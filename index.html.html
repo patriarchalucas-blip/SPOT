@@ -1,0 +1,770 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Spot</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>📍</text></svg>">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,500;1,400&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{--ink:#0e0e0e;--ink2:#3a3a3a;--ink3:#888;--surface:#f5f4f0;--white:#fff;--border:rgba(0,0,0,0.08);--green:#2a7a56;--amber:#d4890a;--red:#c0392b}
+html{background:#0a0a0a}
+body{font-family:'DM Sans',sans-serif;background:#0a0a0a;max-width:430px;margin:0 auto;min-height:100vh}
+
+/* SCREENS */
+.screen{display:none;flex-direction:column;min-height:100vh}
+.screen.active{display:flex}
+
+/* LOADING */
+#loading{background:#0a0a0a;align-items:center;justify-content:center}
+.splash-wm{font-family:'Playfair Display',serif;font-size:48px;color:#fff;letter-spacing:-2px}
+.splash-wm em{font-style:italic;color:rgba(255,255,255,0.4)}
+.spinner{display:inline-block;width:20px;height:20px;border:2px solid rgba(255,255,255,0.2);border-top-color:rgba(255,255,255,0.6);border-radius:50%;animation:spin .6s linear infinite;margin-top:20px}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+/* LOGIN */
+#login{background:#0a0a0a;height:100vh;overflow:hidden;position:relative}
+.login-photos{position:absolute;inset:0;z-index:0}
+.login-photo{position:absolute;inset:0;background-size:cover;background-position:center;opacity:0;transition:opacity 1.4s ease-in-out;transform:scale(1.05);animation:kenburns 7s ease-out forwards}
+.login-photo.active{opacity:1}
+@keyframes kenburns{from{transform:scale(1.05)}to{transform:scale(1.15)}}
+.login-scrim{position:absolute;inset:0;z-index:1;background:linear-gradient(to bottom,rgba(0,0,0,0.35) 0%,rgba(0,0,0,0.1) 30%,rgba(0,0,0,0.55) 70%,rgba(0,0,0,0.92) 100%)}
+.login-inner{position:relative;z-index:2;height:100vh;padding:48px 28px 40px;display:flex;flex-direction:column;justify-content:space-between}
+.login-top{display:flex;justify-content:center}
+.login-place-tag{font-size:12px;color:rgba(255,255,255,0.85);letter-spacing:.1em;text-transform:uppercase;background:rgba(0,0,0,0.28);backdrop-filter:blur(12px);padding:9px 18px 9px 14px;border-radius:100px;border:1px solid rgba(255,255,255,0.15);transition:opacity .5s;display:flex;align-items:center;gap:8px}
+.lpt-dot{width:6px;height:6px;border-radius:50%;background:#fff;box-shadow:0 0 0 0 rgba(255,255,255,0.6);animation:dotpulse 2s infinite}
+@keyframes dotpulse{0%{box-shadow:0 0 0 0 rgba(255,255,255,0.5)}70%{box-shadow:0 0 0 8px rgba(255,255,255,0)}100%{box-shadow:0 0 0 0 rgba(255,255,255,0)}}
+.login-bottom{display:flex;flex-direction:column}
+.photo-dots{display:flex;gap:6px;margin-bottom:20px}
+.photo-dots .pd{height:3px;border-radius:2px;background:rgba(255,255,255,0.3);transition:all .4s;width:16px}
+.photo-dots .pd.active{background:#fff;width:28px}
+.wordmark{font-family:'Playfair Display',serif;font-size:76px;color:#fff;letter-spacing:-3px;line-height:1;margin-bottom:8px;text-shadow:0 2px 40px rgba(0,0,0,0.5)}
+.wordmark em{font-style:italic;color:rgba(255,255,255,0.55)}
+.pin-o{font-style:normal;font-size:0.62em;display:inline-block;transform:translateY(-0.08em);margin:0 -0.04em;filter:drop-shadow(0 2px 8px rgba(0,0,0,0.5))}
+.tagline{font-size:13px;color:rgba(255,255,255,0.6);letter-spacing:.14em;text-transform:uppercase;margin-bottom:28px}
+.form-stack{display:flex;flex-direction:column;gap:12px}
+.field{background:rgba(255,255,255,0.12);border:1px solid rgba(255,255,255,0.18);border-radius:16px;padding:17px 18px;font-size:15px;font-family:'DM Sans',sans-serif;color:#fff;outline:none;width:100%;backdrop-filter:blur(10px);margin-bottom:2px}
+.field::placeholder{color:rgba(255,255,255,0.5)}.field:focus{border-color:rgba(255,255,255,0.4)}
+.btn-primary{background:#fff;color:#0e0e0e;border:none;border-radius:16px;padding:18px;font-size:15px;font-weight:600;font-family:'DM Sans',sans-serif;cursor:pointer;width:100%;margin-top:4px}
+.btn-primary:active{opacity:.85}.btn-primary:disabled{opacity:.5}
+.btn-google{background:rgba(255,255,255,0.16);border:1px solid rgba(255,255,255,0.25);border-radius:16px;padding:17px;color:#fff;font-size:15px;font-weight:600;font-family:'DM Sans',sans-serif;cursor:pointer;width:100%;display:flex;align-items:center;justify-content:center;gap:10px;backdrop-filter:blur(10px);margin-bottom:12px}
+.btn-google:active{background:rgba(255,255,255,0.24)}
+.btn-email-ghost{background:transparent;border:none;color:rgba(255,255,255,0.75);font-size:14px;font-weight:500;font-family:'DM Sans',sans-serif;cursor:pointer;width:100%;padding:8px;text-decoration:underline;text-underline-offset:3px}
+.login-toggle{text-align:center;font-size:13px;color:rgba(255,255,255,0.6);cursor:pointer;margin-top:8px}
+.login-toggle span span{color:#fff;text-decoration:underline}
+.login-back{text-align:center;font-size:13px;color:rgba(255,255,255,0.5);cursor:pointer;margin-top:14px}
+.auth-error{background:rgba(192,57,43,0.3);border:1px solid rgba(192,57,43,0.4);border-radius:12px;padding:12px 16px;font-size:13px;color:#ffb3aa;display:none;backdrop-filter:blur(10px)}
+.auth-error.show{display:block}
+
+/* DASHBOARD */
+#dashboard{background:var(--surface)}
+.dash-top{background:#0e0e0e;padding:56px 28px 28px}
+.dash-top-row{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:20px}
+.dash-hello{font-size:13px;color:rgba(255,255,255,0.35);margin-bottom:4px}
+.dash-name{font-family:'Playfair Display',serif;font-size:30px;color:#fff;letter-spacing:-.5px}
+.avatar{width:40px;height:40px;border-radius:50%;background:linear-gradient(135deg,#2a6b5e,#1a3d36);display:flex;align-items:center;justify-content:center;font-size:16px;color:white;font-weight:600;cursor:pointer;flex-shrink:0}
+.stats-strip{display:flex;background:rgba(255,255,255,0.05);border-radius:14px;overflow:hidden}
+.stat-block{flex:1;padding:12px 10px;text-align:center;border-right:1px solid rgba(255,255,255,0.06)}
+.stat-block:last-child{border-right:none}
+.stat-n{font-family:'Playfair Display',serif;font-size:22px;color:#fff}
+.stat-l{font-size:10px;color:rgba(255,255,255,0.3);text-transform:uppercase;letter-spacing:.06em;margin-top:2px}
+.dash-body{padding:20px 24px 100px}
+.section-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;margin-top:8px}
+.section-title{font-size:11px;font-weight:600;color:var(--ink3);text-transform:uppercase;letter-spacing:.08em}
+
+/* TRIP CARDS */
+.trip-card{border-radius:24px;overflow:hidden;margin-bottom:16px;cursor:pointer;position:relative;height:200px;transition:transform .15s}
+.trip-card:active{transform:scale(.98)}
+.tc-bg{position:absolute;inset:0;background-size:cover;background-position:center;background-color:#1a3a5c}
+.tc-overlay{position:absolute;inset:0;background:linear-gradient(to bottom,rgba(0,0,0,0.2) 0%,rgba(0,0,0,0.75) 100%)}
+.tc-content{position:absolute;inset:0;padding:20px;display:flex;flex-direction:column;justify-content:space-between}
+.tc-top{display:flex;justify-content:space-between}
+.tc-status{font-size:11px;font-weight:600;color:rgba(255,255,255,0.6);background:rgba(255,255,255,0.1);border:1px solid rgba(255,255,255,0.15);padding:5px 12px;border-radius:100px;backdrop-filter:blur(8px)}
+.tc-status.done{color:rgba(100,220,150,0.9);background:rgba(40,100,60,0.3);border-color:rgba(100,220,150,0.2)}
+.tc-flags{font-size:20px}
+.tc-dest{font-size:11px;color:rgba(255,255,255,0.5);text-transform:uppercase;letter-spacing:.1em;margin-bottom:4px}
+.tc-name{font-family:'Playfair Display',serif;font-size:26px;color:#fff;margin-bottom:12px}
+.tc-footer{display:flex;align-items:center;justify-content:space-between}
+.tc-pills{display:flex;gap:6px;flex-wrap:wrap}
+.tc-pill{font-size:11px;padding:3px 9px;border-radius:100px;background:rgba(255,255,255,0.12);color:rgba(255,255,255,0.7);border:1px solid rgba(255,255,255,0.1)}
+.prog-circle{width:36px;height:36px;flex-shrink:0}
+.empty-state{text-align:center;padding:48px 24px;color:var(--ink3)}
+.empty-state .ei{font-size:48px;margin-bottom:16px}
+.empty-state h3{font-family:'Playfair Display',serif;font-size:20px;color:var(--ink2);margin-bottom:8px}
+.empty-state p{font-size:14px;line-height:1.5}
+
+/* FAB */
+.fab{position:fixed;bottom:80px;right:calc(50% - 215px + 24px);width:56px;height:56px;background:var(--ink);border-radius:50%;display:flex;align-items:center;justify-content:center;cursor:pointer;box-shadow:0 4px 20px rgba(0,0,0,0.25);z-index:50;font-size:26px;color:white;border:none;font-family:'DM Sans',sans-serif}
+.fab:active{transform:scale(.93)}
+@media(max-width:430px){.fab{right:24px}}
+
+/* BOTTOM NAV */
+.bottom-nav{position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:430px;background:var(--white);border-top:1px solid var(--border);display:flex;padding:10px 0 26px;z-index:40}
+@media(max-width:430px){.bottom-nav{width:100%;left:0;transform:none}}
+.nav-item{flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;cursor:pointer}
+.nav-icon{font-size:20px;height:24px;display:flex;align-items:center}
+.nav-label{font-size:10px;font-weight:500;color:var(--ink3)}
+.nav-item.active .nav-label{color:var(--ink);font-weight:600}
+
+/* TRIP VIEW */
+#trip{background:var(--surface)}
+.trip-hero{height:240px;position:relative;overflow:hidden;flex-shrink:0;background:#0d2033}
+.trip-hero-img{position:absolute;inset:0;background-size:cover;background-position:center}
+.trip-float{position:absolute;bottom:-18px;left:24px;font-family:'Playfair Display',serif;font-size:80px;font-style:italic;color:rgba(255,255,255,0.06);white-space:nowrap;pointer-events:none;line-height:1}
+.trip-hero-content{position:absolute;inset:0;padding:52px 24px 28px;display:flex;flex-direction:column;justify-content:flex-end;background:linear-gradient(to bottom,rgba(0,0,0,0.1),rgba(0,0,0,0.65))}
+.back-btn{position:absolute;top:20px;left:20px;width:36px;height:36px;background:rgba(0,0,0,0.35);border:none;border-radius:50%;color:white;font-size:16px;cursor:pointer;display:flex;align-items:center;justify-content:center;backdrop-filter:blur(8px)}
+.trip-hero-label{font-size:11px;color:rgba(255,255,255,0.5);text-transform:uppercase;letter-spacing:.1em;margin-bottom:4px}
+.trip-hero-name{font-family:'Playfair Display',serif;font-size:32px;color:#fff}
+.trip-hero-meta{font-size:13px;color:rgba(255,255,255,0.5);margin-top:4px}
+.cat-tabs-wrap{background:var(--white);border-bottom:1px solid var(--border);position:sticky;top:0;z-index:10}
+.cat-tabs{display:flex}
+.cat-tab{flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;padding:12px 8px;font-size:12px;font-weight:500;color:var(--ink3);cursor:pointer;border-bottom:2px solid transparent;text-align:center}
+.cat-tab.active{color:var(--ink);border-bottom-color:var(--ink)}
+.cat-tab .ct-icon{font-size:18px}
+.cat-tab .ct-count{font-size:10px;background:var(--surface);padding:1px 6px;border-radius:100px;margin-top:1px}
+.trip-body{padding:16px 24px 120px}
+.city-section{margin-bottom:28px}
+.city-header{display:flex;align-items:center;gap:8px;margin-bottom:12px}
+.city-name-text{font-family:'Playfair Display',serif;font-size:20px;color:var(--ink)}
+.city-count{margin-left:auto;font-size:12px;color:var(--ink3)}
+.place-row{display:flex;align-items:center;background:var(--white);border-radius:18px;margin-bottom:10px;cursor:pointer;overflow:hidden;border:1px solid var(--border)}
+.place-row:active{transform:scale(.98)}
+.place-bar{width:4px;align-self:stretch;flex-shrink:0}
+.bar-food{background:linear-gradient(to bottom,#e67c3a,#c0522a)}
+.bar-hotel{background:linear-gradient(to bottom,#7b68ee,#5a4fcf)}
+.bar-experience{background:linear-gradient(to bottom,#5ab04a,#2a6b2a)}
+.place-row-main{flex:1;padding:14px 16px 14px 12px;display:flex;align-items:center;gap:12px;min-width:0}
+.place-thumb{width:48px;height:48px;border-radius:12px;background:var(--surface);flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:22px;overflow:hidden;border:1px solid var(--border)}
+.place-row-info{flex:1;min-width:0}
+.place-row-name{font-size:15px;font-weight:500;color:var(--ink);margin-bottom:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.place-row-note{font-size:12px;color:var(--ink3);font-style:italic;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.place-row-right{display:flex;flex-direction:column;align-items:flex-end;gap:4px;flex-shrink:0;padding-right:16px}
+.place-type-tag{font-size:11px;color:var(--ink3);background:var(--surface);padding:3px 8px;border-radius:8px}
+.status-dot{width:8px;height:8px;border-radius:50%}
+.dot-want{background:var(--amber)}.dot-been{background:var(--green)}
+
+/* PLACE DETAIL */
+#place{background:var(--white)}
+.place-hero{height:280px;position:relative;overflow:hidden;flex-shrink:0;background:#0d2033}
+.place-hero-img{position:absolute;inset:0;background-size:cover;background-position:center}
+.hero-overlay{position:absolute;inset:0;background:linear-gradient(to bottom,rgba(0,0,0,0.2),rgba(0,0,0,0.7))}
+.hero-back{position:absolute;top:20px;left:20px;width:36px;height:36px;background:rgba(0,0,0,0.35);border:none;border-radius:50%;color:white;font-size:16px;cursor:pointer;display:flex;align-items:center;justify-content:center;z-index:2;backdrop-filter:blur(8px)}
+.hero-chip{position:absolute;top:20px;right:20px;padding:7px 16px;border-radius:100px;font-size:12px;font-weight:600;cursor:pointer;z-index:2;backdrop-filter:blur(8px)}
+.chip-want{background:rgba(240,165,0,0.25);border:1px solid rgba(240,165,0,0.4);color:#f5c842}
+.chip-been{background:rgba(42,138,94,0.25);border:1px solid rgba(42,138,94,0.4);color:#5ecfa0}
+.hero-bottom{position:absolute;bottom:0;left:0;right:0;padding:24px;z-index:2}
+.hero-type{font-size:11px;color:rgba(255,255,255,0.5);text-transform:uppercase;letter-spacing:.1em;margin-bottom:6px}
+.hero-name{font-family:'Playfair Display',serif;font-size:32px;color:#fff;line-height:1.1}
+.d-section{padding:20px 24px;border-bottom:1px solid var(--border)}
+.sec-label{font-size:10px;font-weight:600;color:var(--ink3);text-transform:uppercase;letter-spacing:.1em;margin-bottom:12px}
+.note-card{background:#0e0e0e;border-radius:18px;padding:20px;position:relative;overflow:hidden}
+.note-glow{position:absolute;inset:0;background:radial-gradient(ellipse 200px 100px at 20% 50%,rgba(42,100,160,0.2),transparent);pointer-events:none}
+.note-quote{font-family:'Playfair Display',serif;font-size:18px;font-style:italic;color:rgba(255,255,255,0.85);line-height:1.5;position:relative;z-index:1}
+.note-attr{font-size:11px;color:rgba(255,255,255,0.25);margin-top:10px;position:relative;z-index:1}
+.info-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.info-cell{background:var(--surface);border-radius:14px;padding:14px}
+.info-cell.wide{grid-column:1/-1}
+.info-cell-icon{font-size:18px;margin-bottom:6px}
+.info-cell-label{font-size:10px;color:var(--ink3);text-transform:uppercase;letter-spacing:.06em;margin-bottom:4px}
+.info-cell-value{font-size:14px;font-weight:500;color:var(--ink)}
+.info-cell-sub{font-size:11px;color:var(--ink3);margin-top:2px}
+.status-toggle{display:flex;background:var(--surface);border-radius:16px;padding:4px;gap:4px}
+.toggle-btn{flex:1;padding:11px 8px;border:none;border-radius:12px;background:transparent;font-size:13px;font-weight:500;font-family:'DM Sans',sans-serif;color:var(--ink3);cursor:pointer;text-align:center}
+.toggle-btn.sel-want{background:#fff;color:#c07800;box-shadow:0 2px 8px rgba(0,0,0,0.08)}
+.toggle-btn.sel-been{background:#fff;color:#1a7a4e;box-shadow:0 2px 8px rgba(0,0,0,0.08)}
+.toggle-btn.sel-skip{background:#fff;color:var(--red);box-shadow:0 2px 8px rgba(0,0,0,0.08)}
+.stars-row{display:flex;gap:6px;margin-bottom:16px}
+.star-btn{font-size:28px;cursor:pointer;color:rgba(0,0,0,0.1);background:none;border:none;padding:0}
+.star-btn.lit{color:var(--amber)}
+.review-area{width:100%;background:var(--surface);border:none;border-radius:16px;padding:16px;font-size:14px;font-family:'DM Sans',sans-serif;color:var(--ink);resize:none;outline:none;line-height:1.6}
+.review-area::placeholder{color:var(--ink3)}
+.action-btn{display:block;width:100%;background:var(--ink);color:white;border:none;border-radius:16px;padding:17px;font-size:15px;font-weight:600;font-family:'DM Sans',sans-serif;cursor:pointer;margin-top:12px;margin-bottom:40px}
+
+/* OVERLAYS */
+.overlay{position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:200;display:none;align-items:flex-end;backdrop-filter:blur(4px)}
+.overlay.show{display:flex}
+.sheet{background:var(--white);border-radius:28px 28px 0 0;width:100%;max-width:430px;margin:0 auto;max-height:90vh;overflow-y:auto;scrollbar-width:none;animation:slideUp .28s ease;position:relative}
+.sheet::-webkit-scrollbar{display:none}
+@keyframes slideUp{from{transform:translateY(100%)}to{transform:translateY(0)}}
+.sheet-handle{width:36px;height:4px;background:var(--border);border-radius:2px;margin:12px auto 20px}
+.sheet-title{font-family:'Playfair Display',serif;font-size:22px;color:var(--ink);padding:0 24px 20px}
+.sheet-close{position:absolute;top:16px;right:20px;width:32px;height:32px;background:var(--surface);border:none;border-radius:50%;cursor:pointer;font-size:14px;display:flex;align-items:center;justify-content:center;color:var(--ink3)}
+.step-dots{display:flex;gap:8px;padding:0 24px 20px}
+.step-dot{width:8px;height:8px;border-radius:50%;background:var(--border)}
+.step-dot.active{background:var(--ink)}.step-dot.done{background:var(--green)}
+.trip-option{display:flex;align-items:center;gap:14px;padding:14px 24px;cursor:pointer}
+.trip-option:active{background:var(--surface)}
+.trip-option-img{width:48px;height:48px;border-radius:14px;flex-shrink:0;background-size:cover;background-position:center;background-color:#1a4a6b;display:flex;align-items:center;justify-content:center;font-size:20px}
+.trip-option-name{font-size:16px;font-weight:500;color:var(--ink)}
+.trip-option-meta{font-size:13px;color:var(--ink3);margin-top:2px}
+.trip-option-arrow{margin-left:auto;color:var(--ink3);font-size:20px}
+.new-trip-btn{margin:8px 24px 28px;display:flex;align-items:center;gap:12px;padding:16px;background:var(--surface);border-radius:16px;cursor:pointer;border:2px dashed var(--border)}
+.new-trip-icon{width:40px;height:40px;border-radius:12px;background:rgba(0,0,0,0.06);display:flex;align-items:center;justify-content:center;font-size:20px}
+.new-trip-text{font-size:15px;font-weight:500;color:var(--ink2)}
+.cat-options{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;padding:0 24px 24px}
+.cat-option{padding:16px 10px;background:var(--surface);border-radius:16px;text-align:center;cursor:pointer;border:2px solid transparent}
+.cat-option.sel{border-color:var(--ink);background:var(--ink)}
+.cat-option .co-icon{font-size:24px;margin-bottom:6px}
+.cat-option .co-name{font-size:12px;font-weight:500;color:var(--ink2)}
+.cat-option.sel .co-name{color:white}
+.search-wrap{padding:0 24px 12px;position:relative}
+.search-wrap .si{position:absolute;left:40px;top:15px;font-size:16px;pointer-events:none}
+.search-input{width:100%;background:var(--surface);border:1.5px solid var(--border);border-radius:14px;padding:14px 16px 14px 44px;font-size:15px;font-family:'DM Sans',sans-serif;color:var(--ink);outline:none}
+.search-input:focus{border-color:var(--ink)}
+.search-powered{display:flex;align-items:center;gap:6px;padding:4px 24px 8px}
+.search-powered span{font-size:11px;color:var(--ink3)}
+.search-powered strong{font-size:11px;color:var(--ink)}
+.search-result{display:flex;align-items:center;gap:12px;padding:12px 24px;cursor:pointer}
+.search-result:active{background:var(--surface)}
+.sr-icon{width:44px;height:44px;border-radius:12px;background:var(--surface);display:flex;align-items:center;justify-content:center;font-size:20px;border:1px solid var(--border);flex-shrink:0}
+.sr-name{font-size:15px;font-weight:500;color:var(--ink)}
+.sr-meta{font-size:12px;color:var(--ink3);margin-top:2px}
+.search-loading{text-align:center;padding:32px;color:var(--ink3);font-size:14px}
+.note-place-row{display:flex;align-items:center;gap:12px;padding:0 24px 20px}
+.note-place-icon{width:52px;height:52px;border-radius:14px;background:var(--surface);border:1px solid var(--border);flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:24px}
+.note-place-name{font-size:16px;font-weight:600;color:var(--ink)}
+.note-place-meta{font-size:13px;color:var(--ink3);margin-top:2px}
+.note-wrap{padding:0 24px}
+.note-input{width:100%;background:var(--surface);border:1.5px solid var(--border);border-radius:16px;padding:16px;font-size:15px;font-family:'DM Sans',sans-serif;color:var(--ink);resize:none;outline:none;line-height:1.5}
+.note-input:focus{border-color:var(--ink)}
+.note-input::placeholder{color:var(--ink3);font-style:italic}
+.note-input.error{border-color:var(--red)}
+.note-hint{font-size:12px;color:var(--ink3);padding:8px 24px 0}
+.sheet-cta{display:block;width:calc(100% - 48px);margin:20px 24px 32px;background:var(--ink);color:white;border:none;border-radius:16px;padding:17px;font-size:15px;font-weight:600;font-family:'DM Sans',sans-serif;cursor:pointer}
+.nt-label{font-size:11px;font-weight:600;color:var(--ink3);text-transform:uppercase;letter-spacing:.08em;padding:0 24px 8px}
+.nt-wrap{padding:0 24px 16px}
+.nt-input{width:100%;background:var(--surface);border:1.5px solid var(--border);border-radius:14px;padding:14px 16px;font-size:15px;font-family:'DM Sans',sans-serif;color:var(--ink);outline:none}
+.nt-input:focus{border-color:var(--ink)}
+.nt-input::placeholder{color:var(--ink3)}
+.dates-row{display:flex;gap:10px;padding:0 24px 16px}
+.dates-row .nt-input{flex:1;font-size:14px}
+.dest-search-wrap{padding:0 24px 8px;position:relative}
+.dest-search-wrap .dsi{position:absolute;left:40px;top:15px;font-size:15px;pointer-events:none}
+.dest-result{display:flex;align-items:center;gap:12px;padding:10px 24px;cursor:pointer}
+.dest-result:active{background:var(--surface)}
+.dest-flag{font-size:26px}
+.dest-name{font-size:15px;font-weight:500;color:var(--ink)}
+.dest-region{font-size:12px;color:var(--ink3)}
+.selected-dests{display:flex;flex-wrap:wrap;gap:8px;padding:0 24px 16px}
+.sel-dest-chip{display:flex;align-items:center;gap:6px;background:var(--ink);color:white;padding:6px 12px;border-radius:100px;font-size:13px;font-weight:500}
+.sel-dest-chip button{background:none;border:none;color:rgba(255,255,255,0.6);cursor:pointer;font-size:14px;padding:0;line-height:1}
+.toast{position:fixed;bottom:90px;left:50%;transform:translateX(-50%);width:calc(100% - 48px);max-width:382px;background:var(--ink);color:white;border-radius:16px;padding:16px 20px;z-index:300;display:none}
+.toast.show{display:block;animation:toastIn .3s ease}
+@keyframes toastIn{from{transform:translateX(-50%) translateY(20px);opacity:0}to{transform:translateX(-50%) translateY(0);opacity:1}}
+.toast-title{font-size:13px;font-weight:600;margin-bottom:3px}
+.toast-msg{font-size:13px;color:rgba(255,255,255,0.6);font-style:italic}
+</style>
+</head>
+<body>
+
+<div class="screen active" id="loading">
+  <div style="text-align:center"><div class="splash-wm">Sp<em>o</em>t</div><div class="spinner"></div></div>
+</div>
+
+<div class="screen" id="login">
+  <div class="login-photos" id="loginPhotos">
+    <div class="login-photo active" style="background-image:url('https://images.unsplash.com/photo-1555990538-ffc0a1c1c1e1?w=900&q=80')"></div>
+  </div>
+  <div class="login-scrim"></div>
+  <div class="login-inner">
+    <div class="login-top">
+      <div class="login-place-tag" id="loginPlaceTag"><span class="lpt-dot"></span>Dubrovnik, Croácia</div>
+    </div>
+    <div class="login-bottom">
+      <div class="photo-dots" id="photoDots"></div>
+      <div class="wordmark">Sp<em>o</em>t</div>
+      <div class="tagline">seus lugares · sua voz</div>
+      <div class="form-stack">
+        <div class="auth-error" id="authError"></div>
+        <div id="loginButtons">
+          <button class="btn-google" onclick="signInGoogle()">
+            <svg width="18" height="18" viewBox="0 0 24 24"><path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.07 5.07 0 01-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#fff"/><path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#fff"/><path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18A11 11 0 001 12c0 1.78.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#fff"/><path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#fff"/></svg>
+            Continuar com Google
+          </button>
+          <button class="btn-email-ghost" onclick="showEmailForm()">Entrar com email</button>
+        </div>
+        <div id="emailForm" style="display:none">
+          <input class="field" type="email" id="authEmail" placeholder="seu@email.com">
+          <input class="field" type="password" id="authPassword" placeholder="senha (mín. 6 caracteres)">
+          <button class="btn-primary" id="authBtn" onclick="handleAuth()">Entrar</button>
+          <div class="login-toggle" onclick="toggleAuthMode()"><span id="authToggleText">Não tem conta? <span>Cadastre-se</span></span></div>
+          <div class="login-back" onclick="hideEmailForm()">← voltar</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="screen" id="dashboard">
+  <div class="dash-top">
+    <div class="dash-top-row">
+      <div><div class="dash-hello">Olá de volta,</div><div class="dash-name" id="dashName">—</div></div>
+      <div class="avatar" id="dashAvatar" onclick="signOut()">?</div>
+    </div>
+    <div class="stats-strip">
+      <div class="stat-block"><div class="stat-n" id="statTrips">0</div><div class="stat-l">viagens</div></div>
+      <div class="stat-block"><div class="stat-n" id="statSpots">0</div><div class="stat-l">spots</div></div>
+      <div class="stat-block"><div class="stat-n" id="statVisited">0</div><div class="stat-l">visitados</div></div>
+      <div class="stat-block"><div class="stat-n" id="statCountries">0</div><div class="stat-l">países</div></div>
+    </div>
+  </div>
+  <div class="dash-body" id="tripsContainer"><div class="section-head"><span class="section-title">Minhas viagens</span></div><div class="empty-state"><div class="ei">✈️</div><h3>Nenhuma viagem ainda</h3><p>Toca no + para criar sua primeira viagem</p></div></div>
+  <button class="fab" onclick="showOv('ov-trip')">+</button>
+  <div class="bottom-nav"><div class="nav-item active" onclick="goTo('dashboard');loadDashboard()"><div class="nav-icon">🗺️</div><div class="nav-label" style="color:var(--ink);font-weight:600">Viagens</div></div><div class="nav-item" onclick="toast('Em breve','Explorar chega em breve!')"><div class="nav-icon">🔍</div><div class="nav-label">Explorar</div></div><div class="nav-item" onclick="toast('Em breve','Amigos chega em breve!')"><div class="nav-icon">👥</div><div class="nav-label">Amigos</div></div><div class="nav-item" onclick="toast('Em breve','Perfil chega em breve!')"><div class="nav-icon">👤</div><div class="nav-label">Perfil</div></div></div>
+</div>
+
+<div class="screen" id="trip">
+  <div class="trip-hero"><div class="trip-hero-img" id="tripHeroImg"></div><div class="trip-float" id="tripFloat"></div><div class="trip-hero-content"><button class="back-btn" onclick="goTo('dashboard');loadDashboard()">←</button><div><div class="trip-hero-label" id="tripLabel"></div><div class="trip-hero-name" id="tripName"></div><div class="trip-hero-meta" id="tripMeta"></div></div></div></div>
+  <div class="cat-tabs-wrap"><div class="cat-tabs"><div class="cat-tab active" onclick="switchCat('food',this)"><div class="ct-icon">🍽️</div><div>Comer & Beber</div><div class="ct-count" id="cnt-food">0</div></div><div class="cat-tab" onclick="switchCat('hotel',this)"><div class="ct-icon">🏨</div><div>Onde Ficar</div><div class="ct-count" id="cnt-hotel">0</div></div><div class="cat-tab" onclick="switchCat('experience',this)"><div class="ct-icon">🗺️</div><div>Experiências</div><div class="ct-count" id="cnt-experience">0</div></div></div></div>
+  <div class="trip-body" id="tripBody"></div>
+  <button class="fab" onclick="showOv('ov-trip')">+</button>
+  <div class="bottom-nav"><div class="nav-item active" onclick="goTo('dashboard');loadDashboard()"><div class="nav-icon">🗺️</div><div class="nav-label" style="color:var(--ink);font-weight:600">Viagens</div></div><div class="nav-item" onclick="toast('Em breve','Explorar chega em breve!')"><div class="nav-icon">🔍</div><div class="nav-label">Explorar</div></div><div class="nav-item" onclick="toast('Em breve','Amigos chega em breve!')"><div class="nav-icon">👥</div><div class="nav-label">Amigos</div></div><div class="nav-item" onclick="toast('Em breve','Perfil chega em breve!')"><div class="nav-icon">👤</div><div class="nav-label">Perfil</div></div></div>
+</div>
+
+<div class="screen" id="place">
+  <div class="place-hero"><div class="place-hero-img" id="placeHeroImg"></div><div class="hero-overlay"></div><button class="hero-back" onclick="goTo('trip');loadTrip(S.curTrip)">←</button><div class="hero-chip chip-want" id="placeChip" onclick="cycleStatus()">Quero ir</div><div class="hero-bottom"><div class="hero-type" id="placeType"></div><div class="hero-name" id="placeName"></div></div></div>
+  <div class="d-section"><div class="sec-label">Minha nota</div><div class="note-card"><div class="note-glow"></div><div class="note-quote" id="placeNote"></div><div class="note-attr" id="placeNoteAttr"></div></div></div>
+  <div class="d-section"><div class="sec-label">Informações</div><div class="info-grid" id="placeInfoGrid"></div></div>
+  <div class="d-section"><div class="sec-label">Status</div><div class="status-toggle"><button class="toggle-btn sel-want" id="t-want" onclick="setStatus('want')">Quero ir</button><button class="toggle-btn" id="t-been" onclick="setStatus('been')">Fui</button><button class="toggle-btn" id="t-skip" onclick="setStatus('skip')">Pular</button></div></div>
+  <div class="d-section"><div class="sec-label">Minha avaliação</div><div class="stars-row"><button class="star-btn" onclick="rateStar(1)">★</button><button class="star-btn" onclick="rateStar(2)">★</button><button class="star-btn" onclick="rateStar(3)">★</button><button class="star-btn" onclick="rateStar(4)">★</button><button class="star-btn" onclick="rateStar(5)">★</button></div><textarea class="review-area" id="reviewText" rows="3" placeholder="O que você achou?"></textarea><button class="action-btn" onclick="saveReview()">Salvar avaliação</button></div>
+</div>
+
+<!-- OVERLAYS -->
+<div class="overlay" id="ov-trip" onclick="closeOut(event,'ov-trip')"><div class="sheet"><button class="sheet-close" onclick="closeOv('ov-trip')">✕</button><div class="sheet-handle"></div><div class="sheet-title">Em qual viagem?</div><div class="step-dots"><div class="step-dot active"></div><div class="step-dot"></div><div class="step-dot"></div><div class="step-dot"></div></div><div id="tripOptions"></div><div class="new-trip-btn" onclick="nextOv('ov-trip','ov-newtrip')"><div class="new-trip-icon">✦</div><div class="new-trip-text">Nova viagem</div></div></div></div>
+
+<div class="overlay" id="ov-cat" onclick="closeOut(event,'ov-cat')"><div class="sheet"><button class="sheet-close" onclick="closeOv('ov-cat')">✕</button><div class="sheet-handle"></div><div class="sheet-title">Qual categoria?</div><div class="step-dots"><div class="step-dot done"></div><div class="step-dot active"></div><div class="step-dot"></div><div class="step-dot"></div></div><div class="cat-options"><div class="cat-option" id="co-food" onclick="pickCat('food')"><div class="co-icon">🍽️</div><div class="co-name">Comer & Beber</div></div><div class="cat-option" id="co-hotel" onclick="pickCat('hotel')"><div class="co-icon">🏨</div><div class="co-name">Onde Ficar</div></div><div class="cat-option" id="co-experience" onclick="pickCat('experience')"><div class="co-icon">🗺️</div><div class="co-name">Experiências</div></div></div></div></div>
+
+<div class="overlay" id="ov-search" onclick="closeOut(event,'ov-search')"><div class="sheet"><button class="sheet-close" onclick="closeOv('ov-search')">✕</button><div class="sheet-handle"></div><div class="sheet-title">Buscar lugar</div><div class="step-dots"><div class="step-dot done"></div><div class="step-dot done"></div><div class="step-dot active"></div><div class="step-dot"></div></div><div class="search-wrap"><span class="si">🔍</span><input class="search-input" id="placeSearch" placeholder="Nome do lugar..." oninput="searchPlaces(this.value)"></div><div class="search-powered"><span>Resultados via</span><strong>Google Places</strong></div><div id="searchResults"><div class="search-loading">Digite para buscar...</div></div></div></div>
+
+<div class="overlay" id="ov-note" onclick="closeOut(event,'ov-note')"><div class="sheet"><button class="sheet-close" onclick="closeOv('ov-note')">✕</button><div class="sheet-handle"></div><div class="sheet-title">Sua nota</div><div class="step-dots"><div class="step-dot done"></div><div class="step-dot done"></div><div class="step-dot done"></div><div class="step-dot active"></div></div><div class="note-place-row"><div class="note-place-icon" id="selIcon">🍽️</div><div><div class="note-place-name" id="selName"></div><div class="note-place-meta" id="selMeta"></div></div></div><div class="note-wrap"><textarea class="note-input" id="noteField" rows="3" placeholder="Por que esse lugar te chamou atenção?"></textarea></div><div class="note-hint">Pode ser uma palavra ou uma frase.</div><button class="sheet-cta" id="saveSpotBtn" onclick="saveSpot()">Salvar spot</button></div></div>
+
+<div class="overlay" id="ov-newtrip" onclick="closeOut(event,'ov-newtrip')"><div class="sheet"><button class="sheet-close" onclick="closeOv('ov-newtrip')">✕</button><div class="sheet-handle"></div><div class="sheet-title">Nova viagem</div><div class="nt-label">Nome</div><div class="nt-wrap"><input class="nt-input" id="tripNameInput" placeholder="Ex: Europa 2027, Japão..."></div><div class="nt-label">Destinos</div><div class="selected-dests" id="selDests"></div><div class="dest-search-wrap"><span class="dsi">🔍</span><input class="nt-input" style="padding-left:44px" id="destSearch" placeholder="Buscar país ou cidade..." oninput="filterDests(this.value)"></div><div id="destList"><div class="dest-result" onclick="addDest('🇯🇵','Japão')"><span class="dest-flag">🇯🇵</span><div><div class="dest-name">Japão</div><div class="dest-region">Ásia</div></div></div><div class="dest-result" onclick="addDest('🇵🇹','Portugal')"><span class="dest-flag">🇵🇹</span><div><div class="dest-name">Portugal</div><div class="dest-region">Europa</div></div></div><div class="dest-result" onclick="addDest('🇦🇷','Argentina')"><span class="dest-flag">🇦🇷</span><div><div class="dest-name">Argentina</div><div class="dest-region">América do Sul</div></div></div><div class="dest-result" onclick="addDest('🇭🇷','Croácia')"><span class="dest-flag">🇭🇷</span><div><div class="dest-name">Croácia</div><div class="dest-region">Europa</div></div></div><div class="dest-result" onclick="addDest('🇲🇪','Montenegro')"><span class="dest-flag">🇲🇪</span><div><div class="dest-name">Montenegro</div><div class="dest-region">Europa</div></div></div><div class="dest-result" onclick="addDest('🇧🇦','Bósnia')"><span class="dest-flag">🇧🇦</span><div><div class="dest-name">Bósnia</div><div class="dest-region">Europa</div></div></div><div class="dest-result" onclick="addDest('🇮🇹','Itália')"><span class="dest-flag">🇮🇹</span><div><div class="dest-name">Itália</div><div class="dest-region">Europa</div></div></div><div class="dest-result" onclick="addDest('🇫🇷','França')"><span class="dest-flag">🇫🇷</span><div><div class="dest-name">França</div><div class="dest-region">Europa</div></div></div><div class="dest-result" onclick="addDest('🇪🇸','Espanha')"><span class="dest-flag">🇪🇸</span><div><div class="dest-name">Espanha</div><div class="dest-region">Europa</div></div></div><div class="dest-result" onclick="addDest('🇬🇷','Grécia')"><span class="dest-flag">🇬🇷</span><div><div class="dest-name">Grécia</div><div class="dest-region">Europa</div></div></div><div class="dest-result" onclick="addDest('🇵🇪','Peru')"><span class="dest-flag">🇵🇪</span><div><div class="dest-name">Peru</div><div class="dest-region">América do Sul</div></div></div><div class="dest-result" onclick="addDest('🇹🇭','Tailândia')"><span class="dest-flag">🇹🇭</span><div><div class="dest-name">Tailândia</div><div class="dest-region">Ásia</div></div></div><div class="dest-result" onclick="addDest('🇭🇷','Split')"><span class="dest-flag">🇭🇷</span><div><div class="dest-name">Split</div><div class="dest-region">Croácia</div></div></div><div class="dest-result" onclick="addDest('🇭🇷','Dubrovnik')"><span class="dest-flag">🇭🇷</span><div><div class="dest-name">Dubrovnik</div><div class="dest-region">Croácia</div></div></div><div class="dest-result" onclick="addDest('🇭🇷','Hvar')"><span class="dest-flag">🇭🇷</span><div><div class="dest-name">Hvar</div><div class="dest-region">Croácia</div></div></div><div class="dest-result" onclick="addDest('🇲🇪','Kotor')"><span class="dest-flag">🇲🇪</span><div><div class="dest-name">Kotor</div><div class="dest-region">Montenegro</div></div></div><div class="dest-result" onclick="addDest('🇧🇦','Sarajevo')"><span class="dest-flag">🇧🇦</span><div><div class="dest-name">Sarajevo</div><div class="dest-region">Bósnia</div></div></div><div class="dest-result" onclick="addDest('🇧🇦','Mostar')"><span class="dest-flag">🇧🇦</span><div><div class="dest-name">Mostar</div><div class="dest-region">Bósnia</div></div></div><div class="dest-result" onclick="addDest('🇮🇹','Roma')"><span class="dest-flag">🇮🇹</span><div><div class="dest-name">Roma</div><div class="dest-region">Itália</div></div></div><div class="dest-result" onclick="addDest('🇫🇷','Paris')"><span class="dest-flag">🇫🇷</span><div><div class="dest-name">Paris</div><div class="dest-region">França</div></div></div><div class="dest-result" onclick="addDest('🇵🇪','Lima')"><span class="dest-flag">🇵🇪</span><div><div class="dest-name">Lima</div><div class="dest-region">Peru</div></div></div><div class="dest-result" onclick="addDest('🇵🇹','Lisboa')"><span class="dest-flag">🇵🇹</span><div><div class="dest-name">Lisboa</div><div class="dest-region">Portugal</div></div></div><div class="dest-result" onclick="addDest('🇵🇹','Porto')"><span class="dest-flag">🇵🇹</span><div><div class="dest-name">Porto</div><div class="dest-region">Portugal</div></div></div></div><div class="nt-label" style="margin-top:8px">Datas (opcional)</div><div class="dates-row"><input class="nt-input" type="date" id="tripStart"><input class="nt-input" type="date" id="tripEnd"></div><button class="sheet-cta" onclick="createTrip()">Criar viagem</button></div></div>
+
+<div class="toast" id="toast"><div class="toast-title" id="toastTitle"></div><div class="toast-msg" id="toastMsg"></div></div>
+
+<script>
+const SB_URL='https://kzidnilsyrvauzgelsqd.supabase.co';
+const SB_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imt6aWRuaWxzeXJ2YXV6Z2Vsc3FkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODEyODE5NDAsImV4cCI6MjA5Njg1Nzk0MH0.BMgiP_lTe8mCfe0eSPNUCksXatOntuWAhcqGtR8hco4';
+let sb;
+try{sb=supabase.createClient(SB_URL,SB_KEY)}catch(e){console.error(e)}
+
+const S={user:null,trips:[],curTrip:null,curPlace:null,curCat:'food',addTrip:null,addCat:null,selPlace:null,selDests:[],searchResults:[],token:null};
+let authMode='signin';
+
+// ═══ DATA LAYER (raw fetch — bypasses buggy SB client) ═══
+async function ensureToken(){
+  if(S.token)return S.token;
+  try{const{data}=await sb.auth.getSession();S.token=data?.session?.access_token;}catch(e){}
+  return S.token;
+}
+async function dbGet(table,query){
+  await ensureToken();
+  const r=await fetch(SB_URL+'/rest/v1/'+table+'?'+query,{
+    headers:{'apikey':SB_KEY,'Authorization':'Bearer '+S.token}
+  });
+  if(!r.ok){console.error('dbGet error',table,await r.text());return[]}
+  return await r.json();
+}
+async function dbInsert(table,obj){
+  await ensureToken();
+  const r=await fetch(SB_URL+'/rest/v1/'+table,{
+    method:'POST',
+    headers:{'Content-Type':'application/json','apikey':SB_KEY,'Authorization':'Bearer '+S.token,'Prefer':'return=representation'},
+    body:JSON.stringify(obj)
+  });
+  const body=await r.json();
+  if(!r.ok){console.error('dbInsert error',table,body);return{error:body,data:null}}
+  return{error:null,data:Array.isArray(body)?body[0]:body};
+}
+async function dbUpdate(table,id,obj){
+  await ensureToken();
+  const r=await fetch(SB_URL+'/rest/v1/'+table+'?id=eq.'+id,{
+    method:'PATCH',
+    headers:{'Content-Type':'application/json','apikey':SB_KEY,'Authorization':'Bearer '+S.token,'Prefer':'return=representation'},
+    body:JSON.stringify(obj)
+  });
+  if(!r.ok){console.error('dbUpdate error',table,await r.text());return{error:true}}
+  return{error:null};
+}
+
+// ═══ INIT ═══
+async function init(){
+  if(!sb){goTo('login');return}
+  sb.auth.onAuthStateChange(async(ev,sess)=>{
+    try{
+      if((ev==='SIGNED_IN'||ev==='INITIAL_SESSION'||ev==='TOKEN_REFRESHED')&&sess?.user&&!S.user){
+        S.user=sess.user;
+        S.token=sess.access_token;
+        try{await loadDashboard()}catch(e){console.error('Dashboard error:',e)}
+        goTo('dashboard');
+      }
+      if(ev==='SIGNED_OUT'){S.user=null;S.token=null;goTo('login')}
+    }catch(e){console.error('Auth error:',e);goTo('login')}
+  });
+  // Safety: if still on loading after 3s, force login
+  setTimeout(()=>{
+    if(document.getElementById('loading').classList.contains('active')){
+      goTo(S.user?'dashboard':'login');
+    }
+  },3000);
+}
+
+// ═══ AUTH ═══
+async function signInGoogle(){
+  if(!sb)return;
+  const{error}=await sb.auth.signInWithOAuth({provider:'google',options:{redirectTo:window.location.origin}});
+  if(error)showAuthErr(error.message);
+}
+function toggleAuthMode(){
+  authMode=authMode==='signin'?'signup':'signin';
+  document.getElementById('authBtn').textContent=authMode==='signup'?'Criar conta':'Entrar';
+  document.getElementById('authToggleText').innerHTML=authMode==='signup'?'Já tem conta? <span>Entrar</span>':'Não tem conta? <span>Cadastre-se</span>';
+}
+async function handleAuth(){
+  const email=document.getElementById('authEmail').value.trim();
+  const pw=document.getElementById('authPassword').value;
+  if(!email||!pw){showAuthErr('Preencha email e senha');return}
+  if(pw.length<6){showAuthErr('Senha mín. 6 caracteres');return}
+  const btn=document.getElementById('authBtn');btn.disabled=true;btn.textContent='...';
+  hideAuthErr();
+  let r;
+  if(authMode==='signup')r=await sb.auth.signUp({email,password:pw});
+  else r=await sb.auth.signInWithPassword({email,password:pw});
+  if(r.error){showAuthErr(r.error.message);btn.disabled=false;btn.textContent=authMode==='signup'?'Criar conta':'Entrar';return}
+  if(authMode==='signup'&&!r.data.session){showAuthErr('Verifique seu email para confirmar');btn.disabled=false;btn.textContent='Criar conta';return}
+  // onAuthStateChange will handle the rest
+}
+function showAuthErr(m){const e=document.getElementById('authError');e.textContent=m;e.classList.add('show')}
+function hideAuthErr(){document.getElementById('authError').classList.remove('show')}
+async function signOut(){if(!confirm('Sair do Spot?'))return;await sb.auth.signOut()}
+
+// ═══ DASHBOARD ═══
+async function loadDashboard(){
+  if(!S.user)return;
+  const meta=S.user.user_metadata||{};
+  let name=meta.full_name||meta.name||S.user.email.split('@')[0].split('.')[0];
+  name=name.split(' ')[0];name=name.charAt(0).toUpperCase()+name.slice(1).toLowerCase();
+  document.getElementById('dashName').textContent=name;
+  document.getElementById('dashAvatar').textContent=name.charAt(0).toUpperCase();
+  const trips=await dbGet('trips','user_id=eq.'+S.user.id+'&order=created_at.desc');
+  S.trips=trips||[];
+  let ts=0,tv=0,ctrs=new Set();
+  for(const t of S.trips){
+    const spots=await dbGet('spots','trip_id=eq.'+t.id);
+    t._spots=spots||[];ts+=t._spots.length;tv+=t._spots.filter(s=>s.status==='been').length;
+    (t.destinations||[]).forEach(d=>ctrs.add(d));
+  }
+  document.getElementById('statTrips').textContent=S.trips.length;
+  document.getElementById('statSpots').textContent=ts;
+  document.getElementById('statVisited').textContent=tv;
+  document.getElementById('statCountries').textContent=ctrs.size;
+  renderTrips();populateTripOpts();
+}
+function renderTrips(){
+  const c=document.getElementById('tripsContainer');
+  if(!S.trips.length){c.innerHTML='<div class="section-head"><span class="section-title">Minhas viagens</span></div><div class="empty-state"><div class="ei">✈️</div><h3>Nenhuma viagem ainda</h3><p>Toca no + para criar sua primeira viagem</p></div>';return}
+  let h='<div class="section-head"><span class="section-title">Minhas viagens</span></div>';
+  S.trips.forEach(t=>{
+    const sp=t._spots||[],vis=sp.filter(s=>s.status==='been').length,pct=sp.length?Math.round(vis/sp.length*100):0,circ=Math.round(pct*.94);
+    const flags=(t.destinations||[]).slice(0,3).map(d=>flagFor(d)).join(' ')||'🌍';
+    const img=unsplash(t.destinations);
+    h+=`<div class="trip-card" onclick="openTrip('${t.id}')"><div class="tc-bg" style="background-image:url('${img}')"></div><div class="tc-overlay"></div><div class="tc-content"><div class="tc-top"><div class="tc-flags">${flags}</div><div class="tc-status ${t.status==='done'?'done':''}">${t.status==='done'?'Concluída':'Planejando'}</div></div><div><div class="tc-dest">${t.dates||''}</div><div class="tc-name">${t.name}</div><div class="tc-footer"><div class="tc-pills"><span class="tc-pill">${sp.length} spots</span>${vis?`<span class="tc-pill">${vis} visitados</span>`:''}</div><svg class="prog-circle" viewBox="0 0 36 36"><circle cx="18" cy="18" r="15" fill="none" stroke="rgba(255,255,255,0.15)" stroke-width="2.5"/><circle cx="18" cy="18" r="15" fill="none" stroke="rgba(255,255,255,0.6)" stroke-width="2.5" stroke-dasharray="${circ} ${94-circ}" stroke-linecap="round" transform="rotate(-90 18 18)"/><text x="18" y="22" text-anchor="middle" fill="white" font-size="9" font-family="DM Sans">${pct}%</text></svg></div></div></div></div>`;
+  });
+  c.innerHTML=h;
+}
+
+// ═══ TRIP VIEW ═══
+async function openTrip(id){
+  const t=S.trips.find(x=>x.id===id);if(!t)return;
+  S.curTrip=t;S.addTrip=t;await loadTrip(t);goTo('trip');
+}
+async function loadTrip(t){
+  if(!t)return;
+  document.getElementById('tripFloat').textContent=t.name;
+  document.getElementById('tripName').textContent=t.name;
+  document.getElementById('tripLabel').textContent=(t.destinations||[]).map(d=>flagFor(d)).join(' ')+(t.dates?' · '+t.dates:'');
+  document.getElementById('tripMeta').textContent=t.dates||'';
+  document.getElementById('tripHeroImg').style.backgroundImage=`url('${unsplash(t.destinations)}')`;
+  const spots=await dbGet('spots','trip_id=eq.'+t.id+'&order=created_at.asc');
+  t._spots=spots||[];
+  switchCat(S.curCat,document.querySelector('.cat-tab.active'));
+  updCatCnts(t._spots);
+}
+function updCatCnts(sp){
+  document.getElementById('cnt-food').textContent=sp.filter(s=>s.category==='food').length;
+  document.getElementById('cnt-hotel').textContent=sp.filter(s=>s.category==='hotel').length;
+  document.getElementById('cnt-experience').textContent=sp.filter(s=>s.category==='experience').length;
+}
+function switchCat(cat,el){
+  S.curCat=cat;document.querySelectorAll('.cat-tab').forEach(t=>t.classList.remove('active'));if(el)el.classList.add('active');
+  if(!S.curTrip?._spots){document.getElementById('tripBody').innerHTML='';return}
+  renderSpots(S.curTrip._spots.filter(s=>s.category===cat));
+}
+function renderSpots(spots){
+  const b=document.getElementById('tripBody');
+  if(!spots.length){b.innerHTML=`<div class="empty-state" style="padding:40px 24px"><div class="ei">${catIcon(S.curCat)}</div><h3>Nenhum spot aqui</h3><p>Toca no + para adicionar</p></div>`;return}
+  const byCity={};spots.forEach(s=>{const c=s.city||'Outros';if(!byCity[c])byCity[c]=[];byCity[c].push(s)});
+  let h='';for(const[city,cs]of Object.entries(byCity)){
+    h+=`<div class="city-section"><div class="city-header"><div class="city-name-text">${city}</div><div class="city-count">${cs.length} spots</div></div>`;
+    cs.forEach(s=>{
+      const bc=s.category==='food'?'bar-food':s.category==='hotel'?'bar-hotel':'bar-experience';
+      const dot=s.status==='been'?'dot-been':'dot-want';
+      const thumb=s.photo_url?`<div class="place-thumb"><img src="${s.photo_url}" style="width:100%;height:100%;object-fit:cover;border-radius:12px" onerror="this.parentElement.textContent='${catIcon(s.category)}'"></div>`:`<div class="place-thumb">${catIcon(s.category)}</div>`;
+      h+=`<div class="place-row" onclick="openPlace('${s.id}')"><div class="place-bar ${bc}"></div><div class="place-row-main">${thumb}<div class="place-row-info"><div class="place-row-name">${s.name}</div><div class="place-row-note">${s.my_note||''}</div></div><div class="place-row-right"><span class="place-type-tag">${s.place_type||catLabel(s.category)}</span><div class="status-dot ${dot}"></div></div></div></div>`;
+    });h+='</div>'}
+  b.innerHTML=h;
+}
+
+// ═══ PLACE DETAIL ═══
+async function openPlace(id){
+  const s=S.curTrip._spots.find(x=>x.id===id);if(!s)return;S.curPlace=s;
+  document.getElementById('placeName').textContent=s.name;
+  document.getElementById('placeType').textContent=`${catLabel(s.category)} · ${s.city||''}`;
+  document.getElementById('placeNote').textContent=`"${s.my_note}"`;
+  document.getElementById('placeNoteAttr').textContent=`— ${document.getElementById('dashName').textContent}, antes de ir`;
+  document.getElementById('placeHeroImg').style.backgroundImage=`url('${s.photo_url||unsplash([s.city||S.curTrip.name])}')`;
+  let ig='';
+  if(s.address)ig+=`<div class="info-cell wide"><div class="info-cell-icon">📍</div><div class="info-cell-label">Endereço</div><div class="info-cell-value">${s.address}</div></div>`;
+  if(s.city)ig+=`<div class="info-cell"><div class="info-cell-icon">🏙️</div><div class="info-cell-label">Cidade</div><div class="info-cell-value">${s.city}</div></div>`;
+  if(s.rating_google)ig+=`<div class="info-cell"><div class="info-cell-icon">⭐</div><div class="info-cell-label">Google</div><div class="info-cell-value">${s.rating_google}</div></div>`;
+  if(!ig)ig=`<div class="info-cell wide"><div class="info-cell-icon">📍</div><div class="info-cell-label">Local</div><div class="info-cell-value">${s.city||'—'}</div></div>`;
+  document.getElementById('placeInfoGrid').innerHTML=ig;
+  setStatus(s.status||'want',false);
+  document.querySelectorAll('.star-btn').forEach((b,i)=>b.classList.toggle('lit',i<(s.my_rating||0)));
+  document.getElementById('reviewText').value=s.my_review||'';
+  goTo('place');
+}
+async function setStatus(s,save=true){
+  ['want','been','skip'].forEach(k=>document.getElementById('t-'+k).className='toggle-btn');
+  document.getElementById('t-'+s).classList.add('sel-'+s);
+  const ch=document.getElementById('placeChip'),m={want:['chip-want','Quero ir'],been:['chip-been','Fui'],skip:['','Pulando']};
+  ch.className='hero-chip '+m[s][0];ch.textContent=m[s][1];
+  if(save&&S.curPlace){await dbUpdate('spots',S.curPlace.id,{status:s});S.curPlace.status=s}
+}
+function cycleStatus(){document.getElementById('placeChip').classList.contains('chip-want')?setStatus('been'):setStatus('want')}
+function rateStar(n){document.querySelectorAll('.star-btn').forEach((s,i)=>s.classList.toggle('lit',i<n))}
+async function saveReview(){
+  if(!S.curPlace)return;const r=document.querySelectorAll('.star-btn.lit').length,rv=document.getElementById('reviewText').value.trim();
+  const btn=document.querySelector('.action-btn');btn.textContent='Salvando...';btn.disabled=true;
+  await dbUpdate('spots',S.curPlace.id,{my_rating:r,my_review:rv});
+  btn.textContent='Salvo ✓';setTimeout(()=>{btn.textContent='Salvar avaliação';btn.disabled=false},2000);
+  toast('Avaliação salva!','');
+}
+
+// ═══ ADD SPOT FLOW ═══
+function populateTripOpts(){
+  const c=document.getElementById('tripOptions');
+  c.innerHTML=S.trips.map(t=>`<div class="trip-option" onclick="selTripForSpot('${t.id}')"><div class="trip-option-img" style="background-image:url('${unsplash(t.destinations)}')"></div><div><div class="trip-option-name">${t.name}</div><div class="trip-option-meta">${(t._spots||[]).length} spots</div></div><div class="trip-option-arrow">›</div></div>`).join('');
+}
+function selTripForSpot(id){S.addTrip=S.trips.find(t=>t.id===id);nextOv('ov-trip','ov-cat')}
+function pickCat(c){S.addCat=c;document.querySelectorAll('.cat-option').forEach(o=>o.classList.remove('sel'));document.getElementById('co-'+c).classList.add('sel');setTimeout(()=>nextOv('ov-cat','ov-search'),200)}
+const GAPI='AIzaSyDYUDC3BkvUYSjlBVX2C6BZ8pMmycxfYUQ';
+let searchTO;
+function searchPlaces(v){
+  clearTimeout(searchTO);const r=document.getElementById('searchResults');
+  if(!v.trim()){r.innerHTML='<div class="search-loading">Digite para buscar...</div>';return}
+  r.innerHTML='<div class="search-loading">Buscando...</div>';
+  searchTO=setTimeout(async()=>{
+    try{
+      const typeMap={food:'restaurant|cafe|bar|bakery|meal_delivery',hotel:'lodging|hotel',experience:'tourist_attraction|museum|park|amusement_park|church'};
+      const resp=await fetch('https://places.googleapis.com/v1/places:searchText',{
+        method:'POST',
+        headers:{'Content-Type':'application/json','X-Goog-Api-Key':GAPI,'X-Goog-FieldMask':'places.id,places.displayName,places.formattedAddress,places.location,places.photos,places.rating,places.userRatingCount,places.types,places.primaryType'},
+        body:JSON.stringify({textQuery:v,languageCode:'pt-BR',maxResultCount:6})
+      });
+      const data=await resp.json();
+      if(!data.places||!data.places.length){r.innerHTML='<div class="search-loading">Nenhum resultado</div>';return}
+      S.searchResults=data.places.map(p=>{
+        const name=p.displayName?.text||'';
+        const addr=p.formattedAddress||'';
+        const city=extractCityFromAddr(addr);
+        const rating=p.rating?p.rating+' ⭐':'';
+        const photoRef=p.photos?.[0]?.name||'';
+        const photoUrl=photoRef?'https://places.googleapis.com/v1/'+photoRef+'/media?maxWidthPx=200&key='+GAPI:'';
+        return{name,meta:addr,icon:catIcon(S.addCat),city,address:addr,photo_url:photoUrl,rating_google:rating};
+      });
+      r.innerHTML=S.searchResults.map((p,i)=>{
+        const thumb=p.photo_url?'<div class="sr-icon"><img src="'+p.photo_url+'" style="width:100%;height:100%;object-fit:cover;border-radius:12px"></div>':'<div class="sr-icon">'+p.icon+'</div>';
+        return '<div class="search-result" onclick="pickSearchResult('+i+')">'+thumb+'<div><div class="sr-name">'+p.name+'</div><div class="sr-meta">'+p.address.substring(0,50)+(p.rating_google?' · '+p.rating_google:'')+'</div></div></div>';
+      }).join('');
+    }catch(e){
+      console.error(e);
+      r.innerHTML='<div class="search-loading">Erro na busca. Tente novamente.</div>';
+    }
+  },500);
+}
+function extractCityFromAddr(addr){
+  if(!addr)return'';
+  const parts=addr.split(',').map(s=>s.trim());
+  // Usually city is 2nd or 3rd from end
+  if(parts.length>=3)return parts[parts.length-3];
+  if(parts.length>=2)return parts[parts.length-2];
+  return parts[0];
+}
+function pickSearchResult(i){pickPlace(S.searchResults[i])}
+function pickPlace(p){
+  S.selPlace=p;document.getElementById('selName').textContent=p.name;document.getElementById('selMeta').textContent=p.meta;
+  document.getElementById('selIcon').textContent=p.icon;document.getElementById('noteField').value='';
+  document.getElementById('noteField').classList.remove('error');nextOv('ov-search','ov-note');
+}
+async function saveSpot(){
+  const note=document.getElementById('noteField').value.trim();
+  if(!note){document.getElementById('noteField').classList.add('error');document.getElementById('noteField').placeholder='A nota é obrigatória!';return}
+  const btn=document.getElementById('saveSpotBtn');btn.textContent='Salvando...';btn.disabled=true;
+  const t=S.addTrip,p=S.selPlace;
+  const{data,error}=await dbInsert('spots',{user_id:S.user.id,trip_id:t.id,name:p.name,category:S.addCat,my_note:note,city:p.city||'',address:p.address||'',photo_url:p.photo_url||'',place_type:catLabel(S.addCat),rating_google:p.rating_google||'',status:'want'});
+  if(!error&&data){
+    if(!t._spots)t._spots=[];t._spots.push(data);closeOv('ov-note');toast('✦ Spot salvo',`"${p.name} · ${note}"`);
+    if(document.getElementById('trip').classList.contains('active')&&S.curTrip?.id===t.id){S.curTrip._spots=t._spots;switchCat(S.curCat,document.querySelector('.cat-tab.active'));updCatCnts(t._spots)}
+    await loadDashboard();
+  }else toast('Erro',error?.message||'');
+  btn.textContent='Salvar spot';btn.disabled=false;
+}
+
+// ═══ NEW TRIP ═══
+async function createTrip(){
+  const name=document.getElementById('tripNameInput').value.trim();
+  if(!name){document.getElementById('tripNameInput').style.borderColor='var(--red)';return}
+  const s=document.getElementById('tripStart').value,e=document.getElementById('tripEnd').value;
+  let dates='';if(s&&e)dates=fmtD(s)+' – '+fmtD(e);else if(s)dates='A partir de '+fmtD(s);
+  const btn=document.querySelector('#ov-newtrip .sheet-cta');btn.textContent='Criando...';btn.disabled=true;
+  const dests=S.selDests.map(d=>d.name);
+  const{data,error}=await dbInsert('trips',{user_id:S.user.id,name,destinations:dests,dates,status:'planning'});
+  if(!error&&data){
+    data._spots=[];S.trips.unshift(data);closeOv('ov-newtrip');
+    document.getElementById('tripNameInput').value='';document.getElementById('tripStart').value='';document.getElementById('tripEnd').value='';S.selDests=[];document.getElementById('selDests').innerHTML='';
+    renderTrips();populateTripOpts();
+    document.getElementById('statTrips').textContent=S.trips.length;
+    toast('✦ Viagem criada','"'+name+'"');
+  }else{
+    toast('Erro ao criar',error?.message||'Tente novamente');
+  }
+  btn.textContent='Criar viagem';btn.disabled=false;
+}
+function fmtD(d){const[y,m,day]=d.split('-');const ms=['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'];return parseInt(day)+' '+ms[parseInt(m)-1]}
+let destTO;
+function filterDests(v){
+  clearTimeout(destTO);
+  const list=document.getElementById('destList');
+  if(!v.trim()||v.trim().length<2){
+    // Show default suggestions
+    list.querySelectorAll('.dest-result').forEach(r=>r.style.display='');
+    list.querySelectorAll('.dest-result-api').forEach(r=>r.remove());
+    return;
+  }
+  // Hide default list
+  list.querySelectorAll('.dest-result:not(.dest-result-api)').forEach(r=>{
+    r.style.display=r.querySelector('.dest-name').textContent.toLowerCase().includes(v.toLowerCase())?'':'none';
+  });
+  // Search Google Places for cities
+  destTO=setTimeout(async()=>{
+    list.querySelectorAll('.dest-result-api').forEach(r=>r.remove());
+    try{
+      const resp=await fetch('https://places.googleapis.com/v1/places:searchText',{
+        method:'POST',
+        headers:{'Content-Type':'application/json','X-Goog-Api-Key':GAPI,'X-Goog-FieldMask':'places.displayName,places.formattedAddress,places.types'},
+        body:JSON.stringify({textQuery:v,includedType:'locality',languageCode:'pt-BR',maxResultCount:5})
+      });
+      const data=await resp.json();
+      if(data.places){
+        data.places.forEach(p=>{
+          const name=p.displayName?.text||'';
+          const addr=p.formattedAddress||'';
+          const country=addr.split(',').pop()?.trim()||'';
+          const flag=countryFlag(country);
+          const div=document.createElement('div');
+          div.className='dest-result dest-result-api';
+          div.onclick=()=>addDest(flag,name);
+          div.innerHTML='<span class="dest-flag">'+flag+'</span><div><div class="dest-name">'+name+'</div><div class="dest-region">'+country+'</div></div>';
+          list.appendChild(div);
+        });
+      }
+    }catch(e){console.error(e)}
+  },500);
+}
+function countryFlag(country){
+  const m={'Brasil':'🇧🇷','Brazil':'🇧🇷','Croácia':'🇭🇷','Croatia':'🇭🇷','Montenegro':'🇲🇪','Bósnia e Herzegovina':'🇧🇦','Bosnia and Herzegovina':'🇧🇦','Itália':'🇮🇹','Italy':'🇮🇹','Peru':'🇵🇪','França':'🇫🇷','France':'🇫🇷','Espanha':'🇪🇸','Spain':'🇪🇸','Portugal':'🇵🇹','Japão':'🇯🇵','Japan':'🇯🇵','Argentina':'🇦🇷','Grécia':'🇬🇷','Greece':'🇬🇷','Tailândia':'🇹🇭','Thailand':'🇹🇭','Indonésia':'🇮🇩','Indonesia':'🇮🇩','Marrocos':'🇲🇦','Morocco':'🇲🇦','Estados Unidos':'🇺🇸','United States':'🇺🇸','Alemanha':'🇩🇪','Germany':'🇩🇪','Reino Unido':'🇬🇧','United Kingdom':'🇬🇧','México':'🇲🇽','Mexico':'🇲🇽','Colômbia':'🇨🇴','Colombia':'🇨🇴','Chile':'🇨🇱','Turquia':'🇹🇷','Turkey':'🇹🇷','Türkiye':'🇹🇷','Egito':'🇪🇬','Egypt':'🇪🇬','Índia':'🇮🇳','India':'🇮🇳','China':'🇨🇳','Austrália':'🇦🇺','Australia':'🇦🇺','Canadá':'🇨🇦','Canada':'🇨🇦','Suíça':'🇨🇭','Switzerland':'🇨🇭','Áustria':'🇦🇹','Austria':'🇦🇹','Holanda':'🇳🇱','Netherlands':'🇳🇱','Bélgica':'🇧🇪','Belgium':'🇧🇪','República Tcheca':'🇨🇿','Czechia':'🇨🇿','Hungria':'🇭🇺','Hungary':'🇭🇺','Polônia':'🇵🇱','Poland':'🇵🇱','Noruega':'🇳🇴','Norway':'🇳🇴','Suécia':'🇸🇪','Sweden':'🇸🇪','Dinamarca':'🇩🇰','Denmark':'🇩🇰','Irlanda':'🇮🇪','Ireland':'🇮🇪','África do Sul':'🇿🇦','South Africa':'🇿🇦','Coreia do Sul':'🇰🇷','South Korea':'🇰🇷','Singapura':'🇸🇬','Singapore':'🇸🇬','Vietnã':'🇻🇳','Vietnam':'🇻🇳','Filipinas':'🇵🇭','Philippines':'🇵🇭'};
+  return m[country]||'🌍';
+}
+function addDest(flag,name){
+  if(S.selDests.find(d=>d.name===name))return;S.selDests.push({flag,name});
+  const w=document.getElementById('selDests'),c=document.createElement('div');c.className='sel-dest-chip';c.dataset.name=name;
+  c.innerHTML=`${flag} ${name} <button onclick="removeDest('${name}')">×</button>`;w.appendChild(c);
+  document.getElementById('destSearch').value='';filterDests('');
+}
+function removeDest(n){S.selDests=S.selDests.filter(d=>d.name!==n);document.querySelector(`.sel-dest-chip[data-name="${n}"]`)?.remove()}
+
+// ═══ HELPERS ═══
+function catIcon(c){return{food:'🍽️',hotel:'🏨',experience:'🗺️'}[c]||'📍'}
+function catLabel(c){return{food:'Comer & Beber',hotel:'Onde Ficar',experience:'Experiência'}[c]||c}
+function flagFor(n){const m={'Croácia':'🇭🇷','Montenegro':'🇲🇪','Bósnia':'🇧🇦','Itália':'🇮🇹','Peru':'🇵🇪','França':'🇫🇷','Espanha':'🇪🇸','Portugal':'🇵🇹','Japão':'🇯🇵','Argentina':'🇦🇷','Grécia':'🇬🇷','Tailândia':'🇹🇭','Brasil':'🇧🇷','Estados Unidos':'🇺🇸'};return m[n]||'🌍'}
+function unsplash(d){const n=d?.[0]||'travel';const q={'Croácia':'dubrovnik','Montenegro':'kotor%20montenegro','Bósnia':'sarajevo','Itália':'rome%20colosseum','Peru':'machu%20picchu','França':'paris%20eiffel','Espanha':'barcelona','Portugal':'lisbon','Japão':'tokyo%20temple','Argentina':'buenos%20aires','Grécia':'santorini','Tailândia':'bangkok%20temple'};return`https://source.unsplash.com/800x600/?${q[n]||n.toLowerCase()}&sig=${n.charCodeAt(0)}`}
+
+// ═══ NAVIGATION ═══
+function goTo(id){document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));document.getElementById(id).classList.add('active');window.scrollTo(0,0)}
+function showOv(id){populateTripOpts();document.getElementById(id).classList.add('show')}
+function closeOv(id){document.getElementById(id).classList.remove('show')}
+function closeOut(e,id){if(e.target===document.getElementById(id))closeOv(id)}
+function nextOv(a,b){closeOv(a);setTimeout(()=>document.getElementById(b).classList.add('show'),220)}
+function toast(t,m){const el=document.getElementById('toast');document.getElementById('toastTitle').textContent=t;document.getElementById('toastMsg').textContent=m;el.classList.add('show');setTimeout(()=>el.classList.remove('show'),3500)}
+
+// ═══ LOGIN PHOTOS ═══
+const LOGIN_DESTS=[
+  {url:'https://picsum.photos/seed/dubrovnik/900/1600',name:'Dubrovnik, Croácia',grad:'linear-gradient(145deg,#1a5276 0%,#2e86c1 45%,#d68910 100%)'},
+  {url:'https://picsum.photos/seed/tokyo/900/1600',name:'Tóquio, Japão',grad:'linear-gradient(145deg,#2c1654 0%,#6c3483 45%,#e74c8c 100%)'},
+  {url:'https://picsum.photos/seed/marrakech/900/1600',name:'Marrakech, Marrocos',grad:'linear-gradient(145deg,#7e3517 0%,#c0682a 50%,#e8b04b 100%)'},
+  {url:'https://picsum.photos/seed/santorini/900/1600',name:'Santorini, Grécia',grad:'linear-gradient(145deg,#1b4f72 0%,#2980b9 50%,#eaf2f8 100%)'},
+  {url:'https://picsum.photos/seed/paris/900/1600',name:'Paris, França',grad:'linear-gradient(145deg,#34373b 0%,#85929e 50%,#d5a880 100%)'}
+];
+let loginPhotoIdx=0,loginPhotoTimer=null;
+function startLoginPhotos(){
+  const container=document.getElementById('loginPhotos');
+  if(!container)return;
+  container.innerHTML='';
+  LOGIN_DESTS.forEach((d,i)=>{
+    const div=document.createElement('div');
+    div.className='login-photo'+(i===0?' active':'');
+    // Gradient base always shows; photo loads on top if available
+    div.style.background=d.grad;
+    const img=new Image();
+    img.onload=()=>{div.style.backgroundImage=`url('${d.url}')`;div.style.backgroundSize='cover';div.style.backgroundPosition='center'};
+    img.src=d.url;
+    container.appendChild(div);
+  });
+  document.getElementById('loginPlaceTag').innerHTML='<span class="lpt-dot"></span>'+LOGIN_DESTS[0].name;
+  // Build indicator dots
+  const dotsC=document.getElementById('photoDots');
+  if(dotsC){dotsC.innerHTML=LOGIN_DESTS.map((_,i)=>`<div class="pd${i===0?' active':''}"></div>`).join('')}
+  clearInterval(loginPhotoTimer);
+  loginPhotoTimer=setInterval(rotateLoginPhoto,4500);
+}
+function rotateLoginPhoto(){
+  const photos=document.querySelectorAll('.login-photo');
+  if(!photos.length)return;
+  photos[loginPhotoIdx].classList.remove('active');
+  loginPhotoIdx=(loginPhotoIdx+1)%photos.length;
+  photos[loginPhotoIdx].classList.add('active');
+  const tag=document.getElementById('loginPlaceTag');
+  tag.style.opacity='0';
+  setTimeout(()=>{tag.innerHTML='<span class="lpt-dot"></span>'+LOGIN_DESTS[loginPhotoIdx].name;tag.style.opacity='1'},500);
+  // Update indicator dots
+  document.querySelectorAll('#photoDots .pd').forEach((d,i)=>d.classList.toggle('active',i===loginPhotoIdx));
+}
+function showEmailForm(){
+  document.getElementById('loginButtons').style.display='none';
+  document.getElementById('emailForm').style.display='block';
+}
+function hideEmailForm(){
+  document.getElementById('emailForm').style.display='none';
+  document.getElementById('loginButtons').style.display='block';
+  hideAuthErr();
+}
+
+// ═══ START ═══
+init();
+startLoginPhotos();
+</script>
+</body>
+</html>
