@@ -6,9 +6,6 @@
 <title>Spot</title>
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'><path d='M32 8C19.8 8 10 17 10 28.2c0 9.4 6.9 17.3 16.2 19.6L32 58l5.8-10.2C47.1 45.5 54 37.6 54 28.2 54 17 44.2 8 32 8z' fill='%232a7a56'/><circle cx='23.5' cy='27' r='3.2' fill='white'/><circle cx='32' cy='27' r='3.2' fill='white'/><circle cx='40.5' cy='27' r='3.2' fill='white'/></svg>">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script src="https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/topojson-client@3"></script>
-<script src="https://cdn.jsdelivr.net/npm/globe.gl@2.46.1/dist/globe.gl.min.js"></script>
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,500;1,400&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
@@ -995,9 +992,39 @@ const COUNTRY_INFO={
   'Nova Zelândia':{geo:'New Zealand',cont:'Oceania'},'Jordânia':{geo:'Jordan',cont:'Ásia'},
   'Emirados Árabes':{geo:'United Arab Emirates',cont:'Ásia'}
 };
-let globeInstance=null,globeCountriesData=null;
+let globeInstance=null,globeCountriesData=null,globeLibsLoading=false;
+// Dynamically load a script, trying multiple CDNs in order
+function loadScript(urls){
+  return new Promise((resolve,reject)=>{
+    let i=0;
+    const tryNext=()=>{
+      if(i>=urls.length){reject(new Error('all CDNs failed'));return}
+      const s=document.createElement('script');
+      s.src=urls[i++];
+      s.onload=()=>resolve();
+      s.onerror=()=>{s.remove();tryNext()};
+      document.head.appendChild(s);
+    };
+    tryNext();
+  });
+}
+async function ensureGlobeLibs(){
+  if(typeof Globe!=='undefined'&&typeof topojson!=='undefined')return true;
+  if(globeLibsLoading)return new Promise(r=>{const iv=setInterval(()=>{if(typeof Globe!=='undefined'&&typeof topojson!=='undefined'){clearInterval(iv);r(true)}},200);setTimeout(()=>{clearInterval(iv);r(typeof Globe!=='undefined')},8000)});
+  globeLibsLoading=true;
+  try{
+    if(typeof topojson==='undefined'){
+      await loadScript(['https://unpkg.com/topojson-client@3/dist/topojson-client.min.js','https://cdn.jsdelivr.net/npm/topojson-client@3/dist/topojson-client.min.js']);
+    }
+    if(typeof Globe==='undefined'){
+      // globe.gl standalone bundles three.js
+      await loadScript(['https://unpkg.com/globe.gl@2.46.1/dist/globe.gl.min.js','https://cdn.jsdelivr.net/npm/globe.gl@2.46.1/dist/globe.gl.min.js']);
+    }
+    globeLibsLoading=false;
+    return typeof Globe!=='undefined'&&typeof topojson!=='undefined';
+  }catch(e){globeLibsLoading=false;return false}
+}
 function visitedCountryNames(){
-  // distinct country names from trips (each trip = a country)
   const set=new Set();
   S.trips.forEach(t=>{const n=(t.destinations&&t.destinations[0])||t.name;if(n)set.add(n)});
   return [...set];
@@ -1010,32 +1037,27 @@ async function loadProfile(){
   document.getElementById('profName').textContent=name;
   document.getElementById('profAvatar').textContent=name.charAt(0).toUpperCase();
   document.getElementById('profEmail').textContent=S.user.email;
-  // Make sure trips are loaded (if user came straight to profile)
   if(!S.trips.length){const trips=await dbGet('trips','user_id=eq.'+S.user.id);S.trips=trips||[]}
   const visited=visitedCountryNames();
-  // Stats
   const conts=new Set();
   visited.forEach(c=>{const info=COUNTRY_INFO[c];if(info)conts.add(info.cont)});
   document.getElementById('wsCountries').textContent=visited.length;
   document.getElementById('wsContinents').textContent=conts.size;
   document.getElementById('wsPct').textContent=Math.round(visited.length/195*100)+'%';
-  // Country chips
   const chips=document.getElementById('countryChips');
   if(visited.length){
     chips.innerHTML=visited.map(c=>`<div class="country-chip">${flagFor(c)} ${c}</div>`).join('');
   }else{
     chips.innerHTML='<div class="country-chips-empty">Crie viagens para pintar o mundo 🌍</div>';
   }
-  // Render globe
   renderGlobe(visited);
 }
-function renderGlobe(visited){
+async function renderGlobe(visited){
   const hint=document.getElementById('globeHint');
-  if(typeof Globe==='undefined'){hint.textContent='globo indisponível';return}
-  // Set of GeoJSON names that are visited
+  hint.style.display='';hint.textContent='girando o mundo…';
   const visitedGeo=new Set(visited.map(c=>COUNTRY_INFO[c]?.geo).filter(Boolean));
   const paint=()=>{
-    if(!globeCountriesData)return;
+    if(!globeCountriesData||!globeInstance)return;
     globeInstance
       .polygonsData(globeCountriesData)
       .polygonCapColor(d=>visitedGeo.has(d.properties.name)?'#2a7a56':'#26323d')
@@ -1043,25 +1065,27 @@ function renderGlobe(visited){
       .polygonStrokeColor(()=>'rgba(10,10,10,0.6)')
       .polygonAltitude(d=>visitedGeo.has(d.properties.name)?0.014:0.006);
   };
+  // Already built — just repaint
   if(globeInstance){paint();hint.style.display='none';return}
+  // Load libraries on demand
+  const ok=await ensureGlobeLibs();
+  if(!ok){hint.textContent='globo indisponível';return}
   const el=document.getElementById('globeViz');
   el.innerHTML='';
   const w=el.clientWidth||window.innerWidth,h=el.clientHeight||360;
-  globeInstance=Globe()(el)
-    .width(w).height(h)
-    .backgroundColor('rgba(0,0,0,0)')
-    .showGlobe(true).showAtmosphere(true).atmosphereColor('#2a7a56').atmosphereAltitude(0.16);
-  try{globeInstance.globeMaterial().color=new THREE.Color('#16202a')}catch(e){}
-  fetch('https://cdn.jsdelivr.net/npm/world-atlas@2.0.2/countries-110m.json')
-    .then(r=>r.json())
-    .then(topology=>{
-      globeCountriesData=topojson.feature(topology,topology.objects.countries).features;
-      paint();
-      hint.style.display='none';
-      const c=globeInstance.controls();c.autoRotate=true;c.autoRotateSpeed=0.55;c.enableZoom=true;
-      globeInstance.pointOfView({lat:20,lng:0,altitude:2.2},0);
-    })
-    .catch(e=>{hint.textContent='erro ao carregar o globo'});
+  try{
+    globeInstance=Globe()(el)
+      .width(w).height(h)
+      .backgroundColor('rgba(0,0,0,0)')
+      .showGlobe(true).showAtmosphere(true).atmosphereColor('#2a7a56').atmosphereAltitude(0.16);
+    try{globeInstance.globeMaterial().color=new THREE.Color('#16202a')}catch(e){}
+    const topology=await fetch('https://unpkg.com/world-atlas@2.0.2/countries-110m.json').then(r=>r.json()).catch(()=>fetch('https://cdn.jsdelivr.net/npm/world-atlas@2.0.2/countries-110m.json').then(r=>r.json()));
+    globeCountriesData=topojson.feature(topology,topology.objects.countries).features;
+    paint();
+    hint.style.display='none';
+    const c=globeInstance.controls();c.autoRotate=true;c.autoRotateSpeed=0.55;c.enableZoom=true;
+    globeInstance.pointOfView({lat:20,lng:0,altitude:2.2},0);
+  }catch(e){console.error('globe error',e);hint.textContent='globo indisponível'}
 }
 function goTo(id){document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));document.getElementById(id).classList.add('active');window.scrollTo(0,0)}
 function showOv(id){populateTripOpts();if(id==='ov-newtrip')prepNewTrip();document.getElementById(id).classList.add('show')}
