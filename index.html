@@ -189,22 +189,24 @@ body{font-family:'DM Sans',sans-serif;background:#0a0a0a;max-width:430px;margin:
 .action-btn{display:block;width:100%;background:var(--ink);color:white;border:none;border-radius:16px;padding:17px;font-size:15px;font-weight:600;font-family:'DM Sans',sans-serif;cursor:pointer;margin-top:12px;margin-bottom:16px}
 .delete-link{display:block;width:100%;background:none;border:none;color:var(--red);font-size:13px;font-family:'DM Sans',sans-serif;cursor:pointer;padding:8px;margin-bottom:40px;text-decoration:underline;text-underline-offset:3px}
 .cm-text{font-size:15px;line-height:1.5;color:var(--ink2);margin:8px 0 20px}
-/* ── Profile / Globe ── */
-#profile{background:var(--surface)}
-.profile-globe-wrap{position:relative;height:48vh;min-height:340px;background:#0a0a0a;overflow:hidden}
-#globeViz{position:absolute;inset:0;display:flex;align-items:center;justify-content:center}
-.profile-globe-overlay{position:absolute;left:0;right:0;bottom:0;height:120px;background:linear-gradient(to bottom,transparent,var(--surface));pointer-events:none;z-index:3}
-.profile-head{position:absolute;top:0;left:0;right:0;padding:36px 24px 0;z-index:4;display:flex;flex-direction:column;align-items:center;pointer-events:none}
-.profile-avatar{width:64px;height:64px;border-radius:50%;background:var(--green);color:#fff;display:flex;align-items:center;justify-content:center;font-size:26px;font-weight:600;font-family:'DM Sans';border:3px solid rgba(255,255,255,0.2);box-shadow:0 8px 30px rgba(0,0,0,0.4)}
-.profile-name{font-family:'Playfair Display',serif;font-size:26px;color:#fff;margin-top:12px;text-shadow:0 2px 20px rgba(0,0,0,0.6)}
-.profile-email{font-size:12px;color:rgba(255,255,255,0.55);margin-top:2px}
-.globe-hint{position:absolute;bottom:130px;left:0;right:0;text-align:center;color:rgba(255,255,255,0.4);font-size:11px;letter-spacing:.1em;text-transform:uppercase;z-index:4;pointer-events:none}
-.profile-body{padding:0 24px 24px;margin-top:-30px;position:relative;z-index:5}
-.world-stats{display:flex;gap:10px;margin-bottom:20px}
+/* ── Profile / World Map ── */
+#profile{background:var(--surface);overflow-y:auto}
+.profile-header-bar{display:flex;align-items:center;gap:14px;padding:40px 24px 20px;background:var(--ink)}
+.profile-avatar{width:56px;height:56px;border-radius:50%;background:var(--green);color:#fff;display:flex;align-items:center;justify-content:center;font-size:24px;font-weight:600;font-family:'DM Sans';flex-shrink:0}
+.profile-name{font-family:'Playfair Display',serif;font-size:24px;color:#fff;line-height:1.1}
+.profile-email{font-size:12px;color:rgba(255,255,255,0.5);margin-top:3px}
+.profile-body{padding:20px 24px 24px}
+.world-map-card{background:#0e1a24;border-radius:22px;padding:18px 16px 12px;margin-bottom:16px;overflow:hidden}
+.wm-title{font-family:'Playfair Display',serif;font-size:16px;color:rgba(255,255,255,0.9);font-style:italic;margin-bottom:10px;padding-left:4px}
+.world-map-wrap{width:100%;line-height:0}
+.world-map-wrap svg{width:100%;height:auto;display:block}
+.wm-country{fill:#26323d;stroke:#0e1a24;stroke-width:0.3;transition:fill .3s}
+.wm-country.visited{fill:#2a7a56}
+.world-stats{display:flex;gap:10px;margin-bottom:10px}
 .ws-block{flex:1;background:var(--white);border:1px solid var(--border);border-radius:18px;padding:18px 12px;text-align:center}
 .ws-n{font-family:'Playfair Display',serif;font-size:30px;color:var(--green);line-height:1}
 .ws-l{font-size:11px;color:var(--ink3);margin-top:6px;text-transform:uppercase;letter-spacing:.08em}
-.country-chips{display:flex;flex-wrap:wrap;gap:8px}
+.country-chips{display:flex;flex-wrap:wrap;gap:8px;margin-top:4px}
 .country-chip{background:var(--white);border:1px solid var(--border);border-radius:100px;padding:8px 14px;font-size:13px;color:var(--ink2);display:flex;align-items:center;gap:6px}
 .country-chips-empty{color:var(--ink3);font-size:14px;padding:8px 0}
 
@@ -353,18 +355,20 @@ body{font-family:'DM Sans',sans-serif;background:#0a0a0a;max-width:430px;margin:
 </div>
 
 <div class="screen" id="profile">
-  <div class="profile-globe-wrap"><div id="globeViz"></div>
-    <div class="profile-globe-overlay"></div>
-    <div class="profile-head">
-      <div class="profile-avatar" id="profAvatar">?</div>
-      <div class="profile-name" id="profName">—</div>
-      <div class="profile-email" id="profEmail"></div>
-    </div>
-    <div class="globe-hint" id="globeHint">girando o mundo…</div>
+  <div class="profile-header-bar">
+    <div class="profile-avatar" id="profAvatar">?</div>
+    <div><div class="profile-name" id="profName">—</div><div class="profile-email" id="profEmail"></div></div>
   </div>
   <div class="profile-body">
+    <div class="world-map-card">
+      <div class="wm-title">Meu mundo</div>
+      <div class="world-map-wrap" id="worldMapWrap"></div>
+    </div>
     <div class="world-stats">
       <div class="ws-block"><div class="ws-n" id="wsCountries">0</div><div class="ws-l">países</div></div>
+      <div class="ws-block"><div class="ws-n" id="wsCities">0</div><div class="ws-l">cidades</div></div>
+    </div>
+    <div class="world-stats">
       <div class="ws-block"><div class="ws-n" id="wsContinents">0</div><div class="ws-l">continentes</div></div>
       <div class="ws-block"><div class="ws-n" id="wsPct">0%</div><div class="ws-l">do mundo</div></div>
     </div>
@@ -1003,7 +1007,6 @@ const COUNTRY_INFO={
   'Nova Zelândia':{geo:'New Zealand',cont:'Oceania'},'Jordânia':{geo:'Jordan',cont:'Ásia'},
   'Emirados Árabes':{geo:'United Arab Emirates',cont:'Ásia'}
 };
-let globeInstance=null,globeCountriesData=null,globeLibsLoading=false;
 // Dynamically load a script, trying multiple CDNs in order
 function loadScript(urls){
   return new Promise((resolve,reject)=>{
@@ -1019,26 +1022,15 @@ function loadScript(urls){
     tryNext();
   });
 }
-async function ensureGlobeLibs(){
-  if(typeof Globe!=='undefined'&&typeof topojson!=='undefined')return true;
-  if(globeLibsLoading)return new Promise(r=>{const iv=setInterval(()=>{if(typeof Globe!=='undefined'&&typeof topojson!=='undefined'){clearInterval(iv);r(true)}},200);setTimeout(()=>{clearInterval(iv);r(typeof Globe!=='undefined')},8000)});
-  globeLibsLoading=true;
-  try{
-    if(typeof topojson==='undefined'){
-      await loadScript(['https://unpkg.com/topojson-client@3/dist/topojson-client.min.js','https://cdn.jsdelivr.net/npm/topojson-client@3/dist/topojson-client.min.js']);
-    }
-    if(typeof Globe==='undefined'){
-      // globe.gl standalone bundles three.js
-      await loadScript(['https://unpkg.com/globe.gl@2.46.1/dist/globe.gl.min.js','https://cdn.jsdelivr.net/npm/globe.gl@2.46.1/dist/globe.gl.min.js']);
-    }
-    globeLibsLoading=false;
-    return typeof Globe!=='undefined'&&typeof topojson!=='undefined';
-  }catch(e){globeLibsLoading=false;return false}
-}
 function visitedCountryNames(){
   const set=new Set();
   S.trips.forEach(t=>{const n=(t.destinations&&t.destinations[0])||t.name;if(n)set.add(n)});
   return [...set];
+}
+function visitedCityCount(){
+  const set=new Set();
+  S.trips.forEach(t=>(t._spots||[]).forEach(s=>{if(s.city)set.add(s.city)}));
+  return set.size;
 }
 async function loadProfile(){
   if(!S.user)return;
@@ -1048,11 +1040,14 @@ async function loadProfile(){
   document.getElementById('profName').textContent=name;
   document.getElementById('profAvatar').textContent=name.charAt(0).toUpperCase();
   document.getElementById('profEmail').textContent=S.user.email;
+  // Load trips + their spots (for city count) if missing
   if(!S.trips.length){const trips=await dbGet('trips','user_id=eq.'+S.user.id);S.trips=trips||[]}
+  for(const t of S.trips){if(!t._spots){const sp=await dbGet('spots','trip_id=eq.'+t.id);t._spots=sp||[]}}
   const visited=visitedCountryNames();
   const conts=new Set();
   visited.forEach(c=>{const info=COUNTRY_INFO[c];if(info)conts.add(info.cont)});
   document.getElementById('wsCountries').textContent=visited.length;
+  document.getElementById('wsCities').textContent=visitedCityCount();
   document.getElementById('wsContinents').textContent=conts.size;
   document.getElementById('wsPct').textContent=Math.round(visited.length/195*100)+'%';
   const chips=document.getElementById('countryChips');
@@ -1061,42 +1056,52 @@ async function loadProfile(){
   }else{
     chips.innerHTML='<div class="country-chips-empty">Crie viagens para pintar o mundo 🌍</div>';
   }
-  renderGlobe(visited);
+  renderWorldMap(visited);
 }
-async function renderGlobe(visited){
-  const hint=document.getElementById('globeHint');
-  hint.style.display='';hint.textContent='girando o mundo…';
+// ── Static SVG world map (equirectangular projection) ──
+let worldGeoData=null;
+function lonLatToXY(lon,lat,w,h){
+  // equirectangular
+  const x=(lon+180)/360*w;
+  const y=(90-lat)/180*h;
+  return [x,y];
+}
+function ringToPath(ring,w,h){
+  let d='';
+  ring.forEach((pt,i)=>{const[x,y]=lonLatToXY(pt[0],pt[1],w,h);d+=(i===0?'M':'L')+x.toFixed(1)+' '+y.toFixed(1)});
+  return d+'Z';
+}
+function featureToPath(feat,w,h){
+  const g=feat.geometry;if(!g)return'';
+  let d='';
+  if(g.type==='Polygon'){g.coordinates.forEach(ring=>d+=ringToPath(ring,w,h))}
+  else if(g.type==='MultiPolygon'){g.coordinates.forEach(poly=>poly.forEach(ring=>d+=ringToPath(ring,w,h)))}
+  return d;
+}
+async function renderWorldMap(visited){
+  const wrap=document.getElementById('worldMapWrap');
   const visitedGeo=new Set(visited.map(c=>COUNTRY_INFO[c]?.geo).filter(Boolean));
-  const paint=()=>{
-    if(!globeCountriesData||!globeInstance)return;
-    globeInstance
-      .polygonsData(globeCountriesData)
-      .polygonCapColor(d=>visitedGeo.has(d.properties.name)?'#2a7a56':'#26323d')
-      .polygonSideColor(()=>'rgba(0,0,0,0.12)')
-      .polygonStrokeColor(()=>'rgba(10,10,10,0.6)')
-      .polygonAltitude(d=>visitedGeo.has(d.properties.name)?0.014:0.006);
-  };
-  // Already built — just repaint
-  if(globeInstance){paint();hint.style.display='none';return}
-  // Load libraries on demand
-  const ok=await ensureGlobeLibs();
-  if(!ok){hint.textContent='globo indisponível';return}
-  const el=document.getElementById('globeViz');
-  el.innerHTML='';
-  const w=el.clientWidth||window.innerWidth,h=el.clientHeight||360;
-  try{
-    globeInstance=Globe()(el)
-      .width(w).height(h)
-      .backgroundColor('rgba(0,0,0,0)')
-      .showGlobe(true).showAtmosphere(true).atmosphereColor('#2a7a56').atmosphereAltitude(0.16);
-    try{globeInstance.globeMaterial().color=new THREE.Color('#16202a')}catch(e){}
-    const topology=await fetch('https://unpkg.com/world-atlas@2.0.2/countries-110m.json').then(r=>r.json()).catch(()=>fetch('https://cdn.jsdelivr.net/npm/world-atlas@2.0.2/countries-110m.json').then(r=>r.json()));
-    globeCountriesData=topojson.feature(topology,topology.objects.countries).features;
-    paint();
-    hint.style.display='none';
-    const c=globeInstance.controls();c.autoRotate=true;c.autoRotateSpeed=0.55;c.enableZoom=true;
-    globeInstance.pointOfView({lat:20,lng:0,altitude:2.2},0);
-  }catch(e){console.error('globe error',e);hint.textContent='globo indisponível'}
+  // Load + cache the geojson (parse topojson once)
+  if(!worldGeoData){
+    wrap.innerHTML='<div style="color:rgba(255,255,255,0.4);font-size:12px;padding:30px 0;text-align:center">carregando mapa…</div>';
+    try{
+      if(typeof topojson==='undefined'){
+        await loadScript(['https://unpkg.com/topojson-client@3/dist/topojson-client.min.js','https://cdn.jsdelivr.net/npm/topojson-client@3/dist/topojson-client.min.js']);
+      }
+      const topology=await fetch('https://unpkg.com/world-atlas@2.0.2/countries-110m.json').then(r=>r.json()).catch(()=>fetch('https://cdn.jsdelivr.net/npm/world-atlas@2.0.2/countries-110m.json').then(r=>r.json()));
+      worldGeoData=topojson.feature(topology,topology.objects.countries).features;
+    }catch(e){wrap.innerHTML='<div style="color:rgba(255,255,255,0.4);font-size:12px;padding:30px 0;text-align:center">mapa indisponível</div>';return}
+  }
+  const W=720,H=360;
+  let paths='';
+  worldGeoData.forEach(f=>{
+    const nm=f.properties.name;
+    const cls='wm-country'+(visitedGeo.has(nm)?' visited':'');
+    const d=featureToPath(f,W,H);
+    if(d)paths+=`<path class="${cls}" d="${d}"/>`;
+  });
+  // crop antarctica a bit: viewBox cuts bottom
+  wrap.innerHTML=`<svg viewBox="0 12 ${W} ${H-70}" xmlns="http://www.w3.org/2000/svg">${paths}</svg>`;
 }
 function goTo(id){document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));document.getElementById(id).classList.add('active');window.scrollTo(0,0)}
 function showOv(id){populateTripOpts();if(id==='ov-newtrip')prepNewTrip();document.getElementById(id).classList.add('show')}
