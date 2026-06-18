@@ -27,12 +27,16 @@ body{font-family:'DM Sans',sans-serif;background:#0a0a0a;max-width:430px;margin:
 /* LOGIN */
 #login{background:#0a0a0a;height:100vh;overflow:hidden;position:relative}
 .login-photos{position:absolute;inset:0;z-index:0}
-.login-photo{position:absolute;inset:0;background-size:200% 200% !important;opacity:0;transition:opacity 1.6s ease-in-out;animation:gradshift 12s ease-in-out infinite alternate}
+.login-photo{position:absolute;inset:0;background-size:cover;background-position:center;opacity:0;transition:opacity 1.6s ease-in-out}
 .login-photo.active{opacity:1}
-@keyframes gradshift{0%{background-position:0% 0%}100%{background-position:100% 100%}}
-.login-scrim{position:absolute;inset:0;z-index:1;background:linear-gradient(to bottom,rgba(0,0,0,0.25) 0%,rgba(0,0,0,0.05) 35%,rgba(0,0,0,0.5) 70%,rgba(0,0,0,0.92) 100%)}
+.login-photo.has-photo.active{animation:slowzoom 6s ease-out forwards}
+@keyframes slowzoom{from{transform:scale(1.0)}to{transform:scale(1.08)}}
+.login-scrim{position:absolute;inset:0;z-index:1;background:linear-gradient(to bottom,rgba(0,0,0,0.3) 0%,rgba(0,0,0,0.1) 35%,rgba(0,0,0,0.55) 70%,rgba(0,0,0,0.92) 100%)}
 .login-inner{position:relative;z-index:2;height:100vh;padding:48px 28px 40px;display:flex;flex-direction:column;justify-content:space-between}
 .login-top{display:flex;justify-content:center;min-height:20px}
+.login-place-tag{font-size:12px;color:rgba(255,255,255,0.9);letter-spacing:.1em;text-transform:uppercase;background:rgba(0,0,0,0.3);backdrop-filter:blur(12px);padding:9px 18px 9px 14px;border-radius:100px;border:1px solid rgba(255,255,255,0.18);transition:opacity .5s;display:flex;align-items:center;gap:8px}
+.lpt-dot{width:6px;height:6px;border-radius:50%;background:#fff;box-shadow:0 0 0 0 rgba(255,255,255,0.6);animation:dotpulse 2s infinite}
+@keyframes dotpulse{0%{box-shadow:0 0 0 0 rgba(255,255,255,0.5)}70%{box-shadow:0 0 0 8px rgba(255,255,255,0)}100%{box-shadow:0 0 0 0 rgba(255,255,255,0)}}
 .login-bottom{display:flex;flex-direction:column}
 .photo-dots{display:flex;gap:6px;margin-bottom:20px}
 .photo-dots .pd{height:3px;border-radius:2px;background:rgba(255,255,255,0.3);transition:all .4s;width:16px}
@@ -267,6 +271,7 @@ body{font-family:'DM Sans',sans-serif;background:#0a0a0a;max-width:430px;margin:
   <div class="login-scrim"></div>
   <div class="login-inner">
     <div class="login-top">
+      <div class="login-place-tag" id="loginPlaceTag"><span class="lpt-dot"></span>Dubrovnik, Croácia</div>
     </div>
     <div class="login-bottom">
       <div class="photo-dots" id="photoDots"></div>
@@ -706,30 +711,55 @@ function closeOut(e,id){if(e.target===document.getElementById(id))closeOv(id)}
 function nextOv(a,b){closeOv(a);setTimeout(()=>document.getElementById(b).classList.add('show'),220)}
 function toast(t,m){const el=document.getElementById('toast');document.getElementById('toastTitle').textContent=t;document.getElementById('toastMsg').textContent=m;el.classList.add('show');setTimeout(()=>el.classList.remove('show'),3500)}
 
-// ═══ LOGIN BACKGROUNDS (animated gradients — no external images) ═══
-const LOGIN_GRADS=[
-  'linear-gradient(150deg,#0f2027 0%,#203a43 45%,#2c5364 100%)',
-  'linear-gradient(150deg,#3a1c71 0%,#a44b8f 50%,#d76d77 100%)',
-  'linear-gradient(150deg,#42275a 0%,#734b6d 100%)',
-  'linear-gradient(150deg,#1a2a6c 0%,#2a4858 45%,#b06a3b 100%)',
-  'linear-gradient(150deg,#16222a 0%,#3a6073 100%)'
+// ═══ LOGIN BACKGROUNDS (real city photos via Google Places + gradient fallback) ═══
+const LOGIN_CITIES=[
+  {q:'Dubrovnik Croatia',name:'Dubrovnik, Croácia',grad:'linear-gradient(150deg,#0f2027,#203a43,#2c5364)'},
+  {q:'Tokyo Japan skyline',name:'Tóquio, Japão',grad:'linear-gradient(150deg,#3a1c71,#a44b8f,#d76d77)'},
+  {q:'Santorini Greece',name:'Santorini, Grécia',grad:'linear-gradient(150deg,#1b4f72,#2980b9,#d4e6f1)'},
+  {q:'Paris France Eiffel Tower',name:'Paris, França',grad:'linear-gradient(150deg,#34373b,#85929e,#d5a880)'},
+  {q:'Marrakech Morocco',name:'Marrakech, Marrocos',grad:'linear-gradient(150deg,#7e3517,#c0682a,#e8b04b)'}
 ];
 let loginPhotoIdx=0,loginPhotoTimer=null;
-function startLoginPhotos(){
+async function startLoginPhotos(){
   const container=document.getElementById('loginPhotos');
   if(!container)return;
   container.innerHTML='';
-  LOGIN_GRADS.forEach((g,i)=>{
+  // Build layers with gradient first (instant), then load real photo on top
+  LOGIN_CITIES.forEach((c,i)=>{
     const div=document.createElement('div');
     div.className='login-photo'+(i===0?' active':'');
-    div.style.background=g;
+    div.style.background=c.grad;
+    div.id='lphoto-'+i;
     container.appendChild(div);
   });
-  // Build indicator dots
+  // Build dots + show first city name
   const dotsC=document.getElementById('photoDots');
-  if(dotsC){dotsC.innerHTML=LOGIN_GRADS.map((_,i)=>`<div class="pd${i===0?' active':''}"></div>`).join('')}
+  if(dotsC){dotsC.innerHTML=LOGIN_CITIES.map((_,i)=>`<div class="pd${i===0?' active':''}"></div>`).join('')}
+  const tag=document.getElementById('loginPlaceTag');
+  if(tag)tag.innerHTML='<span class="lpt-dot"></span>'+LOGIN_CITIES[0].name;
   clearInterval(loginPhotoTimer);
   loginPhotoTimer=setInterval(rotateLoginPhoto,5000);
+  // Fetch real photos from Google Places (async, fills in as they arrive)
+  LOGIN_CITIES.forEach(async(c,i)=>{
+    try{
+      const resp=await fetch('https://places.googleapis.com/v1/places:searchText',{
+        method:'POST',
+        headers:{'Content-Type':'application/json','X-Goog-Api-Key':GAPI,'X-Goog-FieldMask':'places.photos'},
+        body:JSON.stringify({textQuery:c.q,maxResultCount:1})
+      });
+      const data=await resp.json();
+      const photoName=data.places?.[0]?.photos?.[0]?.name;
+      if(photoName){
+        const url='https://places.googleapis.com/v1/'+photoName+'/media?maxWidthPx=900&key='+GAPI;
+        const img=new Image();
+        img.onload=()=>{
+          const el=document.getElementById('lphoto-'+i);
+          if(el){el.style.backgroundImage=`url('${url}')`;el.style.backgroundSize='cover';el.style.backgroundPosition='center';el.classList.add('has-photo')}
+        };
+        img.src=url;
+      }
+    }catch(e){/* gradient stays as fallback */}
+  });
 }
 function rotateLoginPhoto(){
   const photos=document.querySelectorAll('.login-photo');
@@ -738,6 +768,8 @@ function rotateLoginPhoto(){
   loginPhotoIdx=(loginPhotoIdx+1)%photos.length;
   photos[loginPhotoIdx].classList.add('active');
   document.querySelectorAll('#photoDots .pd').forEach((d,i)=>d.classList.toggle('active',i===loginPhotoIdx));
+  const tag=document.getElementById('loginPlaceTag');
+  if(tag){tag.style.opacity='0';setTimeout(()=>{tag.innerHTML='<span class="lpt-dot"></span>'+LOGIN_CITIES[loginPhotoIdx].name;tag.style.opacity='1'},500)}
 }
 function showEmailForm(){
   document.getElementById('loginButtons').style.display='none';
