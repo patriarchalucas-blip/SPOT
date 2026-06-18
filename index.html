@@ -84,6 +84,7 @@ body{font-family:'DM Sans',sans-serif;background:#0a0a0a;max-width:430px;margin:
 .tc-top{display:flex;justify-content:space-between}
 .tc-status{font-size:11px;font-weight:600;color:rgba(255,255,255,0.6);background:rgba(255,255,255,0.1);border:1px solid rgba(255,255,255,0.15);padding:5px 12px;border-radius:100px;backdrop-filter:blur(8px)}
 .tc-status.done{color:rgba(100,220,150,0.9);background:rgba(40,100,60,0.3);border-color:rgba(100,220,150,0.2)}
+.tc-status.ongoing{color:rgba(120,200,255,0.95);background:rgba(30,80,130,0.4);border-color:rgba(120,200,255,0.25)}
 .tc-flags{font-size:20px}
 .tc-dest{font-size:11px;color:rgba(255,255,255,0.5);text-transform:uppercase;letter-spacing:.1em;margin-bottom:4px}
 .tc-name{font-family:'Playfair Display',serif;font-size:26px;color:#fff;margin-bottom:12px}
@@ -185,6 +186,7 @@ body{font-family:'DM Sans',sans-serif;background:#0a0a0a;max-width:430px;margin:
 .review-area::placeholder{color:var(--ink3)}
 .action-btn{display:block;width:100%;background:var(--ink);color:white;border:none;border-radius:16px;padding:17px;font-size:15px;font-weight:600;font-family:'DM Sans',sans-serif;cursor:pointer;margin-top:12px;margin-bottom:16px}
 .delete-link{display:block;width:100%;background:none;border:none;color:var(--red);font-size:13px;font-family:'DM Sans',sans-serif;cursor:pointer;padding:8px;margin-bottom:40px;text-decoration:underline;text-underline-offset:3px}
+.cm-text{font-size:15px;line-height:1.5;color:var(--ink2);margin:8px 0 20px}
 
 /* OVERLAYS */
 .overlay{position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:200;display:none;align-items:flex-end;backdrop-filter:blur(4px)}
@@ -344,7 +346,8 @@ body{font-family:'DM Sans',sans-serif;background:#0a0a0a;max-width:430px;margin:
 
 <div class="overlay" id="ov-note" onclick="closeOut(event,'ov-note')"><div class="sheet"><button class="sheet-close" onclick="closeOv('ov-note')">✕</button><div class="sheet-handle"></div><div class="sheet-title">Sua nota</div><div class="step-dots"><div class="step-dot done"></div><div class="step-dot done"></div><div class="step-dot done"></div><div class="step-dot active"></div></div><div class="note-place-row"><div class="note-place-icon" id="selIcon">🍽️</div><div><div class="note-place-name" id="selName"></div><div class="note-place-meta" id="selMeta"></div></div></div><div class="note-wrap"><textarea class="note-input" id="noteField" rows="3" placeholder="Por que esse lugar te chamou atenção?"></textarea></div><div class="note-hint">Pode ser uma palavra ou uma frase.</div><button class="sheet-cta" id="saveSpotBtn" onclick="saveSpot()">Salvar spot</button></div></div>
 
-<div class="overlay" id="ov-newtrip" onclick="closeOut(event,'ov-newtrip')"><div class="sheet"><button class="sheet-close" onclick="closeOv('ov-newtrip')">✕</button><div class="sheet-handle"></div><div class="sheet-title">Nova viagem</div><div class="nt-label">Nome</div><div class="nt-wrap"><input class="nt-input" id="tripNameInput" placeholder="Ex: Europa 2027, Japão..."></div><div class="nt-label">Destinos</div><div class="selected-dests" id="selDests"></div><div class="dest-search-wrap"><span class="dsi">🔍</span><input class="nt-input" style="padding-left:44px" id="destSearch" placeholder="Buscar país ou cidade..." oninput="filterDests(this.value)"></div><div id="destList"><div class="dest-result" onclick="addDest('🇯🇵','Japão')"><span class="dest-flag">🇯🇵</span><div><div class="dest-name">Japão</div><div class="dest-region">Ásia</div></div></div><div class="dest-result" onclick="addDest('🇵🇹','Portugal')"><span class="dest-flag">🇵🇹</span><div><div class="dest-name">Portugal</div><div class="dest-region">Europa</div></div></div><div class="dest-result" onclick="addDest('🇦🇷','Argentina')"><span class="dest-flag">🇦🇷</span><div><div class="dest-name">Argentina</div><div class="dest-region">América do Sul</div></div></div><div class="dest-result" onclick="addDest('🇭🇷','Croácia')"><span class="dest-flag">🇭🇷</span><div><div class="dest-name">Croácia</div><div class="dest-region">Europa</div></div></div><div class="dest-result" onclick="addDest('🇲🇪','Montenegro')"><span class="dest-flag">🇲🇪</span><div><div class="dest-name">Montenegro</div><div class="dest-region">Europa</div></div></div><div class="dest-result" onclick="addDest('🇧🇦','Bósnia')"><span class="dest-flag">🇧🇦</span><div><div class="dest-name">Bósnia</div><div class="dest-region">Europa</div></div></div><div class="dest-result" onclick="addDest('🇮🇹','Itália')"><span class="dest-flag">🇮🇹</span><div><div class="dest-name">Itália</div><div class="dest-region">Europa</div></div></div><div class="dest-result" onclick="addDest('🇫🇷','França')"><span class="dest-flag">🇫🇷</span><div><div class="dest-name">França</div><div class="dest-region">Europa</div></div></div><div class="dest-result" onclick="addDest('🇪🇸','Espanha')"><span class="dest-flag">🇪🇸</span><div><div class="dest-name">Espanha</div><div class="dest-region">Europa</div></div></div><div class="dest-result" onclick="addDest('🇬🇷','Grécia')"><span class="dest-flag">🇬🇷</span><div><div class="dest-name">Grécia</div><div class="dest-region">Europa</div></div></div><div class="dest-result" onclick="addDest('🇵🇪','Peru')"><span class="dest-flag">🇵🇪</span><div><div class="dest-name">Peru</div><div class="dest-region">América do Sul</div></div></div><div class="dest-result" onclick="addDest('🇹🇭','Tailândia')"><span class="dest-flag">🇹🇭</span><div><div class="dest-name">Tailândia</div><div class="dest-region">Ásia</div></div></div><div class="dest-result" onclick="addDest('🇭🇷','Split')"><span class="dest-flag">🇭🇷</span><div><div class="dest-name">Split</div><div class="dest-region">Croácia</div></div></div><div class="dest-result" onclick="addDest('🇭🇷','Dubrovnik')"><span class="dest-flag">🇭🇷</span><div><div class="dest-name">Dubrovnik</div><div class="dest-region">Croácia</div></div></div><div class="dest-result" onclick="addDest('🇭🇷','Hvar')"><span class="dest-flag">🇭🇷</span><div><div class="dest-name">Hvar</div><div class="dest-region">Croácia</div></div></div><div class="dest-result" onclick="addDest('🇲🇪','Kotor')"><span class="dest-flag">🇲🇪</span><div><div class="dest-name">Kotor</div><div class="dest-region">Montenegro</div></div></div><div class="dest-result" onclick="addDest('🇧🇦','Sarajevo')"><span class="dest-flag">🇧🇦</span><div><div class="dest-name">Sarajevo</div><div class="dest-region">Bósnia</div></div></div><div class="dest-result" onclick="addDest('🇧🇦','Mostar')"><span class="dest-flag">🇧🇦</span><div><div class="dest-name">Mostar</div><div class="dest-region">Bósnia</div></div></div><div class="dest-result" onclick="addDest('🇮🇹','Roma')"><span class="dest-flag">🇮🇹</span><div><div class="dest-name">Roma</div><div class="dest-region">Itália</div></div></div><div class="dest-result" onclick="addDest('🇫🇷','Paris')"><span class="dest-flag">🇫🇷</span><div><div class="dest-name">Paris</div><div class="dest-region">França</div></div></div><div class="dest-result" onclick="addDest('🇵🇪','Lima')"><span class="dest-flag">🇵🇪</span><div><div class="dest-name">Lima</div><div class="dest-region">Peru</div></div></div><div class="dest-result" onclick="addDest('🇵🇹','Lisboa')"><span class="dest-flag">🇵🇹</span><div><div class="dest-name">Lisboa</div><div class="dest-region">Portugal</div></div></div><div class="dest-result" onclick="addDest('🇵🇹','Porto')"><span class="dest-flag">🇵🇹</span><div><div class="dest-name">Porto</div><div class="dest-region">Portugal</div></div></div></div><div class="nt-label" style="margin-top:8px">Datas (opcional)</div><div class="dates-row"><input class="nt-input" type="date" id="tripStart"><input class="nt-input" type="date" id="tripEnd"></div><button class="sheet-cta" onclick="createTrip()">Criar viagem</button></div></div>
+<div class="overlay" id="ov-mismatch" onclick="closeOut(event,'ov-mismatch')"><div class="sheet"><button class="sheet-close" onclick="closeOv('ov-mismatch')">✕</button><div class="sheet-handle"></div><div class="sheet-title">País diferente</div><div class="cm-text" id="cmText"></div><button class="sheet-cta" id="cmMoveBtn">Mover</button><button class="delete-link" style="color:var(--ink3)" onclick="keepInThisTripAnyway()">Adicionar nesta viagem mesmo assim</button></div></div>
+<div class="overlay" id="ov-newtrip" onclick="closeOut(event,'ov-newtrip')"><div class="sheet"><button class="sheet-close" onclick="closeOv('ov-newtrip')">✕</button><div class="sheet-handle"></div><div class="sheet-title">Para qual país?</div><div class="nt-label">País da viagem</div><div class="dest-search-wrap"><span class="dsi">🔍</span><input class="nt-input" style="padding-left:44px" id="countrySearch" placeholder="Buscar país..." oninput="filterCountries(this.value)"></div><div id="countryList"></div><div class="nt-label" style="margin-top:8px">Datas (opcional)</div><div class="dates-row"><input class="nt-input" type="date" id="tripStart"><input class="nt-input" type="date" id="tripEnd"></div><button class="sheet-cta" id="createTripBtn" onclick="createTrip()" style="opacity:.4;pointer-events:none">Selecione um país</button></div></div>
 
 <div class="toast" id="toast"><div class="toast-title" id="toastTitle"></div><div class="toast-msg" id="toastMsg"></div></div>
 
@@ -354,7 +357,7 @@ const SB_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZ
 let sb;
 try{sb=supabase.createClient(SB_URL,SB_KEY)}catch(e){console.error(e)}
 
-const S={user:null,trips:[],curTrip:null,curPlace:null,curCat:'food',addTrip:null,addCat:null,selPlace:null,selDests:[],searchResults:[],token:null};
+const S={user:null,trips:[],curTrip:null,curPlace:null,curCat:'food',addTrip:null,addCat:null,selPlace:null,pendingPlace:null,searchResults:[],token:null};
 let authMode='signin';
 
 // ═══ DATA LAYER (raw fetch — bypasses buggy SB client) ═══
@@ -475,15 +478,59 @@ async function loadDashboard(){
   document.getElementById('statCountries').textContent=ctrs.size;
   renderTrips();populateTripOpts();
 }
+// Compute smart status from dates: planning / ongoing / done
+const MONTH_PT={jan:0,fev:1,mar:2,abr:3,mai:4,jun:5,jul:6,ago:7,set:8,out:9,nov:10,dez:11};
+function parseDatesString(str){
+  // e.g. "13 Jun – 21 Jun" or "13 Jun 2026 – 21 Jun 2026" → {start,end} using current year if missing
+  if(!str)return{};
+  const y=new Date().getFullYear();
+  const re=/(\d{1,2})\s+([A-Za-zçÇ]{3})(?:\s+(\d{4}))?/g;
+  const found=[];let mm;
+  while((mm=re.exec(str))!==null){
+    const d=parseInt(mm[1]);const mon=MONTH_PT[mm[2].toLowerCase().slice(0,3)];const yr=mm[3]?parseInt(mm[3]):y;
+    if(mon!==undefined)found.push(new Date(yr,mon,d));
+  }
+  return{start:found[0]||null,end:found[1]||null};
+}
+function tripStatus(t){
+  // explicit done wins
+  if(t.status==='done')return'done';
+  const today=new Date();today.setHours(0,0,0,0);
+  let start=t.date_start?new Date(t.date_start):null;
+  let end=t.date_end?new Date(t.date_end):null;
+  // Fallback: parse the human dates string for older trips
+  if(!start&&!end&&t.dates){const p=parseDatesString(t.dates);start=p.start;end=p.end}
+  if(start)start.setHours(0,0,0,0);
+  if(end)end.setHours(0,0,0,0);
+  if(start&&end){
+    if(today<start)return'planning';
+    if(today>end)return'done';
+    return'ongoing';
+  }
+  if(start){
+    if(today<start)return'planning';
+    return'ongoing';
+  }
+  return'planning';
+}
+function statusLabel(s){return s==='done'?'Concluída':s==='ongoing'?'Em viagem':'Planejando'}
+// Count distinct cities from spots
+function tripCityCount(t){
+  const cities=new Set((t._spots||[]).map(s=>s.city).filter(Boolean));
+  return cities.size;
+}
 function renderTrips(){
   const c=document.getElementById('tripsContainer');
   if(!S.trips.length){c.innerHTML='<div class="section-head"><span class="section-title">Minhas viagens</span></div><div class="empty-state"><div class="ei">✈️</div><h3>Nenhuma viagem ainda</h3><p>Toca no + para criar sua primeira viagem</p></div>';return}
   let h='<div class="section-head"><span class="section-title">Minhas viagens</span></div>';
   S.trips.forEach(t=>{
     const sp=t._spots||[],vis=sp.filter(s=>s.status==='been').length,pct=sp.length?Math.round(vis/sp.length*100):0,circ=Math.round(pct*.94);
-    const flags=(t.destinations||[]).slice(0,3).map(d=>flagFor(d)).join(' ')||'🌍';
+    const st=tripStatus(t);
+    const flag=flagFor((t.destinations&&t.destinations[0])||t.name);
+    const cities=tripCityCount(t);
     const grad=destGradient((t.destinations&&t.destinations[0])||t.name);
-    h+=`<div class="trip-card" onclick="openTrip('${t.id}')"><div class="tc-bg" id="tcbg-${t.id}" style="background:${grad}"></div><div class="tc-overlay"></div><div class="tc-content"><div class="tc-top"><div class="tc-flags">${flags}</div><div class="tc-status ${t.status==='done'?'done':''}">${t.status==='done'?'Concluída':'Planejando'}</div></div><div><div class="tc-dest">${t.dates||''}</div><div class="tc-name">${t.name}</div><div class="tc-footer"><div class="tc-pills"><span class="tc-pill">${sp.length} spots</span>${vis?`<span class="tc-pill">${vis} visitados</span>`:''}</div><svg class="prog-circle" viewBox="0 0 36 36"><circle cx="18" cy="18" r="15" fill="none" stroke="rgba(255,255,255,0.15)" stroke-width="2.5"/><circle cx="18" cy="18" r="15" fill="none" stroke="rgba(255,255,255,0.6)" stroke-width="2.5" stroke-dasharray="${circ} ${94-circ}" stroke-linecap="round" transform="rotate(-90 18 18)"/><text x="18" y="22" text-anchor="middle" fill="white" font-size="9" font-family="DM Sans">${pct}%</text></svg></div></div></div></div>`;
+    const cityPill=cities>0?`<span class="tc-pill">${cities} ${cities===1?'cidade':'cidades'}</span>`:'';
+    h+=`<div class="trip-card" onclick="openTrip('${t.id}')"><div class="tc-bg" id="tcbg-${t.id}" style="background:${grad}"></div><div class="tc-overlay"></div><div class="tc-content"><div class="tc-top"><div class="tc-flags" style="font-size:24px">${flag}</div><div class="tc-status ${st==='done'?'done':''} ${st==='ongoing'?'ongoing':''}">${statusLabel(st)}</div></div><div><div class="tc-dest">${t.dates||''}</div><div class="tc-name">${t.name}</div><div class="tc-footer"><div class="tc-pills">${cityPill}<span class="tc-pill">${sp.length} ${sp.length===1?'spot':'spots'}</span></div><svg class="prog-circle" viewBox="0 0 36 36"><circle cx="18" cy="18" r="15" fill="none" stroke="rgba(255,255,255,0.15)" stroke-width="2.5"/><circle cx="18" cy="18" r="15" fill="none" stroke="rgba(255,255,255,0.6)" stroke-width="2.5" stroke-dasharray="${circ} ${94-circ}" stroke-linecap="round" transform="rotate(-90 18 18)"/><text x="18" y="22" text-anchor="middle" fill="white" font-size="9" font-family="DM Sans">${pct}%</text></svg></div></div></div></div>`;
   });
   c.innerHTML=h;
   fillTripPhotos();
@@ -606,10 +653,13 @@ function populateTripOpts(){
 }
 function selTripForSpot(id){S.addTrip=S.trips.find(t=>t.id===id);nextOv('ov-trip','ov-cat')}
 function addSpotToCurrentTrip(){
-  // Already inside a trip — skip "which trip" and go straight to category
+  // Already inside a trip — skip "which trip" AND skip category (use active tab)
   S.addTrip=S.curTrip;
-  document.querySelectorAll('.cat-option').forEach(o=>o.classList.remove('sel'));
-  document.getElementById('ov-cat').classList.add('show');
+  S.addCat=S.curCat||'food';
+  // Reset search field and go straight to place search
+  const si=document.getElementById('placeSearch');if(si)si.value='';
+  document.getElementById('searchResults').innerHTML='<div class="search-loading">Digite para buscar...</div>';
+  document.getElementById('ov-search').classList.add('show');
 }
 function pickCat(c){S.addCat=c;document.querySelectorAll('.cat-option').forEach(o=>o.classList.remove('sel'));document.getElementById('co-'+c).classList.add('sel');setTimeout(()=>nextOv('ov-cat','ov-search'),200)}
 const GAPI='AIzaSyDYUDC3BkvUYSjlBVX2C6BZ8pMmycxfYUQ';
@@ -631,11 +681,12 @@ function searchPlaces(v){
         const name=p.displayName?.text||'';
         const addr=p.formattedAddress||'';
         const city=cityFromComponents(p.addressComponents)||extractCityFromAddr(addr);
+        const country=countryFromComponents(p.addressComponents);
         const rating=p.rating?p.rating+' ⭐':'';
         const photoRef=p.photos?.[0]?.name||'';
         const photoThumb=photoRef?'https://places.googleapis.com/v1/'+photoRef+'/media?maxWidthPx=200&key='+GAPI:'';
         const photoFull=photoRef?'https://places.googleapis.com/v1/'+photoRef+'/media?maxWidthPx=800&key='+GAPI:'';
-        return{name,meta:addr,icon:catIcon(S.addCat),city,address:addr,photo_url:photoFull,photo_thumb:photoThumb,rating_google:rating};
+        return{name,meta:addr,icon:catIcon(S.addCat),city,country,address:addr,photo_url:photoFull,photo_thumb:photoThumb,rating_google:rating};
       });
       r.innerHTML=S.searchResults.map((p,i)=>{
         const thumb=p.photo_thumb?'<div class="sr-icon"><img src="'+p.photo_thumb+'" style="width:100%;height:100%;object-fit:cover;border-radius:12px"></div>':'<div class="sr-icon">'+p.icon+'</div>';
@@ -663,9 +714,60 @@ function extractCityFromAddr(addr){
 }
 function pickSearchResult(i){pickPlace(S.searchResults[i])}
 function pickPlace(p){
+  // ── Sanity check: does the place's country match the trip's country? ──
+  const tripCountry=(S.addTrip&&S.addTrip.destinations&&S.addTrip.destinations[0])||S.addTrip?.name||'';
+  if(p.country&&tripCountry&&p.country!==tripCountry){
+    S.pendingPlace=p;
+    showCountryMismatch(p.country,tripCountry);
+    return;
+  }
   S.selPlace=p;document.getElementById('selName').textContent=p.name;document.getElementById('selMeta').textContent=p.meta;
   document.getElementById('selIcon').textContent=p.icon;document.getElementById('noteField').value='';
   document.getElementById('noteField').classList.remove('error');nextOv('ov-search','ov-note');
+}
+// ── Country mismatch handling ──
+function showCountryMismatch(placeCountry,tripCountry){
+  document.getElementById('cmText').innerHTML=`Esse lugar fica em <strong>${placeCountry}</strong>, não na <strong>${tripCountry}</strong>.`;
+  // Does a trip for the correct country already exist?
+  const existing=S.trips.find(t=>((t.destinations&&t.destinations[0])||t.name)===placeCountry);
+  const btn=document.getElementById('cmMoveBtn');
+  if(existing){
+    btn.textContent='Adicionar em '+placeCountry;
+    btn.onclick=()=>moveToCorrectCountry(existing,false);
+  }else{
+    btn.textContent='Criar viagem de '+placeCountry;
+    btn.onclick=()=>moveToCorrectCountry(null,true);
+  }
+  closeOv('ov-search');
+  setTimeout(()=>document.getElementById('ov-mismatch').classList.add('show'),220);
+}
+async function moveToCorrectCountry(existingTrip,createNew){
+  const p=S.pendingPlace;if(!p)return;
+  let trip=existingTrip;
+  if(createNew){
+    const country=p.country;
+    const{data,error}=await dbInsert('trips',{user_id:S.user.id,name:country,destinations:[country],dates:'',status:'planning'});
+    if(error||!data){toast('Erro ao criar viagem','');return}
+    data._spots=[];S.trips.unshift(data);trip=data;
+    document.getElementById('statTrips').textContent=S.trips.length;
+  }
+  // Set the add target to the correct trip and proceed to note
+  S.addTrip=trip;S.selPlace=p;S.pendingPlace=null;
+  document.getElementById('selName').textContent=p.name;document.getElementById('selMeta').textContent=p.meta;
+  document.getElementById('selIcon').textContent=p.icon;document.getElementById('noteField').value='';
+  document.getElementById('noteField').classList.remove('error');
+  closeOv('ov-mismatch');
+  setTimeout(()=>document.getElementById('ov-note').classList.add('show'),220);
+}
+function keepInThisTripAnyway(){
+  // user insists — keep place in current trip
+  const p=S.pendingPlace;if(!p)return;
+  S.selPlace=p;S.pendingPlace=null;
+  document.getElementById('selName').textContent=p.name;document.getElementById('selMeta').textContent=p.meta;
+  document.getElementById('selIcon').textContent=p.icon;document.getElementById('noteField').value='';
+  document.getElementById('noteField').classList.remove('error');
+  closeOv('ov-mismatch');
+  setTimeout(()=>document.getElementById('ov-note').classList.add('show'),220);
 }
 async function saveSpot(){
   const note=document.getElementById('noteField').value.trim();
@@ -683,76 +785,97 @@ async function saveSpot(){
 
 // ═══ NEW TRIP ═══
 async function createTrip(){
-  const name=document.getElementById('tripNameInput').value.trim();
-  if(!name){document.getElementById('tripNameInput').style.borderColor='var(--red)';return}
+  if(!selectedCountry){return}
+  const name=selectedCountry.name;
   const s=document.getElementById('tripStart').value,e=document.getElementById('tripEnd').value;
   let dates='';if(s&&e)dates=fmtD(s)+' – '+fmtD(e);else if(s)dates='A partir de '+fmtD(s);
-  const btn=document.querySelector('#ov-newtrip .sheet-cta');btn.textContent='Criando...';btn.disabled=true;
-  const dests=S.selDests.map(d=>d.name);
-  const{data,error}=await dbInsert('trips',{user_id:S.user.id,name,destinations:dests,dates,status:'planning'});
+  const btn=document.getElementById('createTripBtn');btn.textContent='Criando...';btn.style.pointerEvents='none';
+  // store dates as raw ISO too, for smart status
+  let{data,error}=await dbInsert('trips',{user_id:S.user.id,name,destinations:[name],dates,date_start:s||null,date_end:e||null,status:'planning'});
+  // If date columns don't exist in DB, retry without them
+  if(error&&!data){
+    const retry=await dbInsert('trips',{user_id:S.user.id,name,destinations:[name],dates,status:'planning'});
+    data=retry.data;error=retry.error;
+  }
   if(!error&&data){
     data._spots=[];S.trips.unshift(data);closeOv('ov-newtrip');
-    document.getElementById('tripNameInput').value='';document.getElementById('tripStart').value='';document.getElementById('tripEnd').value='';S.selDests=[];document.getElementById('selDests').innerHTML='';
+    // reset picker
+    selectedCountry=null;
+    document.getElementById('countrySearch').value='';
+    document.getElementById('countryList').innerHTML='';
+    document.getElementById('tripStart').value='';document.getElementById('tripEnd').value='';
     renderTrips();populateTripOpts();
     document.getElementById('statTrips').textContent=S.trips.length;
     toast('✦ Viagem criada','"'+name+'"');
   }else{
     toast('Erro ao criar',error?.message||'Tente novamente');
+    btn.textContent='Criar viagem';btn.style.pointerEvents='auto';
   }
-  btn.textContent='Criar viagem';btn.disabled=false;
 }
 function fmtD(d){const[y,m,day]=d.split('-');const ms=['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'];return parseInt(day)+' '+ms[parseInt(m)-1]}
-let destTO;
-function filterDests(v){
-  clearTimeout(destTO);
-  const list=document.getElementById('destList');
-  if(!v.trim()||v.trim().length<2){
-    // Show default suggestions
-    list.querySelectorAll('.dest-result').forEach(r=>r.style.display='');
-    list.querySelectorAll('.dest-result-api').forEach(r=>r.remove());
-    return;
-  }
-  // Hide default list
-  list.querySelectorAll('.dest-result:not(.dest-result-api)').forEach(r=>{
-    r.style.display=r.querySelector('.dest-name').textContent.toLowerCase().includes(v.toLowerCase())?'':'none';
-  });
-  // Search Google Places for cities
-  destTO=setTimeout(async()=>{
-    list.querySelectorAll('.dest-result-api').forEach(r=>r.remove());
-    try{
-      const resp=await fetch('https://places.googleapis.com/v1/places:searchText',{
-        method:'POST',
-        headers:{'Content-Type':'application/json','X-Goog-Api-Key':GAPI,'X-Goog-FieldMask':'places.displayName,places.formattedAddress,places.types'},
-        body:JSON.stringify({textQuery:v,includedType:'locality',languageCode:'pt-BR',maxResultCount:5})
-      });
-      const data=await resp.json();
-      if(data.places){
-        data.places.forEach(p=>{
-          const name=p.displayName?.text||'';
-          const addr=p.formattedAddress||'';
-          const country=addr.split(',').pop()?.trim()||'';
-          const flag=countryFlag(country);
-          const div=document.createElement('div');
-          div.className='dest-result dest-result-api';
-          div.onclick=()=>addDest(flag,name);
-          div.innerHTML='<span class="dest-flag">'+flag+'</span><div><div class="dest-name">'+name+'</div><div class="dest-region">'+country+'</div></div>';
-          list.appendChild(div);
-        });
-      }
-    }catch(e){console.error(e)}
-  },500);
+
+// ═══ COUNTRIES DATABASE ═══
+const COUNTRIES=[
+  {flag:'🇧🇷',name:'Brasil',region:'América do Sul'},{flag:'🇵🇹',name:'Portugal',region:'Europa'},
+  {flag:'🇭🇷',name:'Croácia',region:'Europa'},{flag:'🇲🇪',name:'Montenegro',region:'Europa'},
+  {flag:'🇧🇦',name:'Bósnia e Herzegovina',region:'Europa'},{flag:'🇮🇹',name:'Itália',region:'Europa'},
+  {flag:'🇫🇷',name:'França',region:'Europa'},{flag:'🇪🇸',name:'Espanha',region:'Europa'},
+  {flag:'🇬🇷',name:'Grécia',region:'Europa'},{flag:'🇯🇵',name:'Japão',region:'Ásia'},
+  {flag:'🇹🇭',name:'Tailândia',region:'Ásia'},{flag:'🇮🇩',name:'Indonésia',region:'Ásia'},
+  {flag:'🇵🇪',name:'Peru',region:'América do Sul'},{flag:'🇦🇷',name:'Argentina',region:'América do Sul'},
+  {flag:'🇨🇱',name:'Chile',region:'América do Sul'},{flag:'🇨🇴',name:'Colômbia',region:'América do Sul'},
+  {flag:'🇺🇾',name:'Uruguai',region:'América do Sul'},{flag:'🇲🇽',name:'México',region:'América do Norte'},
+  {flag:'🇺🇸',name:'Estados Unidos',region:'América do Norte'},{flag:'🇨🇦',name:'Canadá',region:'América do Norte'},
+  {flag:'🇬🇧',name:'Reino Unido',region:'Europa'},{flag:'🇩🇪',name:'Alemanha',region:'Europa'},
+  {flag:'🇳🇱',name:'Holanda',region:'Europa'},{flag:'🇧🇪',name:'Bélgica',region:'Europa'},
+  {flag:'🇨🇭',name:'Suíça',region:'Europa'},{flag:'🇦🇹',name:'Áustria',region:'Europa'},
+  {flag:'🇨🇿',name:'República Tcheca',region:'Europa'},{flag:'🇭🇺',name:'Hungria',region:'Europa'},
+  {flag:'🇵🇱',name:'Polônia',region:'Europa'},{flag:'🇳🇴',name:'Noruega',region:'Europa'},
+  {flag:'🇸🇪',name:'Suécia',region:'Europa'},{flag:'🇩🇰',name:'Dinamarca',region:'Europa'},
+  {flag:'🇮🇪',name:'Irlanda',region:'Europa'},{flag:'🇹🇷',name:'Turquia',region:'Europa/Ásia'},
+  {flag:'🇲🇦',name:'Marrocos',region:'África'},{flag:'🇪🇬',name:'Egito',region:'África'},
+  {flag:'🇿🇦',name:'África do Sul',region:'África'},{flag:'🇮🇳',name:'Índia',region:'Ásia'},
+  {flag:'🇨🇳',name:'China',region:'Ásia'},{flag:'🇰🇷',name:'Coreia do Sul',region:'Ásia'},
+  {flag:'🇸🇬',name:'Singapura',region:'Ásia'},{flag:'🇻🇳',name:'Vietnã',region:'Ásia'},
+  {flag:'🇵🇭',name:'Filipinas',region:'Ásia'},{flag:'🇦🇺',name:'Austrália',region:'Oceania'},
+  {flag:'🇳🇿',name:'Nova Zelândia',region:'Oceania'},{flag:'🇯🇴',name:'Jordânia',region:'Ásia'},
+  {flag:'🇦🇪',name:'Emirados Árabes',region:'Ásia'}
+];
+let selectedCountry=null;
+function renderCountryList(filter){
+  const list=document.getElementById('countryList');
+  const f=(filter||'').toLowerCase();
+  const matches=COUNTRIES.filter(c=>!f||c.name.toLowerCase().includes(f));
+  list.innerHTML=matches.map(c=>`<div class="dest-result" onclick='selectCountry(${JSON.stringify(c).replace(/'/g,"&apos;")})'><span class="dest-flag">${c.flag}</span><div><div class="dest-name">${c.name}</div><div class="dest-region">${c.region}</div></div></div>`).join('')||'<div class="search-loading">Nenhum país encontrado</div>';
+}
+function filterCountries(v){renderCountryList(v)}
+function selectCountry(c){
+  selectedCountry=c;
+  document.getElementById('countrySearch').value=c.flag+' '+c.name;
+  document.getElementById('countryList').innerHTML='';
+  const btn=document.getElementById('createTripBtn');
+  btn.textContent='Criar viagem';btn.style.opacity='1';btn.style.pointerEvents='auto';
 }
 function countryFlag(country){
-  const m={'Brasil':'🇧🇷','Brazil':'🇧🇷','Croácia':'🇭🇷','Croatia':'🇭🇷','Montenegro':'🇲🇪','Bósnia e Herzegovina':'🇧🇦','Bosnia and Herzegovina':'🇧🇦','Itália':'🇮🇹','Italy':'🇮🇹','Peru':'🇵🇪','França':'🇫🇷','France':'🇫🇷','Espanha':'🇪🇸','Spain':'🇪🇸','Portugal':'🇵🇹','Japão':'🇯🇵','Japan':'🇯🇵','Argentina':'🇦🇷','Grécia':'🇬🇷','Greece':'🇬🇷','Tailândia':'🇹🇭','Thailand':'🇹🇭','Indonésia':'🇮🇩','Indonesia':'🇮🇩','Marrocos':'🇲🇦','Morocco':'🇲🇦','Estados Unidos':'🇺🇸','United States':'🇺🇸','Alemanha':'🇩🇪','Germany':'🇩🇪','Reino Unido':'🇬🇧','United Kingdom':'🇬🇧','México':'🇲🇽','Mexico':'🇲🇽','Colômbia':'🇨🇴','Colombia':'🇨🇴','Chile':'🇨🇱','Turquia':'🇹🇷','Turkey':'🇹🇷','Türkiye':'🇹🇷','Egito':'🇪🇬','Egypt':'🇪🇬','Índia':'🇮🇳','India':'🇮🇳','China':'🇨🇳','Austrália':'🇦🇺','Australia':'🇦🇺','Canadá':'🇨🇦','Canada':'🇨🇦','Suíça':'🇨🇭','Switzerland':'🇨🇭','Áustria':'🇦🇹','Austria':'🇦🇹','Holanda':'🇳🇱','Netherlands':'🇳🇱','Bélgica':'🇧🇪','Belgium':'🇧🇪','República Tcheca':'🇨🇿','Czechia':'🇨🇿','Hungria':'🇭🇺','Hungary':'🇭🇺','Polônia':'🇵🇱','Poland':'🇵🇱','Noruega':'🇳🇴','Norway':'🇳🇴','Suécia':'🇸🇪','Sweden':'🇸🇪','Dinamarca':'🇩🇰','Denmark':'🇩🇰','Irlanda':'🇮🇪','Ireland':'🇮🇪','África do Sul':'🇿🇦','South Africa':'🇿🇦','Coreia do Sul':'🇰🇷','South Korea':'🇰🇷','Singapura':'🇸🇬','Singapore':'🇸🇬','Vietnã':'🇻🇳','Vietnam':'🇻🇳','Filipinas':'🇵🇭','Philippines':'🇵🇭'};
-  return m[country]||'🌍';
+  const c=COUNTRIES.find(x=>x.name===country||x.name.toLowerCase()===(country||'').toLowerCase());
+  if(c)return c.flag;
+  // English fallbacks
+  const en={'Brazil':'🇧🇷','Croatia':'🇭🇷','Italy':'🇮🇹','France':'🇫🇷','Spain':'🇪🇸','Greece':'🇬🇷','Japan':'🇯🇵','Thailand':'🇹🇭','Indonesia':'🇮🇩','Morocco':'🇲🇦','United States':'🇺🇸','Germany':'🇩🇪','United Kingdom':'🇬🇧','Mexico':'🇲🇽','Colombia':'🇨🇴','Turkey':'🇹🇷','Türkiye':'🇹🇷','Egypt':'🇪🇬','India':'🇮🇳','China':'🇨🇳','Australia':'🇦🇺','Canada':'🇨🇦','Switzerland':'🇨🇭','Austria':'🇦🇹','Netherlands':'🇳🇱','Belgium':'🇧🇪','Czechia':'🇨🇿','Hungary':'🇭🇺','Poland':'🇵🇱','Norway':'🇳🇴','Sweden':'🇸🇪','Denmark':'🇩🇰','Ireland':'🇮🇪','South Africa':'🇿🇦','South Korea':'🇰🇷','Singapore':'🇸🇬','Vietnam':'🇻🇳','Philippines':'🇵🇭','Bosnia and Herzegovina':'🇧🇦','Bosnia & Herzegovina':'🇧🇦','Jordan':'🇯🇴','New Zealand':'🇳🇿'};
+  return en[country]||'🌍';
 }
-function addDest(flag,name){
-  if(S.selDests.find(d=>d.name===name))return;S.selDests.push({flag,name});
-  const w=document.getElementById('selDests'),c=document.createElement('div');c.className='sel-dest-chip';c.dataset.name=name;
-  c.innerHTML=`${flag} ${name} <button onclick="removeDest('${name}')">×</button>`;w.appendChild(c);
-  document.getElementById('destSearch').value='';filterDests('');
+// Normalize country name (English from Google → Portuguese)
+function normalizeCountry(country){
+  if(!country)return'';
+  const c=COUNTRIES.find(x=>x.name===country);
+  if(c)return c.name;
+  const map={'Brazil':'Brasil','Croatia':'Croácia','Italy':'Itália','France':'França','Spain':'Espanha','Greece':'Grécia','Japan':'Japão','Thailand':'Tailândia','Indonesia':'Indonésia','Morocco':'Marrocos','United States':'Estados Unidos','Germany':'Alemanha','United Kingdom':'Reino Unido','Mexico':'México','Colombia':'Colômbia','Turkey':'Turquia','Türkiye':'Turquia','Egypt':'Egito','India':'Índia','China':'China','Australia':'Austrália','Canada':'Canadá','Switzerland':'Suíça','Austria':'Áustria','Netherlands':'Holanda','Belgium':'Bélgica','Czechia':'República Tcheca','Hungary':'Hungria','Poland':'Polônia','Norway':'Noruega','Sweden':'Suécia','Denmark':'Dinamarca','Ireland':'Irlanda','South Africa':'África do Sul','South Korea':'Coreia do Sul','Singapore':'Singapura','Vietnam':'Vietnã','Philippines':'Filipinas','Bosnia and Herzegovina':'Bósnia e Herzegovina','Jordan':'Jordânia','New Zealand':'Nova Zelândia','Peru':'Peru','Argentina':'Argentina','Chile':'Chile','Portugal':'Portugal','Montenegro':'Montenegro'};
+  return map[country]||country;
 }
-function removeDest(n){S.selDests=S.selDests.filter(d=>d.name!==n);document.querySelector(`.sel-dest-chip[data-name="${n}"]`)?.remove()}
+function countryFromComponents(comps){
+  if(!comps||!comps.length)return'';
+  const c=comps.find(x=>(x.types||[]).includes('country'));
+  return c?normalizeCountry(c.longText):'';
+}
 
 // ═══ HELPERS ═══
 function catIcon(c){return{food:'🍽️',hotel:'🏨',experience:'🗺️'}[c]||'📍'}
@@ -794,10 +917,16 @@ function destGradient(name){
 
 // ═══ NAVIGATION ═══
 function goTo(id){document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));document.getElementById(id).classList.add('active');window.scrollTo(0,0)}
-function showOv(id){populateTripOpts();document.getElementById(id).classList.add('show')}
+function showOv(id){populateTripOpts();if(id==='ov-newtrip')prepNewTrip();document.getElementById(id).classList.add('show')}
 function closeOv(id){document.getElementById(id).classList.remove('show')}
 function closeOut(e,id){if(e.target===document.getElementById(id))closeOv(id)}
-function nextOv(a,b){closeOv(a);setTimeout(()=>document.getElementById(b).classList.add('show'),220)}
+function nextOv(a,b){closeOv(a);if(b==='ov-newtrip')prepNewTrip();setTimeout(()=>document.getElementById(b).classList.add('show'),220)}
+function prepNewTrip(){
+  selectedCountry=null;
+  const cs=document.getElementById('countrySearch');if(cs)cs.value='';
+  const btn=document.getElementById('createTripBtn');if(btn){btn.textContent='Selecione um país';btn.style.opacity='.4';btn.style.pointerEvents='none'}
+  renderCountryList('');
+}
 function toast(t,m){const el=document.getElementById('toast');document.getElementById('toastTitle').textContent=t;document.getElementById('toastMsg').textContent=m;el.classList.add('show');setTimeout(()=>el.classList.remove('show'),3500)}
 
 // ═══ LOGIN BACKGROUNDS (real city photos via Google Places + gradient fallback) ═══
