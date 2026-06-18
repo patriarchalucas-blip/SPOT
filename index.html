@@ -190,25 +190,27 @@ body{font-family:'DM Sans',sans-serif;background:#0a0a0a;max-width:430px;margin:
 .delete-link{display:block;width:100%;background:none;border:none;color:var(--red);font-size:13px;font-family:'DM Sans',sans-serif;cursor:pointer;padding:8px;margin-bottom:40px;text-decoration:underline;text-underline-offset:3px}
 .cm-text{font-size:15px;line-height:1.5;color:var(--ink2);margin:8px 0 20px}
 /* ── Profile / World Map (Been-style) ── */
-#profile{background:var(--surface);overflow-y:auto}
-.profile-hero{background:linear-gradient(165deg,#0d1b2a 0%,#102a3c 55%,#0a1622 100%);padding:40px 22px 28px;position:relative;overflow:hidden}
-.profile-hero::before{content:'';position:absolute;top:-40%;right:-20%;width:80%;height:80%;background:radial-gradient(circle,rgba(42,122,86,0.25),transparent 70%);pointer-events:none}
-.profile-header-bar{display:flex;align-items:center;gap:14px;margin-bottom:18px;position:relative;z-index:2}
+#profile{background:#0b1620;overflow-y:auto}
+.profile-header-bar{display:flex;align-items:center;gap:14px;padding:40px 22px 16px;background:#0b1620;position:relative;z-index:5}
 .profile-avatar{width:54px;height:54px;border-radius:50%;background:var(--green);color:#fff;display:flex;align-items:center;justify-content:center;font-size:23px;font-weight:600;font-family:'DM Sans';flex-shrink:0;box-shadow:0 4px 20px rgba(42,122,86,0.4)}
 .profile-name{font-family:'Playfair Display',serif;font-size:24px;color:#fff;line-height:1.1}
 .profile-email{font-size:12px;color:rgba(255,255,255,0.45);margin-top:3px}
-.world-map-wrap{width:100%;line-height:0;position:relative;z-index:2;margin:8px 0}
-.world-map-wrap svg{width:100%;height:auto;display:block;overflow:visible;min-height:200px}
-.wm-country{fill:#1e3346;stroke:#0d1b2a;stroke-width:0.4;transition:fill .4s}
-.wm-country.visited{fill:#2fb574;filter:drop-shadow(0 0 3px rgba(47,181,116,0.6))}
-.hero-headline{position:relative;z-index:2;text-align:center;color:rgba(255,255,255,0.92);font-family:'Playfair Display',serif;font-size:17px;font-style:italic;margin:14px 0 18px;line-height:1.4}
+.profile-map-block{position:relative;width:100%;height:300px;background:#0b1620;overflow:hidden}
+.world-map-wrap{position:absolute;inset:0;line-height:0;touch-action:none}
+.world-map-wrap svg{width:100%;height:100%;display:block;cursor:grab}
+.world-map-wrap svg:active{cursor:grabbing}
+.wm-country{fill:#1c2f40;stroke:#0b1620;stroke-width:0.4;transition:fill .4s}
+.wm-country.visited{fill:#2fb574}
+.map-zoom-hint{position:absolute;bottom:10px;left:0;right:0;text-align:center;color:rgba(255,255,255,0.3);font-size:10px;letter-spacing:.12em;text-transform:uppercase;pointer-events:none;z-index:2}
+.profile-statline{background:#0b1620;padding:18px 22px 24px}
+.hero-headline{text-align:center;color:rgba(255,255,255,0.92);font-family:'Playfair Display',serif;font-size:18px;font-style:italic;margin:0 0 18px;line-height:1.4}
 .hero-headline b{color:#3fd488;font-style:normal;font-weight:600}
-.hero-stats{position:relative;z-index:2;display:flex;align-items:center;justify-content:center;gap:0}
-.hs-item{display:flex;flex-direction:column;align-items:center;padding:0 22px}
-.hs-n{font-family:'Playfair Display',serif;font-size:30px;color:#fff;line-height:1}
-.hs-l{font-size:10px;color:rgba(255,255,255,0.5);text-transform:uppercase;letter-spacing:.1em;margin-top:5px}
-.hs-div{width:1px;height:34px;background:rgba(255,255,255,0.12)}
-.profile-body{padding:24px 22px}
+.hero-stats{display:flex;align-items:center;justify-content:center;gap:0}
+.hs-item{display:flex;flex-direction:column;align-items:center;padding:0 24px}
+.hs-n{font-family:'Playfair Display',serif;font-size:32px;color:#fff;line-height:1}
+.hs-l{font-size:10px;color:rgba(255,255,255,0.5);text-transform:uppercase;letter-spacing:.1em;margin-top:6px}
+.hs-div{width:1px;height:36px;background:rgba(255,255,255,0.12)}
+.profile-body{padding:24px 22px;background:var(--surface);border-radius:24px 24px 0 0}
 .country-chips{display:flex;flex-wrap:wrap;gap:8px;margin-top:4px}
 .country-chip{background:var(--white);border:1px solid var(--border);border-radius:100px;padding:8px 14px;font-size:13px;color:var(--ink2);display:flex;align-items:center;gap:6px}
 .country-chips-empty{color:var(--ink3);font-size:14px;padding:8px 0}
@@ -358,12 +360,15 @@ body{font-family:'DM Sans',sans-serif;background:#0a0a0a;max-width:430px;margin:
 </div>
 
 <div class="screen" id="profile">
-  <div class="profile-hero">
-    <div class="profile-header-bar">
-      <div class="profile-avatar" id="profAvatar">?</div>
-      <div><div class="profile-name" id="profName">—</div><div class="profile-email" id="profEmail"></div></div>
-    </div>
+  <div class="profile-header-bar">
+    <div class="profile-avatar" id="profAvatar">?</div>
+    <div><div class="profile-name" id="profName">—</div><div class="profile-email" id="profEmail"></div></div>
+  </div>
+  <div class="profile-map-block">
     <div class="world-map-wrap" id="worldMapWrap"></div>
+    <div class="map-zoom-hint">toque para dar zoom</div>
+  </div>
+  <div class="profile-statline">
     <div class="hero-headline" id="heroHeadline">Comece a explorar o mundo</div>
     <div class="hero-stats">
       <div class="hs-item"><span class="hs-n" id="wsCountries">0</span><span class="hs-l">países</span></div>
@@ -1107,8 +1112,70 @@ async function renderWorldMap(visited){
     const d=featureToPath(f,W,H);
     if(d)paths+=`<path class="${cls}" d="${d}"/>`;
   });
-  // Aggressive crop: just the inhabited latitude band (~72°N to ~56°S), full width — fills the panel
-  wrap.innerHTML=`<svg viewBox="10 60 ${W-20} 200" preserveAspectRatio="xMidYMid slice" xmlns="http://www.w3.org/2000/svg">${paths}</svg>`;
+  // viewBox shows the inhabited band (cuts most empty ocean top/bottom); fills the 300px block
+  const vb={x:0,y:55,w:W,h:215};
+  wrap.innerHTML=`<svg id="worldSvg" viewBox="${vb.x} ${vb.y} ${vb.w} ${vb.h}" preserveAspectRatio="xMidYMid slice" xmlns="http://www.w3.org/2000/svg">${paths}</svg>`;
+  initMapZoom(vb);
+}
+// Pan + pinch/double-tap zoom on the SVG world map
+function initMapZoom(baseVB){
+  const svg=document.getElementById('worldSvg');
+  if(!svg)return;
+  let vb={...baseVB};
+  const apply=()=>svg.setAttribute('viewBox',`${vb.x} ${vb.y} ${vb.w} ${vb.h}`);
+  const minW=baseVB.w*0.25, maxW=baseVB.w;
+  function zoomAt(cx,cy,factor){
+    let nw=vb.w/factor, nh=vb.h/factor;
+    nw=Math.max(minW,Math.min(maxW,nw));
+    nh=nw*(baseVB.h/baseVB.w);
+    // keep point (cx,cy) stable
+    const rect=svg.getBoundingClientRect();
+    const px=(cx-rect.left)/rect.width, py=(cy-rect.top)/rect.height;
+    vb.x=vb.x+(vb.w-nw)*px;
+    vb.y=vb.y+(vb.h-nh)*py;
+    vb.w=nw;vb.h=nh;
+    clampVB();apply();
+  }
+  function clampVB(){
+    if(vb.x<0)vb.x=0;if(vb.y<0)vb.y=0;
+    if(vb.x+vb.w>baseVB.w)vb.x=baseVB.w-vb.w;
+    if(vb.y+vb.h>360)vb.y=360-vb.h;
+    if(vb.x<0)vb.x=0;if(vb.y<0)vb.y=0;
+  }
+  // double tap / double click to zoom in (and reset when fully zoomed)
+  let lastTap=0;
+  svg.addEventListener('click',e=>{
+    const now=Date.now();
+    if(now-lastTap<300){
+      if(vb.w<=minW*1.05){vb={...baseVB}} // reset
+      else zoomAt(e.clientX,e.clientY,1.8);
+      apply();
+    }
+    lastTap=now;
+  });
+  // drag to pan
+  let dragging=false,sx=0,sy=0,svb=null;
+  svg.addEventListener('pointerdown',e=>{dragging=true;sx=e.clientX;sy=e.clientY;svb={...vb};svg.setPointerCapture(e.pointerId)});
+  svg.addEventListener('pointermove',e=>{
+    if(!dragging)return;
+    const rect=svg.getBoundingClientRect();
+    const dx=(e.clientX-sx)/rect.width*vb.w, dy=(e.clientY-sy)/rect.height*vb.h;
+    vb.x=svb.x-dx;vb.y=svb.y-dy;clampVB();apply();
+  });
+  svg.addEventListener('pointerup',()=>{dragging=false});
+  svg.addEventListener('pointercancel',()=>{dragging=false});
+  // pinch zoom
+  let pts={};
+  svg.addEventListener('touchmove',e=>{
+    if(e.touches.length===2){
+      e.preventDefault();
+      const[a,b]=e.touches;
+      const dist=Math.hypot(a.clientX-b.clientX,a.clientY-b.clientY);
+      if(pts.dist){const f=dist/pts.dist;if(Math.abs(f-1)>0.01)zoomAt((a.clientX+b.clientX)/2,(a.clientY+b.clientY)/2,f)}
+      pts.dist=dist;
+    }
+  },{passive:false});
+  svg.addEventListener('touchend',()=>{pts={}});
 }
 function goTo(id){document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));document.getElementById(id).classList.add('active');window.scrollTo(0,0)}
 function showOv(id){populateTripOpts();if(id==='ov-newtrip')prepNewTrip();document.getElementById(id).classList.add('show')}
