@@ -759,19 +759,18 @@ function catIcon(c){return{food:'🍽️',hotel:'🏨',experience:'🗺️'}[c]|
 function catLabel(c){return{food:'Comer & Beber',hotel:'Onde Ficar',experience:'Experiência'}[c]||c}
 function flagFor(n){const m={'Croácia':'🇭🇷','Montenegro':'🇲🇪','Bósnia':'🇧🇦','Itália':'🇮🇹','Peru':'🇵🇪','França':'🇫🇷','Espanha':'🇪🇸','Portugal':'🇵🇹','Japão':'🇯🇵','Argentina':'🇦🇷','Grécia':'🇬🇷','Tailândia':'🇹🇭','Brasil':'🇧🇷','Estados Unidos':'🇺🇸'};return m[n]||'🌍'}
 // Cache for city photos so we don't refetch
+const UNSPLASH_KEY='1fwslJzsd0FfmwxGEdvRVbqZtpBUVsoxpAjYb47dZXo';
 const cityPhotoCache={};
 async function fetchCityPhoto(query){
   if(!query)return'';
   if(cityPhotoCache[query]!==undefined)return cityPhotoCache[query];
   try{
-    const resp=await fetch('https://places.googleapis.com/v1/places:searchText',{
-      method:'POST',
-      headers:{'Content-Type':'application/json','X-Goog-Api-Key':GAPI,'X-Goog-FieldMask':'places.photos'},
-      body:JSON.stringify({textQuery:query,maxResultCount:1})
-    });
+    const resp=await fetch('https://api.unsplash.com/search/photos?query='+encodeURIComponent(query)+'&per_page=10&orientation=landscape&client_id='+UNSPLASH_KEY);
     const data=await resp.json();
-    const photoName=data.places?.[0]?.photos?.[0]?.name;
-    const url=photoName?'https://places.googleapis.com/v1/'+photoName+'/media?maxWidthPx=800&key='+GAPI:'';
+    const results=data.results||[];
+    // Pick a random photo from the top results for variety
+    const pick=results.length?results[Math.floor(Math.random()*Math.min(results.length,6))]:null;
+    const url=pick?pick.urls.regular:'';
     cityPhotoCache[query]=url;
     return url;
   }catch(e){cityPhotoCache[query]='';return''}
@@ -846,18 +845,11 @@ async function startLoginPhotos(){
   if(tag)tag.innerHTML='<span class="lpt-dot"></span>'+LOGIN_CITIES[0].name;
   clearInterval(loginPhotoTimer);
   loginPhotoTimer=setInterval(rotateLoginPhoto,5000);
-  // Fetch real photos from Google Places (async, fills in as they arrive)
+  // Fetch real photos from Unsplash (async, fills in as they arrive)
   LOGIN_CITIES.forEach(async(c,i)=>{
     try{
-      const resp=await fetch('https://places.googleapis.com/v1/places:searchText',{
-        method:'POST',
-        headers:{'Content-Type':'application/json','X-Goog-Api-Key':GAPI,'X-Goog-FieldMask':'places.photos'},
-        body:JSON.stringify({textQuery:c.q,maxResultCount:1})
-      });
-      const data=await resp.json();
-      const photoName=data.places?.[0]?.photos?.[0]?.name;
-      if(photoName){
-        const url='https://places.googleapis.com/v1/'+photoName+'/media?maxWidthPx=900&key='+GAPI;
+      const url=await fetchCityPhoto(c.q);
+      if(url){
         const img=new Image();
         img.onload=()=>{
           const el=document.getElementById('lphoto-'+i);
