@@ -189,21 +189,26 @@ body{font-family:'DM Sans',sans-serif;background:#0a0a0a;max-width:430px;margin:
 .action-btn{display:block;width:100%;background:var(--ink);color:white;border:none;border-radius:16px;padding:17px;font-size:15px;font-weight:600;font-family:'DM Sans',sans-serif;cursor:pointer;margin-top:12px;margin-bottom:16px}
 .delete-link{display:block;width:100%;background:none;border:none;color:var(--red);font-size:13px;font-family:'DM Sans',sans-serif;cursor:pointer;padding:8px;margin-bottom:40px;text-decoration:underline;text-underline-offset:3px}
 .cm-text{font-size:15px;line-height:1.5;color:var(--ink2);margin:8px 0 20px}
-/* ── Profile / World Map ── */
+/* ── Profile / World Map (Been-style) ── */
 #profile{background:var(--surface);overflow-y:auto}
-.profile-header-bar{display:flex;align-items:center;gap:14px;padding:40px 24px 20px;background:var(--ink)}
-.profile-avatar{width:56px;height:56px;border-radius:50%;background:var(--green);color:#fff;display:flex;align-items:center;justify-content:center;font-size:24px;font-weight:600;font-family:'DM Sans';flex-shrink:0}
+.profile-hero{background:linear-gradient(165deg,#0d1b2a 0%,#102a3c 55%,#0a1622 100%);padding:40px 22px 28px;position:relative;overflow:hidden}
+.profile-hero::before{content:'';position:absolute;top:-40%;right:-20%;width:80%;height:80%;background:radial-gradient(circle,rgba(42,122,86,0.25),transparent 70%);pointer-events:none}
+.profile-header-bar{display:flex;align-items:center;gap:14px;margin-bottom:18px;position:relative;z-index:2}
+.profile-avatar{width:54px;height:54px;border-radius:50%;background:var(--green);color:#fff;display:flex;align-items:center;justify-content:center;font-size:23px;font-weight:600;font-family:'DM Sans';flex-shrink:0;box-shadow:0 4px 20px rgba(42,122,86,0.4)}
 .profile-name{font-family:'Playfair Display',serif;font-size:24px;color:#fff;line-height:1.1}
-.profile-email{font-size:12px;color:rgba(255,255,255,0.5);margin-top:3px}
-.profile-body{padding:24px 20px}
-.world-map-wrap{width:100%;line-height:0;margin:0 0 24px}
-.world-map-wrap svg{width:100%;height:auto;display:block}
-.wm-country{fill:#dcd9d2;stroke:var(--surface);stroke-width:0.3;transition:fill .3s}
-.wm-country.visited{fill:#2a7a56}
-.world-stats{display:flex;gap:10px;margin-bottom:10px}
-.ws-block{flex:1;background:var(--white);border:1px solid var(--border);border-radius:18px;padding:18px 12px;text-align:center}
-.ws-n{font-family:'Playfair Display',serif;font-size:30px;color:var(--green);line-height:1}
-.ws-l{font-size:11px;color:var(--ink3);margin-top:6px;text-transform:uppercase;letter-spacing:.08em}
+.profile-email{font-size:12px;color:rgba(255,255,255,0.45);margin-top:3px}
+.world-map-wrap{width:100%;line-height:0;position:relative;z-index:2;margin:4px 0}
+.world-map-wrap svg{width:100%;height:auto;display:block;overflow:visible}
+.wm-country{fill:#1e3346;stroke:#0d1b2a;stroke-width:0.4;transition:fill .4s}
+.wm-country.visited{fill:#2fb574;filter:drop-shadow(0 0 3px rgba(47,181,116,0.6))}
+.hero-headline{position:relative;z-index:2;text-align:center;color:rgba(255,255,255,0.92);font-family:'Playfair Display',serif;font-size:17px;font-style:italic;margin:14px 0 18px;line-height:1.4}
+.hero-headline b{color:#3fd488;font-style:normal;font-weight:600}
+.hero-stats{position:relative;z-index:2;display:flex;align-items:center;justify-content:center;gap:0}
+.hs-item{display:flex;flex-direction:column;align-items:center;padding:0 22px}
+.hs-n{font-family:'Playfair Display',serif;font-size:30px;color:#fff;line-height:1}
+.hs-l{font-size:10px;color:rgba(255,255,255,0.5);text-transform:uppercase;letter-spacing:.1em;margin-top:5px}
+.hs-div{width:1px;height:34px;background:rgba(255,255,255,0.12)}
+.profile-body{padding:24px 22px}
 .country-chips{display:flex;flex-wrap:wrap;gap:8px;margin-top:4px}
 .country-chip{background:var(--white);border:1px solid var(--border);border-radius:100px;padding:8px 14px;font-size:13px;color:var(--ink2);display:flex;align-items:center;gap:6px}
 .country-chips-empty{color:var(--ink3);font-size:14px;padding:8px 0}
@@ -353,23 +358,25 @@ body{font-family:'DM Sans',sans-serif;background:#0a0a0a;max-width:430px;margin:
 </div>
 
 <div class="screen" id="profile">
-  <div class="profile-header-bar">
-    <div class="profile-avatar" id="profAvatar">?</div>
-    <div><div class="profile-name" id="profName">—</div><div class="profile-email" id="profEmail"></div></div>
+  <div class="profile-hero">
+    <div class="profile-header-bar">
+      <div class="profile-avatar" id="profAvatar">?</div>
+      <div><div class="profile-name" id="profName">—</div><div class="profile-email" id="profEmail"></div></div>
+    </div>
+    <div class="world-map-wrap" id="worldMapWrap"></div>
+    <div class="hero-headline" id="heroHeadline">Comece a explorar o mundo</div>
+    <div class="hero-stats">
+      <div class="hs-item"><span class="hs-n" id="wsCountries">0</span><span class="hs-l">países</span></div>
+      <div class="hs-div"></div>
+      <div class="hs-item"><span class="hs-n" id="wsCities">0</span><span class="hs-l">cidades</span></div>
+      <div class="hs-div"></div>
+      <div class="hs-item"><span class="hs-n" id="wsContinents">0</span><span class="hs-l">continentes</span></div>
+    </div>
   </div>
   <div class="profile-body">
-    <div class="world-map-wrap" id="worldMapWrap"></div>
-    <div class="world-stats">
-      <div class="ws-block"><div class="ws-n" id="wsCountries">0</div><div class="ws-l">países</div></div>
-      <div class="ws-block"><div class="ws-n" id="wsCities">0</div><div class="ws-l">cidades</div></div>
-    </div>
-    <div class="world-stats">
-      <div class="ws-block"><div class="ws-n" id="wsContinents">0</div><div class="ws-l">continentes</div></div>
-      <div class="ws-block"><div class="ws-n" id="wsPct">0%</div><div class="ws-l">do mundo</div></div>
-    </div>
-    <div class="section-head" style="margin-top:8px"><span class="section-title">Países que conheço</span></div>
+    <div class="section-head"><span class="section-title">Países que conheço</span></div>
     <div class="country-chips" id="countryChips"></div>
-    <button class="action-btn" style="margin-top:20px;background:var(--surface);color:var(--ink)" onclick="signOut()">Sair da conta</button>
+    <button class="action-btn" style="margin-top:24px;background:var(--surface);color:var(--ink2);border:1px solid var(--border)" onclick="signOut()">Sair da conta</button>
     <div style="height:40px"></div>
   </div>
   <div class="bottom-nav"><div class="nav-item" onclick="goTo('dashboard');loadDashboard()"><div class="nav-icon">🗺️</div><div class="nav-label">Viagens</div></div><div class="nav-item" onclick="toast('Em breve','Explorar chega em breve!')"><div class="nav-icon">🔍</div><div class="nav-label">Explorar</div></div><div class="nav-item" onclick="toast('Em breve','Amigos chega em breve!')"><div class="nav-icon">👥</div><div class="nav-label">Amigos</div></div><div class="nav-item active" onclick="goTo('profile');loadProfile()"><div class="nav-icon">👤</div><div class="nav-label" style="color:var(--ink);font-weight:600">Perfil</div></div></div>
@@ -1041,10 +1048,14 @@ async function loadProfile(){
   const visited=visitedCountryNames();
   const conts=new Set();
   visited.forEach(c=>{const info=COUNTRY_INFO[c];if(info)conts.add(info.cont)});
+  const pct=Math.round(visited.length/195*100);
   document.getElementById('wsCountries').textContent=visited.length;
   document.getElementById('wsCities').textContent=visitedCityCount();
   document.getElementById('wsContinents').textContent=conts.size;
-  document.getElementById('wsPct').textContent=Math.round(visited.length/195*100)+'%';
+  // Headline
+  const hl=document.getElementById('heroHeadline');
+  if(visited.length===0){hl.innerHTML='Comece a explorar o mundo'}
+  else{hl.innerHTML=`Você já explorou <b>${pct}%</b> do mundo`}
   const chips=document.getElementById('countryChips');
   if(visited.length){
     chips.innerHTML=visited.map(c=>`<div class="country-chip">${flagFor(c)} ${c}</div>`).join('');
