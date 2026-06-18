@@ -197,8 +197,8 @@ body{font-family:'DM Sans',sans-serif;background:#0a0a0a;max-width:430px;margin:
 .profile-avatar{width:54px;height:54px;border-radius:50%;background:var(--green);color:#fff;display:flex;align-items:center;justify-content:center;font-size:23px;font-weight:600;font-family:'DM Sans';flex-shrink:0;box-shadow:0 4px 20px rgba(42,122,86,0.4)}
 .profile-name{font-family:'Playfair Display',serif;font-size:24px;color:#fff;line-height:1.1}
 .profile-email{font-size:12px;color:rgba(255,255,255,0.45);margin-top:3px}
-.world-map-wrap{width:100%;line-height:0;position:relative;z-index:2;margin:4px 0}
-.world-map-wrap svg{width:100%;height:auto;display:block;overflow:visible}
+.world-map-wrap{width:100%;line-height:0;position:relative;z-index:2;margin:8px 0}
+.world-map-wrap svg{width:100%;height:auto;display:block;overflow:visible;min-height:200px}
 .wm-country{fill:#1e3346;stroke:#0d1b2a;stroke-width:0.4;transition:fill .4s}
 .wm-country.visited{fill:#2fb574;filter:drop-shadow(0 0 3px rgba(47,181,116,0.6))}
 .hero-headline{position:relative;z-index:2;text-align:center;color:rgba(255,255,255,0.92);font-family:'Playfair Display',serif;font-size:17px;font-style:italic;margin:14px 0 18px;line-height:1.4}
@@ -1106,8 +1106,8 @@ async function renderWorldMap(visited){
     const d=featureToPath(f,W,H);
     if(d)paths+=`<path class="${cls}" d="${d}"/>`;
   });
-  // Tighter crop: focus on inhabited landmass band (cuts empty ocean/poles) so continents fill the panel
-  wrap.innerHTML=`<svg viewBox="8 48 ${W-16} ${H-150}" preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg">${paths}</svg>`;
+  // Aggressive crop: just the inhabited latitude band (~72°N to ~56°S), full width — fills the panel
+  wrap.innerHTML=`<svg viewBox="10 60 ${W-20} 200" preserveAspectRatio="xMidYMid slice" xmlns="http://www.w3.org/2000/svg">${paths}</svg>`;
 }
 function goTo(id){document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));document.getElementById(id).classList.add('active');window.scrollTo(0,0)}
 function showOv(id){populateTripOpts();if(id==='ov-newtrip')prepNewTrip();document.getElementById(id).classList.add('show')}
