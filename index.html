@@ -1106,8 +1106,8 @@ async function renderWorldMap(visited){
     const d=featureToPath(f,W,H);
     if(d)paths+=`<path class="${cls}" d="${d}"/>`;
   });
-  // Crop poles (Antarctica/top) so map fills the space without huge empty bands
-  wrap.innerHTML=`<svg viewBox="0 30 ${W} ${H-110}" xmlns="http://www.w3.org/2000/svg">${paths}</svg>`;
+  // Tighter crop: focus on inhabited landmass band (cuts empty ocean/poles) so continents fill the panel
+  wrap.innerHTML=`<svg viewBox="8 48 ${W-16} ${H-150}" preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg">${paths}</svg>`;
 }
 function goTo(id){document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));document.getElementById(id).classList.add('active');window.scrollTo(0,0)}
 function showOv(id){populateTripOpts();if(id==='ov-newtrip')prepNewTrip();document.getElementById(id).classList.add('show')}
@@ -1167,6 +1167,7 @@ async function startLoginPhotos(){
   if(tag)tag.innerHTML='<span class="lpt-dot"></span>'+LOGIN_CITIES[0].name;
   clearInterval(loginPhotoTimer);
   loginPhotoTimer=setInterval(rotateLoginPhoto,5000);
+  initLoginSwipe();
   // Fetch real photos from Unsplash (async, fills in as they arrive)
   LOGIN_CITIES.forEach(async(c,i)=>{
     try{
@@ -1182,15 +1183,38 @@ async function startLoginPhotos(){
     }catch(e){/* gradient stays as fallback */}
   });
 }
-function rotateLoginPhoto(){
+function goToLoginPhoto(idx){
   const photos=document.querySelectorAll('.login-photo');
   if(!photos.length)return;
   photos[loginPhotoIdx].classList.remove('active');
-  loginPhotoIdx=(loginPhotoIdx+1)%photos.length;
+  loginPhotoIdx=(idx+photos.length)%photos.length;
   photos[loginPhotoIdx].classList.add('active');
   document.querySelectorAll('#photoDots .pd').forEach((d,i)=>d.classList.toggle('active',i===loginPhotoIdx));
   const tag=document.getElementById('loginPlaceTag');
-  if(tag){tag.style.opacity='0';setTimeout(()=>{tag.innerHTML='<span class="lpt-dot"></span>'+LOGIN_CITIES[loginPhotoIdx].name;tag.style.opacity='1'},500)}
+  if(tag){tag.style.opacity='0';setTimeout(()=>{tag.innerHTML='<span class="lpt-dot"></span>'+LOGIN_CITIES[loginPhotoIdx].name;tag.style.opacity='1'},400)}
+}
+function rotateLoginPhoto(){goToLoginPhoto(loginPhotoIdx+1)}
+function nextLoginPhoto(){restartLoginTimer();goToLoginPhoto(loginPhotoIdx+1)}
+function prevLoginPhoto(){restartLoginTimer();goToLoginPhoto(loginPhotoIdx-1)}
+function restartLoginTimer(){clearInterval(loginPhotoTimer);loginPhotoTimer=setInterval(rotateLoginPhoto,5000)}
+// Swipe handling on login photos
+function initLoginSwipe(){
+  const el=document.getElementById('loginPhotos');
+  if(!el||el.dataset.swipeInit)return;
+  el.dataset.swipeInit='1';
+  let startX=0,startY=0,tracking=false;
+  el.addEventListener('touchstart',e=>{startX=e.touches[0].clientX;startY=e.touches[0].clientY;tracking=true},{passive:true});
+  el.addEventListener('touchend',e=>{
+    if(!tracking)return;tracking=false;
+    const dx=e.changedTouches[0].clientX-startX,dy=e.changedTouches[0].clientY-startY;
+    if(Math.abs(dx)>40&&Math.abs(dx)>Math.abs(dy)){if(dx<0)nextLoginPhoto();else prevLoginPhoto()}
+  },{passive:true});
+  // Also allow click on left/right half for desktop — only upper 60% to avoid the login buttons area
+  el.addEventListener('click',e=>{
+    const r=el.getBoundingClientRect();
+    if(e.clientY-r.top>r.height*0.6)return; // ignore clicks near buttons
+    if(e.clientX-r.left>r.width/2)nextLoginPhoto();else prevLoginPhoto();
+  });
 }
 function showEmailForm(){
   document.getElementById('loginButtons').style.display='none';
