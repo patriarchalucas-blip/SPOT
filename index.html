@@ -116,6 +116,8 @@ body{font-family:'DM Sans',sans-serif;background:#0a0a0a;max-width:430px;margin:
 .trip-float{position:absolute;bottom:-18px;left:24px;font-family:'Playfair Display',serif;font-size:80px;font-style:italic;color:rgba(255,255,255,0.06);white-space:nowrap;pointer-events:none;line-height:1}
 .trip-hero-content{position:absolute;inset:0;padding:52px 24px 28px;display:flex;flex-direction:column;justify-content:flex-end;background:linear-gradient(to bottom,rgba(0,0,0,0.1),rgba(0,0,0,0.65))}
 .back-btn{position:absolute;top:20px;left:20px;width:36px;height:36px;background:rgba(0,0,0,0.35);border:none;border-radius:50%;color:white;font-size:16px;cursor:pointer;display:flex;align-items:center;justify-content:center;backdrop-filter:blur(8px)}
+.trip-del-btn{position:absolute;top:20px;right:20px;width:36px;height:36px;background:rgba(0,0,0,0.35);border:none;border-radius:50%;color:white;font-size:15px;cursor:pointer;display:flex;align-items:center;justify-content:center;backdrop-filter:blur(8px)}
+.trip-del-btn:active{background:rgba(192,57,43,0.6)}
 .trip-hero-label{font-size:11px;color:rgba(255,255,255,0.5);text-transform:uppercase;letter-spacing:.1em;margin-bottom:4px}
 .trip-hero-name{font-family:'Playfair Display',serif;font-size:32px;color:#fff}
 .trip-hero-meta{font-size:13px;color:rgba(255,255,255,0.5);margin-top:4px}
@@ -181,7 +183,8 @@ body{font-family:'DM Sans',sans-serif;background:#0a0a0a;max-width:430px;margin:
 .star-btn.lit{color:var(--amber)}
 .review-area{width:100%;background:var(--surface);border:none;border-radius:16px;padding:16px;font-size:14px;font-family:'DM Sans',sans-serif;color:var(--ink);resize:none;outline:none;line-height:1.6}
 .review-area::placeholder{color:var(--ink3)}
-.action-btn{display:block;width:100%;background:var(--ink);color:white;border:none;border-radius:16px;padding:17px;font-size:15px;font-weight:600;font-family:'DM Sans',sans-serif;cursor:pointer;margin-top:12px;margin-bottom:40px}
+.action-btn{display:block;width:100%;background:var(--ink);color:white;border:none;border-radius:16px;padding:17px;font-size:15px;font-weight:600;font-family:'DM Sans',sans-serif;cursor:pointer;margin-top:12px;margin-bottom:16px}
+.delete-link{display:block;width:100%;background:none;border:none;color:var(--red);font-size:13px;font-family:'DM Sans',sans-serif;cursor:pointer;padding:8px;margin-bottom:40px;text-decoration:underline;text-underline-offset:3px}
 
 /* OVERLAYS */
 .overlay{position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:200;display:none;align-items:flex-end;backdrop-filter:blur(4px)}
@@ -266,7 +269,7 @@ body{font-family:'DM Sans',sans-serif;background:#0a0a0a;max-width:430px;margin:
 
 <div class="screen" id="login">
   <div class="login-photos" id="loginPhotos">
-    <div class="login-photo active" style="background-image:url('https://images.unsplash.com/photo-1555990538-ffc0a1c1c1e1?w=900&q=80')"></div>
+    <div class="login-photo active" style="background:linear-gradient(150deg,#0f2027,#203a43,#2c5364)"></div>
   </div>
   <div class="login-scrim"></div>
   <div class="login-inner">
@@ -317,10 +320,10 @@ body{font-family:'DM Sans',sans-serif;background:#0a0a0a;max-width:430px;margin:
 </div>
 
 <div class="screen" id="trip">
-  <div class="trip-hero"><div class="trip-hero-img" id="tripHeroImg"></div><div class="trip-float" id="tripFloat"></div><div class="trip-hero-content"><button class="back-btn" onclick="goTo('dashboard');loadDashboard()">←</button><div><div class="trip-hero-label" id="tripLabel"></div><div class="trip-hero-name" id="tripName"></div><div class="trip-hero-meta" id="tripMeta"></div></div></div></div>
+  <div class="trip-hero"><div class="trip-hero-img" id="tripHeroImg"></div><div class="trip-float" id="tripFloat"></div><div class="trip-hero-content"><button class="back-btn" onclick="goTo('dashboard');loadDashboard()">←</button><button class="trip-del-btn" onclick="deleteTrip()">🗑</button><div><div class="trip-hero-label" id="tripLabel"></div><div class="trip-hero-name" id="tripName"></div><div class="trip-hero-meta" id="tripMeta"></div></div></div></div>
   <div class="cat-tabs-wrap"><div class="cat-tabs"><div class="cat-tab active" onclick="switchCat('food',this)"><div class="ct-icon">🍽️</div><div>Comer & Beber</div><div class="ct-count" id="cnt-food">0</div></div><div class="cat-tab" onclick="switchCat('hotel',this)"><div class="ct-icon">🏨</div><div>Onde Ficar</div><div class="ct-count" id="cnt-hotel">0</div></div><div class="cat-tab" onclick="switchCat('experience',this)"><div class="ct-icon">🗺️</div><div>Experiências</div><div class="ct-count" id="cnt-experience">0</div></div></div></div>
   <div class="trip-body" id="tripBody"></div>
-  <button class="fab" onclick="showOv('ov-trip')">+</button>
+  <button class="fab" onclick="addSpotToCurrentTrip()">+</button>
   <div class="bottom-nav"><div class="nav-item active" onclick="goTo('dashboard');loadDashboard()"><div class="nav-icon">🗺️</div><div class="nav-label" style="color:var(--ink);font-weight:600">Viagens</div></div><div class="nav-item" onclick="toast('Em breve','Explorar chega em breve!')"><div class="nav-icon">🔍</div><div class="nav-label">Explorar</div></div><div class="nav-item" onclick="toast('Em breve','Amigos chega em breve!')"><div class="nav-icon">👥</div><div class="nav-label">Amigos</div></div><div class="nav-item" onclick="toast('Em breve','Perfil chega em breve!')"><div class="nav-icon">👤</div><div class="nav-label">Perfil</div></div></div>
 </div>
 
@@ -329,7 +332,7 @@ body{font-family:'DM Sans',sans-serif;background:#0a0a0a;max-width:430px;margin:
   <div class="d-section"><div class="sec-label">Minha nota</div><div class="note-card"><div class="note-glow"></div><div class="note-quote" id="placeNote"></div><div class="note-attr" id="placeNoteAttr"></div></div></div>
   <div class="d-section"><div class="sec-label">Informações</div><div class="info-grid" id="placeInfoGrid"></div></div>
   <div class="d-section"><div class="sec-label">Status</div><div class="status-toggle"><button class="toggle-btn sel-want" id="t-want" onclick="setStatus('want')">Quero ir</button><button class="toggle-btn" id="t-been" onclick="setStatus('been')">Fui</button><button class="toggle-btn" id="t-skip" onclick="setStatus('skip')">Pular</button></div></div>
-  <div class="d-section"><div class="sec-label">Minha avaliação</div><div class="stars-row"><button class="star-btn" onclick="rateStar(1)">★</button><button class="star-btn" onclick="rateStar(2)">★</button><button class="star-btn" onclick="rateStar(3)">★</button><button class="star-btn" onclick="rateStar(4)">★</button><button class="star-btn" onclick="rateStar(5)">★</button></div><textarea class="review-area" id="reviewText" rows="3" placeholder="O que você achou?"></textarea><button class="action-btn" onclick="saveReview()">Salvar avaliação</button></div>
+  <div class="d-section"><div class="sec-label">Minha avaliação</div><div class="stars-row"><button class="star-btn" onclick="rateStar(1)">★</button><button class="star-btn" onclick="rateStar(2)">★</button><button class="star-btn" onclick="rateStar(3)">★</button><button class="star-btn" onclick="rateStar(4)">★</button><button class="star-btn" onclick="rateStar(5)">★</button></div><textarea class="review-area" id="reviewText" rows="3" placeholder="O que você achou?"></textarea><button class="action-btn" onclick="saveReview()">Salvar avaliação</button><button class="delete-link" onclick="deleteSpot()">Excluir este spot</button></div>
 </div>
 
 <!-- OVERLAYS -->
@@ -387,6 +390,15 @@ async function dbUpdate(table,id,obj){
     body:JSON.stringify(obj)
   });
   if(!r.ok){console.error('dbUpdate error',table,await r.text());return{error:true}}
+  return{error:null};
+}
+async function dbDelete(table,id){
+  await ensureToken();
+  const r=await fetch(SB_URL+'/rest/v1/'+table+'?id=eq.'+id,{
+    method:'DELETE',
+    headers:{'apikey':SB_KEY,'Authorization':'Bearer '+S.token}
+  });
+  if(!r.ok){console.error('dbDelete error',table,await r.text());return{error:true}}
   return{error:null};
 }
 
@@ -470,13 +482,41 @@ function renderTrips(){
   S.trips.forEach(t=>{
     const sp=t._spots||[],vis=sp.filter(s=>s.status==='been').length,pct=sp.length?Math.round(vis/sp.length*100):0,circ=Math.round(pct*.94);
     const flags=(t.destinations||[]).slice(0,3).map(d=>flagFor(d)).join(' ')||'🌍';
-    const img=unsplash(t.destinations);
-    h+=`<div class="trip-card" onclick="openTrip('${t.id}')"><div class="tc-bg" style="background-image:url('${img}')"></div><div class="tc-overlay"></div><div class="tc-content"><div class="tc-top"><div class="tc-flags">${flags}</div><div class="tc-status ${t.status==='done'?'done':''}">${t.status==='done'?'Concluída':'Planejando'}</div></div><div><div class="tc-dest">${t.dates||''}</div><div class="tc-name">${t.name}</div><div class="tc-footer"><div class="tc-pills"><span class="tc-pill">${sp.length} spots</span>${vis?`<span class="tc-pill">${vis} visitados</span>`:''}</div><svg class="prog-circle" viewBox="0 0 36 36"><circle cx="18" cy="18" r="15" fill="none" stroke="rgba(255,255,255,0.15)" stroke-width="2.5"/><circle cx="18" cy="18" r="15" fill="none" stroke="rgba(255,255,255,0.6)" stroke-width="2.5" stroke-dasharray="${circ} ${94-circ}" stroke-linecap="round" transform="rotate(-90 18 18)"/><text x="18" y="22" text-anchor="middle" fill="white" font-size="9" font-family="DM Sans">${pct}%</text></svg></div></div></div></div>`;
+    const grad=destGradient((t.destinations&&t.destinations[0])||t.name);
+    h+=`<div class="trip-card" onclick="openTrip('${t.id}')"><div class="tc-bg" id="tcbg-${t.id}" style="background:${grad}"></div><div class="tc-overlay"></div><div class="tc-content"><div class="tc-top"><div class="tc-flags">${flags}</div><div class="tc-status ${t.status==='done'?'done':''}">${t.status==='done'?'Concluída':'Planejando'}</div></div><div><div class="tc-dest">${t.dates||''}</div><div class="tc-name">${t.name}</div><div class="tc-footer"><div class="tc-pills"><span class="tc-pill">${sp.length} spots</span>${vis?`<span class="tc-pill">${vis} visitados</span>`:''}</div><svg class="prog-circle" viewBox="0 0 36 36"><circle cx="18" cy="18" r="15" fill="none" stroke="rgba(255,255,255,0.15)" stroke-width="2.5"/><circle cx="18" cy="18" r="15" fill="none" stroke="rgba(255,255,255,0.6)" stroke-width="2.5" stroke-dasharray="${circ} ${94-circ}" stroke-linecap="round" transform="rotate(-90 18 18)"/><text x="18" y="22" text-anchor="middle" fill="white" font-size="9" font-family="DM Sans">${pct}%</text></svg></div></div></div></div>`;
   });
   c.innerHTML=h;
+  fillTripPhotos();
 }
 
 // ═══ TRIP VIEW ═══
+async function deleteTrip(){
+  if(!S.curTrip)return;
+  if(!confirm(`Excluir a viagem "${S.curTrip.name}"? Todos os spots dela serão apagados. Isso não pode ser desfeito.`))return;
+  const id=S.curTrip.id;
+  // Delete spots first, then the trip
+  await dbDelete('spots','trip_id=eq.'+id).catch(()=>{});
+  // dbDelete uses id=eq, but spots are deleted by trip_id — do it directly
+  await fetch(SB_URL+'/rest/v1/spots?trip_id=eq.'+id,{method:'DELETE',headers:{'apikey':SB_KEY,'Authorization':'Bearer '+S.token}}).catch(()=>{});
+  const{error}=await dbDelete('trips',id);
+  if(!error){
+    S.trips=S.trips.filter(t=>t.id!==id);
+    S.curTrip=null;
+    goTo('dashboard');loadDashboard();
+    toast('Viagem excluída','');
+  }else toast('Erro ao excluir','');
+}
+async function deleteSpot(){
+  if(!S.curPlace)return;
+  if(!confirm(`Excluir "${S.curPlace.name}"?`))return;
+  const id=S.curPlace.id,tripId=S.curPlace.trip_id;
+  const{error}=await dbDelete('spots',id);
+  if(!error){
+    if(S.curTrip&&S.curTrip._spots){S.curTrip._spots=S.curTrip._spots.filter(s=>s.id!==id)}
+    goTo('trip');loadTrip(S.curTrip);
+    toast('Spot excluído','');
+  }else toast('Erro ao excluir','');
+}
 async function openTrip(id){
   const t=S.trips.find(x=>x.id===id);if(!t)return;
   S.curTrip=t;S.addTrip=t;await loadTrip(t);goTo('trip');
@@ -487,7 +527,10 @@ async function loadTrip(t){
   document.getElementById('tripName').textContent=t.name;
   document.getElementById('tripLabel').textContent=(t.destinations||[]).map(d=>flagFor(d)).join(' ')+(t.dates?' · '+t.dates:'');
   document.getElementById('tripMeta').textContent=t.dates||'';
-  document.getElementById('tripHeroImg').style.backgroundImage=`url('${unsplash(t.destinations)}')`;
+  const heroEl=document.getElementById('tripHeroImg');
+  const dest=(t.destinations&&t.destinations[0])||t.name;
+  heroEl.style.background=destGradient(dest);heroEl.style.backgroundImage='';
+  fetchCityPhoto(dest).then(url=>{if(url)heroEl.style.backgroundImage=`url('${url}')`});
   const spots=await dbGet('spots','trip_id=eq.'+t.id+'&order=created_at.asc');
   t._spots=spots||[];
   switchCat(S.curCat,document.querySelector('.cat-tab.active'));
@@ -525,7 +568,9 @@ async function openPlace(id){
   document.getElementById('placeType').textContent=`${catLabel(s.category)} · ${s.city||''}`;
   document.getElementById('placeNote').textContent=`"${s.my_note}"`;
   document.getElementById('placeNoteAttr').textContent=`— ${document.getElementById('dashName').textContent}, antes de ir`;
-  document.getElementById('placeHeroImg').style.backgroundImage=`url('${s.photo_url||unsplash([s.city||S.curTrip.name])}')`;
+  const phEl=document.getElementById('placeHeroImg');
+  if(s.photo_url){phEl.style.background='';phEl.style.backgroundImage=`url('${s.photo_url}')`}
+  else{phEl.style.background=destGradient(s.city||s.name);phEl.style.backgroundImage='';fetchCityPhoto(s.city||s.name).then(u=>{if(u)phEl.style.backgroundImage=`url('${u}')`})}
   let ig='';
   if(s.address)ig+=`<div class="info-cell wide"><div class="info-cell-icon">📍</div><div class="info-cell-label">Endereço</div><div class="info-cell-value">${s.address}</div></div>`;
   if(s.city)ig+=`<div class="info-cell"><div class="info-cell-icon">🏙️</div><div class="info-cell-label">Cidade</div><div class="info-cell-value">${s.city}</div></div>`;
@@ -557,9 +602,15 @@ async function saveReview(){
 // ═══ ADD SPOT FLOW ═══
 function populateTripOpts(){
   const c=document.getElementById('tripOptions');
-  c.innerHTML=S.trips.map(t=>`<div class="trip-option" onclick="selTripForSpot('${t.id}')"><div class="trip-option-img" style="background-image:url('${unsplash(t.destinations)}')"></div><div><div class="trip-option-name">${t.name}</div><div class="trip-option-meta">${(t._spots||[]).length} spots</div></div><div class="trip-option-arrow">›</div></div>`).join('');
+  c.innerHTML=S.trips.map(t=>`<div class="trip-option" onclick="selTripForSpot('${t.id}')"><div class="trip-option-img" style="background:${destGradient((t.destinations&&t.destinations[0])||t.name)}">${flagFor((t.destinations&&t.destinations[0])||'')}</div><div><div class="trip-option-name">${t.name}</div><div class="trip-option-meta">${(t._spots||[]).length} spots</div></div><div class="trip-option-arrow">›</div></div>`).join('');
 }
 function selTripForSpot(id){S.addTrip=S.trips.find(t=>t.id===id);nextOv('ov-trip','ov-cat')}
+function addSpotToCurrentTrip(){
+  // Already inside a trip — skip "which trip" and go straight to category
+  S.addTrip=S.curTrip;
+  document.querySelectorAll('.cat-option').forEach(o=>o.classList.remove('sel'));
+  document.getElementById('ov-cat').classList.add('show');
+}
 function pickCat(c){S.addCat=c;document.querySelectorAll('.cat-option').forEach(o=>o.classList.remove('sel'));document.getElementById('co-'+c).classList.add('sel');setTimeout(()=>nextOv('ov-cat','ov-search'),200)}
 const GAPI='AIzaSyDYUDC3BkvUYSjlBVX2C6BZ8pMmycxfYUQ';
 let searchTO;
@@ -569,10 +620,9 @@ function searchPlaces(v){
   r.innerHTML='<div class="search-loading">Buscando...</div>';
   searchTO=setTimeout(async()=>{
     try{
-      const typeMap={food:'restaurant|cafe|bar|bakery|meal_delivery',hotel:'lodging|hotel',experience:'tourist_attraction|museum|park|amusement_park|church'};
       const resp=await fetch('https://places.googleapis.com/v1/places:searchText',{
         method:'POST',
-        headers:{'Content-Type':'application/json','X-Goog-Api-Key':GAPI,'X-Goog-FieldMask':'places.id,places.displayName,places.formattedAddress,places.location,places.photos,places.rating,places.userRatingCount,places.types,places.primaryType'},
+        headers:{'Content-Type':'application/json','X-Goog-Api-Key':GAPI,'X-Goog-FieldMask':'places.id,places.displayName,places.formattedAddress,places.addressComponents,places.location,places.photos,places.rating'},
         body:JSON.stringify({textQuery:v,languageCode:'pt-BR',maxResultCount:6})
       });
       const data=await resp.json();
@@ -580,14 +630,15 @@ function searchPlaces(v){
       S.searchResults=data.places.map(p=>{
         const name=p.displayName?.text||'';
         const addr=p.formattedAddress||'';
-        const city=extractCityFromAddr(addr);
+        const city=cityFromComponents(p.addressComponents)||extractCityFromAddr(addr);
         const rating=p.rating?p.rating+' ⭐':'';
         const photoRef=p.photos?.[0]?.name||'';
-        const photoUrl=photoRef?'https://places.googleapis.com/v1/'+photoRef+'/media?maxWidthPx=200&key='+GAPI:'';
-        return{name,meta:addr,icon:catIcon(S.addCat),city,address:addr,photo_url:photoUrl,rating_google:rating};
+        const photoThumb=photoRef?'https://places.googleapis.com/v1/'+photoRef+'/media?maxWidthPx=200&key='+GAPI:'';
+        const photoFull=photoRef?'https://places.googleapis.com/v1/'+photoRef+'/media?maxWidthPx=800&key='+GAPI:'';
+        return{name,meta:addr,icon:catIcon(S.addCat),city,address:addr,photo_url:photoFull,photo_thumb:photoThumb,rating_google:rating};
       });
       r.innerHTML=S.searchResults.map((p,i)=>{
-        const thumb=p.photo_url?'<div class="sr-icon"><img src="'+p.photo_url+'" style="width:100%;height:100%;object-fit:cover;border-radius:12px"></div>':'<div class="sr-icon">'+p.icon+'</div>';
+        const thumb=p.photo_thumb?'<div class="sr-icon"><img src="'+p.photo_thumb+'" style="width:100%;height:100%;object-fit:cover;border-radius:12px"></div>':'<div class="sr-icon">'+p.icon+'</div>';
         return '<div class="search-result" onclick="pickSearchResult('+i+')">'+thumb+'<div><div class="sr-name">'+p.name+'</div><div class="sr-meta">'+p.address.substring(0,50)+(p.rating_google?' · '+p.rating_google:'')+'</div></div></div>';
       }).join('');
     }catch(e){
@@ -595,6 +646,12 @@ function searchPlaces(v){
       r.innerHTML='<div class="search-loading">Erro na busca. Tente novamente.</div>';
     }
   },500);
+}
+function cityFromComponents(comps){
+  if(!comps||!comps.length)return'';
+  // Priority: locality > postal_town > administrative_area_level_2 > admin_level_1
+  const byType=(t)=>comps.find(c=>(c.types||[]).includes(t))?.longText;
+  return byType('locality')||byType('postal_town')||byType('administrative_area_level_2')||byType('administrative_area_level_1')||'';
 }
 function extractCityFromAddr(addr){
   if(!addr)return'';
@@ -701,7 +758,40 @@ function removeDest(n){S.selDests=S.selDests.filter(d=>d.name!==n);document.quer
 function catIcon(c){return{food:'🍽️',hotel:'🏨',experience:'🗺️'}[c]||'📍'}
 function catLabel(c){return{food:'Comer & Beber',hotel:'Onde Ficar',experience:'Experiência'}[c]||c}
 function flagFor(n){const m={'Croácia':'🇭🇷','Montenegro':'🇲🇪','Bósnia':'🇧🇦','Itália':'🇮🇹','Peru':'🇵🇪','França':'🇫🇷','Espanha':'🇪🇸','Portugal':'🇵🇹','Japão':'🇯🇵','Argentina':'🇦🇷','Grécia':'🇬🇷','Tailândia':'🇹🇭','Brasil':'🇧🇷','Estados Unidos':'🇺🇸'};return m[n]||'🌍'}
-function unsplash(d){const n=d?.[0]||'travel';const q={'Croácia':'dubrovnik','Montenegro':'kotor%20montenegro','Bósnia':'sarajevo','Itália':'rome%20colosseum','Peru':'machu%20picchu','França':'paris%20eiffel','Espanha':'barcelona','Portugal':'lisbon','Japão':'tokyo%20temple','Argentina':'buenos%20aires','Grécia':'santorini','Tailândia':'bangkok%20temple'};return`https://source.unsplash.com/800x600/?${q[n]||n.toLowerCase()}&sig=${n.charCodeAt(0)}`}
+// Cache for city photos so we don't refetch
+const cityPhotoCache={};
+async function fetchCityPhoto(query){
+  if(!query)return'';
+  if(cityPhotoCache[query]!==undefined)return cityPhotoCache[query];
+  try{
+    const resp=await fetch('https://places.googleapis.com/v1/places:searchText',{
+      method:'POST',
+      headers:{'Content-Type':'application/json','X-Goog-Api-Key':GAPI,'X-Goog-FieldMask':'places.photos'},
+      body:JSON.stringify({textQuery:query,maxResultCount:1})
+    });
+    const data=await resp.json();
+    const photoName=data.places?.[0]?.photos?.[0]?.name;
+    const url=photoName?'https://places.googleapis.com/v1/'+photoName+'/media?maxWidthPx=800&key='+GAPI:'';
+    cityPhotoCache[query]=url;
+    return url;
+  }catch(e){cityPhotoCache[query]='';return''}
+}
+// Fill trip card backgrounds with real photos after render
+async function fillTripPhotos(){
+  for(const t of S.trips){
+    const el=document.getElementById('tcbg-'+t.id);
+    if(!el)continue;
+    const dest=(t.destinations&&t.destinations[0])||t.name;
+    const url=await fetchCityPhoto(dest);
+    if(url&&el){el.style.backgroundImage=`url('${url}')`}
+  }
+}
+// Gradient fallback per destination (shows instantly, photo loads on top)
+function destGradient(name){
+  const grads=['linear-gradient(150deg,#0f2027,#2c5364)','linear-gradient(150deg,#3a1c71,#d76d77)','linear-gradient(150deg,#1b4f72,#2980b9)','linear-gradient(150deg,#34373b,#85929e)','linear-gradient(150deg,#7e3517,#e8b04b)','linear-gradient(150deg,#16222a,#3a6073)'];
+  let h=0;const s=name||'x';for(let i=0;i<s.length;i++)h=s.charCodeAt(i)+((h<<5)-h);
+  return grads[Math.abs(h)%grads.length];
+}
 
 // ═══ NAVIGATION ═══
 function goTo(id){document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));document.getElementById(id).classList.add('active');window.scrollTo(0,0)}
@@ -712,13 +802,30 @@ function nextOv(a,b){closeOv(a);setTimeout(()=>document.getElementById(b).classL
 function toast(t,m){const el=document.getElementById('toast');document.getElementById('toastTitle').textContent=t;document.getElementById('toastMsg').textContent=m;el.classList.add('show');setTimeout(()=>el.classList.remove('show'),3500)}
 
 // ═══ LOGIN BACKGROUNDS (real city photos via Google Places + gradient fallback) ═══
-const LOGIN_CITIES=[
-  {q:'Dubrovnik Croatia',name:'Dubrovnik, Croácia',grad:'linear-gradient(150deg,#0f2027,#203a43,#2c5364)'},
-  {q:'Tokyo Japan skyline',name:'Tóquio, Japão',grad:'linear-gradient(150deg,#3a1c71,#a44b8f,#d76d77)'},
-  {q:'Santorini Greece',name:'Santorini, Grécia',grad:'linear-gradient(150deg,#1b4f72,#2980b9,#d4e6f1)'},
-  {q:'Paris France Eiffel Tower',name:'Paris, França',grad:'linear-gradient(150deg,#34373b,#85929e,#d5a880)'},
-  {q:'Marrakech Morocco',name:'Marrakech, Marrocos',grad:'linear-gradient(150deg,#7e3517,#c0682a,#e8b04b)'}
+const ALL_LOGIN_CITIES=[
+  {q:'Dubrovnik Croatia',name:'Dubrovnik, Croácia'},
+  {q:'Tokyo Japan skyline',name:'Tóquio, Japão'},
+  {q:'Santorini Greece',name:'Santorini, Grécia'},
+  {q:'Paris France Eiffel Tower',name:'Paris, França'},
+  {q:'Marrakech Morocco',name:'Marrakech, Marrocos'},
+  {q:'Rome Italy Colosseum',name:'Roma, Itália'},
+  {q:'Kyoto Japan temple',name:'Kyoto, Japão'},
+  {q:'Lisbon Portugal',name:'Lisboa, Portugal'},
+  {q:'Barcelona Spain Sagrada',name:'Barcelona, Espanha'},
+  {q:'New York City skyline',name:'Nova York, EUA'},
+  {q:'Machu Picchu Peru',name:'Machu Picchu, Peru'},
+  {q:'Cape Town South Africa',name:'Cidade do Cabo, África do Sul'},
+  {q:'Venice Italy canal',name:'Veneza, Itália'},
+  {q:'Istanbul Turkey',name:'Istambul, Turquia'},
+  {q:'Bali Indonesia temple',name:'Bali, Indonésia'},
+  {q:'Rio de Janeiro Brazil',name:'Rio de Janeiro, Brasil'},
+  {q:'Amsterdam Netherlands canal',name:'Amsterdã, Holanda'},
+  {q:'Prague Czech Republic',name:'Praga, Tchéquia'},
+  {q:'Kotor Montenegro bay',name:'Kotor, Montenegro'},
+  {q:'Petra Jordan',name:'Petra, Jordânia'}
 ];
+// Shuffle and pick 6 random cities each time the app loads
+const LOGIN_CITIES=[...ALL_LOGIN_CITIES].sort(()=>Math.random()-0.5).slice(0,6).map(c=>({...c,grad:destGradient(c.name)}));
 let loginPhotoIdx=0,loginPhotoTimer=null;
 async function startLoginPhotos(){
   const container=document.getElementById('loginPhotos');
