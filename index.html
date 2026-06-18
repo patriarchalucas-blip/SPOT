@@ -195,12 +195,10 @@ body{font-family:'DM Sans',sans-serif;background:#0a0a0a;max-width:430px;margin:
 .profile-avatar{width:56px;height:56px;border-radius:50%;background:var(--green);color:#fff;display:flex;align-items:center;justify-content:center;font-size:24px;font-weight:600;font-family:'DM Sans';flex-shrink:0}
 .profile-name{font-family:'Playfair Display',serif;font-size:24px;color:#fff;line-height:1.1}
 .profile-email{font-size:12px;color:rgba(255,255,255,0.5);margin-top:3px}
-.profile-body{padding:20px 24px 24px}
-.world-map-card{background:#0e1a24;border-radius:22px;padding:18px 16px 12px;margin-bottom:16px;overflow:hidden}
-.wm-title{font-family:'Playfair Display',serif;font-size:16px;color:rgba(255,255,255,0.9);font-style:italic;margin-bottom:10px;padding-left:4px}
-.world-map-wrap{width:100%;line-height:0}
+.profile-body{padding:24px 20px}
+.world-map-wrap{width:100%;line-height:0;margin:0 0 24px}
 .world-map-wrap svg{width:100%;height:auto;display:block}
-.wm-country{fill:#26323d;stroke:#0e1a24;stroke-width:0.3;transition:fill .3s}
+.wm-country{fill:#dcd9d2;stroke:var(--surface);stroke-width:0.3;transition:fill .3s}
 .wm-country.visited{fill:#2a7a56}
 .world-stats{display:flex;gap:10px;margin-bottom:10px}
 .ws-block{flex:1;background:var(--white);border:1px solid var(--border);border-radius:18px;padding:18px 12px;text-align:center}
@@ -360,10 +358,7 @@ body{font-family:'DM Sans',sans-serif;background:#0a0a0a;max-width:430px;margin:
     <div><div class="profile-name" id="profName">—</div><div class="profile-email" id="profEmail"></div></div>
   </div>
   <div class="profile-body">
-    <div class="world-map-card">
-      <div class="wm-title">Meu mundo</div>
-      <div class="world-map-wrap" id="worldMapWrap"></div>
-    </div>
+    <div class="world-map-wrap" id="worldMapWrap"></div>
     <div class="world-stats">
       <div class="ws-block"><div class="ws-n" id="wsCountries">0</div><div class="ws-l">países</div></div>
       <div class="ws-block"><div class="ws-n" id="wsCities">0</div><div class="ws-l">cidades</div></div>
@@ -1100,8 +1095,8 @@ async function renderWorldMap(visited){
     const d=featureToPath(f,W,H);
     if(d)paths+=`<path class="${cls}" d="${d}"/>`;
   });
-  // crop antarctica a bit: viewBox cuts bottom
-  wrap.innerHTML=`<svg viewBox="0 12 ${W} ${H-70}" xmlns="http://www.w3.org/2000/svg">${paths}</svg>`;
+  // Crop poles (Antarctica/top) so map fills the space without huge empty bands
+  wrap.innerHTML=`<svg viewBox="0 30 ${W} ${H-110}" xmlns="http://www.w3.org/2000/svg">${paths}</svg>`;
 }
 function goTo(id){document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));document.getElementById(id).classList.add('active');window.scrollTo(0,0)}
 function showOv(id){populateTripOpts();if(id==='ov-newtrip')prepNewTrip();document.getElementById(id).classList.add('show')}
