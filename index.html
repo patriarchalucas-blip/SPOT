@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Spot</title>
-<link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>📍</text></svg>">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'><path d='M32 8C19.8 8 10 17 10 28.2c0 9.4 6.9 17.3 16.2 19.6L32 58l5.8-10.2C47.1 45.5 54 37.6 54 28.2 54 17 44.2 8 32 8z' fill='%232a7a56'/><circle cx='23.5' cy='27' r='3.2' fill='white'/><circle cx='32' cy='27' r='3.2' fill='white'/><circle cx='40.5' cy='27' r='3.2' fill='white'/></svg>">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,500;1,400&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
 <style>
@@ -41,9 +41,10 @@ body{font-family:'DM Sans',sans-serif;background:#0a0a0a;max-width:430px;margin:
 .photo-dots{display:flex;gap:6px;margin-bottom:20px}
 .photo-dots .pd{height:3px;border-radius:2px;background:rgba(255,255,255,0.3);transition:all .4s;width:16px}
 .photo-dots .pd.active{background:#fff;width:28px}
-.wordmark{font-family:'Playfair Display',serif;font-size:76px;color:#fff;letter-spacing:-3px;line-height:1;margin-bottom:8px;text-shadow:0 2px 40px rgba(0,0,0,0.5)}
+.brand-lockup{display:flex;align-items:center;gap:14px;margin-bottom:10px}
+.brand-mark{filter:drop-shadow(0 4px 16px rgba(0,0,0,0.35));flex-shrink:0}
+.wordmark{font-family:'Playfair Display',serif;font-size:60px;font-weight:500;color:#fff;letter-spacing:-1.5px;line-height:1;text-shadow:0 2px 40px rgba(0,0,0,0.5)}
 .wordmark em{font-style:italic;color:rgba(255,255,255,0.55)}
-.pin-o{font-style:normal;font-size:0.62em;display:inline-block;transform:translateY(-0.08em);margin:0 -0.04em;filter:drop-shadow(0 2px 8px rgba(0,0,0,0.5))}
 .tagline{font-size:13px;color:rgba(255,255,255,0.6);letter-spacing:.14em;text-transform:uppercase;margin-bottom:28px}
 .form-stack{display:flex;flex-direction:column;gap:12px}
 .field{background:rgba(255,255,255,0.12);border:1px solid rgba(255,255,255,0.18);border-radius:16px;padding:17px 18px;font-size:15px;font-family:'DM Sans',sans-serif;color:#fff;outline:none;width:100%;backdrop-filter:blur(10px);margin-bottom:2px}
@@ -64,6 +65,7 @@ body{font-family:'DM Sans',sans-serif;background:#0a0a0a;max-width:430px;margin:
 .dash-top{background:#0e0e0e;padding:56px 28px 28px}
 .dash-top-row{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:20px}
 .dash-hello{font-size:13px;color:rgba(255,255,255,0.35);margin-bottom:4px}
+.dash-email{font-size:11px;color:rgba(255,255,255,0.3);margin-top:6px;cursor:pointer;letter-spacing:.02em}
 .dash-name{font-family:'Playfair Display',serif;font-size:30px;color:#fff;letter-spacing:-.5px}
 .avatar{width:40px;height:40px;border-radius:50%;background:linear-gradient(135deg,#2a6b5e,#1a3d36);display:flex;align-items:center;justify-content:center;font-size:16px;color:white;font-weight:600;cursor:pointer;flex-shrink:0}
 .stats-strip{display:flex;background:rgba(255,255,255,0.05);border-radius:14px;overflow:hidden}
@@ -280,7 +282,10 @@ body{font-family:'DM Sans',sans-serif;background:#0a0a0a;max-width:430px;margin:
     </div>
     <div class="login-bottom">
       <div class="photo-dots" id="photoDots"></div>
-      <div class="wordmark">Sp<em>o</em>t</div>
+      <div class="brand-lockup">
+        <svg class="brand-mark" width="46" height="46" viewBox="0 0 64 64"><path d="M32 8C19.8 8 10 17 10 28.2c0 9.4 6.9 17.3 16.2 19.6L32 58l5.8-10.2C47.1 45.5 54 37.6 54 28.2 54 17 44.2 8 32 8z" fill="#fff"/><circle cx="23.5" cy="27" r="3.2" fill="#0e0e0e"/><circle cx="32" cy="27" r="3.2" fill="#0e0e0e"/><circle cx="40.5" cy="27" r="3.2" fill="#0e0e0e"/></svg>
+        <div class="wordmark">Spot</div>
+      </div>
       <div class="tagline">seus lugares · sua voz</div>
       <div class="form-stack">
         <div class="auth-error" id="authError"></div>
@@ -306,7 +311,7 @@ body{font-family:'DM Sans',sans-serif;background:#0a0a0a;max-width:430px;margin:
 <div class="screen" id="dashboard">
   <div class="dash-top">
     <div class="dash-top-row">
-      <div><div class="dash-hello">Olá de volta,</div><div class="dash-name" id="dashName">—</div></div>
+      <div><div class="dash-hello">Olá de volta,</div><div class="dash-name" id="dashName">—</div><div class="dash-email" id="dashEmail" onclick="signOut()"></div></div>
       <div class="avatar" id="dashAvatar" onclick="signOut()">?</div>
     </div>
     <div class="stats-strip">
@@ -454,7 +459,7 @@ async function handleAuth(){
 }
 function showAuthErr(m){const e=document.getElementById('authError');e.textContent=m;e.classList.add('show')}
 function hideAuthErr(){document.getElementById('authError').classList.remove('show')}
-async function signOut(){if(!confirm('Sair do Spot?'))return;await sb.auth.signOut()}
+async function signOut(){if(!confirm('Sair do Spot?'))return;try{await sb.auth.signOut()}catch(e){}S.user=null;S.token=null;S.trips=[];location.reload()}
 
 // ═══ DASHBOARD ═══
 async function loadDashboard(){
@@ -464,6 +469,7 @@ async function loadDashboard(){
   name=name.split(' ')[0];name=name.charAt(0).toUpperCase()+name.slice(1).toLowerCase();
   document.getElementById('dashName').textContent=name;
   document.getElementById('dashAvatar').textContent=name.charAt(0).toUpperCase();
+  const emEl=document.getElementById('dashEmail');if(emEl)emEl.textContent=S.user.email+' · sair';
   const trips=await dbGet('trips','user_id=eq.'+S.user.id+'&order=created_at.desc');
   S.trips=trips||[];
   let ts=0,tv=0,ctrs=new Set();
