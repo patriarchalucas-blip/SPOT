@@ -931,20 +931,31 @@ function catLabel(c){return{food:'Comer & Beber',hotel:'Onde Ficar',experience:'
 function flagFor(n){const m={'Croácia':'🇭🇷','Montenegro':'🇲🇪','Bósnia':'🇧🇦','Itália':'🇮🇹','Peru':'🇵🇪','França':'🇫🇷','Espanha':'🇪🇸','Portugal':'🇵🇹','Japão':'🇯🇵','Argentina':'🇦🇷','Grécia':'🇬🇷','Tailândia':'🇹🇭','Brasil':'🇧🇷','Estados Unidos':'🇺🇸'};return m[n]||'🌍'}
 // Cache for city photos so we don't refetch
 const UNSPLASH_KEY='1fwslJzsd0FfmwxGEdvRVbqZtpBUVsoxpAjYb47dZXo';
-const cityPhotoCache={};
+// In-memory + persistent cache so we don't re-hit Unsplash (50/hr limit)
+let cityPhotoCache={};
+try{cityPhotoCache=JSON.parse(localStorage.getItem('spot_photo_cache')||'{}')}catch(e){cityPhotoCache={}}
+let unsplashBlockedUntil=0;
+function savePhotoCache(){try{localStorage.setItem('spot_photo_cache',JSON.stringify(cityPhotoCache))}catch(e){}}
 async function fetchCityPhoto(query){
   if(!query)return'';
-  if(cityPhotoCache[query]!==undefined)return cityPhotoCache[query];
+  // Return cached (persisted) result if we have it — covers the 50/hr limit
+  if(cityPhotoCache[query]!==undefined&&cityPhotoCache[query]!=='')return cityPhotoCache[query];
+  // If Unsplash recently rate-limited us, don't hammer it — use gradient fallback
+  if(Date.now()<unsplashBlockedUntil)return'';
   try{
     const resp=await fetch('https://api.unsplash.com/search/photos?query='+encodeURIComponent(query)+'&per_page=10&orientation=landscape&client_id='+UNSPLASH_KEY);
+    if(resp.status===403||resp.status===429){
+      // rate limited — back off for 10 min, rely on gradients meanwhile
+      unsplashBlockedUntil=Date.now()+10*60*1000;
+      return'';
+    }
     const data=await resp.json();
     const results=data.results||[];
-    // Pick a random photo from the top results for variety
     const pick=results.length?results[Math.floor(Math.random()*Math.min(results.length,6))]:null;
     const url=pick?pick.urls.regular:'';
-    cityPhotoCache[query]=url;
+    if(url){cityPhotoCache[query]=url;savePhotoCache()}
     return url;
-  }catch(e){cityPhotoCache[query]='';return''}
+  }catch(e){return''}
 }
 // Fill trip card backgrounds with real photos after render
 async function fillTripPhotos(){
