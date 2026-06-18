@@ -340,7 +340,7 @@ body{font-family:'DM Sans',sans-serif;background:#0a0a0a;max-width:430px;margin:
     <div class="stats-strip">
       <div class="stat-block"><div class="stat-n" id="statTrips">0</div><div class="stat-l">viagens</div></div>
       <div class="stat-block"><div class="stat-n" id="statSpots">0</div><div class="stat-l">spots</div></div>
-      <div class="stat-block"><div class="stat-n" id="statVisited">0</div><div class="stat-l">visitados</div></div>
+      <div class="stat-block"><div class="stat-n" id="statCities">0</div><div class="stat-l">cidades</div></div>
       <div class="stat-block"><div class="stat-n" id="statCountries">0</div><div class="stat-l">países</div></div>
     </div>
   </div>
@@ -520,15 +520,16 @@ async function loadDashboard(){
   const emEl=document.getElementById('dashEmail');if(emEl)emEl.textContent=S.user.email+' · sair';
   const trips=await dbGet('trips','user_id=eq.'+S.user.id+'&order=created_at.desc');
   S.trips=trips||[];
-  let ts=0,tv=0,ctrs=new Set();
+  let ts=0,ctrs=new Set(),cities=new Set();
   for(const t of S.trips){
     const spots=await dbGet('spots','trip_id=eq.'+t.id);
-    t._spots=spots||[];ts+=t._spots.length;tv+=t._spots.filter(s=>s.status==='been').length;
+    t._spots=spots||[];ts+=t._spots.length;
+    t._spots.forEach(s=>{if(s.city)cities.add(s.city)});
     (t.destinations||[]).forEach(d=>ctrs.add(d));
   }
   document.getElementById('statTrips').textContent=S.trips.length;
   document.getElementById('statSpots').textContent=ts;
-  document.getElementById('statVisited').textContent=tv;
+  document.getElementById('statCities').textContent=cities.size;
   document.getElementById('statCountries').textContent=ctrs.size;
   renderTrips();populateTripOpts();
 }
@@ -578,13 +579,13 @@ function renderTrips(){
   if(!S.trips.length){c.innerHTML='<div class="section-head"><span class="section-title">Minhas viagens</span></div><div class="empty-state"><div class="ei">✈️</div><h3>Nenhuma viagem ainda</h3><p>Toca no + para criar sua primeira viagem</p></div>';return}
   let h='<div class="section-head"><span class="section-title">Minhas viagens</span></div>';
   S.trips.forEach(t=>{
-    const sp=t._spots||[],vis=sp.filter(s=>s.status==='been').length,pct=sp.length?Math.round(vis/sp.length*100):0,circ=Math.round(pct*.94);
+    const sp=t._spots||[];
     const st=tripStatus(t);
     const flag=flagFor((t.destinations&&t.destinations[0])||t.name);
     const cities=tripCityCount(t);
     const grad=destGradient((t.destinations&&t.destinations[0])||t.name);
     const cityPill=cities>0?`<span class="tc-pill">${cities} ${cities===1?'cidade':'cidades'}</span>`:'';
-    h+=`<div class="trip-card" onclick="openTrip('${t.id}')"><div class="tc-bg" id="tcbg-${t.id}" style="background:${grad}"></div><div class="tc-overlay"></div><div class="tc-content"><div class="tc-top"><div class="tc-flags" style="font-size:24px">${flag}</div><div class="tc-status ${st==='done'?'done':''} ${st==='ongoing'?'ongoing':''}">${statusLabel(st)}</div></div><div><div class="tc-dest">${t.dates||''}</div><div class="tc-name">${t.name}</div><div class="tc-footer"><div class="tc-pills">${cityPill}<span class="tc-pill">${sp.length} ${sp.length===1?'spot':'spots'}</span></div><svg class="prog-circle" viewBox="0 0 36 36"><circle cx="18" cy="18" r="15" fill="none" stroke="rgba(255,255,255,0.15)" stroke-width="2.5"/><circle cx="18" cy="18" r="15" fill="none" stroke="rgba(255,255,255,0.6)" stroke-width="2.5" stroke-dasharray="${circ} ${94-circ}" stroke-linecap="round" transform="rotate(-90 18 18)"/><text x="18" y="22" text-anchor="middle" fill="white" font-size="9" font-family="DM Sans">${pct}%</text></svg></div></div></div></div>`;
+    h+=`<div class="trip-card" onclick="openTrip('${t.id}')"><div class="tc-bg" id="tcbg-${t.id}" style="background:${grad}"></div><div class="tc-overlay"></div><div class="tc-content"><div class="tc-top"><div class="tc-flags" style="font-size:24px">${flag}</div><div class="tc-status ${st==='done'?'done':''} ${st==='ongoing'?'ongoing':''}">${statusLabel(st)}</div></div><div><div class="tc-dest">${t.dates||''}</div><div class="tc-name">${t.name}</div><div class="tc-footer"><div class="tc-pills">${cityPill}<span class="tc-pill">${sp.length} ${sp.length===1?'spot':'spots'}</span></div></div></div></div></div>`;
   });
   c.innerHTML=h;
   fillTripPhotos();
