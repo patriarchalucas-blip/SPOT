@@ -195,7 +195,7 @@ body{font-family:'DM Sans',sans-serif;background:#0a0a0a;max-width:430px;margin:
 .profile-avatar{width:54px;height:54px;border-radius:50%;background:var(--green);color:#fff;display:flex;align-items:center;justify-content:center;font-size:23px;font-weight:600;font-family:'DM Sans';flex-shrink:0;box-shadow:0 4px 20px rgba(42,122,86,0.4)}
 .profile-name{font-family:'Playfair Display',serif;font-size:24px;color:#fff;line-height:1.1}
 .profile-email{font-size:12px;color:rgba(255,255,255,0.45);margin-top:3px}
-.profile-map-block{position:relative;width:100%;aspect-ratio:720/232;background:#0b1620;overflow:hidden}
+.profile-map-block{position:relative;width:100%;aspect-ratio:800/420;background:#0b1620;overflow:hidden}
 .world-map-wrap{position:absolute;inset:0;line-height:0;touch-action:none}
 .world-map-wrap svg{width:100%;height:100%;display:block;cursor:grab}
 .world-map-wrap svg:active{cursor:grabbing}
@@ -1070,53 +1070,43 @@ async function loadProfile(){
   }
   renderWorldMap(visited);
 }
-// ── Static SVG world map (equirectangular projection) ──
+// ── World map via d3-geo (Natural Earth projection, proper shapes) ──
 let worldGeoData=null;
-function lonLatToXY(lon,lat,w,h){
-  // equirectangular
-  const x=(lon+180)/360*w;
-  const y=(90-lat)/180*h;
-  return [x,y];
-}
-function ringToPath(ring,w,h){
-  let d='';
-  ring.forEach((pt,i)=>{const[x,y]=lonLatToXY(pt[0],pt[1],w,h);d+=(i===0?'M':'L')+x.toFixed(1)+' '+y.toFixed(1)});
-  return d+'Z';
-}
-function featureToPath(feat,w,h){
-  const g=feat.geometry;if(!g)return'';
-  let d='';
-  if(g.type==='Polygon'){g.coordinates.forEach(ring=>d+=ringToPath(ring,w,h))}
-  else if(g.type==='MultiPolygon'){g.coordinates.forEach(poly=>poly.forEach(ring=>d+=ringToPath(ring,w,h)))}
-  return d;
+const MAP_W=800, MAP_H=420;
+async function ensureMapLibs(){
+  if(typeof topojson==='undefined'){
+    await loadScript(['https://unpkg.com/topojson-client@3/dist/topojson-client.min.js','https://cdn.jsdelivr.net/npm/topojson-client@3/dist/topojson-client.min.js']);
+  }
+  if(typeof d3==='undefined'||!d3.geoNaturalEarth1){
+    await loadScript(['https://unpkg.com/d3-geo@3/dist/d3-geo.min.js','https://cdn.jsdelivr.net/npm/d3-geo@3/dist/d3-geo.min.js']);
+  }
 }
 async function renderWorldMap(visited){
   const wrap=document.getElementById('worldMapWrap');
   const visitedGeo=new Set(visited.map(c=>COUNTRY_INFO[c]?.geo).filter(Boolean));
-  // Load + cache the geojson (parse topojson once)
   if(!worldGeoData){
-    wrap.innerHTML='<div style="color:rgba(255,255,255,0.4);font-size:12px;padding:30px 0;text-align:center">carregando mapa…</div>';
+    wrap.innerHTML='<div style="color:rgba(255,255,255,0.4);font-size:12px;padding:60px 0;text-align:center">carregando mapa…</div>';
     try{
-      if(typeof topojson==='undefined'){
-        await loadScript(['https://unpkg.com/topojson-client@3/dist/topojson-client.min.js','https://cdn.jsdelivr.net/npm/topojson-client@3/dist/topojson-client.min.js']);
-      }
-      const topology=await fetch('https://unpkg.com/world-atlas@2.0.2/countries-110m.json').then(r=>r.json()).catch(()=>fetch('https://cdn.jsdelivr.net/npm/world-atlas@2.0.2/countries-110m.json').then(r=>r.json()));
-      worldGeoData=topojson.feature(topology,topology.objects.countries).features;
-    }catch(e){wrap.innerHTML='<div style="color:rgba(255,255,255,0.4);font-size:12px;padding:30px 0;text-align:center">mapa indisponível</div>';return}
+      await ensureMapLibs();
+      // 50m = higher resolution (smoother countries)
+      const topology=await fetch('https://unpkg.com/world-atlas@2.0.2/countries-50m.json').then(r=>r.json()).catch(()=>fetch('https://cdn.jsdelivr.net/npm/world-atlas@2.0.2/countries-50m.json').then(r=>r.json()));
+      worldGeoData=topojson.feature(topology,topology.objects.countries);
+    }catch(e){wrap.innerHTML='<div style="color:rgba(255,255,255,0.4);font-size:12px;padding:60px 0;text-align:center">mapa indisponível</div>';return}
   }
-  const W=720,H=360;
+  // Natural Earth projection — balanced, rounded, not stretched; fit to box so whole world shows
+  const projection=d3.geoNaturalEarth1().fitExtent([[6,6],[MAP_W-6,MAP_H-6]],worldGeoData);
+  const path=d3.geoPath(projection);
   let paths='';
-  worldGeoData.forEach(f=>{
+  worldGeoData.features.forEach(f=>{
     const nm=f.properties.name;
-    const cls='wm-country'+(visitedGeo.has(nm)?' visited':'');
-    const d=featureToPath(f,W,H);
-    if(d)paths+=`<path class="${cls}" d="${d}"/>`;
+    const d=path(f);
+    if(d)paths+=`<path class="wm-country${visitedGeo.has(nm)?' visited':''}" d="${d}"/>`;
   });
-  // viewBox shows full inhabited band; 'meet' shows the ENTIRE map without cropping edges
-  const vb={x:0,y:48,w:W,h:232};
-  wrap.innerHTML=`<svg id="worldSvg" viewBox="${vb.x} ${vb.y} ${vb.w} ${vb.h}" preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg">${paths}</svg>`;
+  const vb={x:0,y:0,w:MAP_W,h:MAP_H};
+  wrap.innerHTML=`<svg id="worldSvg" viewBox="0 0 ${MAP_W} ${MAP_H}" preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg">${paths}</svg>`;
   initMapZoom(vb);
 }
+
 // Pan + pinch/double-tap zoom on the SVG world map
 function initMapZoom(baseVB){
   const svg=document.getElementById('worldSvg');
