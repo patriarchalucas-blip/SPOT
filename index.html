@@ -195,7 +195,7 @@ body{font-family:'DM Sans',sans-serif;background:#0a0a0a;max-width:430px;margin:
 .profile-avatar{width:54px;height:54px;border-radius:50%;background:var(--green);color:#fff;display:flex;align-items:center;justify-content:center;font-size:23px;font-weight:600;font-family:'DM Sans';flex-shrink:0;box-shadow:0 4px 20px rgba(42,122,86,0.4)}
 .profile-name{font-family:'Playfair Display',serif;font-size:24px;color:#fff;line-height:1.1}
 .profile-email{font-size:12px;color:rgba(255,255,255,0.45);margin-top:3px}
-.profile-map-block{position:relative;width:100%;height:180px;background:#0b1620;overflow:hidden}
+.profile-map-block{position:relative;width:100%;aspect-ratio:720/232;background:#0b1620;overflow:hidden}
 .world-map-wrap{position:absolute;inset:0;line-height:0;touch-action:none}
 .world-map-wrap svg{width:100%;height:100%;display:block;cursor:grab}
 .world-map-wrap svg:active{cursor:grabbing}
@@ -1112,9 +1112,9 @@ async function renderWorldMap(visited){
     const d=featureToPath(f,W,H);
     if(d)paths+=`<path class="${cls}" d="${d}"/>`;
   });
-  // viewBox shows the inhabited band (cuts most empty ocean top/bottom); fills the 300px block
-  const vb={x:0,y:55,w:W,h:215};
-  wrap.innerHTML=`<svg id="worldSvg" viewBox="${vb.x} ${vb.y} ${vb.w} ${vb.h}" preserveAspectRatio="xMidYMid slice" xmlns="http://www.w3.org/2000/svg">${paths}</svg>`;
+  // viewBox shows full inhabited band; 'meet' shows the ENTIRE map without cropping edges
+  const vb={x:0,y:48,w:W,h:232};
+  wrap.innerHTML=`<svg id="worldSvg" viewBox="${vb.x} ${vb.y} ${vb.w} ${vb.h}" preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg">${paths}</svg>`;
   initMapZoom(vb);
 }
 // Pan + pinch/double-tap zoom on the SVG world map
