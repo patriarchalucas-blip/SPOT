@@ -265,6 +265,14 @@ body{font-family:'DM Sans',sans-serif;background:#0a0a0a;max-width:430px;margin:
 .note-input::placeholder{color:var(--ink3);font-style:italic}
 .note-input.error{border-color:var(--red)}
 .note-hint{font-size:12px;color:var(--ink3);padding:8px 24px 0}
+.status-choice{display:flex;gap:10px;padding:4px 24px 0}
+.status-opt{flex:1;background:var(--surface);border:1.5px solid var(--border);border-radius:16px;padding:14px;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:6px;font-family:'DM Sans',sans-serif;transition:all .15s}
+.status-opt.active{border-color:var(--green);background:rgba(42,122,86,0.06)}
+.so-emoji{font-size:22px}
+.so-label{font-size:13px;font-weight:600;color:var(--ink2)}
+.status-opt.active .so-label{color:var(--green)}
+.note-label{font-size:13px;font-weight:600;color:var(--ink2);padding:18px 24px 8px}
+#addStars{padding:0 24px}
 .sheet-cta{display:block;width:calc(100% - 48px);margin:20px 24px 32px;background:var(--ink);color:white;border:none;border-radius:16px;padding:17px;font-size:15px;font-weight:600;font-family:'DM Sans',sans-serif;cursor:pointer}
 .nt-label{font-size:11px;font-weight:600;color:var(--ink3);text-transform:uppercase;letter-spacing:.08em;padding:0 24px 8px}
 .nt-wrap{padding:0 24px 16px}
@@ -402,7 +410,11 @@ body{font-family:'DM Sans',sans-serif;background:#0a0a0a;max-width:430px;margin:
 
 <div class="overlay" id="ov-search" onclick="closeOut(event,'ov-search')"><div class="sheet"><button class="sheet-close" onclick="closeOv('ov-search')">✕</button><div class="sheet-handle"></div><div class="sheet-title">Buscar lugar</div><div class="step-dots"><div class="step-dot done"></div><div class="step-dot done"></div><div class="step-dot active"></div><div class="step-dot"></div></div><div class="search-wrap"><span class="si">🔍</span><input class="search-input" id="placeSearch" placeholder="Nome do lugar..." oninput="searchPlaces(this.value)"></div><div class="search-powered"><span>Resultados via</span><strong>Google Places</strong></div><div id="searchResults"><div class="search-loading">Digite para buscar...</div></div></div></div>
 
-<div class="overlay" id="ov-note" onclick="closeOut(event,'ov-note')"><div class="sheet"><button class="sheet-close" onclick="closeOv('ov-note')">✕</button><div class="sheet-handle"></div><div class="sheet-title">Sua nota</div><div class="step-dots"><div class="step-dot done"></div><div class="step-dot done"></div><div class="step-dot done"></div><div class="step-dot active"></div></div><div class="note-place-row"><div class="note-place-icon" id="selIcon">🍽️</div><div><div class="note-place-name" id="selName"></div><div class="note-place-meta" id="selMeta"></div></div></div><div class="note-wrap"><textarea class="note-input" id="noteField" rows="3" placeholder="Por que esse lugar te chamou atenção?"></textarea></div><div class="note-hint">Pode ser uma palavra ou uma frase.</div><button class="sheet-cta" id="saveSpotBtn" onclick="saveSpot()">Salvar spot</button></div></div>
+<div class="overlay" id="ov-note" onclick="closeOut(event,'ov-note')"><div class="sheet"><button class="sheet-close" onclick="closeOv('ov-note')">✕</button><div class="sheet-handle"></div><div class="sheet-title">Adicionar spot</div><div class="note-place-row"><div class="note-place-icon" id="selIcon">🍽️</div><div><div class="note-place-name" id="selName"></div><div class="note-place-meta" id="selMeta"></div></div></div>
+<div class="status-choice"><button class="status-opt active" id="stWant" onclick="setSpotStatus('want')"><div class="so-emoji">🔖</div><div class="so-label">Quero ir</div></button><button class="status-opt" id="stBeen" onclick="setSpotStatus('been')"><div class="so-emoji">✓</div><div class="so-label">Já fui</div></button></div>
+<div id="ratingRow" style="display:none"><div class="note-label">Sua avaliação</div><div class="stars-row" id="addStars"><button class="star-btn" onclick="setAddRating(1)">★</button><button class="star-btn" onclick="setAddRating(2)">★</button><button class="star-btn" onclick="setAddRating(3)">★</button><button class="star-btn" onclick="setAddRating(4)">★</button><button class="star-btn" onclick="setAddRating(5)">★</button></div></div>
+<div class="note-label">Sua nota <span style="color:var(--ink3);font-weight:400">(opcional)</span></div><div class="note-wrap"><textarea class="note-input" id="noteField" rows="2" placeholder="Por que esse lugar te chamou atenção?"></textarea></div>
+<button class="sheet-cta" id="saveSpotBtn" onclick="saveSpot()">Salvar spot</button></div></div>
 
 <div class="overlay" id="ov-mismatch" onclick="closeOut(event,'ov-mismatch')"><div class="sheet"><button class="sheet-close" onclick="closeOv('ov-mismatch')">✕</button><div class="sheet-handle"></div><div class="sheet-title">País diferente</div><div class="cm-text" id="cmText"></div><button class="sheet-cta" id="cmMoveBtn">Mover</button><button class="delete-link" style="color:var(--ink3)" onclick="keepInThisTripAnyway()">Adicionar nesta viagem mesmo assim</button></div></div>
 <div class="overlay" id="ov-newtrip" onclick="closeOut(event,'ov-newtrip')"><div class="sheet"><button class="sheet-close" onclick="closeOv('ov-newtrip')">✕</button><div class="sheet-handle"></div><div class="sheet-title">Para qual país?</div><div class="nt-label">País da viagem</div><div class="dest-search-wrap"><span class="dsi">🔍</span><input class="nt-input" style="padding-left:44px" id="countrySearch" placeholder="Buscar país..." oninput="filterCountries(this.value)"></div><div id="countryList"></div><div class="nt-label" style="margin-top:8px">Datas (opcional)</div><div class="dates-row"><input class="nt-input" type="date" id="tripStart"><input class="nt-input" type="date" id="tripEnd"></div><button class="sheet-cta" id="createTripBtn" onclick="createTrip()" style="opacity:.4;pointer-events:none">Selecione um país</button></div></div>
@@ -782,8 +794,7 @@ function pickPlace(p){
     return;
   }
   S.selPlace=p;document.getElementById('selName').textContent=p.name;document.getElementById('selMeta').textContent=p.meta;
-  document.getElementById('selIcon').textContent=p.icon;document.getElementById('noteField').value='';
-  document.getElementById('noteField').classList.remove('error');nextOv('ov-search','ov-note');
+  document.getElementById('selIcon').textContent=p.icon;resetNoteSheet();nextOv('ov-search','ov-note');
 }
 // ── Country mismatch handling ──
 function showCountryMismatch(placeCountry,tripCountry){
@@ -814,8 +825,7 @@ async function moveToCorrectCountry(existingTrip,createNew){
   // Set the add target to the correct trip and proceed to note
   S.addTrip=trip;S.selPlace=p;S.pendingPlace=null;
   document.getElementById('selName').textContent=p.name;document.getElementById('selMeta').textContent=p.meta;
-  document.getElementById('selIcon').textContent=p.icon;document.getElementById('noteField').value='';
-  document.getElementById('noteField').classList.remove('error');
+  document.getElementById('selIcon').textContent=p.icon;resetNoteSheet();
   closeOv('ov-mismatch');
   setTimeout(()=>document.getElementById('ov-note').classList.add('show'),220);
 }
@@ -824,19 +834,40 @@ function keepInThisTripAnyway(){
   const p=S.pendingPlace;if(!p)return;
   S.selPlace=p;S.pendingPlace=null;
   document.getElementById('selName').textContent=p.name;document.getElementById('selMeta').textContent=p.meta;
-  document.getElementById('selIcon').textContent=p.icon;document.getElementById('noteField').value='';
-  document.getElementById('noteField').classList.remove('error');
+  document.getElementById('selIcon').textContent=p.icon;resetNoteSheet();
   closeOv('ov-mismatch');
   setTimeout(()=>document.getElementById('ov-note').classList.add('show'),220);
 }
+let addStatus='want',addRating=0;
+function setSpotStatus(s){
+  addStatus=s;
+  document.getElementById('stWant').classList.toggle('active',s==='want');
+  document.getElementById('stBeen').classList.toggle('active',s==='been');
+  // Show rating only when "já fui"
+  document.getElementById('ratingRow').style.display=(s==='been')?'block':'none';
+}
+function setAddRating(n){
+  addRating=n;
+  document.querySelectorAll('#addStars .star-btn').forEach((b,i)=>b.style.color=i<n?'#f5a623':'rgba(0,0,0,0.1)');
+}
+function resetNoteSheet(){
+  addStatus='want';addRating=0;
+  document.getElementById('stWant').classList.add('active');
+  document.getElementById('stBeen').classList.remove('active');
+  document.getElementById('ratingRow').style.display='none';
+  document.querySelectorAll('#addStars .star-btn').forEach(b=>b.style.color='rgba(0,0,0,0.1)');
+  const nf=document.getElementById('noteField');nf.value='';nf.classList.remove('error');
+}
 async function saveSpot(){
-  const note=document.getElementById('noteField').value.trim();
-  if(!note){document.getElementById('noteField').classList.add('error');document.getElementById('noteField').placeholder='A nota é obrigatória!';return}
+  const note=document.getElementById('noteField').value.trim(); // optional now
   const btn=document.getElementById('saveSpotBtn');btn.textContent='Salvando...';btn.disabled=true;
   const t=S.addTrip,p=S.selPlace;
-  const{data,error}=await dbInsert('spots',{user_id:S.user.id,trip_id:t.id,name:p.name,category:S.addCat,my_note:note,city:p.city||'',address:p.address||'',photo_url:p.photo_url||'',place_type:catLabel(S.addCat),rating_google:p.rating_google||'',status:'want'});
+  const rec={user_id:S.user.id,trip_id:t.id,name:p.name,category:S.addCat,my_note:note,city:p.city||'',address:p.address||'',photo_url:p.photo_url||'',place_type:catLabel(S.addCat),rating_google:p.rating_google||'',status:addStatus};
+  if(addStatus==='been'&&addRating>0)rec.my_rating=addRating;
+  const{data,error}=await dbInsert('spots',rec);
   if(!error&&data){
-    if(!t._spots)t._spots=[];t._spots.push(data);closeOv('ov-note');toast('✦ Spot salvo',`"${p.name} · ${note}"`);
+    if(!t._spots)t._spots=[];t._spots.push(data);closeOv('ov-note');
+    toast('✦ Spot salvo',note?`"${p.name} · ${note}"`:p.name);
     if(document.getElementById('trip').classList.contains('active')&&S.curTrip?.id===t.id){S.curTrip._spots=t._spots;switchCat(S.curCat,document.querySelector('.cat-tab.active'));updCatCnts(t._spots)}
     await loadDashboard();
   }else toast('Erro',error?.message||'');
