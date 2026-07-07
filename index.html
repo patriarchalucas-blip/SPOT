@@ -1104,37 +1104,53 @@ async function loadProfile(){
 // ── World map via d3-geo (Natural Earth projection, proper shapes) ──
 let worldGeoData=null;
 const MAP_W=800, MAP_H=420;
-async function ensureMapLibs(){
-  if(typeof topojson==='undefined'){
-    await loadScript(['https://unpkg.com/topojson-client@3/dist/topojson-client.min.js','https://cdn.jsdelivr.net/npm/topojson-client@3/dist/topojson-client.min.js']);
-  }
-  if(typeof d3==='undefined'||!d3.geoNaturalEarth1){
-    await loadScript(['https://unpkg.com/d3-geo@3/dist/d3-geo.min.js','https://cdn.jsdelivr.net/npm/d3-geo@3/dist/d3-geo.min.js']);
-  }
-}
 async function renderWorldMap(visited){
   const wrap=document.getElementById('worldMapWrap');
   const visitedGeo=new Set(visited.map(c=>COUNTRY_INFO[c]?.geo).filter(Boolean));
   if(!worldGeoData){
     wrap.innerHTML='<div style="color:rgba(255,255,255,0.4);font-size:12px;padding:60px 0;text-align:center">carregando mapa…</div>';
     try{
-      await ensureMapLibs();
-      // 50m = higher resolution (smoother countries)
+      // topojson is small + reliable; needed to parse the map data
+      if(typeof topojson==='undefined'){
+        await loadScript(['https://unpkg.com/topojson-client@3/dist/topojson-client.min.js','https://cdn.jsdelivr.net/npm/topojson-client@3/dist/topojson-client.min.js']);
+      }
       const topology=await fetch('https://unpkg.com/world-atlas@2.0.2/countries-50m.json').then(r=>r.json()).catch(()=>fetch('https://cdn.jsdelivr.net/npm/world-atlas@2.0.2/countries-50m.json').then(r=>r.json()));
       worldGeoData=topojson.feature(topology,topology.objects.countries);
     }catch(e){wrap.innerHTML='<div style="color:rgba(255,255,255,0.4);font-size:12px;padding:60px 0;text-align:center">mapa indisponível</div>';return}
   }
-  // Natural Earth projection — balanced, rounded, not stretched; fit to box so whole world shows
-  const projection=d3.geoNaturalEarth1().fitExtent([[6,6],[MAP_W-6,MAP_H-6]],worldGeoData);
-  const path=d3.geoPath(projection);
-  let paths='';
-  worldGeoData.features.forEach(f=>{
-    const nm=f.properties.name;
-    const d=path(f);
-    if(d)paths+=`<path class="wm-country${visitedGeo.has(nm)?' visited':''}" d="${d}"/>`;
-  });
-  const vb={x:0,y:0,w:MAP_W,h:MAP_H};
-  wrap.innerHTML=`<svg id="worldSvg" viewBox="0 0 ${MAP_W} ${MAP_H}" preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg">${paths}</svg>`;
+  // Try to load d3 for the pretty Natural Earth projection
+  let useD3=false;
+  try{
+    if(typeof d3==='undefined'||!d3.geoNaturalEarth1){
+      await loadScript(['https://cdn.jsdelivr.net/npm/d3@7/dist/d3.min.js','https://unpkg.com/d3@7/dist/d3.min.js']);
+    }
+    useD3=(typeof d3!=='undefined'&&!!d3.geoNaturalEarth1);
+  }catch(e){useD3=false}
+
+  let paths='',vb;
+  if(useD3){
+    // Natural Earth projection — balanced, rounded, proper shapes
+    const projection=d3.geoNaturalEarth1().fitExtent([[6,6],[MAP_W-6,MAP_H-6]],worldGeoData);
+    const path=d3.geoPath(projection);
+    worldGeoData.features.forEach(f=>{
+      const d=path(f);
+      if(d)paths+=`<path class="wm-country${visitedGeo.has(f.properties.name)?' visited':''}" d="${d}"/>`;
+    });
+    vb={x:0,y:0,w:MAP_W,h:MAP_H};
+  }else{
+    // Fallback: simple equirectangular (still shows a real map, just less rounded)
+    const W=800,H=400;
+    const proj=(lon,lat)=>[(lon+180)/360*W,(90-lat)/180*H];
+    const ring=r=>{let d='';r.forEach((p,i)=>{const[x,y]=proj(p[0],p[1]);d+=(i?'L':'M')+x.toFixed(1)+' '+y.toFixed(1)});return d+'Z'};
+    worldGeoData.features.forEach(f=>{
+      const g=f.geometry;if(!g)return;let d='';
+      if(g.type==='Polygon')g.coordinates.forEach(r=>d+=ring(r));
+      else if(g.type==='MultiPolygon')g.coordinates.forEach(pl=>pl.forEach(r=>d+=ring(r)));
+      if(d)paths+=`<path class="wm-country${visitedGeo.has(f.properties.name)?' visited':''}" d="${d}"/>`;
+    });
+    vb={x:0,y:40,w:W,h:320};
+  }
+  wrap.innerHTML=`<svg id="worldSvg" viewBox="${vb.x} ${vb.y} ${vb.w} ${vb.h}" preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg">${paths}</svg>`;
   initMapZoom(vb);
 }
 
