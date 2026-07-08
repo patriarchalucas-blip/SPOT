@@ -508,6 +508,16 @@ async function dbDelete(table,id){
   if(!r.ok){console.error('dbDelete error',table,await r.text());return{error:true}}
   return{error:null};
 }
+async function dbRpc(fn,params){
+  await ensureToken();
+  const r=await fetch(SB_URL+'/rest/v1/rpc/'+fn,{
+    method:'POST',
+    headers:{'Content-Type':'application/json','apikey':SB_KEY,'Authorization':'Bearer '+S.token},
+    body:JSON.stringify(params||{})
+  });
+  if(!r.ok){console.error('dbRpc error',fn,await r.text());return[]}
+  return await r.json();
+}
 
 // ═══ INIT ═══
 async function init(){
@@ -1516,7 +1526,7 @@ async function sendFriendRequest(){
   const errEl=document.getElementById('friendAddErr');
   if(!username){errEl.textContent='Digita um username';return}
   const btn=document.getElementById('sendReqBtn');btn.textContent='Buscando...';btn.style.pointerEvents='none';
-  const matches=await dbGet('profiles',`username=ilike.${encodeURIComponent(username)}`);
+  const matches=await dbRpc('find_profile_by_username',{uname:username});
   if(!matches.length){
     btn.textContent='Enviar pedido';btn.style.pointerEvents='auto';
     errEl.textContent='Não encontramos ninguém com esse username no Spot.';
@@ -1553,7 +1563,7 @@ async function saveUsername(){
     statusEl.style.color=var_red();statusEl.textContent='Use 3-20 letras, números ou _ (sem espaço/acento)';
     return;
   }
-  const existing=await dbGet('profiles',`username=ilike.${encodeURIComponent(raw)}`);
+  const existing=await dbRpc('find_profile_by_username',{uname:raw});
   if(existing.length&&existing[0].id!==S.user.id){
     statusEl.style.color=var_red();statusEl.textContent='Esse username já está em uso';
     return;
