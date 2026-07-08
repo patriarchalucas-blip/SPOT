@@ -1427,7 +1427,7 @@ function timeAgo(iso){
 }
 function initials(name){
   if(!name)return'?';
-  return name.trim().slice(0,2).toUpperCase();
+  return name.replace(/^@/,'').trim().slice(0,2).toUpperCase();
 }
 async function loadFriends(){
   const uid=S.user.id;
@@ -1453,7 +1453,7 @@ async function loadFriends(){
   if(friendIds.length){
     const[trips,spots]=await Promise.all([
       dbGet('trips',`user_id=in.(${friendIds.join(',')})&order=created_at.desc&limit=15`),
-      dbGet('spots',`user_id=in.(${friendIds.join(',')})&order=created_at.desc&limit=15`)
+      dbGet('spots',`user_id=in.(${friendIds.join(',')})&status=eq.been&order=created_at.desc&limit=15`)
     ]);
     trips.forEach(t=>{
       const p=pmap[t.user_id];const name=p?(p.display_name||(p.username?'@'+p.username:p.email)):'Alguém';
@@ -1480,7 +1480,7 @@ async function loadFriends(){
 
   h+='<div class="section-head"><span class="section-title">Atividade dos amigos</span></div>';
   if(!friendIds.length){
-    h+='<div class="empty-state"><div class="ei">👥</div><h3>Sem amigos ainda</h3><p>Toca no + pra adicionar um amigo pelo email</p></div>';
+    h+='<div class="empty-state"><div class="ei">👥</div><h3>Sem amigos ainda</h3><p>Toca no + pra adicionar um amigo pelo username</p></div>';
   }else if(!feedItems.length){
     h+='<div class="empty-state"><div class="ei">🌍</div><p>Seus amigos ainda não têm atividade</p></div>';
   }else{
@@ -1494,7 +1494,7 @@ async function loadFriends(){
     h+='<div class="section-head" style="margin-top:20px"><span class="section-title">Pedidos enviados</span></div>';
     outgoing.forEach(r=>{
       const p=pmap[r.following_id];const name=p?(p.display_name||(p.username?'@'+p.username:p.email)):'Alguém';
-      h+=`<div class="req-card"><div class="feed-avatar">${initials(name)}</div><div style="flex:1"><div class="req-name">${name}</div></div><span class="tc-pill" style="color:var(--ink3);background:var(--surface);border-color:var(--border)">Pendente</span></div>`;
+      h+=`<div class="req-card"><div class="feed-avatar">${initials(name)}</div><div style="flex:1"><div class="req-name">${name}</div></div><button class="req-btn req-decline" onclick="cancelRequest('${r.id}')">Cancelar</button></div>`;
     });
   }
 
@@ -1542,6 +1542,10 @@ async function sendFriendRequest(){
   toast('Pedido enviado! ✈️','Assim que aceitar, vocês veem a atividade um do outro.');
   loadFriends();
 }
+async function cancelRequest(followId){
+  await dbDelete('follows',followId);
+  loadFriends();
+}
 async function saveUsername(){
   const raw=document.getElementById('usernameInput').value.trim().toLowerCase().replace(/^@/,'');
   const statusEl=document.getElementById('usernameStatus');
@@ -1554,7 +1558,14 @@ async function saveUsername(){
     statusEl.style.color=var_red();statusEl.textContent='Esse username já está em uso';
     return;
   }
-  const{error}=await dbUpdate('profiles',S.user.id,{username:raw});
+  // upsert real: se o profile ainda não existe (edge case de conta criada antes do trigger), insere; senão atualiza
+  const mine=await dbGet('profiles',`id=eq.${S.user.id}`);
+  let error;
+  if(mine.length){
+    ({error}=await dbUpdate('profiles',S.user.id,{username:raw}));
+  }else{
+    ({error}=await dbInsert('profiles',{id:S.user.id,email:S.user.email,display_name:S.user.email.split('@')[0],username:raw}));
+  }
   if(error){statusEl.style.color=var_red();statusEl.textContent='Erro ao salvar. Tenta de novo.';return}
   statusEl.style.color='';statusEl.textContent='Salvo! Seus amigos já podem te encontrar por @'+raw;
 }
