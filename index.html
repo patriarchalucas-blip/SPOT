@@ -192,6 +192,19 @@ body{font-family:'DM Sans',sans-serif;background:#0a0a0a;max-width:430px;margin:
 .review-area{width:100%;background:var(--surface);border:none;border-radius:16px;padding:16px;font-size:14px;font-family:'DM Sans',sans-serif;color:var(--ink);resize:none;outline:none;line-height:1.6}
 .review-area::placeholder{color:var(--ink3)}
 .action-btn{display:block;width:100%;background:var(--ink);color:white;border:none;border-radius:16px;padding:17px;font-size:15px;font-weight:600;font-family:'DM Sans',sans-serif;cursor:pointer;margin-top:12px;margin-bottom:16px}
+.req-card{display:flex;align-items:center;gap:12px;background:var(--white);border:1px solid var(--border);border-radius:16px;padding:12px 14px;margin-bottom:10px}
+.req-name{font-size:14px;font-weight:600;color:var(--ink);flex:1}
+.req-email{font-size:12px;color:var(--ink3)}
+.req-btn{border:none;border-radius:10px;padding:8px 14px;font-size:13px;font-weight:600;font-family:'DM Sans',sans-serif;cursor:pointer}
+.req-accept{background:var(--ink);color:#fff}
+.req-decline{background:var(--surface);color:var(--ink3)}
+.feed-item{display:flex;gap:12px;padding:14px 0;border-bottom:1px solid var(--border)}
+.feed-avatar{width:38px;height:38px;border-radius:50%;background:linear-gradient(135deg,#2a6b5e,#1a3d36);display:flex;align-items:center;justify-content:center;font-size:14px;color:#fff;font-weight:600;flex-shrink:0}
+.feed-text{font-size:14px;color:var(--ink);line-height:1.4}
+.feed-text b{font-weight:600}
+.feed-time{font-size:12px;color:var(--ink3);margin-top:2px}
+.badge-count{background:var(--red);color:#fff;font-size:10px;font-weight:700;border-radius:100px;padding:1px 6px;margin-left:4px}
+.friend-search-card{display:flex;align-items:center;gap:12px;background:var(--surface);border-radius:14px;padding:12px 14px;margin-top:10px}
 .delete-link{display:block;width:100%;background:none;border:none;color:var(--red);font-size:13px;font-family:'DM Sans',sans-serif;cursor:pointer;padding:8px;margin-bottom:40px;text-decoration:underline;text-underline-offset:3px}
 .cm-text{font-size:15px;line-height:1.5;color:var(--ink2);margin:8px 0 20px}
 /* ── Profile / World Map (Been-style) ── */
@@ -360,7 +373,7 @@ body{font-family:'DM Sans',sans-serif;background:#0a0a0a;max-width:430px;margin:
   </div>
   <div class="dash-body" id="tripsContainer"><div class="section-head"><span class="section-title">Minhas viagens</span></div><div class="empty-state"><div class="ei">✈️</div><h3>Nenhuma viagem ainda</h3><p>Toca no + para criar sua primeira viagem</p></div></div>
   <button class="fab" onclick="showOv('ov-trip')">+</button>
-  <div class="bottom-nav"><div class="nav-item active" onclick="goTo('dashboard');loadDashboard()"><div class="nav-icon">🗺️</div><div class="nav-label" style="color:var(--ink);font-weight:600">Viagens</div></div><div class="nav-item" onclick="toast('Em breve','Explorar chega em breve!')"><div class="nav-icon">🔍</div><div class="nav-label">Explorar</div></div><div class="nav-item" onclick="toast('Em breve','Amigos chega em breve!')"><div class="nav-icon">👥</div><div class="nav-label">Amigos</div></div><div class="nav-item" onclick="goTo('profile');loadProfile()"><div class="nav-icon">👤</div><div class="nav-label">Perfil</div></div></div>
+  <div class="bottom-nav"><div class="nav-item active" onclick="goTo('dashboard');loadDashboard()"><div class="nav-icon">🗺️</div><div class="nav-label" style="color:var(--ink);font-weight:600">Viagens</div></div><div class="nav-item" onclick="toast('Em breve','Explorar chega em breve!')"><div class="nav-icon">🔍</div><div class="nav-label">Explorar</div></div><div class="nav-item" onclick="goTo('friends');loadFriends()"><div class="nav-icon">👥</div><div class="nav-label">Amigos</div></div><div class="nav-item" onclick="goTo('profile');loadProfile()"><div class="nav-icon">👤</div><div class="nav-label">Perfil</div></div></div>
 </div>
 
 <div class="screen" id="trip">
@@ -368,7 +381,7 @@ body{font-family:'DM Sans',sans-serif;background:#0a0a0a;max-width:430px;margin:
   <div class="cat-tabs-wrap"><div class="cat-tabs"><div class="cat-tab active" onclick="switchCat('food',this)"><div class="ct-icon">🍽️</div><div>Comer & Beber</div><div class="ct-count" id="cnt-food">0</div></div><div class="cat-tab" onclick="switchCat('hotel',this)"><div class="ct-icon">🏨</div><div>Onde Ficar</div><div class="ct-count" id="cnt-hotel">0</div></div><div class="cat-tab" onclick="switchCat('experience',this)"><div class="ct-icon">🗺️</div><div>Experiências</div><div class="ct-count" id="cnt-experience">0</div></div></div></div>
   <div class="trip-body" id="tripBody"></div>
   <button class="fab" onclick="addSpotToCurrentTrip()">+</button>
-  <div class="bottom-nav"><div class="nav-item active" onclick="goTo('dashboard');loadDashboard()"><div class="nav-icon">🗺️</div><div class="nav-label" style="color:var(--ink);font-weight:600">Viagens</div></div><div class="nav-item" onclick="toast('Em breve','Explorar chega em breve!')"><div class="nav-icon">🔍</div><div class="nav-label">Explorar</div></div><div class="nav-item" onclick="toast('Em breve','Amigos chega em breve!')"><div class="nav-icon">👥</div><div class="nav-label">Amigos</div></div><div class="nav-item" onclick="goTo('profile');loadProfile()"><div class="nav-icon">👤</div><div class="nav-label">Perfil</div></div></div>
+  <div class="bottom-nav"><div class="nav-item active" onclick="goTo('dashboard');loadDashboard()"><div class="nav-icon">🗺️</div><div class="nav-label" style="color:var(--ink);font-weight:600">Viagens</div></div><div class="nav-item" onclick="toast('Em breve','Explorar chega em breve!')"><div class="nav-icon">🔍</div><div class="nav-label">Explorar</div></div><div class="nav-item" onclick="goTo('friends');loadFriends()"><div class="nav-icon">👥</div><div class="nav-label">Amigos</div></div><div class="nav-item" onclick="goTo('profile');loadProfile()"><div class="nav-icon">👤</div><div class="nav-label">Perfil</div></div></div>
 </div>
 
 <div class="screen" id="profile">
@@ -397,7 +410,18 @@ body{font-family:'DM Sans',sans-serif;background:#0a0a0a;max-width:430px;margin:
     <button class="action-btn" style="margin-top:24px;background:var(--surface);color:var(--ink2);border:1px solid var(--border)" onclick="signOut()">Sair da conta</button>
     <div style="height:40px"></div>
   </div>
-  <div class="bottom-nav"><div class="nav-item" onclick="goTo('dashboard');loadDashboard()"><div class="nav-icon">🗺️</div><div class="nav-label">Viagens</div></div><div class="nav-item" onclick="toast('Em breve','Explorar chega em breve!')"><div class="nav-icon">🔍</div><div class="nav-label">Explorar</div></div><div class="nav-item" onclick="toast('Em breve','Amigos chega em breve!')"><div class="nav-icon">👥</div><div class="nav-label">Amigos</div></div><div class="nav-item active" onclick="goTo('profile');loadProfile()"><div class="nav-icon">👤</div><div class="nav-label" style="color:var(--ink);font-weight:600">Perfil</div></div></div>
+  <div class="bottom-nav"><div class="nav-item" onclick="goTo('dashboard');loadDashboard()"><div class="nav-icon">🗺️</div><div class="nav-label">Viagens</div></div><div class="nav-item" onclick="toast('Em breve','Explorar chega em breve!')"><div class="nav-icon">🔍</div><div class="nav-label">Explorar</div></div><div class="nav-item" onclick="goTo('friends');loadFriends()"><div class="nav-icon">👥</div><div class="nav-label">Amigos</div></div><div class="nav-item active" onclick="goTo('profile');loadProfile()"><div class="nav-icon">👤</div><div class="nav-label" style="color:var(--ink);font-weight:600">Perfil</div></div></div>
+</div>
+
+<div class="screen" id="friends">
+  <div class="dash-top" style="padding-bottom:20px">
+    <div class="dash-top-row">
+      <div><div class="dash-hello">Amigos</div><div class="dash-name" style="font-size:24px">Atividade da turma</div></div>
+    </div>
+  </div>
+  <div class="dash-body" id="friendsContainer"></div>
+  <button class="fab" onclick="showOv('ov-addfriend')">+</button>
+  <div class="bottom-nav"><div class="nav-item" onclick="goTo('dashboard');loadDashboard()"><div class="nav-icon">🗺️</div><div class="nav-label">Viagens</div></div><div class="nav-item" onclick="toast('Em breve','Explorar chega em breve!')"><div class="nav-icon">🔍</div><div class="nav-label">Explorar</div></div><div class="nav-item active" onclick="goTo('friends');loadFriends()"><div class="nav-icon">👥</div><div class="nav-label" style="color:var(--ink);font-weight:600">Amigos</div></div><div class="nav-item" onclick="goTo('profile');loadProfile()"><div class="nav-icon">👤</div><div class="nav-label">Perfil</div></div></div>
 </div>
 
 <div class="screen" id="place">
@@ -424,6 +448,7 @@ body{font-family:'DM Sans',sans-serif;background:#0a0a0a;max-width:430px;margin:
 <div class="overlay" id="ov-mismatch" onclick="closeOut(event,'ov-mismatch')"><div class="sheet"><button class="sheet-close" onclick="closeOv('ov-mismatch')">✕</button><div class="sheet-handle"></div><div class="sheet-title">País diferente</div><div class="cm-text" id="cmText"></div><button class="sheet-cta" id="cmMoveBtn">Mover</button><button class="delete-link" style="color:var(--ink3)" onclick="keepInThisTripAnyway()">Adicionar nesta viagem mesmo assim</button></div></div>
 <div class="overlay" id="ov-newtrip" onclick="closeOut(event,'ov-newtrip')"><div class="sheet"><button class="sheet-close" onclick="closeOv('ov-newtrip')">✕</button><div class="sheet-handle"></div><div class="sheet-title">Para qual país?</div><div class="nt-label">País da viagem</div><div class="dest-search-wrap"><span class="dsi">🔍</span><input class="nt-input" style="padding-left:44px" id="countrySearch" placeholder="Buscar país..." oninput="filterCountries(this.value)"></div><div id="countryList"></div><div class="nt-label" style="margin-top:8px">Datas (opcional)</div><div class="dates-row"><input class="nt-input" type="date" id="tripStart"><input class="nt-input" type="date" id="tripEnd"></div><button class="sheet-cta" id="createTripBtn" onclick="createTrip()" style="opacity:.4;pointer-events:none">Selecione um país</button></div></div>
 <div class="overlay" id="ov-quickvisit" onclick="closeOut(event,'ov-quickvisit')"><div class="sheet"><button class="sheet-close" onclick="closeOv('ov-quickvisit')">✕</button><div class="sheet-handle"></div><div class="sheet-title">Qual país você já visitou?</div><div class="nt-label">País</div><div class="dest-search-wrap"><span class="dsi">🔍</span><input class="nt-input" style="padding-left:44px" id="countrySearch2" placeholder="Buscar país..." oninput="filterCountries2(this.value)"></div><div id="countryList2"></div><button class="sheet-cta" id="createVisitBtn" onclick="markVisited()" style="opacity:.4;pointer-events:none">Selecione um país</button></div></div>
+<div class="overlay" id="ov-addfriend" onclick="closeOut(event,'ov-addfriend')"><div class="sheet"><button class="sheet-close" onclick="closeOv('ov-addfriend')">✕</button><div class="sheet-handle"></div><div class="sheet-title">Adicionar amigo</div><div class="nt-label">Email do amigo</div><input class="nt-input" id="friendEmailInput" type="email" placeholder="amigo@email.com" oninput="document.getElementById('friendAddErr').textContent=''"><div class="auth-error" id="friendAddErr"></div><button class="sheet-cta" id="sendReqBtn" onclick="sendFriendRequest()">Enviar pedido</button></div></div>
 
 <div class="toast" id="toast"><div class="toast-title" id="toastTitle"></div><div class="toast-msg" id="toastMsg"></div></div>
 
@@ -1382,9 +1407,135 @@ function hideEmailForm(){
   hideAuthErr();
 }
 
+// ═══ FRIENDS ═══
+function timeAgo(iso){
+  if(!iso)return'';
+  const s=(Date.now()-new Date(iso).getTime())/1000;
+  if(s<60)return'agora';
+  if(s<3600)return'há '+Math.floor(s/60)+'min';
+  if(s<86400)return'há '+Math.floor(s/3600)+'h';
+  const d=Math.floor(s/86400);
+  if(d<30)return'há '+d+(d===1?' dia':' dias');
+  return'há '+Math.floor(d/30)+(Math.floor(d/30)===1?' mês':' meses');
+}
+function initials(name){
+  if(!name)return'?';
+  return name.trim().slice(0,2).toUpperCase();
+}
+async function loadFriends(){
+  const uid=S.user.id;
+  const c=document.getElementById('friendsContainer');
+  c.innerHTML='<div class="empty-state"><div class="ei">👥</div><p>Carregando...</p></div>';
+
+  const[accepted,incoming,outgoing]=await Promise.all([
+    dbGet('follows',`status=eq.accepted&or=(follower_id.eq.${uid},following_id.eq.${uid})`),
+    dbGet('follows',`status=eq.pending&following_id=eq.${uid}`),
+    dbGet('follows',`status=eq.pending&follower_id=eq.${uid}`)
+  ]);
+
+  const friendIds=accepted.map(r=>r.follower_id===uid?r.following_id:r.follower_id);
+  const incomingIds=incoming.map(r=>r.follower_id);
+  const outgoingIds=outgoing.map(r=>r.following_id);
+  const allIds=[...new Set([...friendIds,...incomingIds,...outgoingIds])];
+
+  let profiles=[];
+  if(allIds.length)profiles=await dbGet('profiles',`id=in.(${allIds.join(',')})`);
+  const pmap={};profiles.forEach(p=>pmap[p.id]=p);
+
+  let feedItems=[];
+  if(friendIds.length){
+    const[trips,spots]=await Promise.all([
+      dbGet('trips',`user_id=in.(${friendIds.join(',')})&order=created_at.desc&limit=15`),
+      dbGet('spots',`user_id=in.(${friendIds.join(',')})&order=created_at.desc&limit=15`)
+    ]);
+    trips.forEach(t=>{
+      const p=pmap[t.user_id];const name=p?(p.display_name||p.email):'Alguém';
+      const verb=t.status==='done'?'marcou <b>'+t.name+'</b> como visitado':'está planejando uma viagem para <b>'+t.name+'</b>';
+      feedItems.push({user_id:t.user_id,created_at:t.created_at,html:'<b>'+name+'</b> '+verb});
+    });
+    spots.forEach(sp=>{
+      const p=pmap[sp.user_id];const name=p?(p.display_name||p.email):'Alguém';
+      const loc=sp.city?' em '+sp.city:'';
+      feedItems.push({user_id:sp.user_id,created_at:sp.created_at,html:'<b>'+name+'</b> adicionou <b>'+sp.name+'</b>'+loc});
+    });
+    feedItems.sort((a,b)=>new Date(b.created_at)-new Date(a.created_at));
+    feedItems=feedItems.slice(0,25);
+  }
+
+  let h='';
+  if(incoming.length){
+    h+='<div class="section-head"><span class="section-title">Pedidos de amizade</span></div>';
+    incoming.forEach(r=>{
+      const p=pmap[r.follower_id];const name=p?(p.display_name||p.email):'Alguém';
+      h+=`<div class="req-card"><div class="feed-avatar">${initials(name)}</div><div style="flex:1"><div class="req-name">${name}</div>${p?`<div class="req-email">${p.email}</div>`:''}</div><button class="req-btn req-accept" onclick="respondRequest('${r.id}',true)">Aceitar</button><button class="req-btn req-decline" onclick="respondRequest('${r.id}',false)">Recusar</button></div>`;
+    });
+  }
+
+  h+='<div class="section-head"><span class="section-title">Atividade dos amigos</span></div>';
+  if(!friendIds.length){
+    h+='<div class="empty-state"><div class="ei">👥</div><h3>Sem amigos ainda</h3><p>Toca no + pra adicionar um amigo pelo email</p></div>';
+  }else if(!feedItems.length){
+    h+='<div class="empty-state"><div class="ei">🌍</div><p>Seus amigos ainda não têm atividade</p></div>';
+  }else{
+    feedItems.forEach(it=>{
+      const p=pmap[it.user_id];const name=p?(p.display_name||p.email):'Alguém';
+      h+=`<div class="feed-item"><div class="feed-avatar">${initials(name)}</div><div><div class="feed-text">${it.html}</div><div class="feed-time">${timeAgo(it.created_at)}</div></div></div>`;
+    });
+  }
+
+  if(outgoing.length){
+    h+='<div class="section-head" style="margin-top:20px"><span class="section-title">Pedidos enviados</span></div>';
+    outgoing.forEach(r=>{
+      const p=pmap[r.following_id];const name=p?(p.display_name||p.email):'Alguém';
+      h+=`<div class="req-card"><div class="feed-avatar">${initials(name)}</div><div style="flex:1"><div class="req-name">${name}</div></div><span class="tc-pill" style="color:var(--ink3);background:var(--surface);border-color:var(--border)">Pendente</span></div>`;
+    });
+  }
+
+  h+='<div style="height:40px"></div>';
+  c.innerHTML=h;
+}
+async function respondRequest(followId,accept){
+  if(accept){
+    const{error}=await dbUpdate('follows',followId,{status:'accepted'});
+    if(error){toast('Erro','Não foi possível aceitar. Tenta de novo.');return}
+    toast('Amigo adicionado! 🎉','Vocês já podem ver a atividade um do outro.');
+  }else{
+    await dbDelete('follows',followId);
+  }
+  loadFriends();
+}
+async function sendFriendRequest(){
+  const email=document.getElementById('friendEmailInput').value.trim().toLowerCase();
+  const errEl=document.getElementById('friendAddErr');
+  if(!email){errEl.textContent='Digita um email';return}
+  if(email===S.user.email.toLowerCase()){errEl.textContent='Esse é o seu próprio email 🙂';return}
+  const btn=document.getElementById('sendReqBtn');btn.textContent='Buscando...';btn.style.pointerEvents='none';
+  const matches=await dbGet('profiles',`email=eq.${encodeURIComponent(email)}`);
+  if(!matches.length){
+    btn.textContent='Enviar pedido';btn.style.pointerEvents='auto';
+    errEl.textContent='Não encontramos ninguém com esse email no Spot.';
+    return;
+  }
+  const target=matches[0];
+  const existing=await dbGet('follows',`or=(and(follower_id.eq.${S.user.id},following_id.eq.${target.id}),and(follower_id.eq.${target.id},following_id.eq.${S.user.id}))`);
+  if(existing.length){
+    btn.textContent='Enviar pedido';btn.style.pointerEvents='auto';
+    errEl.textContent=existing[0].status==='accepted'?'Vocês já são amigos!':'Já existe um pedido entre vocês.';
+    return;
+  }
+  const{error}=await dbInsert('follows',{follower_id:S.user.id,following_id:target.id,status:'pending'});
+  btn.textContent='Enviar pedido';btn.style.pointerEvents='auto';
+  if(error){errEl.textContent='Erro ao enviar. Tenta de novo.';return}
+  closeOv('ov-addfriend');
+  document.getElementById('friendEmailInput').value='';
+  toast('Pedido enviado! ✈️','Assim que aceitar, vocês veem a atividade um do outro.');
+  loadFriends();
+}
+
 // ═══ START ═══
 init();
 startLoginPhotos();
+
 </script>
 </body>
 </html>
