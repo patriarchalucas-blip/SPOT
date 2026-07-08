@@ -395,6 +395,7 @@ body{font-family:'DM Sans',sans-serif;background:#0a0a0a;max-width:430px;margin:
   <div class="profile-body">
     <div class="section-head"><span class="section-title">Países que conheço</span></div>
     <div class="country-chips" id="countryChips"></div>
+    <div class="new-trip-btn" style="margin:16px 0 0" onclick="showOv('ov-quickvisit')"><div class="new-trip-icon">🌍</div><div class="new-trip-text">Marcar país que já visitei</div></div>
     <button class="action-btn" style="margin-top:24px;background:var(--surface);color:var(--ink2);border:1px solid var(--border)" onclick="signOut()">Sair da conta</button>
     <div style="height:40px"></div>
   </div>
@@ -424,6 +425,7 @@ body{font-family:'DM Sans',sans-serif;background:#0a0a0a;max-width:430px;margin:
 
 <div class="overlay" id="ov-mismatch" onclick="closeOut(event,'ov-mismatch')"><div class="sheet"><button class="sheet-close" onclick="closeOv('ov-mismatch')">✕</button><div class="sheet-handle"></div><div class="sheet-title">País diferente</div><div class="cm-text" id="cmText"></div><button class="sheet-cta" id="cmMoveBtn">Mover</button><button class="delete-link" style="color:var(--ink3)" onclick="keepInThisTripAnyway()">Adicionar nesta viagem mesmo assim</button></div></div>
 <div class="overlay" id="ov-newtrip" onclick="closeOut(event,'ov-newtrip')"><div class="sheet"><button class="sheet-close" onclick="closeOv('ov-newtrip')">✕</button><div class="sheet-handle"></div><div class="sheet-title">Para qual país?</div><div class="nt-label">País da viagem</div><div class="dest-search-wrap"><span class="dsi">🔍</span><input class="nt-input" style="padding-left:44px" id="countrySearch" placeholder="Buscar país..." oninput="filterCountries(this.value)"></div><div id="countryList"></div><div class="nt-label" style="margin-top:8px">Datas (opcional)</div><div class="dates-row"><input class="nt-input" type="date" id="tripStart"><input class="nt-input" type="date" id="tripEnd"></div><button class="sheet-cta" id="createTripBtn" onclick="createTrip()" style="opacity:.4;pointer-events:none">Selecione um país</button></div></div>
+<div class="overlay" id="ov-quickvisit" onclick="closeOut(event,'ov-quickvisit')"><div class="sheet"><button class="sheet-close" onclick="closeOv('ov-quickvisit')">✕</button><div class="sheet-handle"></div><div class="sheet-title">Qual país você já visitou?</div><div class="nt-label">País</div><div class="dest-search-wrap"><span class="dsi">🔍</span><input class="nt-input" style="padding-left:44px" id="countrySearch2" placeholder="Buscar país..." oninput="filterCountries2(this.value)"></div><div id="countryList2"></div><button class="sheet-cta" id="createVisitBtn" onclick="markVisited()" style="opacity:.4;pointer-events:none">Selecione um país</button></div></div>
 
 <div class="toast" id="toast"><div class="toast-title" id="toastTitle"></div><div class="toast-msg" id="toastMsg"></div></div>
 
@@ -953,6 +955,48 @@ function selectCountry(c){
   const btn=document.getElementById('createTripBtn');
   btn.textContent='Criar viagem';btn.style.opacity='1';btn.style.pointerEvents='auto';
 }
+// ── Quick "mark as already visited" flow (no dates, no spots needed) ──
+let selectedVisitCountry=null;
+function renderCountryList2(filter){
+  const list=document.getElementById('countryList2');
+  const f=(filter||'').toLowerCase();
+  const matches=COUNTRIES.filter(c=>!f||c.name.toLowerCase().includes(f));
+  list.innerHTML=matches.map(c=>`<div class="dest-result" onclick='selectCountry2(${JSON.stringify(c).replace(/'/g,"&apos;")})'><span class="dest-flag">${c.flag}</span><div><div class="dest-name">${c.name}</div><div class="dest-region">${c.region}</div></div></div>`).join('')||'<div class="search-loading">Nenhum país encontrado</div>';
+}
+function filterCountries2(v){renderCountryList2(v)}
+function selectCountry2(c){
+  selectedVisitCountry=c;
+  document.getElementById('countrySearch2').value=c.flag+' '+c.name;
+  document.getElementById('countryList2').innerHTML='';
+  const btn=document.getElementById('createVisitBtn');
+  btn.textContent='Marcar como visitado';btn.style.opacity='1';btn.style.pointerEvents='auto';
+}
+function prepQuickVisit(){
+  selectedVisitCountry=null;
+  const cs=document.getElementById('countrySearch2');if(cs)cs.value='';
+  const btn=document.getElementById('createVisitBtn');if(btn){btn.textContent='Selecione um país';btn.style.opacity='.4';btn.style.pointerEvents='none'}
+  renderCountryList2('');
+}
+async function markVisited(){
+  if(!selectedVisitCountry)return;
+  const name=selectedVisitCountry.name;
+  const existing=S.trips.find(t=>((t.destinations&&t.destinations[0])||t.name)===name);
+  if(existing){
+    closeOv('ov-quickvisit');
+    toast('Já existe',`Você já tem uma viagem pra ${name}.`);
+    return;
+  }
+  const btn=document.getElementById('createVisitBtn');btn.textContent='Marcando...';btn.style.pointerEvents='none';
+  const{data,error}=await dbInsert('trips',{user_id:S.user.id,name,destinations:[name],dates:'',status:'done'});
+  if(!error&&data){
+    data._spots=[];S.trips.unshift(data);closeOv('ov-quickvisit');
+    renderTrips();populateTripOpts();loadProfile();
+    toast('Marcado! 🌍',`${name} agora está no seu mapa.`);
+  }else{
+    btn.textContent='Marcar como visitado';btn.style.pointerEvents='auto';
+    toast('Erro','Não foi possível marcar. Tenta de novo.');
+  }
+}
 function countryFlag(country){
   const c=COUNTRIES.find(x=>x.name===country||x.name.toLowerCase()===(country||'').toLowerCase());
   if(c)return c.flag;
@@ -1224,7 +1268,7 @@ function initMapZoom(baseVB){
   svg.addEventListener('touchend',()=>{pts={}});
 }
 function goTo(id){document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));document.getElementById(id).classList.add('active');window.scrollTo(0,0)}
-function showOv(id){populateTripOpts();if(id==='ov-newtrip')prepNewTrip();document.getElementById(id).classList.add('show')}
+function showOv(id){populateTripOpts();if(id==='ov-newtrip')prepNewTrip();if(id==='ov-quickvisit')prepQuickVisit();document.getElementById(id).classList.add('show')}
 function closeOv(id){document.getElementById(id).classList.remove('show')}
 function closeOut(e,id){if(e.target===document.getElementById(id))closeOv(id)}
 function nextOv(a,b){closeOv(a);if(b==='ov-newtrip')prepNewTrip();setTimeout(()=>document.getElementById(b).classList.add('show'),220)}
