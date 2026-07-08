@@ -9,7 +9,7 @@
   "orientation": "portrait",
   "icons": [
     {
-      "src": "data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'><rect width='64' height='64' rx='14' fill='%23f4ede1'/><path d='M20.00 23.40 L24.80 13.80 L34.40 13.00 L44.80 21.00 L44.00 31.40 L32.00 53.80 L20.80 34.60 Z' fill='%23c1552f'/><path d='M44.80 21.00 L44.00 31.40 L32.00 53.80 L34.40 26.60 Z' fill='%239c4326' opacity='0.55'/></svg>",
+      "src": "data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'><rect width='64' height='64' rx='14' fill='%23f4ede1'/><path d='M18.00 24.00 A14.00 14.00 0 1 1 46.00 24.00 Q46.00 42.90 32.00 56.20 Q18.00 42.90 18.00 24.00 Z' fill='%23c1552f'/><circle cx='32.00' cy='23.30' r='5.88' fill='%23f4ede1'/></svg>",
       "sizes": "any",
       "type": "image/svg+xml",
       "purpose": "any maskable"
