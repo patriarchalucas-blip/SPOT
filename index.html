@@ -404,6 +404,9 @@ body{font-family:'DM Sans',sans-serif;background:#0a0a0a;max-width:430px;margin:
     </div>
   </div>
   <div class="profile-body">
+    <div class="section-head"><span class="section-title">Seu username</span></div>
+    <div style="display:flex;gap:8px;margin-bottom:4px"><input class="nt-input" id="usernameInput" placeholder="seu_username" style="flex:1" oninput="document.getElementById('usernameStatus').textContent=''"><button class="req-btn req-accept" style="padding:0 18px" onclick="saveUsername()">Salvar</button></div>
+    <div class="feed-time" id="usernameStatus" style="margin-bottom:20px"></div>
     <div class="section-head"><span class="section-title">Países que conheço</span></div>
     <div class="country-chips" id="countryChips"></div>
     <div class="new-trip-btn" style="margin:16px 0 0" onclick="showOv('ov-quickvisit')"><div class="new-trip-icon">🌍</div><div class="new-trip-text">Marcar país que já visitei</div></div>
@@ -448,7 +451,7 @@ body{font-family:'DM Sans',sans-serif;background:#0a0a0a;max-width:430px;margin:
 <div class="overlay" id="ov-mismatch" onclick="closeOut(event,'ov-mismatch')"><div class="sheet"><button class="sheet-close" onclick="closeOv('ov-mismatch')">✕</button><div class="sheet-handle"></div><div class="sheet-title">País diferente</div><div class="cm-text" id="cmText"></div><button class="sheet-cta" id="cmMoveBtn">Mover</button><button class="delete-link" style="color:var(--ink3)" onclick="keepInThisTripAnyway()">Adicionar nesta viagem mesmo assim</button></div></div>
 <div class="overlay" id="ov-newtrip" onclick="closeOut(event,'ov-newtrip')"><div class="sheet"><button class="sheet-close" onclick="closeOv('ov-newtrip')">✕</button><div class="sheet-handle"></div><div class="sheet-title">Para qual país?</div><div class="nt-label">País da viagem</div><div class="dest-search-wrap"><span class="dsi">🔍</span><input class="nt-input" style="padding-left:44px" id="countrySearch" placeholder="Buscar país..." oninput="filterCountries(this.value)"></div><div id="countryList"></div><div class="nt-label" style="margin-top:8px">Datas (opcional)</div><div class="dates-row"><input class="nt-input" type="date" id="tripStart"><input class="nt-input" type="date" id="tripEnd"></div><button class="sheet-cta" id="createTripBtn" onclick="createTrip()" style="opacity:.4;pointer-events:none">Selecione um país</button></div></div>
 <div class="overlay" id="ov-quickvisit" onclick="closeOut(event,'ov-quickvisit')"><div class="sheet"><button class="sheet-close" onclick="closeOv('ov-quickvisit')">✕</button><div class="sheet-handle"></div><div class="sheet-title">Qual país você já visitou?</div><div class="nt-label">País</div><div class="dest-search-wrap"><span class="dsi">🔍</span><input class="nt-input" style="padding-left:44px" id="countrySearch2" placeholder="Buscar país..." oninput="filterCountries2(this.value)"></div><div id="countryList2"></div><button class="sheet-cta" id="createVisitBtn" onclick="markVisited()" style="opacity:.4;pointer-events:none">Selecione um país</button></div></div>
-<div class="overlay" id="ov-addfriend" onclick="closeOut(event,'ov-addfriend')"><div class="sheet"><button class="sheet-close" onclick="closeOv('ov-addfriend')">✕</button><div class="sheet-handle"></div><div class="sheet-title">Adicionar amigo</div><div class="nt-label">Email do amigo</div><input class="nt-input" id="friendEmailInput" type="email" placeholder="amigo@email.com" oninput="document.getElementById('friendAddErr').textContent=''"><div class="auth-error" id="friendAddErr"></div><button class="sheet-cta" id="sendReqBtn" onclick="sendFriendRequest()">Enviar pedido</button></div></div>
+<div class="overlay" id="ov-addfriend" onclick="closeOut(event,'ov-addfriend')"><div class="sheet"><button class="sheet-close" onclick="closeOv('ov-addfriend')">✕</button><div class="sheet-handle"></div><div class="sheet-title">Adicionar amigo</div><div class="nt-label">Username do amigo</div><input class="nt-input" id="friendUsernameInput" type="text" placeholder="username_do_amigo" autocapitalize="none" oninput="document.getElementById('friendAddErr').textContent=''"><div class="auth-error" id="friendAddErr"></div><button class="sheet-cta" id="sendReqBtn" onclick="sendFriendRequest()">Enviar pedido</button></div></div>
 
 <div class="toast" id="toast"><div class="toast-title" id="toastTitle"></div><div class="toast-msg" id="toastMsg"></div></div>
 
@@ -1152,6 +1155,10 @@ async function loadProfile(){
   document.getElementById('profName').textContent=name;
   document.getElementById('profAvatar').textContent=name.charAt(0).toUpperCase();
   document.getElementById('profEmail').textContent=S.user.email;
+  dbGet('profiles','id=eq.'+S.user.id).then(rows=>{
+    const p=rows&&rows[0];
+    document.getElementById('usernameInput').value=p&&p.username?p.username:'';
+  });
   // Load trips + their spots (for city count) if missing
   if(!S.trips.length){const trips=await dbGet('trips','user_id=eq.'+S.user.id);S.trips=trips||[]}
   for(const t of S.trips){if(!t._spots){const sp=await dbGet('spots','trip_id=eq.'+t.id);t._spots=sp||[]}}
@@ -1449,12 +1456,12 @@ async function loadFriends(){
       dbGet('spots',`user_id=in.(${friendIds.join(',')})&order=created_at.desc&limit=15`)
     ]);
     trips.forEach(t=>{
-      const p=pmap[t.user_id];const name=p?(p.display_name||p.email):'Alguém';
+      const p=pmap[t.user_id];const name=p?(p.display_name||(p.username?'@'+p.username:p.email)):'Alguém';
       const verb=t.status==='done'?'marcou <b>'+t.name+'</b> como visitado':'está planejando uma viagem para <b>'+t.name+'</b>';
       feedItems.push({user_id:t.user_id,created_at:t.created_at,html:'<b>'+name+'</b> '+verb});
     });
     spots.forEach(sp=>{
-      const p=pmap[sp.user_id];const name=p?(p.display_name||p.email):'Alguém';
+      const p=pmap[sp.user_id];const name=p?(p.display_name||(p.username?'@'+p.username:p.email)):'Alguém';
       const loc=sp.city?' em '+sp.city:'';
       feedItems.push({user_id:sp.user_id,created_at:sp.created_at,html:'<b>'+name+'</b> adicionou <b>'+sp.name+'</b>'+loc});
     });
@@ -1466,8 +1473,8 @@ async function loadFriends(){
   if(incoming.length){
     h+='<div class="section-head"><span class="section-title">Pedidos de amizade</span></div>';
     incoming.forEach(r=>{
-      const p=pmap[r.follower_id];const name=p?(p.display_name||p.email):'Alguém';
-      h+=`<div class="req-card"><div class="feed-avatar">${initials(name)}</div><div style="flex:1"><div class="req-name">${name}</div>${p?`<div class="req-email">${p.email}</div>`:''}</div><button class="req-btn req-accept" onclick="respondRequest('${r.id}',true)">Aceitar</button><button class="req-btn req-decline" onclick="respondRequest('${r.id}',false)">Recusar</button></div>`;
+      const p=pmap[r.follower_id];const name=p?(p.display_name||(p.username?'@'+p.username:p.email)):'Alguém';
+      h+=`<div class="req-card"><div class="feed-avatar">${initials(name)}</div><div style="flex:1"><div class="req-name">${name}</div>${p&&p.username?`<div class="req-email">@${p.username}</div>`:''}</div><button class="req-btn req-accept" onclick="respondRequest('${r.id}',true)">Aceitar</button><button class="req-btn req-decline" onclick="respondRequest('${r.id}',false)">Recusar</button></div>`;
     });
   }
 
@@ -1478,7 +1485,7 @@ async function loadFriends(){
     h+='<div class="empty-state"><div class="ei">🌍</div><p>Seus amigos ainda não têm atividade</p></div>';
   }else{
     feedItems.forEach(it=>{
-      const p=pmap[it.user_id];const name=p?(p.display_name||p.email):'Alguém';
+      const p=pmap[it.user_id];const name=p?(p.display_name||(p.username?'@'+p.username:p.email)):'Alguém';
       h+=`<div class="feed-item"><div class="feed-avatar">${initials(name)}</div><div><div class="feed-text">${it.html}</div><div class="feed-time">${timeAgo(it.created_at)}</div></div></div>`;
     });
   }
@@ -1486,7 +1493,7 @@ async function loadFriends(){
   if(outgoing.length){
     h+='<div class="section-head" style="margin-top:20px"><span class="section-title">Pedidos enviados</span></div>';
     outgoing.forEach(r=>{
-      const p=pmap[r.following_id];const name=p?(p.display_name||p.email):'Alguém';
+      const p=pmap[r.following_id];const name=p?(p.display_name||(p.username?'@'+p.username:p.email)):'Alguém';
       h+=`<div class="req-card"><div class="feed-avatar">${initials(name)}</div><div style="flex:1"><div class="req-name">${name}</div></div><span class="tc-pill" style="color:var(--ink3);background:var(--surface);border-color:var(--border)">Pendente</span></div>`;
     });
   }
@@ -1505,18 +1512,22 @@ async function respondRequest(followId,accept){
   loadFriends();
 }
 async function sendFriendRequest(){
-  const email=document.getElementById('friendEmailInput').value.trim().toLowerCase();
+  const username=document.getElementById('friendUsernameInput').value.trim().toLowerCase().replace(/^@/,'');
   const errEl=document.getElementById('friendAddErr');
-  if(!email){errEl.textContent='Digita um email';return}
-  if(email===S.user.email.toLowerCase()){errEl.textContent='Esse é o seu próprio email 🙂';return}
+  if(!username){errEl.textContent='Digita um username';return}
   const btn=document.getElementById('sendReqBtn');btn.textContent='Buscando...';btn.style.pointerEvents='none';
-  const matches=await dbGet('profiles',`email=eq.${encodeURIComponent(email)}`);
+  const matches=await dbGet('profiles',`username=ilike.${encodeURIComponent(username)}`);
   if(!matches.length){
     btn.textContent='Enviar pedido';btn.style.pointerEvents='auto';
-    errEl.textContent='Não encontramos ninguém com esse email no Spot.';
+    errEl.textContent='Não encontramos ninguém com esse username no Spot.';
     return;
   }
   const target=matches[0];
+  if(target.id===S.user.id){
+    btn.textContent='Enviar pedido';btn.style.pointerEvents='auto';
+    errEl.textContent='Esse é o seu próprio username 🙂';
+    return;
+  }
   const existing=await dbGet('follows',`or=(and(follower_id.eq.${S.user.id},following_id.eq.${target.id}),and(follower_id.eq.${target.id},following_id.eq.${S.user.id}))`);
   if(existing.length){
     btn.textContent='Enviar pedido';btn.style.pointerEvents='auto';
@@ -1527,10 +1538,27 @@ async function sendFriendRequest(){
   btn.textContent='Enviar pedido';btn.style.pointerEvents='auto';
   if(error){errEl.textContent='Erro ao enviar. Tenta de novo.';return}
   closeOv('ov-addfriend');
-  document.getElementById('friendEmailInput').value='';
+  document.getElementById('friendUsernameInput').value='';
   toast('Pedido enviado! ✈️','Assim que aceitar, vocês veem a atividade um do outro.');
   loadFriends();
 }
+async function saveUsername(){
+  const raw=document.getElementById('usernameInput').value.trim().toLowerCase().replace(/^@/,'');
+  const statusEl=document.getElementById('usernameStatus');
+  if(!/^[a-z0-9_]{3,20}$/.test(raw)){
+    statusEl.style.color=var_red();statusEl.textContent='Use 3-20 letras, números ou _ (sem espaço/acento)';
+    return;
+  }
+  const existing=await dbGet('profiles',`username=ilike.${encodeURIComponent(raw)}`);
+  if(existing.length&&existing[0].id!==S.user.id){
+    statusEl.style.color=var_red();statusEl.textContent='Esse username já está em uso';
+    return;
+  }
+  const{error}=await dbUpdate('profiles',S.user.id,{username:raw});
+  if(error){statusEl.style.color=var_red();statusEl.textContent='Erro ao salvar. Tenta de novo.';return}
+  statusEl.style.color='';statusEl.textContent='Salvo! Seus amigos já podem te encontrar por @'+raw;
+}
+function var_red(){return getComputedStyle(document.documentElement).getPropertyValue('--red')}
 
 // ═══ START ═══
 init();
