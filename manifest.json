@@ -9,7 +9,7 @@
   "orientation": "portrait",
   "icons": [
     {
-      "src": "data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'><rect width='64' height='64' rx='14' fill='%232a7a56'/><path d='M32 10C21.5 10 13 18 13 28.2c0 9.4 6.9 17.3 16.2 19.6L32 58l5.8-10.2C47.1 45.5 54 37.6 54 28.2 54 18 45.5 10 32 10z' fill='white'/><circle cx='23.5' cy='27' r='3.2' fill='%232a7a56'/><circle cx='32' cy='27' r='3.2' fill='%232a7a56'/><circle cx='40.5' cy='27' r='3.2' fill='%232a7a56'/></svg>",
+      "src": "data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'><rect width='64' height='64' rx='14' fill='%23f4efe4'/><circle cx='32' cy='32' r='21.5' fill='none' stroke='%231e3350' stroke-width='2.3'/><path d='M32 23.75 c-4.88 0-8.76 3.80-8.76 8.37 0 6.20 8.76 13.25 8.76 13.25s8.76-7.13 8.76-13.25c0-4.65-3.88-8.37-8.76-8.37z' fill='none' stroke='%231e3350' stroke-width='1.86'/><circle cx='32' cy='36.54' r='2.32' fill='%231e3350'/></svg>",
       "sizes": "any",
       "type": "image/svg+xml",
       "purpose": "any maskable"
