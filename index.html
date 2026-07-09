@@ -779,10 +779,12 @@ function addSpotToCurrentTrip(){
 function pickCat(c){S.addCat=c;document.querySelectorAll('.cat-option').forEach(o=>o.classList.remove('sel'));document.getElementById('co-'+c).classList.add('sel');setTimeout(()=>nextOv('ov-cat','ov-search'),200)}
 const GAPI='AIzaSyDYUDC3BkvUYSjlBVX2C6BZ8pMmycxfYUQ';
 let searchTO;
+let searchReqId=0;
 function searchPlaces(v){
   clearTimeout(searchTO);const r=document.getElementById('searchResults');
   if(!v.trim()){r.innerHTML='<div class="search-loading">Digite para buscar...</div>';return}
   r.innerHTML='<div class="search-loading">Buscando...</div>';
+  const myReqId=++searchReqId;
   searchTO=setTimeout(async()=>{
     try{
       const resp=await fetch('https://places.googleapis.com/v1/places:searchText',{
@@ -790,7 +792,9 @@ function searchPlaces(v){
         headers:{'Content-Type':'application/json','X-Goog-Api-Key':GAPI,'X-Goog-FieldMask':'places.id,places.displayName,places.formattedAddress,places.addressComponents,places.location,places.photos,places.rating'},
         body:JSON.stringify({textQuery:v,languageCode:'pt-BR',maxResultCount:6})
       });
+      if(myReqId!==searchReqId)return; // busca mais nova já foi disparada, ignora essa resposta atrasada
       const data=await resp.json();
+      if(myReqId!==searchReqId)return;
       if(!data.places||!data.places.length){r.innerHTML='<div class="search-loading">Nenhum resultado</div>';return}
       S.searchResults=data.places.map(p=>{
         const name=p.displayName?.text||'';
@@ -803,15 +807,17 @@ function searchPlaces(v){
         const photoFull=photoRef?'https://places.googleapis.com/v1/'+photoRef+'/media?maxWidthPx=800&key='+GAPI:'';
         return{name,meta:addr,icon:catIcon(S.addCat),city,country,address:addr,photo_url:photoFull,photo_thumb:photoThumb,rating_google:rating};
       });
+      if(myReqId!==searchReqId)return;
       r.innerHTML=S.searchResults.map((p,i)=>{
-        const thumb=p.photo_thumb?'<div class="sr-icon"><img src="'+p.photo_thumb+'" style="width:100%;height:100%;object-fit:cover;border-radius:12px"></div>':'<div class="sr-icon">'+p.icon+'</div>';
+        const thumb=p.photo_thumb?'<div class="sr-icon"><img src="'+p.photo_thumb+'" loading="eager" style="width:100%;height:100%;object-fit:cover;border-radius:12px"></div>':'<div class="sr-icon">'+p.icon+'</div>';
         return '<div class="search-result" onclick="pickSearchResult('+i+')">'+thumb+'<div><div class="sr-name">'+p.name+'</div><div class="sr-meta">'+p.address.substring(0,50)+(p.rating_google?' · '+p.rating_google:'')+'</div></div></div>';
       }).join('');
     }catch(e){
+      if(myReqId!==searchReqId)return;
       console.error(e);
       r.innerHTML='<div class="search-loading">Erro na busca. Tente novamente.</div>';
     }
-  },500);
+  },250);
 }
 function cityFromComponents(comps){
   if(!comps||!comps.length)return'';
