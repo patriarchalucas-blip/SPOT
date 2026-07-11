@@ -586,7 +586,14 @@ async function loadDashboard(){
     t._spots.forEach(s=>{if(s.city)cities.add(s.city)});
     (t.destinations||[]).forEach(d=>ctrs.add(d));
   }
-  document.getElementById('statTrips').textContent=S.trips.length;
+  // Migração única: viagens antigas criadas por "marcar país visitado" antes de existir
+  // o marcador __quickvisit__ (só pode ter vindo de lá: status done + sem datas)
+  const legacy=S.trips.filter(t=>t.status==='done'&&t.dates==='');
+  for(const t of legacy){
+    dbUpdate('trips',t.id,{dates:'__quickvisit__'});
+    t.dates='__quickvisit__';
+  }
+  document.getElementById('statTrips').textContent=S.trips.filter(t=>!isQuickVisit(t)).length;
   document.getElementById('statSpots').textContent=ts;
   document.getElementById('statCities').textContent=cities.size;
   document.getElementById('statCountries').textContent=ctrs.size;
@@ -633,18 +640,21 @@ function tripCityCount(t){
   const cities=new Set((t._spots||[]).map(s=>s.city).filter(Boolean));
   return cities.size;
 }
+function isQuickVisit(t){return t.dates==='__quickvisit__'&&(!t._spots||!t._spots.length)}
 function renderTrips(){
   const c=document.getElementById('tripsContainer');
-  if(!S.trips.length){c.innerHTML='<div class="section-head"><span class="section-title">Minhas viagens</span></div><div class="empty-state"><div class="ei">✈️</div><h3>Nenhuma viagem ainda</h3><p>Toca no + para criar sua primeira viagem</p></div>';return}
+  const visibleTrips=S.trips.filter(t=>!isQuickVisit(t));
+  if(!visibleTrips.length){c.innerHTML='<div class="section-head"><span class="section-title">Minhas viagens</span></div><div class="empty-state"><div class="ei">✈️</div><h3>Nenhuma viagem ainda</h3><p>Toca no + para criar sua primeira viagem</p></div>';return}
   let h='<div class="section-head"><span class="section-title">Minhas viagens</span></div>';
-  S.trips.forEach(t=>{
+  visibleTrips.forEach(t=>{
     const sp=t._spots||[];
     const st=tripStatus(t);
     const flag=flagFor((t.destinations&&t.destinations[0])||t.name);
     const cities=tripCityCount(t);
     const grad=destGradient((t.destinations&&t.destinations[0])||t.name);
     const cityTxt=cities>0?(cities+(cities===1?' cidade · ':' cidades · ')):'';
-    const meta=(t.dates?t.dates+' · ':'')+cityTxt+sp.length+(sp.length===1?' spot':' spots');
+    const showDates=t.dates&&t.dates!=='__quickvisit__';
+    const meta=(showDates?t.dates+' · ':'')+cityTxt+sp.length+(sp.length===1?' spot':' spots');
     h+=`<div class="trip-card" onclick="openTrip('${t.id}')"><div class="tc-photo" id="tcbg-${t.id}" style="background:${grad}"></div><div class="tc-stub"><div class="tc-stub-top"><span class="tc-flag">${flag}</span><span class="tc-status-dot st-${st}"></span><span class="tc-status-label">${statusLabel(st)}</span></div><div class="tc-name">${t.name}</div><div class="tc-meta">${meta}</div></div></div>`;
   });
   c.innerHTML=h;
@@ -687,8 +697,9 @@ async function loadTrip(t){
   if(!t)return;
   document.getElementById('tripFloat').textContent=t.name;
   document.getElementById('tripName').textContent=t.name;
-  document.getElementById('tripLabel').textContent=(t.destinations||[]).map(d=>flagFor(d)).join(' ')+(t.dates?' · '+t.dates:'');
-  document.getElementById('tripMeta').textContent=t.dates||'';
+  const realDates=t.dates&&t.dates!=='__quickvisit__'?t.dates:'';
+  document.getElementById('tripLabel').textContent=(t.destinations||[]).map(d=>flagFor(d)).join(' ')+(realDates?' · '+realDates:'');
+  document.getElementById('tripMeta').textContent=realDates;
   const heroEl=document.getElementById('tripHeroImg');
   const dest=(t.destinations&&t.destinations[0])||t.name;
   heroEl.style.background=destGradient(dest);heroEl.style.backgroundImage='';
@@ -1028,7 +1039,7 @@ async function markVisited(){
     return;
   }
   const btn=document.getElementById('createVisitBtn');btn.textContent='Marcando...';btn.style.pointerEvents='none';
-  const{data,error}=await dbInsert('trips',{user_id:S.user.id,name,destinations:[name],dates:'',status:'done'});
+  const{data,error}=await dbInsert('trips',{user_id:S.user.id,name,destinations:[name],dates:'__quickvisit__',status:'done'});
   if(!error&&data){
     data._spots=[];S.trips.unshift(data);closeOv('ov-quickvisit');
     renderTrips();populateTripOpts();loadProfile();
