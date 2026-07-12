@@ -190,6 +190,8 @@ body{font-family:'DM Sans',sans-serif;background:#0a0a0a;max-width:430px;margin:
 .review-area{width:100%;background:var(--surface);border:none;border-radius:16px;padding:16px;font-size:14px;font-family:'DM Sans',sans-serif;color:var(--ink);resize:none;outline:none;line-height:1.6}
 .review-area::placeholder{color:var(--ink3)}
 .action-btn{display:block;width:100%;background:var(--ink);color:white;border:none;border-radius:16px;padding:17px;font-size:15px;font-weight:600;font-family:'DM Sans',sans-serif;cursor:pointer;margin-top:12px;margin-bottom:16px}
+.reserve-btn{display:block;text-align:center;width:100%;box-sizing:border-box;background:var(--white);color:var(--ink);border:1.5px solid var(--ink);border-radius:14px;padding:14px;font-size:14px;font-weight:600;font-family:'DM Sans',sans-serif;text-decoration:none;margin-top:12px}
+.reserve-btn:active{background:var(--surface)}
 .req-card{display:flex;align-items:center;gap:12px;background:var(--white);border:1px solid var(--border);border-radius:16px;padding:12px 14px;margin-bottom:10px}
 .req-name{font-size:14px;font-weight:600;color:var(--ink);flex:1}
 .req-email{font-size:12px;color:var(--ink3)}
@@ -428,7 +430,7 @@ body{font-family:'DM Sans',sans-serif;background:#0a0a0a;max-width:430px;margin:
 <div class="screen" id="place">
   <div class="place-hero"><div class="place-hero-img" id="placeHeroImg"></div><div class="hero-overlay"></div><button class="hero-back" onclick="goTo('trip');loadTrip(S.curTrip)">←</button><div class="hero-chip chip-want" id="placeChip" onclick="cycleStatus()">Quero ir</div><div class="hero-bottom"><div class="hero-type" id="placeType"></div><div class="hero-name" id="placeName"></div></div></div>
   <div class="d-section"><div class="sec-label">Minha nota</div><div class="note-card"><div class="note-glow"></div><div class="note-quote" id="placeNote"></div><div class="note-attr" id="placeNoteAttr"></div></div></div>
-  <div class="d-section"><div class="sec-label">Informações</div><div class="info-grid" id="placeInfoGrid"></div></div>
+  <div class="d-section"><div class="sec-label">Informações</div><div class="info-grid" id="placeInfoGrid"></div><div id="placeReserveWrap"></div></div>
   <div class="d-section"><div class="sec-label">Status</div><div class="status-toggle"><button class="toggle-btn sel-want" id="t-want" onclick="setStatus('want')">Quero ir</button><button class="toggle-btn" id="t-been" onclick="setStatus('been')">Fui</button><button class="toggle-btn" id="t-skip" onclick="setStatus('skip')">Pular</button></div></div>
   <div class="d-section"><div class="sec-label">Minha avaliação</div><div class="stars-row"><button class="star-btn" onclick="rateStar(1)">★</button><button class="star-btn" onclick="rateStar(2)">★</button><button class="star-btn" onclick="rateStar(3)">★</button><button class="star-btn" onclick="rateStar(4)">★</button><button class="star-btn" onclick="rateStar(5)">★</button></div><textarea class="review-area" id="reviewText" rows="3" placeholder="O que você achou?"></textarea><button class="action-btn" onclick="saveReview()">Salvar avaliação</button><button class="delete-link" onclick="deleteSpot()">Excluir este spot</button></div>
 </div>
@@ -739,6 +741,13 @@ async function openPlace(id){
   if(s.rating_google)ig+=`<div class="info-cell"><div class="info-cell-icon">⭐</div><div class="info-cell-label">Google</div><div class="info-cell-value">${s.rating_google}</div></div>`;
   if(!ig)ig=`<div class="info-cell wide"><div class="info-cell-icon">📍</div><div class="info-cell-label">Local</div><div class="info-cell-value">${s.city||'—'}</div></div>`;
   document.getElementById('placeInfoGrid').innerHTML=ig;
+  const reserveWrap=document.getElementById('placeReserveWrap');
+  if(s.category==='food'){
+    const q=encodeURIComponent(s.name+(s.city?' '+s.city:''));
+    reserveWrap.innerHTML=`<a class="reserve-btn" href="https://www.thefork.com/search?query=${q}" target="_blank" rel="noopener">🍽️ Reservar mesa</a>`;
+  }else{
+    reserveWrap.innerHTML='';
+  }
   setStatus(s.status||'want',false);
   document.querySelectorAll('.star-btn').forEach((b,i)=>b.classList.toggle('lit',i<(s.my_rating||0)));
   document.getElementById('reviewText').value=s.my_review||'';
