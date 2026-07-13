@@ -91,6 +91,7 @@ body{font-family:'DM Sans',sans-serif;background:#0a0a0a;max-width:430px;margin:
 .tc-flag{font-size:16px;line-height:1}
 .tc-status-dot{width:6px;height:6px;border-radius:50%;flex-shrink:0}
 .tc-status-dot.st-planning{background:var(--ink3)}
+.tc-status-dot.st-nodate{background:var(--ink3)}
 .tc-status-dot.st-ongoing{background:var(--amber)}
 .tc-status-dot.st-done{background:var(--green)}
 .tc-status-label{font-family:'IBM Plex Mono',monospace;font-size:9.5px;text-transform:uppercase;letter-spacing:.08em;color:var(--ink3)}
@@ -635,9 +636,9 @@ function tripStatus(t){
     if(today<start)return'planning';
     return'ongoing';
   }
-  return'planning';
+  return'nodate';
 }
-function statusLabel(s){return s==='done'?'Concluída':s==='ongoing'?'Em viagem':'Planejando'}
+function statusLabel(s){return s==='done'?'Concluída':s==='ongoing'?'Em viagem':s==='nodate'?'Sem data':'Planejando'}
 // Count distinct cities from spots
 function tripCityCount(t){
   const cities=new Set((t._spots||[]).map(s=>s.city).filter(Boolean));
