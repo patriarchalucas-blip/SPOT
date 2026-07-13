@@ -1185,6 +1185,14 @@ function catLabel(c){return{food:'Comer & Beber',hotel:'Onde Ficar',experience:'
 function flagFor(n){const c=COUNTRIES.find(x=>x.name===n);return c?c.flag:'🌍'}
 // Cache for city photos so we don't refetch
 const UNSPLASH_KEY='1fwslJzsd0FfmwxGEdvRVbqZtpBUVsoxpAjYb47dZXo';
+// Limpeza única: versão anterior do cache podia guardar bloqueios de 1h
+// criados enquanto a cota estava esgotada, travando fotos bem depois
+// da cota já ter voltado. Invalida tudo uma vez só.
+if(localStorage.getItem('spot_cache_version')!=='2'){
+  localStorage.removeItem('spot_photo_cache');
+  localStorage.removeItem('spot_unsplash_blocked_until');
+  localStorage.setItem('spot_cache_version','2');
+}
 // In-memory + persistent cache so we don't re-hit Unsplash (50/hr limit)
 let cityPhotoCache={};
 try{cityPhotoCache=JSON.parse(localStorage.getItem('spot_photo_cache')||'{}')}catch(e){cityPhotoCache={}}
@@ -1205,6 +1213,7 @@ async function fetchCityPhoto(query){
     const resp=await fetch('https://api.unsplash.com/search/photos?query='+encodeURIComponent(query)+'&per_page=10&orientation=landscape&client_id='+UNSPLASH_KEY);
     if(resp.status===403||resp.status===429){
       setUnsplashBlock(10*60*1000);
+      if(!window.__unsplashWarned){window.__unsplashWarned=true;toast('Fotos pausadas','Cota do Unsplash esgotada, volta em ~10min. Gradiente por enquanto.')}
       return'';
     }
     const data=await resp.json();
