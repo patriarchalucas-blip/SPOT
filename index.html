@@ -21,6 +21,8 @@ body{font-family:'DM Sans',sans-serif;background:#0a0a0a;max-width:430px;margin:
 
 /* SCREENS */
 .screen{display:none;flex-direction:column;min-height:100vh}
+@keyframes screenIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+.screen.active{animation:screenIn .28s ease}
 .screen.active{display:flex}
 
 /* LOADING */
@@ -112,10 +114,34 @@ body{font-family:'DM Sans',sans-serif;background:#0a0a0a;max-width:430px;margin:
 .bottom-nav{position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:430px;background:var(--white);border-top:1px solid var(--border);display:flex;padding:10px 0 26px;z-index:40}
 @media(max-width:430px){.bottom-nav{width:100%;left:0;transform:none}}
 
+/* ═══ HOVER (só em dispositivos com mouse — não afeta toque) ═══ */
+@media(hover:hover){
+  .trip-card{transition:transform .15s,box-shadow .15s,border-color .15s}
+  .trip-card:hover{transform:translateY(-2px);box-shadow:0 10px 28px rgba(22,35,42,0.1);border-color:var(--ink3)}
+  .place-row{transition:border-color .15s,box-shadow .15s}
+  .place-row:hover{border-color:var(--ink3);box-shadow:0 4px 14px rgba(22,35,42,0.06)}
+  .nav-item{border-radius:10px;transition:background .15s}
+  .nav-item:hover{background:var(--surface)}
+  .action-btn,.sheet-cta{transition:opacity .15s}
+  .action-btn:hover,.sheet-cta:hover{opacity:.88}
+  .req-btn{transition:opacity .15s}
+  .req-btn:hover{opacity:.85}
+  .feed-item,.req-card{transition:background .15s}
+  .feed-item:hover{background:var(--surface)}
+  a.reserve-btn{transition:background .15s}
+  a.reserve-btn:hover{background:var(--surface)}
+  .new-trip-btn{transition:border-color .15s,background .15s}
+  .new-trip-btn:hover{border-color:var(--ink3);background:var(--white)}
+  .btn-google:hover,.btn-primary:hover{opacity:.9}
+  .btn-email-ghost:hover{opacity:.75}
+}
+
 /* ═══ DESKTOP (site, não coluna de celular flutuando) ═══ */
 @media(min-width:900px){
   body{max-width:100%;background:var(--surface)}
-  #login{max-width:430px;margin:0 auto}
+  #login{max-width:100%}
+  #login .login-inner{max-width:480px;margin:0 auto;padding:64px 40px 56px}
+  #login .login-top{justify-content:flex-start}
   #dashboard,#profile,#friends{margin-left:240px;max-width:900px;padding-bottom:40px}
   #trip,#place{max-width:640px;margin:0 auto}
   .bottom-nav{
