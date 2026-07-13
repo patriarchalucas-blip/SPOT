@@ -111,6 +111,28 @@ body{font-family:'DM Sans',sans-serif;background:#0a0a0a;max-width:430px;margin:
 /* BOTTOM NAV */
 .bottom-nav{position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:430px;background:var(--white);border-top:1px solid var(--border);display:flex;padding:10px 0 26px;z-index:40}
 @media(max-width:430px){.bottom-nav{width:100%;left:0;transform:none}}
+
+/* ═══ DESKTOP (site, não coluna de celular flutuando) ═══ */
+@media(min-width:900px){
+  body{max-width:100%;background:var(--surface)}
+  #login{max-width:430px;margin:0 auto}
+  #dashboard,#profile,#friends{margin-left:240px;max-width:900px;padding-bottom:40px}
+  #trip,#place{max-width:640px;margin:0 auto}
+  .bottom-nav{
+    position:fixed;top:0;left:0;bottom:auto;transform:none;
+    width:240px;height:100vh;flex-direction:column;justify-content:flex-start;
+    align-items:stretch;gap:4px;padding:32px 16px;border-top:none;
+    border-right:1px solid var(--border);z-index:60;
+  }
+  .nav-item{flex:none;flex-direction:row;justify-content:flex-start;gap:12px;padding:12px 14px;border-radius:10px;transition:background .15s}
+  .nav-item:hover{background:var(--surface)}
+  .nav-icon{height:auto}
+  .nav-label{font-size:14px}
+  .fab{right:calc(240px + 40px);bottom:40px}
+  #tripsContainer{display:grid;grid-template-columns:repeat(2,1fr);gap:14px}
+  #tripsContainer .section-head{grid-column:1/-1;margin-top:8px}
+  .trip-card{margin-bottom:0}
+}
 .nav-item{flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;cursor:pointer}
 .nav-icon{font-size:20px;height:24px;display:flex;align-items:center}
 .nav-label{font-size:10px;font-weight:500;color:var(--ink3)}
