@@ -225,7 +225,7 @@ body{font-family:'DM Sans',sans-serif;background:#0a0a0a;max-width:430px;margin:
 .hero-headline b{color:#3fd488;font-style:normal;font-weight:600}
 .hero-stats{display:flex;align-items:center;justify-content:center;gap:0}
 .hs-item{display:flex;flex-direction:column;align-items:center;padding:0 24px}
-.hs-n{font-family:'IBM Plex Mono',monospace;font-weight:500;font-size:28px;color:#fff;line-height:1}
+.hs-n{font-family:'IBM Plex Mono',monospace;font-weight:500;font-size:23px;color:#fff;line-height:1}
 .hs-l{font-family:'IBM Plex Mono',monospace;font-size:9px;color:rgba(255,255,255,0.5);text-transform:uppercase;letter-spacing:.09em;margin-top:7px}
 .hs-div{width:1px;height:36px;background:rgba(255,255,255,0.12)}
 .profile-body{padding:24px 22px;background:var(--surface);border-radius:24px 24px 0 0}
@@ -377,7 +377,7 @@ body{font-family:'DM Sans',sans-serif;background:#0a0a0a;max-width:430px;margin:
 </div>
 
 <div class="screen" id="trip">
-  <div class="trip-hero"><div class="trip-hero-img" id="tripHeroImg"></div><div class="trip-float" id="tripFloat"></div><div class="trip-hero-content"><button class="back-btn" onclick="goTo('dashboard');loadDashboard()">←</button><button class="trip-del-btn" onclick="deleteTrip()">🗑</button><div><div class="trip-hero-label" id="tripLabel"></div><div class="trip-hero-name" id="tripName"></div><div class="trip-hero-meta" id="tripMeta"></div></div></div></div>
+  <div class="trip-hero"><div class="trip-hero-img" id="tripHeroImg"></div><div class="trip-float" id="tripFloat"></div><div class="trip-hero-content"><button class="back-btn" onclick="goTo('dashboard');loadDashboard()">←</button><button class="trip-del-btn" style="right:64px" onclick="openEditDates()">✎</button><button class="trip-del-btn" onclick="deleteTrip()">🗑</button><div><div class="trip-hero-label" id="tripLabel"></div><div class="trip-hero-name" id="tripName"></div><div class="trip-hero-meta" id="tripMeta"></div></div></div></div>
   <div class="cat-tabs-wrap"><div class="cat-tabs"><div class="cat-tab active" onclick="switchCat('food',this)"><div class="ct-icon">🍽️</div><div>Comer & Beber</div><div class="ct-count" id="cnt-food">0</div></div><div class="cat-tab" onclick="switchCat('hotel',this)"><div class="ct-icon">🏨</div><div>Onde Ficar</div><div class="ct-count" id="cnt-hotel">0</div></div><div class="cat-tab" onclick="switchCat('experience',this)"><div class="ct-icon">🗺️</div><div>Experiências</div><div class="ct-count" id="cnt-experience">0</div></div></div></div>
   <div class="trip-body" id="tripBody"></div>
   <button class="fab" onclick="addSpotToCurrentTrip()">+</button>
@@ -453,6 +453,7 @@ body{font-family:'DM Sans',sans-serif;background:#0a0a0a;max-width:430px;margin:
 <div class="overlay" id="ov-quickvisit" onclick="closeOut(event,'ov-quickvisit')"><div class="sheet"><button class="sheet-close" onclick="closeOv('ov-quickvisit')">✕</button><div class="sheet-handle"></div><div class="sheet-title">Qual país você já visitou?</div><div class="nt-label">País</div><div class="dest-search-wrap"><span class="dsi">🔍</span><input class="nt-input" style="padding-left:44px" id="countrySearch2" placeholder="Buscar país..." oninput="filterCountries2(this.value)"></div><div id="countryList2"></div><button class="sheet-cta" id="createVisitBtn" onclick="markVisited()" style="opacity:.4;pointer-events:none">Selecione um país</button></div></div>
 <div class="overlay" id="ov-addfriend" onclick="closeOut(event,'ov-addfriend')"><div class="sheet"><button class="sheet-close" onclick="closeOv('ov-addfriend')">✕</button><div class="sheet-handle"></div><div class="sheet-title">Adicionar amigo</div><div class="nt-label">Username do amigo</div><input class="nt-input" id="friendUsernameInput" type="text" placeholder="username_do_amigo" autocapitalize="none" oninput="document.getElementById('friendAddErr').textContent=''"><div class="auth-error" id="friendAddErr"></div><button class="sheet-cta" id="sendReqBtn" onclick="sendFriendRequest()">Enviar pedido</button></div></div>
 
+<div class="overlay" id="ov-editdates" onclick="closeOut(event,'ov-editdates')"><div class="sheet"><button class="sheet-close" onclick="closeOv('ov-editdates')">✕</button><div class="sheet-handle"></div><div class="sheet-title">Datas da viagem</div><div class="nt-label">Deixe em branco se não for uma viagem com data definida (ex: seu país de origem)</div><div class="dates-row"><input class="nt-input" type="date" id="editStart"><input class="nt-input" type="date" id="editEnd"></div><button class="sheet-cta" onclick="saveEditDates()">Salvar</button><button class="delete-link" onclick="clearEditDates()">Limpar datas (não é uma viagem)</button></div></div>
 <div class="toast" id="toast"><div class="toast-title" id="toastTitle"></div><div class="toast-msg" id="toastMsg"></div></div>
 
 <script>
@@ -643,27 +644,68 @@ function tripCityCount(t){
   return cities.size;
 }
 function isQuickVisit(t){return t.dates==='__quickvisit__'&&(!t._spots||!t._spots.length)}
+function regionFor(name){const c=COUNTRIES.find(x=>x.name===name);return c?c.region:'Outros'}
+const REGION_ORDER=['Europa','América do Sul','América do Norte','Ásia','África','Oceania','Antártida','Outros'];
+function tripCardHTML(t){
+  const sp=t._spots||[];
+  const st=tripStatus(t);
+  const flag=flagFor((t.destinations&&t.destinations[0])||t.name);
+  const cities=tripCityCount(t);
+  const grad=destGradient((t.destinations&&t.destinations[0])||t.name);
+  const cityTxt=cities>0?(cities+(cities===1?' cidade · ':' cidades · ')):'';
+  const showDates=t.dates&&t.dates!=='__quickvisit__';
+  const meta=(showDates?t.dates+' · ':'')+cityTxt+sp.length+(sp.length===1?' spot':' spots');
+  return `<div class="trip-card" onclick="openTrip('${t.id}')"><div class="tc-photo" id="tcbg-${t.id}" style="background:${grad}"></div><div class="tc-stub"><div class="tc-stub-top"><span class="tc-flag">${flag}</span><span class="tc-status-dot st-${st}"></span><span class="tc-status-label">${statusLabel(st)}</span></div><div class="tc-name">${t.name}</div><div class="tc-meta">${meta}</div></div></div>`;
+}
 function renderTrips(){
   const c=document.getElementById('tripsContainer');
   const visibleTrips=S.trips.filter(t=>!isQuickVisit(t));
   if(!visibleTrips.length){c.innerHTML='<div class="section-head"><span class="section-title">Minhas viagens</span></div><div class="empty-state"><div class="ei">✈️</div><h3>Nenhuma viagem ainda</h3><p>Toca no + para criar sua primeira viagem</p></div>';return}
-  let h='<div class="section-head"><span class="section-title">Minhas viagens</span></div>';
+  const groups={};
   visibleTrips.forEach(t=>{
-    const sp=t._spots||[];
-    const st=tripStatus(t);
-    const flag=flagFor((t.destinations&&t.destinations[0])||t.name);
-    const cities=tripCityCount(t);
-    const grad=destGradient((t.destinations&&t.destinations[0])||t.name);
-    const cityTxt=cities>0?(cities+(cities===1?' cidade · ':' cidades · ')):'';
-    const showDates=t.dates&&t.dates!=='__quickvisit__';
-    const meta=(showDates?t.dates+' · ':'')+cityTxt+sp.length+(sp.length===1?' spot':' spots');
-    h+=`<div class="trip-card" onclick="openTrip('${t.id}')"><div class="tc-photo" id="tcbg-${t.id}" style="background:${grad}"></div><div class="tc-stub"><div class="tc-stub-top"><span class="tc-flag">${flag}</span><span class="tc-status-dot st-${st}"></span><span class="tc-status-label">${statusLabel(st)}</span></div><div class="tc-name">${t.name}</div><div class="tc-meta">${meta}</div></div></div>`;
+    const region=regionFor((t.destinations&&t.destinations[0])||t.name);
+    (groups[region]=groups[region]||[]).push(t);
+  });
+  const orderedRegions=[...REGION_ORDER.filter(r=>groups[r]),...Object.keys(groups).filter(r=>!REGION_ORDER.includes(r))];
+  let h='';
+  orderedRegions.forEach(region=>{
+    h+=`<div class="section-head"><span class="section-title">${region}</span></div>`;
+    groups[region].forEach(t=>{h+=tripCardHTML(t)});
   });
   c.innerHTML=h;
   fillTripPhotos();
 }
 
 // ═══ TRIP VIEW ═══
+function openEditDates(){
+  if(!S.curTrip)return;
+  document.getElementById('editStart').value=S.curTrip.date_start||'';
+  document.getElementById('editEnd').value=S.curTrip.date_end||'';
+  document.getElementById('ov-editdates').classList.add('show');
+}
+function fmtDateBR(iso){
+  if(!iso)return'';
+  const[y,m,d]=iso.split('-');const ms=['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'];
+  return parseInt(d)+' '+ms[parseInt(m)-1];
+}
+async function applyTripDates(start,end){
+  const dates=start&&end?fmtDateBR(start)+' – '+fmtDateBR(end):(start?'A partir de '+fmtDateBR(start):'');
+  const{error}=await dbUpdate('trips',S.curTrip.id,{date_start:start||null,date_end:end||null,dates});
+  if(error){toast('Erro ao salvar','');return}
+  S.curTrip.date_start=start||null;S.curTrip.date_end=end||null;S.curTrip.dates=dates;
+  const idx=S.trips.findIndex(t=>t.id===S.curTrip.id);if(idx>-1)S.trips[idx]=S.curTrip;
+  closeOv('ov-editdates');
+  loadTrip(S.curTrip);
+  toast('Datas atualizadas','');
+}
+function saveEditDates(){
+  const start=document.getElementById('editStart').value;
+  const end=document.getElementById('editEnd').value;
+  applyTripDates(start,end);
+}
+function clearEditDates(){
+  applyTripDates('','');
+}
 async function deleteTrip(){
   if(!S.curTrip)return;
   if(!confirm(`Excluir a viagem "${S.curTrip.name}"? Todos os spots dela serão apagados. Isso não pode ser desfeito.`))return;
@@ -976,67 +1018,87 @@ function fmtD(d){const[y,m,day]=d.split('-');const ms=['Jan','Fev','Mar','Abr','
 
 // ═══ COUNTRIES DATABASE ═══
 const COUNTRIES=[
-  {flag:'🇦🇫',name:'Afeganistão',region:'Ásia'},{flag:'🇦🇱',name:'Albânia',region:'Europa'},{flag:'🇩🇪',name:'Alemanha',region:'Europa'},{flag:'🇦🇩',name:'Andorra',region:'Europa'},
-  {flag:'🇦🇴',name:'Angola',region:'África'},{flag:'🇦🇮',name:'Anguila',region:'América do Norte'},{flag:'🇦🇬',name:'Antígua e Barbuda',region:'América do Norte'},{flag:'🇦🇷',name:'Argentina',region:'América do Sul'},
-  {flag:'🇩🇿',name:'Argélia',region:'África'},{flag:'🇦🇲',name:'Armênia',region:'Ásia'},{flag:'🇦🇼',name:'Aruba',region:'América do Norte'},{flag:'🇸🇦',name:'Arábia Saudita',region:'Ásia'},
-  {flag:'🇦🇺',name:'Austrália',region:'Oceania'},{flag:'🇦🇿',name:'Azerbaidjão',region:'Ásia'},{flag:'🇧🇸',name:'Bahamas',region:'América do Norte'},{flag:'🇧🇩',name:'Bangladesh',region:'Ásia'},
-  {flag:'🇧🇧',name:'Barbados',region:'América do Norte'},{flag:'🇧🇭',name:'Barein',region:'Ásia'},{flag:'🇧🇿',name:'Belize',region:'América do Norte'},{flag:'🇧🇯',name:'Benin',region:'África'},
-  {flag:'🇧🇲',name:'Bermuda',region:'América do Norte'},{flag:'🇧🇾',name:'Bielo-Rússia',region:'Europa'},{flag:'🇧🇴',name:'Bolívia',region:'América do Sul'},{flag:'🇧🇶',name:'Bonaire, Saba e Santo Eustáquio',region:'América do Norte'},
-  {flag:'🇧🇼',name:'Botsuana',region:'África'},{flag:'🇧🇷',name:'Brasil',region:'América do Sul'},{flag:'🇧🇳',name:'Brunei',region:'Ásia'},{flag:'🇧🇬',name:'Bulgária',region:'Europa'},
-  {flag:'🇧🇫',name:'Burquina',region:'África'},{flag:'🇧🇮',name:'Burundi',region:'África'},{flag:'🇧🇹',name:'Butão',region:'Ásia'},{flag:'🇧🇪',name:'Bélgica',region:'Europa'},
-  {flag:'🇧🇦',name:'Bósnia e Herzegovina',region:'Europa'},{flag:'🇨🇻',name:'Cabo Verde',region:'África'},{flag:'🇨🇲',name:'Camarões',region:'África'},{flag:'🇰🇭',name:'Camboja',region:'Ásia'},
-  {flag:'🇨🇦',name:'Canadá',region:'América do Norte'},{flag:'🇶🇦',name:'Catar',region:'Ásia'},{flag:'🇰🇿',name:'Cazaquistão',region:'Ásia'},{flag:'🇹🇩',name:'Chade',region:'África'},
-  {flag:'🇨🇱',name:'Chile',region:'América do Sul'},{flag:'🇨🇳',name:'China',region:'Ásia'},{flag:'🇨🇾',name:'Chipre',region:'Ásia'},{flag:'🇸🇬',name:'Singapura',region:'Ásia'},
-  {flag:'🇨🇴',name:'Colômbia',region:'América do Sul'},{flag:'🇰🇲',name:'Comores',region:'África'},{flag:'🇰🇵',name:'Coreia do Norte',region:'Ásia'},{flag:'🇰🇷',name:'Coreia do Sul',region:'Ásia'},
-  {flag:'🇨🇷',name:'Costa Rica',region:'América do Norte'},{flag:'🇨🇮',name:'Costa do Marfim',region:'África'},{flag:'🇭🇷',name:'Croácia',region:'Europa'},{flag:'🇨🇺',name:'Cuba',region:'América do Norte'},
-  {flag:'🇨🇼',name:'Curaçao',region:'América do Norte'},{flag:'🇩🇰',name:'Dinamarca',region:'Europa'},{flag:'🇩🇯',name:'Djibuti',region:'África'},{flag:'🇩🇲',name:'Domínica',region:'América do Norte'},
-  {flag:'🇪🇬',name:'Egito',region:'África'},{flag:'🇸🇻',name:'El Salvador',region:'América do Norte'},{flag:'🇦🇪',name:'Emirados Árabes',region:'Ásia'},{flag:'🇪🇨',name:'Equador',region:'América do Sul'},
-  {flag:'🇪🇷',name:'Eritréia',region:'África'},{flag:'🇸🇰',name:'Eslováquia',region:'Europa'},{flag:'🇸🇮',name:'Eslovênia',region:'Europa'},{flag:'🇪🇸',name:'Espanha',region:'Europa'},
-  {flag:'🇸🇿',name:'Essuatíni',region:'África'},{flag:'🇺🇸',name:'Estados Unidos',region:'América do Norte'},{flag:'🇪🇪',name:'Estônia',region:'Europa'},{flag:'🇪🇹',name:'Etiópia',region:'África'},
-  {flag:'🇫🇯',name:'Fiji',region:'Oceania'},{flag:'🇵🇭',name:'Filipinas',region:'Ásia'},{flag:'🇫🇮',name:'Finlândia',region:'Europa'},{flag:'🇫🇷',name:'França',region:'Europa'},
-  {flag:'🇬🇦',name:'Gabão',region:'África'},{flag:'🇬🇭',name:'Gana',region:'África'},{flag:'🇬🇪',name:'Geórgia',region:'Ásia'},{flag:'🇬🇮',name:'Gibraltar',region:'Europa'},
-  {flag:'🇬🇩',name:'Granada',region:'América do Norte'},{flag:'🇬🇱',name:'Groenlândia',region:'América do Norte'},{flag:'🇬🇷',name:'Grécia',region:'Europa'},{flag:'🇬🇵',name:'Guadalupe',region:'América do Norte'},
-  {flag:'🇬🇺',name:'Guam',region:'Oceania'},{flag:'🇬🇹',name:'Guatemala',region:'América do Norte'},{flag:'🇬🇬',name:'Guernsey',region:'Europa'},{flag:'🇬🇾',name:'Guiana',region:'América do Sul'},
-  {flag:'🇬🇫',name:'Guiana Francesa',region:'América do Sul'},{flag:'🇬🇳',name:'Guiné',region:'África'},{flag:'🇬🇶',name:'Guiné Equatorial',region:'África'},{flag:'🇬🇼',name:'Guiné-Bissau',region:'África'},
-  {flag:'🇬🇲',name:'Gâmbia',region:'África'},{flag:'🇭🇹',name:'Haiti',region:'América do Norte'},{flag:'🇳🇱',name:'Holanda',region:'Europa'},{flag:'🇭🇳',name:'Honduras',region:'América do Norte'},
-  {flag:'🇭🇰',name:'Hong Kong',region:'Ásia'},{flag:'🇭🇺',name:'Hungria',region:'Europa'},{flag:'🇨🇽',name:'Ilha Christmas',region:'Oceania'},{flag:'🇳🇫',name:'Ilha Norfolk',region:'Oceania'},
-  {flag:'🇮🇲',name:'Ilha de Man',region:'Europa'},{flag:'🇰🇾',name:'Ilhas Cayman',region:'América do Norte'},{flag:'🇨🇨',name:'Ilhas Cocos',region:'Oceania'},{flag:'🇨🇰',name:'Ilhas Cook',region:'Oceania'},
-  {flag:'🇫🇴',name:'Ilhas Faroe',region:'Europa'},{flag:'🇫🇰',name:'Ilhas Malvinas',region:'América do Sul'},{flag:'🇲🇵',name:'Ilhas Marianas do Norte',region:'Oceania'},{flag:'🇲🇭',name:'Ilhas Marshall',region:'Oceania'},
-  {flag:'🇸🇧',name:'Ilhas Salomão',region:'Oceania'},{flag:'🇹🇨',name:'Ilhas Turks e Caicos',region:'América do Norte'},{flag:'🇻🇬',name:'Ilhas Virgens Britânicas',region:'América do Norte'},{flag:'🇻🇮',name:'Ilhas Virgens dos Estados Unidos',region:'América do Norte'},
-  {flag:'🇦🇽',name:'Ilhas Åland',region:'Europa'},{flag:'🇮🇩',name:'Indonésia',region:'Ásia'},{flag:'🇮🇶',name:'Iraque',region:'Ásia'},{flag:'🇮🇪',name:'Irlanda',region:'Europa'},
-  {flag:'🇮🇷',name:'Irã',region:'Ásia'},{flag:'🇮🇸',name:'Islândia',region:'Europa'},{flag:'🇮🇱',name:'Israel',region:'Ásia'},{flag:'🇮🇹',name:'Itália',region:'Europa'},
-  {flag:'🇾🇪',name:'Iêmen',region:'Ásia'},{flag:'🇯🇲',name:'Jamaica',region:'América do Norte'},{flag:'🇯🇵',name:'Japão',region:'Ásia'},{flag:'🇯🇪',name:'Jersey',region:'Europa'},
-  {flag:'🇯🇴',name:'Jordânia',region:'Ásia'},{flag:'🇰🇮',name:'Kiribati',region:'Oceania'},{flag:'🇽🇰',name:'Kosovo',region:'Europa'},{flag:'🇰🇼',name:'Kuwait',region:'Ásia'},
-  {flag:'🇱🇦',name:'Laos',region:'Ásia'},{flag:'🇱🇸',name:'Lesoto',region:'África'},{flag:'🇱🇻',name:'Letônia',region:'Europa'},{flag:'🇱🇷',name:'Libéria',region:'África'},
-  {flag:'🇱🇮',name:'Liechtenstein',region:'Europa'},{flag:'🇱🇹',name:'Lituânia',region:'Europa'},{flag:'🇱🇺',name:'Luxemburgo',region:'Europa'},{flag:'🇱🇧',name:'Líbano',region:'Ásia'},
-  {flag:'🇱🇾',name:'Líbia',region:'África'},{flag:'🇲🇴',name:'Macau',region:'Ásia'},{flag:'🇲🇰',name:'Macedônia do Norte',region:'Europa'},{flag:'🇲🇬',name:'Madagascar',region:'África'},
-  {flag:'🇾🇹',name:'Maiote',region:'África'},{flag:'🇲🇼',name:'Malaui',region:'África'},{flag:'🇲🇻',name:'Maldivas',region:'Ásia'},{flag:'🇲🇱',name:'Mali',region:'África'},
-  {flag:'🇲🇹',name:'Malta',region:'Europa'},{flag:'🇲🇾',name:'Malásia',region:'Ásia'},{flag:'🇲🇦',name:'Marrocos',region:'África'},{flag:'🇲🇶',name:'Martinica',region:'América do Norte'},
-  {flag:'🇲🇷',name:'Mauritânia',region:'África'},{flag:'🇲🇺',name:'Maurício',region:'África'},{flag:'🇫🇲',name:'Micronésia',region:'Oceania'},{flag:'🇲🇩',name:'Moldávia',region:'Europa'},
-  {flag:'🇲🇳',name:'Mongólia',region:'Ásia'},{flag:'🇲🇪',name:'Montenegro',region:'Europa'},{flag:'🇲🇸',name:'Montserrat',region:'América do Norte'},{flag:'🇲🇿',name:'Moçambique',region:'África'},
-  {flag:'🇲🇲',name:'Myanmar',region:'Ásia'},{flag:'🇲🇽',name:'México',region:'América do Norte'},{flag:'🇲🇨',name:'Mônaco',region:'Europa'},{flag:'🇳🇦',name:'Namíbia',region:'África'},
-  {flag:'🇳🇷',name:'Nauru',region:'Oceania'},{flag:'🇳🇵',name:'Nepal',region:'Ásia'},{flag:'🇳🇮',name:'Nicarágua',region:'América do Norte'},{flag:'🇳🇬',name:'Nigéria',region:'África'},
-  {flag:'🇳🇺',name:'Niue',region:'Oceania'},{flag:'🇳🇴',name:'Noruega',region:'Europa'},{flag:'🇳🇨',name:'Nova Caledônia',region:'Oceania'},{flag:'🇳🇿',name:'Nova Zelândia',region:'Oceania'},
-  {flag:'🇳🇪',name:'Níger',region:'África'},{flag:'🇴🇲',name:'Omã',region:'Ásia'},{flag:'🇵🇼',name:'Palau',region:'Oceania'},{flag:'🇵🇸',name:'Palestina',region:'Ásia'},
-  {flag:'🇵🇦',name:'Panamá',region:'América do Norte'},{flag:'🇵🇬',name:'Papua-Nova Guiné',region:'Oceania'},{flag:'🇵🇰',name:'Paquistão',region:'Ásia'},{flag:'🇵🇾',name:'Paraguai',region:'América do Sul'},
-  {flag:'🇵🇪',name:'Peru',region:'América do Sul'},{flag:'🇵🇳',name:'Pitcairn',region:'Oceania'},{flag:'🇵🇫',name:'Polinésia Francesa',region:'Oceania'},{flag:'🇵🇱',name:'Polônia',region:'Europa'},
-  {flag:'🇵🇷',name:'Porto Rico',region:'América do Norte'},{flag:'🇵🇹',name:'Portugal',region:'Europa'},{flag:'🇰🇬',name:'Quirguistão',region:'Ásia'},{flag:'🇰🇪',name:'Quênia',region:'África'},
-  {flag:'🇬🇧',name:'Reino Unido',region:'Europa'},{flag:'🇨🇫',name:'República Centro-Africana',region:'África'},{flag:'🇨🇩',name:'República Democrática do Congo',region:'África'},{flag:'🇩🇴',name:'República Dominicana',region:'América do Norte'},
-  {flag:'🇨🇿',name:'República Tcheca',region:'Europa'},{flag:'🇨🇬',name:'República do Congo',region:'África'},{flag:'🇷🇪',name:'Reunião',region:'África'},{flag:'🇷🇴',name:'Romênia',region:'Europa'},
-  {flag:'🇷🇼',name:'Ruanda',region:'África'},{flag:'🇷🇺',name:'Rússia',region:'Europa'},{flag:'🇪🇭',name:'Saara Ocidental',region:'África'},{flag:'🇼🇸',name:'Samoa',region:'Oceania'},
-  {flag:'🇦🇸',name:'Samoa Americana',region:'Oceania'},{flag:'🇸🇭',name:'Santa Helena, Ascensão e Tristão da Cunha',region:'África'},{flag:'🇱🇨',name:'Santa Lúcia',region:'América do Norte'},{flag:'🇸🇳',name:'Senegal',region:'África'},
-  {flag:'🇸🇱',name:'Serra Leoa',region:'África'},{flag:'🇸🇨',name:'Seychelles',region:'África'},{flag:'🇸🇽',name:'Sint Maarten',region:'América do Norte'},{flag:'🇸🇴',name:'Somália',region:'África'},
-  {flag:'🇱🇰',name:'Sri Lanka',region:'Ásia'},{flag:'🇸🇩',name:'Sudão',region:'África'},{flag:'🇸🇸',name:'Sudão do Sul',region:'África'},{flag:'🇸🇷',name:'Suriname',region:'América do Sul'},
-  {flag:'🇸🇪',name:'Suécia',region:'Europa'},{flag:'🇨🇭',name:'Suíça',region:'Europa'},{flag:'🇸🇯',name:'Svalbard e a Ilha de Jan Mayen',region:'Europa'},{flag:'🇧🇱',name:'São Bartolomeu',region:'América do Norte'},
-  {flag:'🇰🇳',name:'São Cristóvão e Névis',region:'América do Norte'},{flag:'🇸🇲',name:'São Marino',region:'Europa'},{flag:'🇲🇫',name:'São Martim',region:'América do Norte'},{flag:'🇵🇲',name:'São Pedro e Miquelon',region:'América do Norte'},
-  {flag:'🇸🇹',name:'São Tomé e Príncipe',region:'África'},{flag:'🇻🇨',name:'São Vicente e Granadinas',region:'América do Norte'},{flag:'🇷🇸',name:'Sérvia',region:'Europa'},{flag:'🇸🇾',name:'Síria',region:'Ásia'},
-  {flag:'🇹🇯',name:'Tadjiquistão',region:'Ásia'},{flag:'🇹🇭',name:'Tailândia',region:'Ásia'},{flag:'🇹🇼',name:'Taiwan',region:'Ásia'},{flag:'🇹🇿',name:'Tanzânia',region:'África'},
-  {flag:'🇹🇱',name:'Timor Leste',region:'Europa'},{flag:'🇹🇬',name:'Togo',region:'África'},{flag:'🇹🇴',name:'Tonga',region:'Oceania'},{flag:'🇹🇰',name:'Toquelau',region:'Oceania'},
-  {flag:'🇹🇹',name:'Trinidade e Tobago',region:'América do Norte'},{flag:'🇹🇳',name:'Tunísia',region:'África'},{flag:'🇹🇲',name:'Turcomenistão',region:'Ásia'},{flag:'🇹🇷',name:'Turquia',region:'Ásia'},
-  {flag:'🇹🇻',name:'Tuvalu',region:'Oceania'},{flag:'🇺🇦',name:'Ucrânia',region:'Europa'},{flag:'🇺🇬',name:'Uganda',region:'África'},{flag:'🇺🇾',name:'Uruguai',region:'América do Sul'},
-  {flag:'🇺🇿',name:'Uzbequistão',region:'Ásia'},{flag:'🇻🇺',name:'Vanuatu',region:'Oceania'},{flag:'🇻🇦',name:'Vaticano',region:'Europa'},{flag:'🇻🇪',name:'Venezuela',region:'América do Sul'},
-  {flag:'🇻🇳',name:'Vietnã',region:'Ásia'},{flag:'🇼🇫',name:'Wallis e Futuna',region:'Oceania'},{flag:'🇿🇼',name:'Zimbábue',region:'África'},{flag:'🇿🇲',name:'Zâmbia',region:'África'},
-  {flag:'🇿🇦',name:'África do Sul',region:'África'},{flag:'🇦🇹',name:'Áustria',region:'Europa'},{flag:'🇮🇳',name:'Índia',region:'Ásia'}
+  {flag:'🇦🇫',name:'Afeganistão',region:'Ásia',geo:'Afghanistan'},{flag:'🇦🇱',name:'Albânia',region:'Europa',geo:'Albania'},{flag:'🇩🇪',name:'Alemanha',region:'Europa',geo:'Germany'},
+  {flag:'🇦🇩',name:'Andorra',region:'Europa',geo:'Andorra'},{flag:'🇦🇴',name:'Angola',region:'África',geo:'Angola'},{flag:'🇦🇮',name:'Anguila',region:'América do Norte',geo:'Anguilla'},
+  {flag:'🇦🇬',name:'Antígua e Barbuda',region:'América do Norte',geo:'Antigua and Barbuda'},{flag:'🇦🇷',name:'Argentina',region:'América do Sul',geo:'Argentina'},{flag:'🇩🇿',name:'Argélia',region:'África',geo:'Algeria'},
+  {flag:'🇦🇲',name:'Armênia',region:'Ásia',geo:'Armenia'},{flag:'🇦🇼',name:'Aruba',region:'América do Norte',geo:'Aruba'},{flag:'🇸🇦',name:'Arábia Saudita',region:'Ásia',geo:'Saudi Arabia'},
+  {flag:'🇦🇺',name:'Austrália',region:'Oceania',geo:'Australia'},{flag:'🇦🇿',name:'Azerbaidjão',region:'Ásia',geo:'Azerbaijan'},{flag:'🇧🇸',name:'Bahamas',region:'América do Norte',geo:'Bahamas'},
+  {flag:'🇧🇩',name:'Bangladesh',region:'Ásia',geo:'Bangladesh'},{flag:'🇧🇧',name:'Barbados',region:'América do Norte',geo:'Barbados'},{flag:'🇧🇭',name:'Barein',region:'Ásia',geo:'Bahrain'},
+  {flag:'🇧🇿',name:'Belize',region:'América do Norte',geo:'Belize'},{flag:'🇧🇯',name:'Benin',region:'África',geo:'Benin'},{flag:'🇧🇲',name:'Bermuda',region:'América do Norte',geo:'Bermuda'},
+  {flag:'🇧🇾',name:'Bielo-Rússia',region:'Europa',geo:'Belarus'},{flag:'🇧🇴',name:'Bolívia',region:'América do Sul',geo:'Bolivia, Plurinational State of'},{flag:'🇧🇶',name:'Bonaire, Saba e Santo Eustáquio',region:'América do Norte',geo:'Bonaire, Sint Eustatius and Saba'},
+  {flag:'🇧🇼',name:'Botsuana',region:'África',geo:'Botswana'},{flag:'🇧🇷',name:'Brasil',region:'América do Sul',geo:'Brazil'},{flag:'🇧🇳',name:'Brunei',region:'Ásia',geo:'Brunei Darussalam'},
+  {flag:'🇧🇬',name:'Bulgária',region:'Europa',geo:'Bulgaria'},{flag:'🇧🇫',name:'Burquina',region:'África',geo:'Burkina Faso'},{flag:'🇧🇮',name:'Burundi',region:'África',geo:'Burundi'},
+  {flag:'🇧🇹',name:'Butão',region:'Ásia',geo:'Bhutan'},{flag:'🇧🇪',name:'Bélgica',region:'Europa',geo:'Belgium'},{flag:'🇧🇦',name:'Bósnia e Herzegovina',region:'Europa',geo:'Bosnia and Herz.'},
+  {flag:'🇨🇻',name:'Cabo Verde',region:'África',geo:'Cabo Verde'},{flag:'🇨🇲',name:'Camarões',region:'África',geo:'Cameroon'},{flag:'🇰🇭',name:'Camboja',region:'Ásia',geo:'Cambodia'},
+  {flag:'🇨🇦',name:'Canadá',region:'América do Norte',geo:'Canada'},{flag:'🇶🇦',name:'Catar',region:'Ásia',geo:'Qatar'},{flag:'🇰🇿',name:'Cazaquistão',region:'Ásia',geo:'Kazakhstan'},
+  {flag:'🇹🇩',name:'Chade',region:'África',geo:'Chad'},{flag:'🇨🇱',name:'Chile',region:'América do Sul',geo:'Chile'},{flag:'🇨🇳',name:'China',region:'Ásia',geo:'China'},
+  {flag:'🇨🇾',name:'Chipre',region:'Ásia',geo:'Cyprus'},{flag:'🇸🇬',name:'Singapura',region:'Ásia',geo:'Singapore'},{flag:'🇨🇴',name:'Colômbia',region:'América do Sul',geo:'Colombia'},
+  {flag:'🇰🇲',name:'Comores',region:'África',geo:'Comoros'},{flag:'🇰🇵',name:'Coreia do Norte',region:'Ásia',geo:'North Korea'},{flag:'🇰🇷',name:'Coreia do Sul',region:'Ásia',geo:'South Korea'},
+  {flag:'🇨🇷',name:'Costa Rica',region:'América do Norte',geo:'Costa Rica'},{flag:'🇨🇮',name:'Costa do Marfim',region:'África',geo:'Côte d\'Ivoire'},{flag:'🇭🇷',name:'Croácia',region:'Europa',geo:'Croatia'},
+  {flag:'🇨🇺',name:'Cuba',region:'América do Norte',geo:'Cuba'},{flag:'🇨🇼',name:'Curaçao',region:'América do Norte',geo:'Curaçao'},{flag:'🇩🇰',name:'Dinamarca',region:'Europa',geo:'Denmark'},
+  {flag:'🇩🇯',name:'Djibuti',region:'África',geo:'Djibouti'},{flag:'🇩🇲',name:'Domínica',region:'América do Norte',geo:'Dominica'},{flag:'🇪🇬',name:'Egito',region:'África',geo:'Egypt'},
+  {flag:'🇸🇻',name:'El Salvador',region:'América do Norte',geo:'El Salvador'},{flag:'🇦🇪',name:'Emirados Árabes',region:'Ásia',geo:'United Arab Emirates'},{flag:'🇪🇨',name:'Equador',region:'América do Sul',geo:'Ecuador'},
+  {flag:'🇪🇷',name:'Eritréia',region:'África',geo:'Eritrea'},{flag:'🇸🇰',name:'Eslováquia',region:'Europa',geo:'Slovakia'},{flag:'🇸🇮',name:'Eslovênia',region:'Europa',geo:'Slovenia'},
+  {flag:'🇪🇸',name:'Espanha',region:'Europa',geo:'Spain'},{flag:'🇸🇿',name:'Essuatíni',region:'África',geo:'eSwatini'},{flag:'🇺🇸',name:'Estados Unidos',region:'América do Norte',geo:'United States of America'},
+  {flag:'🇪🇪',name:'Estônia',region:'Europa',geo:'Estonia'},{flag:'🇪🇹',name:'Etiópia',region:'África',geo:'Ethiopia'},{flag:'🇫🇯',name:'Fiji',region:'Oceania',geo:'Fiji'},
+  {flag:'🇵🇭',name:'Filipinas',region:'Ásia',geo:'Philippines'},{flag:'🇫🇮',name:'Finlândia',region:'Europa',geo:'Finland'},{flag:'🇫🇷',name:'França',region:'Europa',geo:'France'},
+  {flag:'🇬🇦',name:'Gabão',region:'África',geo:'Gabon'},{flag:'🇬🇭',name:'Gana',region:'África',geo:'Ghana'},{flag:'🇬🇪',name:'Geórgia',region:'Ásia',geo:'Georgia'},
+  {flag:'🇬🇮',name:'Gibraltar',region:'Europa',geo:'Gibraltar'},{flag:'🇬🇩',name:'Granada',region:'América do Norte',geo:'Grenada'},{flag:'🇬🇱',name:'Groenlândia',region:'América do Norte',geo:'Greenland'},
+  {flag:'🇬🇷',name:'Grécia',region:'Europa',geo:'Greece'},{flag:'🇬🇵',name:'Guadalupe',region:'América do Norte',geo:'Guadeloupe'},{flag:'🇬🇺',name:'Guam',region:'Oceania',geo:'Guam'},
+  {flag:'🇬🇹',name:'Guatemala',region:'América do Norte',geo:'Guatemala'},{flag:'🇬🇬',name:'Guernsey',region:'Europa',geo:'Guernsey'},{flag:'🇬🇾',name:'Guiana',region:'América do Sul',geo:'Guyana'},
+  {flag:'🇬🇫',name:'Guiana Francesa',region:'América do Sul',geo:'French Guiana'},{flag:'🇬🇳',name:'Guiné',region:'África',geo:'Guinea'},{flag:'🇬🇶',name:'Guiné Equatorial',region:'África',geo:'Eq. Guinea'},
+  {flag:'🇬🇼',name:'Guiné-Bissau',region:'África',geo:'Guinea-Bissau'},{flag:'🇬🇲',name:'Gâmbia',region:'África',geo:'Gambia'},{flag:'🇭🇹',name:'Haiti',region:'América do Norte',geo:'Haiti'},
+  {flag:'🇳🇱',name:'Holanda',region:'Europa',geo:'Netherlands'},{flag:'🇭🇳',name:'Honduras',region:'América do Norte',geo:'Honduras'},{flag:'🇭🇰',name:'Hong Kong',region:'Ásia',geo:'Hong Kong'},
+  {flag:'🇭🇺',name:'Hungria',region:'Europa',geo:'Hungary'},{flag:'🇨🇽',name:'Ilha Christmas',region:'Oceania',geo:'Christmas Island'},{flag:'🇳🇫',name:'Ilha Norfolk',region:'Oceania',geo:'Norfolk Island'},
+  {flag:'🇮🇲',name:'Ilha de Man',region:'Europa',geo:'Isle of Man'},{flag:'🇰🇾',name:'Ilhas Cayman',region:'América do Norte',geo:'Cayman Islands'},{flag:'🇨🇨',name:'Ilhas Cocos',region:'Oceania',geo:'Cocos (Keeling) Islands'},
+  {flag:'🇨🇰',name:'Ilhas Cook',region:'Oceania',geo:'Cook Islands'},{flag:'🇫🇴',name:'Ilhas Faroe',region:'Europa',geo:'Faroe Islands'},{flag:'🇫🇰',name:'Ilhas Malvinas',region:'América do Sul',geo:'Falkland Islands (Malvinas)'},
+  {flag:'🇲🇵',name:'Ilhas Marianas do Norte',region:'Oceania',geo:'Northern Mariana Islands'},{flag:'🇲🇭',name:'Ilhas Marshall',region:'Oceania',geo:'Marshall Islands'},{flag:'🇸🇧',name:'Ilhas Salomão',region:'Oceania',geo:'Solomon Is.'},
+  {flag:'🇹🇨',name:'Ilhas Turks e Caicos',region:'América do Norte',geo:'Turks and Caicos Islands'},{flag:'🇻🇬',name:'Ilhas Virgens Britânicas',region:'América do Norte',geo:'Virgin Islands, British'},{flag:'🇻🇮',name:'Ilhas Virgens dos Estados Unidos',region:'América do Norte',geo:'Virgin Islands, U.S.'},
+  {flag:'🇦🇽',name:'Ilhas Åland',region:'Europa',geo:'Åland Islands'},{flag:'🇮🇩',name:'Indonésia',region:'Ásia',geo:'Indonesia'},{flag:'🇮🇶',name:'Iraque',region:'Ásia',geo:'Iraq'},
+  {flag:'🇮🇪',name:'Irlanda',region:'Europa',geo:'Ireland'},{flag:'🇮🇷',name:'Irã',region:'Ásia',geo:'Iran, Islamic Republic of'},{flag:'🇮🇸',name:'Islândia',region:'Europa',geo:'Iceland'},
+  {flag:'🇮🇱',name:'Israel',region:'Ásia',geo:'Israel'},{flag:'🇮🇹',name:'Itália',region:'Europa',geo:'Italy'},{flag:'🇾🇪',name:'Iêmen',region:'Ásia',geo:'Yemen'},
+  {flag:'🇯🇲',name:'Jamaica',region:'América do Norte',geo:'Jamaica'},{flag:'🇯🇵',name:'Japão',region:'Ásia',geo:'Japan'},{flag:'🇯🇪',name:'Jersey',region:'Europa',geo:'Jersey'},
+  {flag:'🇯🇴',name:'Jordânia',region:'Ásia',geo:'Jordan'},{flag:'🇰🇮',name:'Kiribati',region:'Oceania',geo:'Kiribati'},{flag:'🇽🇰',name:'Kosovo',region:'Europa',geo:'Kosovo'},
+  {flag:'🇰🇼',name:'Kuwait',region:'Ásia',geo:'Kuwait'},{flag:'🇱🇦',name:'Laos',region:'Ásia',geo:'Laos'},{flag:'🇱🇸',name:'Lesoto',region:'África',geo:'Lesotho'},
+  {flag:'🇱🇻',name:'Letônia',region:'Europa',geo:'Latvia'},{flag:'🇱🇷',name:'Libéria',region:'África',geo:'Liberia'},{flag:'🇱🇮',name:'Liechtenstein',region:'Europa',geo:'Liechtenstein'},
+  {flag:'🇱🇹',name:'Lituânia',region:'Europa',geo:'Lithuania'},{flag:'🇱🇺',name:'Luxemburgo',region:'Europa',geo:'Luxembourg'},{flag:'🇱🇧',name:'Líbano',region:'Ásia',geo:'Lebanon'},
+  {flag:'🇱🇾',name:'Líbia',region:'África',geo:'Libya'},{flag:'🇲🇴',name:'Macau',region:'Ásia',geo:'Macao'},{flag:'🇲🇰',name:'Macedônia do Norte',region:'Europa',geo:'North Macedonia'},
+  {flag:'🇲🇬',name:'Madagascar',region:'África',geo:'Madagascar'},{flag:'🇾🇹',name:'Maiote',region:'África',geo:'Mayotte'},{flag:'🇲🇼',name:'Malaui',region:'África',geo:'Malawi'},
+  {flag:'🇲🇻',name:'Maldivas',region:'Ásia',geo:'Maldives'},{flag:'🇲🇱',name:'Mali',region:'África',geo:'Mali'},{flag:'🇲🇹',name:'Malta',region:'Europa',geo:'Malta'},
+  {flag:'🇲🇾',name:'Malásia',region:'Ásia',geo:'Malaysia'},{flag:'🇲🇦',name:'Marrocos',region:'África',geo:'Morocco'},{flag:'🇲🇶',name:'Martinica',region:'América do Norte',geo:'Martinique'},
+  {flag:'🇲🇷',name:'Mauritânia',region:'África',geo:'Mauritania'},{flag:'🇲🇺',name:'Maurício',region:'África',geo:'Mauritius'},{flag:'🇫🇲',name:'Micronésia',region:'Oceania',geo:'Micronesia, Federated States of'},
+  {flag:'🇲🇩',name:'Moldávia',region:'Europa',geo:'Moldova, Republic of'},{flag:'🇲🇳',name:'Mongólia',region:'Ásia',geo:'Mongolia'},{flag:'🇲🇪',name:'Montenegro',region:'Europa',geo:'Montenegro'},
+  {flag:'🇲🇸',name:'Montserrat',region:'América do Norte',geo:'Montserrat'},{flag:'🇲🇿',name:'Moçambique',region:'África',geo:'Mozambique'},{flag:'🇲🇲',name:'Myanmar',region:'Ásia',geo:'Myanmar'},
+  {flag:'🇲🇽',name:'México',region:'América do Norte',geo:'Mexico'},{flag:'🇲🇨',name:'Mônaco',region:'Europa',geo:'Monaco'},{flag:'🇳🇦',name:'Namíbia',region:'África',geo:'Namibia'},
+  {flag:'🇳🇷',name:'Nauru',region:'Oceania',geo:'Nauru'},{flag:'🇳🇵',name:'Nepal',region:'Ásia',geo:'Nepal'},{flag:'🇳🇮',name:'Nicarágua',region:'América do Norte',geo:'Nicaragua'},
+  {flag:'🇳🇬',name:'Nigéria',region:'África',geo:'Nigeria'},{flag:'🇳🇺',name:'Niue',region:'Oceania',geo:'Niue'},{flag:'🇳🇴',name:'Noruega',region:'Europa',geo:'Norway'},
+  {flag:'🇳🇨',name:'Nova Caledônia',region:'Oceania',geo:'New Caledonia'},{flag:'🇳🇿',name:'Nova Zelândia',region:'Oceania',geo:'New Zealand'},{flag:'🇳🇪',name:'Níger',region:'África',geo:'Niger'},
+  {flag:'🇴🇲',name:'Omã',region:'Ásia',geo:'Oman'},{flag:'🇵🇼',name:'Palau',region:'Oceania',geo:'Palau'},{flag:'🇵🇸',name:'Palestina',region:'Ásia',geo:'Palestine'},
+  {flag:'🇵🇦',name:'Panamá',region:'América do Norte',geo:'Panama'},{flag:'🇵🇬',name:'Papua-Nova Guiné',region:'Oceania',geo:'Papua New Guinea'},{flag:'🇵🇰',name:'Paquistão',region:'Ásia',geo:'Pakistan'},
+  {flag:'🇵🇾',name:'Paraguai',region:'América do Sul',geo:'Paraguay'},{flag:'🇵🇪',name:'Peru',region:'América do Sul',geo:'Peru'},{flag:'🇵🇳',name:'Pitcairn',region:'Oceania',geo:'Pitcairn'},
+  {flag:'🇵🇫',name:'Polinésia Francesa',region:'Oceania',geo:'French Polynesia'},{flag:'🇵🇱',name:'Polônia',region:'Europa',geo:'Poland'},{flag:'🇵🇷',name:'Porto Rico',region:'América do Norte',geo:'Puerto Rico'},
+  {flag:'🇵🇹',name:'Portugal',region:'Europa',geo:'Portugal'},{flag:'🇰🇬',name:'Quirguistão',region:'Ásia',geo:'Kyrgyzstan'},{flag:'🇰🇪',name:'Quênia',region:'África',geo:'Kenya'},
+  {flag:'🇬🇧',name:'Reino Unido',region:'Europa',geo:'United Kingdom'},{flag:'🇨🇫',name:'República Centro-Africana',region:'África',geo:'Central African Rep.'},{flag:'🇨🇩',name:'República Democrática do Congo',region:'África',geo:'Dem. Rep. Congo'},
+  {flag:'🇩🇴',name:'República Dominicana',region:'América do Norte',geo:'Dominican Rep.'},{flag:'🇨🇿',name:'República Tcheca',region:'Europa',geo:'Czechia'},{flag:'🇨🇬',name:'República do Congo',region:'África',geo:'Congo'},
+  {flag:'🇷🇪',name:'Reunião',region:'África',geo:'Réunion'},{flag:'🇷🇴',name:'Romênia',region:'Europa',geo:'Romania'},{flag:'🇷🇼',name:'Ruanda',region:'África',geo:'Rwanda'},
+  {flag:'🇷🇺',name:'Rússia',region:'Europa',geo:'Russia'},{flag:'🇪🇭',name:'Saara Ocidental',region:'África',geo:'Western Sahara'},{flag:'🇼🇸',name:'Samoa',region:'Oceania',geo:'Samoa'},
+  {flag:'🇦🇸',name:'Samoa Americana',region:'Oceania',geo:'American Samoa'},{flag:'🇸🇭',name:'Santa Helena, Ascensão e Tristão da Cunha',region:'África',geo:'Saint Helena, Ascension and Tristan da Cunha'},{flag:'🇱🇨',name:'Santa Lúcia',region:'América do Norte',geo:'Saint Lucia'},
+  {flag:'🇸🇳',name:'Senegal',region:'África',geo:'Senegal'},{flag:'🇸🇱',name:'Serra Leoa',region:'África',geo:'Sierra Leone'},{flag:'🇸🇨',name:'Seychelles',region:'África',geo:'Seychelles'},
+  {flag:'🇸🇽',name:'Sint Maarten',region:'América do Norte',geo:'Sint Maarten (Dutch part)'},{flag:'🇸🇴',name:'Somália',region:'África',geo:'Somalia'},{flag:'🇱🇰',name:'Sri Lanka',region:'Ásia',geo:'Sri Lanka'},
+  {flag:'🇸🇩',name:'Sudão',region:'África',geo:'Sudan'},{flag:'🇸🇸',name:'Sudão do Sul',region:'África',geo:'S. Sudan'},{flag:'🇸🇷',name:'Suriname',region:'América do Sul',geo:'Suriname'},
+  {flag:'🇸🇪',name:'Suécia',region:'Europa',geo:'Sweden'},{flag:'🇨🇭',name:'Suíça',region:'Europa',geo:'Switzerland'},{flag:'🇸🇯',name:'Svalbard e a Ilha de Jan Mayen',region:'Europa',geo:'Svalbard and Jan Mayen'},
+  {flag:'🇧🇱',name:'São Bartolomeu',region:'América do Norte',geo:'Saint Barthélemy'},{flag:'🇰🇳',name:'São Cristóvão e Névis',region:'América do Norte',geo:'Saint Kitts and Nevis'},{flag:'🇸🇲',name:'São Marino',region:'Europa',geo:'San Marino'},
+  {flag:'🇲🇫',name:'São Martim',region:'América do Norte',geo:'Saint Martin (French part)'},{flag:'🇵🇲',name:'São Pedro e Miquelon',region:'América do Norte',geo:'Saint Pierre and Miquelon'},{flag:'🇸🇹',name:'São Tomé e Príncipe',region:'África',geo:'São Tomé and Principe'},
+  {flag:'🇻🇨',name:'São Vicente e Granadinas',region:'América do Norte',geo:'Saint Vincent and the Grenadines'},{flag:'🇷🇸',name:'Sérvia',region:'Europa',geo:'Serbia'},{flag:'🇸🇾',name:'Síria',region:'Ásia',geo:'Syria'},
+  {flag:'🇹🇯',name:'Tadjiquistão',region:'Ásia',geo:'Tajikistan'},{flag:'🇹🇭',name:'Tailândia',region:'Ásia',geo:'Thailand'},{flag:'🇹🇼',name:'Taiwan',region:'Ásia',geo:'Taiwan, Province of China'},
+  {flag:'🇹🇿',name:'Tanzânia',region:'África',geo:'Tanzania'},{flag:'🇹🇱',name:'Timor Leste',region:'Europa',geo:'Timor-Leste'},{flag:'🇹🇬',name:'Togo',region:'África',geo:'Togo'},
+  {flag:'🇹🇴',name:'Tonga',region:'Oceania',geo:'Tonga'},{flag:'🇹🇰',name:'Toquelau',region:'Oceania',geo:'Tokelau'},{flag:'🇹🇹',name:'Trinidade e Tobago',region:'América do Norte',geo:'Trinidad and Tobago'},
+  {flag:'🇹🇳',name:'Tunísia',region:'África',geo:'Tunisia'},{flag:'🇹🇲',name:'Turcomenistão',region:'Ásia',geo:'Turkmenistan'},{flag:'🇹🇷',name:'Turquia',region:'Ásia',geo:'Türkiye'},
+  {flag:'🇹🇻',name:'Tuvalu',region:'Oceania',geo:'Tuvalu'},{flag:'🇺🇦',name:'Ucrânia',region:'Europa',geo:'Ukraine'},{flag:'🇺🇬',name:'Uganda',region:'África',geo:'Uganda'},
+  {flag:'🇺🇾',name:'Uruguai',region:'América do Sul',geo:'Uruguay'},{flag:'🇺🇿',name:'Uzbequistão',region:'Ásia',geo:'Uzbekistan'},{flag:'🇻🇺',name:'Vanuatu',region:'Oceania',geo:'Vanuatu'},
+  {flag:'🇻🇦',name:'Vaticano',region:'Europa',geo:'Holy See (Vatican City State)'},{flag:'🇻🇪',name:'Venezuela',region:'América do Sul',geo:'Venezuela, Bolivarian Republic of'},{flag:'🇻🇳',name:'Vietnã',region:'Ásia',geo:'Vietnam'},
+  {flag:'🇼🇫',name:'Wallis e Futuna',region:'Oceania',geo:'Wallis and Futuna'},{flag:'🇿🇼',name:'Zimbábue',region:'África',geo:'Zimbabwe'},{flag:'🇿🇲',name:'Zâmbia',region:'África',geo:'Zambia'},
+  {flag:'🇿🇦',name:'África do Sul',region:'África',geo:'South Africa'},{flag:'🇦🇹',name:'Áustria',region:'Europa',geo:'Austria'},{flag:'🇮🇳',name:'Índia',region:'Ásia',geo:'India'}
 ];
 let selectedCountry=null;
 function renderCountryList(filter){
@@ -1125,19 +1187,23 @@ const UNSPLASH_KEY='1fwslJzsd0FfmwxGEdvRVbqZtpBUVsoxpAjYb47dZXo';
 // In-memory + persistent cache so we don't re-hit Unsplash (50/hr limit)
 let cityPhotoCache={};
 try{cityPhotoCache=JSON.parse(localStorage.getItem('spot_photo_cache')||'{}')}catch(e){cityPhotoCache={}}
-let unsplashBlockedUntil=0;
+let unsplashBlockedUntil=parseInt(localStorage.getItem('spot_unsplash_blocked_until')||'0',10)||0;
+function setUnsplashBlock(ms){unsplashBlockedUntil=Date.now()+ms;try{localStorage.setItem('spot_unsplash_blocked_until',String(unsplashBlockedUntil))}catch(e){}}
 function savePhotoCache(){try{localStorage.setItem('spot_photo_cache',JSON.stringify(cityPhotoCache))}catch(e){}}
 async function fetchCityPhoto(query){
   if(!query)return'';
-  // Return cached (persisted) result if we have it — covers the 50/hr limit
-  if(cityPhotoCache[query]!==undefined&&cityPhotoCache[query]!=='')return cityPhotoCache[query];
-  // If Unsplash recently rate-limited us, don't hammer it — use gradient fallback
+  // Return cached (persisted) result if we have it — inclui negativos, pra não reconsultar toda hora
+  if(cityPhotoCache[query]!==undefined){
+    const c=cityPhotoCache[query];
+    if(c&&c.exp&&Date.now()<c.exp)return c.url||'';
+    if(typeof c==='string')return c; // formato antigo (positivo, sem expiração)
+  }
+  // Se o Unsplash bloqueou recentemente, não martela de novo — usa gradiente
   if(Date.now()<unsplashBlockedUntil)return'';
   try{
     const resp=await fetch('https://api.unsplash.com/search/photos?query='+encodeURIComponent(query)+'&per_page=10&orientation=landscape&client_id='+UNSPLASH_KEY);
     if(resp.status===403||resp.status===429){
-      // rate limited — back off for 10 min, rely on gradients meanwhile
-      unsplashBlockedUntil=Date.now()+10*60*1000;
+      setUnsplashBlock(10*60*1000);
       return'';
     }
     const data=await resp.json();
@@ -1145,6 +1211,7 @@ async function fetchCityPhoto(query){
     const pick=results.length?results[Math.floor(Math.random()*Math.min(results.length,6))]:null;
     const url=pick?pick.urls.regular:'';
     if(url){cityPhotoCache[query]=url;savePhotoCache()}
+    else{cityPhotoCache[query]={url:'',exp:Date.now()+60*60*1000};savePhotoCache()} // sem resultado: não retenta por 1h
     return url;
   }catch(e){return''}
 }
@@ -1168,32 +1235,7 @@ function destGradient(name){
 // ═══ NAVIGATION ═══
 // ═══ PROFILE + 3D GLOBE ═══
 // Map Portuguese country name → {geo: name in world-atlas GeoJSON, cont: continent}
-const COUNTRY_INFO={
-  'Brasil':{geo:'Brazil',cont:'América do Sul'},'Portugal':{geo:'Portugal',cont:'Europa'},
-  'Croácia':{geo:'Croatia',cont:'Europa'},'Montenegro':{geo:'Montenegro',cont:'Europa'},
-  'Bósnia e Herzegovina':{geo:'Bosnia and Herz.',cont:'Europa'},'Itália':{geo:'Italy',cont:'Europa'},
-  'França':{geo:'France',cont:'Europa'},'Espanha':{geo:'Spain',cont:'Europa'},
-  'Grécia':{geo:'Greece',cont:'Europa'},'Japão':{geo:'Japan',cont:'Ásia'},
-  'Tailândia':{geo:'Thailand',cont:'Ásia'},'Indonésia':{geo:'Indonesia',cont:'Ásia'},
-  'Peru':{geo:'Peru',cont:'América do Sul'},'Argentina':{geo:'Argentina',cont:'América do Sul'},
-  'Chile':{geo:'Chile',cont:'América do Sul'},'Colômbia':{geo:'Colombia',cont:'América do Sul'},
-  'Uruguai':{geo:'Uruguay',cont:'América do Sul'},'México':{geo:'Mexico',cont:'América do Norte'},
-  'Estados Unidos':{geo:'United States of America',cont:'América do Norte'},'Canadá':{geo:'Canada',cont:'América do Norte'},
-  'Reino Unido':{geo:'United Kingdom',cont:'Europa'},'Alemanha':{geo:'Germany',cont:'Europa'},
-  'Holanda':{geo:'Netherlands',cont:'Europa'},'Bélgica':{geo:'Belgium',cont:'Europa'},
-  'Suíça':{geo:'Switzerland',cont:'Europa'},'Áustria':{geo:'Austria',cont:'Europa'},
-  'República Tcheca':{geo:'Czechia',cont:'Europa'},'Hungria':{geo:'Hungary',cont:'Europa'},
-  'Polônia':{geo:'Poland',cont:'Europa'},'Noruega':{geo:'Norway',cont:'Europa'},
-  'Suécia':{geo:'Sweden',cont:'Europa'},'Dinamarca':{geo:'Denmark',cont:'Europa'},
-  'Irlanda':{geo:'Ireland',cont:'Europa'},'Turquia':{geo:'Turkey',cont:'Ásia'},
-  'Marrocos':{geo:'Morocco',cont:'África'},'Egito':{geo:'Egypt',cont:'África'},
-  'África do Sul':{geo:'South Africa',cont:'África'},'Índia':{geo:'India',cont:'Ásia'},
-  'China':{geo:'China',cont:'Ásia'},'Coreia do Sul':{geo:'South Korea',cont:'Ásia'},
-  'Singapura':{geo:'Singapore',cont:'Ásia'},'Vietnã':{geo:'Vietnam',cont:'Ásia'},
-  'Filipinas':{geo:'Philippines',cont:'Ásia'},'Austrália':{geo:'Australia',cont:'Oceania'},
-  'Nova Zelândia':{geo:'New Zealand',cont:'Oceania'},'Jordânia':{geo:'Jordan',cont:'Ásia'},
-  'Emirados Árabes':{geo:'United Arab Emirates',cont:'Ásia'}
-};
+function geoFor(name){const c=COUNTRIES.find(x=>x.name===name);return c?c.geo:null}
 // Dynamically load a script, trying multiple CDNs in order
 function loadScript(urls){
   return new Promise((resolve,reject)=>{
@@ -1236,9 +1278,9 @@ async function loadProfile(){
   for(const t of S.trips){if(!t._spots){const sp=await dbGet('spots','trip_id=eq.'+t.id);t._spots=sp||[]}}
   const visited=visitedCountryNames();
   const conts=new Set();
-  visited.forEach(c=>{const info=COUNTRY_INFO[c];if(info)conts.add(info.cont)});
+  visited.forEach(c=>{const region=regionFor(c);if(region&&region!=='Outros')conts.add(region)});
   const pct=Math.round(visited.length/195*100);
-  document.getElementById('wsCountries').textContent=visited.length;
+  document.getElementById('wsCountries').textContent=visited.length+'/'+COUNTRIES.length;
   document.getElementById('wsCities').textContent=visitedCityCount();
   document.getElementById('wsContinents').textContent=conts.size;
   // Headline
@@ -1258,7 +1300,7 @@ let worldGeoData=null;
 const MAP_W=800, MAP_H=420;
 async function renderWorldMap(visited){
   const wrap=document.getElementById('worldMapWrap');
-  const visitedGeo=new Set(visited.map(c=>COUNTRY_INFO[c]?.geo).filter(Boolean));
+  const visitedGeo=new Set(visited.map(c=>geoFor(c)).filter(Boolean));
   if(!worldGeoData){
     wrap.innerHTML='<div style="color:rgba(255,255,255,0.4);font-size:12px;padding:60px 0;text-align:center">carregando mapa…</div>';
     try{
