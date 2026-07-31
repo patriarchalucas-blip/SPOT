@@ -75,7 +75,22 @@ Motivo da existência: o visual original (fundo creme `#f4ede1` + serifada de al
   2. **Buscar sugestões via blogs** (preenche a aba "Explorar", hoje só um placeholder "em breve"): backend chama Claude com a ferramenta de web search ativada, pesquisa blogs de viagem reais sobre o destino, devolve lugares sugeridos com motivo — usuário confirma e adiciona (cai no fluxo normal de Google Places + nota pessoal). Enquadrar como sugestão, nunca como fato.
   - As duas precisam da MESMA peça de infra (function serverless escondendo a chave Anthropic) — construir uma vez, os dois recursos em cima.
   - Modelo sugerido: Claude Haiku (rápido/barato, mais que suficiente pra essas tarefas). Não confiar em preço de cabeça — checar docs.claude.com antes de decidir volume de uso.
-- **Rebranding "amador"**: Lucas sinalizou que o app ainda parece amador mesmo depois do redesign de paleta/tipografia/cards. Suspeita levantada (não confirmada com ele ainda): uso de emoji cru como ícone (nav, categorias, status) é um tell clássico de "app gerado rápido" — provavelmente o próximo ponto de ataque quando ele disser "execute". **Não mexer nisso sem ele confirmar direção primeiro** — ele tem histórico de rejeitar decisões de design tomadas sem alinhamento prévio (ver seção Logo).
+- **Rebranding — confirmado como PRINCIPAL próxima tarefa, escopo: o app inteiro** (Lucas usa "landing page" pra se referir ao layout todo, não uma página de marketing separada — não existe página fora do app hoje, só a tela de login). Ele sente que ainda parece amador mesmo depois do redesign de paleta/tipografia/cards.
+
+  **Causa raiz já auditada e confirmada com dados** (não é só suspeita): o app usa **emoji cru como ícone de interface** em todo lugar — isso é um dos tells mais reconhecíveis de "app feito rápido/por IA", porque produtos de verdade usam um sistema de ícones consistente (mesmo peso de traço, mesmo grid, geralmente SVG), não emoji do sistema operacional (que renderiza diferente em cada plataforma/fonte e não segue nenhuma linguagem visual unificada com o resto do design).
+
+  Levantamento feito em `index.html` (linha aproximada pode ter mudado, buscar pelo emoji):
+  - Nav inferior: 🗺️ (Viagens) 🔍 (Explorar) 👥 (Amigos) 👤 (Perfil)
+  - `function catIcon(c)`: 🍽️ (food) 🏨 (hotel) 🗺️ (experience) 📍 (fallback)
+  - Empty states: ✈️ 🌍 👥
+  - Botões de ação: 🔍 (busca) ✎ (editar) 🗑 (excluir)
+  - Pin do logo (favicon/wordmark) **não é emoji**, é SVG desenhado — não precisa mexer, já está certo.
+
+  **Plano sugerido (não executar sem revisar com o Lucas primeiro — ele tem histórico de rejeitar direção de design decidida sem alinhamento, ver seção Logo):**
+  1. Escolher UM sistema de ícones SVG consistente (ex: Lucide, Phosphor, ou um set custom desenhado no mesmo espírito do pin do logo) — trocar todos os emoji de interface por esse set, mantendo o mesmo peso visual em todo lugar.
+  2. Revisar consistência entre telas que já passaram pelo redesign (Dashboard, cards) vs telas que podem ter ficado atrás (Amigos, Perfil, sheets/formulários) — o "patchwork" de graus de polimento diferentes entre telas também contribui pra sensação de amador, não é só ícone.
+  3. Aba "Explorar" hoje é só um placeholder "em breve" visível na navegação principal — uma aba quebrada/vazia na nav principal também pesa na percepção geral. Ou implementa (ver ideia de busca via blogs) ou reconsidera se deve estar visível antes de ter conteúdo.
+
 - **Domínio próprio** (Cloudflare Registrar) — decidido que ele quer, nome ainda não escolhido.
 - **Placar entre amigos** (gamificação) — Lucas achou "fraco", não vale reintroduzir sem uma abordagem nova.
 - **Importar notas soltas via IA** — colar bagunçado (bloco de notas/WhatsApp) e a IA separa em lugares estruturados. Mesma peça de infra do recap/explorar.
