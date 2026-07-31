@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Spot</title>
-<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'><rect width='64' height='64' rx='14' fill='%23f4ede1'/><path d='M18.00 24.00 A14.00 14.00 0 1 1 46.00 24.00 Q46.00 42.90 32.00 56.20 Q18.00 42.90 18.00 24.00 Z' fill='%23c1552f'/><circle cx='32.00' cy='23.30' r='5.88' fill='%23f4ede1'/></svg>">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'><rect width='64' height='64' rx='14' fill='%23f4ede1'/><circle cx='32' cy='32' r='22' stroke='%23c1552f' stroke-width='4.5' stroke-dasharray='3.4 4' fill='none'/><circle cx='32' cy='32' r='8' fill='%23c1552f'/></svg>">
 <link rel="manifest" href="/manifest.json">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -15,7 +15,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,500&family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,500;0,9..144,600;1,9..144,400&family=DM+Sans:wght@300;400;500;600&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
-:root{--ink:#16232A;--ink2:#3D4B52;--ink3:#7C8B92;--surface:#EBEDE6;--white:#fff;--border:rgba(22,35,42,0.1);--green:#2F5D62;--amber:#A9915F;--red:#A8342C}
+:root{--ink:#16232A;--ink2:#3D4B52;--ink3:#7C8B92;--surface:#EBEDE6;--white:#fff;--border:rgba(22,35,42,0.1);--green:#2F5D62;--amber:#A9915F;--red:#A8342C;--terra:#c1552f}
 html{background:#0a0a0a}
 body{font-family:'DM Sans',sans-serif;background:#0a0a0a;max-width:430px;margin:0 auto;min-height:100vh}
 
@@ -106,7 +106,7 @@ body{font-family:'DM Sans',sans-serif;background:#0a0a0a;max-width:430px;margin:
 .empty-state p{font-size:14px;line-height:1.5}
 
 /* FAB */
-.fab{position:fixed;bottom:80px;right:calc(50% - 215px + 24px);width:56px;height:56px;background:var(--ink);border-radius:50%;display:flex;align-items:center;justify-content:center;cursor:pointer;box-shadow:0 4px 20px rgba(0,0,0,0.25);z-index:50;font-size:26px;color:white;border:none;font-family:'DM Sans',sans-serif}
+.fab{position:fixed;bottom:80px;right:calc(50% - 215px + 24px);width:56px;height:56px;background:var(--terra);border-radius:50%;display:flex;align-items:center;justify-content:center;cursor:pointer;box-shadow:0 4px 20px rgba(0,0,0,0.25);z-index:50;font-size:26px;color:white;border:none;font-family:'DM Sans',sans-serif}
 .fab:active{transform:scale(.93)}
 @media(max-width:430px){.fab{right:24px}}
 
@@ -210,7 +210,7 @@ body{font-family:'DM Sans',sans-serif;background:#0a0a0a;max-width:430px;margin:
 .hero-overlay{position:absolute;inset:0;background:linear-gradient(to bottom,rgba(0,0,0,0.2),rgba(0,0,0,0.7))}
 .hero-back{position:absolute;top:20px;left:20px;width:36px;height:36px;background:rgba(0,0,0,0.35);border:none;border-radius:50%;color:white;font-size:16px;cursor:pointer;display:flex;align-items:center;justify-content:center;z-index:2;backdrop-filter:blur(8px)}
 .hero-chip{position:absolute;top:20px;right:20px;padding:7px 16px;border-radius:100px;font-size:12px;font-weight:600;cursor:pointer;z-index:2;backdrop-filter:blur(8px)}
-.chip-want{background:rgba(240,165,0,0.25);border:1px solid rgba(240,165,0,0.4);color:#f5c842}
+.chip-want{background:rgba(169,145,95,0.3);border:1px solid rgba(169,145,95,0.5);color:#e2d3b3}
 .chip-been{background:rgba(42,138,94,0.25);border:1px solid rgba(42,138,94,0.4);color:#5ecfa0}
 .hero-bottom{position:absolute;bottom:0;left:0;right:0;padding:24px;z-index:2}
 .hero-type{font-size:11px;color:rgba(255,255,255,0.5);text-transform:uppercase;letter-spacing:.1em;margin-bottom:6px}
@@ -230,22 +230,22 @@ body{font-family:'DM Sans',sans-serif;background:#0a0a0a;max-width:430px;margin:
 .info-cell-sub{font-size:11px;color:var(--ink3);margin-top:2px}
 .status-toggle{display:flex;background:var(--surface);border-radius:16px;padding:4px;gap:4px}
 .toggle-btn{flex:1;padding:11px 8px;border:none;border-radius:12px;background:transparent;font-size:13px;font-weight:500;font-family:'DM Sans',sans-serif;color:var(--ink3);cursor:pointer;text-align:center}
-.toggle-btn.sel-want{background:#fff;color:#c07800;box-shadow:0 2px 8px rgba(0,0,0,0.08)}
-.toggle-btn.sel-been{background:#fff;color:#1a7a4e;box-shadow:0 2px 8px rgba(0,0,0,0.08)}
+.toggle-btn.sel-want{background:#fff;color:var(--amber);box-shadow:0 2px 8px rgba(0,0,0,0.08)}
+.toggle-btn.sel-been{background:#fff;color:var(--green);box-shadow:0 2px 8px rgba(0,0,0,0.08)}
 .toggle-btn.sel-skip{background:#fff;color:var(--red);box-shadow:0 2px 8px rgba(0,0,0,0.08)}
 .stars-row{display:flex;gap:6px;margin-bottom:16px}
 .star-btn{font-size:28px;cursor:pointer;color:rgba(0,0,0,0.1);background:none;border:none;padding:0}
 .star-btn.lit{color:var(--amber)}
 .review-area{width:100%;background:var(--surface);border:none;border-radius:16px;padding:16px;font-size:14px;font-family:'DM Sans',sans-serif;color:var(--ink);resize:none;outline:none;line-height:1.6}
 .review-area::placeholder{color:var(--ink3)}
-.action-btn{display:block;width:100%;background:var(--ink);color:white;border:none;border-radius:16px;padding:17px;font-size:15px;font-weight:600;font-family:'DM Sans',sans-serif;cursor:pointer;margin-top:12px;margin-bottom:16px}
+.action-btn{display:block;width:100%;background:var(--terra);color:white;border:none;border-radius:16px;padding:17px;font-size:15px;font-weight:600;font-family:'DM Sans',sans-serif;cursor:pointer;margin-top:12px;margin-bottom:16px}
 .reserve-btn{display:block;text-align:center;width:100%;box-sizing:border-box;background:var(--white);color:var(--ink);border:1.5px solid var(--ink);border-radius:14px;padding:14px;font-size:14px;font-weight:600;font-family:'DM Sans',sans-serif;text-decoration:none;margin-top:12px}
 .reserve-btn:active{background:var(--surface)}
 .req-card{display:flex;align-items:center;gap:12px;background:var(--white);border:1px solid var(--border);border-radius:16px;padding:12px 14px;margin-bottom:10px}
 .req-name{font-size:14px;font-weight:600;color:var(--ink);flex:1}
 .req-email{font-size:12px;color:var(--ink3)}
 .req-btn{border:none;border-radius:10px;padding:8px 14px;font-size:13px;font-weight:600;font-family:'DM Sans',sans-serif;cursor:pointer}
-.req-accept{background:var(--ink);color:#fff}
+.req-accept{background:var(--terra);color:#fff}
 .req-decline{background:var(--surface);color:var(--ink3)}
 .feed-item{display:flex;gap:12px;padding:14px 0;border-bottom:1px solid var(--border)}
 .feed-avatar{width:38px;height:38px;border-radius:50%;background:linear-gradient(135deg,#2a6b5e,#1a3d36);display:flex;align-items:center;justify-content:center;font-size:14px;color:#fff;font-weight:600;flex-shrink:0}
@@ -305,7 +305,7 @@ body{font-family:'DM Sans',sans-serif;background:#0a0a0a;max-width:430px;margin:
 .new-trip-text{font-size:15px;font-weight:500;color:var(--ink2)}
 .cat-options{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;padding:0 24px 24px}
 .cat-option{padding:16px 10px;background:var(--surface);border-radius:16px;text-align:center;cursor:pointer;border:2px solid transparent}
-.cat-option.sel{border-color:var(--ink);background:var(--ink)}
+.cat-option.sel{border-color:var(--terra);background:var(--terra)}
 .cat-option .co-icon{font-size:24px;margin-bottom:6px}
 .cat-option .co-name{font-size:12px;font-weight:500;color:var(--ink2)}
 .cat-option.sel .co-name{color:white}
@@ -340,7 +340,7 @@ body{font-family:'DM Sans',sans-serif;background:#0a0a0a;max-width:430px;margin:
 .status-opt.active .so-label{color:var(--green)}
 .note-label{font-size:13px;font-weight:600;color:var(--ink2);padding:18px 24px 8px}
 #addStars{padding:0 24px}
-.sheet-cta{display:block;width:calc(100% - 48px);margin:20px 24px 32px;background:var(--ink);color:white;border:none;border-radius:16px;padding:17px;font-size:15px;font-weight:600;font-family:'DM Sans',sans-serif;cursor:pointer}
+.sheet-cta{display:block;width:calc(100% - 48px);margin:20px 24px 32px;background:var(--terra);color:white;border:none;border-radius:16px;padding:17px;font-size:15px;font-weight:600;font-family:'DM Sans',sans-serif;cursor:pointer}
 .nt-label{font-size:11px;font-weight:600;color:var(--ink3);text-transform:uppercase;letter-spacing:.08em;padding:0 24px 8px}
 .nt-wrap{padding:0 24px 16px}
 .nt-input{width:100%;background:var(--surface);border:1.5px solid var(--border);border-radius:14px;padding:14px 16px;font-size:15px;font-family:'DM Sans',sans-serif;color:var(--ink);outline:none}
@@ -363,6 +363,17 @@ body{font-family:'DM Sans',sans-serif;background:#0a0a0a;max-width:430px;margin:
 @keyframes toastIn{from{transform:translateX(-50%) translateY(20px);opacity:0}to{transform:translateX(-50%) translateY(0);opacity:1}}
 .toast-title{font-size:13px;font-weight:600;margin-bottom:3px}
 .toast-msg{font-size:13px;color:rgba(255,255,255,0.6);font-style:italic}
+
+/* ═══ SISTEMA DE ÍCONES (SVG line — substitui emoji cru) ═══ */
+svg.ic{width:1em;height:1em;display:inline-block;vertical-align:middle;flex:none;color:inherit}
+svg.ic path,svg.ic circle,svg.ic line,svg.ic polyline,svg.ic rect{fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.nav-icon,.ct-icon,.co-icon,.so-emoji,.ei,.si,.dsi{display:flex;align-items:center;justify-content:center}
+.nav-icon{color:var(--ink3)}
+.nav-item.active .nav-icon{color:var(--ink)}
+.si,.dsi,.info-cell-icon{color:var(--ink3)}
+.status-opt.active .so-emoji{color:var(--green)}
+.star-btn svg.ic path{fill:currentColor;stroke:none}
+.reserve-btn{display:flex;align-items:center;justify-content:center;gap:8px}
 </style>
 </head>
 <body>
@@ -383,7 +394,7 @@ body{font-family:'DM Sans',sans-serif;background:#0a0a0a;max-width:430px;margin:
     <div class="login-bottom">
       <div class="photo-dots" id="photoDots"></div>
       <div class="brand-lockup">
-        <svg class="brand-wordmark" viewBox="-4 20 217 100" height="52"><text x="0" y="110" font-family="Playfair Display" font-weight="500" font-size="100" fill="#f4ede1">Sp</text><path d="M125.54 72.36 A16.36 16.36 0 1 1 158.26 72.36 Q158.26 94.45 141.90 110.00 Q125.54 94.45 125.54 72.36 Z" fill="#c1552f"/><circle cx="141.90" cy="71.55" r="6.87" fill="#0b1620"/><text x="169.6" y="110" font-family="Playfair Display" font-weight="500" font-size="100" fill="#f4ede1">t</text></svg>
+        <svg class="brand-wordmark" viewBox="-4 20 217 100" height="52"><text x="0" y="110" font-family="Playfair Display" font-weight="500" font-size="100" fill="#f4ede1">Sp</text><circle cx="141.9" cy="84.5" r="27" stroke="#c1552f" stroke-width="4" stroke-dasharray="4 5" fill="none"/><circle cx="141.9" cy="84.5" r="10" fill="#c1552f"/><text x="169.6" y="110" font-family="Playfair Display" font-weight="500" font-size="100" fill="#f4ede1">t</text></svg>
       </div>
       <div class="tagline">seus lugares · sua voz</div>
       <div class="form-stack">
@@ -420,17 +431,17 @@ body{font-family:'DM Sans',sans-serif;background:#0a0a0a;max-width:430px;margin:
       <div class="stat-block"><div class="stat-n" id="statCountries">0</div><div class="stat-l">países</div></div>
     </div>
   </div>
-  <div class="dash-body" id="tripsContainer"><div class="section-head"><span class="section-title">Minhas viagens</span></div><div class="empty-state"><div class="ei">✈️</div><h3>Nenhuma viagem ainda</h3><p>Toca no + para criar sua primeira viagem</p></div></div>
+  <div class="dash-body" id="tripsContainer"><div class="section-head"><span class="section-title">Minhas viagens</span></div><div class="empty-state"><div class="ei" data-ic="suitcase"></div><h3>Nenhuma viagem ainda</h3><p>Toca no + para criar sua primeira viagem</p></div></div>
   <button class="fab" onclick="showOv('ov-trip')">+</button>
-  <div class="bottom-nav"><div class="nav-item active" onclick="goTo('dashboard');loadDashboard()"><div class="nav-icon">🗺️</div><div class="nav-label" style="color:var(--ink);font-weight:600">Viagens</div></div><div class="nav-item" onclick="toast('Em breve','Explorar chega em breve!')"><div class="nav-icon">🔍</div><div class="nav-label">Explorar</div></div><div class="nav-item" onclick="goTo('friends');loadFriends()"><div class="nav-icon">👥</div><div class="nav-label">Amigos</div></div><div class="nav-item" onclick="goTo('profile');loadProfile()"><div class="nav-icon">👤</div><div class="nav-label">Perfil</div></div></div>
+  <div class="bottom-nav"><div class="nav-item active" onclick="goTo('dashboard');loadDashboard()"><div class="nav-icon" data-ic="map"></div><div class="nav-label" style="color:var(--ink);font-weight:600">Viagens</div></div><div class="nav-item" onclick="toast('Em breve','Explorar chega em breve!')"><div class="nav-icon" data-ic="search"></div><div class="nav-label">Explorar</div></div><div class="nav-item" onclick="goTo('friends');loadFriends()"><div class="nav-icon" data-ic="users"></div><div class="nav-label">Amigos</div></div><div class="nav-item" onclick="goTo('profile');loadProfile()"><div class="nav-icon" data-ic="user"></div><div class="nav-label">Perfil</div></div></div>
 </div>
 
 <div class="screen" id="trip">
-  <div class="trip-hero"><div class="trip-hero-img" id="tripHeroImg"></div><div class="trip-float" id="tripFloat"></div><div class="trip-hero-content"><button class="back-btn" onclick="goTo('dashboard');loadDashboard()">←</button><button class="trip-del-btn" style="right:64px" onclick="openEditDates()">✎</button><button class="trip-del-btn" onclick="deleteTrip()">🗑</button><div><div class="trip-hero-label" id="tripLabel"></div><div class="trip-hero-name" id="tripName"></div><div class="trip-hero-meta" id="tripMeta"></div></div></div></div>
-  <div class="cat-tabs-wrap"><div class="cat-tabs"><div class="cat-tab active" onclick="switchCat('food',this)"><div class="ct-icon">🍽️</div><div>Comer & Beber</div><div class="ct-count" id="cnt-food">0</div></div><div class="cat-tab" onclick="switchCat('hotel',this)"><div class="ct-icon">🏨</div><div>Onde Ficar</div><div class="ct-count" id="cnt-hotel">0</div></div><div class="cat-tab" onclick="switchCat('experience',this)"><div class="ct-icon">🗺️</div><div>Experiências</div><div class="ct-count" id="cnt-experience">0</div></div></div></div>
+  <div class="trip-hero"><div class="trip-hero-img" id="tripHeroImg"></div><div class="trip-float" id="tripFloat"></div><div class="trip-hero-content"><button class="back-btn" onclick="goTo('dashboard');loadDashboard()" data-ic="back" aria-label="Voltar"></button><button class="trip-del-btn" style="right:64px" onclick="openEditDates()" data-ic="edit" aria-label="Editar datas"></button><button class="trip-del-btn" onclick="deleteTrip()" data-ic="trash" aria-label="Excluir viagem"></button><div><div class="trip-hero-label" id="tripLabel"></div><div class="trip-hero-name" id="tripName"></div><div class="trip-hero-meta" id="tripMeta"></div></div></div></div>
+  <div class="cat-tabs-wrap"><div class="cat-tabs"><div class="cat-tab active" onclick="switchCat('food',this)"><div class="ct-icon" data-ic="food"></div><div>Comer & Beber</div><div class="ct-count" id="cnt-food">0</div></div><div class="cat-tab" onclick="switchCat('hotel',this)"><div class="ct-icon" data-ic="hotel"></div><div>Onde Ficar</div><div class="ct-count" id="cnt-hotel">0</div></div><div class="cat-tab" onclick="switchCat('experience',this)"><div class="ct-icon" data-ic="compass"></div><div>Experiências</div><div class="ct-count" id="cnt-experience">0</div></div></div></div>
   <div class="trip-body" id="tripBody"></div>
   <button class="fab" onclick="addSpotToCurrentTrip()">+</button>
-  <div class="bottom-nav"><div class="nav-item active" onclick="goTo('dashboard');loadDashboard()"><div class="nav-icon">🗺️</div><div class="nav-label" style="color:var(--ink);font-weight:600">Viagens</div></div><div class="nav-item" onclick="toast('Em breve','Explorar chega em breve!')"><div class="nav-icon">🔍</div><div class="nav-label">Explorar</div></div><div class="nav-item" onclick="goTo('friends');loadFriends()"><div class="nav-icon">👥</div><div class="nav-label">Amigos</div></div><div class="nav-item" onclick="goTo('profile');loadProfile()"><div class="nav-icon">👤</div><div class="nav-label">Perfil</div></div></div>
+  <div class="bottom-nav"><div class="nav-item active" onclick="goTo('dashboard');loadDashboard()"><div class="nav-icon" data-ic="map"></div><div class="nav-label" style="color:var(--ink);font-weight:600">Viagens</div></div><div class="nav-item" onclick="toast('Em breve','Explorar chega em breve!')"><div class="nav-icon" data-ic="search"></div><div class="nav-label">Explorar</div></div><div class="nav-item" onclick="goTo('friends');loadFriends()"><div class="nav-icon" data-ic="users"></div><div class="nav-label">Amigos</div></div><div class="nav-item" onclick="goTo('profile');loadProfile()"><div class="nav-icon" data-ic="user"></div><div class="nav-label">Perfil</div></div></div>
 </div>
 
 <div class="screen" id="profile">
@@ -458,11 +469,11 @@ body{font-family:'DM Sans',sans-serif;background:#0a0a0a;max-width:430px;margin:
     <div class="feed-time" id="usernameStatus" style="margin-bottom:20px"></div>
     <div class="section-head"><span class="section-title">Países que conheço</span></div>
     <div class="country-chips" id="countryChips"></div>
-    <div class="new-trip-btn" style="margin:16px 0 0" onclick="showOv('ov-quickvisit')"><div class="new-trip-icon">🌍</div><div class="new-trip-text">Marcar país que já visitei</div></div>
+    <div class="new-trip-btn" style="margin:16px 0 0" onclick="showOv('ov-quickvisit')"><div class="new-trip-icon" data-ic="globe"></div><div class="new-trip-text">Marcar país que já visitei</div></div>
     <button class="action-btn" style="margin-top:24px;background:var(--surface);color:var(--ink2);border:1px solid var(--border)" onclick="signOut()">Sair da conta</button>
     <div style="height:40px"></div>
   </div>
-  <div class="bottom-nav"><div class="nav-item" onclick="goTo('dashboard');loadDashboard()"><div class="nav-icon">🗺️</div><div class="nav-label">Viagens</div></div><div class="nav-item" onclick="toast('Em breve','Explorar chega em breve!')"><div class="nav-icon">🔍</div><div class="nav-label">Explorar</div></div><div class="nav-item" onclick="goTo('friends');loadFriends()"><div class="nav-icon">👥</div><div class="nav-label">Amigos</div></div><div class="nav-item active" onclick="goTo('profile');loadProfile()"><div class="nav-icon">👤</div><div class="nav-label" style="color:var(--ink);font-weight:600">Perfil</div></div></div>
+  <div class="bottom-nav"><div class="nav-item" onclick="goTo('dashboard');loadDashboard()"><div class="nav-icon" data-ic="map"></div><div class="nav-label">Viagens</div></div><div class="nav-item" onclick="toast('Em breve','Explorar chega em breve!')"><div class="nav-icon" data-ic="search"></div><div class="nav-label">Explorar</div></div><div class="nav-item" onclick="goTo('friends');loadFriends()"><div class="nav-icon" data-ic="users"></div><div class="nav-label">Amigos</div></div><div class="nav-item active" onclick="goTo('profile');loadProfile()"><div class="nav-icon" data-ic="user"></div><div class="nav-label" style="color:var(--ink);font-weight:600">Perfil</div></div></div>
 </div>
 
 <div class="screen" id="friends">
@@ -473,39 +484,66 @@ body{font-family:'DM Sans',sans-serif;background:#0a0a0a;max-width:430px;margin:
   </div>
   <div class="dash-body" id="friendsContainer"></div>
   <button class="fab" onclick="showOv('ov-addfriend')">+</button>
-  <div class="bottom-nav"><div class="nav-item" onclick="goTo('dashboard');loadDashboard()"><div class="nav-icon">🗺️</div><div class="nav-label">Viagens</div></div><div class="nav-item" onclick="toast('Em breve','Explorar chega em breve!')"><div class="nav-icon">🔍</div><div class="nav-label">Explorar</div></div><div class="nav-item active" onclick="goTo('friends');loadFriends()"><div class="nav-icon">👥</div><div class="nav-label" style="color:var(--ink);font-weight:600">Amigos</div></div><div class="nav-item" onclick="goTo('profile');loadProfile()"><div class="nav-icon">👤</div><div class="nav-label">Perfil</div></div></div>
+  <div class="bottom-nav"><div class="nav-item" onclick="goTo('dashboard');loadDashboard()"><div class="nav-icon" data-ic="map"></div><div class="nav-label">Viagens</div></div><div class="nav-item" onclick="toast('Em breve','Explorar chega em breve!')"><div class="nav-icon" data-ic="search"></div><div class="nav-label">Explorar</div></div><div class="nav-item active" onclick="goTo('friends');loadFriends()"><div class="nav-icon" data-ic="users"></div><div class="nav-label" style="color:var(--ink);font-weight:600">Amigos</div></div><div class="nav-item" onclick="goTo('profile');loadProfile()"><div class="nav-icon" data-ic="user"></div><div class="nav-label">Perfil</div></div></div>
 </div>
 
 <div class="screen" id="place">
-  <div class="place-hero"><div class="place-hero-img" id="placeHeroImg"></div><div class="hero-overlay"></div><button class="hero-back" onclick="goTo('trip');loadTrip(S.curTrip)">←</button><div class="hero-chip chip-want" id="placeChip" onclick="cycleStatus()">Quero ir</div><div class="hero-bottom"><div class="hero-type" id="placeType"></div><div class="hero-name" id="placeName"></div></div></div>
+  <div class="place-hero"><div class="place-hero-img" id="placeHeroImg"></div><div class="hero-overlay"></div><button class="hero-back" onclick="goTo('trip');loadTrip(S.curTrip)" data-ic="back" aria-label="Voltar"></button><div class="hero-chip chip-want" id="placeChip" onclick="cycleStatus()">Quero ir</div><div class="hero-bottom"><div class="hero-type" id="placeType"></div><div class="hero-name" id="placeName"></div></div></div>
   <div class="d-section"><div class="sec-label">Minha nota</div><div class="note-card"><div class="note-glow"></div><div class="note-quote" id="placeNote"></div><div class="note-attr" id="placeNoteAttr"></div></div></div>
   <div class="d-section"><div class="sec-label">Informações</div><div class="info-grid" id="placeInfoGrid"></div><div id="placeReserveWrap"></div></div>
   <div class="d-section"><div class="sec-label">Status</div><div class="status-toggle"><button class="toggle-btn sel-want" id="t-want" onclick="setStatus('want')">Quero ir</button><button class="toggle-btn" id="t-been" onclick="setStatus('been')">Fui</button><button class="toggle-btn" id="t-skip" onclick="setStatus('skip')">Pular</button></div></div>
-  <div class="d-section"><div class="sec-label">Minha avaliação</div><div class="stars-row"><button class="star-btn" onclick="rateStar(1)">★</button><button class="star-btn" onclick="rateStar(2)">★</button><button class="star-btn" onclick="rateStar(3)">★</button><button class="star-btn" onclick="rateStar(4)">★</button><button class="star-btn" onclick="rateStar(5)">★</button></div><textarea class="review-area" id="reviewText" rows="3" placeholder="O que você achou?"></textarea><button class="action-btn" onclick="saveReview()">Salvar avaliação</button><button class="delete-link" onclick="deleteSpot()">Excluir este spot</button></div>
+  <div class="d-section"><div class="sec-label">Minha avaliação</div><div class="stars-row"><button class="star-btn" onclick="rateStar(1)" data-ic="star"></button><button class="star-btn" onclick="rateStar(2)" data-ic="star"></button><button class="star-btn" onclick="rateStar(3)" data-ic="star"></button><button class="star-btn" onclick="rateStar(4)" data-ic="star"></button><button class="star-btn" onclick="rateStar(5)" data-ic="star"></button></div><textarea class="review-area" id="reviewText" rows="3" placeholder="O que você achou?"></textarea><button class="action-btn" onclick="saveReview()">Salvar avaliação</button><button class="delete-link" onclick="deleteSpot()">Excluir este spot</button></div>
 </div>
 
 <!-- OVERLAYS -->
-<div class="overlay" id="ov-trip" onclick="closeOut(event,'ov-trip')"><div class="sheet"><button class="sheet-close" onclick="closeOv('ov-trip')">✕</button><div class="sheet-handle"></div><div class="sheet-title">Em qual viagem?</div><div class="step-dots"><div class="step-dot active"></div><div class="step-dot"></div><div class="step-dot"></div><div class="step-dot"></div></div><div id="tripOptions"></div><div class="new-trip-btn" onclick="nextOv('ov-trip','ov-newtrip')"><div class="new-trip-icon">✦</div><div class="new-trip-text">Nova viagem</div></div></div></div>
+<div class="overlay" id="ov-trip" onclick="closeOut(event,'ov-trip')"><div class="sheet"><button class="sheet-close" onclick="closeOv('ov-trip')" data-ic="close" aria-label="Fechar"></button><div class="sheet-handle"></div><div class="sheet-title">Em qual viagem?</div><div class="step-dots"><div class="step-dot active"></div><div class="step-dot"></div><div class="step-dot"></div><div class="step-dot"></div></div><div id="tripOptions"></div><div class="new-trip-btn" onclick="nextOv('ov-trip','ov-newtrip')"><div class="new-trip-icon" data-ic="plus"></div><div class="new-trip-text">Nova viagem</div></div></div></div>
 
-<div class="overlay" id="ov-cat" onclick="closeOut(event,'ov-cat')"><div class="sheet"><button class="sheet-close" onclick="closeOv('ov-cat')">✕</button><div class="sheet-handle"></div><div class="sheet-title">Qual categoria?</div><div class="step-dots"><div class="step-dot done"></div><div class="step-dot active"></div><div class="step-dot"></div><div class="step-dot"></div></div><div class="cat-options"><div class="cat-option" id="co-food" onclick="pickCat('food')"><div class="co-icon">🍽️</div><div class="co-name">Comer & Beber</div></div><div class="cat-option" id="co-hotel" onclick="pickCat('hotel')"><div class="co-icon">🏨</div><div class="co-name">Onde Ficar</div></div><div class="cat-option" id="co-experience" onclick="pickCat('experience')"><div class="co-icon">🗺️</div><div class="co-name">Experiências</div></div></div></div></div>
+<div class="overlay" id="ov-cat" onclick="closeOut(event,'ov-cat')"><div class="sheet"><button class="sheet-close" onclick="closeOv('ov-cat')" data-ic="close" aria-label="Fechar"></button><div class="sheet-handle"></div><div class="sheet-title">Qual categoria?</div><div class="step-dots"><div class="step-dot done"></div><div class="step-dot active"></div><div class="step-dot"></div><div class="step-dot"></div></div><div class="cat-options"><div class="cat-option" id="co-food" onclick="pickCat('food')"><div class="co-icon" data-ic="food"></div><div class="co-name">Comer & Beber</div></div><div class="cat-option" id="co-hotel" onclick="pickCat('hotel')"><div class="co-icon" data-ic="hotel"></div><div class="co-name">Onde Ficar</div></div><div class="cat-option" id="co-experience" onclick="pickCat('experience')"><div class="co-icon" data-ic="compass"></div><div class="co-name">Experiências</div></div></div></div></div>
 
-<div class="overlay" id="ov-search" onclick="closeOut(event,'ov-search')"><div class="sheet"><button class="sheet-close" onclick="closeOv('ov-search')">✕</button><div class="sheet-handle"></div><div class="sheet-title">Buscar lugar</div><div class="step-dots"><div class="step-dot done"></div><div class="step-dot done"></div><div class="step-dot active"></div><div class="step-dot"></div></div><div class="search-wrap"><span class="si">🔍</span><input class="search-input" id="placeSearch" placeholder="Nome do lugar..." oninput="searchPlaces(this.value)"></div><div class="search-powered"><span>Resultados via</span><strong>Google Places</strong></div><div id="searchResults"><div class="search-loading">Digite para buscar...</div></div></div></div>
+<div class="overlay" id="ov-search" onclick="closeOut(event,'ov-search')"><div class="sheet"><button class="sheet-close" onclick="closeOv('ov-search')" data-ic="close" aria-label="Fechar"></button><div class="sheet-handle"></div><div class="sheet-title">Buscar lugar</div><div class="step-dots"><div class="step-dot done"></div><div class="step-dot done"></div><div class="step-dot active"></div><div class="step-dot"></div></div><div class="search-wrap"><span class="si" data-ic="search"></span><input class="search-input" id="placeSearch" placeholder="Nome do lugar..." oninput="searchPlaces(this.value)"></div><div class="search-powered"><span>Resultados via</span><strong>Google Places</strong></div><div id="searchResults"><div class="search-loading">Digite para buscar...</div></div></div></div>
 
-<div class="overlay" id="ov-note" onclick="closeOut(event,'ov-note')"><div class="sheet"><button class="sheet-close" onclick="closeOv('ov-note')">✕</button><div class="sheet-handle"></div><div class="sheet-title">Adicionar spot</div><div class="note-place-row"><div class="note-place-icon" id="selIcon">🍽️</div><div><div class="note-place-name" id="selName"></div><div class="note-place-meta" id="selMeta"></div></div></div>
-<div class="status-choice"><button class="status-opt active" id="stWant" onclick="setSpotStatus('want')"><div class="so-emoji">🔖</div><div class="so-label">Quero ir</div></button><button class="status-opt" id="stBeen" onclick="setSpotStatus('been')"><div class="so-emoji">✓</div><div class="so-label">Já fui</div></button></div>
-<div id="ratingRow" style="display:none"><div class="note-label">Sua avaliação</div><div class="stars-row" id="addStars"><button class="star-btn" onclick="setAddRating(1)">★</button><button class="star-btn" onclick="setAddRating(2)">★</button><button class="star-btn" onclick="setAddRating(3)">★</button><button class="star-btn" onclick="setAddRating(4)">★</button><button class="star-btn" onclick="setAddRating(5)">★</button></div></div>
+<div class="overlay" id="ov-note" onclick="closeOut(event,'ov-note')"><div class="sheet"><button class="sheet-close" onclick="closeOv('ov-note')" data-ic="close" aria-label="Fechar"></button><div class="sheet-handle"></div><div class="sheet-title">Adicionar spot</div><div class="note-place-row"><div class="note-place-icon" id="selIcon" data-ic="food"></div><div><div class="note-place-name" id="selName"></div><div class="note-place-meta" id="selMeta"></div></div></div>
+<div class="status-choice"><button class="status-opt active" id="stWant" onclick="setSpotStatus('want')"><div class="so-emoji" data-ic="bookmark"></div><div class="so-label">Quero ir</div></button><button class="status-opt" id="stBeen" onclick="setSpotStatus('been')"><div class="so-emoji" data-ic="check"></div><div class="so-label">Já fui</div></button></div>
+<div id="ratingRow" style="display:none"><div class="note-label">Sua avaliação</div><div class="stars-row" id="addStars"><button class="star-btn" onclick="setAddRating(1)" data-ic="star"></button><button class="star-btn" onclick="setAddRating(2)" data-ic="star"></button><button class="star-btn" onclick="setAddRating(3)" data-ic="star"></button><button class="star-btn" onclick="setAddRating(4)" data-ic="star"></button><button class="star-btn" onclick="setAddRating(5)" data-ic="star"></button></div></div>
 <div class="note-label">Sua nota <span style="color:var(--ink3);font-weight:400">(opcional)</span></div><div class="note-wrap"><textarea class="note-input" id="noteField" rows="2" placeholder="Por que esse lugar te chamou atenção?"></textarea></div>
 <button class="sheet-cta" id="saveSpotBtn" onclick="saveSpot()">Salvar spot</button></div></div>
 
-<div class="overlay" id="ov-mismatch" onclick="closeOut(event,'ov-mismatch')"><div class="sheet"><button class="sheet-close" onclick="closeOv('ov-mismatch')">✕</button><div class="sheet-handle"></div><div class="sheet-title">País diferente</div><div class="cm-text" id="cmText"></div><button class="sheet-cta" id="cmMoveBtn">Mover</button><button class="delete-link" style="color:var(--ink3)" onclick="keepInThisTripAnyway()">Adicionar nesta viagem mesmo assim</button></div></div>
-<div class="overlay" id="ov-newtrip" onclick="closeOut(event,'ov-newtrip')"><div class="sheet"><button class="sheet-close" onclick="closeOv('ov-newtrip')">✕</button><div class="sheet-handle"></div><div class="sheet-title">Para qual país?</div><div class="nt-label">País da viagem</div><div class="dest-search-wrap"><span class="dsi">🔍</span><input class="nt-input" style="padding-left:44px" id="countrySearch" placeholder="Buscar país..." oninput="filterCountries(this.value)"></div><div id="countryList"></div><div class="nt-label" style="margin-top:8px">Datas (opcional)</div><div class="dates-row"><input class="nt-input" type="date" id="tripStart"><input class="nt-input" type="date" id="tripEnd"></div><button class="sheet-cta" id="createTripBtn" onclick="createTrip()" style="opacity:.4;pointer-events:none">Selecione um país</button></div></div>
-<div class="overlay" id="ov-quickvisit" onclick="closeOut(event,'ov-quickvisit')"><div class="sheet"><button class="sheet-close" onclick="closeOv('ov-quickvisit')">✕</button><div class="sheet-handle"></div><div class="sheet-title">Qual país você já visitou?</div><div class="nt-label">País</div><div class="dest-search-wrap"><span class="dsi">🔍</span><input class="nt-input" style="padding-left:44px" id="countrySearch2" placeholder="Buscar país..." oninput="filterCountries2(this.value)"></div><div id="countryList2"></div><button class="sheet-cta" id="createVisitBtn" onclick="markVisited()" style="opacity:.4;pointer-events:none">Selecione um país</button></div></div>
-<div class="overlay" id="ov-addfriend" onclick="closeOut(event,'ov-addfriend')"><div class="sheet"><button class="sheet-close" onclick="closeOv('ov-addfriend')">✕</button><div class="sheet-handle"></div><div class="sheet-title">Adicionar amigo</div><div class="nt-label">Username do amigo</div><input class="nt-input" id="friendUsernameInput" type="text" placeholder="username_do_amigo" autocapitalize="none" oninput="document.getElementById('friendAddErr').textContent=''"><div class="auth-error" id="friendAddErr"></div><button class="sheet-cta" id="sendReqBtn" onclick="sendFriendRequest()">Enviar pedido</button></div></div>
+<div class="overlay" id="ov-mismatch" onclick="closeOut(event,'ov-mismatch')"><div class="sheet"><button class="sheet-close" onclick="closeOv('ov-mismatch')" data-ic="close" aria-label="Fechar"></button><div class="sheet-handle"></div><div class="sheet-title">País diferente</div><div class="cm-text" id="cmText"></div><button class="sheet-cta" id="cmMoveBtn">Mover</button><button class="delete-link" style="color:var(--ink3)" onclick="keepInThisTripAnyway()">Adicionar nesta viagem mesmo assim</button></div></div>
+<div class="overlay" id="ov-newtrip" onclick="closeOut(event,'ov-newtrip')"><div class="sheet"><button class="sheet-close" onclick="closeOv('ov-newtrip')" data-ic="close" aria-label="Fechar"></button><div class="sheet-handle"></div><div class="sheet-title">Para qual país?</div><div class="nt-label">País da viagem</div><div class="dest-search-wrap"><span class="dsi" data-ic="search"></span><input class="nt-input" style="padding-left:44px" id="countrySearch" placeholder="Buscar país..." oninput="filterCountries(this.value)"></div><div id="countryList"></div><div class="nt-label" style="margin-top:8px">Datas (opcional)</div><div class="dates-row"><input class="nt-input" type="date" id="tripStart"><input class="nt-input" type="date" id="tripEnd"></div><button class="sheet-cta" id="createTripBtn" onclick="createTrip()" style="opacity:.4;pointer-events:none">Selecione um país</button></div></div>
+<div class="overlay" id="ov-quickvisit" onclick="closeOut(event,'ov-quickvisit')"><div class="sheet"><button class="sheet-close" onclick="closeOv('ov-quickvisit')" data-ic="close" aria-label="Fechar"></button><div class="sheet-handle"></div><div class="sheet-title">Qual país você já visitou?</div><div class="nt-label">País</div><div class="dest-search-wrap"><span class="dsi" data-ic="search"></span><input class="nt-input" style="padding-left:44px" id="countrySearch2" placeholder="Buscar país..." oninput="filterCountries2(this.value)"></div><div id="countryList2"></div><button class="sheet-cta" id="createVisitBtn" onclick="markVisited()" style="opacity:.4;pointer-events:none">Selecione um país</button></div></div>
+<div class="overlay" id="ov-addfriend" onclick="closeOut(event,'ov-addfriend')"><div class="sheet"><button class="sheet-close" onclick="closeOv('ov-addfriend')" data-ic="close" aria-label="Fechar"></button><div class="sheet-handle"></div><div class="sheet-title">Adicionar amigo</div><div class="nt-label">Username do amigo</div><input class="nt-input" id="friendUsernameInput" type="text" placeholder="username_do_amigo" autocapitalize="none" oninput="document.getElementById('friendAddErr').textContent=''"><div class="auth-error" id="friendAddErr"></div><button class="sheet-cta" id="sendReqBtn" onclick="sendFriendRequest()">Enviar pedido</button></div></div>
 
-<div class="overlay" id="ov-editdates" onclick="closeOut(event,'ov-editdates')"><div class="sheet"><button class="sheet-close" onclick="closeOv('ov-editdates')">✕</button><div class="sheet-handle"></div><div class="sheet-title">Datas da viagem</div><div class="nt-label">Deixe em branco se não for uma viagem com data definida (ex: seu país de origem)</div><div class="dates-row"><input class="nt-input" type="date" id="editStart"><input class="nt-input" type="date" id="editEnd"></div><button class="sheet-cta" onclick="saveEditDates()">Salvar</button><button class="delete-link" onclick="clearEditDates()">Limpar datas (não é uma viagem)</button></div></div>
+<div class="overlay" id="ov-editdates" onclick="closeOut(event,'ov-editdates')"><div class="sheet"><button class="sheet-close" onclick="closeOv('ov-editdates')" data-ic="close" aria-label="Fechar"></button><div class="sheet-handle"></div><div class="sheet-title">Datas da viagem</div><div class="nt-label">Deixe em branco se não for uma viagem com data definida (ex: seu país de origem)</div><div class="dates-row"><input class="nt-input" type="date" id="editStart"><input class="nt-input" type="date" id="editEnd"></div><button class="sheet-cta" onclick="saveEditDates()">Salvar</button><button class="delete-link" onclick="clearEditDates()">Limpar datas (não é uma viagem)</button></div></div>
 <div class="toast" id="toast"><div class="toast-title" id="toastTitle"></div><div class="toast-msg" id="toastMsg"></div></div>
 
 <script>
+/* ═══ ÍCONES SVG (fonte única — substitui emoji de interface) ═══ */
+const ICONS={
+map:'<path d="M9 4.5 3.5 6.8v12.7l5.5-2.3 6 2.5 5.5-2.3V4.7L15 7 9 4.5Z"/><path d="M9 4.5V17"/><path d="M15 7v12.7"/>',
+search:'<circle cx="11" cy="11" r="6.5"/><path d="M16 16l4 4"/>',
+users:'<circle cx="9" cy="8.5" r="3"/><path d="M3.8 19a5.2 5.2 0 0 1 10.4 0"/><path d="M16 6.2a3 3 0 0 1 0 5.6"/><path d="M17.2 14.4a5.2 5.2 0 0 1 3 4.6"/>',
+user:'<circle cx="12" cy="8" r="3.6"/><path d="M5.5 20a6.5 6.5 0 0 1 13 0"/>',
+food:'<path d="M7 3v5a2 2 0 0 0 4 0V3"/><path d="M9 8v13"/><path d="M16.5 3c-1.4 1-2 3.2-2 6.5h2V3Z"/><path d="M16.5 9.5V21"/>',
+hotel:'<path d="M3 8v12"/><path d="M3 15h15a3 3 0 0 1 3 3v2"/><path d="M7 11.5h3a2 2 0 0 1 2 2V15"/>',
+compass:'<circle cx="12" cy="12" r="9"/><path d="M15.5 8.5l-2.2 5.2-5.2 2.2 2.2-5.2 5.2-2.2Z"/>',
+pin:'<path d="M12 21c4-4.4 6-7.7 6-10.5a6 6 0 1 0-12 0C6 13.3 8 16.6 12 21Z"/><circle cx="12" cy="10.5" r="2.2"/>',
+city:'<path d="M3 21V9l6-2.5v14.5"/><path d="M9 21V11l8-3v13"/><path d="M17 21V13l4 1.5V21"/><path d="M3 21h18"/>',
+star:'<path d="M12 4l2.35 4.76 5.25.76-3.8 3.7.9 5.23L12 16.24 7.3 18.45l.9-5.23-3.8-3.7 5.25-.76L12 4Z"/>',
+bookmark:'<path d="M6.5 4h11a1 1 0 0 1 1 1v15l-6.5-4.3L5.5 20V5a1 1 0 0 1 1-1Z"/>',
+check:'<path d="M5 12.5l4.5 4.5L19 7.5"/>',
+suitcase:'<rect x="4" y="8" width="16" height="12" rx="2.2"/><path d="M9 8V5.5a1.5 1.5 0 0 1 1.5-1.5h3A1.5 1.5 0 0 1 15 5.5V8"/><path d="M9.5 8v12M14.5 8v12"/>',
+globe:'<circle cx="12" cy="12" r="9"/><path d="M3 12h18"/><path d="M12 3c3 3 3 15 0 18M12 3c-3 3-3 15 0 18"/>',
+edit:'<path d="M4 20l1-4.2L15.5 5.3a1.6 1.6 0 0 1 2.3 0l1 1a1.6 1.6 0 0 1 0 2.3L8.2 19 4 20Z"/><path d="M14 6.8l3 3"/>',
+trash:'<path d="M4.5 7h15"/><path d="M9 7V5a1.2 1.2 0 0 1 1.2-1.2h3.6A1.2 1.2 0 0 1 15 5v2"/><path d="M6.5 7l1 12.3a1.2 1.2 0 0 0 1.2 1.1h6.6a1.2 1.2 0 0 0 1.2-1.1L18 7"/><path d="M10 10.5v6M14 10.5v6"/>',
+back:'<path d="M19 12H5"/><path d="M11.5 5.5 5 12l6.5 6.5"/>',
+close:'<path d="M6.5 6.5l11 11M17.5 6.5l-11 11"/>',
+plus:'<path d="M12 5.5v13M5.5 12h13"/>'
+};
+function icon(n,c){return '<svg class="ic'+(c?' '+c:'')+'" viewBox="0 0 24 24" aria-hidden="true">'+(ICONS[n]||ICONS.pin)+'</svg>';}
+function catIconName(c){return {food:'food',hotel:'hotel',experience:'compass'}[c]||'pin';}
+function thumbFallback(img,cat){img.parentElement.innerHTML=catIcon(cat);}
+function hydrateIcons(root){(root||document).querySelectorAll('[data-ic]:not([data-ic-done])').forEach(function(el){el.innerHTML=icon(el.getAttribute('data-ic'));el.setAttribute('data-ic-done','1');});}
+if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',function(){hydrateIcons();});else hydrateIcons();
 const SB_URL='https://kzidnilsyrvauzgelsqd.supabase.co';
 const SB_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imt6aWRuaWxzeXJ2YXV6Z2Vsc3FkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODEyODE5NDAsImV4cCI6MjA5Njg1Nzk0MH0.BMgiP_lTe8mCfe0eSPNUCksXatOntuWAhcqGtR8hco4';
 let sb;
@@ -709,7 +747,7 @@ function tripCardHTML(t){
 function renderTrips(){
   const c=document.getElementById('tripsContainer');
   const visibleTrips=S.trips.filter(t=>!isQuickVisit(t));
-  if(!visibleTrips.length){c.innerHTML='<div class="section-head"><span class="section-title">Minhas viagens</span></div><div class="empty-state"><div class="ei">✈️</div><h3>Nenhuma viagem ainda</h3><p>Toca no + para criar sua primeira viagem</p></div>';return}
+  if(!visibleTrips.length){c.innerHTML='<div class="section-head"><span class="section-title">Minhas viagens</span></div><div class="empty-state"><div class="ei">'+icon('suitcase')+'</div><h3>Nenhuma viagem ainda</h3><p>Toca no + para criar sua primeira viagem</p></div>';return}
   const groups={};
   visibleTrips.forEach(t=>{
     const region=regionFor((t.destinations&&t.destinations[0])||t.name);
@@ -821,7 +859,7 @@ function renderSpots(spots){
     cs.forEach(s=>{
       const bc=s.category==='food'?'bar-food':s.category==='hotel'?'bar-hotel':'bar-experience';
       const dot=s.status==='been'?'dot-been':'dot-want';
-      const thumb=s.photo_url?`<div class="place-thumb"><img src="${s.photo_url}" style="width:100%;height:100%;object-fit:cover;border-radius:12px" onerror="this.parentElement.textContent='${catIcon(s.category)}'"></div>`:`<div class="place-thumb">${catIcon(s.category)}</div>`;
+      const thumb=s.photo_url?`<div class="place-thumb"><img src="${s.photo_url}" style="width:100%;height:100%;object-fit:cover;border-radius:12px" onerror="thumbFallback(this,'${s.category}')"></div>`:`<div class="place-thumb">${catIcon(s.category)}</div>`;
       h+=`<div class="place-row" onclick="openPlace('${s.id}')"><div class="place-bar ${bc}"></div><div class="place-row-main">${thumb}<div class="place-row-info"><div class="place-row-name">${s.name}</div><div class="place-row-note">${s.my_note||''}</div></div><div class="place-row-right"><span class="place-type-tag">${s.place_type||catLabel(s.category)}</span><div class="status-dot ${dot}"></div></div></div></div>`;
     });h+='</div>'}
   b.innerHTML=h;
@@ -838,15 +876,15 @@ async function openPlace(id){
   if(s.photo_url){phEl.style.background='';phEl.style.backgroundImage=`url('${s.photo_url}')`}
   else{phEl.style.background=destGradient(s.city||s.name);phEl.style.backgroundImage='';fetchCityPhoto(s.city||s.name).then(u=>{if(u)phEl.style.backgroundImage=`url('${u}')`})}
   let ig='';
-  if(s.address)ig+=`<div class="info-cell wide"><div class="info-cell-icon">📍</div><div class="info-cell-label">Endereço</div><div class="info-cell-value">${s.address}</div></div>`;
-  if(s.city)ig+=`<div class="info-cell"><div class="info-cell-icon">🏙️</div><div class="info-cell-label">Cidade</div><div class="info-cell-value">${s.city}</div></div>`;
-  if(s.rating_google)ig+=`<div class="info-cell"><div class="info-cell-icon">⭐</div><div class="info-cell-label">Google</div><div class="info-cell-value">${s.rating_google}</div></div>`;
-  if(!ig)ig=`<div class="info-cell wide"><div class="info-cell-icon">📍</div><div class="info-cell-label">Local</div><div class="info-cell-value">${s.city||'—'}</div></div>`;
+  if(s.address)ig+=`<div class="info-cell wide"><div class="info-cell-icon">${icon('pin')}</div><div class="info-cell-label">Endereço</div><div class="info-cell-value">${s.address}</div></div>`;
+  if(s.city)ig+=`<div class="info-cell"><div class="info-cell-icon">${icon('city')}</div><div class="info-cell-label">Cidade</div><div class="info-cell-value">${s.city}</div></div>`;
+  if(s.rating_google)ig+=`<div class="info-cell"><div class="info-cell-icon">${icon('star')}</div><div class="info-cell-label">Google</div><div class="info-cell-value">${s.rating_google}</div></div>`;
+  if(!ig)ig=`<div class="info-cell wide"><div class="info-cell-icon">${icon('pin')}</div><div class="info-cell-label">Local</div><div class="info-cell-value">${s.city||'—'}</div></div>`;
   document.getElementById('placeInfoGrid').innerHTML=ig;
   const reserveWrap=document.getElementById('placeReserveWrap');
   if(s.category==='food'){
     const q=encodeURIComponent(s.name+(s.city?' '+s.city:''));
-    reserveWrap.innerHTML=`<a class="reserve-btn" href="https://www.thefork.com/search?query=${q}" target="_blank" rel="noopener">🍽️ Reservar mesa</a>`;
+    reserveWrap.innerHTML=`<a class="reserve-btn" href="https://www.thefork.com/search?query=${q}" target="_blank" rel="noopener">${icon('food')} Reservar mesa</a>`;
   }else{
     reserveWrap.innerHTML='';
   }
@@ -912,7 +950,7 @@ function searchPlaces(v){
         const addr=p.formattedAddress||'';
         const city=cityFromComponents(p.addressComponents)||extractCityFromAddr(addr);
         const country=countryFromComponents(p.addressComponents);
-        const rating=p.rating?p.rating+' ⭐':'';
+        const rating=p.rating?String(p.rating):'';
         const photoRef=p.photos?.[0]?.name||'';
         const photoThumb=photoRef?'https://places.googleapis.com/v1/'+photoRef+'/media?maxWidthPx=200&key='+GAPI:'';
         const photoFull=photoRef?'https://places.googleapis.com/v1/'+photoRef+'/media?maxWidthPx=800&key='+GAPI:'';
@@ -954,7 +992,7 @@ function pickPlace(p){
     return;
   }
   S.selPlace=p;document.getElementById('selName').textContent=p.name;document.getElementById('selMeta').textContent=p.meta;
-  document.getElementById('selIcon').textContent=p.icon;resetNoteSheet();nextOv('ov-search','ov-note');
+  document.getElementById('selIcon').innerHTML=p.icon;resetNoteSheet();nextOv('ov-search','ov-note');
 }
 // ── Country mismatch handling ──
 function showCountryMismatch(placeCountry,tripCountry){
@@ -985,7 +1023,7 @@ async function moveToCorrectCountry(existingTrip,createNew){
   // Set the add target to the correct trip and proceed to note
   S.addTrip=trip;S.selPlace=p;S.pendingPlace=null;
   document.getElementById('selName').textContent=p.name;document.getElementById('selMeta').textContent=p.meta;
-  document.getElementById('selIcon').textContent=p.icon;resetNoteSheet();
+  document.getElementById('selIcon').innerHTML=p.icon;resetNoteSheet();
   closeOv('ov-mismatch');
   setTimeout(()=>document.getElementById('ov-note').classList.add('show'),220);
 }
@@ -994,7 +1032,7 @@ function keepInThisTripAnyway(){
   const p=S.pendingPlace;if(!p)return;
   S.selPlace=p;S.pendingPlace=null;
   document.getElementById('selName').textContent=p.name;document.getElementById('selMeta').textContent=p.meta;
-  document.getElementById('selIcon').textContent=p.icon;resetNoteSheet();
+  document.getElementById('selIcon').innerHTML=p.icon;resetNoteSheet();
   closeOv('ov-mismatch');
   setTimeout(()=>document.getElementById('ov-note').classList.add('show'),220);
 }
@@ -1228,7 +1266,7 @@ function countryFromComponents(comps){
 }
 
 // ═══ HELPERS ═══
-function catIcon(c){return{food:'🍽️',hotel:'🏨',experience:'🗺️'}[c]||'📍'}
+function catIcon(c){return icon(catIconName(c))}
 function catLabel(c){return{food:'Comer & Beber',hotel:'Onde Ficar',experience:'Experiência'}[c]||c}
 function flagFor(n){const c=COUNTRIES.find(x=>x.name===n);return c?c.flag:'🌍'}
 // Cache for city photos so we don't refetch
@@ -1604,7 +1642,7 @@ function initials(name){
 async function loadFriends(){
   const uid=S.user.id;
   const c=document.getElementById('friendsContainer');
-  c.innerHTML='<div class="empty-state"><div class="ei">👥</div><p>Carregando...</p></div>';
+  c.innerHTML='<div class="empty-state"><div class="ei">'+icon('users')+'</div><p>Carregando...</p></div>';
 
   const[accepted,incoming,outgoing]=await Promise.all([
     dbGet('follows',`status=eq.accepted&or=(follower_id.eq.${uid},following_id.eq.${uid})`),
@@ -1652,9 +1690,9 @@ async function loadFriends(){
 
   h+='<div class="section-head"><span class="section-title">Atividade dos amigos</span></div>';
   if(!friendIds.length){
-    h+='<div class="empty-state"><div class="ei">👥</div><h3>Sem amigos ainda</h3><p>Toca no + pra adicionar um amigo pelo username</p></div>';
+    h+='<div class="empty-state"><div class="ei">'+icon('users')+'</div><h3>Sem amigos ainda</h3><p>Toca no + pra adicionar um amigo pelo username</p></div>';
   }else if(!feedItems.length){
-    h+='<div class="empty-state"><div class="ei">🌍</div><p>Seus amigos ainda não têm atividade</p></div>';
+    h+='<div class="empty-state"><div class="ei">'+icon('globe')+'</div><p>Seus amigos ainda não têm atividade</p></div>';
   }else{
     feedItems.forEach(it=>{
       const p=pmap[it.user_id];const name=p?(p.display_name||(p.username?'@'+p.username:p.email)):'Alguém';
