@@ -89,6 +89,21 @@ body{font-family:'DM Sans',sans-serif;background:var(--dark);max-width:430px;mar
 .section-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;margin-top:24px}
 .section-title{font-size:13px;font-weight:600;color:var(--ink2)}
 
+/* Pastas por continente — recolhíveis de verdade, não só um título */
+.region-folder{margin-bottom:2px}
+.region-header{display:flex;align-items:center;gap:10px;padding:15px 4px;cursor:pointer;border-bottom:1px solid var(--border);-webkit-tap-highlight-color:transparent}
+.region-chevron{width:15px;height:15px;color:var(--ink3);transition:transform .2s ease;flex-shrink:0}
+.region-folder.open .region-chevron{transform:rotate(90deg)}
+.region-name{font-size:14px;font-weight:600;color:var(--ink2);flex:1}
+.region-count{font-family:var(--mono);font-size:11px;color:var(--ink3);background:rgba(234,231,224,.07);border-radius:var(--r-pill);padding:2px 10px;flex-shrink:0}
+/* colapso por display — transição de grid-template-rows tem suporte irregular
+   (inclusive no Safari do iPhone), então aqui vale confiabilidade, não animação */
+.region-body-wrap{display:none}
+.region-folder.open .region-body-wrap{display:block;animation:regionOpen .2s ease}
+@keyframes regionOpen{from{opacity:0;transform:translateY(-5px)}to{opacity:1;transform:none}}
+.region-body-inner{min-height:0}
+.region-body{padding-top:12px}
+
 /* TRIP CARDS */
 /* nome NUNCA corta com "..." — quebra em quantas linhas precisar e o card cresce */
 .trip-card{display:flex;gap:14px;margin-bottom:14px;cursor:pointer;position:relative;border:1px solid var(--border);border-radius:var(--r);background:var(--white);padding:14px;align-items:flex-start;transition:transform .15s,border-color .15s,box-shadow .15s;box-shadow:var(--shadow-sm)}
@@ -489,7 +504,7 @@ svg.ic path,svg.ic circle,svg.ic line,svg.ic polyline,svg.ic rect{fill:none;stro
 <div class="screen" id="friends">
   <div class="dash-top" style="padding-bottom:20px">
     <div class="dash-top-row">
-      <div><div class="dash-hello">Amigos</div><div class="dash-name" style="font-size:24px">Atividade da turma</div></div>
+      <div><div class="dash-hello">Amigos</div><div class="dash-name" style="font-size:24px">Feed</div></div>
     </div>
   </div>
   <div class="dash-body" id="friendsContainer"></div>
@@ -547,7 +562,8 @@ edit:'<path d="M4 20l1-4.2L15.5 5.3a1.6 1.6 0 0 1 2.3 0l1 1a1.6 1.6 0 0 1 0 2.3L
 trash:'<path d="M4.5 7h15"/><path d="M9 7V5a1.2 1.2 0 0 1 1.2-1.2h3.6A1.2 1.2 0 0 1 15 5v2"/><path d="M6.5 7l1 12.3a1.2 1.2 0 0 0 1.2 1.1h6.6a1.2 1.2 0 0 0 1.2-1.1L18 7"/><path d="M10 10.5v6M14 10.5v6"/>',
 back:'<path d="M19 12H5"/><path d="M11.5 5.5 5 12l6.5 6.5"/>',
 close:'<path d="M6.5 6.5l11 11M17.5 6.5l-11 11"/>',
-plus:'<path d="M12 5.5v13M5.5 12h13"/>'
+plus:'<path d="M12 5.5v13M5.5 12h13"/>',
+chevron:'<path d="M9 5.5 15.5 12 9 18.5"/>'
 };
 function icon(n,c){return '<svg class="ic'+(c?' '+c:'')+'" viewBox="0 0 24 24" aria-hidden="true">'+(ICONS[n]||ICONS.pin)+'</svg>';}
 function catIconName(c){return {food:'food',hotel:'hotel',experience:'compass'}[c]||'pin';}
@@ -625,8 +641,12 @@ async function init(){
       if((ev==='SIGNED_IN'||ev==='INITIAL_SESSION'||ev==='TOKEN_REFRESHED')&&sess?.user&&!S.user){
         S.user=sess.user;
         S.token=sess.access_token;
-        try{await loadDashboard()}catch(e){console.error('Dashboard error:',e)}
+        // Troca de tela PRIMEIRO: o dashboard já mostra nome/avatar na hora e os
+        // cards entram conforme os dados chegam. Antes, esperava o carregamento
+        // inteiro terminar antes de sair da tela de loading — o usuário ficava
+        // olhando tela parada por todo o tempo das requisições.
         goTo('dashboard');
+        try{await loadDashboard()}catch(e){console.error('Dashboard error:',e)}
       }
       if(ev==='SIGNED_OUT'){S.user=null;S.token=null;goTo('login')}
     }catch(e){console.error('Auth error:',e);goTo('login')}
@@ -680,9 +700,22 @@ async function loadDashboard(){
   const trips=await dbGet('trips','user_id=eq.'+S.user.id+'&order=created_at.desc');
   S.trips=trips||[];
   let ts=0,ctrs=new Set(),cities=new Set();
+  S.trips.forEach(t=>{t._spots=[];t._spotsLoaded=false});
+  // Desenha os cards JÁ, com uma só ida ao banco. Os spots (contagens) chegam
+  // na sequência e só atualizam o texto — o usuário não fica olhando tela vazia.
+  renderTrips();populateTripOpts();
+  const visivelAntes=S.trips.filter(t=>!isQuickVisit(t)).map(t=>t.id).join(',');
+  // TODOS os spots numa única query (antes: uma por viagem, em série — somava
+  // um round-trip inteiro por viagem antes de qualquer card aparecer)
+  if(S.trips.length){
+    const byId={};S.trips.forEach(t=>{byId[t.id]=t});
+    const ids=S.trips.map(t=>t.id).join(',');
+    const allSpots=await dbGet('spots','trip_id=in.('+ids+')&order=created_at.asc');
+    (allSpots||[]).forEach(s=>{const t=byId[s.trip_id];if(t)t._spots.push(s)});
+  }
+  S.trips.forEach(t=>{t._spotsLoaded=true});
   for(const t of S.trips){
-    const spots=await dbGet('spots','trip_id=eq.'+t.id);
-    t._spots=spots||[];ts+=t._spots.length;
+    ts+=t._spots.length;
     t._spots.forEach(s=>{if(s.city)cities.add(s.city)});
     (t.destinations||[]).forEach(d=>ctrs.add(d));
   }
@@ -697,7 +730,12 @@ async function loadDashboard(){
   document.getElementById('statSpots').textContent=ts;
   document.getElementById('statCities').textContent=cities.size;
   document.getElementById('statCountries').textContent=ctrs.size;
-  renderTrips();populateTripOpts();
+  // Só redesenha tudo se a lista visível mudou (ex.: migração __quickvisit__).
+  // Caso normal: atualiza só o texto — sem piscada e sem rebuscar as fotos.
+  const visivelAgora=S.trips.filter(t=>!isQuickVisit(t)).map(t=>t.id).join(',');
+  if(visivelAgora!==visivelAntes){renderTrips()}
+  else{refreshTripMetas()}
+  populateTripOpts();
 }
 // Compute smart status from dates: planning / ongoing / done
 const MONTH_PT={jan:0,fev:1,mar:2,abr:3,mai:4,jun:5,jul:6,ago:7,set:8,out:9,nov:10,dez:11};
@@ -743,16 +781,36 @@ function tripCityCount(t){
 function isQuickVisit(t){return t.dates==='__quickvisit__'&&(!t._spots||!t._spots.length)}
 function regionFor(name){const c=COUNTRIES.find(x=>x.name===name);return c?c.region:'Outros'}
 const REGION_ORDER=['Europa','América do Sul','América do Norte','Ásia','África','Oceania','Antártida','Outros'];
-function tripCardHTML(t){
+// Linha de metadados do card. Separada porque os cards são desenhados assim que
+// as viagens chegam; os spots chegam logo depois e só esse texto é atualizado.
+function tripMetaText(t){
   const sp=t._spots||[];
-  const st=tripStatus(t);
-  const flag=flagFor((t.destinations&&t.destinations[0])||t.name);
   const cities=tripCityCount(t);
-  const grad=destGradient((t.destinations&&t.destinations[0])||t.name);
   const cityTxt=cities>0?(cities+(cities===1?' cidade · ':' cidades · ')):'';
   const showDates=t.dates&&t.dates!=='__quickvisit__';
-  const meta=(showDates?t.dates+' · ':'')+cityTxt+sp.length+(sp.length===1?' spot':' spots');
-  return `<div class="trip-card" onclick="openTrip('${t.id}')"><div class="tc-photo" id="tcbg-${t.id}" style="background:${grad}"></div><div class="tc-stub"><div class="tc-stub-top"><span class="tc-flag">${flag}</span><span class="tc-status-dot st-${st}"></span><span class="tc-status-label">${statusLabel(st)}</span></div><div class="tc-name">${t.name}</div><div class="tc-meta">${meta}</div></div></div>`;
+  if(!t._spotsLoaded)return showDates?t.dates:'';
+  return (showDates?t.dates+' · ':'')+cityTxt+sp.length+(sp.length===1?' spot':' spots');
+}
+function refreshTripMetas(){
+  S.trips.forEach(t=>{
+    const el=document.getElementById('tcmeta-'+t.id);
+    if(el)el.textContent=tripMetaText(t);
+  });
+}
+function tripCardHTML(t){
+  const st=tripStatus(t);
+  const flag=flagFor((t.destinations&&t.destinations[0])||t.name);
+  const grad=destGradient((t.destinations&&t.destinations[0])||t.name);
+  return `<div class="trip-card" onclick="openTrip('${t.id}')"><div class="tc-photo" id="tcbg-${t.id}" style="background-image:${grad}"></div><div class="tc-stub"><div class="tc-stub-top"><span class="tc-flag">${flag}</span><span class="tc-status-dot st-${st}"></span><span class="tc-status-label">${statusLabel(st)}</span></div><div class="tc-name">${t.name}</div><div class="tc-meta" id="tcmeta-${t.id}">${tripMetaText(t)}</div></div></div>`;
+}
+// Pastas por continente lembram se estão abertas/fechadas entre sessões
+function regionOpenKey(region){return 'spot_region_open_'+region}
+function isRegionOpen(region){const v=localStorage.getItem(regionOpenKey(region));return v===null?true:v==='1'}
+function toggleRegionFolder(region,headerEl){
+  const folder=headerEl.closest('.region-folder');
+  const nowOpen=!folder.classList.contains('open');
+  folder.classList.toggle('open',nowOpen);
+  try{localStorage.setItem(regionOpenKey(region),nowOpen?'1':'0')}catch(e){}
 }
 function renderTrips(){
   const c=document.getElementById('tripsContainer');
@@ -766,8 +824,13 @@ function renderTrips(){
   const orderedRegions=[...REGION_ORDER.filter(r=>groups[r]),...Object.keys(groups).filter(r=>!REGION_ORDER.includes(r))];
   let h='';
   orderedRegions.forEach(region=>{
-    h+=`<div class="section-head"><span class="section-title">${region}</span></div>`;
-    groups[region].forEach(t=>{h+=tripCardHTML(t)});
+    const trips=groups[region];
+    const open=isRegionOpen(region);
+    h+=`<div class="region-folder${open?' open':''}">`;
+    h+=`<div class="region-header" onclick="toggleRegionFolder('${region}',this)"><span class="region-chevron">${icon('chevron')}</span><span class="region-name">${region}</span><span class="region-count">${trips.length}</span></div>`;
+    h+=`<div class="region-body-wrap"><div class="region-body-inner"><div class="region-body">`;
+    trips.forEach(t=>{h+=tripCardHTML(t)});
+    h+='</div></div></div></div>';
   });
   c.innerHTML=h;
   fillTripPhotos();
@@ -843,7 +906,9 @@ async function loadTrip(t){
   document.getElementById('tripMeta').textContent=realDates;
   const heroEl=document.getElementById('tripHeroImg');
   const dest=(t.destinations&&t.destinations[0])||t.name;
-  heroEl.style.background=destGradient(dest);heroEl.style.backgroundImage='';
+  // usa backgroundImage, nunca o atalho `background` — o atalho reseta
+  // background-size/position e a foto renderiza no tamanho natural, cortada no canto
+  heroEl.style.backgroundImage=destGradient(dest);
   fetchCityPhoto(dest).then(url=>{if(url)heroEl.style.backgroundImage=`url('${url}')`});
   const spots=await dbGet('spots','trip_id=eq.'+t.id+'&order=created_at.asc');
   t._spots=spots||[];
@@ -883,8 +948,8 @@ async function openPlace(id){
   document.getElementById('placeNote').textContent=`"${s.my_note}"`;
   document.getElementById('placeNoteAttr').textContent=`— ${document.getElementById('dashName').textContent}, antes de ir`;
   const phEl=document.getElementById('placeHeroImg');
-  if(s.photo_url){phEl.style.background='';phEl.style.backgroundImage=`url('${s.photo_url}')`}
-  else{phEl.style.background=destGradient(s.city||s.name);phEl.style.backgroundImage='';fetchCityPhoto(s.city||s.name).then(u=>{if(u)phEl.style.backgroundImage=`url('${u}')`})}
+  if(s.photo_url){phEl.style.backgroundImage=`url('${s.photo_url}')`}
+  else{phEl.style.backgroundImage=destGradient(s.city||s.name);fetchCityPhoto(s.city||s.name).then(u=>{if(u)phEl.style.backgroundImage=`url('${u}')`})}
   let ig='';
   if(s.address)ig+=`<div class="info-cell wide"><div class="info-cell-icon">${icon('pin')}</div><div class="info-cell-label">Endereço</div><div class="info-cell-value">${s.address}</div></div>`;
   if(s.city)ig+=`<div class="info-cell"><div class="info-cell-icon">${icon('city')}</div><div class="info-cell-label">Cidade</div><div class="info-cell-value">${s.city}</div></div>`;
@@ -923,7 +988,7 @@ async function saveReview(){
 // ═══ ADD SPOT FLOW ═══
 function populateTripOpts(){
   const c=document.getElementById('tripOptions');
-  c.innerHTML=S.trips.map(t=>`<div class="trip-option" onclick="selTripForSpot('${t.id}')"><div class="trip-option-img" style="background:${destGradient((t.destinations&&t.destinations[0])||t.name)}">${flagFor((t.destinations&&t.destinations[0])||'')}</div><div><div class="trip-option-name">${t.name}</div><div class="trip-option-meta">${(t._spots||[]).length} spots</div></div><div class="trip-option-arrow">›</div></div>`).join('');
+  c.innerHTML=S.trips.map(t=>`<div class="trip-option" onclick="selTripForSpot('${t.id}')"><div class="trip-option-img" style="background-image:${destGradient((t.destinations&&t.destinations[0])||t.name)}">${flagFor((t.destinations&&t.destinations[0])||'')}</div><div><div class="trip-option-name">${t.name}</div><div class="trip-option-meta">${(t._spots||[]).length} spots</div></div><div class="trip-option-arrow">›</div></div>`).join('');
 }
 function selTripForSpot(id){S.addTrip=S.trips.find(t=>t.id===id);nextOv('ov-trip','ov-cat')}
 function addSpotToCurrentTrip(){
@@ -1322,14 +1387,16 @@ async function fetchCityPhoto(query){
   }catch(e){return''}
 }
 // Fill trip card backgrounds with real photos after render
+// Busca as fotos de todas as viagens em paralelo (mesmo motivo do loadDashboard:
+// em série, cada viagem esperava a anterior terminar antes de sequer começar a pedir a foto)
 async function fillTripPhotos(){
-  for(const t of S.trips){
+  await Promise.all(S.trips.map(async t=>{
     const el=document.getElementById('tcbg-'+t.id);
-    if(!el)continue;
+    if(!el)return;
     const dest=(t.destinations&&t.destinations[0])||t.name;
     const url=await fetchCityPhoto(dest);
     if(url&&el){el.style.backgroundImage=`url('${url}')`}
-  }
+  }));
 }
 // Gradient fallback per destination (shows instantly, photo loads on top)
 function destGradient(name){
@@ -1698,7 +1765,7 @@ async function loadFriends(){
     });
   }
 
-  h+='<div class="section-head"><span class="section-title">Atividade dos amigos</span></div>';
+  h+='<div class="section-head"><span class="section-title">Recente</span></div>';
   if(!friendIds.length){
     h+='<div class="empty-state"><div class="ei">'+icon('users')+'</div><h3>Sem amigos ainda</h3><p>Toca no + pra adicionar um amigo pelo username</p></div>';
   }else if(!feedItems.length){
