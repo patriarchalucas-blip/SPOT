@@ -1,0 +1,6 @@
+# O app é um único HTML — se ele ficar em cache, o usuário continua rodando
+# uma versão antiga depois do deploy (o iPhone, com o app na tela de início,
+# é o caso mais teimoso: mantém cache próprio e ignora must-revalidate).
+# no-store garante que todo carregamento pegue a versão publicada.
+/*
+  Cache-Control: no-store, no-cache, must-revalidate, max-age=0
