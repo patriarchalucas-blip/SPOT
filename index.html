@@ -86,7 +86,8 @@ body{font-family:'DM Sans',sans-serif;background:var(--dark);max-width:430px;mar
 .dash-name{font-family:'Fraunces',serif;font-weight:400;font-size:34px;color:var(--ink);letter-spacing:-.015em;line-height:1.05}
 .avatar{width:40px;height:40px;border-radius:50%;background:var(--green);display:flex;align-items:center;justify-content:center;font-size:16px;color:var(--dark);font-weight:600;cursor:pointer;flex-shrink:0;box-shadow:var(--shadow-sm),0 0 0 2px rgba(234,231,224,.08)}
 .stats-strip{display:flex;gap:8px}
-.stat-block{flex:1;background:linear-gradient(160deg,rgba(234,231,224,.08),rgba(234,231,224,.02));border:1px solid var(--border);border-radius:var(--r-sm);padding:13px 8px;text-align:center;box-shadow:var(--shadow-sm)}
+.stat-block{flex:1;background:linear-gradient(160deg,rgba(234,231,224,.08),rgba(234,231,224,.02));border:1px solid var(--border);border-radius:var(--r-sm);padding:13px 8px;text-align:center;box-shadow:var(--shadow-sm);cursor:pointer;transition:transform .15s,border-color .15s}
+.stat-block:active{transform:scale(.96)}
 .stat-n{font-family:var(--mono);font-weight:600;font-size:21px;color:var(--ink);line-height:1.1}
 .stat-l{font-size:11.5px;color:var(--ink3);margin-top:4px}
 .dash-body{padding:8px 24px 100px}
@@ -107,6 +108,31 @@ body{font-family:'DM Sans',sans-serif;background:var(--dark);max-width:430px;mar
 @keyframes regionOpen{from{opacity:0;transform:translateY(-5px)}to{opacity:1;transform:none}}
 .region-body-inner{min-height:0}
 .region-body{padding-top:12px}
+
+/* ═══ TELA DE LISTA (spots / cidades / países / viagens) ═══ */
+#list{background:var(--surface)}
+.list-top{background:var(--dark);padding:46px 20px 20px;display:flex;align-items:flex-start;gap:14px;position:relative;overflow:hidden}
+.list-top::before{content:"";position:absolute;inset:0;pointer-events:none;background:radial-gradient(380px 200px at 10% -20%,rgba(193,85,47,.16),transparent 60%)}
+.list-top>*{position:relative;z-index:1}
+.list-back{width:38px;height:38px;flex-shrink:0;background:rgba(234,231,224,.07);border:1px solid var(--border);border-radius:50%;color:var(--ink);font-size:15px;cursor:pointer;display:flex;align-items:center;justify-content:center;margin-top:4px}
+.list-kicker{font-size:12.5px;color:var(--ink3);margin-bottom:5px}
+.list-title{font-family:'Fraunces',serif;font-weight:400;font-size:30px;color:var(--ink);line-height:1.06;letter-spacing:-.015em}
+.list-filters{display:flex;gap:8px;padding:14px 20px;overflow-x:auto;scrollbar-width:none;background:var(--surface);border-bottom:1px solid var(--border);position:sticky;top:0;z-index:10}
+.list-filters::-webkit-scrollbar{display:none}
+.filter-chip{flex-shrink:0;background:rgba(234,231,224,.06);border:1px solid var(--border);border-radius:var(--r-pill);padding:8px 14px;font-size:12.5px;color:var(--ink2);cursor:pointer;white-space:nowrap;transition:background .15s,border-color .15s,color .15s}
+.filter-chip.on{background:var(--terra);border-color:var(--terra);color:#fff;font-weight:600}
+.list-body{padding:14px 20px 110px}
+.lrow{display:flex;align-items:center;gap:13px;background:var(--white);border:1px solid var(--border);border-radius:var(--r);padding:12px 14px;margin-bottom:10px;box-shadow:var(--shadow-sm);cursor:pointer;transition:transform .15s}
+.lrow:active{transform:scale(.99)}
+.lrank{font-family:var(--mono);font-size:12px;color:var(--ink3);width:22px;flex-shrink:0;text-align:right}
+.lthumb{width:46px;height:46px;flex-shrink:0;border-radius:var(--r-sm);background-color:var(--dark);background-size:cover;background-position:center;border:1px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:19px;color:var(--ink3)}
+.lmain{flex:1;min-width:0}
+.lname{font-size:14.5px;font-weight:600;color:var(--ink);line-height:1.3;overflow-wrap:break-word}
+.lmeta{font-size:12px;color:var(--ink3);margin-top:3px;overflow-wrap:break-word}
+.lright{flex-shrink:0;display:flex;flex-direction:column;align-items:flex-end;gap:5px}
+.lrating{font-family:var(--mono);font-size:12.5px;color:var(--amber);font-weight:600;white-space:nowrap}
+.lcount{font-family:var(--mono);font-size:12.5px;color:var(--ink2);background:rgba(234,231,224,.07);border-radius:var(--r-pill);padding:3px 10px;white-space:nowrap}
+.lflag{font-size:22px;flex-shrink:0}
 
 /* TRIP CARDS */
 /* nome NUNCA corta com "..." — quebra em quantas linhas precisar e o card cresce */
@@ -454,15 +480,28 @@ svg.ic path,svg.ic circle,svg.ic line,svg.ic polyline,svg.ic rect{fill:none;stro
       <div class="avatar" id="dashAvatar" onclick="signOut()">?</div>
     </div>
     <div class="stats-strip">
-      <div class="stat-block"><div class="stat-n" id="statTrips">0</div><div class="stat-l">viagens</div></div>
-      <div class="stat-block"><div class="stat-n" id="statSpots">0</div><div class="stat-l">spots</div></div>
-      <div class="stat-block"><div class="stat-n" id="statCities">0</div><div class="stat-l">cidades</div></div>
-      <div class="stat-block"><div class="stat-n" id="statCountries">0</div><div class="stat-l">países</div></div>
+      <div class="stat-block" onclick="openList('trips')"><div class="stat-n" id="statTrips">0</div><div class="stat-l">viagens</div></div>
+      <div class="stat-block" onclick="openList('spots')"><div class="stat-n" id="statSpots">0</div><div class="stat-l">spots</div></div>
+      <div class="stat-block" onclick="openList('cities')"><div class="stat-n" id="statCities">0</div><div class="stat-l">cidades</div></div>
+      <div class="stat-block" onclick="openList('countries')"><div class="stat-n" id="statCountries">0</div><div class="stat-l">países</div></div>
     </div>
   </div>
   <div class="dash-body" id="tripsContainer"><div class="section-head"><span class="section-title">Minhas viagens</span></div><div class="empty-state"><div class="ei" data-ic="suitcase"></div><h3>Nenhuma viagem ainda</h3><p>Toca no + para criar sua primeira viagem</p></div></div>
   <button class="fab" onclick="showOv('ov-trip')">+</button>
   <div class="bottom-nav"><div class="nav-item active" onclick="goTo('dashboard');loadDashboard()"><div class="nav-icon" data-ic="map"></div><div class="nav-label" style="color:var(--ink);font-weight:600">Viagens</div></div><div class="nav-item" onclick="toast('Em breve','Explorar chega em breve!')"><div class="nav-icon" data-ic="search"></div><div class="nav-label">Explorar</div></div><div class="nav-item" onclick="goTo('friends');loadFriends()"><div class="nav-icon" data-ic="users"></div><div class="nav-label">Amigos</div></div><div class="nav-item" onclick="goTo('profile');loadProfile()"><div class="nav-icon" data-ic="user"></div><div class="nav-label">Perfil</div></div></div>
+</div>
+
+<div class="screen" id="list">
+  <div class="list-top">
+    <button class="list-back" onclick="closeList()" data-ic="back" aria-label="Voltar"></button>
+    <div class="list-head-text">
+      <div class="list-kicker" id="listKicker"></div>
+      <div class="list-title" id="listTitle">—</div>
+    </div>
+  </div>
+  <div class="list-filters" id="listFilters"></div>
+  <div class="list-body" id="listBody"></div>
+  <div class="bottom-nav"><div class="nav-item active" onclick="goTo('dashboard');loadDashboard()"><div class="nav-icon" data-ic="map"></div><div class="nav-label">Viagens</div></div><div class="nav-item" onclick="toast('Em breve','Explorar chega em breve!')"><div class="nav-icon" data-ic="search"></div><div class="nav-label">Explorar</div></div><div class="nav-item" onclick="goTo('friends');loadFriends()"><div class="nav-icon" data-ic="users"></div><div class="nav-label">Amigos</div></div><div class="nav-item" onclick="goTo('profile');loadProfile()"><div class="nav-icon" data-ic="user"></div><div class="nav-label">Perfil</div></div></div>
 </div>
 
 <div class="screen" id="trip">
@@ -517,7 +556,7 @@ svg.ic path,svg.ic circle,svg.ic line,svg.ic polyline,svg.ic rect{fill:none;stro
 </div>
 
 <div class="screen" id="place">
-  <div class="place-hero"><div class="place-hero-img" id="placeHeroImg"></div><div class="hero-overlay"></div><button class="hero-back" onclick="goTo('trip');loadTrip(S.curTrip)" data-ic="back" aria-label="Voltar"></button><div class="hero-chip chip-want" id="placeChip" onclick="cycleStatus()">Quero ir</div><div class="hero-bottom"><div class="hero-type" id="placeType"></div><div class="hero-name" id="placeName"></div></div></div>
+  <div class="place-hero"><div class="place-hero-img" id="placeHeroImg"></div><div class="hero-overlay"></div><button class="hero-back" onclick="backFromPlace()" data-ic="back" aria-label="Voltar"></button><div class="hero-chip chip-want" id="placeChip" onclick="cycleStatus()">Quero ir</div><div class="hero-bottom"><div class="hero-type" id="placeType"></div><div class="hero-name" id="placeName"></div></div></div>
   <div class="d-section"><div class="sec-label">Minha nota</div><div class="note-card"><div class="note-glow"></div><div class="note-quote" id="placeNote"></div><div class="note-attr" id="placeNoteAttr"></div></div></div>
   <div class="d-section"><div class="sec-label">Informações</div><div class="info-grid" id="placeInfoGrid"></div><div id="placeReserveWrap"></div></div>
   <div class="d-section"><div class="sec-label">Status</div><div class="status-toggle"><button class="toggle-btn sel-want" id="t-want" onclick="setStatus('want')">Quero ir</button><button class="toggle-btn" id="t-been" onclick="setStatus('been')">Fui</button><button class="toggle-btn" id="t-skip" onclick="setStatus('skip')">Pular</button></div></div>
@@ -840,6 +879,132 @@ function renderTrips(){
   fillTripPhotos();
 }
 
+// ═══ TELA DE LISTA (aberta pelos scorecards do dashboard) ═══
+// Uma tela só, quatro modos. Os itens ficam em LS.items e o onclick referencia
+// pelo índice — nome de cidade/país pode ter acento e apóstrofo, e interpolar
+// isso direto num atributo onclick quebra.
+const LS={mode:'spots',sort:'rating',cat:'',country:'',city:'',items:[]};
+const LIST_TITLES={spots:'Todos os spots',cities:'Cidades',countries:'Países',trips:'Viagens'};
+
+function allSpotsFlat(){
+  const out=[];
+  S.trips.forEach(t=>{
+    const country=(t.destinations&&t.destinations[0])||t.name;
+    (t._spots||[]).forEach(s=>out.push(Object.assign({},s,{_country:country,_tripId:t.id,_tripName:t.name})));
+  });
+  return out;
+}
+function openList(mode){
+  LS.mode=mode;LS.sort='rating';LS.cat='';LS.country='';LS.city='';
+  goTo('list');renderList();
+}
+function closeList(){goTo('dashboard')}
+function setListFilter(k,v){LS[k]=(LS[k]===v?'':v);renderList()}
+function setListSort(v){LS.sort=v;renderList()}
+function drillTo(kind,value){
+  LS.mode='spots';LS.sort='rating';LS.cat='';LS.country='';LS.city='';
+  LS[kind]=value;renderList();
+}
+function chip(label,on,handler){return `<div class="filter-chip${on?' on':''}" onclick="${handler}">${label}</div>`}
+
+function renderList(){
+  const kicker=document.getElementById('listKicker');
+  const title=document.getElementById('listTitle');
+  const filters=document.getElementById('listFilters');
+  const body=document.getElementById('listBody');
+  const spots=allSpotsFlat();
+  let f='',h='';
+
+  if(LS.mode==='spots'){
+    let list=spots.slice();
+    if(LS.cat)list=list.filter(s=>s.category===LS.cat);
+    if(LS.country)list=list.filter(s=>s._country===LS.country);
+    if(LS.city)list=list.filter(s=>s.city===LS.city);
+    if(LS.sort==='rating')list.sort((a,b)=>(parseFloat(b.my_rating)||0)-(parseFloat(a.my_rating)||0)||(parseFloat(b.rating_google)||0)-(parseFloat(a.rating_google)||0));
+    else if(LS.sort==='name')list.sort((a,b)=>(a.name||'').localeCompare(b.name||'','pt-BR'));
+    LS.items=list;
+
+    const escopo=LS.city||LS.country;
+    title.textContent=escopo||LIST_TITLES.spots;
+    kicker.textContent=list.length+(list.length===1?' spot':' spots')+(escopo?' · filtrado':'');
+
+    f+=chip('Melhores',LS.sort==='rating',"setListSort('rating')");
+    f+=chip('A–Z',LS.sort==='name',"setListSort('name')");
+    f+=chip('Comer',LS.cat==='food',"setListFilter('cat','food')");
+    f+=chip('Ficar',LS.cat==='hotel',"setListFilter('cat','hotel')");
+    f+=chip('Experiências',LS.cat==='experience',"setListFilter('cat','experience')");
+    if(LS.city)f+=chip('✕ '+LS.city,true,"setListFilter('city','"+String(LS.city).replace(/'/g,"\\'")+"')");
+    if(LS.country)f+=chip('✕ '+LS.country,true,"setListFilter('country','"+String(LS.country).replace(/'/g,"\\'")+"')");
+
+    if(!list.length)h='<div class="empty-state"><div class="ei">'+icon('pin')+'</div><h3>Nenhum spot aqui</h3><p>Ajusta os filtros ou salva lugares nas suas viagens.</p></div>';
+    list.forEach((s,i)=>{
+      const nota=s.my_rating?('★ '+s.my_rating):(s.rating_google?('☆ '+s.rating_google):'');
+      const thumb=s.photo_url?`<div class="lthumb" style="background-image:url('${s.photo_url}')"></div>`:`<div class="lthumb">${catIcon(s.category)}</div>`;
+      const local=[s.city,s._country].filter(Boolean).join(' · ');
+      h+=`<div class="lrow" onclick="openSpotFromList(${i})"><span class="lrank">${i+1}</span>${thumb}<div class="lmain"><div class="lname">${s.name||''}</div><div class="lmeta">${local}</div></div><div class="lright">${nota?`<span class="lrating">${nota}</span>`:''}<span class="status-dot dot-${s.status==='been'?'been':'want'}"></span></div></div>`;
+    });
+  }
+
+  else if(LS.mode==='cities'){
+    const map={};
+    spots.forEach(s=>{if(!s.city)return;(map[s.city]=map[s.city]||{city:s.city,country:s._country,n:0}).n++});
+    const list=Object.values(map).sort((a,b)=>b.n-a.n);
+    LS.items=list;
+    title.textContent=LIST_TITLES.cities;
+    kicker.textContent=list.length+(list.length===1?' cidade':' cidades');
+    if(!list.length)h='<div class="empty-state"><div class="ei">'+icon('city')+'</div><h3>Nenhuma cidade ainda</h3><p>As cidades aparecem conforme você salva spots.</p></div>';
+    list.forEach((c,i)=>{
+      h+=`<div class="lrow" onclick="drillFromList(${i},'city')"><span class="lflag">${flagFor(c.country)}</span><div class="lmain"><div class="lname">${c.city}</div><div class="lmeta">${c.country||''}</div></div><span class="lcount">${c.n} ${c.n===1?'spot':'spots'}</span></div>`;
+    });
+  }
+
+  else if(LS.mode==='countries'){
+    const map={};
+    S.trips.forEach(t=>{
+      const c=(t.destinations&&t.destinations[0])||t.name;if(!c)return;
+      const e=map[c]=map[c]||{country:c,viagens:0,spots:0};
+      if(!isQuickVisit(t))e.viagens++;
+      e.spots+=(t._spots||[]).length;
+    });
+    const list=Object.values(map).sort((a,b)=>b.spots-a.spots||a.country.localeCompare(b.country,'pt-BR'));
+    LS.items=list;
+    title.textContent=LIST_TITLES.countries;
+    kicker.textContent=list.length+(list.length===1?' país':' países');
+    list.forEach((c,i)=>{
+      const meta=[c.viagens?c.viagens+(c.viagens===1?' viagem':' viagens'):'',c.spots?c.spots+(c.spots===1?' spot':' spots'):''].filter(Boolean).join(' · ')||'sem spots ainda';
+      h+=`<div class="lrow" onclick="drillFromList(${i},'country')"><span class="lflag">${flagFor(c.country)}</span><div class="lmain"><div class="lname">${c.country}</div><div class="lmeta">${meta}</div></div><span class="lcount">${regionFor(c.country)}</span></div>`;
+    });
+  }
+
+  else if(LS.mode==='trips'){
+    const list=S.trips.filter(t=>!isQuickVisit(t));
+    LS.items=list;
+    title.textContent=LIST_TITLES.trips;
+    kicker.textContent=list.length+(list.length===1?' viagem':' viagens');
+    if(!list.length)h='<div class="empty-state"><div class="ei">'+icon('suitcase')+'</div><h3>Nenhuma viagem ainda</h3><p>Toca no + no dashboard para criar.</p></div>';
+    list.forEach((t,i)=>{
+      const st=tripStatus(t),sp=(t._spots||[]).length;
+      const meta=[t.dates&&t.dates!=='__quickvisit__'?t.dates:'',statusLabel(st)].filter(Boolean).join(' · ');
+      h+=`<div class="lrow" onclick="openTripFromList(${i})"><span class="lflag">${flagFor((t.destinations&&t.destinations[0])||t.name)}</span><div class="lmain"><div class="lname">${t.name}</div><div class="lmeta">${meta}</div></div><span class="lcount">${sp} ${sp===1?'spot':'spots'}</span></div>`;
+    });
+  }
+
+  filters.innerHTML=f;
+  filters.style.display=f?'flex':'none';
+  body.innerHTML=h;
+  hydrateIcons(body);
+}
+function openSpotFromList(i){const s=LS.items[i];if(!s)return;const t=S.trips.find(x=>x.id===s._tripId);if(!t)return;S.curTrip=t;openPlace(s.id,'list')}
+function backFromPlace(){
+  if(S.placeOrigin==='list'){goTo('list');renderList();return}
+  goTo('trip');loadTrip(S.curTrip);
+}
+function openTripFromList(i){const t=LS.items[i];if(t)openTrip(t.id)}
+function drillFromList(i,kind){
+  const it=LS.items[i];if(!it)return;
+  drillTo(kind,kind==='city'?it.city:it.country);
+}
+
 // ═══ TRIP VIEW ═══
 function openEditDates(){
   if(!S.curTrip)return;
@@ -945,8 +1110,9 @@ function renderSpots(spots){
 }
 
 // ═══ PLACE DETAIL ═══
-async function openPlace(id){
+async function openPlace(id,origin){
   const s=S.curTrip._spots.find(x=>x.id===id);if(!s)return;S.curPlace=s;
+  S.placeOrigin=origin||'trip'; // pra saber pra onde o "voltar" deve levar
   document.getElementById('placeName').textContent=s.name;
   document.getElementById('placeType').textContent=`${catLabel(s.category)} · ${s.city||''}`;
   document.getElementById('placeNote').textContent=`"${s.my_note}"`;
