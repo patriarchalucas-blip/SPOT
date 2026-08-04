@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Spot</title>
-<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'><rect width='64' height='64' rx='14' fill='%23f4ede1'/><circle cx='32' cy='32' r='22' stroke='%23c1552f' stroke-width='4.5' stroke-dasharray='3.4 4' fill='none'/><circle cx='32' cy='32' r='8' fill='%23c1552f'/></svg>">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'><rect width='64' height='64' rx='14' fill='%230b1620'/><circle cx='32' cy='32' r='19' fill='none' stroke='%23c1552f' stroke-width='5'/><ellipse cx='32' cy='32' rx='22.8' ry='7' fill='none' stroke='%23c1552f' stroke-width='3.2' transform='rotate(-22 32 32)'/></svg>">
 <link rel="manifest" href="/manifest.json">
 <!-- iOS ignora SVG aqui e cai no fallback de desenhar a letra do nome ("S").
      Precisa ser PNG de verdade pra tela de início mostrar o logo. -->
@@ -16,7 +16,7 @@
 <meta name="apple-mobile-web-app-title" content="Spot">
 <meta name="theme-color" content="#16232A">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,500&family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,500;0,9..144,600;1,9..144,400&family=DM+Sans:wght@300;400;500;600&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;600&family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,500;0,9..144,600;1,9..144,400&family=DM+Sans:wght@300;400;500;600&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 /* ═══ TOKENS — base escura ═══
@@ -434,7 +434,7 @@ svg.ic path,svg.ic circle,svg.ic line,svg.ic polyline,svg.ic rect{fill:none;stro
 <body>
 
 <div class="screen active" id="loading">
-  <div style="text-align:center"><svg class="brand-wordmark" viewBox="-4 20 217 100" height="54"><text x="0" y="110" font-family="Playfair Display" font-weight="500" font-size="100" fill="#f4ede1">Sp</text><circle cx="141.9" cy="84.5" r="27" stroke="#c1552f" stroke-width="4" stroke-dasharray="4 5" fill="none"/><circle cx="141.9" cy="84.5" r="10" fill="#c1552f"/><text x="169.6" y="110" font-family="Playfair Display" font-weight="500" font-size="100" fill="#f4ede1">t</text></svg><div class="spinner" style="margin-top:20px"></div></div>
+  <div style="text-align:center"><svg class="brand-wordmark" viewBox="0 81 269 74" height="46" role="img" aria-label="Spot"><text x="0" y="150" font-family="Cinzel" font-weight="500" font-size="100" letter-spacing="6" fill="#f4ede1">SP</text><circle cx="159.3" cy="118" r="30" fill="none" stroke="#c1552f" stroke-width="8"/><ellipse cx="159.3" cy="118" rx="36" ry="11" fill="none" stroke="#c1552f" stroke-width="5" transform="rotate(-22 159.3 118)"/><text x="201.4" y="150" font-family="Cinzel" font-weight="500" font-size="100" letter-spacing="6" fill="#f4ede1">T</text></svg><div class="spinner" style="margin-top:20px"></div></div>
 </div>
 
 <div class="screen" id="login">
@@ -449,7 +449,7 @@ svg.ic path,svg.ic circle,svg.ic line,svg.ic polyline,svg.ic rect{fill:none;stro
     <div class="login-bottom">
       <div class="photo-dots" id="photoDots"></div>
       <div class="brand-lockup">
-        <svg class="brand-wordmark" viewBox="-4 20 217 100" height="52"><text x="0" y="110" font-family="Playfair Display" font-weight="500" font-size="100" fill="#f4ede1">Sp</text><circle cx="141.9" cy="84.5" r="27" stroke="#c1552f" stroke-width="4" stroke-dasharray="4 5" fill="none"/><circle cx="141.9" cy="84.5" r="10" fill="#c1552f"/><text x="169.6" y="110" font-family="Playfair Display" font-weight="500" font-size="100" fill="#f4ede1">t</text></svg>
+        <svg class="brand-wordmark" viewBox="0 81 269 74" height="44" role="img" aria-label="Spot"><text x="0" y="150" font-family="Cinzel" font-weight="500" font-size="100" letter-spacing="6" fill="#f4ede1">SP</text><circle cx="159.3" cy="118" r="30" fill="none" stroke="#c1552f" stroke-width="8"/><ellipse cx="159.3" cy="118" rx="36" ry="11" fill="none" stroke="#c1552f" stroke-width="5" transform="rotate(-22 159.3 118)"/><text x="201.4" y="150" font-family="Cinzel" font-weight="500" font-size="100" letter-spacing="6" fill="#f4ede1">T</text></svg>
       </div>
       <div class="tagline">seus lugares · sua voz</div>
       <div class="form-stack">
@@ -757,9 +757,10 @@ async function loadDashboard(){
     (allSpots||[]).forEach(s=>{const t=byId[s.trip_id];if(t)t._spots.push(s)});
   }
   S.trips.forEach(t=>{t._spotsLoaded=true});
+  rebuildCityCanon(); // funde "Split" e "Split-Dalmatia County" antes de contar
   for(const t of S.trips){
     ts+=t._spots.length;
-    t._spots.forEach(s=>{if(s.city)cities.add(s.city)});
+    t._spots.forEach(s=>{const c=cityOf(s);if(c)cities.add(c)});
     (t.destinations||[]).forEach(d=>ctrs.add(d));
   }
   // Migração: viagens antigas criadas por "marcar país visitado" antes de existir
@@ -818,7 +819,7 @@ function tripStatus(t){
 function statusLabel(s){return s==='done'?'Concluída':s==='ongoing'?'Em viagem':s==='nodate'?'Sem data':'Planejando'}
 // Count distinct cities from spots
 function tripCityCount(t){
-  const cities=new Set((t._spots||[]).map(s=>s.city).filter(Boolean));
+  const cities=new Set((t._spots||[]).map(s=>cityOf(s)).filter(Boolean));
   return cities.size;
 }
 function isQuickVisit(t){return t.dates==='__quickvisit__'&&(!t._spots||!t._spots.length)}
@@ -912,6 +913,7 @@ function renderList(){
   const title=document.getElementById('listTitle');
   const filters=document.getElementById('listFilters');
   const body=document.getElementById('listBody');
+  rebuildCityCanon();
   const spots=allSpotsFlat();
   let f='',h='';
 
@@ -919,7 +921,7 @@ function renderList(){
     let list=spots.slice();
     if(LS.cat)list=list.filter(s=>s.category===LS.cat);
     if(LS.country)list=list.filter(s=>s._country===LS.country);
-    if(LS.city)list=list.filter(s=>s.city===LS.city);
+    if(LS.city)list=list.filter(s=>cityOf(s)===LS.city);
     if(LS.sort==='rating')list.sort((a,b)=>(parseFloat(b.my_rating)||0)-(parseFloat(a.my_rating)||0)||(parseFloat(b.rating_google)||0)-(parseFloat(a.rating_google)||0));
     else if(LS.sort==='name')list.sort((a,b)=>(a.name||'').localeCompare(b.name||'','pt-BR'));
     LS.items=list;
@@ -938,16 +940,18 @@ function renderList(){
 
     if(!list.length)h='<div class="empty-state"><div class="ei">'+icon('pin')+'</div><h3>Nenhum spot aqui</h3><p>Ajusta os filtros ou salva lugares nas suas viagens.</p></div>';
     list.forEach((s,i)=>{
-      const nota=s.my_rating?('★ '+s.my_rating):(s.rating_google?('☆ '+s.rating_google):'');
-      const thumb=s.photo_url?`<div class="lthumb" style="background-image:url('${s.photo_url}')"></div>`:`<div class="lthumb">${catIcon(s.category)}</div>`;
-      const local=[s.city,s._country].filter(Boolean).join(' · ');
+      const nota=s.my_rating?('★ '+fmtRating(s.my_rating)):(s.rating_google?('☆ '+fmtRating(s.rating_google)):'');
+      // <img> em vez de background-image: só assim dá pra detectar foto quebrada
+      // (referência do Google expirada) e disparar o auto-conserto
+      const thumb=s.photo_url?`<div class="lthumb"><img src="${s.photo_url}" style="width:100%;height:100%;object-fit:cover;border-radius:inherit" onerror="onSpotPhotoError(this,'${s.id}','${s.category}')"></div>`:`<div class="lthumb">${catIcon(s.category)}</div>`;
+      const local=[cityOf(s),s._country].filter(Boolean).join(' · ');
       h+=`<div class="lrow" onclick="openSpotFromList(${i})"><span class="lrank">${i+1}</span>${thumb}<div class="lmain"><div class="lname">${s.name||''}</div><div class="lmeta">${local}</div></div><div class="lright">${nota?`<span class="lrating">${nota}</span>`:''}<span class="status-dot dot-${s.status==='been'?'been':'want'}"></span></div></div>`;
     });
   }
 
   else if(LS.mode==='cities'){
     const map={};
-    spots.forEach(s=>{if(!s.city)return;(map[s.city]=map[s.city]||{city:s.city,country:s._country,n:0}).n++});
+    spots.forEach(s=>{const c=cityOf(s);if(!c)return;(map[c]=map[c]||{city:c,country:s._country,n:0}).n++});
     const list=Object.values(map).sort((a,b)=>b.n-a.n);
     LS.items=list;
     title.textContent=LIST_TITLES.cities;
@@ -1097,13 +1101,14 @@ function switchCat(cat,el){
 function renderSpots(spots){
   const b=document.getElementById('tripBody');
   if(!spots.length){b.innerHTML=`<div class="empty-state" style="padding:40px 24px"><div class="ei">${catIcon(S.curCat)}</div><h3>Nenhum spot aqui</h3><p>Toca no + para adicionar</p></div>`;return}
-  const byCity={};spots.forEach(s=>{const c=s.city||'Outros';if(!byCity[c])byCity[c]=[];byCity[c].push(s)});
+  rebuildCityCanon();
+  const byCity={};spots.forEach(s=>{const c=cityOf(s)||'Outros';if(!byCity[c])byCity[c]=[];byCity[c].push(s)});
   let h='';for(const[city,cs]of Object.entries(byCity)){
     h+=`<div class="city-section"><div class="city-header"><div class="city-name-text">${city}</div><div class="city-count">${cs.length} spots</div></div>`;
     cs.forEach(s=>{
       const bc=s.category==='food'?'bar-food':s.category==='hotel'?'bar-hotel':'bar-experience';
       const dot=s.status==='been'?'dot-been':'dot-want';
-      const thumb=s.photo_url?`<div class="place-thumb"><img src="${s.photo_url}" style="width:100%;height:100%;object-fit:cover;border-radius:12px" onerror="thumbFallback(this,'${s.category}')"></div>`:`<div class="place-thumb">${catIcon(s.category)}</div>`;
+      const thumb=s.photo_url?`<div class="place-thumb"><img src="${s.photo_url}" style="width:100%;height:100%;object-fit:cover;border-radius:inherit" onerror="onSpotPhotoError(this,'${s.id}','${s.category}')"></div>`:`<div class="place-thumb">${catIcon(s.category)}</div>`;
       h+=`<div class="place-row" onclick="openPlace('${s.id}')"><div class="place-bar ${bc}"></div><div class="place-row-main">${thumb}<div class="place-row-info"><div class="place-row-name">${s.name}</div><div class="place-row-note">${s.my_note||''}</div></div><div class="place-row-right"><span class="place-type-tag">${s.place_type||catLabel(s.category)}</span><div class="status-dot ${dot}"></div></div></div></div>`;
     });h+='</div>'}
   b.innerHTML=h;
@@ -1114,21 +1119,34 @@ async function openPlace(id,origin){
   const s=S.curTrip._spots.find(x=>x.id===id);if(!s)return;S.curPlace=s;
   S.placeOrigin=origin||'trip'; // pra saber pra onde o "voltar" deve levar
   document.getElementById('placeName').textContent=s.name;
-  document.getElementById('placeType').textContent=`${catLabel(s.category)} · ${s.city||''}`;
+  document.getElementById('placeType').textContent=`${catLabel(s.category)} · ${cityOf(s)}`;
   document.getElementById('placeNote').textContent=`"${s.my_note}"`;
   document.getElementById('placeNoteAttr').textContent=`— ${document.getElementById('dashName').textContent}, antes de ir`;
   const phEl=document.getElementById('placeHeroImg');
-  if(s.photo_url){phEl.style.backgroundImage=`url('${s.photo_url}')`}
-  else{phEl.style.backgroundImage=destGradient(s.city||s.name);fetchCityPhoto(s.city||s.name).then(u=>{if(u)phEl.style.backgroundImage=`url('${u}')`})}
+  const cid=cityOf(s)||s.name;
+  const aindaNesteSpot=()=>S.curPlace&&S.curPlace.id===s.id;
+  if(s.photo_url){
+    phEl.style.backgroundImage=`url('${s.photo_url}')`;
+    // background-image não dispara erro quando a URL falha. O probe carrega a
+    // mesma imagem só pra detectar a quebra e acionar o auto-conserto.
+    const probe=new Image();
+    probe.onerror=()=>{
+      if(!aindaNesteSpot())return;
+      phEl.style.backgroundImage=destGradient(cid);
+      healSpotPhoto(s.id).then(u=>{if(u&&aindaNesteSpot())phEl.style.backgroundImage=`url('${u}')`});
+    };
+    probe.src=s.photo_url;
+  }
+  else{phEl.style.backgroundImage=destGradient(cid);fetchCityPhoto(cid).then(u=>{if(u&&aindaNesteSpot())phEl.style.backgroundImage=`url('${u}')`})}
   let ig='';
   if(s.address)ig+=`<div class="info-cell wide"><div class="info-cell-icon">${icon('pin')}</div><div class="info-cell-label">Endereço</div><div class="info-cell-value">${s.address}</div></div>`;
-  if(s.city)ig+=`<div class="info-cell"><div class="info-cell-icon">${icon('city')}</div><div class="info-cell-label">Cidade</div><div class="info-cell-value">${s.city}</div></div>`;
-  if(s.rating_google)ig+=`<div class="info-cell"><div class="info-cell-icon">${icon('star')}</div><div class="info-cell-label">Google</div><div class="info-cell-value">${s.rating_google}</div></div>`;
-  if(!ig)ig=`<div class="info-cell wide"><div class="info-cell-icon">${icon('pin')}</div><div class="info-cell-label">Local</div><div class="info-cell-value">${s.city||'—'}</div></div>`;
+  if(cityOf(s))ig+=`<div class="info-cell"><div class="info-cell-icon">${icon('city')}</div><div class="info-cell-label">Cidade</div><div class="info-cell-value">${cityOf(s)}</div></div>`;
+  if(s.rating_google)ig+=`<div class="info-cell"><div class="info-cell-icon">${icon('star')}</div><div class="info-cell-label">Google</div><div class="info-cell-value">${fmtRating(s.rating_google)}</div></div>`;
+  if(!ig)ig=`<div class="info-cell wide"><div class="info-cell-icon">${icon('pin')}</div><div class="info-cell-label">Local</div><div class="info-cell-value">${cityOf(s)||'—'}</div></div>`;
   document.getElementById('placeInfoGrid').innerHTML=ig;
   const reserveWrap=document.getElementById('placeReserveWrap');
   if(s.category==='food'){
-    const q=encodeURIComponent(s.name+(s.city?' '+s.city:''));
+    const q=encodeURIComponent(s.name+(cityOf(s)?' '+cityOf(s):''));
     reserveWrap.innerHTML=`<a class="reserve-btn" href="https://www.thefork.com/search?query=${q}" target="_blank" rel="noopener">${icon('food')} Reservar mesa</a>`;
   }else{
     reserveWrap.innerHTML='';
@@ -1215,9 +1233,13 @@ function searchPlaces(v){
 }
 function cityFromComponents(comps){
   if(!comps||!comps.length)return'';
-  // Priority: locality > postal_town > administrative_area_level_2 > admin_level_1
+  // Prioridade: locality > postal_town > administrative_area_level_2.
+  // administrative_area_level_1 ficou de fora de propósito: é estado/condado, não
+  // cidade. Quando o lugar não tinha `locality` a gente caía nele e gravava
+  // "Split-Dalmatia County" em vez de "Split" — foi isso que duplicou a contagem.
+  // Sem nenhum dos três, quem responde é o extractCityFromAddr de quem chama.
   const byType=(t)=>comps.find(c=>(c.types||[]).includes(t))?.longText;
-  return byType('locality')||byType('postal_town')||byType('administrative_area_level_2')||byType('administrative_area_level_1')||'';
+  return byType('locality')||byType('postal_town')||byType('administrative_area_level_2')||'';
 }
 function extractCityFromAddr(addr){
   if(!addr)return'';
@@ -1514,6 +1536,107 @@ function countryFromComponents(comps){
 function catIcon(c){return icon(catIconName(c))}
 function catLabel(c){return{food:'Comer & Beber',hotel:'Onde Ficar',experience:'Experiência'}[c]||c}
 function flagFor(n){const c=COUNTRIES.find(x=>x.name===n);return c?c.flag:'🌍'}
+
+// ═══ NOTAS ═══
+// Sempre uma casa decimal. Antes "5" e "4.5" apareciam lado a lado e pareciam
+// dois formatos diferentes de nota.
+function fmtRating(v){const n=parseFloat(v);return isNaN(n)?'':n.toFixed(1)}
+
+// ═══ CIDADES: normalização e fusão de duplicatas ═══
+// O Google devolve granularidade diferente dependendo do lugar: às vezes "Split",
+// às vezes "Split-Dalmatia County". A origem já foi corrigida em
+// cityFromComponents, mas os spots salvos antes disso continuam no banco com o
+// nome longo. Em vez de pedir mais uma rodada de SQL, a fusão acontece na
+// leitura: se uma cidade é o começo de outra, as duas contam como a mais curta.
+const CITY_ADMIN_SRC='(county|municipality|province|prefecture|district|region|metropolitan city|city of|comune di|provincia|departamento|condado|municipio|regiao)';
+const CITY_ADMIN_TEST=new RegExp('\\b'+CITY_ADMIN_SRC+'\\b','i');
+const CITY_ADMIN_RE=new RegExp('\\b'+CITY_ADMIN_SRC+'\\b','gi');
+// Reduz o nome salvo a um "núcleo" comparável, sem acento e sem descritor
+// administrativo. Duas cidades só se fundem se o núcleo for IDÊNTICO — fundir por
+// prefixo seria frouxo demais e juntaria "Porto Alegre" com "Porto".
+function cityCore(raw){
+  if(!raw)return'';
+  let v=String(raw).normalize('NFD').replace(/\p{Diacritic}/gu,'').trim();
+  // Convenção de condado composto ("Split-Dalmatia County", "Primorje-Gorski
+  // Kotar County"): a cidade é a parte antes do hífen. Só vale quando há uma
+  // palavra administrativa junto, senão "Baden-Baden" viraria "Baden".
+  if(CITY_ADMIN_TEST.test(v)&&/[-–—]/.test(v))v=v.split(/[-–—]/)[0];
+  return v.replace(CITY_ADMIN_RE,' ').replace(/\s+/g,' ').trim().toLowerCase();
+}
+// Mapa nome_salvo -> rótulo exibido. Dentro de cada grupo vence o nome mais
+// curto; empatando, vence o que tem acento ("São Paulo" e não "Sao Paulo").
+function buildCityCanon(raws){
+  const groups={};
+  [...new Set((raws||[]).filter(Boolean))].forEach(r=>{
+    const k=cityCore(r);if(!k)return;
+    (groups[k]=groups[k]||[]).push(r);
+  });
+  const map={};
+  Object.values(groups).forEach(list=>{
+    const label=list.slice().sort((a,b)=>a.length-b.length||b.localeCompare(a,'pt-BR'))[0];
+    list.forEach(r=>{map[r]=label});
+  });
+  return map;
+}
+function rebuildCityCanon(){
+  const raws=[];
+  (S.trips||[]).forEach(t=>(t._spots||[]).forEach(s=>{if(s.city)raws.push(s.city)}));
+  S.cityCanon=buildCityCanon(raws);
+}
+function cityOf(s){
+  const raw=(s&&s.city)||'';
+  if(!raw)return'';
+  return (S.cityCanon&&S.cityCanon[raw])||raw;
+}
+
+// ═══ FOTOS: auto-conserto ═══
+// A referência de foto do Google Places expira com o tempo. Quando isso acontece
+// a URL guardada em spots.photo_url para de responder e sobra um quadrado vazio.
+// Aqui a gente detecta a falha, rebusca a foto atual do lugar e regrava no banco —
+// conserta de vez, uma vez só por spot, sem precisar de SQL.
+const photoHealing=new Set();
+function findSpotById(id){
+  for(const t of (S.trips||[])){const s=(t._spots||[]).find(x=>x.id===id);if(s)return s}
+  return null;
+}
+async function healSpotPhoto(id){
+  if(!id||photoHealing.has(id))return null;
+  const s=findSpotById(id);
+  if(!s||!s.name)return null;
+  photoHealing.add(id);
+  try{
+    const resp=await fetch('https://places.googleapis.com/v1/places:searchText',{
+      method:'POST',
+      headers:{'Content-Type':'application/json','X-Goog-Api-Key':GAPI,'X-Goog-FieldMask':'places.photos,places.addressComponents'},
+      body:JSON.stringify({textQuery:s.name+(cityOf(s)?' '+cityOf(s):''),languageCode:'pt-BR',maxResultCount:1})
+    });
+    const d=await resp.json();
+    const p=d.places&&d.places[0];
+    if(!p)return null;
+    const patch={};
+    // De brinde: se a cidade salva é na verdade um condado/estado (spot criado
+    // antes do conserto em cityFromComponents), aproveita a mesma resposta e
+    // grava a cidade certa.
+    const cidadeNova=cityFromComponents(p.addressComponents);
+    if(cidadeNova&&CITY_ADMIN_TEST.test(s.city||'')&&cidadeNova!==s.city){patch.city=cidadeNova;s.city=cidadeNova}
+    const ref=p.photos&&p.photos[0]&&p.photos[0].name;
+    const url=ref?'https://places.googleapis.com/v1/'+ref+'/media?maxWidthPx=800&key='+GAPI:'';
+    // se a URL veio igual, a falha não era referência expirada — não regrava
+    if(url&&url!==s.photo_url){patch.photo_url=url;s.photo_url=url}
+    if(!Object.keys(patch).length)return null;
+    await dbUpdate('spots',id,patch);
+    return patch.photo_url||null;
+  }catch(e){console.error('healSpotPhoto',e);return null}
+  finally{photoHealing.delete(id)}
+}
+// onerror da <img>: troca pelo ícone da categoria agora e tenta consertar pra próxima
+function onSpotPhotoError(img,id,cat){
+  const box=img.parentElement;
+  thumbFallback(img,cat);
+  healSpotPhoto(id).then(url=>{
+    if(url&&box)box.innerHTML='<img src="'+url+'" style="width:100%;height:100%;object-fit:cover;border-radius:inherit">';
+  });
+}
 // Cache for city photos so we don't refetch
 const UNSPLASH_KEY='1fwslJzsd0FfmwxGEdvRVbqZtpBUVsoxpAjYb47dZXo';
 // Limpeza única: versão anterior do cache podia guardar bloqueios de 1h
@@ -1600,8 +1723,9 @@ function visitedCountryNames(){
   return [...set];
 }
 function visitedCityCount(){
+  rebuildCityCanon();
   const set=new Set();
-  S.trips.forEach(t=>(t._spots||[]).forEach(s=>{if(s.city)set.add(s.city)}));
+  S.trips.forEach(t=>(t._spots||[]).forEach(s=>{const c=cityOf(s);if(c)set.add(c)}));
   return set.size;
 }
 async function loadProfile(){

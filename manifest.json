@@ -15,7 +15,7 @@
       "purpose": "any"
     },
     {
-      "src": "data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'><rect width='64' height='64' rx='14' fill='%23f4ede1'/><circle cx='32' cy='32' r='22' stroke='%23c1552f' stroke-width='4.5' stroke-dasharray='3.4 4' fill='none'/><circle cx='32' cy='32' r='8' fill='%23c1552f'/></svg>",
+      "src": "data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'><rect width='64' height='64' fill='%230b1620'/><circle cx='32' cy='32' r='15' fill='none' stroke='%23c1552f' stroke-width='4'/><ellipse cx='32' cy='32' rx='18' ry='5.5' fill='none' stroke='%23c1552f' stroke-width='2.5' transform='rotate(-22 32 32)'/></svg>",
       "sizes": "any",
       "type": "image/svg+xml",
       "purpose": "any maskable"
