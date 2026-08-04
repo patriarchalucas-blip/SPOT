@@ -6,6 +6,10 @@
 <title>Spot</title>
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'><rect width='64' height='64' rx='14' fill='%23f4ede1'/><circle cx='32' cy='32' r='22' stroke='%23c1552f' stroke-width='4.5' stroke-dasharray='3.4 4' fill='none'/><circle cx='32' cy='32' r='8' fill='%23c1552f'/></svg>">
 <link rel="manifest" href="/manifest.json">
+<!-- iOS ignora SVG aqui e cai no fallback de desenhar a letra do nome ("S").
+     Precisa ser PNG de verdade pra tela de início mostrar o logo. -->
+<link rel="apple-touch-icon" href="/icon-180.png">
+<link rel="apple-touch-icon" sizes="180x180" href="/icon-180.png">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">

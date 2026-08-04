@@ -5,11 +5,17 @@
   "start_url": "/",
   "display": "standalone",
   "background_color": "#0b1620",
-  "theme_color": "#16232A",
+  "theme_color": "#0b1620",
   "orientation": "portrait",
   "icons": [
     {
-      "src": "data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'><rect width='64' height='64' rx='14' fill='%23f4ede1'/><path d='M18.00 24.00 A14.00 14.00 0 1 1 46.00 24.00 Q46.00 42.90 32.00 56.20 Q18.00 42.90 18.00 24.00 Z' fill='%23c1552f'/><circle cx='32.00' cy='23.30' r='5.88' fill='%23f4ede1'/></svg>",
+      "src": "/icon-180.png",
+      "sizes": "180x180",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'><rect width='64' height='64' rx='14' fill='%23f4ede1'/><circle cx='32' cy='32' r='22' stroke='%23c1552f' stroke-width='4.5' stroke-dasharray='3.4 4' fill='none'/><circle cx='32' cy='32' r='8' fill='%23c1552f'/></svg>",
       "sizes": "any",
       "type": "image/svg+xml",
       "purpose": "any maskable"
