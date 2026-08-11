@@ -1367,7 +1367,29 @@ function populateTripOpts(){
   const c=document.getElementById('tripOptions');
   c.innerHTML=S.trips.map(t=>`<div class="trip-option" onclick="selTripForSpot('${t.id}')"><div class="trip-option-img" style="background-image:${destGradient((t.destinations&&t.destinations[0])||t.name)}">${flagFor((t.destinations&&t.destinations[0])||'')}</div><div><div class="trip-option-name">${t.name}</div><div class="trip-option-meta">${(t._spots||[]).length} spots</div></div><div class="trip-option-arrow">›</div></div>`).join('');
 }
-function selTripForSpot(id){S.addTrip=S.trips.find(t=>t.id===id);nextOv('ov-trip','ov-cat')}
+// Pula direto pra ficha de nota: usado quando viagem, categoria e lugar já
+// são todos conhecidos (Explorar, check-in) — nada a perguntar.
+function jumpToNoteSheet(trip,cat,place,status){
+  S.addTrip=trip;S.addCat=cat;
+  // pickPlace já chama resetNoteSheet() por dentro — setSpotStatus tem que
+  // vir DEPOIS, senão o reset apaga o status que a gente acabou de marcar.
+  pickPlace(place); // também cuida do check de país trocado, se acontecer
+  if(status)setSpotStatus(status);
+}
+function selTripForSpot(id){
+  S.addTrip=S.trips.find(t=>t.id===id);
+  if(S.explorePick&&S.explorePickCat){
+    // Categoria já era sabida antes de escolher a viagem (vem do Explorar
+    // ou do check-in) — perguntar de novo seria repetir uma decisão que o
+    // usuário já tomou.
+    const p=S.explorePick,cat=S.explorePickCat,status=S.explorePickStatus;
+    S.explorePick=null;S.explorePickCat=null;S.explorePickStatus=null;
+    closeOv('ov-trip');
+    setTimeout(()=>jumpToNoteSheet(S.addTrip,cat,p,status),220);
+  }else{
+    nextOv('ov-trip','ov-cat');
+  }
+}
 function addSpotToCurrentTrip(){
   // Already inside a trip — skip "which trip" AND skip category (use active tab)
   S.addTrip=S.curTrip;
@@ -1376,15 +1398,10 @@ function addSpotToCurrentTrip(){
   document.getElementById('ov-search').classList.add('show');
 }
 function pickCat(c){
+  // ov-cat só abre quando a categoria ainda não era sabida — Explorar e
+  // check-in pulam essa tela direto (ver selTripForSpot/jumpToNoteSheet).
   S.addCat=c;document.querySelectorAll('.cat-option').forEach(o=>o.classList.remove('sel'));document.getElementById('co-'+c).classList.add('sel');
-  // Vindo do Explorar já tem o lugar inteiro escolhido — em vez de mandar
-  // buscar de novo, vai direto pra ficha de nota com os dados já prontos.
-  if(S.explorePick){
-    const p=S.explorePick;S.explorePick=null;
-    setTimeout(()=>{closeOv('ov-cat');setTimeout(()=>pickPlace(p),220)},200);
-  }else{
-    setTimeout(()=>nextOv('ov-cat','ov-search'),200);
-  }
+  setTimeout(()=>nextOv('ov-cat','ov-search'),200);
 }
 
 // ═══ EXPLORAR ═══ v1: tendência = nota alta com volume relevante de
@@ -1444,6 +1461,10 @@ function renderExploreResults(){
 function addExploreSpot(i){
   const t=EXPLORE.items[i];if(!t)return;
   S.explorePick={name:t.name,meta:t.address,icon:catIcon(EXPLORE.cat),city:t.city,country:t.country,address:t.address,photo_url:t.photo_url,rating_google:t.rating,website_url:t.website_url,maps_url:t.maps_url};
+  // Categoria já foi escolhida na aba do Explorar (Comer/Ficar/Experiências)
+  // antes de buscar — perguntar de novo seria repetir uma decisão já feita.
+  S.explorePickCat=EXPLORE.cat;
+  S.explorePickStatus='want'; // Explorar é descoberta, ainda não foi lá
   showOv('ov-trip');
 }
 const GAPI='AIzaSyDYUDC3BkvUYSjlBVX2C6BZ8pMmycxfYUQ';
@@ -1557,13 +1578,21 @@ function maybeShowCheckin(){
       // Saiko Sando e o vizinho colado nele) e o vizinho, com mais avaliações,
       // ganhava mesmo estando parado na porta do outro. Distância manda aqui.
       places.sort((a,b)=>a._dist-b._dist);
-      const p=places[0];
-      const name=p.displayName&&p.displayName.text;
-      if(!name)return;
-      const jaSalvo=(S.trips||[]).some(t=>(t._spots||[]).some(s=>normName(s.name)===normName(name)));
-      if(jaSalvo)return;
-      const dismissKey='spot_checkin_dismissed_'+normName(name);
-      if(+(localStorage.getItem(dismissKey)||0)>Date.now())return;
+      // Não pode ser só o mais próximo: se ele já foi salvo ou ignorado,
+      // tenta o próximo da lista em vez de desistir — senão "Ignorar" no
+      // vizinho errado nunca chegava a sugerir o lugar certo depois.
+      let p=null;
+      for(const cand of places){
+        const nm=cand.displayName&&cand.displayName.text;
+        if(!nm)continue;
+        const jaSalvo=(S.trips||[]).some(t=>(t._spots||[]).some(s=>normName(s.name)===normName(nm)));
+        if(jaSalvo)continue;
+        const dismissKey='spot_checkin_dismissed_'+normName(nm);
+        if(+(localStorage.getItem(dismissKey)||0)>Date.now())continue;
+        p=cand;break;
+      }
+      if(!p)return;
+      const name=p.displayName.text;
       const addr=p.formattedAddress||'';
       const city=cityFromComponents(p.addressComponents)||extractCityFromAddr(addr);
       const country=countryFromComponents(p.addressComponents);
@@ -1581,13 +1610,28 @@ function checkinIgnore(){
   document.getElementById('checkinBanner').style.display='none';
   if(CHECKIN.place)localStorage.setItem('spot_checkin_dismissed_'+normName(CHECKIN.place.name),String(Date.now()+4*60*60*1000));
   CHECKIN.place=null;
+  // Tenta de novo na hora — se o lugar errado (o vizinho) acabou de ser
+  // ignorado, o certo (próximo mais perto) pode aparecer imediatamente,
+  // sem esperar os 2 minutos do intervalo normal entre checagens.
+  lastCheckinCheck=0;
+  maybeShowCheckin();
 }
 function checkinAdd(){
   const p=CHECKIN.place;if(!p)return;
   document.getElementById('checkinBanner').style.display='none';
-  S.explorePick={name:p.name,meta:p.meta,icon:p.icon,city:p.city,country:p.country,address:p.address,rating_google:p.rating_google,website_url:p.website_url,maps_url:p.maps_url};
+  const place={name:p.name,meta:p.meta,icon:p.icon,city:p.city,country:p.country,address:p.address,rating_google:p.rating_google,website_url:p.website_url,maps_url:p.maps_url};
   CHECKIN.place=null;
-  showOv('ov-trip');
+  // Categoria já é sabida (check-in só busca comer/beber) e "Já fui" é o
+  // padrão óbvio — você está literalmente lá. Viagem: se só existir uma que
+  // bate com o país do lugar, nem pergunta; só pergunta quando é ambíguo
+  // (nenhuma viagem pro país, ou mais de uma).
+  const candidatas=S.trips.filter(t=>((t.destinations&&t.destinations[0])||t.name)===p.country);
+  if(candidatas.length===1){
+    jumpToNoteSheet(candidatas[0],'food',place,'been');
+  }else{
+    S.explorePick=place;S.explorePickCat='food';S.explorePickStatus='been';
+    showOv('ov-trip');
+  }
 }
 let searchTO;
 let searchReqId=0;
@@ -2440,7 +2484,7 @@ function goTo(id){document.querySelectorAll('.screen').forEach(s=>s.classList.re
 function showOv(id){populateTripOpts();if(id==='ov-newtrip')prepNewTrip();if(id==='ov-quickvisit')prepQuickVisit();document.getElementById(id).classList.add('show')}
 function closeOv(id){document.getElementById(id).classList.remove('show')}
 function closeOut(e,id){if(e.target===document.getElementById(id))closeOv(id)}
-function nextOv(a,b){closeOv(a);if(b==='ov-newtrip')prepNewTrip();if(b==='ov-trip'){populateTripOpts();S.explorePick=null}if(b==='ov-search')resetSearchSheet();setTimeout(()=>document.getElementById(b).classList.add('show'),220)}
+function nextOv(a,b){closeOv(a);if(b==='ov-newtrip')prepNewTrip();if(b==='ov-trip'){populateTripOpts();S.explorePick=null;S.explorePickCat=null;S.explorePickStatus=null}if(b==='ov-search')resetSearchSheet();setTimeout(()=>document.getElementById(b).classList.add('show'),220)}
 function prepNewTrip(){
   selectedCountry=null;
   const cs=document.getElementById('countrySearch');if(cs)cs.value='';
