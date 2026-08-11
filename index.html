@@ -581,6 +581,7 @@ svg.ic path,svg.ic circle,svg.ic line,svg.ic polyline,svg.ic rect{fill:none;stro
     <div class="country-chips" id="countryChips"></div>
     <div class="new-trip-btn" style="margin:16px 0 0" onclick="openVisitedCountryPicker()"><div class="new-trip-icon" data-ic="globe"></div><div class="new-trip-text">Marcar país que já visitei</div></div>
     <div class="new-trip-btn" style="margin:10px 0 0" onclick="openHomeCountryPicker()"><div class="new-trip-icon" data-ic="pin"></div><div class="new-trip-text">Marcar país onde moro</div></div>
+    <div class="new-trip-btn" style="margin:10px 0 0" onclick="backfillWebsites()"><div class="new-trip-icon" data-ic="menu"></div><div class="new-trip-text">Atualizar sites dos restaurantes</div></div>
     <button class="action-btn" style="margin-top:24px;background:var(--surface);color:var(--ink2);border:1px solid var(--border)" onclick="signOut()">Sair da conta</button>
     <div style="height:40px"></div>
   </div>
@@ -993,11 +994,11 @@ function tripCityCount(t){
   return cities.size;
 }
 function isQuickVisit(t){return t.dates==='__quickvisit__'&&(!t._spots||!t._spots.length)}
-function isHomeCountry(t){return t.dates==='__home__'&&(!t._spots||!t._spots.length)}
-// Marcador único pros dois casos que não são viagem de fato (só um país
-// marcado): usar em todo lugar que hoje decide o que entra em "Minhas
-// viagens" — assim um novo tipo de marcador não exige caçar 8 call sites.
-function isNonTrip(t){return isQuickVisit(t)||isHomeCountry(t)}
+// País de moradia NÃO é mais um marcador de viagem (ver profiles.home_country
+// e migrations/004) — só isQuickVisit mesmo. isNonTrip ficou como nome porque
+// é o que os 8 call sites abaixo já chamam; se surgir outro tipo de marcador
+// de "não é viagem de fato" no futuro, entra aqui.
+function isNonTrip(t){return isQuickVisit(t)}
 function regionFor(name){const c=COUNTRIES.find(x=>x.name===name);return c?c.region:'Outros'}
 const REGION_ORDER=['Europa','América do Sul','América do Norte','Ásia','África','Oceania','Antártida','Outros'];
 // Linha de metadados do card. Separada porque os cards são desenhados assim que
@@ -1763,24 +1764,44 @@ function prepQuickVisit(){
 }
 async function markVisited(){
   if(!selectedVisitCountry)return;
+  if(quickVisitMode==='home')return saveHomeCountry(selectedVisitCountry.name);
   const name=selectedVisitCountry.name;
-  const isHome=quickVisitMode==='home';
   const existing=S.trips.find(t=>((t.destinations&&t.destinations[0])||t.name)===name);
   if(existing){
     closeOv('ov-quickvisit');
-    toast('Já existe',isHome?`${name} já está marcado na sua conta.`:`Você já tem uma viagem pra ${name}.`,'alert');
+    toast('Já existe',`Você já tem uma viagem pra ${name}.`,'alert');
     return;
   }
   const btn=document.getElementById('createVisitBtn');btn.textContent='Marcando...';btn.style.pointerEvents='none';
-  const{data,error}=await dbInsert('trips',{user_id:S.user.id,name,destinations:[name],dates:isHome?'__home__':'__quickvisit__',status:isHome?'home':'done'});
+  const{data,error}=await dbInsert('trips',{user_id:S.user.id,name,destinations:[name],dates:'__quickvisit__',status:'done'});
   if(!error&&data){
     data._spots=[];S.trips.unshift(data);closeOv('ov-quickvisit');
     renderTrips();populateTripOpts();loadProfile();
-    toast('Marcado!',isHome?`${name} agora é onde você mora.`:`${name} agora está no seu mapa.`,'globe');
+    toast('Marcado!',`${name} agora está no seu mapa.`,'globe');
   }else{
-    btn.textContent=isHome?'Marcar como moradia':'Marcar como visitado';btn.style.pointerEvents='auto';
+    btn.textContent='Marcar como visitado';btn.style.pointerEvents='auto';
     toast('Erro','Não foi possível marcar. Tenta de novo.');
   }
+}
+// País de moradia mora em profiles.home_country — não é linha de viagem,
+// então não conflita com uma viagem real (com spots e tudo) pro mesmo país.
+// É exatamente o caso do Lucas: Brasil já é uma viagem em andamento com
+// spots, e "moro aqui" só marca um campo a mais, sem tocar nela.
+async function saveHomeCountry(name){
+  const btn=document.getElementById('createVisitBtn');btn.textContent='Marcando...';btn.style.pointerEvents='none';
+  const mine=await dbGet('profiles',`id=eq.${S.user.id}`);
+  let error;
+  if(mine.length){({error}=await dbUpdate('profiles',S.user.id,{home_country:name}))}
+  else{({error}=await dbInsert('profiles',{id:S.user.id,email:S.user.email,display_name:S.user.email.split('@')[0],home_country:name}))}
+  if(error){
+    btn.textContent='Marcar como moradia';btn.style.pointerEvents='auto';
+    toast('Erro','Não foi possível salvar. Tenta de novo.');
+    return;
+  }
+  S.profile=S.profile||{};S.profile.home_country=name;
+  closeOv('ov-quickvisit');
+  renderTrips();loadProfile();
+  toast('Marcado!',`${name} agora é onde você mora.`,'globe');
 }
 function countryFlag(country){
   const c=COUNTRIES.find(x=>x.name===country||x.name.toLowerCase()===(country||'').toLowerCase());
@@ -1869,6 +1890,30 @@ const photoHealing=new Set();
 function findSpotById(id){
   for(const t of (S.trips||[])){const s=(t._spots||[]).find(x=>x.id===id);if(s)return s}
   return null;
+}
+// Backfill manual do site (usado no botão "Ver cardápio"). O conserto
+// automático em healSpotPhoto só roda quando uma FOTO quebra — spot com
+// foto boa nunca aciona ele, então nenhum spot salvo antes dessa feature
+// ganhava site sozinho. Isso aqui varre todos de uma vez, sob comando.
+async function backfillWebsites(){
+  const foodSpots=[];
+  (S.trips||[]).forEach(t=>(t._spots||[]).forEach(s=>{if(s.category==='food'&&!s.website_url)foodSpots.push(s)}));
+  if(!foodSpots.length){toast('Nada pra atualizar','Seus spots de comida já têm site (ou não têm no Google).','check');return}
+  toast('Atualizando...',`Buscando site de ${foodSpots.length} spot(s)...`,'send');
+  let achados=0;
+  for(const s of foodSpots){
+    try{
+      const resp=await fetch('https://places.googleapis.com/v1/places:searchText',{
+        method:'POST',
+        headers:{'Content-Type':'application/json','X-Goog-Api-Key':GAPI,'X-Goog-FieldMask':'places.websiteUri'},
+        body:JSON.stringify({textQuery:s.name+(cityOf(s)?' '+cityOf(s):''),languageCode:'pt-BR',maxResultCount:1})
+      });
+      const d=await resp.json();
+      const site=d.places&&d.places[0]&&d.places[0].websiteUri;
+      if(site){await dbUpdate('spots',s.id,{website_url:site});s.website_url=site;achados++}
+    }catch(e){console.error('backfillWebsites',e)}
+  }
+  toast('Pronto!',achados?`${achados} site(s) encontrado(s).`:'Nenhum site encontrado nos seus spots de comida.','check');
 }
 async function healSpotPhoto(id){
   if(!id||photoHealing.has(id))return null;
@@ -2011,8 +2056,7 @@ function visitedCountryNames(){
   return [...set];
 }
 function homeCountryName(){
-  const t=S.trips.find(isHomeCountry);
-  return t?((t.destinations&&t.destinations[0])||t.name):null;
+  return(S.profile&&S.profile.home_country)||null;
 }
 function visitedCityCount(){
   rebuildCityCanon();
@@ -2028,12 +2072,11 @@ async function loadProfile(){
   document.getElementById('profName').textContent=name;
   document.getElementById('profAvatar').textContent=name.charAt(0).toUpperCase();
   document.getElementById('profEmail').textContent=S.user.email;
-  fetchOwnProfile(true).then(p=>{
-    document.getElementById('usernameInput').value=p.username||'';
-    document.getElementById('bioInput').value=p.bio||'';
-    applyAvatar('dashAvatar',name,p.avatar_url);
-    applyAvatar('profAvatar',name,p.avatar_url);
-  });
+  const p=await fetchOwnProfile(true);
+  document.getElementById('usernameInput').value=p.username||'';
+  document.getElementById('bioInput').value=p.bio||'';
+  applyAvatar('dashAvatar',name,p.avatar_url);
+  applyAvatar('profAvatar',name,p.avatar_url);
   // Load trips + their spots (for city count) if missing
   if(!S.trips.length){const trips=await dbGet('trips','user_id=eq.'+S.user.id);S.trips=trips||[]}
   for(const t of S.trips){if(!t._spots){const sp=await dbGet('spots','trip_id=eq.'+t.id);t._spots=sp||[]}}
