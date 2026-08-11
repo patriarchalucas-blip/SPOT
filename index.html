@@ -1532,19 +1532,24 @@ function maybeShowCheckin(){
         // rankPreference:DISTANCE fazia o pin literalmente mais próximo ganhar
         // mesmo sendo irrelevante — sem isso, o padrão é por relevância.
         // 'bakery'/'cafe'/'bar' ampliam pra restaurante, padaria, café e bar.
-        body:JSON.stringify({includedTypes:['restaurant','bakery','cafe','bar','lodging','tourist_attraction'],maxResultCount:15,locationRestriction:{circle:{center:{latitude,longitude},radius:60}}})
+        // Check-in restrito a comer/beber de propósito: "experiências" inclui
+        // museu, prédio grande, ponto turístico — o IMS apareceu assim, e não
+        // faz sentido perguntar "você está aqui?" de algo que você já sabe
+        // que está (diferente de "ah é, tem esse restaurante aqui" que é o
+        // caso real de uso). Hotel também saiu — não é "check-in" o alvo ali.
+        body:JSON.stringify({includedTypes:['restaurant','bakery','cafe','bar'],maxResultCount:15,locationRestriction:{circle:{center:{latitude,longitude},radius:45}}})
       });
       const data=await resp.json();
       // O locationRestriction do Google é só uma dica de área — não é garantia
       // de raio exato. Recalcula a distância real (Haversine) e reforça um
-      // limite rígido de 55m, senão lugar "meio perto" no mapa do Google
-      // aparecia como se você estivesse literalmente lá dentro.
+      // limite rígido de 40m — mais apertado que antes (era 55m), porque um
+      // prédio grande dentro do raio antigo ainda parecia "eu estou lá".
       let places=(data.places||[]).filter(p=>{
         if(!p.rating||!p.userRatingCount||isIrrelevantPlace(p))return false;
         const loc=p.location;
         if(!loc)return false;
         const dist=haversineMeters(latitude,longitude,loc.latitude,loc.longitude);
-        return dist<=55;
+        return dist<=40;
       });
       if(!places.length)return;
       places.sort((a,b)=>(b.rating*Math.log10(b.userRatingCount+1))-(a.rating*Math.log10(a.userRatingCount+1)));
@@ -1558,9 +1563,7 @@ function maybeShowCheckin(){
       const addr=p.formattedAddress||'';
       const city=cityFromComponents(p.addressComponents)||extractCityFromAddr(addr);
       const country=countryFromComponents(p.addressComponents);
-      const tipos=p.types||[];
-      const cat=tipos.includes('lodging')?'hotel':(!tipos.includes('restaurant')&&tipos.some(t=>t==='tourist_attraction'||t==='museum'||t==='park')?'experience':'food');
-      CHECKIN.place={name,meta:addr,icon:catIcon(cat),city,country,address:addr,rating_google:p.rating?String(p.rating):'',website_url:p.websiteUri||'',maps_url:p.googleMapsUri||'',category:cat};
+      CHECKIN.place={name,meta:addr,icon:catIcon('food'),city,country,address:addr,rating_google:p.rating?String(p.rating):'',website_url:p.websiteUri||'',maps_url:p.googleMapsUri||'',category:'food'};
       document.getElementById('checkinName').textContent=name;
       document.getElementById('checkinBanner').style.display='flex';
     }catch(e){console.error('maybeShowCheckin',e)}
