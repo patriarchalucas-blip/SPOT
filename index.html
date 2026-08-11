@@ -264,6 +264,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--dark);max-width:430px;mar
 .place-hero-img{position:absolute;inset:0;background-size:cover;background-position:center}
 .hero-overlay{position:absolute;inset:0;background:linear-gradient(to bottom,rgba(0,0,0,0.2),rgba(0,0,0,0.7))}
 .hero-back{position:absolute;top:18px;left:18px;width:34px;height:34px;background:rgba(11,22,32,.5);border:1px solid rgba(255,255,255,.16);border-radius:50%;color:#fff;font-size:15px;cursor:pointer;display:flex;align-items:center;justify-content:center;z-index:2;backdrop-filter:blur(8px)}
+.hero-photo-btn{position:absolute;bottom:18px;right:18px;width:34px;height:34px;background:rgba(11,22,32,.5);border:1px solid rgba(255,255,255,.16);border-radius:50%;color:#fff;font-size:14px;cursor:pointer;display:flex;align-items:center;justify-content:center;z-index:2;backdrop-filter:blur(8px)}
 .hero-chip{position:absolute;top:18px;right:18px;padding:7px 15px;border-radius:var(--r-pill);font-size:12px;font-weight:600;cursor:pointer;z-index:2;backdrop-filter:blur(8px)}
 .chip-want{background:rgba(191,164,112,0.24);border:1px solid rgba(191,164,112,0.55);color:#DDCBA4}
 .chip-been{background:rgba(78,148,144,0.24);border:1px solid rgba(78,148,144,0.55);color:#8FD3CE}
@@ -315,6 +316,9 @@ body{font-family:'DM Sans',sans-serif;background:var(--dark);max-width:430px;mar
 #profile{background:#0b1620;overflow-y:auto}
 .profile-header-bar{display:flex;align-items:center;gap:14px;padding:40px 22px 16px;background:#0b1620;position:relative;z-index:5}
 .profile-avatar{width:54px;height:54px;border-radius:50%;background:var(--green);color:var(--dark);display:flex;align-items:center;justify-content:center;font-size:22px;font-weight:600;flex-shrink:0;box-shadow:var(--shadow-md),0 0 0 3px rgba(234,231,224,.06)}
+.profile-avatar-wrap{position:relative;cursor:pointer;flex-shrink:0}
+.avatar-edit-badge{position:absolute;bottom:-2px;right:-2px;width:22px;height:22px;border-radius:50%;background:var(--terra);color:#fff;display:flex;align-items:center;justify-content:center;font-size:11px;border:2px solid #0b1620}
+.avatar-edit-badge svg{width:11px;height:11px}
 .profile-name{font-family:'Fraunces',serif;font-weight:400;font-size:26px;color:var(--ink);line-height:1.1;letter-spacing:-.01em}
 .profile-email{font-size:12.5px;color:var(--ink3);margin-top:5px}
 .profile-map-block{position:relative;width:100%;aspect-ratio:800/420;background:#0b1620;overflow:hidden}
@@ -335,6 +339,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--dark);max-width:430px;mar
 .profile-body{padding:24px 22px;background:var(--surface);border-radius:var(--r) var(--r) 0 0}
 .country-chips{display:flex;flex-wrap:wrap;gap:8px;margin-top:4px}
 .country-chip{background:var(--white);border:1px solid var(--border);border-radius:var(--r-pill);padding:8px 14px;font-size:13px;color:var(--ink2);display:flex;align-items:center;gap:6px}
+.chip-home-tag{font-family:var(--mono);font-size:9.5px;letter-spacing:.04em;color:var(--terra);background:rgba(193,85,47,.14);border-radius:var(--r-pill);padding:2px 7px;margin-left:2px}
 .country-chips-empty{color:var(--ink3);font-size:14px;padding:8px 0}
 
 /* OVERLAYS */
@@ -413,11 +418,13 @@ body{font-family:'DM Sans',sans-serif;background:var(--dark);max-width:430px;mar
 .selected-dests{display:flex;flex-wrap:wrap;gap:8px;padding:0 24px 16px}
 .sel-dest-chip{display:flex;align-items:center;gap:7px;background:var(--terra);color:#fff;border-radius:var(--r-pill);padding:7px 13px;font-size:13px;font-weight:500}
 .sel-dest-chip button{background:none;border:none;color:rgba(255,255,255,0.7);cursor:pointer;font-size:14px;padding:0;line-height:1}
-.toast{position:fixed;bottom:88px;left:50%;transform:translateX(-50%);width:calc(100% - 48px);max-width:382px;background:#EAE7E0;color:var(--dark);border-radius:var(--r-sm);padding:15px 18px;z-index:300;display:none;box-shadow:0 6px 24px rgba(0,0,0,.35)}
-.toast.show{display:block;animation:toastIn .3s ease}
+.toast{position:fixed;bottom:88px;left:50%;transform:translateX(-50%);width:calc(100% - 48px);max-width:382px;background:var(--white);border:1px solid var(--border);color:var(--ink);border-radius:var(--r-sm);padding:14px 16px;z-index:300;display:none;box-shadow:var(--shadow-lg);gap:12px;align-items:flex-start}
+.toast.show{display:flex;animation:toastIn .3s ease}
 @keyframes toastIn{from{transform:translateX(-50%) translateY(20px);opacity:0}to{transform:translateX(-50%) translateY(0);opacity:1}}
-.toast-title{font-size:13.5px;font-weight:600;margin-bottom:3px;color:var(--dark)}
-.toast-msg{font-family:'Fraunces',serif;font-size:14px;color:rgba(11,22,32,.68);font-style:italic;line-height:1.4}
+.toast-icon{width:22px;height:22px;flex-shrink:0;color:var(--terra);margin-top:1px}
+.toast-body{flex:1;min-width:0}
+.toast-title{font-size:13.5px;font-weight:600;margin-bottom:3px;color:var(--ink)}
+.toast-msg{font-family:'Fraunces',serif;font-size:14px;color:var(--ink3);font-style:italic;line-height:1.4}
 
 /* ═══ SISTEMA DE ÍCONES (SVG line — substitui emoji cru) ═══ */
 svg.ic{width:1em;height:1em;display:inline-block;vertical-align:middle;flex:none;color:inherit}
@@ -487,7 +494,7 @@ svg.ic path,svg.ic circle,svg.ic line,svg.ic polyline,svg.ic rect{fill:none;stro
     </div>
   </div>
   <div class="dash-body" id="tripsContainer"><div class="section-head"><span class="section-title">Minhas viagens</span></div><div class="empty-state"><div class="ei" data-ic="suitcase"></div><h3>Nenhuma viagem ainda</h3><p>Toca no + para criar sua primeira viagem</p></div></div>
-  <button class="fab" onclick="showOv('ov-trip')">+</button>
+  <button class="fab" onclick="showOv('ov-fabchoice')">+</button>
   <div class="bottom-nav"><div class="nav-item active" onclick="goTo('dashboard');loadDashboard()"><div class="nav-icon" data-ic="map"></div><div class="nav-label" style="color:var(--ink);font-weight:600">Viagens</div></div><div class="nav-item" onclick="toast('Em breve','Explorar chega em breve!')"><div class="nav-icon" data-ic="search"></div><div class="nav-label">Explorar</div></div><div class="nav-item" onclick="goTo('friends');loadFriends()"><div class="nav-icon" data-ic="users"></div><div class="nav-label">Amigos</div></div><div class="nav-item" onclick="goTo('profile');loadProfile()"><div class="nav-icon" data-ic="user"></div><div class="nav-label">Perfil</div></div></div>
 </div>
 
@@ -499,6 +506,7 @@ svg.ic path,svg.ic circle,svg.ic line,svg.ic polyline,svg.ic rect{fill:none;stro
       <div class="list-title" id="listTitle">—</div>
     </div>
   </div>
+  <div class="search-wrap" id="listCitySearchWrap" style="display:none;padding:14px 20px 0"><span class="si" data-ic="search"></span><input class="search-input" id="listCitySearch" placeholder="Buscar cidade..." oninput="setListCityQuery(this.value)"></div>
   <div class="list-filters" id="listFilters"></div>
   <div class="list-body" id="listBody"></div>
   <div class="bottom-nav"><div class="nav-item active" onclick="goTo('dashboard');loadDashboard()"><div class="nav-icon" data-ic="map"></div><div class="nav-label">Viagens</div></div><div class="nav-item" onclick="toast('Em breve','Explorar chega em breve!')"><div class="nav-icon" data-ic="search"></div><div class="nav-label">Explorar</div></div><div class="nav-item" onclick="goTo('friends');loadFriends()"><div class="nav-icon" data-ic="users"></div><div class="nav-label">Amigos</div></div><div class="nav-item" onclick="goTo('profile');loadProfile()"><div class="nav-icon" data-ic="user"></div><div class="nav-label">Perfil</div></div></div>
@@ -514,7 +522,11 @@ svg.ic path,svg.ic circle,svg.ic line,svg.ic polyline,svg.ic rect{fill:none;stro
 
 <div class="screen" id="profile">
   <div class="profile-header-bar">
-    <div class="profile-avatar" id="profAvatar">?</div>
+    <div class="profile-avatar-wrap" onclick="document.getElementById('avatarFileInput').click()">
+      <div class="profile-avatar" id="profAvatar">?</div>
+      <div class="avatar-edit-badge" data-ic="edit"></div>
+    </div>
+    <input type="file" id="avatarFileInput" accept="image/*" style="display:none" onchange="onAvatarFileChosen(this)">
     <div><div class="profile-name" id="profName">—</div><div class="profile-email" id="profEmail"></div></div>
   </div>
   <div class="profile-map-block">
@@ -535,9 +547,13 @@ svg.ic path,svg.ic circle,svg.ic line,svg.ic polyline,svg.ic rect{fill:none;stro
     <div class="section-head"><span class="section-title">Seu username</span></div>
     <div style="display:flex;gap:8px;margin-bottom:4px"><input class="nt-input" id="usernameInput" placeholder="seu_username" style="flex:1" oninput="document.getElementById('usernameStatus').textContent=''"><button class="req-btn req-accept" style="padding:0 18px" onclick="saveUsername()">Salvar</button></div>
     <div class="feed-time" id="usernameStatus" style="margin-bottom:20px"></div>
+    <div class="section-head"><span class="section-title">Bio</span></div>
+    <textarea class="note-input" id="bioInput" rows="2" placeholder="Uma frase sobre como você viaja" style="margin-bottom:8px"></textarea>
+    <button class="req-btn req-accept" style="padding:0 18px;height:38px;margin-bottom:20px" onclick="saveBio()">Salvar bio</button>
     <div class="section-head"><span class="section-title">Países que conheço</span></div>
     <div class="country-chips" id="countryChips"></div>
-    <div class="new-trip-btn" style="margin:16px 0 0" onclick="showOv('ov-quickvisit')"><div class="new-trip-icon" data-ic="globe"></div><div class="new-trip-text">Marcar país que já visitei</div></div>
+    <div class="new-trip-btn" style="margin:16px 0 0" onclick="openVisitedCountryPicker()"><div class="new-trip-icon" data-ic="globe"></div><div class="new-trip-text">Marcar país que já visitei</div></div>
+    <div class="new-trip-btn" style="margin:10px 0 0" onclick="openHomeCountryPicker()"><div class="new-trip-icon" data-ic="pin"></div><div class="new-trip-text">Marcar país onde moro</div></div>
     <button class="action-btn" style="margin-top:24px;background:var(--surface);color:var(--ink2);border:1px solid var(--border)" onclick="signOut()">Sair da conta</button>
     <div style="height:40px"></div>
   </div>
@@ -556,7 +572,7 @@ svg.ic path,svg.ic circle,svg.ic line,svg.ic polyline,svg.ic rect{fill:none;stro
 </div>
 
 <div class="screen" id="place">
-  <div class="place-hero"><div class="place-hero-img" id="placeHeroImg"></div><div class="hero-overlay"></div><button class="hero-back" onclick="backFromPlace()" data-ic="back" aria-label="Voltar"></button><div class="hero-chip chip-want" id="placeChip" onclick="cycleStatus()">Quero ir</div><div class="hero-bottom"><div class="hero-type" id="placeType"></div><div class="hero-name" id="placeName"></div></div></div>
+  <div class="place-hero"><div class="place-hero-img" id="placeHeroImg"></div><div class="hero-overlay"></div><button class="hero-back" onclick="backFromPlace()" data-ic="back" aria-label="Voltar"></button><button class="hero-photo-btn" onclick="document.getElementById('spotPhotoFileInput').click()" data-ic="edit" aria-label="Trocar foto"></button><input type="file" id="spotPhotoFileInput" accept="image/*" style="display:none" onchange="onSpotPhotoFileChosen(this)"><div class="hero-chip chip-want" id="placeChip" onclick="cycleStatus()">Quero ir</div><div class="hero-bottom"><div class="hero-type" id="placeType"></div><div class="hero-name" id="placeName"></div></div></div>
   <div class="d-section"><div class="sec-label">Minha nota</div><div class="note-card"><div class="note-glow"></div><div class="note-quote" id="placeNote"></div><div class="note-attr" id="placeNoteAttr"></div></div></div>
   <div class="d-section"><div class="sec-label">Informações</div><div class="info-grid" id="placeInfoGrid"></div><div id="placeReserveWrap"></div></div>
   <div class="d-section"><div class="sec-label">Status</div><div class="status-toggle"><button class="toggle-btn sel-want" id="t-want" onclick="setStatus('want')">Quero ir</button><button class="toggle-btn" id="t-been" onclick="setStatus('been')">Fui</button><button class="toggle-btn" id="t-skip" onclick="setStatus('skip')">Pular</button></div></div>
@@ -564,6 +580,7 @@ svg.ic path,svg.ic circle,svg.ic line,svg.ic polyline,svg.ic rect{fill:none;stro
 </div>
 
 <!-- OVERLAYS -->
+<div class="overlay" id="ov-fabchoice" onclick="closeOut(event,'ov-fabchoice')"><div class="sheet"><button class="sheet-close" onclick="closeOv('ov-fabchoice')" data-ic="close" aria-label="Fechar"></button><div class="sheet-handle"></div><div class="sheet-title">O que você quer fazer?</div><div class="new-trip-btn" onclick="nextOv('ov-fabchoice','ov-newtrip')"><div class="new-trip-icon" data-ic="suitcase"></div><div class="new-trip-text">Nova viagem</div></div><div class="new-trip-btn" onclick="nextOv('ov-fabchoice','ov-trip')"><div class="new-trip-icon" data-ic="pin"></div><div class="new-trip-text">Adicionar spot</div></div></div></div>
 <div class="overlay" id="ov-trip" onclick="closeOut(event,'ov-trip')"><div class="sheet"><button class="sheet-close" onclick="closeOv('ov-trip')" data-ic="close" aria-label="Fechar"></button><div class="sheet-handle"></div><div class="sheet-title">Em qual viagem?</div><div class="step-dots"><div class="step-dot active"></div><div class="step-dot"></div><div class="step-dot"></div><div class="step-dot"></div></div><div id="tripOptions"></div><div class="new-trip-btn" onclick="nextOv('ov-trip','ov-newtrip')"><div class="new-trip-icon" data-ic="plus"></div><div class="new-trip-text">Nova viagem</div></div></div></div>
 
 <div class="overlay" id="ov-cat" onclick="closeOut(event,'ov-cat')"><div class="sheet"><button class="sheet-close" onclick="closeOv('ov-cat')" data-ic="close" aria-label="Fechar"></button><div class="sheet-handle"></div><div class="sheet-title">Qual categoria?</div><div class="step-dots"><div class="step-dot done"></div><div class="step-dot active"></div><div class="step-dot"></div><div class="step-dot"></div></div><div class="cat-options"><div class="cat-option" id="co-food" onclick="pickCat('food')"><div class="co-icon" data-ic="food"></div><div class="co-name">Comer & Beber</div></div><div class="cat-option" id="co-hotel" onclick="pickCat('hotel')"><div class="co-icon" data-ic="hotel"></div><div class="co-name">Onde Ficar</div></div><div class="cat-option" id="co-experience" onclick="pickCat('experience')"><div class="co-icon" data-ic="compass"></div><div class="co-name">Experiências</div></div></div></div></div>
@@ -578,11 +595,11 @@ svg.ic path,svg.ic circle,svg.ic line,svg.ic polyline,svg.ic rect{fill:none;stro
 
 <div class="overlay" id="ov-mismatch" onclick="closeOut(event,'ov-mismatch')"><div class="sheet"><button class="sheet-close" onclick="closeOv('ov-mismatch')" data-ic="close" aria-label="Fechar"></button><div class="sheet-handle"></div><div class="sheet-title">País diferente</div><div class="cm-text" id="cmText"></div><button class="sheet-cta" id="cmMoveBtn">Mover</button><button class="delete-link" style="color:var(--ink3)" onclick="keepInThisTripAnyway()">Adicionar nesta viagem mesmo assim</button></div></div>
 <div class="overlay" id="ov-newtrip" onclick="closeOut(event,'ov-newtrip')"><div class="sheet"><button class="sheet-close" onclick="closeOv('ov-newtrip')" data-ic="close" aria-label="Fechar"></button><div class="sheet-handle"></div><div class="sheet-title">Para qual país?</div><div class="nt-label">País da viagem</div><div class="dest-search-wrap"><span class="dsi" data-ic="search"></span><input class="nt-input" style="padding-left:44px" id="countrySearch" placeholder="Buscar país..." oninput="filterCountries(this.value)"></div><div id="countryList"></div><div class="nt-label" style="margin-top:8px">Datas (opcional)</div><div class="dates-row"><input class="nt-input" type="date" id="tripStart"><input class="nt-input" type="date" id="tripEnd"></div><button class="sheet-cta" id="createTripBtn" onclick="createTrip()" style="opacity:.4;pointer-events:none">Selecione um país</button></div></div>
-<div class="overlay" id="ov-quickvisit" onclick="closeOut(event,'ov-quickvisit')"><div class="sheet"><button class="sheet-close" onclick="closeOv('ov-quickvisit')" data-ic="close" aria-label="Fechar"></button><div class="sheet-handle"></div><div class="sheet-title">Qual país você já visitou?</div><div class="nt-label">País</div><div class="dest-search-wrap"><span class="dsi" data-ic="search"></span><input class="nt-input" style="padding-left:44px" id="countrySearch2" placeholder="Buscar país..." oninput="filterCountries2(this.value)"></div><div id="countryList2"></div><button class="sheet-cta" id="createVisitBtn" onclick="markVisited()" style="opacity:.4;pointer-events:none">Selecione um país</button></div></div>
+<div class="overlay" id="ov-quickvisit" onclick="closeOut(event,'ov-quickvisit')"><div class="sheet"><button class="sheet-close" onclick="closeOv('ov-quickvisit')" data-ic="close" aria-label="Fechar"></button><div class="sheet-handle"></div><div class="sheet-title" id="quickVisitTitle">Qual país você já visitou?</div><div class="nt-label">País</div><div class="dest-search-wrap"><span class="dsi" data-ic="search"></span><input class="nt-input" style="padding-left:44px" id="countrySearch2" placeholder="Buscar país..." oninput="filterCountries2(this.value)"></div><div id="countryList2"></div><button class="sheet-cta" id="createVisitBtn" onclick="markVisited()" style="opacity:.4;pointer-events:none">Selecione um país</button></div></div>
 <div class="overlay" id="ov-addfriend" onclick="closeOut(event,'ov-addfriend')"><div class="sheet"><button class="sheet-close" onclick="closeOv('ov-addfriend')" data-ic="close" aria-label="Fechar"></button><div class="sheet-handle"></div><div class="sheet-title">Adicionar amigo</div><div class="nt-label">Username do amigo</div><input class="nt-input" id="friendUsernameInput" type="text" placeholder="username_do_amigo" autocapitalize="none" oninput="document.getElementById('friendAddErr').textContent=''"><div class="auth-error" id="friendAddErr"></div><button class="sheet-cta" id="sendReqBtn" onclick="sendFriendRequest()">Enviar pedido</button></div></div>
 
 <div class="overlay" id="ov-editdates" onclick="closeOut(event,'ov-editdates')"><div class="sheet"><button class="sheet-close" onclick="closeOv('ov-editdates')" data-ic="close" aria-label="Fechar"></button><div class="sheet-handle"></div><div class="sheet-title">Datas da viagem</div><div class="nt-label">Deixe em branco se não for uma viagem com data definida (ex: seu país de origem)</div><div class="dates-row"><input class="nt-input" type="date" id="editStart"><input class="nt-input" type="date" id="editEnd"></div><button class="sheet-cta" onclick="saveEditDates()">Salvar</button><button class="delete-link" onclick="clearEditDates()">Limpar datas (não é uma viagem)</button></div></div>
-<div class="toast" id="toast"><div class="toast-title" id="toastTitle"></div><div class="toast-msg" id="toastMsg"></div></div>
+<div class="toast" id="toast"><div class="toast-icon" id="toastIcon"></div><div class="toast-body"><div class="toast-title" id="toastTitle"></div><div class="toast-msg" id="toastMsg"></div></div></div>
 
 <script>
 /* ═══ ÍCONES SVG (fonte única — substitui emoji de interface) ═══ */
@@ -606,11 +623,36 @@ trash:'<path d="M4.5 7h15"/><path d="M9 7V5a1.2 1.2 0 0 1 1.2-1.2h3.6A1.2 1.2 0 
 back:'<path d="M19 12H5"/><path d="M11.5 5.5 5 12l6.5 6.5"/>',
 close:'<path d="M6.5 6.5l11 11M17.5 6.5l-11 11"/>',
 plus:'<path d="M12 5.5v13M5.5 12h13"/>',
-chevron:'<path d="M9 5.5 15.5 12 9 18.5"/>'
+chevron:'<path d="M9 5.5 15.5 12 9 18.5"/>',
+alert:'<circle cx="12" cy="12" r="9"/><path d="M12 7.5v6"/><path d="M12 16v.01"/>',
+send:'<path d="M22 2 11 13"/><path d="M22 2 15 22l-4-9-9-4 20-7Z"/>',
+menu:'<path d="M4 6.5h16"/><path d="M4 12h16"/><path d="M4 17.5h10"/>'
 };
 function icon(n,c){return '<svg class="ic'+(c?' '+c:'')+'" viewBox="0 0 24 24" aria-hidden="true">'+(ICONS[n]||ICONS.pin)+'</svg>';}
 function catIconName(c){return {food:'food',hotel:'hotel',experience:'compass'}[c]||'pin';}
 function thumbFallback(img,cat){img.parentElement.innerHTML=catIcon(cat);}
+// Os círculos de avatar (dashAvatar, profAvatar) mostram a inicial por
+// padrão; quando tem foto, troca pra imagem sem perder o formato/tamanho
+// do círculo (que já está certo pra cada um dos dois lugares).
+function applyAvatar(elId,name,avatarUrl){
+  const el=document.getElementById(elId);if(!el)return;
+  if(avatarUrl){
+    el.style.backgroundImage=`url('${avatarUrl}')`;el.style.backgroundSize='cover';el.style.backgroundPosition='center';el.textContent='';
+  }else{
+    el.style.backgroundImage='';el.textContent=(name||'?').charAt(0).toUpperCase();
+  }
+}
+async function fetchOwnProfile(force){
+  if(S.profile&&!force)return S.profile;
+  const rows=await dbGet('profiles','id=eq.'+S.user.id);
+  S.profile=(rows&&rows[0])||{};
+  return S.profile;
+}
+async function refreshAvatars(name){
+  const p=await fetchOwnProfile();
+  applyAvatar('dashAvatar',name,p.avatar_url);
+  applyAvatar('profAvatar',name,p.avatar_url);
+}
 function hydrateIcons(root){(root||document).querySelectorAll('[data-ic]:not([data-ic-done])').forEach(function(el){el.innerHTML=icon(el.getAttribute('data-ic'));el.setAttribute('data-ic-done','1');});}
 if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',function(){hydrateIcons();});else hydrateIcons();
 const SB_URL='https://kzidnilsyrvauzgelsqd.supabase.co';
@@ -618,7 +660,7 @@ const SB_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZ
 let sb;
 try{sb=supabase.createClient(SB_URL,SB_KEY)}catch(e){console.error(e)}
 
-const S={user:null,trips:[],curTrip:null,curPlace:null,curCat:'food',addTrip:null,addCat:null,selPlace:null,pendingPlace:null,searchResults:[],token:null};
+const S={user:null,trips:[],curTrip:null,curPlace:null,curCat:'food',addTrip:null,addCat:null,selPlace:null,pendingPlace:null,searchResults:[],token:null,profile:null};
 let authMode='signin';
 
 // ═══ DATA LAYER (raw fetch — bypasses buggy SB client) ═══
@@ -655,6 +697,21 @@ async function dbUpdate(table,id,obj){
   });
   if(!r.ok){console.error('dbUpdate error',table,await r.text());return{error:true}}
   return{error:null};
+}
+// Storage também via fetch direto, mesmo motivo do resto: nunca o SDK JS.
+// Path por pasta do usuário (uploads/{user_id}/...) é o que a policy de
+// RLS do bucket espera pra deixar cada um escrever só na própria pasta.
+async function uploadToStorage(file,prefix){
+  await ensureToken();
+  const ext=(file.name.split('.').pop()||'jpg').toLowerCase().replace(/[^a-z0-9]/g,'')||'jpg';
+  const path=S.user.id+'/'+prefix+'-'+Date.now()+'.'+ext;
+  const r=await fetch(SB_URL+'/storage/v1/object/uploads/'+path,{
+    method:'POST',
+    headers:{'apikey':SB_KEY,'Authorization':'Bearer '+S.token,'Content-Type':file.type||'application/octet-stream','x-upsert':'true'},
+    body:file
+  });
+  if(!r.ok){console.error('uploadToStorage error',await r.text());return null}
+  return SB_URL+'/storage/v1/object/public/uploads/'+path;
 }
 async function dbDelete(table,id){
   await ensureToken();
@@ -739,6 +796,7 @@ async function loadDashboard(){
   name=name.split(' ')[0];name=name.charAt(0).toUpperCase()+name.slice(1).toLowerCase();
   document.getElementById('dashName').textContent=name;
   document.getElementById('dashAvatar').textContent=name.charAt(0).toUpperCase();
+  refreshAvatars(name);
   const emEl=document.getElementById('dashEmail');if(emEl)emEl.textContent=S.user.email+' · sair';
   const trips=await dbGet('trips','user_id=eq.'+S.user.id+'&order=created_at.desc');
   S.trips=trips||[];
@@ -747,7 +805,7 @@ async function loadDashboard(){
   // Desenha os cards JÁ, com uma só ida ao banco. Os spots (contagens) chegam
   // na sequência e só atualizam o texto — o usuário não fica olhando tela vazia.
   renderTrips();populateTripOpts();
-  const visivelAntes=S.trips.filter(t=>!isQuickVisit(t)).map(t=>t.id).join(',');
+  const visivelAntes=S.trips.filter(t=>!isNonTrip(t)).map(t=>t.id).join(',');
   // TODOS os spots numa única query (antes: uma por viagem, em série — somava
   // um round-trip inteiro por viagem antes de qualquer card aparecer)
   if(S.trips.length){
@@ -770,13 +828,13 @@ async function loadDashboard(){
     dbUpdate('trips',t.id,{dates:'__quickvisit__'});
     t.dates='__quickvisit__';
   }
-  document.getElementById('statTrips').textContent=S.trips.filter(t=>!isQuickVisit(t)).length;
+  document.getElementById('statTrips').textContent=S.trips.filter(t=>!isNonTrip(t)).length;
   document.getElementById('statSpots').textContent=ts;
   document.getElementById('statCities').textContent=cities.size;
   document.getElementById('statCountries').textContent=ctrs.size;
   // Só redesenha tudo se a lista visível mudou (ex.: migração __quickvisit__).
   // Caso normal: atualiza só o texto — sem piscada e sem rebuscar as fotos.
-  const visivelAgora=S.trips.filter(t=>!isQuickVisit(t)).map(t=>t.id).join(',');
+  const visivelAgora=S.trips.filter(t=>!isNonTrip(t)).map(t=>t.id).join(',');
   if(visivelAgora!==visivelAntes){renderTrips()}
   else{refreshTripMetas()}
   populateTripOpts();
@@ -823,6 +881,11 @@ function tripCityCount(t){
   return cities.size;
 }
 function isQuickVisit(t){return t.dates==='__quickvisit__'&&(!t._spots||!t._spots.length)}
+function isHomeCountry(t){return t.dates==='__home__'&&(!t._spots||!t._spots.length)}
+// Marcador único pros dois casos que não são viagem de fato (só um país
+// marcado): usar em todo lugar que hoje decide o que entra em "Minhas
+// viagens" — assim um novo tipo de marcador não exige caçar 8 call sites.
+function isNonTrip(t){return isQuickVisit(t)||isHomeCountry(t)}
 function regionFor(name){const c=COUNTRIES.find(x=>x.name===name);return c?c.region:'Outros'}
 const REGION_ORDER=['Europa','América do Sul','América do Norte','Ásia','África','Oceania','Antártida','Outros'];
 // Linha de metadados do card. Separada porque os cards são desenhados assim que
@@ -858,7 +921,7 @@ function toggleRegionFolder(region,headerEl){
 }
 function renderTrips(){
   const c=document.getElementById('tripsContainer');
-  const visibleTrips=S.trips.filter(t=>!isQuickVisit(t));
+  const visibleTrips=S.trips.filter(t=>!isNonTrip(t));
   if(!visibleTrips.length){c.innerHTML='<div class="section-head"><span class="section-title">Minhas viagens</span></div><div class="empty-state"><div class="ei">'+icon('suitcase')+'</div><h3>Nenhuma viagem ainda</h3><p>Toca no + para criar sua primeira viagem</p></div>';return}
   const groups={};
   visibleTrips.forEach(t=>{
@@ -896,14 +959,15 @@ function allSpotsFlat(){
   return out;
 }
 function openList(mode){
-  LS.mode=mode;LS.sort='rating';LS.cat='';LS.country='';LS.city='';
+  LS.mode=mode;LS.sort='rating';LS.cat='';LS.country='';LS.city='';LS.cityQuery='';
   goTo('list');renderList();
 }
 function closeList(){goTo('dashboard')}
 function setListFilter(k,v){LS[k]=(LS[k]===v?'':v);renderList()}
 function setListSort(v){LS.sort=v;renderList()}
+function setListCityQuery(v){LS.cityQuery=v;renderList()}
 function drillTo(kind,value){
-  LS.mode='spots';LS.sort='rating';LS.cat='';LS.country='';LS.city='';
+  LS.mode='spots';LS.sort='rating';LS.cat='';LS.country='';LS.city='';LS.cityQuery='';
   LS[kind]=value;renderList();
 }
 function chip(label,on,handler){return `<div class="filter-chip${on?' on':''}" onclick="${handler}">${label}</div>`}
@@ -917,11 +981,20 @@ function renderList(){
   const spots=allSpotsFlat();
   let f='',h='';
 
+  // Busca por cidade só faz sentido depois de já ter filtrado por país e
+  // antes de ter escolhido uma cidade específica — daí é só uma, buscar
+  // não ajuda em nada.
+  const wrap=document.getElementById('listCitySearchWrap');
+  const mostrarBuscaCidade=LS.mode==='spots'&&!!LS.country&&!LS.city;
+  wrap.style.display=mostrarBuscaCidade?'block':'none';
+  if(!mostrarBuscaCidade){LS.cityQuery='';const inp=document.getElementById('listCitySearch');if(inp)inp.value=''}
+
   if(LS.mode==='spots'){
     let list=spots.slice();
     if(LS.cat)list=list.filter(s=>s.category===LS.cat);
     if(LS.country)list=list.filter(s=>s._country===LS.country);
     if(LS.city)list=list.filter(s=>cityOf(s)===LS.city);
+    if(LS.cityQuery)list=list.filter(s=>cityOf(s).toLowerCase().includes(LS.cityQuery.toLowerCase()));
     if(LS.sort==='rating')list.sort((a,b)=>(parseFloat(b.my_rating)||0)-(parseFloat(a.my_rating)||0)||(parseFloat(b.rating_google)||0)-(parseFloat(a.rating_google)||0));
     else if(LS.sort==='name')list.sort((a,b)=>(a.name||'').localeCompare(b.name||'','pt-BR'));
     LS.items=list;
@@ -967,7 +1040,7 @@ function renderList(){
     S.trips.forEach(t=>{
       const c=(t.destinations&&t.destinations[0])||t.name;if(!c)return;
       const e=map[c]=map[c]||{country:c,viagens:0,spots:0};
-      if(!isQuickVisit(t))e.viagens++;
+      if(!isNonTrip(t))e.viagens++;
       e.spots+=(t._spots||[]).length;
     });
     const list=Object.values(map).sort((a,b)=>b.spots-a.spots||a.country.localeCompare(b.country,'pt-BR'));
@@ -981,7 +1054,7 @@ function renderList(){
   }
 
   else if(LS.mode==='trips'){
-    const list=S.trips.filter(t=>!isQuickVisit(t));
+    const list=S.trips.filter(t=>!isNonTrip(t));
     LS.items=list;
     title.textContent=LIST_TITLES.trips;
     kicker.textContent=list.length+(list.length===1?' viagem':' viagens');
@@ -1052,7 +1125,7 @@ async function deleteTrip(){
     S.trips=S.trips.filter(t=>t.id!==id);
     S.curTrip=null;
     goTo('dashboard');loadDashboard();
-    toast('Viagem excluída','');
+    toast('Viagem excluída','','trash');
   }else toast('Erro ao excluir','');
 }
 async function deleteSpot(){
@@ -1063,7 +1136,7 @@ async function deleteSpot(){
   if(!error){
     if(S.curTrip&&S.curTrip._spots){S.curTrip._spots=S.curTrip._spots.filter(s=>s.id!==id)}
     goTo('trip');loadTrip(S.curTrip);
-    toast('Spot excluído','');
+    toast('Spot excluído','','trash');
   }else toast('Erro ao excluir','');
 }
 async function openTrip(id){
@@ -1121,7 +1194,7 @@ async function openPlace(id,origin){
   document.getElementById('placeName').textContent=s.name;
   document.getElementById('placeType').textContent=`${catLabel(s.category)} · ${cityOf(s)}`;
   document.getElementById('placeNote').textContent=`"${s.my_note}"`;
-  document.getElementById('placeNoteAttr').textContent=`— ${document.getElementById('dashName').textContent}, antes de ir`;
+  document.getElementById('placeNoteAttr').style.display='none';
   const phEl=document.getElementById('placeHeroImg');
   const cid=cityOf(s)||s.name;
   const aindaNesteSpot=()=>S.curPlace&&S.curPlace.id===s.id;
@@ -1147,7 +1220,12 @@ async function openPlace(id,origin){
   const reserveWrap=document.getElementById('placeReserveWrap');
   if(s.category==='food'){
     const q=encodeURIComponent(s.name+(cityOf(s)?' '+cityOf(s):''));
-    reserveWrap.innerHTML=`<a class="reserve-btn" href="https://www.thefork.com/search?query=${q}" target="_blank" rel="noopener">${icon('food')} Reservar mesa</a>`;
+    let rh=`<a class="reserve-btn" href="https://www.thefork.com/search?query=${q}" target="_blank" rel="noopener">${icon('food')} Reservar mesa</a>`;
+    // Places API (New) não tem campo de menu — nenhum lugar tem, testei.
+    // websiteUri é o que existe de real: quando o lugar salvou o site
+    // próprio, manda pra lá, que é onde o cardápio de fato mora.
+    if(s.website_url)rh+=`<a class="reserve-btn" href="${s.website_url}" target="_blank" rel="noopener">${icon('menu')} Ver cardápio</a>`;
+    reserveWrap.innerHTML=rh;
   }else{
     reserveWrap.innerHTML='';
   }
@@ -1170,7 +1248,7 @@ async function saveReview(){
   const btn=document.querySelector('.action-btn');btn.textContent='Salvando...';btn.disabled=true;
   await dbUpdate('spots',S.curPlace.id,{my_rating:r,my_review:rv});
   btn.textContent='Salvo ✓';setTimeout(()=>{btn.textContent='Salvar avaliação';btn.disabled=false},2000);
-  toast('Avaliação salva!','');
+  toast('Avaliação salva!','','star');
 }
 
 // ═══ ADD SPOT FLOW ═══
@@ -1201,7 +1279,7 @@ function searchPlaces(v){
     try{
       const resp=await fetch('https://places.googleapis.com/v1/places:searchText',{
         method:'POST',
-        headers:{'Content-Type':'application/json','X-Goog-Api-Key':GAPI,'X-Goog-FieldMask':'places.id,places.displayName,places.formattedAddress,places.addressComponents,places.location,places.photos,places.rating'},
+        headers:{'Content-Type':'application/json','X-Goog-Api-Key':GAPI,'X-Goog-FieldMask':'places.id,places.displayName,places.formattedAddress,places.addressComponents,places.location,places.photos,places.rating,places.websiteUri'},
         body:JSON.stringify({textQuery:v,languageCode:'pt-BR',maxResultCount:6})
       });
       if(myReqId!==searchReqId)return; // busca mais nova já foi disparada, ignora essa resposta atrasada
@@ -1217,7 +1295,7 @@ function searchPlaces(v){
         const photoRef=p.photos?.[0]?.name||'';
         const photoThumb=photoRef?'https://places.googleapis.com/v1/'+photoRef+'/media?maxWidthPx=200&key='+GAPI:'';
         const photoFull=photoRef?'https://places.googleapis.com/v1/'+photoRef+'/media?maxWidthPx=800&key='+GAPI:'';
-        return{name,meta:addr,icon:catIcon(S.addCat),city,country,address:addr,photo_url:photoFull,photo_thumb:photoThumb,rating_google:rating};
+        return{name,meta:addr,icon:catIcon(S.addCat),city,country,address:addr,photo_url:photoFull,photo_thumb:photoThumb,rating_google:rating,website_url:p.websiteUri||''};
       });
       if(myReqId!==searchReqId)return;
       r.innerHTML=S.searchResults.map((p,i)=>{
@@ -1285,7 +1363,7 @@ async function moveToCorrectCountry(existingTrip,createNew){
     const{data,error}=await dbInsert('trips',{user_id:S.user.id,name:country,destinations:[country],dates:'',status:'planning'});
     if(error||!data){toast('Erro ao criar viagem','');return}
     data._spots=[];S.trips.unshift(data);trip=data;
-    document.getElementById('statTrips').textContent=S.trips.filter(t=>!isQuickVisit(t)).length;
+    document.getElementById('statTrips').textContent=S.trips.filter(t=>!isNonTrip(t)).length;
   }
   // Set the add target to the correct trip and proceed to note
   S.addTrip=trip;S.selPlace=p;S.pendingPlace=null;
@@ -1327,12 +1405,12 @@ async function saveSpot(){
   const note=document.getElementById('noteField').value.trim(); // optional now
   const btn=document.getElementById('saveSpotBtn');btn.textContent='Salvando...';btn.disabled=true;
   const t=S.addTrip,p=S.selPlace;
-  const rec={user_id:S.user.id,trip_id:t.id,name:p.name,category:S.addCat,my_note:note,city:p.city||'',address:p.address||'',photo_url:p.photo_url||'',place_type:catLabel(S.addCat),rating_google:p.rating_google||'',status:addStatus};
+  const rec={user_id:S.user.id,trip_id:t.id,name:p.name,category:S.addCat,my_note:note,city:p.city||'',address:p.address||'',photo_url:p.photo_url||'',place_type:catLabel(S.addCat),rating_google:p.rating_google||'',status:addStatus,website_url:p.website_url||''};
   if(addStatus==='been'&&addRating>0)rec.my_rating=addRating;
   const{data,error}=await dbInsert('spots',rec);
   if(!error&&data){
     if(!t._spots)t._spots=[];t._spots.push(data);closeOv('ov-note');
-    toast('✦ Spot salvo',note?`"${p.name} · ${note}"`:p.name);
+    toast('Spot salvo',note?`"${p.name} · ${note}"`:p.name,'check');
     if(document.getElementById('trip').classList.contains('active')&&S.curTrip?.id===t.id){S.curTrip._spots=t._spots;switchCat(S.curCat,document.querySelector('.cat-tab.active'));updCatCnts(t._spots)}
     await loadDashboard();
   }else toast('Erro',error?.message||'');
@@ -1361,8 +1439,8 @@ async function createTrip(){
     document.getElementById('countryList').innerHTML='';
     document.getElementById('tripStart').value='';document.getElementById('tripEnd').value='';
     renderTrips();populateTripOpts();
-    document.getElementById('statTrips').textContent=S.trips.filter(t=>!isQuickVisit(t)).length;
-    toast('✦ Viagem criada','"'+name+'"');
+    document.getElementById('statTrips').textContent=S.trips.filter(t=>!isNonTrip(t)).length;
+    toast('Viagem criada','"'+name+'"','suitcase');
   }else{
     toast('Erro ao criar',error?.message||'Tente novamente');
     btn.textContent='Criar viagem';btn.style.pointerEvents='auto';
@@ -1471,6 +1549,9 @@ function selectCountry(c){
 }
 // ── Quick "mark as already visited" flow (no dates, no spots needed) ──
 let selectedVisitCountry=null;
+let quickVisitMode='visited'; // 'visited' | 'home' — mesmo sheet, dois marcadores diferentes
+function openVisitedCountryPicker(){quickVisitMode='visited';showOv('ov-quickvisit')}
+function openHomeCountryPicker(){quickVisitMode='home';showOv('ov-quickvisit')}
 function renderCountryList2(filter){
   const list=document.getElementById('countryList2');
   const f=(filter||'').toLowerCase();
@@ -1483,31 +1564,33 @@ function selectCountry2(c){
   document.getElementById('countrySearch2').value=c.flag+' '+c.name;
   document.getElementById('countryList2').innerHTML='';
   const btn=document.getElementById('createVisitBtn');
-  btn.textContent='Marcar como visitado';btn.style.opacity='1';btn.style.pointerEvents='auto';
+  btn.textContent=quickVisitMode==='home'?'Marcar como moradia':'Marcar como visitado';btn.style.opacity='1';btn.style.pointerEvents='auto';
 }
 function prepQuickVisit(){
   selectedVisitCountry=null;
   const cs=document.getElementById('countrySearch2');if(cs)cs.value='';
   const btn=document.getElementById('createVisitBtn');if(btn){btn.textContent='Selecione um país';btn.style.opacity='.4';btn.style.pointerEvents='none'}
+  document.getElementById('quickVisitTitle').textContent=quickVisitMode==='home'?'Qual país você mora?':'Qual país você já visitou?';
   renderCountryList2('');
 }
 async function markVisited(){
   if(!selectedVisitCountry)return;
   const name=selectedVisitCountry.name;
+  const isHome=quickVisitMode==='home';
   const existing=S.trips.find(t=>((t.destinations&&t.destinations[0])||t.name)===name);
   if(existing){
     closeOv('ov-quickvisit');
-    toast('Já existe',`Você já tem uma viagem pra ${name}.`);
+    toast('Já existe',isHome?`${name} já está marcado na sua conta.`:`Você já tem uma viagem pra ${name}.`,'alert');
     return;
   }
   const btn=document.getElementById('createVisitBtn');btn.textContent='Marcando...';btn.style.pointerEvents='none';
-  const{data,error}=await dbInsert('trips',{user_id:S.user.id,name,destinations:[name],dates:'__quickvisit__',status:'done'});
+  const{data,error}=await dbInsert('trips',{user_id:S.user.id,name,destinations:[name],dates:isHome?'__home__':'__quickvisit__',status:isHome?'home':'done'});
   if(!error&&data){
     data._spots=[];S.trips.unshift(data);closeOv('ov-quickvisit');
     renderTrips();populateTripOpts();loadProfile();
-    toast('Marcado! 🌍',`${name} agora está no seu mapa.`);
+    toast('Marcado!',isHome?`${name} agora é onde você mora.`:`${name} agora está no seu mapa.`,'globe');
   }else{
-    btn.textContent='Marcar como visitado';btn.style.pointerEvents='auto';
+    btn.textContent=isHome?'Marcar como moradia':'Marcar como visitado';btn.style.pointerEvents='auto';
     toast('Erro','Não foi possível marcar. Tenta de novo.');
   }
 }
@@ -1607,7 +1690,7 @@ async function healSpotPhoto(id){
   try{
     const resp=await fetch('https://places.googleapis.com/v1/places:searchText',{
       method:'POST',
-      headers:{'Content-Type':'application/json','X-Goog-Api-Key':GAPI,'X-Goog-FieldMask':'places.photos,places.addressComponents'},
+      headers:{'Content-Type':'application/json','X-Goog-Api-Key':GAPI,'X-Goog-FieldMask':'places.photos,places.addressComponents,places.websiteUri'},
       body:JSON.stringify({textQuery:s.name+(cityOf(s)?' '+cityOf(s):''),languageCode:'pt-BR',maxResultCount:1})
     });
     const d=await resp.json();
@@ -1619,6 +1702,9 @@ async function healSpotPhoto(id){
     // grava a cidade certa.
     const cidadeNova=cityFromComponents(p.addressComponents);
     if(cidadeNova&&CITY_ADMIN_TEST.test(s.city||'')&&cidadeNova!==s.city){patch.city=cidadeNova;s.city=cidadeNova}
+    // De brinde também: spot salvo antes do botão "Ver cardápio" existir
+    // nunca teve website_url gravado. Preenche agora que já está buscando.
+    if(p.websiteUri&&!s.website_url){patch.website_url=p.websiteUri;s.website_url=p.websiteUri}
     const ref=p.photos&&p.photos[0]&&p.photos[0].name;
     const url=ref?'https://places.googleapis.com/v1/'+ref+'/media?maxWidthPx=800&key='+GAPI:'';
     // se a URL veio igual, a falha não era referência expirada — não regrava
@@ -1628,6 +1714,18 @@ async function healSpotPhoto(id){
     return patch.photo_url||null;
   }catch(e){console.error('healSpotPhoto',e);return null}
   finally{photoHealing.delete(id)}
+}
+async function onSpotPhotoFileChosen(input){
+  const file=input.files&&input.files[0];if(!file)return;
+  input.value='';
+  const s=S.curPlace;if(!s)return;
+  const url=await uploadToStorage(file,'spot');
+  if(!url){toast('Erro','Não foi possível enviar a foto.');return}
+  const{error}=await dbUpdate('spots',s.id,{photo_url:url});
+  if(error){toast('Erro','Não foi possível salvar a foto.');return}
+  s.photo_url=url;
+  document.getElementById('placeHeroImg').style.backgroundImage=`url('${url}')`;
+  toast('Foto atualizada','','check');
 }
 // onerror da <img>: troca pelo ícone da categoria agora e tenta consertar pra próxima
 function onSpotPhotoError(img,id,cat){
@@ -1667,7 +1765,7 @@ async function fetchCityPhoto(query){
     const resp=await fetch('https://api.unsplash.com/search/photos?query='+encodeURIComponent(query)+'&per_page=10&orientation=landscape&client_id='+UNSPLASH_KEY);
     if(resp.status===403||resp.status===429){
       setUnsplashBlock(10*60*1000);
-      if(!window.__unsplashWarned){window.__unsplashWarned=true;toast('Fotos pausadas','Cota do Unsplash esgotada, volta em ~10min. Gradiente por enquanto.')}
+      if(!window.__unsplashWarned){window.__unsplashWarned=true;toast('Fotos pausadas','Cota do Unsplash esgotada, volta em ~10min. Gradiente por enquanto.','alert')}
       return'';
     }
     const data=await resp.json();
@@ -1722,6 +1820,10 @@ function visitedCountryNames(){
   S.trips.forEach(t=>{const n=(t.destinations&&t.destinations[0])||t.name;if(n)set.add(n)});
   return [...set];
 }
+function homeCountryName(){
+  const t=S.trips.find(isHomeCountry);
+  return t?((t.destinations&&t.destinations[0])||t.name):null;
+}
 function visitedCityCount(){
   rebuildCityCanon();
   const set=new Set();
@@ -1736,9 +1838,11 @@ async function loadProfile(){
   document.getElementById('profName').textContent=name;
   document.getElementById('profAvatar').textContent=name.charAt(0).toUpperCase();
   document.getElementById('profEmail').textContent=S.user.email;
-  dbGet('profiles','id=eq.'+S.user.id).then(rows=>{
-    const p=rows&&rows[0];
-    document.getElementById('usernameInput').value=p&&p.username?p.username:'';
+  fetchOwnProfile(true).then(p=>{
+    document.getElementById('usernameInput').value=p.username||'';
+    document.getElementById('bioInput').value=p.bio||'';
+    applyAvatar('dashAvatar',name,p.avatar_url);
+    applyAvatar('profAvatar',name,p.avatar_url);
   });
   // Load trips + their spots (for city count) if missing
   if(!S.trips.length){const trips=await dbGet('trips','user_id=eq.'+S.user.id);S.trips=trips||[]}
@@ -1756,7 +1860,8 @@ async function loadProfile(){
   else{hl.innerHTML=`Você já explorou <b>${pct}%</b> do mundo`}
   const chips=document.getElementById('countryChips');
   if(visited.length){
-    chips.innerHTML=visited.map(c=>`<div class="country-chip">${flagFor(c)} ${c}</div>`).join('');
+    const homeName=homeCountryName();
+    chips.innerHTML=visited.map(c=>`<div class="country-chip">${flagFor(c)} ${c}${c===homeName?'<span class="chip-home-tag">mora aqui</span>':''}</div>`).join('');
   }else{
     chips.innerHTML='<div class="country-chips-empty">Crie viagens para pintar o mundo 🌍</div>';
   }
@@ -1882,14 +1987,20 @@ function goTo(id){document.querySelectorAll('.screen').forEach(s=>s.classList.re
 function showOv(id){populateTripOpts();if(id==='ov-newtrip')prepNewTrip();if(id==='ov-quickvisit')prepQuickVisit();document.getElementById(id).classList.add('show')}
 function closeOv(id){document.getElementById(id).classList.remove('show')}
 function closeOut(e,id){if(e.target===document.getElementById(id))closeOv(id)}
-function nextOv(a,b){closeOv(a);if(b==='ov-newtrip')prepNewTrip();setTimeout(()=>document.getElementById(b).classList.add('show'),220)}
+function nextOv(a,b){closeOv(a);if(b==='ov-newtrip')prepNewTrip();if(b==='ov-trip')populateTripOpts();setTimeout(()=>document.getElementById(b).classList.add('show'),220)}
 function prepNewTrip(){
   selectedCountry=null;
   const cs=document.getElementById('countrySearch');if(cs)cs.value='';
   const btn=document.getElementById('createTripBtn');if(btn){btn.textContent='Selecione um país';btn.style.opacity='.4';btn.style.pointerEvents='none'}
   renderCountryList('');
 }
-function toast(t,m){const el=document.getElementById('toast');document.getElementById('toastTitle').textContent=t;document.getElementById('toastMsg').textContent=m;el.classList.add('show');setTimeout(()=>el.classList.remove('show'),3500)}
+function toast(t,m,ic){
+  const el=document.getElementById('toast');
+  document.getElementById('toastIcon').innerHTML=icon(ic||(/erro/i.test(t)?'alert':'check'));
+  document.getElementById('toastTitle').textContent=t;
+  document.getElementById('toastMsg').textContent=m;
+  el.classList.add('show');setTimeout(()=>el.classList.remove('show'),3500);
+}
 
 // ═══ LOGIN BACKGROUNDS (real city photos via Google Places + gradient fallback) ═══
 const ALL_LOGIN_CITIES=[
@@ -2033,7 +2144,7 @@ async function loadFriends(){
   let feedItems=[];
   if(friendIds.length){
     const[trips,spots]=await Promise.all([
-      dbGet('trips',`user_id=in.(${friendIds.join(',')})&order=created_at.desc&limit=15`),
+      dbGet('trips',`user_id=in.(${friendIds.join(',')})&dates=not.in.(__quickvisit__,__home__)&order=created_at.desc&limit=15`),
       dbGet('spots',`user_id=in.(${friendIds.join(',')})&status=eq.been&order=created_at.desc&limit=15`)
     ]);
     trips.forEach(t=>{
@@ -2086,7 +2197,7 @@ async function respondRequest(followId,accept){
   if(accept){
     const{error}=await dbUpdate('follows',followId,{status:'accepted'});
     if(error){toast('Erro','Não foi possível aceitar. Tenta de novo.');return}
-    toast('Amigo adicionado! 🎉','Vocês já podem ver a atividade um do outro.');
+    toast('Amigo adicionado','Vocês já podem ver a atividade um do outro.','users');
   }else{
     await dbDelete('follows',followId);
   }
@@ -2120,7 +2231,7 @@ async function sendFriendRequest(){
   if(error){errEl.textContent='Erro ao enviar. Tenta de novo.';return}
   closeOv('ov-addfriend');
   document.getElementById('friendUsernameInput').value='';
-  toast('Pedido enviado! ✈️','Assim que aceitar, vocês veem a atividade um do outro.');
+  toast('Pedido enviado','Assim que aceitar, vocês veem a atividade um do outro.','send');
   loadFriends();
 }
 async function cancelRequest(followId){
@@ -2151,6 +2262,31 @@ async function saveUsername(){
   statusEl.style.color='';statusEl.textContent='Salvo! Seus amigos já podem te encontrar por @'+raw;
 }
 function var_red(){return getComputedStyle(document.documentElement).getPropertyValue('--red')}
+async function saveBio(){
+  const bio=document.getElementById('bioInput').value.trim();
+  const mine=await dbGet('profiles',`id=eq.${S.user.id}`);
+  let error;
+  if(mine.length){({error}=await dbUpdate('profiles',S.user.id,{bio}))}
+  else{({error}=await dbInsert('profiles',{id:S.user.id,email:S.user.email,display_name:S.user.email.split('@')[0],bio}))}
+  if(error){toast('Erro','Não foi possível salvar a bio.');return}
+  S.profile=S.profile||{};S.profile.bio=bio;
+  toast('Bio salva','','check');
+}
+async function onAvatarFileChosen(input){
+  const file=input.files&&input.files[0];if(!file)return;
+  input.value=''; // permite escolher o mesmo arquivo de novo depois, se quiser trocar por ele mesmo
+  const url=await uploadToStorage(file,'avatar');
+  if(!url){toast('Erro','Não foi possível enviar a foto.');return}
+  const mine=await dbGet('profiles',`id=eq.${S.user.id}`);
+  let error;
+  if(mine.length){({error}=await dbUpdate('profiles',S.user.id,{avatar_url:url}))}
+  else{({error}=await dbInsert('profiles',{id:S.user.id,email:S.user.email,display_name:S.user.email.split('@')[0],avatar_url:url}))}
+  if(error){toast('Erro','Não foi possível salvar a foto.');return}
+  S.profile=S.profile||{};S.profile.avatar_url=url;
+  const name=document.getElementById('profName').textContent;
+  applyAvatar('profAvatar',name,url);applyAvatar('dashAvatar',name,url);
+  toast('Foto atualizada','','check');
+}
 
 // ═══ START ═══
 init();
