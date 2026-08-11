@@ -642,8 +642,7 @@ svg.ic path,svg.ic circle,svg.ic line,svg.ic polyline,svg.ic rect{fill:none;stro
 <div class="overlay" id="ov-quickvisit" onclick="closeOut(event,'ov-quickvisit')"><div class="sheet"><button class="sheet-close" onclick="closeOv('ov-quickvisit')" data-ic="close" aria-label="Fechar"></button><div class="sheet-handle"></div><div class="sheet-title" id="quickVisitTitle">Qual país você já visitou?</div><div class="nt-label">País</div><div class="dest-search-wrap"><span class="dsi" data-ic="search"></span><input class="nt-input" style="padding-left:44px" id="countrySearch2" placeholder="Buscar país..." oninput="filterCountries2(this.value)"></div><div id="countryList2"></div><button class="sheet-cta" id="createVisitBtn" onclick="markVisited()" style="opacity:.4;pointer-events:none">Selecione um país</button></div></div>
 <div class="overlay" id="ov-addfriend" onclick="closeOut(event,'ov-addfriend')"><div class="sheet"><button class="sheet-close" onclick="closeOv('ov-addfriend')" data-ic="close" aria-label="Fechar"></button><div class="sheet-handle"></div><div class="sheet-title">Adicionar amigo</div><div class="nt-label">Username do amigo</div><input class="nt-input" id="friendUsernameInput" type="text" placeholder="username_do_amigo" autocapitalize="none" oninput="document.getElementById('friendAddErr').textContent=''"><div class="auth-error" id="friendAddErr"></div><button class="sheet-cta" id="sendReqBtn" onclick="sendFriendRequest()">Enviar pedido</button></div></div>
 
-<div class="overlay" id="ov-editdates" onclick="closeOut(event,'ov-editdates')"><div class="sheet"><button class="sheet-close" onclick="closeOv('ov-editdates')" data-ic="close" aria-label="Fechar"></button><div class="sheet-handle"></div><div class="sheet-title">Datas da viagem</div><div class="nt-label">Deixe em branco se não for uma viagem com data definida (ex: seu país de origem)</div><div class="dates-row"><input class="nt-input" type="date" id="editStart"><input class="nt-input" type="date" id="editEnd"></div><button class="sheet-cta" onclick="saveEditDates()">Salvar</button><button class="delete-link" onclick="clearEditDates()">Limpar datas (não é uma viagem)</button></div></div>
-<div class="toast" id="toast"><div class="toast-icon" id="toastIcon"></div><div class="toast-body"><div class="toast-title" id="toastTitle"></div><div class="toast-msg" id="toastMsg"></div></div></div>
+<div class="overlay" id="ov-editdates" onclick="closeOut(event,'ov-editdates')"><div class="sheet"><button class="sheet-close" onclick="closeOv('ov-editdates')" data-ic="close" aria-label="Fechar"></button><div class="sheet-handle"></div><div class="sheet-title">Datas da viagem</div><div class="nt-label">Deixe em branco se não for uma viagem com data definida (ex: seu país de origem)</div><div class="dates-row"><input class="nt-input" type="date" id="editStart"><input class="nt-input" type="date" id="editEnd"></div><button class="sheet-cta" onclick="saveEditDates()">Salvar</button><button class="delete-link" onclick="clearEditDates()">Limpar datas (não é uma viagem)</button></div></div><div class="toast" id="toast"><div class="toast-icon" id="toastIcon"></div><div class="toast-body"><div class="toast-title" id="toastTitle"></div><div class="toast-msg" id="toastMsg"></div></div></div>
 
 <div class="cropper-overlay" id="cropperOverlay">
   <div class="cropper-hint">Arraste pra posicionar</div>
@@ -1319,37 +1318,32 @@ async function openPlace(id,origin){
   if(s.rating_google)ig+=`<div class="info-cell"><div class="info-cell-icon">${icon('star')}</div><div class="info-cell-label">Google</div><div class="info-cell-value">${fmtRating(s.rating_google)}</div></div>`;
   if(!ig)ig=`<div class="info-cell wide"><div class="info-cell-icon">${icon('pin')}</div><div class="info-cell-label">Local</div><div class="info-cell-value">${cityOf(s)||'—'}</div></div>`;
   document.getElementById('placeInfoGrid').innerHTML=ig;
-  const reserveWrap=document.getElementById('placeReserveWrap');
-  if(s.category==='food'){
-    const q=encodeURIComponent(s.name+(cityOf(s)?' '+cityOf(s):''));
-    let rh=`<a class="reserve-btn" href="https://www.thefork.com/search?query=${q}" target="_blank" rel="noopener">${icon('food')} Reservar mesa</a>`;
-    // Places API (New) não tem campo de menu — nenhum lugar tem, testei.
-    // websiteUri é o que existe de real, mas na prática costuma ser o
-    // Instagram do lugar (muito restaurante pequeno não tem site próprio,
-    // só isso) — o link já abre o app nativo no iPhone, então o rótulo
-    // avisa certo em vez de prometer "cardápio" e cair numa bio do Insta.
-    if(s.website_url){
-      const isInstagram=/instagram\.com/i.test(s.website_url);
-      rh+=`<a class="reserve-btn" href="${s.website_url}" target="_blank" rel="noopener">${icon(isInstagram?'instagram':'menu')} ${isInstagram?'Abrir Instagram':'Ver cardápio'}</a>`;
-    }else if(s.maps_url){
-      // Sem site nem Instagram cadastrado no Google (existe — testei o caso
-      // real do Cepa) — Maps é o último recurso, pelo menos alguma coisa em
-      // vez de nenhum botão.
-      rh+=`<a class="reserve-btn" href="${s.maps_url}" target="_blank" rel="noopener">${icon('mapPin')} Ver no Google Maps</a>`;
-    }
-    reserveWrap.innerHTML=rh;
-  }else if(s.category==='hotel'||s.category==='experience'){
-    // Hotel e experiência não tinham nenhum link de ação. googleMapsUri é
-    // a página de Maps do lugar específico (fotos, reviews, horário) — a
-    // mesma busca que já roda pra foto/site trouxe isso de graça.
-    reserveWrap.innerHTML=s.maps_url?`<a class="reserve-btn" href="${s.maps_url}" target="_blank" rel="noopener">${icon('mapPin')} Ver no Google Maps</a>`:'';
-  }else{
-    reserveWrap.innerHTML='';
-  }
+  renderPlaceLinks(s);
   setStatus(s.status||'want',false);
   document.querySelectorAll('.star-btn').forEach((b,i)=>b.classList.toggle('lit',i<(s.my_rating||0)));
   document.getElementById('reviewText').value=s.my_review||'';
   goTo('place');
+}
+// Botões de ação na tela do spot — extraído pra função própria porque o
+// backfill automático precisa redesenhar isso quando o link chega depois
+// (a tela pode já estar aberta quando a busca em segundo plano termina).
+function renderPlaceLinks(s){
+  const reserveWrap=document.getElementById('placeReserveWrap');
+  if(s.category==='food'){
+    const q=encodeURIComponent(s.name+(cityOf(s)?' '+cityOf(s):''));
+    let rh=`<a class="reserve-btn" href="https://www.thefork.com/search?query=${q}" target="_blank" rel="noopener">${icon('food')} Reservar mesa</a>`;
+    if(s.website_url){
+      const isInstagram=/instagram\.com/i.test(s.website_url);
+      rh+=`<a class="reserve-btn" href="${s.website_url}" target="_blank" rel="noopener">${icon(isInstagram?'instagram':'menu')} ${isInstagram?'Abrir Instagram':'Ver cardápio'}</a>`;
+    }else if(s.maps_url){
+      rh+=`<a class="reserve-btn" href="${s.maps_url}" target="_blank" rel="noopener">${icon('mapPin')} Ver no Google Maps</a>`;
+    }
+    reserveWrap.innerHTML=rh;
+  }else if(s.category==='hotel'||s.category==='experience'){
+    reserveWrap.innerHTML=s.maps_url?`<a class="reserve-btn" href="${s.maps_url}" target="_blank" rel="noopener">${icon('mapPin')} Ver no Google Maps</a>`:'';
+  }else{
+    reserveWrap.innerHTML='';
+  }
 }
 async function setStatus(s,save=true){
   ['want','been','skip'].forEach(k=>document.getElementById('t-'+k).className='toggle-btn');
@@ -2064,39 +2058,66 @@ function pickBestPlaceMatch(places,wantedName){
 // verificado; spot novo já grava '' quando o Google não tem, então isso
 // nunca reprocessa o mesmo spot de novo nem martela a API sem necessidade).
 let placeLinksBackfillDone=false;
-// A versão anterior do match só aceitava nome EXATO e caía pro resultado
-// [0] às cegas sem isso — muito spot ficou com website_url='' (achando que
-// tinha verificado e não tinha Instagram) quando na verdade tinha, só não
-// bateu o nome. RECHECK_KEY dispara uma segunda passada, UMA vez só (fica
-// marcado no aparelho), reabrindo só quem ficou vazio, com o match novo.
-const WEBSITE_RECHECK_KEY='spot_website_recheck_v2';
+// Google Places não expõe Instagram como campo próprio — só um "site"
+// genérico, que às vezes é o Instagram (quando o dono cadastrou assim) e
+// às vezes não é nada. Quando não é nada, essa function serverless (não
+// roda no navegador — a chave da Brave fica só no servidor) tenta achar o
+// Instagram via busca de verdade. Tem teto de segurança do lado do
+// servidor: nunca passa do crédito grátis, e falha em silêncio se algo
+// não estiver configurado ainda.
+async function findInstagramViaBrave(name,city){
+  try{
+    const resp=await fetch('/api/find-instagram',{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({query:name+(city?' '+city:'')})
+    });
+    if(!resp.ok)return'';
+    const d=await resp.json();
+    return d.instagram_url||'';
+  }catch(e){return''} // sem function configurada ainda, ou offline — nunca quebra o resto
+}
 async function autoBackfillPlaceLinks(){
   if(placeLinksBackfillDone)return;
   placeLinksBackfillDone=true;
-  const jaRecheckou=!!localStorage.getItem(WEBSITE_RECHECK_KEY);
   const targets=[];
   (S.trips||[]).forEach(t=>(t._spots||[]).forEach(s=>{
-    const precisaSite=s.category==='food'&&(s.website_url===null||(s.website_url===''&&!jaRecheckou));
+    const precisaInstagram=s.category==='food'&&!s.insta_checked;
     const precisaMaps=s.maps_url===null;
-    if(precisaSite||precisaMaps)targets.push(s);
+    if(precisaInstagram||precisaMaps)targets.push(s);
   }));
   for(const s of targets){
     try{
-      const resp=await fetch('https://places.googleapis.com/v1/places:searchText',{
-        method:'POST',
-        headers:{'Content-Type':'application/json','X-Goog-Api-Key':GAPI,'X-Goog-FieldMask':'places.displayName,places.websiteUri,places.googleMapsUri'},
-        body:JSON.stringify({textQuery:s.name+(cityOf(s)?' '+cityOf(s):''),languageCode:'pt-BR',maxResultCount:5})
-      });
-      const d=await resp.json();
-      const best=pickBestPlaceMatch(d.places,s.name);
+      const precisaInstagram=s.category==='food'&&!s.insta_checked;
       const patch={};
-      if(s.category==='food'&&(s.website_url===null||(s.website_url===''&&!jaRecheckou)))patch.website_url=(best&&best.websiteUri)||'';
-      if(s.maps_url===null)patch.maps_url=(best&&best.googleMapsUri)||'';
+      let googleSite='',mapsUrl=null;
+      if(precisaInstagram||s.maps_url===null){
+        const resp=await fetch('https://places.googleapis.com/v1/places:searchText',{
+          method:'POST',
+          headers:{'Content-Type':'application/json','X-Goog-Api-Key':GAPI,'X-Goog-FieldMask':'places.displayName,places.websiteUri,places.googleMapsUri'},
+          body:JSON.stringify({textQuery:s.name+(cityOf(s)?' '+cityOf(s):''),languageCode:'pt-BR',maxResultCount:5})
+        });
+        const d=await resp.json();
+        const best=pickBestPlaceMatch(d.places,s.name);
+        googleSite=(best&&best.websiteUri)||'';
+        mapsUrl=(best&&best.googleMapsUri)||'';
+      }
+      if(precisaInstagram){
+        // Instagram sempre vence, MESMO se o Google já tiver devolvido um
+        // site de verdade — só usa o site como fallback se o Instagram
+        // realmente não existir. Só pula a busca na Brave quando o próprio
+        // Google já devolveu um link de Instagram (nesse caso já é o que
+        // queremos, buscar de novo seria desperdício).
+        const googleJaEInstagram=/instagram\.com/i.test(googleSite);
+        const insta=googleJaEInstagram?googleSite:await findInstagramViaBrave(s.name,cityOf(s));
+        patch.website_url=insta||googleSite; // sem Instagram: cai pro site (se tiver)
+        patch.insta_checked=true;
+      }
+      if(s.maps_url===null)patch.maps_url=mapsUrl||'';
       await dbUpdate('spots',s.id,patch); // grava mesmo vazio: marca como já verificado
       Object.assign(s,patch);
     }catch(e){console.error('autoBackfillPlaceLinks',e)}
   }
-  localStorage.setItem(WEBSITE_RECHECK_KEY,'1');
 }
 async function healSpotPhoto(id){
   if(!id||photoHealing.has(id))return null;
@@ -2119,8 +2140,16 @@ async function healSpotPhoto(id){
     const cidadeNova=cityFromComponents(p.addressComponents);
     if(cidadeNova&&CITY_ADMIN_TEST.test(s.city||'')&&cidadeNova!==s.city){patch.city=cidadeNova;s.city=cidadeNova}
     // De brinde também: spot salvo antes do botão "Ver cardápio"/Maps existir
-    // nunca teve esses campos gravados. Preenche agora que já está buscando.
-    if(p.websiteUri&&!s.website_url){patch.website_url=p.websiteUri;s.website_url=p.websiteUri}
+    // nunca teve esses campos gravados. Preenche agora que já está buscando
+    // — Instagram sempre vence sobre site, mesma prioridade do backfill
+    // automático (ver autoBackfillPlaceLinks).
+    if(s.category==='food'&&!s.insta_checked){
+      const googleJaEInstagram=/instagram\.com/i.test(p.websiteUri||'');
+      const insta=googleJaEInstagram?p.websiteUri:await findInstagramViaBrave(s.name,cityOf(s));
+      const finalLink=insta||p.websiteUri||'';
+      patch.website_url=finalLink;s.website_url=finalLink;
+      patch.insta_checked=true;s.insta_checked=true;
+    }
     if(p.googleMapsUri&&!s.maps_url){patch.maps_url=p.googleMapsUri;s.maps_url=p.googleMapsUri}
     const ref=p.photos&&p.photos[0]&&p.photos[0].name;
     const url=ref?'https://places.googleapis.com/v1/'+ref+'/media?maxWidthPx=800&key='+GAPI:'';
