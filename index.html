@@ -313,6 +313,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--dark);max-width:430px;mar
 .badge-count{background:var(--terra);color:#fff;font-size:10.5px;font-weight:700;border-radius:var(--r-pill);padding:2px 7px;margin-left:6px}
 .friend-search-card{display:flex;align-items:center;gap:12px;background:var(--white);border:1px solid var(--border);border-radius:var(--r);padding:13px 14px;margin-top:10px;box-shadow:var(--shadow-sm)}
 .delete-link{display:block;width:100%;background:none;border:none;color:var(--red);font-size:13px;font-family:'DM Sans',sans-serif;cursor:pointer;padding:8px;margin-bottom:40px;text-decoration:underline;text-underline-offset:3px}
+.secondary-link{display:block;width:100%;background:none;border:none;color:var(--ink3);font-size:13px;font-family:'DM Sans',sans-serif;cursor:pointer;padding:12px 8px 8px;text-decoration:underline;text-underline-offset:3px}
 .cm-text{font-size:15px;line-height:1.5;color:var(--ink2);margin:8px 0 20px}
 /* ── Profile / World Map (Been-style) ── */
 #profile{background:#0b1620;overflow-y:auto}
@@ -384,6 +385,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--dark);max-width:430px;mar
 .sr-name{font-size:14.5px;font-weight:500;color:var(--ink)}
 .sr-meta{font-size:12px;color:var(--ink3);margin-top:3px}
 .search-loading{text-align:center;padding:32px;color:var(--ink3);font-size:14px}
+.search-nearby-label{font-family:var(--mono);font-size:10.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--terra);padding:14px 24px 6px}
 .note-place-row{display:flex;align-items:center;gap:12px;padding:0 24px 20px}
 .note-place-icon{width:52px;height:52px;border-radius:var(--r-sm);background:var(--dark);border:1px solid var(--border);flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:22px;color:var(--ink3)}
 .note-place-name{font-size:16px;font-weight:600;color:var(--ink)}
@@ -619,7 +621,7 @@ svg.ic path,svg.ic circle,svg.ic line,svg.ic polyline,svg.ic rect{fill:none;stro
 <div class="status-choice"><button class="status-opt active" id="stWant" onclick="setSpotStatus('want')"><div class="so-emoji" data-ic="bookmark"></div><div class="so-label">Quero ir</div></button><button class="status-opt" id="stBeen" onclick="setSpotStatus('been')"><div class="so-emoji" data-ic="check"></div><div class="so-label">Já fui</div></button></div>
 <div id="ratingRow" style="display:none"><div class="note-label">Sua avaliação</div><div class="stars-row" id="addStars"><button class="star-btn" onclick="setAddRating(1)" data-ic="star"></button><button class="star-btn" onclick="setAddRating(2)" data-ic="star"></button><button class="star-btn" onclick="setAddRating(3)" data-ic="star"></button><button class="star-btn" onclick="setAddRating(4)" data-ic="star"></button><button class="star-btn" onclick="setAddRating(5)" data-ic="star"></button></div></div>
 <div class="note-label">Sua nota <span style="color:var(--ink3);font-weight:400">(opcional)</span></div><div class="note-wrap"><textarea class="note-input" id="noteField" rows="2" placeholder="Por que esse lugar te chamou atenção?"></textarea></div>
-<button class="sheet-cta" id="saveSpotBtn" onclick="saveSpot()">Salvar spot</button></div></div>
+<button class="sheet-cta" id="saveSpotBtn" onclick="saveSpot(false)">Salvar spot</button><button class="secondary-link" id="saveAndAddBtn" onclick="saveSpot(true)">Salvar e adicionar outro</button></div></div>
 
 <div class="overlay" id="ov-mismatch" onclick="closeOut(event,'ov-mismatch')"><div class="sheet"><button class="sheet-close" onclick="closeOv('ov-mismatch')" data-ic="close" aria-label="Fechar"></button><div class="sheet-handle"></div><div class="sheet-title">País diferente</div><div class="cm-text" id="cmText"></div><button class="sheet-cta" id="cmMoveBtn">Mover</button><button class="delete-link" style="color:var(--ink3)" onclick="keepInThisTripAnyway()">Adicionar nesta viagem mesmo assim</button></div></div>
 <div class="overlay" id="ov-newtrip" onclick="closeOut(event,'ov-newtrip')"><div class="sheet"><button class="sheet-close" onclick="closeOv('ov-newtrip')" data-ic="close" aria-label="Fechar"></button><div class="sheet-handle"></div><div class="sheet-title">Para qual país?</div><div class="nt-label">País da viagem</div><div class="dest-search-wrap"><span class="dsi" data-ic="search"></span><input class="nt-input" style="padding-left:44px" id="countrySearch" placeholder="Buscar país..." oninput="filterCountries(this.value)"></div><div id="countryList"></div><div class="nt-label" style="margin-top:8px">Datas (opcional)</div><div class="dates-row"><input class="nt-input" type="date" id="tripStart"><input class="nt-input" type="date" id="tripEnd"></div><button class="sheet-cta" id="createTripBtn" onclick="createTrip()" style="opacity:.4;pointer-events:none">Selecione um país</button></div></div>
@@ -1380,9 +1382,7 @@ function addSpotToCurrentTrip(){
   // Already inside a trip — skip "which trip" AND skip category (use active tab)
   S.addTrip=S.curTrip;
   S.addCat=S.curCat||'food';
-  // Reset search field and go straight to place search
-  const si=document.getElementById('placeSearch');if(si)si.value='';
-  document.getElementById('searchResults').innerHTML='<div class="search-loading">Digite para buscar...</div>';
+  resetSearchSheet();
   document.getElementById('ov-search').classList.add('show');
 }
 function pickCat(c){
@@ -1457,6 +1457,53 @@ function addExploreSpot(i){
   showOv('ov-trip');
 }
 const GAPI='AIzaSyDYUDC3BkvUYSjlBVX2C6BZ8pMmycxfYUQ';
+// Reabre a ficha de busca do jeito certo: campo limpo + tenta sugerir o que
+// tem perto, sem travar nada se a localização não estiver disponível.
+function resetSearchSheet(){
+  const si=document.getElementById('placeSearch');if(si)si.value='';
+  showNearbySuggestions();
+}
+let S_nearbyResults=[];
+function showNearbySuggestions(){
+  const r=document.getElementById('searchResults');
+  r.innerHTML='<div class="search-loading">Digite para buscar...</div>';
+  // Sem API de localização, sem permissão, sem HTTPS (não deve ocorrer em
+  // produção) — qualquer um desses casos só mantém o texto padrão. Nunca
+  // impede a busca manual normal.
+  if(!navigator.geolocation)return;
+  navigator.geolocation.getCurrentPosition(async(pos)=>{
+    const si=document.getElementById('placeSearch');
+    if(si&&si.value.trim())return; // já digitou algo enquanto localizava
+    const{latitude,longitude}=pos.coords;
+    const tipo={food:'restaurant',hotel:'lodging',experience:'tourist_attraction'}[S.addCat]||'point_of_interest';
+    try{
+      const resp=await fetch('https://places.googleapis.com/v1/places:searchNearby',{
+        method:'POST',
+        headers:{'Content-Type':'application/json','X-Goog-Api-Key':GAPI,'X-Goog-FieldMask':'places.displayName,places.formattedAddress,places.addressComponents,places.photos,places.rating,places.userRatingCount,places.websiteUri'},
+        body:JSON.stringify({includedTypes:[tipo],maxResultCount:8,locationRestriction:{circle:{center:{latitude,longitude},radius:600}}})
+      });
+      const data=await resp.json();
+      if(si&&si.value.trim())return;
+      let places=(data.places||[]).filter(p=>p.rating&&p.userRatingCount);
+      if(!places.length)return; // mantém o texto padrão — sem seção "perto de você" pra evitar vazia
+      places.sort((a,b)=>(b.rating*Math.log10(b.userRatingCount+1))-(a.rating*Math.log10(a.userRatingCount+1)));
+      S_nearbyResults=places.slice(0,6).map(p=>{
+        const addr=p.formattedAddress||'';
+        const city=cityFromComponents(p.addressComponents)||extractCityFromAddr(addr);
+        const country=countryFromComponents(p.addressComponents);
+        const ref=p.photos&&p.photos[0]&&p.photos[0].name;
+        const photoThumb=ref?'https://places.googleapis.com/v1/'+ref+'/media?maxWidthPx=200&key='+GAPI:'';
+        const photoFull=ref?'https://places.googleapis.com/v1/'+ref+'/media?maxWidthPx=800&key='+GAPI:'';
+        return{name:p.displayName?.text||'',icon:catIcon(S.addCat),city,country,address:addr,photo_url:photoFull,photo_thumb:photoThumb,rating_google:p.rating?String(p.rating):'',website_url:p.websiteUri||''};
+      });
+      r.innerHTML='<div class="search-nearby-label">Perto de você</div>'+S_nearbyResults.map((p,i)=>{
+        const thumb=p.photo_thumb?'<div class="sr-icon"><img src="'+p.photo_thumb+'" loading="eager" style="width:100%;height:100%;object-fit:cover;border-radius:12px"></div>':'<div class="sr-icon">'+p.icon+'</div>';
+        return '<div class="search-result" onclick="pickNearbyResult('+i+')">'+thumb+'<div><div class="sr-name">'+p.name+'</div><div class="sr-meta">'+p.address.substring(0,50)+(p.rating_google?' · '+p.rating_google:'')+'</div></div></div>';
+      }).join('');
+    }catch(e){console.error('showNearbySuggestions',e)}
+  },function(){/* negada ou indisponível: fica no texto padrão, sem drama */},{timeout:6000,maximumAge:5*60*1000});
+}
+function pickNearbyResult(i){pickPlace(S_nearbyResults[i])}
 let searchTO;
 let searchReqId=0;
 function searchPlaces(v){
@@ -1590,20 +1637,34 @@ function resetNoteSheet(){
   document.querySelectorAll('#addStars .star-btn').forEach(b=>b.style.color='rgba(0,0,0,0.1)');
   const nf=document.getElementById('noteField');nf.value='';nf.classList.remove('error');
 }
-async function saveSpot(){
+async function saveSpot(addAnother){
   const note=document.getElementById('noteField').value.trim(); // optional now
-  const btn=document.getElementById('saveSpotBtn');btn.textContent='Salvando...';btn.disabled=true;
+  const btn=document.getElementById('saveSpotBtn'),btn2=document.getElementById('saveAndAddBtn');
+  btn.disabled=true;btn2.disabled=true;
+  (addAnother?btn2:btn).textContent='Salvando...';
   const t=S.addTrip,p=S.selPlace;
   const rec={user_id:S.user.id,trip_id:t.id,name:p.name,category:S.addCat,my_note:note,city:p.city||'',address:p.address||'',photo_url:p.photo_url||'',place_type:catLabel(S.addCat),rating_google:p.rating_google||'',status:addStatus,website_url:p.website_url||''};
   if(addStatus==='been'&&addRating>0)rec.my_rating=addRating;
   const{data,error}=await dbInsert('spots',rec);
   if(!error&&data){
-    if(!t._spots)t._spots=[];t._spots.push(data);closeOv('ov-note');
+    if(!t._spots)t._spots=[];t._spots.push(data);
     toast('Spot salvo',note?`"${p.name} · ${note}"`:p.name,'check');
     if(document.getElementById('trip').classList.contains('active')&&S.curTrip?.id===t.id){S.curTrip._spots=t._spots;switchCat(S.curCat,document.querySelector('.cat-tab.active'));updCatCnts(t._spots)}
     await loadDashboard();
+    if(addAnother){
+      // Mesma viagem, mesma categoria — só reabre a busca. É exatamente o
+      // caso de colar uma lista de restaurantes e ir adicionando um a um
+      // sem ter que refazer o "em qual viagem/categoria" a cada spot.
+      closeOv('ov-note');
+      setTimeout(()=>{
+        resetSearchSheet();
+        document.getElementById('ov-search').classList.add('show');
+      },220);
+    }else{
+      closeOv('ov-note');
+    }
   }else toast('Erro',error?.message||'');
-  btn.textContent='Salvar spot';btn.disabled=false;
+  btn.textContent='Salvar spot';btn2.textContent='Salvar e adicionar outro';btn.disabled=false;btn2.disabled=false;
 }
 
 // ═══ NEW TRIP ═══
@@ -2220,7 +2281,7 @@ function goTo(id){document.querySelectorAll('.screen').forEach(s=>s.classList.re
 function showOv(id){populateTripOpts();if(id==='ov-newtrip')prepNewTrip();if(id==='ov-quickvisit')prepQuickVisit();document.getElementById(id).classList.add('show')}
 function closeOv(id){document.getElementById(id).classList.remove('show')}
 function closeOut(e,id){if(e.target===document.getElementById(id))closeOv(id)}
-function nextOv(a,b){closeOv(a);if(b==='ov-newtrip')prepNewTrip();if(b==='ov-trip'){populateTripOpts();S.explorePick=null}setTimeout(()=>document.getElementById(b).classList.add('show'),220)}
+function nextOv(a,b){closeOv(a);if(b==='ov-newtrip')prepNewTrip();if(b==='ov-trip'){populateTripOpts();S.explorePick=null}if(b==='ov-search')resetSearchSheet();setTimeout(()=>document.getElementById(b).classList.add('show'),220)}
 function prepNewTrip(){
   selectedCountry=null;
   const cs=document.getElementById('countrySearch');if(cs)cs.value='';
