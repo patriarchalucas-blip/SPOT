@@ -1548,11 +1548,15 @@ function maybeShowCheckin(){
         if(!p.rating||!p.userRatingCount||isIrrelevantPlace(p))return false;
         const loc=p.location;
         if(!loc)return false;
-        const dist=haversineMeters(latitude,longitude,loc.latitude,loc.longitude);
-        return dist<=40;
+        p._dist=haversineMeters(latitude,longitude,loc.latitude,loc.longitude);
+        return p._dist<=40;
       });
       if(!places.length)return;
-      places.sort((a,b)=>(b.rating*Math.log10(b.userRatingCount+1))-(a.rating*Math.log10(a.userRatingCount+1)));
+      // Check-in é sobre ONDE VOCÊ ESTÁ, não sobre o que é melhor — ranquear
+      // por nota já causou um erro real: dois lugares a 12,6m um do outro (o
+      // Saiko Sando e o vizinho colado nele) e o vizinho, com mais avaliações,
+      // ganhava mesmo estando parado na porta do outro. Distância manda aqui.
+      places.sort((a,b)=>a._dist-b._dist);
       const p=places[0];
       const name=p.displayName&&p.displayName.text;
       if(!name)return;
