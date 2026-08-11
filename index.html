@@ -1411,11 +1411,11 @@ async function runExplore(){
   try{
     const resp=await fetch('https://places.googleapis.com/v1/places:searchText',{
       method:'POST',
-      headers:{'Content-Type':'application/json','X-Goog-Api-Key':GAPI,'X-Goog-FieldMask':'places.displayName,places.formattedAddress,places.addressComponents,places.photos,places.rating,places.userRatingCount,places.websiteUri,places.googleMapsUri'},
+      headers:{'Content-Type':'application/json','X-Goog-Api-Key':GAPI,'X-Goog-FieldMask':'places.displayName,places.formattedAddress,places.addressComponents,places.photos,places.rating,places.userRatingCount,places.websiteUri,places.googleMapsUri,places.types'},
       body:JSON.stringify({textQuery:`${termo} em ${city}`,languageCode:'pt-BR',maxResultCount:20})
     });
     const data=await resp.json();
-    let places=(data.places||[]).filter(p=>p.rating&&p.userRatingCount);
+    let places=(data.places||[]).filter(p=>p.rating&&p.userRatingCount&&!isIrrelevantPlace(p));
     if(!places.length){body.innerHTML='<div class="empty-state"><div class="ei" data-ic="pin"></div><h3>Nada encontrado</h3><p>Tenta um nome de cidade diferente.</p></div>';hydrateIcons(body);EXPLORE.items=[];return}
     // "bem recomendado" = nota alta E volume de avaliações — sem isso, 1
     // lugar com 1 avaliação 5★ apareceria acima de outro com 900 avaliações 4.7★
@@ -1448,6 +1448,13 @@ function addExploreSpot(i){
   showOv('ov-trip');
 }
 const GAPI='AIzaSyDYUDC3BkvUYSjlBVX2C6BZ8pMmycxfYUQ';
+// Posto de gasolina, loja de conveniência, mercado — o Google costuma
+// marcar como 'restaurant' secundário quando tem lanchonete dentro, e
+// aparecem em qualquer busca por tipo/categoria. Não é o tipo de lugar que
+// alguém quer sugerir como spot, então nunca deve aparecer — nem no
+// Explorar, nem em "Perto de você", nem no check-in.
+const IRRELEVANT_PLACE_TYPES=new Set(['gas_station','convenience_store','supermarket','grocery_store','car_repair','car_wash','atm','bank','pharmacy','hardware_store']);
+function isIrrelevantPlace(p){return(p.types||[]).some(t=>IRRELEVANT_PLACE_TYPES.has(t))}
 // Reabre a ficha de busca do jeito certo: campo limpo + tenta sugerir o que
 // tem perto, sem travar nada se a localização não estiver disponível.
 function resetSearchSheet(){
@@ -1470,12 +1477,12 @@ function showNearbySuggestions(){
     try{
       const resp=await fetch('https://places.googleapis.com/v1/places:searchNearby',{
         method:'POST',
-        headers:{'Content-Type':'application/json','X-Goog-Api-Key':GAPI,'X-Goog-FieldMask':'places.displayName,places.formattedAddress,places.addressComponents,places.photos,places.rating,places.userRatingCount,places.websiteUri,places.googleMapsUri'},
+        headers:{'Content-Type':'application/json','X-Goog-Api-Key':GAPI,'X-Goog-FieldMask':'places.displayName,places.formattedAddress,places.addressComponents,places.photos,places.rating,places.userRatingCount,places.websiteUri,places.googleMapsUri,places.types'},
         body:JSON.stringify({includedTypes:[tipo],maxResultCount:8,locationRestriction:{circle:{center:{latitude,longitude},radius:600}}})
       });
       const data=await resp.json();
       if(si&&si.value.trim())return;
-      let places=(data.places||[]).filter(p=>p.rating&&p.userRatingCount);
+      let places=(data.places||[]).filter(p=>p.rating&&p.userRatingCount&&!isIrrelevantPlace(p));
       if(!places.length)return; // mantém o texto padrão — sem seção "perto de você" pra evitar vazia
       places.sort((a,b)=>(b.rating*Math.log10(b.userRatingCount+1))-(a.rating*Math.log10(a.userRatingCount+1)));
       S_nearbyResults=places.slice(0,6).map(p=>{
@@ -1522,11 +1529,7 @@ function maybeShowCheckin(){
         body:JSON.stringify({includedTypes:['restaurant','bakery','cafe','lodging','tourist_attraction'],maxResultCount:10,locationRestriction:{circle:{center:{latitude,longitude},radius:70}}})
       });
       const data=await resp.json();
-      // Posto/loja de conveniência entram como 'restaurant' secundário em
-      // muita rede (tem lanchonete dentro) — exclusão explícita, não é o
-      // tipo de lugar que faz sentido perguntar "você está aqui?"
-      const irrelevante=new Set(['gas_station','convenience_store','supermarket','grocery_store']);
-      let places=(data.places||[]).filter(p=>p.rating&&p.userRatingCount&&!(p.types||[]).some(t=>irrelevante.has(t)));
+      let places=(data.places||[]).filter(p=>p.rating&&p.userRatingCount&&!isIrrelevantPlace(p));
       if(!places.length)return;
       places.sort((a,b)=>(b.rating*Math.log10(b.userRatingCount+1))-(a.rating*Math.log10(a.userRatingCount+1)));
       const p=places[0];
