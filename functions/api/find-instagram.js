@@ -25,13 +25,7 @@ export async function onRequestPost(context) {
   if (!env.BRAVE_API_KEY || !env.SPOT_KV) {
     // Configuração ainda não feita no painel do Cloudflare — falha em
     // silêncio pro app, nunca trava a experiência do usuário por isso.
-    // DEBUG temporário: diz exatamente qual dos dois está faltando, pra não
-    // ficar adivinhando às cegas — remover depois de confirmar.
-    return json({
-      instagram_url: null,
-      configured: false,
-      debug: { hasKey: !!env.BRAVE_API_KEY, hasKV: !!env.SPOT_KV, envKeys: Object.keys(env || {}) },
-    });
+    return json({ instagram_url: null, configured: false });
   }
 
   const monthKey = new Date().toISOString().slice(0, 7); // "2026-08"
