@@ -142,12 +142,6 @@ body{font-family:'DM Sans',sans-serif;background:var(--dark);max-width:430px;mar
 .tc-stub{flex:1;min-width:0;padding:0;display:flex;flex-direction:column;border-left:none;order:1}
 .tc-stub-top{display:flex;align-items:center;gap:8px}
 .tc-flag{font-size:15px;line-height:1}
-.tc-status-dot{width:7px;height:7px;border-radius:50%;flex-shrink:0}
-.tc-status-dot.st-planning{background:var(--ink3)}
-.tc-status-dot.st-nodate{background:var(--ink3)}
-.tc-status-dot.st-ongoing{background:var(--amber)}
-.tc-status-dot.st-done{background:var(--green)}
-.tc-status-label{font-size:11.5px;color:var(--ink3);font-weight:500}
 .tc-name{font-family:'Fraunces',serif;font-weight:400;font-size:23px;color:var(--ink);line-height:1.15;letter-spacing:-.01em;margin:7px 0 0;overflow-wrap:break-word}
 .tc-meta{font-family:var(--mono);font-size:11px;color:var(--ink3);margin-top:7px;line-height:1.5}
 .prog-circle{width:32px;height:32px;flex-shrink:0}
@@ -954,42 +948,6 @@ async function loadDashboard(){
   else{refreshTripMetas()}
   populateTripOpts();
 }
-// Compute smart status from dates: planning / ongoing / done
-const MONTH_PT={jan:0,fev:1,mar:2,abr:3,mai:4,jun:5,jul:6,ago:7,set:8,out:9,nov:10,dez:11};
-function parseDatesString(str){
-  // e.g. "13 Jun – 21 Jun" or "13 Jun 2026 – 21 Jun 2026" → {start,end} using current year if missing
-  if(!str)return{};
-  const y=new Date().getFullYear();
-  const re=/(\d{1,2})\s+([A-Za-zçÇ]{3})(?:\s+(\d{4}))?/g;
-  const found=[];let mm;
-  while((mm=re.exec(str))!==null){
-    const d=parseInt(mm[1]);const mon=MONTH_PT[mm[2].toLowerCase().slice(0,3)];const yr=mm[3]?parseInt(mm[3]):y;
-    if(mon!==undefined)found.push(new Date(yr,mon,d));
-  }
-  return{start:found[0]||null,end:found[1]||null};
-}
-function tripStatus(t){
-  // explicit done wins
-  if(t.status==='done')return'done';
-  const today=new Date();today.setHours(0,0,0,0);
-  let start=t.date_start?new Date(t.date_start):null;
-  let end=t.date_end?new Date(t.date_end):null;
-  // Fallback: parse the human dates string for older trips
-  if(!start&&!end&&t.dates){const p=parseDatesString(t.dates);start=p.start;end=p.end}
-  if(start)start.setHours(0,0,0,0);
-  if(end)end.setHours(0,0,0,0);
-  if(start&&end){
-    if(today<start)return'planning';
-    if(today>end)return'done';
-    return'ongoing';
-  }
-  if(start){
-    if(today<start)return'planning';
-    return'ongoing';
-  }
-  return'nodate';
-}
-function statusLabel(s){return s==='done'?'Concluída':s==='ongoing'?'Em viagem':s==='nodate'?'Sem data':'Planejando'}
 // Count distinct cities from spots
 function tripCityCount(t){
   const cities=new Set((t._spots||[]).map(s=>cityOf(s)).filter(Boolean));
@@ -1020,10 +978,9 @@ function refreshTripMetas(){
   });
 }
 function tripCardHTML(t){
-  const st=tripStatus(t);
   const flag=flagFor((t.destinations&&t.destinations[0])||t.name);
   const grad=destGradient((t.destinations&&t.destinations[0])||t.name);
-  return `<div class="trip-card" onclick="openTrip('${t.id}')"><div class="tc-photo" id="tcbg-${t.id}" style="background-image:${grad}"></div><div class="tc-stub"><div class="tc-stub-top"><span class="tc-flag">${flag}</span><span class="tc-status-dot st-${st}"></span><span class="tc-status-label">${statusLabel(st)}</span></div><div class="tc-name">${t.name}</div><div class="tc-meta" id="tcmeta-${t.id}">${tripMetaText(t)}</div></div></div>`;
+  return `<div class="trip-card" onclick="openTrip('${t.id}')"><div class="tc-photo" id="tcbg-${t.id}" style="background-image:${grad}"></div><div class="tc-stub"><div class="tc-stub-top"><span class="tc-flag">${flag}</span></div><div class="tc-name">${t.name}</div><div class="tc-meta" id="tcmeta-${t.id}">${tripMetaText(t)}</div></div></div>`;
 }
 // Pastas por continente lembram se estão abertas/fechadas entre sessões
 function regionOpenKey(region){return 'spot_region_open_'+region}
@@ -1175,8 +1132,8 @@ function renderList(){
     kicker.textContent=list.length+(list.length===1?' viagem':' viagens');
     if(!list.length)h='<div class="empty-state"><div class="ei">'+icon('suitcase')+'</div><h3>Nenhuma viagem ainda</h3><p>Toca no + no dashboard para criar.</p></div>';
     list.forEach((t,i)=>{
-      const st=tripStatus(t),sp=(t._spots||[]).length;
-      const meta=[t.dates&&t.dates!=='__quickvisit__'?t.dates:'',statusLabel(st)].filter(Boolean).join(' · ');
+      const sp=(t._spots||[]).length;
+      const meta=t.dates&&t.dates!=='__quickvisit__'?t.dates:'';
       h+=`<div class="lrow" onclick="openTripFromList(${i})"><span class="lflag">${flagFor((t.destinations&&t.destinations[0])||t.name)}</span><div class="lmain"><div class="lname">${t.name}</div><div class="lmeta">${meta}</div></div><span class="lcount">${sp} ${sp===1?'spot':'spots'}</span></div>`;
     });
   }
