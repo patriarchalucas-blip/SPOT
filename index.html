@@ -426,6 +426,16 @@ body{font-family:'DM Sans',sans-serif;background:var(--dark);max-width:430px;mar
 .toast-title{font-size:13.5px;font-weight:600;margin-bottom:3px;color:var(--ink)}
 .toast-msg{font-family:'Fraunces',serif;font-size:14px;color:var(--ink3);font-style:italic;line-height:1.4}
 
+/* ═══ RECORTE DE FOTO (avatar quadrado, spot 3:2) — arrasta antes de subir,
+   pra nunca cortar o rosto sem o usuário poder escolher onde ═══ */
+.cropper-overlay{position:fixed;inset:0;background:rgba(11,22,32,.96);z-index:500;display:none;flex-direction:column;align-items:center;justify-content:center;gap:22px}
+.cropper-overlay.show{display:flex}
+.cropper-hint{color:var(--ink3);font-family:'IBM Plex Mono',monospace;font-size:11px;letter-spacing:.06em;text-transform:uppercase}
+.cropper-stage{position:relative;overflow:hidden;background:#000;touch-action:none;cursor:grab;box-shadow:0 12px 40px rgba(0,0,0,.5)}
+.cropper-stage:active{cursor:grabbing}
+.cropper-stage img{position:absolute;top:0;left:0;user-select:none;-webkit-user-drag:none;pointer-events:none;max-width:none}
+.cropper-bar{display:flex;gap:12px}
+
 /* ═══ SISTEMA DE ÍCONES (SVG line — substitui emoji cru) ═══ */
 svg.ic{width:1em;height:1em;display:inline-block;vertical-align:middle;flex:none;color:inherit}
 svg.ic path,svg.ic circle,svg.ic line,svg.ic polyline,svg.ic rect{fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
@@ -495,7 +505,7 @@ svg.ic path,svg.ic circle,svg.ic line,svg.ic polyline,svg.ic rect{fill:none;stro
   </div>
   <div class="dash-body" id="tripsContainer"><div class="section-head"><span class="section-title">Minhas viagens</span></div><div class="empty-state"><div class="ei" data-ic="suitcase"></div><h3>Nenhuma viagem ainda</h3><p>Toca no + para criar sua primeira viagem</p></div></div>
   <button class="fab" onclick="showOv('ov-fabchoice')">+</button>
-  <div class="bottom-nav"><div class="nav-item active" onclick="goTo('dashboard');loadDashboard()"><div class="nav-icon" data-ic="map"></div><div class="nav-label" style="color:var(--ink);font-weight:600">Viagens</div></div><div class="nav-item" onclick="toast('Em breve','Explorar chega em breve!')"><div class="nav-icon" data-ic="search"></div><div class="nav-label">Explorar</div></div><div class="nav-item" onclick="goTo('friends');loadFriends()"><div class="nav-icon" data-ic="users"></div><div class="nav-label">Amigos</div></div><div class="nav-item" onclick="goTo('profile');loadProfile()"><div class="nav-icon" data-ic="user"></div><div class="nav-label">Perfil</div></div></div>
+  <div class="bottom-nav"><div class="nav-item active" onclick="goTo('dashboard');loadDashboard()"><div class="nav-icon" data-ic="map"></div><div class="nav-label" style="color:var(--ink);font-weight:600">Viagens</div></div><div class="nav-item" onclick="goTo('explore');loadExplore()"><div class="nav-icon" data-ic="search"></div><div class="nav-label">Explorar</div></div><div class="nav-item" onclick="goTo('friends');loadFriends()"><div class="nav-icon" data-ic="users"></div><div class="nav-label">Amigos</div></div><div class="nav-item" onclick="goTo('profile');loadProfile()"><div class="nav-icon" data-ic="user"></div><div class="nav-label">Perfil</div></div></div>
 </div>
 
 <div class="screen" id="list">
@@ -509,7 +519,7 @@ svg.ic path,svg.ic circle,svg.ic line,svg.ic polyline,svg.ic rect{fill:none;stro
   <div class="search-wrap" id="listCitySearchWrap" style="display:none;padding:14px 20px 0"><span class="si" data-ic="search"></span><input class="search-input" id="listCitySearch" placeholder="Buscar cidade..." oninput="setListCityQuery(this.value)"></div>
   <div class="list-filters" id="listFilters"></div>
   <div class="list-body" id="listBody"></div>
-  <div class="bottom-nav"><div class="nav-item active" onclick="goTo('dashboard');loadDashboard()"><div class="nav-icon" data-ic="map"></div><div class="nav-label">Viagens</div></div><div class="nav-item" onclick="toast('Em breve','Explorar chega em breve!')"><div class="nav-icon" data-ic="search"></div><div class="nav-label">Explorar</div></div><div class="nav-item" onclick="goTo('friends');loadFriends()"><div class="nav-icon" data-ic="users"></div><div class="nav-label">Amigos</div></div><div class="nav-item" onclick="goTo('profile');loadProfile()"><div class="nav-icon" data-ic="user"></div><div class="nav-label">Perfil</div></div></div>
+  <div class="bottom-nav"><div class="nav-item active" onclick="goTo('dashboard');loadDashboard()"><div class="nav-icon" data-ic="map"></div><div class="nav-label">Viagens</div></div><div class="nav-item" onclick="goTo('explore');loadExplore()"><div class="nav-icon" data-ic="search"></div><div class="nav-label">Explorar</div></div><div class="nav-item" onclick="goTo('friends');loadFriends()"><div class="nav-icon" data-ic="users"></div><div class="nav-label">Amigos</div></div><div class="nav-item" onclick="goTo('profile');loadProfile()"><div class="nav-icon" data-ic="user"></div><div class="nav-label">Perfil</div></div></div>
 </div>
 
 <div class="screen" id="trip">
@@ -517,7 +527,22 @@ svg.ic path,svg.ic circle,svg.ic line,svg.ic polyline,svg.ic rect{fill:none;stro
   <div class="cat-tabs-wrap"><div class="cat-tabs"><div class="cat-tab active" onclick="switchCat('food',this)"><div class="ct-icon" data-ic="food"></div><div>Comer & Beber</div><div class="ct-count" id="cnt-food">0</div></div><div class="cat-tab" onclick="switchCat('hotel',this)"><div class="ct-icon" data-ic="hotel"></div><div>Onde Ficar</div><div class="ct-count" id="cnt-hotel">0</div></div><div class="cat-tab" onclick="switchCat('experience',this)"><div class="ct-icon" data-ic="compass"></div><div>Experiências</div><div class="ct-count" id="cnt-experience">0</div></div></div></div>
   <div class="trip-body" id="tripBody"></div>
   <button class="fab" onclick="addSpotToCurrentTrip()">+</button>
-  <div class="bottom-nav"><div class="nav-item active" onclick="goTo('dashboard');loadDashboard()"><div class="nav-icon" data-ic="map"></div><div class="nav-label" style="color:var(--ink);font-weight:600">Viagens</div></div><div class="nav-item" onclick="toast('Em breve','Explorar chega em breve!')"><div class="nav-icon" data-ic="search"></div><div class="nav-label">Explorar</div></div><div class="nav-item" onclick="goTo('friends');loadFriends()"><div class="nav-icon" data-ic="users"></div><div class="nav-label">Amigos</div></div><div class="nav-item" onclick="goTo('profile');loadProfile()"><div class="nav-icon" data-ic="user"></div><div class="nav-label">Perfil</div></div></div>
+  <div class="bottom-nav"><div class="nav-item active" onclick="goTo('dashboard');loadDashboard()"><div class="nav-icon" data-ic="map"></div><div class="nav-label" style="color:var(--ink);font-weight:600">Viagens</div></div><div class="nav-item" onclick="goTo('explore');loadExplore()"><div class="nav-icon" data-ic="search"></div><div class="nav-label">Explorar</div></div><div class="nav-item" onclick="goTo('friends');loadFriends()"><div class="nav-icon" data-ic="users"></div><div class="nav-label">Amigos</div></div><div class="nav-item" onclick="goTo('profile');loadProfile()"><div class="nav-icon" data-ic="user"></div><div class="nav-label">Perfil</div></div></div>
+</div>
+
+<div class="screen" id="explore">
+  <div class="dash-top" style="padding-bottom:18px">
+    <div class="dash-top-row"><div><div class="dash-hello">Explorar</div><div class="dash-name" style="font-size:26px">Tendências por lugar</div></div></div>
+    <div class="search-wrap" style="padding:0;display:flex;gap:8px;align-items:center">
+      <div style="flex:1;position:relative"><span class="si" data-ic="search"></span><input class="search-input" id="exploreCitySearch" placeholder="Buscar cidade..." onkeydown="if(event.key==='Enter')runExplore()"></div>
+      <button class="req-btn req-accept" style="height:48px;padding:0 16px" onclick="runExplore()">Ir</button>
+    </div>
+  </div>
+  <div class="list-filters" id="exploreFilters"></div>
+  <div class="list-body" id="exploreBody">
+    <div class="empty-state"><div class="ei" data-ic="search"></div><h3>Descubra o que está bombando</h3><p>Digite uma cidade pra ver os lugares mais bem avaliados — o começo de "patrocinado" chega depois.</p></div>
+  </div>
+  <div class="bottom-nav"><div class="nav-item" onclick="goTo('dashboard');loadDashboard()"><div class="nav-icon" data-ic="map"></div><div class="nav-label">Viagens</div></div><div class="nav-item active" onclick="goTo('explore');loadExplore()"><div class="nav-icon" data-ic="search"></div><div class="nav-label" style="color:var(--ink);font-weight:600">Explorar</div></div><div class="nav-item" onclick="goTo('friends');loadFriends()"><div class="nav-icon" data-ic="users"></div><div class="nav-label">Amigos</div></div><div class="nav-item" onclick="goTo('profile');loadProfile()"><div class="nav-icon" data-ic="user"></div><div class="nav-label">Perfil</div></div></div>
 </div>
 
 <div class="screen" id="profile">
@@ -557,7 +582,7 @@ svg.ic path,svg.ic circle,svg.ic line,svg.ic polyline,svg.ic rect{fill:none;stro
     <button class="action-btn" style="margin-top:24px;background:var(--surface);color:var(--ink2);border:1px solid var(--border)" onclick="signOut()">Sair da conta</button>
     <div style="height:40px"></div>
   </div>
-  <div class="bottom-nav"><div class="nav-item" onclick="goTo('dashboard');loadDashboard()"><div class="nav-icon" data-ic="map"></div><div class="nav-label">Viagens</div></div><div class="nav-item" onclick="toast('Em breve','Explorar chega em breve!')"><div class="nav-icon" data-ic="search"></div><div class="nav-label">Explorar</div></div><div class="nav-item" onclick="goTo('friends');loadFriends()"><div class="nav-icon" data-ic="users"></div><div class="nav-label">Amigos</div></div><div class="nav-item active" onclick="goTo('profile');loadProfile()"><div class="nav-icon" data-ic="user"></div><div class="nav-label" style="color:var(--ink);font-weight:600">Perfil</div></div></div>
+  <div class="bottom-nav"><div class="nav-item" onclick="goTo('dashboard');loadDashboard()"><div class="nav-icon" data-ic="map"></div><div class="nav-label">Viagens</div></div><div class="nav-item" onclick="goTo('explore');loadExplore()"><div class="nav-icon" data-ic="search"></div><div class="nav-label">Explorar</div></div><div class="nav-item" onclick="goTo('friends');loadFriends()"><div class="nav-icon" data-ic="users"></div><div class="nav-label">Amigos</div></div><div class="nav-item active" onclick="goTo('profile');loadProfile()"><div class="nav-icon" data-ic="user"></div><div class="nav-label" style="color:var(--ink);font-weight:600">Perfil</div></div></div>
 </div>
 
 <div class="screen" id="friends">
@@ -568,7 +593,7 @@ svg.ic path,svg.ic circle,svg.ic line,svg.ic polyline,svg.ic rect{fill:none;stro
   </div>
   <div class="dash-body" id="friendsContainer"></div>
   <button class="fab" onclick="showOv('ov-addfriend')">+</button>
-  <div class="bottom-nav"><div class="nav-item" onclick="goTo('dashboard');loadDashboard()"><div class="nav-icon" data-ic="map"></div><div class="nav-label">Viagens</div></div><div class="nav-item" onclick="toast('Em breve','Explorar chega em breve!')"><div class="nav-icon" data-ic="search"></div><div class="nav-label">Explorar</div></div><div class="nav-item active" onclick="goTo('friends');loadFriends()"><div class="nav-icon" data-ic="users"></div><div class="nav-label" style="color:var(--ink);font-weight:600">Amigos</div></div><div class="nav-item" onclick="goTo('profile');loadProfile()"><div class="nav-icon" data-ic="user"></div><div class="nav-label">Perfil</div></div></div>
+  <div class="bottom-nav"><div class="nav-item" onclick="goTo('dashboard');loadDashboard()"><div class="nav-icon" data-ic="map"></div><div class="nav-label">Viagens</div></div><div class="nav-item" onclick="goTo('explore');loadExplore()"><div class="nav-icon" data-ic="search"></div><div class="nav-label">Explorar</div></div><div class="nav-item active" onclick="goTo('friends');loadFriends()"><div class="nav-icon" data-ic="users"></div><div class="nav-label" style="color:var(--ink);font-weight:600">Amigos</div></div><div class="nav-item" onclick="goTo('profile');loadProfile()"><div class="nav-icon" data-ic="user"></div><div class="nav-label">Perfil</div></div></div>
 </div>
 
 <div class="screen" id="place">
@@ -600,6 +625,17 @@ svg.ic path,svg.ic circle,svg.ic line,svg.ic polyline,svg.ic rect{fill:none;stro
 
 <div class="overlay" id="ov-editdates" onclick="closeOut(event,'ov-editdates')"><div class="sheet"><button class="sheet-close" onclick="closeOv('ov-editdates')" data-ic="close" aria-label="Fechar"></button><div class="sheet-handle"></div><div class="sheet-title">Datas da viagem</div><div class="nt-label">Deixe em branco se não for uma viagem com data definida (ex: seu país de origem)</div><div class="dates-row"><input class="nt-input" type="date" id="editStart"><input class="nt-input" type="date" id="editEnd"></div><button class="sheet-cta" onclick="saveEditDates()">Salvar</button><button class="delete-link" onclick="clearEditDates()">Limpar datas (não é uma viagem)</button></div></div>
 <div class="toast" id="toast"><div class="toast-icon" id="toastIcon"></div><div class="toast-body"><div class="toast-title" id="toastTitle"></div><div class="toast-msg" id="toastMsg"></div></div></div>
+
+<div class="cropper-overlay" id="cropperOverlay">
+  <div class="cropper-hint">Arraste pra posicionar</div>
+  <div class="cropper-stage" id="cropperStage" onpointerdown="cropperDown(event)" onpointermove="cropperMove(event)" onpointerup="cropperUp(event)" onpointercancel="cropperUp(event)">
+    <img id="cropperImg" alt="">
+  </div>
+  <div class="cropper-bar">
+    <button class="req-btn" style="background:rgba(234,231,224,.12);color:#fff" onclick="closeCropper()">Cancelar</button>
+    <button class="req-btn req-accept" onclick="confirmCrop()">Usar foto</button>
+  </div>
+</div>
 
 <script>
 /* ═══ ÍCONES SVG (fonte única — substitui emoji de interface) ═══ */
@@ -712,6 +748,80 @@ async function uploadToStorage(file,prefix){
   });
   if(!r.ok){console.error('uploadToStorage error',await r.text());return null}
   return SB_URL+'/storage/v1/object/public/uploads/'+path;
+}
+// ═══ RECORTE DE FOTO ═══
+// O círculo/retângulo de foto sempre faz center-crop puro — sem isso, uma
+// foto de rosto vira loteria de "corta o queixo" dependendo da composição
+// original. O usuário arrasta a foto por dentro de um recorte do tamanho
+// final antes de enviar, então o que ele vê aqui É o que vai salvar.
+const CROP={file:null,mode:'avatar',natW:0,natH:0,scale:1,x:0,y:0,stageW:0,stageH:0,dragging:false,lastX:0,lastY:0,pointerId:null,onConfirm:null};
+function openCropper(file,mode,onConfirm){
+  CROP.file=file;CROP.mode=mode;CROP.onConfirm=onConfirm;
+  const stage=document.getElementById('cropperStage');
+  const aspect=mode==='avatar'?1:1.5; // spot: mesma proporção larga do hero da tela de detalhe
+  const w=Math.min(320,window.innerWidth-56);
+  const h=Math.round(w/aspect);
+  stage.style.width=w+'px';stage.style.height=h+'px';
+  stage.style.borderRadius=mode==='avatar'?'50%':'var(--r)';
+  CROP.stageW=w;CROP.stageH=h;
+  const img=document.getElementById('cropperImg');
+  const url=URL.createObjectURL(file);
+  img.onload=function(){
+    CROP.natW=img.naturalWidth;CROP.natH=img.naturalHeight;
+    // cover-fit: cobre o recorte inteiro sem sobrar fundo, do jeito que a
+    // foto final vai renderizar (círculo/retângulo sempre preenchidos)
+    CROP.scale=Math.max(w/CROP.natW,h/CROP.natH);
+    CROP.x=(w-CROP.natW*CROP.scale)/2;
+    CROP.y=(h-CROP.natH*CROP.scale)/2;
+    applyCropTransform();
+  };
+  img.src=url;
+  document.getElementById('cropperOverlay').classList.add('show');
+}
+function applyCropTransform(){
+  const img=document.getElementById('cropperImg');
+  img.style.width=(CROP.natW*CROP.scale)+'px';
+  img.style.height=(CROP.natH*CROP.scale)+'px';
+  img.style.transform='translate('+CROP.x+'px,'+CROP.y+'px)';
+}
+function clampCrop(){
+  const w=CROP.natW*CROP.scale,h=CROP.natH*CROP.scale;
+  CROP.x=Math.min(0,Math.max(CROP.stageW-w,CROP.x));
+  CROP.y=Math.min(0,Math.max(CROP.stageH-h,CROP.y));
+}
+function cropperDown(e){
+  CROP.dragging=true;CROP.pointerId=e.pointerId;
+  CROP.lastX=e.clientX;CROP.lastY=e.clientY;
+  e.currentTarget.setPointerCapture&&e.currentTarget.setPointerCapture(e.pointerId);
+}
+function cropperMove(e){
+  if(!CROP.dragging)return;
+  CROP.x+=e.clientX-CROP.lastX;CROP.y+=e.clientY-CROP.lastY;
+  CROP.lastX=e.clientX;CROP.lastY=e.clientY;
+  clampCrop();applyCropTransform();
+}
+function cropperUp(){CROP.dragging=false}
+function closeCropper(){
+  document.getElementById('cropperOverlay').classList.remove('show');
+  const img=document.getElementById('cropperImg');
+  if(img.src)URL.revokeObjectURL(img.src);
+  img.removeAttribute('src');img.onload=null;
+  CROP.onConfirm=null;
+}
+function confirmCrop(){
+  const outW=CROP.mode==='avatar'?480:900;
+  const outH=Math.round(outW/(CROP.stageW/CROP.stageH));
+  const k=outW/CROP.stageW;
+  const canvas=document.createElement('canvas');canvas.width=outW;canvas.height=outH;
+  const ctx=canvas.getContext('2d');
+  const img=document.getElementById('cropperImg');
+  ctx.drawImage(img,CROP.x*k,CROP.y*k,CROP.natW*CROP.scale*k,CROP.natH*CROP.scale*k);
+  const cb=CROP.onConfirm;
+  canvas.toBlob(function(blob){
+    closeCropper();
+    if(!blob||!cb)return;
+    cb(new File([blob],'crop.jpg',{type:'image/jpeg'}));
+  },'image/jpeg',0.9);
 }
 async function dbDelete(table,id){
   await ensureToken();
@@ -1156,8 +1266,14 @@ async function loadTrip(t){
   // background-size/position e a foto renderiza no tamanho natural, cortada no canto
   heroEl.style.backgroundImage=destGradient(dest);
   fetchCityPhoto(dest).then(url=>{if(url)heroEl.style.backgroundImage=`url('${url}')`});
-  const spots=await dbGet('spots','trip_id=eq.'+t.id+'&order=created_at.asc');
-  t._spots=spots||[];
+  // O Dashboard já busca os spots de TODAS as viagens numa única query em
+  // lote (ver loadDashboard). Rebuscar aqui era uma ida a mais ao banco,
+  // sempre, só pra pegar o que já estava na mão — por isso abrir uma
+  // viagem parecia mais lento do que devia.
+  if(!t._spotsLoaded){
+    const spots=await dbGet('spots','trip_id=eq.'+t.id+'&order=created_at.asc');
+    t._spots=spots||[];t._spotsLoaded=true;
+  }
   switchCat(S.curCat,document.querySelector('.cat-tab.active'));
   updCatCnts(t._spots);
 }
@@ -1266,7 +1382,77 @@ function addSpotToCurrentTrip(){
   document.getElementById('searchResults').innerHTML='<div class="search-loading">Digite para buscar...</div>';
   document.getElementById('ov-search').classList.add('show');
 }
-function pickCat(c){S.addCat=c;document.querySelectorAll('.cat-option').forEach(o=>o.classList.remove('sel'));document.getElementById('co-'+c).classList.add('sel');setTimeout(()=>nextOv('ov-cat','ov-search'),200)}
+function pickCat(c){
+  S.addCat=c;document.querySelectorAll('.cat-option').forEach(o=>o.classList.remove('sel'));document.getElementById('co-'+c).classList.add('sel');
+  // Vindo do Explorar já tem o lugar inteiro escolhido — em vez de mandar
+  // buscar de novo, vai direto pra ficha de nota com os dados já prontos.
+  if(S.explorePick){
+    const p=S.explorePick;S.explorePick=null;
+    setTimeout(()=>{closeOv('ov-cat');setTimeout(()=>pickPlace(p),220)},200);
+  }else{
+    setTimeout(()=>nextOv('ov-cat','ov-search'),200);
+  }
+}
+
+// ═══ EXPLORAR ═══ v1: tendência = nota alta com volume relevante de
+// avaliações, via Google Places — sem custo de IA, sem infra nova. A ideia
+// de blog/IA (Claude+web search) fica pra quando essa infra existir e o
+// usuário quiser o "motivo" por trás da recomendação, não só o ranking.
+const EXPLORE={city:'',cat:'food',items:[]};
+function loadExplore(){renderExploreFilters()}
+function renderExploreFilters(){
+  const f=document.getElementById('exploreFilters');
+  f.innerHTML=chip('Comer',EXPLORE.cat==='food',"setExploreCat('food')")
+    +chip('Ficar',EXPLORE.cat==='hotel',"setExploreCat('hotel')")
+    +chip('Experiências',EXPLORE.cat==='experience',"setExploreCat('experience')");
+}
+function setExploreCat(c){EXPLORE.cat=c;renderExploreFilters();if(EXPLORE.city)runExplore()}
+async function runExplore(){
+  const city=document.getElementById('exploreCitySearch').value.trim();
+  if(!city){toast('Digite uma cidade','','alert');return}
+  EXPLORE.city=city;
+  const body=document.getElementById('exploreBody');
+  body.innerHTML='<div class="search-loading">Buscando tendências...</div>';
+  const termo={food:'restaurantes',hotel:'hotéis',experience:'pontos turísticos'}[EXPLORE.cat];
+  try{
+    const resp=await fetch('https://places.googleapis.com/v1/places:searchText',{
+      method:'POST',
+      headers:{'Content-Type':'application/json','X-Goog-Api-Key':GAPI,'X-Goog-FieldMask':'places.displayName,places.formattedAddress,places.addressComponents,places.photos,places.rating,places.userRatingCount,places.websiteUri'},
+      body:JSON.stringify({textQuery:`${termo} em ${city}`,languageCode:'pt-BR',maxResultCount:20})
+    });
+    const data=await resp.json();
+    let places=(data.places||[]).filter(p=>p.rating&&p.userRatingCount);
+    if(!places.length){body.innerHTML='<div class="empty-state"><div class="ei" data-ic="pin"></div><h3>Nada encontrado</h3><p>Tenta um nome de cidade diferente.</p></div>';hydrateIcons(body);EXPLORE.items=[];return}
+    // "bem recomendado" = nota alta E volume de avaliações — sem isso, 1
+    // lugar com 1 avaliação 5★ apareceria acima de outro com 900 avaliações 4.7★
+    places.sort((a,b)=>(b.rating*Math.log10(b.userRatingCount+1))-(a.rating*Math.log10(a.userRatingCount+1)));
+    EXPLORE.items=places.slice(0,12).map(p=>{
+      const addr=p.formattedAddress||'';
+      const c=cityFromComponents(p.addressComponents)||extractCityFromAddr(addr);
+      const country=countryFromComponents(p.addressComponents);
+      const ref=p.photos&&p.photos[0]&&p.photos[0].name;
+      const photo=ref?'https://places.googleapis.com/v1/'+ref+'/media?maxWidthPx=400&key='+GAPI:'';
+      return{name:p.displayName?.text||'',address:addr,city:c,country,rating:String(p.rating),count:p.userRatingCount,photo_url:photo,website_url:p.websiteUri||''};
+    });
+    renderExploreResults();
+  }catch(e){
+    console.error('runExplore',e);
+    body.innerHTML='<div class="empty-state"><div class="ei" data-ic="alert"></div><h3>Erro ao buscar</h3><p>Tenta de novo em alguns segundos.</p></div>';hydrateIcons(body);
+  }
+}
+function renderExploreResults(){
+  const body=document.getElementById('exploreBody');
+  body.innerHTML=EXPLORE.items.map((p,i)=>{
+    const thumb=p.photo_url?`<div class="lthumb" style="width:64px;height:64px"><img src="${p.photo_url}" style="width:100%;height:100%;object-fit:cover;border-radius:inherit" onerror="thumbFallback(this,'${EXPLORE.cat}')"></div>`:`<div class="lthumb" style="width:64px;height:64px">${catIcon(EXPLORE.cat)}</div>`;
+    const local=[p.city,p.country].filter(Boolean).join(' · ');
+    return`<div class="lrow"><span class="lrank">${i+1}</span>${thumb}<div class="lmain"><div class="lname">${p.name}</div><div class="lmeta">${local}${local?' · ':''}${p.count} avaliações</div></div><div class="lright"><span class="lrating">★ ${fmtRating(p.rating)}</span><button class="req-btn req-accept" style="padding:6px 14px;font-size:11.5px" onclick="addExploreSpot(${i})">Adicionar</button></div></div>`;
+  }).join('');
+}
+function addExploreSpot(i){
+  const t=EXPLORE.items[i];if(!t)return;
+  S.explorePick={name:t.name,meta:t.address,icon:catIcon(EXPLORE.cat),city:t.city,country:t.country,address:t.address,photo_url:t.photo_url,rating_google:t.rating,website_url:t.website_url};
+  showOv('ov-trip');
+}
 const GAPI='AIzaSyDYUDC3BkvUYSjlBVX2C6BZ8pMmycxfYUQ';
 let searchTO;
 let searchReqId=0;
@@ -1715,17 +1901,19 @@ async function healSpotPhoto(id){
   }catch(e){console.error('healSpotPhoto',e);return null}
   finally{photoHealing.delete(id)}
 }
-async function onSpotPhotoFileChosen(input){
+function onSpotPhotoFileChosen(input){
   const file=input.files&&input.files[0];if(!file)return;
   input.value='';
   const s=S.curPlace;if(!s)return;
-  const url=await uploadToStorage(file,'spot');
-  if(!url){toast('Erro','Não foi possível enviar a foto.');return}
-  const{error}=await dbUpdate('spots',s.id,{photo_url:url});
-  if(error){toast('Erro','Não foi possível salvar a foto.');return}
-  s.photo_url=url;
-  document.getElementById('placeHeroImg').style.backgroundImage=`url('${url}')`;
-  toast('Foto atualizada','','check');
+  openCropper(file,'spot',async(cropped)=>{
+    const url=await uploadToStorage(cropped,'spot');
+    if(!url){toast('Erro','Não foi possível enviar a foto.');return}
+    const{error}=await dbUpdate('spots',s.id,{photo_url:url});
+    if(error){toast('Erro','Não foi possível salvar a foto.');return}
+    s.photo_url=url;
+    document.getElementById('placeHeroImg').style.backgroundImage=`url('${url}')`;
+    toast('Foto atualizada','','check');
+  });
 }
 // onerror da <img>: troca pelo ícone da categoria agora e tenta consertar pra próxima
 function onSpotPhotoError(img,id,cat){
@@ -1987,7 +2175,7 @@ function goTo(id){document.querySelectorAll('.screen').forEach(s=>s.classList.re
 function showOv(id){populateTripOpts();if(id==='ov-newtrip')prepNewTrip();if(id==='ov-quickvisit')prepQuickVisit();document.getElementById(id).classList.add('show')}
 function closeOv(id){document.getElementById(id).classList.remove('show')}
 function closeOut(e,id){if(e.target===document.getElementById(id))closeOv(id)}
-function nextOv(a,b){closeOv(a);if(b==='ov-newtrip')prepNewTrip();if(b==='ov-trip')populateTripOpts();setTimeout(()=>document.getElementById(b).classList.add('show'),220)}
+function nextOv(a,b){closeOv(a);if(b==='ov-newtrip')prepNewTrip();if(b==='ov-trip'){populateTripOpts();S.explorePick=null}setTimeout(()=>document.getElementById(b).classList.add('show'),220)}
 function prepNewTrip(){
   selectedCountry=null;
   const cs=document.getElementById('countrySearch');if(cs)cs.value='';
@@ -2272,20 +2460,22 @@ async function saveBio(){
   S.profile=S.profile||{};S.profile.bio=bio;
   toast('Bio salva','','check');
 }
-async function onAvatarFileChosen(input){
+function onAvatarFileChosen(input){
   const file=input.files&&input.files[0];if(!file)return;
   input.value=''; // permite escolher o mesmo arquivo de novo depois, se quiser trocar por ele mesmo
-  const url=await uploadToStorage(file,'avatar');
-  if(!url){toast('Erro','Não foi possível enviar a foto.');return}
-  const mine=await dbGet('profiles',`id=eq.${S.user.id}`);
-  let error;
-  if(mine.length){({error}=await dbUpdate('profiles',S.user.id,{avatar_url:url}))}
-  else{({error}=await dbInsert('profiles',{id:S.user.id,email:S.user.email,display_name:S.user.email.split('@')[0],avatar_url:url}))}
-  if(error){toast('Erro','Não foi possível salvar a foto.');return}
-  S.profile=S.profile||{};S.profile.avatar_url=url;
-  const name=document.getElementById('profName').textContent;
-  applyAvatar('profAvatar',name,url);applyAvatar('dashAvatar',name,url);
-  toast('Foto atualizada','','check');
+  openCropper(file,'avatar',async(cropped)=>{
+    const url=await uploadToStorage(cropped,'avatar');
+    if(!url){toast('Erro','Não foi possível enviar a foto.');return}
+    const mine=await dbGet('profiles',`id=eq.${S.user.id}`);
+    let error;
+    if(mine.length){({error}=await dbUpdate('profiles',S.user.id,{avatar_url:url}))}
+    else{({error}=await dbInsert('profiles',{id:S.user.id,email:S.user.email,display_name:S.user.email.split('@')[0],avatar_url:url}))}
+    if(error){toast('Erro','Não foi possível salvar a foto.');return}
+    S.profile=S.profile||{};S.profile.avatar_url=url;
+    const name=document.getElementById('profName').textContent;
+    applyAvatar('profAvatar',name,url);applyAvatar('dashAvatar',name,url);
+    toast('Foto atualizada','','check');
+  });
 }
 
 // ═══ START ═══
