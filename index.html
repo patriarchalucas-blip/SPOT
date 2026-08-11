@@ -1331,6 +1331,11 @@ async function openPlace(id,origin){
     if(s.website_url){
       const isInstagram=/instagram\.com/i.test(s.website_url);
       rh+=`<a class="reserve-btn" href="${s.website_url}" target="_blank" rel="noopener">${icon(isInstagram?'instagram':'menu')} ${isInstagram?'Abrir Instagram':'Ver cardápio'}</a>`;
+    }else if(s.maps_url){
+      // Sem site nem Instagram cadastrado no Google (existe — testei o caso
+      // real do Cepa) — Maps é o último recurso, pelo menos alguma coisa em
+      // vez de nenhum botão.
+      rh+=`<a class="reserve-btn" href="${s.maps_url}" target="_blank" rel="noopener">${icon('mapPin')} Ver no Google Maps</a>`;
     }
     reserveWrap.innerHTML=rh;
   }else if(s.category==='hotel'||s.category==='experience'){
