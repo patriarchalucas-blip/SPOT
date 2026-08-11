@@ -1455,6 +1455,15 @@ const GAPI='AIzaSyDYUDC3BkvUYSjlBVX2C6BZ8pMmycxfYUQ';
 // Explorar, nem em "Perto de você", nem no check-in.
 const IRRELEVANT_PLACE_TYPES=new Set(['gas_station','convenience_store','supermarket','grocery_store','car_repair','car_wash','atm','bank','pharmacy','hardware_store']);
 function isIrrelevantPlace(p){return(p.types||[]).some(t=>IRRELEVANT_PLACE_TYPES.has(t))}
+// Distância real em metros entre duas coordenadas — usado pra conferir de
+// verdade a distância do check-in, já que o raio pedido à Places API é só
+// uma dica de área, não uma garantia exata.
+function haversineMeters(lat1,lon1,lat2,lon2){
+  const R=6371000,rad=Math.PI/180;
+  const dLat=(lat2-lat1)*rad,dLon=(lon2-lon1)*rad;
+  const a=Math.sin(dLat/2)**2+Math.cos(lat1*rad)*Math.cos(lat2*rad)*Math.sin(dLon/2)**2;
+  return R*2*Math.atan2(Math.sqrt(a),Math.sqrt(1-a));
+}
 // Reabre a ficha de busca do jeito certo: campo limpo + tenta sugerir o que
 // tem perto, sem travar nada se a localização não estiver disponível.
 function resetSearchSheet(){
@@ -1520,16 +1529,24 @@ function maybeShowCheckin(){
     try{
       const resp=await fetch('https://places.googleapis.com/v1/places:searchNearby',{
         method:'POST',
-        headers:{'Content-Type':'application/json','X-Goog-Api-Key':GAPI,'X-Goog-FieldMask':'places.displayName,places.formattedAddress,places.addressComponents,places.rating,places.userRatingCount,places.types,places.websiteUri,places.googleMapsUri'},
+        headers:{'Content-Type':'application/json','X-Goog-Api-Key':GAPI,'X-Goog-FieldMask':'places.displayName,places.formattedAddress,places.addressComponents,places.rating,places.userRatingCount,places.types,places.websiteUri,places.googleMapsUri,places.location'},
         // rankPreference:DISTANCE fazia o pin literalmente mais próximo ganhar
-        // mesmo sendo irrelevante (foi assim que um posto de gasolina apareceu
-        // antes de uma padaria colada nele) — sem isso, o padrão é por
-        // relevância. 'bakery'/'cafe' faltavam na lista, por isso a padaria
-        // nunca era nem candidata.
-        body:JSON.stringify({includedTypes:['restaurant','bakery','cafe','lodging','tourist_attraction'],maxResultCount:10,locationRestriction:{circle:{center:{latitude,longitude},radius:70}}})
+        // mesmo sendo irrelevante — sem isso, o padrão é por relevância.
+        // 'bakery'/'cafe'/'bar' ampliam pra restaurante, padaria, café e bar.
+        body:JSON.stringify({includedTypes:['restaurant','bakery','cafe','bar','lodging','tourist_attraction'],maxResultCount:15,locationRestriction:{circle:{center:{latitude,longitude},radius:60}}})
       });
       const data=await resp.json();
-      let places=(data.places||[]).filter(p=>p.rating&&p.userRatingCount&&!isIrrelevantPlace(p));
+      // O locationRestriction do Google é só uma dica de área — não é garantia
+      // de raio exato. Recalcula a distância real (Haversine) e reforça um
+      // limite rígido de 55m, senão lugar "meio perto" no mapa do Google
+      // aparecia como se você estivesse literalmente lá dentro.
+      let places=(data.places||[]).filter(p=>{
+        if(!p.rating||!p.userRatingCount||isIrrelevantPlace(p))return false;
+        const loc=p.location;
+        if(!loc)return false;
+        const dist=haversineMeters(latitude,longitude,loc.latitude,loc.longitude);
+        return dist<=55;
+      });
       if(!places.length)return;
       places.sort((a,b)=>(b.rating*Math.log10(b.userRatingCount+1))-(a.rating*Math.log10(a.userRatingCount+1)));
       const p=places[0];
@@ -1548,7 +1565,11 @@ function maybeShowCheckin(){
       document.getElementById('checkinName').textContent=name;
       document.getElementById('checkinBanner').style.display='flex';
     }catch(e){console.error('maybeShowCheckin',e)}
-  },function(){/* negada ou indisponível: sem banner, sem drama */},{timeout:6000,maximumAge:2*60*1000});
+  // maximumAge:0 força uma leitura fresca do GPS — com cache de minutos, se
+  // você tivesse passado por um lugar e andado embora, o app continuava
+  // achando que você ainda estava lá. enableHighAccuracy pede a leitura mais
+  // precisa do aparelho (mais lenta, mas é exatamente o que "check-in" exige).
+  },function(){/* negada ou indisponível: sem banner, sem drama */},{timeout:8000,maximumAge:0,enableHighAccuracy:true});
 }
 function checkinIgnore(){
   document.getElementById('checkinBanner').style.display='none';
@@ -2019,7 +2040,18 @@ function pickBestPlaceMatch(places,wantedName){
   if(!places||!places.length)return null;
   const norm=s=>String(s||'').toLowerCase().normalize('NFD').replace(/\p{Diacritic}/gu,'').trim();
   const want=norm(wantedName);
-  return places.find(p=>norm(p.displayName&&p.displayName.text)===want)||places[0];
+  // Exigir nome EXATO igual ao salvo era frágil: o nome no Google raramente
+  // é idêntico byte a byte (acento, palavra a mais, "- Bairro" no fim), e
+  // sem match caía pro resultado [0] às cegas — se esse não tivesse
+  // Instagram/site, gravava vazio pra sempre, mesmo o lugar tendo.
+  let candidatos=places.filter(p=>{
+    const n=norm(p.displayName&&p.displayName.text);
+    return n===want||n.includes(want)||want.includes(n);
+  });
+  if(!candidatos.length)candidatos=places; // nenhum nome parecido: usa todos mesmo
+  // Entre os plausíveis, prioriza quem realmente tem o dado que a gente quer
+  // salvar — evita pegar uma filial/duplicata incompleta em vez da principal.
+  return candidatos.find(p=>p.websiteUri)||candidatos.find(p=>p.photos&&p.photos.length)||candidatos[0];
 }
 // Backfill de site (comida) e link de Maps (qualquer categoria) — automático,
 // silencioso, uma vez por sessão, UMA busca por spot cobrindo os dois campos
@@ -2027,12 +2059,19 @@ function pickBestPlaceMatch(places,wantedName){
 // verificado; spot novo já grava '' quando o Google não tem, então isso
 // nunca reprocessa o mesmo spot de novo nem martela a API sem necessidade).
 let placeLinksBackfillDone=false;
+// A versão anterior do match só aceitava nome EXATO e caía pro resultado
+// [0] às cegas sem isso — muito spot ficou com website_url='' (achando que
+// tinha verificado e não tinha Instagram) quando na verdade tinha, só não
+// bateu o nome. RECHECK_KEY dispara uma segunda passada, UMA vez só (fica
+// marcado no aparelho), reabrindo só quem ficou vazio, com o match novo.
+const WEBSITE_RECHECK_KEY='spot_website_recheck_v2';
 async function autoBackfillPlaceLinks(){
   if(placeLinksBackfillDone)return;
   placeLinksBackfillDone=true;
+  const jaRecheckou=!!localStorage.getItem(WEBSITE_RECHECK_KEY);
   const targets=[];
   (S.trips||[]).forEach(t=>(t._spots||[]).forEach(s=>{
-    const precisaSite=s.category==='food'&&s.website_url===null;
+    const precisaSite=s.category==='food'&&(s.website_url===null||(s.website_url===''&&!jaRecheckou));
     const precisaMaps=s.maps_url===null;
     if(precisaSite||precisaMaps)targets.push(s);
   }));
@@ -2046,12 +2085,13 @@ async function autoBackfillPlaceLinks(){
       const d=await resp.json();
       const best=pickBestPlaceMatch(d.places,s.name);
       const patch={};
-      if(s.category==='food'&&s.website_url===null)patch.website_url=(best&&best.websiteUri)||'';
+      if(s.category==='food'&&(s.website_url===null||(s.website_url===''&&!jaRecheckou)))patch.website_url=(best&&best.websiteUri)||'';
       if(s.maps_url===null)patch.maps_url=(best&&best.googleMapsUri)||'';
       await dbUpdate('spots',s.id,patch); // grava mesmo vazio: marca como já verificado
       Object.assign(s,patch);
     }catch(e){console.error('autoBackfillPlaceLinks',e)}
   }
+  localStorage.setItem(WEBSITE_RECHECK_KEY,'1');
 }
 async function healSpotPhoto(id){
   if(!id||photoHealing.has(id))return null;
