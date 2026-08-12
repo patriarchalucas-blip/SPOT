@@ -234,13 +234,13 @@ body{font-family:'DM Sans',sans-serif;background:var(--dark);max-width:430px;mar
 .trip-hero-label{font-size:12px;color:rgba(255,255,255,0.7);margin-bottom:6px}
 .trip-hero-name{font-family:'Fraunces',serif;font-weight:400;font-size:30px;color:#fff;line-height:1.1;letter-spacing:-.015em}
 .trip-hero-meta{font-family:var(--mono);font-size:11.5px;color:rgba(255,255,255,0.6);margin-top:7px}
-.cat-tabs-wrap{background:var(--surface);border-bottom:1px solid var(--border);position:sticky;top:0;z-index:10}
-.cat-tabs{display:flex}
-.cat-tab{flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;padding:12px 6px;font-size:12px;font-weight:500;color:var(--ink3);cursor:pointer;border-bottom:2px solid transparent;text-align:center}
-.cat-tab.active{color:var(--ink);border-bottom-color:var(--terra)}
-.cat-tab .ct-icon{font-size:18px}
-.cat-tab .ct-count{font-family:var(--mono);font-size:10.5px;color:var(--ink3);background:rgba(234,231,224,.07);border-radius:var(--r-pill);padding:1px 7px;margin-top:1px}
-.cat-tab.active .ct-count{color:var(--ink)}
+/* Abas de categoria por CIDADE (dentro do card de cada cidade, não mais
+   fixas no topo da viagem inteira — ver renderTripBody) */
+.cat-tabs-mini{display:flex;gap:6px;margin-bottom:14px}
+.cat-tab-mini{flex:1;display:flex;align-items:center;justify-content:center;gap:5px;padding:9px 6px;border-radius:var(--r-sm);background:rgba(234,231,224,.05);border:1px solid var(--border);font-size:11.5px;font-weight:500;color:var(--ink3);cursor:pointer}
+.cat-tab-mini .ic{font-size:14px}
+.cat-tab-mini.active{color:var(--ink);background:rgba(193,85,47,.12);border-color:rgba(193,85,47,.35)}
+.cat-tab-mini-count{font-family:var(--mono);font-size:10px}
 .trip-body{padding:6px 24px 120px}
 .city-section{margin-bottom:26px}
 .city-header{display:flex;align-items:center;gap:10px;margin-bottom:12px;padding-top:16px}
@@ -543,7 +543,6 @@ svg.ic path,svg.ic circle,svg.ic line,svg.ic polyline,svg.ic rect{fill:none;stro
 
 <div class="screen" id="trip">
   <div class="trip-hero"><div class="trip-hero-img" id="tripHeroImg"></div><div class="trip-float" id="tripFloat"></div><div class="trip-hero-content"><button class="back-btn" onclick="goTo('dashboard');loadDashboard()" data-ic="back" aria-label="Voltar"></button><button class="trip-del-btn" style="right:64px" onclick="openEditDates()" data-ic="edit" aria-label="Editar datas"></button><button class="trip-del-btn" onclick="deleteTrip()" data-ic="trash" aria-label="Excluir viagem"></button><div><div class="trip-hero-label" id="tripLabel"></div><div class="trip-hero-name" id="tripName"></div><div class="trip-hero-meta" id="tripMeta"></div></div></div></div>
-  <div class="cat-tabs-wrap"><div class="cat-tabs"><div class="cat-tab active" onclick="switchCat('food',this)"><div class="ct-icon" data-ic="food"></div><div>Comer & Beber</div><div class="ct-count" id="cnt-food">0</div></div><div class="cat-tab" onclick="switchCat('hotel',this)"><div class="ct-icon" data-ic="hotel"></div><div>Onde Ficar</div><div class="ct-count" id="cnt-hotel">0</div></div><div class="cat-tab" onclick="switchCat('experience',this)"><div class="ct-icon" data-ic="compass"></div><div>Experiências</div><div class="ct-count" id="cnt-experience">0</div></div></div></div>
   <div class="trip-body" id="tripBody"></div>
   <button class="fab" onclick="addSpotToCurrentTrip()">+</button>
   <div class="bottom-nav"><div class="nav-item active" onclick="goTo('dashboard');loadDashboard()"><div class="nav-icon" data-ic="map"></div><div class="nav-label" style="color:var(--ink);font-weight:600">Viagens</div></div><div class="nav-item" onclick="goTo('explore');loadExplore()"><div class="nav-icon" data-ic="search"></div><div class="nav-label">Explorar</div></div><div class="nav-item" onclick="goTo('friends');loadFriends()"><div class="nav-icon" data-ic="users"></div><div class="nav-label">Amigos</div></div><div class="nav-item" onclick="goTo('profile');loadProfile()"><div class="nav-icon" data-ic="user"></div><div class="nav-label">Perfil</div></div></div>
@@ -638,7 +637,7 @@ svg.ic path,svg.ic circle,svg.ic line,svg.ic polyline,svg.ic rect{fill:none;stro
 <button class="sheet-cta" id="saveSpotBtn" onclick="saveSpot(false)">Salvar spot</button><button class="secondary-link" id="saveAndAddBtn" onclick="saveSpot(true)">Salvar e adicionar outro</button></div></div>
 
 <div class="overlay" id="ov-mismatch" onclick="closeOut(event,'ov-mismatch')"><div class="sheet"><button class="sheet-close" onclick="closeOv('ov-mismatch')" data-ic="close" aria-label="Fechar"></button><div class="sheet-handle"></div><div class="sheet-title">País diferente</div><div class="cm-text" id="cmText"></div><button class="sheet-cta" id="cmMoveBtn">Mover</button><button class="delete-link" style="color:var(--ink3)" onclick="keepInThisTripAnyway()">Adicionar nesta viagem mesmo assim</button></div></div>
-<div class="overlay" id="ov-newtrip" onclick="closeOut(event,'ov-newtrip')"><div class="sheet"><button class="sheet-close" onclick="closeOv('ov-newtrip')" data-ic="close" aria-label="Fechar"></button><div class="sheet-handle"></div><div class="sheet-title">Para qual país?</div><div class="nt-label">País da viagem</div><div class="dest-search-wrap"><span class="dsi" data-ic="search"></span><input class="nt-input" style="padding-left:44px" id="countrySearch" placeholder="Buscar país..." oninput="filterCountries(this.value)"></div><div id="countryList"></div><div class="nt-label" style="margin-top:8px">Datas (opcional)</div><div class="dates-row"><input class="nt-input" type="date" id="tripStart"><input class="nt-input" type="date" id="tripEnd"></div><button class="sheet-cta" id="createTripBtn" onclick="createTrip()" style="opacity:.4;pointer-events:none">Selecione um país</button></div></div>
+<div class="overlay" id="ov-newtrip" onclick="closeOut(event,'ov-newtrip')"><div class="sheet"><button class="sheet-close" onclick="closeOv('ov-newtrip')" data-ic="close" aria-label="Fechar"></button><div class="sheet-handle"></div><div class="sheet-title">Para qual cidade?</div><div class="nt-label">Cidade da viagem — o país é identificado sozinho</div><div class="dest-search-wrap"><span class="dsi" data-ic="search"></span><input class="nt-input" style="padding-left:44px" id="countrySearch" placeholder="Buscar cidade..." oninput="filterNewTripCity(this.value)"></div><div id="countryList"></div><div class="nt-label" style="margin-top:8px">Datas (opcional)</div><div class="dates-row"><input class="nt-input" type="date" id="tripStart"><input class="nt-input" type="date" id="tripEnd"></div><button class="sheet-cta" id="createTripBtn" onclick="createTrip()" style="opacity:.4;pointer-events:none">Selecione uma cidade</button></div></div>
 <div class="overlay" id="ov-quickvisit" onclick="closeOut(event,'ov-quickvisit')"><div class="sheet"><button class="sheet-close" onclick="closeOv('ov-quickvisit')" data-ic="close" aria-label="Fechar"></button><div class="sheet-handle"></div><div class="sheet-title" id="quickVisitTitle">Qual país você já visitou?</div><div class="nt-label">País</div><div class="dest-search-wrap"><span class="dsi" data-ic="search"></span><input class="nt-input" style="padding-left:44px" id="countrySearch2" placeholder="Buscar país..." oninput="filterCountries2(this.value)"></div><div id="countryList2"></div><button class="sheet-cta" id="createVisitBtn" onclick="markVisited()" style="opacity:.4;pointer-events:none">Selecione um país</button></div></div>
 <div class="overlay" id="ov-addfriend" onclick="closeOut(event,'ov-addfriend')"><div class="sheet"><button class="sheet-close" onclick="closeOv('ov-addfriend')" data-ic="close" aria-label="Fechar"></button><div class="sheet-handle"></div><div class="sheet-title">Adicionar amigo</div><div class="nt-label">Username do amigo</div><input class="nt-input" id="friendUsernameInput" type="text" placeholder="username_do_amigo" autocapitalize="none" oninput="document.getElementById('friendAddErr').textContent=''"><div class="auth-error" id="friendAddErr"></div><button class="sheet-cta" id="sendReqBtn" onclick="sendFriendRequest()">Enviar pedido</button></div></div>
 
@@ -731,7 +730,7 @@ const SB_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZ
 let sb;
 try{sb=supabase.createClient(SB_URL,SB_KEY)}catch(e){console.error(e)}
 
-const S={user:null,trips:[],curTrip:null,curPlace:null,curCat:'food',addTrip:null,addCat:null,selPlace:null,pendingPlace:null,searchResults:[],token:null,profile:null};
+const S={user:null,trips:[],curTrip:null,curPlace:null,addTrip:null,addCat:null,selPlace:null,pendingPlace:null,searchResults:[],token:null,profile:null};
 let authMode='signin';
 
 // ═══ DATA LAYER (raw fetch — bypasses buggy SB client) ═══
@@ -1274,32 +1273,59 @@ async function loadTrip(t){
     const spots=await dbGet('spots','trip_id=eq.'+t.id+'&order=created_at.asc');
     t._spots=spots||[];t._spotsLoaded=true;
   }
-  switchCat(S.curCat,document.querySelector('.cat-tab.active'));
-  updCatCnts(t._spots);
+  renderTripBody();
 }
-function updCatCnts(sp){
-  document.getElementById('cnt-food').textContent=sp.filter(s=>s.category==='food').length;
-  document.getElementById('cnt-hotel').textContent=sp.filter(s=>s.category==='hotel').length;
-  document.getElementById('cnt-experience').textContent=sp.filter(s=>s.category==='experience').length;
+// ═══ TELA DA VIAGEM: cards de cidade (categoria fica DENTRO de cada
+// cidade, não mais fixa no topo da viagem inteira) ═══
+// Mesmo padrão de accordion já usado pras pastas de continente no
+// Dashboard — reaproveita as classes .region-folder/.region-body-wrap.
+function cityFolderKey(tripId,city){return 'spot_city_open_'+tripId+'_'+city}
+function isCityFolderOpen(tripId,city){const v=localStorage.getItem(cityFolderKey(tripId,city));return v===null?true:v==='1'}
+function cityCatKey(tripId,city){return 'spot_city_cat_'+tripId+'_'+city}
+function getCityCat(tripId,city){return localStorage.getItem(cityCatKey(tripId,city))||'food'}
+function toggleCityFolder(tripId,city,headerEl){
+  const folder=headerEl.closest('.region-folder');
+  const nowOpen=!folder.classList.contains('open');
+  folder.classList.toggle('open',nowOpen);
+  try{localStorage.setItem(cityFolderKey(tripId,city),nowOpen?'1':'0')}catch(e){}
 }
-function switchCat(cat,el){
-  S.curCat=cat;document.querySelectorAll('.cat-tab').forEach(t=>t.classList.remove('active'));if(el)el.classList.add('active');
-  if(!S.curTrip?._spots){document.getElementById('tripBody').innerHTML='';return}
-  renderSpots(S.curTrip._spots.filter(s=>s.category===cat));
+function setCityCat(tripId,city,cat){
+  try{localStorage.setItem(cityCatKey(tripId,city),cat)}catch(e){}
+  renderTripBody();
 }
-function renderSpots(spots){
-  const b=document.getElementById('tripBody');
-  if(!spots.length){b.innerHTML=`<div class="empty-state" style="padding:40px 24px"><div class="ei">${catIcon(S.curCat)}</div><h3>Nenhum spot aqui</h3><p>Toca no + para adicionar</p></div>`;return}
+function renderTripBody(){
+  const t=S.curTrip,b=document.getElementById('tripBody');
+  if(!t)return;
+  if(!t._spots||!t._spots.length){b.innerHTML=`<div class="empty-state" style="padding:40px 24px"><div class="ei">${icon('pin')}</div><h3>Nenhum spot aqui</h3><p>Toca no + para adicionar</p></div>`;return}
   rebuildCityCanon();
-  const byCity={};spots.forEach(s=>{const c=cityOf(s)||'Outros';if(!byCity[c])byCity[c]=[];byCity[c].push(s)});
-  let h='';for(const[city,cs]of Object.entries(byCity)){
-    h+=`<div class="city-section"><div class="city-header"><div class="city-name-text">${city}</div><div class="city-count">${cs.length} spots</div></div>`;
-    cs.forEach(s=>{
-      const bc=s.category==='food'?'bar-food':s.category==='hotel'?'bar-hotel':'bar-experience';
-      const dot=s.status==='been'?'dot-been':'dot-want';
-      const thumb=s.photo_url?`<div class="place-thumb"><img src="${s.photo_url}" style="width:100%;height:100%;object-fit:cover;border-radius:inherit" onerror="onSpotPhotoError(this,'${s.id}','${s.category}')"></div>`:`<div class="place-thumb">${catIcon(s.category)}</div>`;
-      h+=`<div class="place-row" onclick="openPlace('${s.id}')"><div class="place-bar ${bc}"></div><div class="place-row-main">${thumb}<div class="place-row-info"><div class="place-row-name">${s.name}</div><div class="place-row-note">${s.my_note||''}</div></div><div class="place-row-right"><span class="place-type-tag">${s.place_type||catLabel(s.category)}</span><div class="place-status"><span class="status-dot ${dot}"></span><span class="place-status-label">${s.status==='been'?'Fui':'Quero ir'}</span></div></div></div></div>`;
-    });h+='</div>'}
+  const byCity={};t._spots.forEach(s=>{const c=cityOf(s)||'Outros';(byCity[c]=byCity[c]||[]).push(s)});
+  let h='';
+  for(const[city,spots]of Object.entries(byCity)){
+    const cityEsc=String(city).replace(/'/g,"\\'");
+    const open=isCityFolderOpen(t.id,city);
+    const cat=getCityCat(t.id,city);
+    const counts={food:0,hotel:0,experience:0};spots.forEach(s=>{if(counts[s.category]!==undefined)counts[s.category]++});
+    h+=`<div class="region-folder${open?' open':''}">`;
+    h+=`<div class="region-header" onclick="toggleCityFolder('${t.id}','${cityEsc}',this)"><span class="region-chevron">${icon('chevron')}</span><span class="region-name">${city}</span><span class="region-count">${spots.length}</span></div>`;
+    h+=`<div class="region-body-wrap"><div class="region-body-inner"><div class="region-body">`;
+    h+=`<div class="cat-tabs-mini">`;
+    h+=[['food','Comer & Beber'],['hotel','Onde Ficar'],['experience','Experiências']].map(([c,label])=>
+      `<div class="cat-tab-mini${cat===c?' active':''}" onclick="setCityCat('${t.id}','${cityEsc}','${c}')">${icon(c==='food'?'food':c==='hotel'?'hotel':'compass')} ${label} <span class="cat-tab-mini-count">${counts[c]}</span></div>`
+    ).join('');
+    h+=`</div>`;
+    const filtered=spots.filter(s=>s.category===cat);
+    if(!filtered.length){
+      h+=`<div class="empty-state" style="padding:24px 0"><p>Nenhum spot nessa categoria ainda</p></div>`;
+    }else{
+      filtered.forEach(s=>{
+        const bc=s.category==='food'?'bar-food':s.category==='hotel'?'bar-hotel':'bar-experience';
+        const dot=s.status==='been'?'dot-been':'dot-want';
+        const thumb=s.photo_url?`<div class="place-thumb"><img src="${s.photo_url}" style="width:100%;height:100%;object-fit:cover;border-radius:inherit" onerror="onSpotPhotoError(this,'${s.id}','${s.category}')"></div>`:`<div class="place-thumb">${catIcon(s.category)}</div>`;
+        h+=`<div class="place-row" onclick="openPlace('${s.id}')"><div class="place-bar ${bc}"></div><div class="place-row-main">${thumb}<div class="place-row-info"><div class="place-row-name">${s.name}</div><div class="place-row-note">${s.my_note||''}</div></div><div class="place-row-right"><span class="place-type-tag">${s.place_type||catLabel(s.category)}</span><div class="place-status"><span class="status-dot ${dot}"></span><span class="place-status-label">${s.status==='been'?'Fui':'Quero ir'}</span></div></div></div></div>`;
+      });
+    }
+    h+=`</div></div></div></div>`;
+  }
   b.innerHTML=h;
 }
 
@@ -1406,11 +1432,11 @@ function selTripForSpot(id){
   }
 }
 function addSpotToCurrentTrip(){
-  // Already inside a trip — skip "which trip" AND skip category (use active tab)
+  // Viagem já é sabida (o + está dentro dela) — mas categoria não é mais
+  // "a aba ativa": agora cada cidade tem a sua própria, e a tela pode
+  // mostrar várias cidades ao mesmo tempo. Sem uma categoria óbvia, pergunta.
   S.addTrip=S.curTrip;
-  S.addCat=S.curCat||'food';
-  resetSearchSheet();
-  document.getElementById('ov-search').classList.add('show');
+  showOv('ov-cat');
 }
 function pickCat(c){
   // ov-cat só abre quando a categoria ainda não era sabida — Explorar e
@@ -1793,7 +1819,7 @@ async function saveSpot(addAnother){
   if(!error&&data){
     if(!t._spots)t._spots=[];t._spots.push(data);
     toast('Spot salvo',note?`"${p.name} · ${note}"`:p.name,'check');
-    if(document.getElementById('trip').classList.contains('active')&&S.curTrip?.id===t.id){S.curTrip._spots=t._spots;switchCat(S.curCat,document.querySelector('.cat-tab.active'));updCatCnts(t._spots)}
+    if(document.getElementById('trip').classList.contains('active')&&S.curTrip?.id===t.id){S.curTrip._spots=t._spots;renderTripBody()}
     await loadDashboard();
     if(addAnother){
       // Mesma viagem, mesma categoria — só reabre a busca. É exatamente o
@@ -1813,8 +1839,9 @@ async function saveSpot(addAnother){
 
 // ═══ NEW TRIP ═══
 async function createTrip(){
-  if(!selectedCountry){return}
-  const name=selectedCountry.name;
+  if(!selectedNewTripCity){return}
+  const name=selectedNewTripCity.country;
+  const cidadeEscolhida=selectedNewTripCity.city;
   const s=document.getElementById('tripStart').value,e=document.getElementById('tripEnd').value;
   let dates='';if(s&&e)dates=fmtD(s)+' – '+fmtD(e);else if(s)dates='A partir de '+fmtD(s);
   const btn=document.getElementById('createTripBtn');btn.textContent='Criando...';btn.style.pointerEvents='none';
@@ -1826,15 +1853,24 @@ async function createTrip(){
     data=retry.data;error=retry.error;
   }
   if(!error&&data){
-    data._spots=[];S.trips.unshift(data);closeOv('ov-newtrip');
+    data._spots=[];data._spotsLoaded=true;S.trips.unshift(data);closeOv('ov-newtrip');
     // reset picker
-    selectedCountry=null;
+    selectedNewTripCity=null;
     document.getElementById('countrySearch').value='';
     document.getElementById('countryList').innerHTML='';
     document.getElementById('tripStart').value='';document.getElementById('tripEnd').value='';
     renderTrips();populateTripOpts();
     document.getElementById('statTrips').textContent=S.trips.filter(t=>!isNonTrip(t)).length;
     toast('Viagem criada','"'+name+'"','suitcase');
+    // O card da cidade só existe quando tem spot dentro — leva direto pra
+    // adicionar o primeiro, já na viagem recém-criada, em vez de devolver
+    // pro Dashboard vazio.
+    S.curTrip=data;S.addTrip=data;
+    goTo('trip');await loadTrip(data);
+    setTimeout(()=>{
+      toast('Agora adiciona um lugar em '+cidadeEscolhida,'','pin');
+      showOv('ov-cat');
+    },300);
   }else{
     toast('Erro ao criar',error?.message||'Tente novamente');
     btn.textContent='Criar viagem';btn.style.pointerEvents='auto';
@@ -1926,17 +1962,47 @@ const COUNTRIES=[
   {flag:'🇼🇫',name:'Wallis e Futuna',region:'Oceania',geo:'Wallis and Futuna'},{flag:'🇿🇼',name:'Zimbábue',region:'África',geo:'Zimbabwe'},{flag:'🇿🇲',name:'Zâmbia',region:'África',geo:'Zambia'},
   {flag:'🇿🇦',name:'África do Sul',region:'África',geo:'South Africa'},{flag:'🇦🇹',name:'Áustria',region:'Europa',geo:'Austria'},{flag:'🇮🇳',name:'Índia',region:'Ásia',geo:'India'}
 ];
-let selectedCountry=null;
-function renderCountryList(filter){
+// Antes pedia o PAÍS de uma lista fixa de 243. Agora pede a CIDADE (busca
+// de verdade, via Places API) e o país é identificado sozinho a partir
+// dela — igual o Google Maps mostra "São Paulo, Brasil". `destinations`
+// continua guardando só o país (nada mudou nesse dado — toda a lógica de
+// descasamento de país, moradia etc. depende disso) — a cidade só
+// direciona o primeiro spot que a pessoa for adicionar.
+let selectedNewTripCity=null,newTripCityResults=[],newTripSearchTO,newTripReqId=0;
+function filterNewTripCity(v){
+  clearTimeout(newTripSearchTO);
   const list=document.getElementById('countryList');
-  const f=(filter||'').toLowerCase();
-  const matches=COUNTRIES.filter(c=>!f||c.name.toLowerCase().includes(f));
-  list.innerHTML=matches.map(c=>`<div class="dest-result" onclick='selectCountry(${JSON.stringify(c).replace(/'/g,"&apos;")})'><span class="dest-flag">${c.flag}</span><div><div class="dest-name">${c.name}</div><div class="dest-region">${c.region}</div></div></div>`).join('')||'<div class="search-loading">Nenhum país encontrado</div>';
+  if(!v.trim()){list.innerHTML='';return}
+  list.innerHTML='<div class="search-loading">Buscando...</div>';
+  const myReqId=++newTripReqId;
+  newTripSearchTO=setTimeout(async()=>{
+    try{
+      const resp=await fetch('https://places.googleapis.com/v1/places:searchText',{
+        method:'POST',
+        headers:{'Content-Type':'application/json','X-Goog-Api-Key':GAPI,'X-Goog-FieldMask':'places.displayName,places.formattedAddress,places.addressComponents'},
+        body:JSON.stringify({textQuery:v,languageCode:'pt-BR',maxResultCount:6})
+      });
+      if(myReqId!==newTripReqId)return;
+      const data=await resp.json();
+      if(myReqId!==newTripReqId)return;
+      const mapped=(data.places||[]).map(p=>{
+        const addr=p.formattedAddress||'';
+        const city=cityFromComponents(p.addressComponents)||extractCityFromAddr(addr);
+        const country=countryFromComponents(p.addressComponents);
+        return{city,country};
+      }).filter(r=>r.city&&r.country);
+      // busca livre repete a mesma cidade em vários resultados — funde por cidade+país
+      const seen=new Set();
+      newTripCityResults=mapped.filter(r=>{const k=normName(r.city)+'|'+normName(r.country);if(seen.has(k))return false;seen.add(k);return true});
+      if(!newTripCityResults.length){list.innerHTML='<div class="search-loading">Nenhuma cidade encontrada</div>';return}
+      list.innerHTML=newTripCityResults.map((r,i)=>`<div class="dest-result" onclick="selectNewTripCity(${i})"><span class="dest-flag">${flagFor(r.country)}</span><div><div class="dest-name">${r.city}</div><div class="dest-region">${r.country}</div></div></div>`).join('');
+    }catch(e){list.innerHTML='<div class="search-loading">Erro ao buscar</div>'}
+  },350);
 }
-function filterCountries(v){renderCountryList(v)}
-function selectCountry(c){
-  selectedCountry=c;
-  document.getElementById('countrySearch').value=c.flag+' '+c.name;
+function selectNewTripCity(i){
+  const r=newTripCityResults[i];if(!r)return;
+  selectedNewTripCity=r;
+  document.getElementById('countrySearch').value=r.city+', '+r.country;
   document.getElementById('countryList').innerHTML='';
   const btn=document.getElementById('createTripBtn');
   btn.textContent='Criar viagem';btn.style.opacity='1';btn.style.pointerEvents='auto';
@@ -2512,10 +2578,10 @@ function closeOv(id){document.getElementById(id).classList.remove('show')}
 function closeOut(e,id){if(e.target===document.getElementById(id))closeOv(id)}
 function nextOv(a,b){closeOv(a);if(b==='ov-newtrip')prepNewTrip();if(b==='ov-trip'){populateTripOpts();S.explorePick=null;S.explorePickCat=null;S.explorePickStatus=null}if(b==='ov-search')resetSearchSheet();setTimeout(()=>document.getElementById(b).classList.add('show'),220)}
 function prepNewTrip(){
-  selectedCountry=null;
+  selectedNewTripCity=null;
   const cs=document.getElementById('countrySearch');if(cs)cs.value='';
-  const btn=document.getElementById('createTripBtn');if(btn){btn.textContent='Selecione um país';btn.style.opacity='.4';btn.style.pointerEvents='none'}
-  renderCountryList('');
+  document.getElementById('countryList').innerHTML='';
+  const btn=document.getElementById('createTripBtn');if(btn){btn.textContent='Selecione uma cidade';btn.style.opacity='.4';btn.style.pointerEvents='none'}
 }
 function toast(t,m,ic){
   const el=document.getElementById('toast');
