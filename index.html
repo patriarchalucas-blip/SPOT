@@ -711,6 +711,21 @@ async function refreshAvatars(name){
 }
 function hydrateIcons(root){(root||document).querySelectorAll('[data-ic]:not([data-ic-done])').forEach(function(el){el.innerHTML=icon(el.getAttribute('data-ic'));el.setAttribute('data-ic-done','1');});}
 if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',function(){hydrateIcons();});else hydrateIcons();
+// Teclado do celular cobre o botão "Salvar" das fichas (sheet) — no iOS a
+// altura de 90vh da ficha é calculada antes do teclado abrir, então o botão
+// fica escondido embaixo dele. Genérico pra qualquer campo em qualquer
+// ficha, presente ou futura: ao focar um input/textarea dentro de uma
+// .sheet, rola o botão principal pra dentro da área visível.
+document.addEventListener('focusin',function(e){
+  const el=e.target;
+  if(!el.matches||!el.matches('input,textarea'))return;
+  const sheet=el.closest('.sheet');
+  if(!sheet)return;
+  setTimeout(function(){
+    const cta=sheet.querySelector('.sheet-cta')||sheet.querySelector('.secondary-link');
+    if(cta)cta.scrollIntoView({block:'end',behavior:'smooth'});
+  },300);
+});
 const SB_URL='https://kzidnilsyrvauzgelsqd.supabase.co';
 const SB_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imt6aWRuaWxzeXJ2YXV6Z2Vsc3FkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODEyODE5NDAsImV4cCI6MjA5Njg1Nzk0MH0.BMgiP_lTe8mCfe0eSPNUCksXatOntuWAhcqGtR8hco4';
 let sb;
@@ -2104,11 +2119,14 @@ function pickBestPlaceMatch(places,wantedName){
   return candidatos.find(p=>p.websiteUri)||candidatos.find(p=>p.photos&&p.photos.length)||candidatos[0];
 }
 // Backfill de site (comida) e link de Maps (qualquer categoria) — automático,
-// silencioso, uma vez por sessão, UMA busca por spot cobrindo os dois campos
-// (evita 2 chamadas quando 1 já resolve). Só olha campos ainda NULL (nunca
-// verificado; spot novo já grava '' quando o Google não tem, então isso
-// nunca reprocessa o mesmo spot de novo nem martela a API sem necessidade).
-let placeLinksBackfillDone=false;
+// silencioso, UMA busca por spot cobrindo os dois campos (evita 2 chamadas
+// quando 1 já resolve). Só olha campos ainda NULL/não verificados — spot já
+// checado nunca reprocessa. "Rodar uma vez só por sessão" foi um erro: um
+// spot novo, adicionado DEPOIS da primeira rodada (ex: pelo check-in),
+// nunca era verificado até fechar e abrir o app de novo. Agora é só uma
+// trava de "não roda duas vezes ao mesmo tempo" — pode rodar de novo a
+// cada loadDashboard(), sempre pegando o que ainda não foi verificado.
+let placeLinksBackfillRunning=false;
 // Google Places não expõe Instagram como campo próprio — só um "site"
 // genérico, que às vezes é o Instagram (quando o dono cadastrou assim) e
 // às vezes não é nada. Quando não é nada, essa function serverless (não
@@ -2129,8 +2147,9 @@ async function findInstagramViaBrave(name,city){
   }catch(e){return''} // sem function configurada ainda, ou offline — nunca quebra o resto
 }
 async function autoBackfillPlaceLinks(){
-  if(placeLinksBackfillDone)return;
-  placeLinksBackfillDone=true;
+  if(placeLinksBackfillRunning)return;
+  placeLinksBackfillRunning=true;
+  try{
   const targets=[];
   (S.trips||[]).forEach(t=>(t._spots||[]).forEach(s=>{
     const precisaInstagram=s.category==='food'&&!s.insta_checked;
@@ -2167,8 +2186,15 @@ async function autoBackfillPlaceLinks(){
       if(s.maps_url===null)patch.maps_url=mapsUrl||'';
       await dbUpdate('spots',s.id,patch); // grava mesmo vazio: marca como já verificado
       Object.assign(s,patch);
+      // Se o usuário já estiver olhando pra esse spot específico quando a
+      // busca em segundo plano termina, atualiza os botões na hora — sem
+      // isso, só apareceria depois de sair da tela e voltar.
+      if(S.curPlace&&S.curPlace.id===s.id&&document.getElementById('place').classList.contains('active')){
+        renderPlaceLinks(s);
+      }
     }catch(e){console.error('autoBackfillPlaceLinks',e)}
   }
+  }finally{placeLinksBackfillRunning=false}
 }
 async function healSpotPhoto(id){
   if(!id||photoHealing.has(id))return null;
