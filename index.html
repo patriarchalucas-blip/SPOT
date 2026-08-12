@@ -1894,10 +1894,19 @@ async function createTrip(){
   const btn=document.getElementById('createTripBtn');btn.textContent='Criando...';btn.style.pointerEvents='none';
   // store dates as raw ISO too, for smart status
   let{data,error}=await dbInsert('trips',{user_id:S.user.id,name,destinations:[name],dates,date_start:s||null,date_end:e||null,status:'planning',initial_city:cidadeEscolhida});
-  // If date columns don't exist in DB, retry without them
+  // Degrada aos poucos se colunas novas ainda não existirem (migração não rodada):
+  // 1) sem colunas de data, com initial_city  2) com colunas de data, sem initial_city  3) nenhuma das duas
   if(error&&!data){
-    const retry=await dbInsert('trips',{user_id:S.user.id,name,destinations:[name],dates,status:'planning',initial_city:cidadeEscolhida});
-    data=retry.data;error=retry.error;
+    const retry1=await dbInsert('trips',{user_id:S.user.id,name,destinations:[name],dates,status:'planning',initial_city:cidadeEscolhida});
+    data=retry1.data;error=retry1.error;
+  }
+  if(error&&!data){
+    const retry2=await dbInsert('trips',{user_id:S.user.id,name,destinations:[name],dates,date_start:s||null,date_end:e||null,status:'planning'});
+    data=retry2.data;error=retry2.error;
+  }
+  if(error&&!data){
+    const retry3=await dbInsert('trips',{user_id:S.user.id,name,destinations:[name],dates,status:'planning'});
+    data=retry3.data;error=retry3.error;
   }
   if(!error&&data){
     data._spots=[];data._spotsLoaded=true;S.trips.unshift(data);closeOv('ov-newtrip');
