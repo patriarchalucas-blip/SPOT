@@ -1893,11 +1893,11 @@ async function createTrip(){
   let dates='';if(s&&e)dates=fmtD(s)+' – '+fmtD(e);else if(s)dates='A partir de '+fmtD(s);
   const btn=document.getElementById('createTripBtn');btn.textContent='Criando...';btn.style.pointerEvents='none';
   // store dates as raw ISO too, for smart status
-  let{data,error}=await dbInsert('trips',{user_id:S.user.id,name,destinations:[name],dates,date_start:s||null,date_end:e||null,status:'planning',initial_city:cidadeEscolhida});
+  let{data,error}=await dbInsert('trips',{user_id:S.user.id,name,destinations:[name],dates,date_start:s||null,date_end:e||null,status:'planning',initial_city:cidadeEscolhida||null});
   // Degrada aos poucos se colunas novas ainda não existirem (migração não rodada):
   // 1) sem colunas de data, com initial_city  2) com colunas de data, sem initial_city  3) nenhuma das duas
   if(error&&!data){
-    const retry1=await dbInsert('trips',{user_id:S.user.id,name,destinations:[name],dates,status:'planning',initial_city:cidadeEscolhida});
+    const retry1=await dbInsert('trips',{user_id:S.user.id,name,destinations:[name],dates,status:'planning',initial_city:cidadeEscolhida||null});
     data=retry1.data;error=retry1.error;
   }
   if(error&&!data){
@@ -1918,13 +1918,14 @@ async function createTrip(){
     renderTrips();populateTripOpts();
     document.getElementById('statTrips').textContent=S.trips.filter(t=>!isNonTrip(t)).length;
     toast('Viagem criada','"'+name+'"','suitcase');
-    // O card da cidade só existe quando tem spot dentro — leva direto pra
-    // adicionar o primeiro, já na viagem recém-criada, em vez de devolver
-    // pro Dashboard vazio.
+    // Se veio de busca por cidade, o card dela já existe vazio (initial_city) —
+    // leva direto pra adicionar o primeiro spot ali. Se veio de busca só por
+    // país (sem cidade), não tem card nenhum esperando ainda; qualquer spot
+    // que a pessoa adicionar depois cria o próprio card de cidade dele.
     S.curTrip=data;S.addTrip=data;
     goTo('trip');await loadTrip(data);
     setTimeout(()=>{
-      toast('Agora adiciona um lugar em '+cidadeEscolhida,'','pin');
+      toast(cidadeEscolhida?'Agora adiciona um lugar em '+cidadeEscolhida:'Agora adiciona seu primeiro lugar','','pin');
       showOv('ov-cat');
     },300);
   }else{
@@ -2035,7 +2036,7 @@ function filterNewTripCity(v){
     try{
       const resp=await fetch('https://places.googleapis.com/v1/places:searchText',{
         method:'POST',
-        headers:{'Content-Type':'application/json','X-Goog-Api-Key':GAPI,'X-Goog-FieldMask':'places.displayName,places.formattedAddress,places.addressComponents'},
+        headers:{'Content-Type':'application/json','X-Goog-Api-Key':GAPI,'X-Goog-FieldMask':'places.displayName,places.formattedAddress,places.addressComponents,places.types'},
         body:JSON.stringify({textQuery:v,languageCode:'pt-BR',maxResultCount:6})
       });
       if(myReqId!==newTripReqId)return;
@@ -2043,15 +2044,24 @@ function filterNewTripCity(v){
       if(myReqId!==newTripReqId)return;
       const mapped=(data.places||[]).map(p=>{
         const addr=p.formattedAddress||'';
-        const city=cityFromComponents(p.addressComponents)||extractCityFromAddr(addr);
-        const country=countryFromComponents(p.addressComponents);
+        const isCountry=(p.types||[]).includes('country');
+        const country=countryFromComponents(p.addressComponents)||(isCountry?normalizeCountry(p.displayName?.text||''):'');
+        // Resultado de país (ex: buscou "Croácia" direto) não tem locality/postal_town —
+        // não cai no fallback de endereço aqui, senão o nome do país vira "cidade" por
+        // engano (duplicava "Croácia" dentro da viagem "Croácia"). Cidade fica vazia de
+        // propósito; a viagem nasce só com o país, sem card de cidade nenhum.
+        const city=isCountry?'':(cityFromComponents(p.addressComponents)||extractCityFromAddr(addr));
         return{city,country};
-      }).filter(r=>r.city&&r.country);
-      // busca livre repete a mesma cidade em vários resultados — funde por cidade+país
+      }).filter(r=>r.country); // cidade é opcional agora — só o país é obrigatório
+      // busca livre repete o mesmo resultado várias vezes — funde por cidade+país
       const seen=new Set();
       newTripCityResults=mapped.filter(r=>{const k=normName(r.city)+'|'+normName(r.country);if(seen.has(k))return false;seen.add(k);return true});
-      if(!newTripCityResults.length){list.innerHTML='<div class="search-loading">Nenhuma cidade encontrada</div>';return}
-      list.innerHTML=newTripCityResults.map((r,i)=>`<div class="dest-result" onclick="selectNewTripCity(${i})"><span class="dest-flag">${flagFor(r.country)}</span><div><div class="dest-name">${r.city}</div><div class="dest-region">${r.country}</div></div></div>`).join('');
+      if(!newTripCityResults.length){list.innerHTML='<div class="search-loading">Nada encontrado</div>';return}
+      list.innerHTML=newTripCityResults.map((r,i)=>{
+        const mainName=r.city||r.country;
+        const subLabel=r.city?r.country:'País (sem cidade específica)';
+        return `<div class="dest-result" onclick="selectNewTripCity(${i})"><span class="dest-flag">${flagFor(r.country)}</span><div><div class="dest-name">${mainName}</div><div class="dest-region">${subLabel}</div></div></div>`;
+      }).join('');
     }catch(e){list.innerHTML='<div class="search-loading">Erro ao buscar</div>'}
   },350);
 }
