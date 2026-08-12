@@ -234,14 +234,27 @@ body{font-family:'DM Sans',sans-serif;background:var(--dark);max-width:430px;mar
 .trip-hero-label{font-size:12px;color:rgba(255,255,255,0.7);margin-bottom:6px}
 .trip-hero-name{font-family:'Fraunces',serif;font-weight:400;font-size:30px;color:#fff;line-height:1.1;letter-spacing:-.015em}
 .trip-hero-meta{font-family:var(--mono);font-size:11.5px;color:rgba(255,255,255,0.6);margin-top:7px}
-/* Abas de categoria por CIDADE (dentro do card de cada cidade, não mais
-   fixas no topo da viagem inteira — ver renderTripBody) */
-.cat-tabs-mini{display:flex;gap:6px;margin-bottom:14px}
-.cat-tab-mini{flex:1;display:flex;align-items:center;justify-content:center;gap:5px;padding:9px 6px;border-radius:var(--r-sm);background:rgba(234,231,224,.05);border:1px solid var(--border);font-size:11.5px;font-weight:500;color:var(--ink3);cursor:pointer}
-.cat-tab-mini .ic{font-size:14px}
-.cat-tab-mini.active{color:var(--ink);background:rgba(193,85,47,.12);border-color:rgba(193,85,47,.35)}
-.cat-tab-mini-count{font-family:var(--mono);font-size:10px}
+/* Abas de categoria — agora vivem na tela PRÓPRIA de cada cidade, não
+   mais fixas no topo da viagem inteira (a viagem mostra cards de cidade,
+   ver .city-card abaixo; tocar num card abre a tela da cidade) */
+.cat-tabs-wrap{background:var(--surface);border-bottom:1px solid var(--border);position:sticky;top:0;z-index:10}
+.cat-tabs{display:flex}
+.cat-tab{flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;padding:12px 6px;font-size:12px;font-weight:500;color:var(--ink3);cursor:pointer;border-bottom:2px solid transparent;text-align:center}
+.cat-tab.active{color:var(--ink);border-bottom-color:var(--terra)}
+.cat-tab .ct-icon{font-size:18px}
+.cat-tab .ct-count{font-family:var(--mono);font-size:10.5px;color:var(--ink3);background:rgba(234,231,224,.07);border-radius:var(--r-pill);padding:1px 7px;margin-top:1px}
+.cat-tab.active .ct-count{color:var(--ink)}
 .trip-body{padding:6px 24px 120px}
+/* Cards de cidade dentro da viagem — compacto, sem foto, mostra quanto
+   tem de cada categoria antes de abrir. */
+.city-card{border:1px solid var(--border);border-radius:var(--r);background:linear-gradient(160deg,rgba(234,231,224,.05),rgba(234,231,224,.015));padding:16px;margin-bottom:10px;cursor:pointer;box-shadow:var(--shadow-sm);transition:transform .15s}
+.city-card:active{transform:scale(.99)}
+.city-card-top{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:12px}
+.city-card-name{font-family:'Fraunces',serif;font-weight:400;font-size:21px;letter-spacing:-.01em;color:var(--ink)}
+.city-card-count{font-family:var(--mono);font-size:11px;color:var(--ink3)}
+.city-card-breakdown{display:flex;gap:16px;flex-wrap:wrap}
+.city-card-item{display:flex;align-items:center;gap:6px;font-size:12px;color:var(--ink2)}
+.city-card-item .ic{font-size:14px}
 .city-section{margin-bottom:26px}
 .city-header{display:flex;align-items:center;gap:10px;margin-bottom:12px;padding-top:16px}
 .city-name-text{font-family:'Fraunces',serif;font-weight:400;font-size:21px;color:var(--ink);letter-spacing:-.01em}
@@ -548,6 +561,14 @@ svg.ic path,svg.ic circle,svg.ic line,svg.ic polyline,svg.ic rect{fill:none;stro
   <div class="bottom-nav"><div class="nav-item active" onclick="goTo('dashboard');loadDashboard()"><div class="nav-icon" data-ic="map"></div><div class="nav-label" style="color:var(--ink);font-weight:600">Viagens</div></div><div class="nav-item" onclick="goTo('explore');loadExplore()"><div class="nav-icon" data-ic="search"></div><div class="nav-label">Explorar</div></div><div class="nav-item" onclick="goTo('friends');loadFriends()"><div class="nav-icon" data-ic="users"></div><div class="nav-label">Amigos</div></div><div class="nav-item" onclick="goTo('profile');loadProfile()"><div class="nav-icon" data-ic="user"></div><div class="nav-label">Perfil</div></div></div>
 </div>
 
+<div class="screen" id="city">
+  <div class="trip-hero"><div class="trip-hero-img" id="cityHeroImg"></div><div class="trip-float"></div><div class="trip-hero-content"><button class="back-btn" onclick="goTo('trip')" data-ic="back" aria-label="Voltar"></button><div><div class="trip-hero-label" id="cityLabel"></div><div class="trip-hero-name" id="cityName"></div><div class="trip-hero-meta" id="cityMeta"></div></div></div></div>
+  <div class="cat-tabs-wrap"><div class="cat-tabs"><div class="cat-tab active" onclick="switchCityCat('food',this)"><div class="ct-icon" data-ic="food"></div><div>Comer & Beber</div><div class="ct-count" id="cityCnt-food">0</div></div><div class="cat-tab" onclick="switchCityCat('hotel',this)"><div class="ct-icon" data-ic="hotel"></div><div>Onde Ficar</div><div class="ct-count" id="cityCnt-hotel">0</div></div><div class="cat-tab" onclick="switchCityCat('experience',this)"><div class="ct-icon" data-ic="compass"></div><div>Experiências</div><div class="ct-count" id="cityCnt-experience">0</div></div></div></div>
+  <div class="trip-body" id="cityBody"></div>
+  <button class="fab" onclick="addSpotToCurrentCity()">+</button>
+  <div class="bottom-nav"><div class="nav-item active" onclick="goTo('dashboard');loadDashboard()"><div class="nav-icon" data-ic="map"></div><div class="nav-label" style="color:var(--ink);font-weight:600">Viagens</div></div><div class="nav-item" onclick="goTo('explore');loadExplore()"><div class="nav-icon" data-ic="search"></div><div class="nav-label">Explorar</div></div><div class="nav-item" onclick="goTo('friends');loadFriends()"><div class="nav-icon" data-ic="users"></div><div class="nav-label">Amigos</div></div><div class="nav-item" onclick="goTo('profile');loadProfile()"><div class="nav-icon" data-ic="user"></div><div class="nav-label">Perfil</div></div></div>
+</div>
+
 <div class="screen" id="explore">
   <div class="dash-top" style="padding-bottom:18px">
     <div class="dash-top-row"><div><div class="dash-hello">Explorar</div><div class="dash-name" style="font-size:26px">Tendências por lugar</div></div></div>
@@ -730,7 +751,7 @@ const SB_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZ
 let sb;
 try{sb=supabase.createClient(SB_URL,SB_KEY)}catch(e){console.error(e)}
 
-const S={user:null,trips:[],curTrip:null,curPlace:null,addTrip:null,addCat:null,selPlace:null,pendingPlace:null,searchResults:[],token:null,profile:null};
+const S={user:null,trips:[],curTrip:null,curPlace:null,curCity:null,addTrip:null,addCat:null,selPlace:null,pendingPlace:null,searchResults:[],token:null,profile:null};
 let authMode='signin';
 
 // ═══ DATA LAYER (raw fetch — bypasses buggy SB client) ═══
@@ -1275,24 +1296,9 @@ async function loadTrip(t){
   }
   renderTripBody();
 }
-// ═══ TELA DA VIAGEM: cards de cidade (categoria fica DENTRO de cada
-// cidade, não mais fixa no topo da viagem inteira) ═══
-// Mesmo padrão de accordion já usado pras pastas de continente no
-// Dashboard — reaproveita as classes .region-folder/.region-body-wrap.
-function cityFolderKey(tripId,city){return 'spot_city_open_'+tripId+'_'+city}
-function isCityFolderOpen(tripId,city){const v=localStorage.getItem(cityFolderKey(tripId,city));return v===null?true:v==='1'}
-function cityCatKey(tripId,city){return 'spot_city_cat_'+tripId+'_'+city}
-function getCityCat(tripId,city){return localStorage.getItem(cityCatKey(tripId,city))||'food'}
-function toggleCityFolder(tripId,city,headerEl){
-  const folder=headerEl.closest('.region-folder');
-  const nowOpen=!folder.classList.contains('open');
-  folder.classList.toggle('open',nowOpen);
-  try{localStorage.setItem(cityFolderKey(tripId,city),nowOpen?'1':'0')}catch(e){}
-}
-function setCityCat(tripId,city,cat){
-  try{localStorage.setItem(cityCatKey(tripId,city),cat)}catch(e){}
-  renderTripBody();
-}
+// ═══ TELA DA VIAGEM: cards de cidade (compacto, sem foto, mostra quanto
+// tem de cada categoria) — tocar num card abre a TELA PRÓPRIA da cidade,
+// não expande no lugar. ═══
 function renderTripBody(){
   const t=S.curTrip,b=document.getElementById('tripBody');
   if(!t)return;
@@ -1302,31 +1308,64 @@ function renderTripBody(){
   let h='';
   for(const[city,spots]of Object.entries(byCity)){
     const cityEsc=String(city).replace(/'/g,"\\'");
-    const open=isCityFolderOpen(t.id,city);
-    const cat=getCityCat(t.id,city);
     const counts={food:0,hotel:0,experience:0};spots.forEach(s=>{if(counts[s.category]!==undefined)counts[s.category]++});
-    h+=`<div class="region-folder${open?' open':''}">`;
-    h+=`<div class="region-header" onclick="toggleCityFolder('${t.id}','${cityEsc}',this)"><span class="region-chevron">${icon('chevron')}</span><span class="region-name">${city}</span><span class="region-count">${spots.length}</span></div>`;
-    h+=`<div class="region-body-wrap"><div class="region-body-inner"><div class="region-body">`;
-    h+=`<div class="cat-tabs-mini">`;
-    h+=[['food','Comer & Beber'],['hotel','Onde Ficar'],['experience','Experiências']].map(([c,label])=>
-      `<div class="cat-tab-mini${cat===c?' active':''}" onclick="setCityCat('${t.id}','${cityEsc}','${c}')">${icon(c==='food'?'food':c==='hotel'?'hotel':'compass')} ${label} <span class="cat-tab-mini-count">${counts[c]}</span></div>`
+    h+=`<div class="city-card" onclick="openCityScreen('${cityEsc}')"><div class="city-card-top"><div class="city-card-name">${city}</div><div class="city-card-count">${spots.length} ${spots.length===1?'spot':'spots'}</div></div><div class="city-card-breakdown">`;
+    h+=[['food','Comer'],['hotel','Ficar'],['experience','Experiências']].filter(([c])=>counts[c]>0).map(([c,label])=>
+      `<div class="city-card-item">${icon(c==='food'?'food':c==='hotel'?'hotel':'compass')} ${label} ${counts[c]}</div>`
     ).join('');
-    h+=`</div>`;
-    const filtered=spots.filter(s=>s.category===cat);
-    if(!filtered.length){
-      h+=`<div class="empty-state" style="padding:24px 0"><p>Nenhum spot nessa categoria ainda</p></div>`;
-    }else{
-      filtered.forEach(s=>{
-        const bc=s.category==='food'?'bar-food':s.category==='hotel'?'bar-hotel':'bar-experience';
-        const dot=s.status==='been'?'dot-been':'dot-want';
-        const thumb=s.photo_url?`<div class="place-thumb"><img src="${s.photo_url}" style="width:100%;height:100%;object-fit:cover;border-radius:inherit" onerror="onSpotPhotoError(this,'${s.id}','${s.category}')"></div>`:`<div class="place-thumb">${catIcon(s.category)}</div>`;
-        h+=`<div class="place-row" onclick="openPlace('${s.id}')"><div class="place-bar ${bc}"></div><div class="place-row-main">${thumb}<div class="place-row-info"><div class="place-row-name">${s.name}</div><div class="place-row-note">${s.my_note||''}</div></div><div class="place-row-right"><span class="place-type-tag">${s.place_type||catLabel(s.category)}</span><div class="place-status"><span class="status-dot ${dot}"></span><span class="place-status-label">${s.status==='been'?'Fui':'Quero ir'}</span></div></div></div></div>`;
-      });
-    }
-    h+=`</div></div></div></div>`;
+    h+=`</div></div>`;
   }
   b.innerHTML=h;
+}
+// ═══ TELA DA CIDADE (dedicada, aberta ao tocar num card acima) ═══
+let curCityCat='food';
+function updateCityHeader(){
+  const t=S.curTrip;if(!t||!S.curCity)return;
+  const spots=(t._spots||[]).filter(s=>cityOf(s)===S.curCity);
+  document.getElementById('cityMeta').textContent=spots.length+(spots.length===1?' spot':' spots');
+  document.getElementById('cityCnt-food').textContent=spots.filter(s=>s.category==='food').length;
+  document.getElementById('cityCnt-hotel').textContent=spots.filter(s=>s.category==='hotel').length;
+  document.getElementById('cityCnt-experience').textContent=spots.filter(s=>s.category==='experience').length;
+}
+function openCityScreen(city){
+  S.curCity=city;curCityCat='food';
+  document.querySelectorAll('#city .cat-tab').forEach(t=>t.classList.remove('active'));
+  document.querySelector('#city .cat-tab').classList.add('active');
+  const t=S.curTrip;
+  document.getElementById('cityLabel').textContent=(t.destinations||[]).map(d=>flagFor(d)).join(' ');
+  document.getElementById('cityName').textContent=city;
+  updateCityHeader();
+  const heroEl=document.getElementById('cityHeroImg');
+  heroEl.style.backgroundImage=destGradient(city);
+  fetchCityPhoto(city).then(url=>{if(url&&S.curCity===city)heroEl.style.backgroundImage=`url('${url}')`});
+  renderCityBody();
+  goTo('city');
+}
+function switchCityCat(cat,el){
+  curCityCat=cat;
+  document.querySelectorAll('#city .cat-tab').forEach(t=>t.classList.remove('active'));if(el)el.classList.add('active');
+  renderCityBody();
+}
+function renderCityBody(){
+  const b=document.getElementById('cityBody');
+  const t=S.curTrip;if(!t||!S.curCity)return;
+  const spots=(t._spots||[]).filter(s=>cityOf(s)===S.curCity&&s.category===curCityCat);
+  if(!spots.length){b.innerHTML=`<div class="empty-state" style="padding:40px 24px"><div class="ei">${catIcon(curCityCat)}</div><h3>Nenhum spot aqui</h3><p>Toca no + para adicionar</p></div>`;return}
+  let h='';
+  spots.forEach(s=>{
+    const bc=s.category==='food'?'bar-food':s.category==='hotel'?'bar-hotel':'bar-experience';
+    const dot=s.status==='been'?'dot-been':'dot-want';
+    const thumb=s.photo_url?`<div class="place-thumb"><img src="${s.photo_url}" style="width:100%;height:100%;object-fit:cover;border-radius:inherit" onerror="onSpotPhotoError(this,'${s.id}','${s.category}')"></div>`:`<div class="place-thumb">${catIcon(s.category)}</div>`;
+    h+=`<div class="place-row" onclick="openPlace('${s.id}')"><div class="place-bar ${bc}"></div><div class="place-row-main">${thumb}<div class="place-row-info"><div class="place-row-name">${s.name}</div><div class="place-row-note">${s.my_note||''}</div></div><div class="place-row-right"><span class="place-type-tag">${s.place_type||catLabel(s.category)}</span><div class="place-status"><span class="status-dot ${dot}"></span><span class="place-status-label">${s.status==='been'?'Fui':'Quero ir'}</span></div></div></div></div>`;
+  });
+  b.innerHTML=h;
+}
+// Dentro da tela da cidade a categoria já é sabida (a aba ativa) — mesma
+// lógica de antes, só que agora sem ambiguidade (a tela mostra 1 cidade só).
+function addSpotToCurrentCity(){
+  S.addTrip=S.curTrip;S.addCat=curCityCat;
+  resetSearchSheet();
+  document.getElementById('ov-search').classList.add('show');
 }
 
 // ═══ PLACE DETAIL ═══
@@ -1819,7 +1858,11 @@ async function saveSpot(addAnother){
   if(!error&&data){
     if(!t._spots)t._spots=[];t._spots.push(data);
     toast('Spot salvo',note?`"${p.name} · ${note}"`:p.name,'check');
-    if(document.getElementById('trip').classList.contains('active')&&S.curTrip?.id===t.id){S.curTrip._spots=t._spots;renderTripBody()}
+    if(S.curTrip?.id===t.id){
+      S.curTrip._spots=t._spots;
+      if(document.getElementById('trip').classList.contains('active'))renderTripBody();
+      else if(document.getElementById('city').classList.contains('active')){updateCityHeader();renderCityBody()}
+    }
     await loadDashboard();
     if(addAnother){
       // Mesma viagem, mesma categoria — só reabre a busca. É exatamente o
