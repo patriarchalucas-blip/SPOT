@@ -1009,6 +1009,7 @@ async function loadDashboard(){
 // Count distinct cities from spots
 function tripCityCount(t){
   const cities=new Set((t._spots||[]).map(s=>cityOf(s)).filter(Boolean));
+  if(t.initial_city)cities.add(cityOf({city:t.initial_city})||t.initial_city);
   return cities.size;
 }
 function isQuickVisit(t){return t.dates==='__quickvisit__'&&(!t._spots||!t._spots.length)}
@@ -1302,9 +1303,12 @@ async function loadTrip(t){
 function renderTripBody(){
   const t=S.curTrip,b=document.getElementById('tripBody');
   if(!t)return;
-  if(!t._spots||!t._spots.length){b.innerHTML=`<div class="empty-state" style="padding:40px 24px"><div class="ei">${icon('pin')}</div><h3>Nenhum spot aqui</h3><p>Toca no + para adicionar</p></div>`;return}
+  const hasSpots=t._spots&&t._spots.length;
+  if(!hasSpots&&!t.initial_city){b.innerHTML=`<div class="empty-state" style="padding:40px 24px"><div class="ei">${icon('pin')}</div><h3>Nenhum spot aqui</h3><p>Toca no + para adicionar</p></div>`;return}
   rebuildCityCanon();
-  const byCity={};t._spots.forEach(s=>{const c=cityOf(s)||'Outros';(byCity[c]=byCity[c]||[]).push(s)});
+  const byCity={};
+  if(t.initial_city){const c0=cityOf({city:t.initial_city})||t.initial_city;byCity[c0]=byCity[c0]||[]}
+  (t._spots||[]).forEach(s=>{const c=cityOf(s)||'Outros';(byCity[c]=byCity[c]||[]).push(s)});
   let h='';
   for(const[city,spots]of Object.entries(byCity)){
     const cityEsc=String(city).replace(/'/g,"\\'");
@@ -1889,10 +1893,10 @@ async function createTrip(){
   let dates='';if(s&&e)dates=fmtD(s)+' – '+fmtD(e);else if(s)dates='A partir de '+fmtD(s);
   const btn=document.getElementById('createTripBtn');btn.textContent='Criando...';btn.style.pointerEvents='none';
   // store dates as raw ISO too, for smart status
-  let{data,error}=await dbInsert('trips',{user_id:S.user.id,name,destinations:[name],dates,date_start:s||null,date_end:e||null,status:'planning'});
+  let{data,error}=await dbInsert('trips',{user_id:S.user.id,name,destinations:[name],dates,date_start:s||null,date_end:e||null,status:'planning',initial_city:cidadeEscolhida});
   // If date columns don't exist in DB, retry without them
   if(error&&!data){
-    const retry=await dbInsert('trips',{user_id:S.user.id,name,destinations:[name],dates,status:'planning'});
+    const retry=await dbInsert('trips',{user_id:S.user.id,name,destinations:[name],dates,status:'planning',initial_city:cidadeEscolhida});
     data=retry.data;error=retry.error;
   }
   if(!error&&data){
@@ -2186,7 +2190,10 @@ function buildCityCanon(raws){
 }
 function rebuildCityCanon(){
   const raws=[];
-  (S.trips||[]).forEach(t=>(t._spots||[]).forEach(s=>{if(s.city)raws.push(s.city)}));
+  (S.trips||[]).forEach(t=>{
+    if(t.initial_city)raws.push(t.initial_city);
+    (t._spots||[]).forEach(s=>{if(s.city)raws.push(s.city)});
+  });
   S.cityCanon=buildCityCanon(raws);
 }
 function cityOf(s){
