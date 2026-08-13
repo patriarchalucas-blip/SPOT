@@ -252,6 +252,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--dark);max-width:430px;mar
 .city-card-top{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:12px}
 .city-card-name{font-family:'Fraunces',serif;font-weight:400;font-size:21px;letter-spacing:-.01em;color:var(--ink)}
 .city-card-count{font-family:var(--mono);font-size:11px;color:var(--ink3)}
+.city-card-climate{font-family:var(--mono);font-size:10.5px;color:var(--amber);margin-top:3px;min-height:13px}
 .city-card-breakdown{display:flex;gap:16px;flex-wrap:wrap}
 .city-card-item{display:flex;align-items:center;gap:6px;font-size:12px;color:var(--ink2)}
 .city-card-item .ic{font-size:14px}
@@ -1300,6 +1301,22 @@ async function loadTrip(t){
 // ═══ TELA DA VIAGEM: cards de cidade (compacto, sem foto, mostra quanto
 // tem de cada categoria) — tocar num card abre a TELA PRÓPRIA da cidade,
 // não expande no lugar. ═══
+// Temperatura média histórica (Visual Crossing, via function serverless —
+// a chave nunca fica no navegador). Mês vem da DATA DA VIAGEM quando tem
+// (faz sentido mostrar o clima de quando a viagem acontece, não o de
+// hoje); sem data, usa o mês atual.
+async function fetchCityClimate(city,country,month){
+  try{
+    const resp=await fetch('/api/climate',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({city,country,month})});
+    if(!resp.ok)return null;
+    const d=await resp.json();
+    return(typeof d.avg_temp==='number')?d.avg_temp:null;
+  }catch(e){return null} // sem function configurada ainda, ou offline — nunca quebra o resto
+}
+function tripClimateMonth(t){
+  if(t.date_start){const m=new Date(t.date_start+'T00:00:00').getMonth();if(!isNaN(m))return m+1}
+  return new Date().getMonth()+1;
+}
 function renderTripBody(){
   const t=S.curTrip,b=document.getElementById('tripBody');
   if(!t)return;
@@ -1309,17 +1326,28 @@ function renderTripBody(){
   const byCity={};
   if(t.initial_city){const c0=cityOf({city:t.initial_city})||t.initial_city;byCity[c0]=byCity[c0]||[]}
   (t._spots||[]).forEach(s=>{const c=cityOf(s)||'Outros';(byCity[c]=byCity[c]||[]).push(s)});
+  const country=(t.destinations&&t.destinations[0])||t.name;
+  const month=tripClimateMonth(t);
   let h='';
   for(const[city,spots]of Object.entries(byCity)){
     const cityEsc=String(city).replace(/'/g,"\\'");
+    const cityIdSafe=String(city).replace(/[^a-zA-Z0-9]/g,'_');
     const counts={food:0,hotel:0,experience:0};spots.forEach(s=>{if(counts[s.category]!==undefined)counts[s.category]++});
-    h+=`<div class="city-card" onclick="openCityScreen('${cityEsc}')"><div class="city-card-top"><div class="city-card-name">${city}</div><div class="city-card-count">${spots.length} ${spots.length===1?'spot':'spots'}</div></div><div class="city-card-breakdown">`;
+    h+=`<div class="city-card" onclick="openCityScreen('${cityEsc}')"><div class="city-card-top"><div><div class="city-card-name">${city}</div><div class="city-card-climate" id="clima-${cityIdSafe}"></div></div><div class="city-card-count">${spots.length} ${spots.length===1?'spot':'spots'}</div></div><div class="city-card-breakdown">`;
     h+=[['food','Comer'],['hotel','Ficar'],['experience','Experiências']].filter(([c])=>counts[c]>0).map(([c,label])=>
       `<div class="city-card-item">${icon(c==='food'?'food':c==='hotel'?'hotel':'compass')} ${label} ${counts[c]}</div>`
     ).join('');
     h+=`</div></div>`;
   }
   b.innerHTML=h;
+  Object.keys(byCity).forEach(city=>{
+    const cityIdSafe=String(city).replace(/[^a-zA-Z0-9]/g,'_');
+    fetchCityClimate(city,country,month).then(temp=>{
+      if(temp==null)return;
+      const el=document.getElementById('clima-'+cityIdSafe);
+      if(el)el.textContent=Math.round(temp)+'°C em média';
+    });
+  });
 }
 // ═══ TELA DA CIDADE (dedicada, aberta ao tocar num card acima) ═══
 let curCityCat='food';
