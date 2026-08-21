@@ -253,8 +253,20 @@ body{font-family:'DM Sans',sans-serif;background:var(--dark);max-width:430px;mar
 .city-card-name{font-family:'Fraunces',serif;font-weight:400;font-size:21px;letter-spacing:-.01em;color:var(--ink)}
 .city-card-count{font-family:var(--mono);font-size:11px;color:var(--ink3)}
 .city-card-climate{font-family:var(--mono);font-size:10.5px;color:var(--amber);margin-top:3px;min-height:13px}
-.city-card-breakdown{display:flex;gap:16px;flex-wrap:wrap}
-.city-card-item{display:flex;align-items:center;gap:6px;font-size:12px;color:var(--ink2)}
+/* Chips de subcategoria (ficha de adicionar e filtro da tela da cidade) */
+/* Uma linha rolável, não wrap: em 375px os 5 chips quebravam em TRÊS linhas
+   (141px de altura) e empurravam a lista pra baixo. Rolagem horizontal aqui
+   é local ao container — o body continua sem rolar de lado. */
+.subcat-row{display:flex;flex-wrap:nowrap;gap:7px;margin-bottom:4px;overflow-x:auto;scrollbar-width:none;-webkit-overflow-scrolling:touch}
+.subcat-row::-webkit-scrollbar{display:none}
+.subcat-chip{flex:none;white-space:nowrap;display:flex;align-items:center;gap:5px;padding:8px 12px;border:1px solid var(--border);border-radius:999px;font-size:12px;font-family:'IBM Plex Mono',monospace;color:var(--ink2);cursor:pointer;background:transparent;transition:border-color .15s,color .15s}
+.subcat-chip.on{border-color:var(--ink);color:var(--ink);font-weight:500}
+.subcat-chip .ic{font-size:14px}
+.subcat-tag{font-size:11px;font-family:'IBM Plex Mono',monospace;color:var(--ink3);text-transform:uppercase;letter-spacing:.06em}
+.city-card-breakdown{display:flex;gap:14px;flex-wrap:wrap}
+/* Só ícone + número: a palavra ("Comer 10") repetia o que o ícone já diz e
+   lia como comando. O rótulo continua no title/aria-label. */
+.city-card-item{display:flex;align-items:center;gap:5px;font-size:12.5px;color:var(--ink2);font-family:'IBM Plex Mono',monospace}
 .city-card-item .ic{font-size:14px}
 .city-section{margin-bottom:26px}
 .city-header{display:flex;align-items:center;gap:10px;margin-bottom:12px;padding-top:16px}
@@ -337,6 +349,24 @@ body{font-family:'DM Sans',sans-serif;background:var(--dark);max-width:430px;mar
 /* ── Profile / World Map (Been-style) ── */
 #profile{background:#0b1620;overflow-y:auto}
 .profile-header-bar{display:flex;align-items:center;gap:14px;padding:40px 22px 16px;background:#0b1620;position:relative;z-index:5}
+/* ═══ PERFIL DE AMIGO (só leitura) ═══ */
+.friend-top{display:flex;align-items:center;gap:14px;padding:40px 22px 14px;background:#0b1620;position:relative;z-index:5}
+.friend-top .back-btn{position:static;flex-shrink:0}
+.friend-id{min-width:0}
+.friend-name{font-family:'Fraunces',serif;font-size:20px;font-weight:600;color:var(--ink);line-height:1.15;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.friend-user{font-family:'IBM Plex Mono',monospace;font-size:12px;color:var(--ink3);margin-top:2px}
+.friend-bio{padding:0 22px 16px;background:#0b1620;font-size:13.5px;color:var(--ink2);line-height:1.5}
+/* Linha de amigo na aba Amigos */
+.friend-row{display:flex;align-items:center;gap:12px;padding:12px 0;border-bottom:1px solid var(--border);cursor:pointer}
+.friend-row:last-child{border-bottom:none}
+.friend-row-name{flex:1;font-size:14.5px;font-weight:500;color:var(--ink);min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.friend-row-user{font-family:'IBM Plex Mono',monospace;font-size:11.5px;color:var(--ink3)}
+.friend-row-arrow{color:var(--ink3);font-size:17px;flex-shrink:0}
+/* Cidade dentro da viagem do amigo: título + spots embaixo, numa tela só —
+   não vale uma tela de cidade separada só pra leitura. */
+.fcity-head{display:flex;align-items:baseline;justify-content:space-between;margin:22px 0 8px}
+.fcity-name{font-family:'Fraunces',serif;font-size:17px;font-weight:600;color:var(--ink)}
+.fcity-count{font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--ink3)}
 .profile-avatar{width:54px;height:54px;border-radius:50%;background:var(--green);color:var(--dark);display:flex;align-items:center;justify-content:center;font-size:22px;font-weight:600;flex-shrink:0;box-shadow:var(--shadow-md),0 0 0 3px rgba(234,231,224,.06)}
 .profile-avatar-wrap{position:relative;cursor:pointer;flex-shrink:0}
 .avatar-edit-badge{position:absolute;bottom:-2px;right:-2px;width:22px;height:22px;border-radius:50%;background:var(--terra);color:#fff;display:flex;align-items:center;justify-content:center;font-size:11px;border:2px solid #0b1620}
@@ -570,6 +600,7 @@ svg.ic path,svg.ic circle,svg.ic line,svg.ic polyline,svg.ic rect{fill:none;stro
 <div class="screen" id="city">
   <div class="trip-hero"><div class="trip-hero-img" id="cityHeroImg"></div><div class="trip-float"></div><div class="trip-hero-content"><button class="back-btn" onclick="goTo('trip')" data-ic="back" aria-label="Voltar"></button><div><div class="trip-hero-label" id="cityLabel"></div><div class="trip-hero-name" id="cityName"></div><div class="trip-hero-meta" id="cityMeta"></div></div></div></div>
   <div class="cat-tabs-wrap"><div class="cat-tabs"><div class="cat-tab active" onclick="switchCityCat('food',this)"><div class="ct-icon" data-ic="food"></div><div>Comer & Beber</div><div class="ct-count" id="cityCnt-food">0</div></div><div class="cat-tab" onclick="switchCityCat('hotel',this)"><div class="ct-icon" data-ic="hotel"></div><div>Onde Ficar</div><div class="ct-count" id="cityCnt-hotel">0</div></div><div class="cat-tab" onclick="switchCityCat('experience',this)"><div class="ct-icon" data-ic="compass"></div><div>Experiências</div><div class="ct-count" id="cityCnt-experience">0</div></div></div></div>
+  <div class="subcat-row" id="citySubcatFilter" style="display:none;padding:14px 20px 0;scroll-padding-left:20px"></div>
   <div class="trip-body" id="cityBody"></div>
   <button class="fab" onclick="addSpotToCurrentCity()">+</button>
   <div class="bottom-nav"><div class="nav-item active" onclick="goTo('dashboard');loadDashboard()"><div class="nav-icon" data-ic="map"></div><div class="nav-label" style="color:var(--ink);font-weight:600">Viagens</div></div><div class="nav-item" onclick="goTo('explore');loadExplore()"><div class="nav-icon" data-ic="search"></div><div class="nav-label">Explorar</div></div><div class="nav-item" onclick="goTo('friends');loadFriends()"><div class="nav-icon" data-ic="users"></div><div class="nav-label">Amigos</div></div><div class="nav-item" onclick="goTo('profile');loadProfile()"><div class="nav-icon" data-ic="user"></div><div class="nav-label">Perfil</div></div></div>
@@ -641,10 +672,45 @@ svg.ic path,svg.ic circle,svg.ic line,svg.ic polyline,svg.ic rect{fill:none;stro
   <div class="bottom-nav"><div class="nav-item" onclick="goTo('dashboard');loadDashboard()"><div class="nav-icon" data-ic="map"></div><div class="nav-label">Viagens</div></div><div class="nav-item" onclick="goTo('explore');loadExplore()"><div class="nav-icon" data-ic="search"></div><div class="nav-label">Explorar</div></div><div class="nav-item active" onclick="goTo('friends');loadFriends()"><div class="nav-icon" data-ic="users"></div><div class="nav-label" style="color:var(--ink);font-weight:600">Amigos</div></div><div class="nav-item" onclick="goTo('profile');loadProfile()"><div class="nav-icon" data-ic="user"></div><div class="nav-label">Perfil</div></div></div>
 </div>
 
+<div class="screen" id="friend">
+  <div class="friend-top">
+    <button class="back-btn" onclick="backToFriends()" data-ic="back" aria-label="Voltar"></button>
+    <div class="profile-avatar" id="friendAvatar">?</div>
+    <div class="friend-id"><div class="friend-name" id="friendName">—</div><div class="friend-user" id="friendUser"></div></div>
+  </div>
+  <div class="friend-bio" id="friendBio" style="display:none"></div>
+  <div class="dash-body">
+    <div class="stats-strip">
+      <div class="stat-block" style="cursor:default"><div class="stat-n" id="fStatTrips">0</div><div class="stat-l">viagens</div></div>
+      <div class="stat-block" style="cursor:default"><div class="stat-n" id="fStatSpots">0</div><div class="stat-l">spots</div></div>
+      <div class="stat-block" style="cursor:default"><div class="stat-n" id="fStatCities">0</div><div class="stat-l">cidades</div></div>
+      <div class="stat-block" style="cursor:default"><div class="stat-n" id="fStatCountries">0</div><div class="stat-l">países</div></div>
+    </div>
+    <div class="section-head"><span class="section-title">Viagens</span></div>
+    <div id="friendTripsList"></div>
+  </div>
+</div>
+
+<div class="screen" id="friendTrip">
+  <div class="trip-hero">
+    <div class="trip-hero-img" id="ftHeroImg"></div>
+    <div class="trip-hero-content">
+      <button class="back-btn" onclick="goTo('friend')" data-ic="back" aria-label="Voltar"></button>
+      <div>
+        <div class="trip-hero-label" id="ftLabel"></div>
+        <div class="trip-hero-name" id="ftName"></div>
+        <div class="trip-hero-meta" id="ftMeta"></div>
+      </div>
+    </div>
+  </div>
+  <div class="trip-body" id="ftBody"></div>
+</div>
+
 <div class="screen" id="place">
   <div class="place-hero"><div class="place-hero-img" id="placeHeroImg"></div><div class="hero-overlay"></div><button class="hero-back" onclick="backFromPlace()" data-ic="back" aria-label="Voltar"></button><button class="hero-photo-btn" onclick="document.getElementById('spotPhotoFileInput').click()" data-ic="edit" aria-label="Trocar foto"></button><input type="file" id="spotPhotoFileInput" accept="image/*" style="display:none" onchange="onSpotPhotoFileChosen(this)"><div class="hero-chip chip-want" id="placeChip" onclick="cycleStatus()">Quero ir</div><div class="hero-bottom"><div class="hero-type" id="placeType"></div><div class="hero-name" id="placeName"></div></div></div>
   <div class="d-section"><div class="sec-label">Minha nota</div><div class="note-card"><div class="note-glow"></div><div class="note-quote" id="placeNote"></div><div class="note-attr" id="placeNoteAttr"></div></div></div>
   <div class="d-section"><div class="sec-label">Informações</div><div class="info-grid" id="placeInfoGrid"></div><div id="placeReserveWrap"></div></div>
+  <div class="d-section" id="placeSubcatSection" style="display:none"><div class="sec-label">Tipo de experiência</div><div class="subcat-row" id="placeSubcatChips"></div></div>
   <div class="d-section"><div class="sec-label">Status</div><div class="status-toggle"><button class="toggle-btn sel-want" id="t-want" onclick="setStatus('want')">Quero ir</button><button class="toggle-btn" id="t-been" onclick="setStatus('been')">Fui</button><button class="toggle-btn" id="t-skip" onclick="setStatus('skip')">Pular</button></div></div>
   <div class="d-section"><div class="sec-label">Minha avaliação</div><div class="stars-row" id="placeStars"><button class="star-btn" onclick="rateStar(1)" data-ic="star"></button><button class="star-btn" onclick="rateStar(2)" data-ic="star"></button><button class="star-btn" onclick="rateStar(3)" data-ic="star"></button><button class="star-btn" onclick="rateStar(4)" data-ic="star"></button><button class="star-btn" onclick="rateStar(5)" data-ic="star"></button></div><textarea class="review-area" id="reviewText" rows="3" placeholder="O que você achou?"></textarea><button class="action-btn" id="saveReviewBtn" onclick="saveReview()">Salvar avaliação</button><button class="delete-link" onclick="deleteSpot()">Excluir este spot</button></div>
 </div>
@@ -659,6 +725,7 @@ svg.ic path,svg.ic circle,svg.ic line,svg.ic polyline,svg.ic rect{fill:none;stro
 
 <div class="overlay" id="ov-note" onclick="closeOut(event,'ov-note')"><div class="sheet"><button class="sheet-close" onclick="closeOv('ov-note')" data-ic="close" aria-label="Fechar"></button><div class="sheet-handle"></div><div class="sheet-title">Adicionar spot</div><div class="note-place-row"><div class="note-place-icon" id="selIcon" data-ic="food"></div><div><div class="note-place-name" id="selName"></div><div class="note-place-meta" id="selMeta"></div></div></div>
 <div class="status-choice"><button class="status-opt active" id="stWant" onclick="setSpotStatus('want')"><div class="so-emoji" data-ic="bookmark"></div><div class="so-label">Quero ir</div></button><button class="status-opt" id="stBeen" onclick="setSpotStatus('been')"><div class="so-emoji" data-ic="check"></div><div class="so-label">Já fui</div></button></div>
+<div id="subcatRow" style="display:none"><div class="note-label">Que tipo de experiência?</div><div class="subcat-row" id="subcatChips"></div></div>
 <div id="ratingRow" style="display:none"><div class="note-label">Sua avaliação</div><div class="stars-row" id="addStars"><button class="star-btn" onclick="setAddRating(1)" data-ic="star"></button><button class="star-btn" onclick="setAddRating(2)" data-ic="star"></button><button class="star-btn" onclick="setAddRating(3)" data-ic="star"></button><button class="star-btn" onclick="setAddRating(4)" data-ic="star"></button><button class="star-btn" onclick="setAddRating(5)" data-ic="star"></button></div></div>
 <div class="note-label">Sua nota <span style="color:var(--ink3);font-weight:400">(opcional)</span></div><div class="note-wrap"><textarea class="note-input" id="noteField" rows="2" placeholder="Por que esse lugar te chamou atenção?"></textarea></div>
 <button class="sheet-cta" id="saveSpotBtn" onclick="saveSpot(false)">Salvar spot</button><button class="secondary-link" id="saveAndAddBtn" onclick="saveSpot(true)">Salvar e adicionar outro</button></div></div>
@@ -1414,8 +1481,8 @@ function renderTripBody(){
     const cityIdSafe=String(city).replace(/[^a-zA-Z0-9]/g,'_');
     const counts={food:0,hotel:0,experience:0};spots.forEach(s=>{if(counts[s.category]!==undefined)counts[s.category]++});
     h+=`<div class="city-card" onclick="openCityFromTrip(${ci})"><div class="city-card-top"><div><div class="city-card-name">${esc(city)}</div><div class="city-card-climate" id="clima-${cityIdSafe}"></div></div><div class="city-card-count">${spots.length} ${spots.length===1?'spot':'spots'}</div></div><div class="city-card-breakdown">`;
-    h+=[['food','Comer'],['hotel','Ficar'],['experience','Experiências']].filter(([c])=>counts[c]>0).map(([c,label])=>
-      `<div class="city-card-item">${icon(c==='food'?'food':c==='hotel'?'hotel':'compass')} ${label} ${counts[c]}</div>`
+    h+=[['food','pra comer'],['hotel','pra ficar'],['experience','experiências']].filter(([c])=>counts[c]>0).map(([c,label])=>
+      `<div class="city-card-item" title="${counts[c]} ${label}" aria-label="${counts[c]} ${label}">${icon(c==='food'?'food':c==='hotel'?'hotel':'compass')} ${counts[c]}</div>`
     ).join('');
     h+=`</div></div>`;
   });
@@ -1431,6 +1498,26 @@ function renderTripBody(){
 }
 // ═══ TELA DA CIDADE (dedicada, aberta ao tocar num card acima) ═══
 let curCityCat='food';
+let curCitySubcat=''; // '' = todas
+// Chips de filtro só existem se houver o que filtrar: com zero experiência
+// classificada eles seriam cinco botões que não fazem nada.
+function renderCitySubcatFilter(){
+  const box=document.getElementById('citySubcatFilter');
+  const t=S.curTrip;
+  if(!t||!S.curCity||curCityCat!=='experience'){box.style.display='none';box.innerHTML='';return}
+  const daCidade=(t._spots||[]).filter(s=>cityOf(s)===S.curCity&&s.category==='experience');
+  const presentes=EXP_SUBCATS.filter(sc=>daCidade.some(s=>s.subcategory===sc.key));
+  if(!presentes.length){box.style.display='none';box.innerHTML='';return}
+  box.style.display='flex';
+  const semClas=daCidade.some(s=>!s.subcategory);
+  box.innerHTML=`<button class="subcat-chip${curCitySubcat===''?' on':''}" onclick="setCitySubcat('')">Todas ${daCidade.length}</button>`
+    +presentes.map(sc=>{
+      const n=daCidade.filter(s=>s.subcategory===sc.key).length;
+      return `<button class="subcat-chip${curCitySubcat===sc.key?' on':''}" onclick="setCitySubcat('${sc.key}')">${icon(sc.ic)} ${esc(sc.label)} ${n}</button>`;
+    }).join('')
+    +(semClas?`<button class="subcat-chip${curCitySubcat==='__sem__'?' on':''}" onclick="setCitySubcat('__sem__')">Sem tipo ${daCidade.filter(s=>!s.subcategory).length}</button>`:'');
+}
+function setCitySubcat(k){curCitySubcat=(curCitySubcat===k?'':k);renderCitySubcatFilter();renderCityBody()}
 // Cidades da viagem na ordem em que os cards foram desenhados. O card manda o
 // índice; o nome sai daqui, nunca do HTML.
 let TRIP_CITY_ORDER=[];
@@ -1451,6 +1538,7 @@ function openCityScreen(city){
   document.getElementById('cityLabel').textContent=(t.destinations||[]).map(d=>flagFor(d)).join(' ');
   document.getElementById('cityName').textContent=city;
   updateCityHeader();
+  curCitySubcat='';renderCitySubcatFilter();
   const heroEl=document.getElementById('cityHeroImg');
   heroEl.style.backgroundImage=destGradient(city);
   fetchCityPhoto(city).then(url=>{if(url&&S.curCity===city)heroEl.style.backgroundImage=cssUrl(url)});
@@ -1458,21 +1546,24 @@ function openCityScreen(city){
   goTo('city');
 }
 function switchCityCat(cat,el){
-  curCityCat=cat;
+  curCityCat=cat;curCitySubcat='';
   document.querySelectorAll('#city .cat-tab').forEach(t=>t.classList.remove('active'));if(el)el.classList.add('active');
-  renderCityBody();
+  renderCitySubcatFilter();renderCityBody();
 }
 function renderCityBody(){
   const b=document.getElementById('cityBody');
   const t=S.curTrip;if(!t||!S.curCity)return;
-  const spots=(t._spots||[]).filter(s=>cityOf(s)===S.curCity&&s.category===curCityCat);
-  if(!spots.length){b.innerHTML=`<div class="empty-state" style="padding:40px 24px"><div class="ei">${catIcon(curCityCat)}</div><h3>Nenhum spot aqui</h3><p>Toca no + para adicionar</p></div>`;return}
+  let spots=(t._spots||[]).filter(s=>cityOf(s)===S.curCity&&s.category===curCityCat);
+  if(curCityCat==='experience'&&curCitySubcat){
+    spots=curCitySubcat==='__sem__'?spots.filter(s=>!s.subcategory):spots.filter(s=>s.subcategory===curCitySubcat);
+  }
+  if(!spots.length){b.innerHTML=`<div class="empty-state" style="padding:40px 24px"><div class="ei">${catIcon(curCityCat)}</div><h3>Nenhum spot aqui</h3><p>${curCitySubcat?'Nenhuma experiência desse tipo nesta cidade.':'Toca no + para adicionar'}</p></div>`;return}
   let h='';
   spots.forEach(s=>{
     const bc=s.category==='food'?'bar-food':s.category==='hotel'?'bar-hotel':'bar-experience';
     const dot=s.status==='been'?'dot-been':'dot-want';
     const thumb=s.photo_url?`<div class="place-thumb"><img src="${escUrl(s.photo_url)}" style="width:100%;height:100%;object-fit:cover;border-radius:inherit" onerror="onSpotPhotoError(this,'${esc(s.id)}','${esc(s.category)}')"></div>`:`<div class="place-thumb">${catIcon(s.category)}</div>`;
-    h+=`<div class="place-row" onclick="openPlace('${esc(s.id)}','city')"><div class="place-bar ${bc}"></div><div class="place-row-main">${thumb}<div class="place-row-info"><div class="place-row-name">${esc(s.name)}</div><div class="place-row-note">${esc(s.my_note)}</div></div><div class="place-row-right"><span class="place-type-tag">${esc(s.place_type||catLabel(s.category))}</span><div class="place-status"><span class="status-dot ${dot}"></span><span class="place-status-label">${s.status==='been'?'Fui':'Quero ir'}</span></div></div></div></div>`;
+    h+=`<div class="place-row" onclick="openPlace('${esc(s.id)}','city')"><div class="place-bar ${bc}"></div><div class="place-row-main">${thumb}<div class="place-row-info"><div class="place-row-name">${esc(s.name)}</div><div class="place-row-note">${esc(s.my_note)}</div></div><div class="place-row-right"><span class="place-type-tag">${esc(subcatLabel(s.subcategory)||s.place_type||catLabel(s.category))}</span><div class="place-status"><span class="status-dot ${dot}"></span><span class="place-status-label">${s.status==='been'?'Fui':'Quero ir'}</span></div></div></div></div>`;
   });
   b.innerHTML=h;
 }
@@ -1489,7 +1580,7 @@ async function openPlace(id,origin){
   const s=S.curTrip._spots.find(x=>x.id===id);if(!s)return;S.curPlace=s;
   S.placeOrigin=origin||'trip'; // pra saber pra onde o "voltar" deve levar
   document.getElementById('placeName').textContent=s.name;
-  document.getElementById('placeType').textContent=`${catLabel(s.category)} · ${cityOf(s)}`;
+  document.getElementById('placeType').textContent=`${subcatLabel(s.subcategory)||catLabel(s.category)} · ${cityOf(s)}`;
   document.getElementById('placeNote').textContent=`"${s.my_note}"`;
   document.getElementById('placeNoteAttr').style.display='none';
   const phEl=document.getElementById('placeHeroImg');
@@ -1515,6 +1606,7 @@ async function openPlace(id,origin){
   if(!ig)ig=`<div class="info-cell wide"><div class="info-cell-icon">${icon('pin')}</div><div class="info-cell-label">Local</div><div class="info-cell-value">${esc(cityOf(s)||'—')}</div></div>`;
   document.getElementById('placeInfoGrid').innerHTML=ig;
   renderPlaceLinks(s);
+  renderPlaceSubcat();
   setStatus(s.status||'want',false);
   document.querySelectorAll('#placeStars .star-btn').forEach((b,i)=>b.classList.toggle('lit',i<(s.my_rating||0)));
   document.getElementById('reviewText').value=s.my_review||'';
@@ -1540,6 +1632,33 @@ function renderPlaceLinks(s){
   }else{
     reserveWrap.innerHTML='';
   }
+}
+function renderPlaceSubcat(){
+  const sec=document.getElementById('placeSubcatSection');
+  const s=S.curPlace;
+  if(!s||s.category!=='experience'){sec.style.display='none';return}
+  sec.style.display='block';
+  document.getElementById('placeSubcatChips').innerHTML=EXP_SUBCATS.map(sc=>
+    `<button class="subcat-chip${s.subcategory===sc.key?' on':''}" onclick="setPlaceSubcat('${sc.key}')">${icon(sc.ic)} ${esc(sc.label)}</button>`
+  ).join('');
+}
+// Grava na hora, igual ao Status — sem botão de salvar próprio. Tocar na que
+// já está marcada limpa o tipo (é opcional).
+async function setPlaceSubcat(k){
+  const s=S.curPlace;if(!s)return;
+  const novo=s.subcategory===k?null:k;
+  const anterior=s.subcategory||null;
+  s.subcategory=novo;renderPlaceSubcat();
+  const{error}=await dbUpdate('spots',s.id,{subcategory:novo});
+  if(error){
+    s.subcategory=anterior;renderPlaceSubcat();
+    // Praticamente só acontece se a 009 não tiver sido rodada — a mensagem
+    // aponta pra causa em vez de dizer só "deu erro".
+    toast('Erro','Não foi possível salvar o tipo. Falta rodar a migração 009?');
+    return;
+  }
+  // a etiqueta da linha e o filtro da cidade leem daqui, então redesenha
+  if(document.getElementById('city').classList.contains('active')){renderCitySubcatFilter();renderCityBody()}
 }
 async function setStatus(s,save=true){
   ['want','been','skip'].forEach(k=>document.getElementById('t-'+k).className='toggle-btn');
@@ -1651,7 +1770,7 @@ async function runExplore(){
       const addr=p.formattedAddress||'';
       const c=cityFromComponents(p.addressComponents)||extractCityFromAddr(addr);
       const country=countryFromComponents(p.addressComponents);
-      return{name:p.displayName?.text||'',address:addr,city:c,country,rating:String(p.rating),count:p.userRatingCount,photo_url:placePhotoUrl(p,400),website_url:p.websiteUri||'',maps_url:p.googleMapsUri||''};
+      return{name:p.displayName?.text||'',address:addr,city:c,country,rating:String(p.rating),count:p.userRatingCount,subcat:guessSubcat(p.types),photo_url:placePhotoUrl(p,400),website_url:p.websiteUri||'',maps_url:p.googleMapsUri||''};
     });
     renderExploreResults();
   }catch(e){
@@ -1669,7 +1788,7 @@ function renderExploreResults(){
 }
 function addExploreSpot(i){
   const t=EXPLORE.items[i];if(!t)return;
-  S.explorePick={name:t.name,meta:t.address,icon:catIcon(EXPLORE.cat),city:t.city,country:t.country,address:t.address,photo_url:t.photo_url,rating_google:t.rating,website_url:t.website_url,maps_url:t.maps_url};
+  S.explorePick={name:t.name,meta:t.address,icon:catIcon(EXPLORE.cat),city:t.city,country:t.country,address:t.address,subcat:t.subcat||'',photo_url:t.photo_url,rating_google:t.rating,website_url:t.website_url,maps_url:t.maps_url};
   // Categoria já foi escolhida na aba do Explorar (Comer/Ficar/Experiências)
   // antes de buscar — perguntar de novo seria repetir uma decisão já feita.
   S.explorePickCat=EXPLORE.cat;
@@ -1738,7 +1857,7 @@ function showNearbySuggestions(){
         const city=cityFromComponents(p.addressComponents)||extractCityFromAddr(addr);
         const country=countryFromComponents(p.addressComponents);
         const fotos=placePhotoUrls(p);
-        return{name:p.displayName?.text||'',icon:catIcon(S.addCat),city,country,address:addr,photo_url:fotos.full,photo_thumb:fotos.thumb,rating_google:p.rating?String(p.rating):'',website_url:p.websiteUri||'',maps_url:p.googleMapsUri||''};
+        return{name:p.displayName?.text||'',icon:catIcon(S.addCat),city,country,address:addr,subcat:guessSubcat(p.types),photo_url:fotos.full,photo_thumb:fotos.thumb,rating_google:p.rating?String(p.rating):'',website_url:p.websiteUri||'',maps_url:p.googleMapsUri||''};
       });
       r.innerHTML='<div class="search-nearby-label">Perto de você</div>'+S_nearbyResults.map((p,i)=>{
         const thumb=p.photo_thumb?'<div class="sr-icon"><img src="'+escUrl(p.photo_thumb)+'" loading="eager" style="width:100%;height:100%;object-fit:cover;border-radius:12px"></div>':'<div class="sr-icon">'+p.icon+'</div>';
@@ -1814,7 +1933,7 @@ function maybeShowCheckin(){
       const city=cityFromComponents(p.addressComponents)||extractCityFromAddr(addr);
       const country=countryFromComponents(p.addressComponents);
       const fotos=placePhotoUrls(p);
-      CHECKIN.place={name,meta:addr,icon:catIcon('food'),city,country,address:addr,photo_url:fotos.full,photo_thumb:fotos.thumb,rating_google:p.rating?String(p.rating):'',website_url:p.websiteUri||'',maps_url:p.googleMapsUri||'',category:'food'};
+      CHECKIN.place={name,meta:addr,icon:catIcon('food'),city,country,address:addr,subcat:'',photo_url:fotos.full,photo_thumb:fotos.thumb,rating_google:p.rating?String(p.rating):'',website_url:p.websiteUri||'',maps_url:p.googleMapsUri||'',category:'food'};
       document.getElementById('checkinName').textContent=name;
       document.getElementById('checkinBanner').style.display='flex';
     }catch(e){console.error('maybeShowCheckin',e)}
@@ -1862,7 +1981,7 @@ function searchPlaces(v){
     try{
       const resp=await fetch('https://places.googleapis.com/v1/places:searchText',{
         method:'POST',
-        headers:{'Content-Type':'application/json','X-Goog-Api-Key':GAPI,'X-Goog-FieldMask':'places.id,places.displayName,places.formattedAddress,places.addressComponents,places.location,places.photos,places.rating,places.websiteUri,places.googleMapsUri'},
+        headers:{'Content-Type':'application/json','X-Goog-Api-Key':GAPI,'X-Goog-FieldMask':'places.id,places.displayName,places.formattedAddress,places.addressComponents,places.location,places.photos,places.rating,places.websiteUri,places.googleMapsUri,places.types'},
         body:JSON.stringify({textQuery:v,languageCode:'pt-BR',maxResultCount:6})
       });
       if(myReqId!==searchReqId)return; // busca mais nova já foi disparada, ignora essa resposta atrasada
@@ -1876,7 +1995,7 @@ function searchPlaces(v){
         const country=countryFromComponents(p.addressComponents);
         const rating=p.rating?String(p.rating):'';
         const fotos=placePhotoUrls(p);
-        return{name,meta:addr,icon:catIcon(S.addCat),city,country,address:addr,photo_url:fotos.full,photo_thumb:fotos.thumb,rating_google:rating,website_url:p.websiteUri||'',maps_url:p.googleMapsUri||''};
+        return{name,meta:addr,icon:catIcon(S.addCat),city,country,address:addr,subcat:guessSubcat(p.types),photo_url:fotos.full,photo_thumb:fotos.thumb,rating_google:rating,website_url:p.websiteUri||'',maps_url:p.googleMapsUri||''};
       });
       if(myReqId!==searchReqId)return;
       r.innerHTML=S.searchResults.map((p,i)=>{
@@ -1974,8 +2093,22 @@ function setAddRating(n){
   addRating=n;
   document.querySelectorAll('#addStars .star-btn').forEach((b,i)=>b.style.color=i<n?'#f5a623':'rgba(0,0,0,0.1)');
 }
+// Subcategoria escolhida na ficha de adicionar. Começa no palpite vindo dos
+// types do Places (o usuário só confirma) e '' quando o Google não deu pista.
+let addSubcat='';
+function renderSubcatChips(){
+  const box=document.getElementById('subcatChips');
+  box.innerHTML=EXP_SUBCATS.map(s=>
+    `<button class="subcat-chip${addSubcat===s.key?' on':''}" onclick="pickAddSubcat('${s.key}')">${icon(s.ic)} ${esc(s.label)}</button>`
+  ).join('');
+}
+// Tocar na que já está marcada desmarca — subcategoria é opcional.
+function pickAddSubcat(k){addSubcat=(addSubcat===k?'':k);renderSubcatChips()}
 function resetNoteSheet(){
   addStatus='want';addRating=0;
+  addSubcat=(S.addCat==='experience'&&S.selPlace&&S.selPlace.subcat)||'';
+  document.getElementById('subcatRow').style.display=S.addCat==='experience'?'block':'none';
+  if(S.addCat==='experience')renderSubcatChips();
   document.getElementById('stWant').classList.add('active');
   document.getElementById('stBeen').classList.remove('active');
   document.getElementById('ratingRow').style.display='none';
@@ -1989,8 +2122,19 @@ async function saveSpot(addAnother){
   (addAnother?btn2:btn).textContent='Salvando...';
   const t=S.addTrip,p=S.selPlace;
   const rec={user_id:S.user.id,trip_id:t.id,name:p.name,category:S.addCat,my_note:note,city:p.city||'',address:p.address||'',photo_url:p.photo_url||'',place_type:catLabel(S.addCat),rating_google:p.rating_google||'',status:addStatus,website_url:p.website_url||'',maps_url:p.maps_url||''};
+  // Só faz sentido em experiência — nas outras categorias a coluna fica nula
+  if(S.addCat==='experience'&&addSubcat)rec.subcategory=addSubcat;
   if(addStatus==='been'&&addRating>0)rec.my_rating=addRating;
-  const{data,error}=await dbInsert('spots',rec);
+  let{data,error}=await dbInsert('spots',rec);
+  // A coluna subcategory vem da migração 009. Se ela ainda não foi rodada, o
+  // Postgres recusa o insert INTEIRO por causa de uma coluna desconhecida — e
+  // o spot não seria salvo. Retenta sem ela: perder a subcategoria é bem
+  // melhor que perder o spot. Mesmo espírito da cascata do createTrip.
+  if(error&&rec.subcategory){
+    console.warn('insert sem subcategory (migração 009 ainda não rodou?)');
+    delete rec.subcategory;
+    ({data,error}=await dbInsert('spots',rec));
+  }
   if(!error&&data){
     if(!t._spots)t._spots=[];t._spots.push(data);
     toast('Spot salvo',note?`"${p.name} · ${note}"`:p.name,'check');
@@ -2295,6 +2439,27 @@ function countryFromComponents(comps){
 
 // ═══ HELPERS ═══
 function catIcon(c){return icon(catIconName(c))}
+// ═══ SUBCATEGORIA (hoje só em Experiências) ═══
+// Lista fixa no client, sem check constraint no banco: rótulo novo não deve
+// custar migração. `types` são os tipos do Google Places que caem em cada
+// uma — é o que permite vir pré-marcada, com a pessoa só confirmando.
+const EXP_SUBCATS=[
+  {key:'natureza',label:'Natureza',ic:'globe',types:['park','national_park','beach','hiking_area','campground','garden','botanical_garden','state_park','wildlife_park','zoo','marina']},
+  {key:'nightlife',label:'Nightlife',ic:'food',types:['night_club','bar','pub','casino','comedy_club','karaoke','wine_bar']},
+  {key:'wellness',label:'Wellness',ic:'check',types:['gym','spa','fitness_center','yoga_studio','massage','sauna','wellness_center','beauty_salon','public_bath']},
+  {key:'cultura',label:'Cultura',ic:'menu',types:['museum','art_gallery','historical_landmark','church','monument','performing_arts_theater','opera_house','library','cultural_center','historical_place','tourist_attraction']},
+  {key:'passeio',label:'Passeio',ic:'compass',types:['tourist_attraction','travel_agency','boat_tour_agency','sightseeing_tour_agency','amusement_park','water_park','observation_deck','ferry_terminal','cable_car']}
+];
+function subcatByKey(k){return EXP_SUBCATS.find(s=>s.key===k)||null}
+function subcatLabel(k){const s=subcatByKey(k);return s?s.label:''}
+// Cultura e Passeio dividem 'tourist_attraction'. A ordem do EXP_SUBCATS
+// decide o empate, e Cultura vem primeiro de propósito: um ponto turístico
+// com museu/igreja/monumento é o caso muito mais comum que um tour.
+function guessSubcat(types){
+  if(!types||!types.length)return'';
+  for(const s of EXP_SUBCATS){if(types.some(t=>s.types.includes(t)))return s.key}
+  return'';
+}
 function catLabel(c){return{food:'Comer & Beber',hotel:'Onde Ficar',experience:'Experiência'}[c]||c}
 function flagFor(n){const c=COUNTRIES.find(x=>x.name===n);return c?c.flag:'🌍'}
 
@@ -2973,6 +3138,22 @@ async function loadFriends(){
     });
   }
 
+  // Lista de amigos: cada linha abre o perfil dele. O onclick passa o id
+  // (uuid do banco, não texto de usuário) e o nome só como rótulo imediato,
+  // pra tela não abrir vazia enquanto o perfil carrega.
+  if(friendIds.length){
+    h+='<div class="section-head"><span class="section-title">Meus amigos</span><span class="section-title" style="color:var(--ink3);font-weight:400">'+friendIds.length+'</span></div>';
+    friendIds.forEach(fid=>{
+      const p=pmap[fid];const nome=friendName(p);
+      FRIEND_NOMES[fid]=nome;
+      h+='<div class="friend-row" onclick="openFriend(\''+esc(fid)+'\')">'
+        +'<div class="feed-avatar">'+esc(initials(nome))+'</div>'
+        +'<div class="friend-row-name">'+esc(nome)+'</div>'
+        +(p&&p.username?'<div class="friend-row-user">@'+esc(p.username)+'</div>':'')
+        +'<div class="friend-row-arrow">\u203a</div></div>';
+    });
+  }
+
   h+='<div class="section-head"><span class="section-title">Recente</span></div>';
   if(!friendIds.length){
     h+='<div class="empty-state"><div class="ei">'+icon('users')+'</div><h3>Sem amigos ainda</h3><p>Toca no + pra adicionar um amigo pelo username</p></div>';
@@ -2981,7 +3162,10 @@ async function loadFriends(){
   }else{
     feedItems.forEach(it=>{
       const p=pmap[it.user_id];const name=friendName(p);
-      h+=`<div class="feed-item"><div class="feed-avatar">${esc(initials(name))}</div><div><div class="feed-text">${it.html}</div><div class="feed-time">${esc(timeAgo(it.created_at))}</div></div></div>`;
+      FRIEND_NOMES[it.user_id]=name;
+      // o item inteiro leva ao perfil de quem fez a atividade — é o gesto
+      // que todo mundo tenta por instinto
+      h+=`<div class="feed-item" style="cursor:pointer" onclick="openFriend('${esc(it.user_id)}')"><div class="feed-avatar">${esc(initials(name))}</div><div><div class="feed-text">${it.html}</div><div class="feed-time">${esc(timeAgo(it.created_at))}</div></div></div>`;
     });
   }
 
@@ -2995,6 +3179,132 @@ async function loadFriends(){
 
   h+='<div style="height:40px"></div>';
   c.innerHTML=h;
+}
+// ═══ PERFIL DE AMIGO (só leitura) ═══
+// As políticas da 008 já liberam trips/spots de quem é amigo ACEITO, então
+// aqui é leitura normal — não precisa de função especial no banco.
+const FRIEND={id:null,profile:null,trips:[],visiveis:[],trip:null};
+// Nome já conhecido de cada amigo, preenchido ao desenhar a aba Amigos. Serve
+// só pra tela abrir com o nome certo em vez de "Amigo" enquanto o perfil
+// carrega — evita passar texto de outra pessoa dentro de um atributo onclick.
+const FRIEND_NOMES={};
+function backToFriends(){goTo('friends');loadFriends()}
+async function openFriend(id){
+  FRIEND.id=id;FRIEND.trips=[];FRIEND.visiveis=[];FRIEND.trip=null;
+  // Pinta o que já se sabe antes de ir ao banco: a tela abre na hora e os
+  // números entram conforme chegam (mesmo padrão do loadDashboard).
+  const nome=FRIEND_NOMES[id]||'Amigo';
+  document.getElementById('friendName').textContent=nome;
+  document.getElementById('friendUser').textContent='';
+  document.getElementById('friendBio').style.display='none';
+  applyAvatar('friendAvatar',nome,null);
+  ['fStatTrips','fStatSpots','fStatCities','fStatCountries'].forEach(k=>document.getElementById(k).textContent='0');
+  document.getElementById('friendTripsList').innerHTML='<div class="empty-state" style="padding:30px 0"><p>Carregando...</p></div>';
+  goTo('friend');
+
+  const perfis=await dbGet('profiles','id=eq.'+encodeURIComponent(id));
+  if(FRIEND.id!==id)return; // abriu outro amigo no meio do caminho
+  const p=(perfis&&perfis[0])||null;
+  FRIEND.profile=p;
+  const exibido=friendName(p)||nome;
+  document.getElementById('friendName').textContent=exibido;
+  document.getElementById('friendUser').textContent=p&&p.username?'@'+p.username:'';
+  applyAvatar('friendAvatar',exibido,p&&p.avatar_url);
+  const bioEl=document.getElementById('friendBio');
+  if(p&&p.bio){bioEl.textContent=p.bio;bioEl.style.display='block'}else{bioEl.style.display='none'}
+
+  const trips=await dbGet('trips','user_id=eq.'+encodeURIComponent(id)+'&order=created_at.desc');
+  if(FRIEND.id!==id)return;
+  FRIEND.trips=trips||[];
+  // Uma query só pros spots de todas as viagens dele
+  if(FRIEND.trips.length){
+    const byId={};FRIEND.trips.forEach(t=>{t._spots=[];byId[t.id]=t});
+    const ids=FRIEND.trips.map(t=>t.id).join(',');
+    const spots=await dbGet('spots','trip_id=in.('+ids+')&order=created_at.asc');
+    if(FRIEND.id!==id)return;
+    (spots||[]).forEach(s=>{const t=byId[s.trip_id];if(t)t._spots.push(s)});
+  }
+  FRIEND.trips.forEach(t=>{t._spotsLoaded=true});
+  renderFriendProfile();
+}
+function renderFriendProfile(){
+  const visiveis=FRIEND.trips.filter(t=>!isNonTrip(t));
+  FRIEND.visiveis=visiveis;
+  const cidades=new Set(),paises=new Set();let spots=0;
+  FRIEND.trips.forEach(t=>{
+    spots+=(t._spots||[]).length;
+    (t._spots||[]).forEach(s=>{const c=cityOf(s);if(c)cidades.add(c)});
+    (t.destinations||[]).forEach(d=>paises.add(d));
+  });
+  document.getElementById('fStatTrips').textContent=visiveis.length;
+  document.getElementById('fStatSpots').textContent=spots;
+  document.getElementById('fStatCities').textContent=cidades.size;
+  document.getElementById('fStatCountries').textContent=paises.size;
+
+  const box=document.getElementById('friendTripsList');
+  if(!visiveis.length){
+    box.innerHTML='<div class="empty-state" style="padding:30px 0"><div class="ei">'+icon('suitcase')+'</div><p>Esse amigo ainda não tem viagens</p></div>';
+    return;
+  }
+  // Índice no onclick, não o id: mesma razão dos cards de cidade.
+  box.innerHTML=visiveis.map((t,i)=>{
+    const flag=flagFor((t.destinations&&t.destinations[0])||t.name);
+    const grad=destGradient((t.destinations&&t.destinations[0])||t.name);
+    return '<div class="trip-card" onclick="openFriendTrip('+i+')"><div class="tc-photo" id="ftcbg-'+i+'" style="background-image:'+grad+'"></div><div class="tc-stub"><div class="tc-stub-top"><span class="tc-flag">'+flag+'</span></div><div class="tc-name">'+esc(t.name)+'</div><div class="tc-meta">'+esc(tripMetaText(t))+'</div></div></div>';
+  }).join('');
+  // fotos entram depois, sem travar a lista
+  visiveis.forEach((t,i)=>{
+    const dest=(t.destinations&&t.destinations[0])||t.name;
+    fetchCityPhoto(dest).then(url=>{
+      const el=document.getElementById('ftcbg-'+i);
+      if(url&&el)el.style.backgroundImage=cssUrl(url);
+    });
+  });
+}
+function openFriendTrip(i){
+  const t=(FRIEND.visiveis||[])[i];if(!t)return;
+  FRIEND.trip=t;
+  const realDates=t.dates&&t.dates!=='__quickvisit__'?t.dates:'';
+  document.getElementById('ftLabel').textContent=(t.destinations||[]).map(d=>flagFor(d)).join(' ')+(realDates?' · '+realDates:'');
+  document.getElementById('ftName').textContent=t.name;
+  const n=(t._spots||[]).length;
+  document.getElementById('ftMeta').textContent=n+(n===1?' spot':' spots');
+  const hero=document.getElementById('ftHeroImg');
+  const dest=(t.destinations&&t.destinations[0])||t.name;
+  hero.style.backgroundImage=destGradient(dest);
+  fetchCityPhoto(dest).then(url=>{if(url&&FRIEND.trip===t)hero.style.backgroundImage=cssUrl(url)});
+  renderFriendTripBody();
+  goTo('friendTrip');
+}
+// Cidades e spots na MESMA tela: em leitura não há o que fazer numa tela de
+// cidade separada, e é um toque menos no celular.
+function renderFriendTripBody(){
+  const t=FRIEND.trip,b=document.getElementById('ftBody');
+  if(!t)return;
+  const spots=t._spots||[];
+  if(!spots.length){b.innerHTML='<div class="empty-state" style="padding:40px 24px"><div class="ei">'+icon('pin')+'</div><h3>Nenhum spot nesta viagem</h3></div>';return}
+  const byCity={};
+  spots.forEach(s=>{const c=cityOf(s)||'Outros';(byCity[c]=byCity[c]||[]).push(s)});
+  let h='';
+  for(const cidade of Object.keys(byCity)){
+    const lista=byCity[cidade];
+    h+='<div class="fcity-head"><span class="fcity-name">'+esc(cidade)+'</span><span class="fcity-count">'+lista.length+' '+(lista.length===1?'spot':'spots')+'</span></div>';
+    h+=lista.map(s=>{
+      const bc=s.category==='food'?'bar-food':s.category==='hotel'?'bar-hotel':'bar-experience';
+      const dot=s.status==='been'?'dot-been':'dot-want';
+      const thumb=s.photo_url
+        ?'<div class="place-thumb"><img src="'+escUrl(s.photo_url)+'" style="width:100%;height:100%;object-fit:cover;border-radius:inherit" onerror="thumbFallback(this,\''+esc(s.category)+'\')"></div>'
+        :'<div class="place-thumb">'+catIcon(s.category)+'</div>';
+      const nota=s.my_rating?'★ '+fmtRating(s.my_rating):'';
+      // sem onclick: é leitura, não existe tela de detalhe do spot do amigo
+      return '<div class="place-row" style="cursor:default"><div class="place-bar '+bc+'"></div><div class="place-row-main">'+thumb
+        +'<div class="place-row-info"><div class="place-row-name">'+esc(s.name)+'</div><div class="place-row-note">'+esc(s.my_note)+'</div></div>'
+        +'<div class="place-row-right">'+(nota?'<span class="lrating">'+esc(nota)+'</span>':'')
+        +'<span class="place-type-tag">'+esc(subcatLabel(s.subcategory)||s.place_type||catLabel(s.category))+'</span>'
+        +'<div class="place-status"><span class="status-dot '+dot+'"></span><span class="place-status-label">'+(s.status==='been'?'Fui':'Quero ir')+'</span></div></div></div></div>';
+    }).join('');
+  }
+  b.innerHTML=h;
 }
 async function respondRequest(followId,accept){
   if(accept){
