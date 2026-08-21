@@ -12,12 +12,19 @@
 # a primeira é o esc() em todo innerHTML.
 # Se entrar endpoint novo (ex: API da Anthropic via /api/), incluir aqui.
 #
+# *.googleusercontent.com está em img-src porque a URL de foto do Places
+# (places.googleapis.com/v1/<ref>/media) responde 302 pro CDN do Google em
+# lh3.googleusercontent.com, e a CSP vale pro destino do redirect. Sem esse
+# host, TODA foto de estabelecimento/hotel/experiencia fica quebrada (as de
+# cidade vem do Unsplash e continuavam funcionando, o que fazia o defeito
+# parecer intermitente). Curinga porque o Google alterna lh3..lh6.
+#
 # unsplash.com (sem o api.) está em connect-src porque a própria Unsplash
 # REDIRECIONA pra unsplash.com/developers quando a chave falha, e a CSP vale
 # pro destino do redirect: sem isso o fetch morre em exceção antes do código
 # ler o status 403, e o backoff de 10min da cota nunca era acionado.
 /*
   Cache-Control: no-store, no-cache, must-revalidate, max-age=0
-  Content-Security-Policy: default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://unpkg.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: blob: https://kzidnilsyrvauzgelsqd.supabase.co https://places.googleapis.com https://images.unsplash.com; connect-src 'self' https://kzidnilsyrvauzgelsqd.supabase.co https://places.googleapis.com https://api.unsplash.com https://unsplash.com https://cdn.jsdelivr.net https://unpkg.com; object-src 'none'; base-uri 'none'; form-action 'none'; frame-ancestors 'none'
+  Content-Security-Policy: default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://unpkg.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: blob: https://kzidnilsyrvauzgelsqd.supabase.co https://places.googleapis.com https://*.googleusercontent.com https://images.unsplash.com; connect-src 'self' https://kzidnilsyrvauzgelsqd.supabase.co https://places.googleapis.com https://api.unsplash.com https://unsplash.com https://cdn.jsdelivr.net https://unpkg.com; object-src 'none'; base-uri 'none'; form-action 'none'; frame-ancestors 'none'
   Referrer-Policy: strict-origin-when-cross-origin
   X-Content-Type-Options: nosniff
