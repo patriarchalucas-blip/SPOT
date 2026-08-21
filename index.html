@@ -706,6 +706,37 @@ instagram:'<rect x="3.5" y="3.5" width="17" height="17" rx="5"/><circle cx="12" 
 mapPin:'<path d="M12 21c4-4.4 6-7.7 6-10.5a6 6 0 1 0-12 0C6 13.3 8 16.6 12 21Z"/><path d="M9 10.5l1.7 1.7L15 8.3"/>'
 };
 function icon(n,c){return '<svg class="ic'+(c?' '+c:'')+'" viewBox="0 0 24 24" aria-hidden="true">'+(ICONS[n]||ICONS.pin)+'</svg>';}
+// ═══ ESCAPE DE HTML (obrigatório em TODO innerHTML) ═══
+// Quase todo texto que a tela mostra vem de fora: o que o usuário digitou,
+// o que o Google Places devolveu, e — o mais perigoso — o nome/username/
+// viagem/spot de OUTRA pessoa (feed de amigos). Sem escapar, qualquer um
+// escrevia `<img src=x onerror=...>` no nome de um spot e o código rodava
+// dentro da sessão de quem abrisse o feed, com o token de acesso na mão.
+// Regra: `esc()` em qualquer interpolação de dado dentro de template de HTML.
+const ESC_MAP={'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;','`':'&#96;'};
+function esc(v){return String(v==null?'':v).replace(/[&<>"'`]/g,function(c){return ESC_MAP[c]});}
+// safeUrl: só deixa passar http(s) ou caminho relativo. Bloqueia javascript:,
+// data: e vbscript: — website_url/maps_url vêm do Places e photo_url vem do
+// banco, ou seja podem ser qualquer string. Quem escapa pro atributo é o
+// escUrl (href/src) ou o cssUrl (background-image); safeUrl só filtra.
+function safeUrl(v){
+  // controle/espaco fora primeiro: "java\nscript:" passaria pelo teste abaixo
+  const s=String(v==null?'':v).replace(new RegExp('[\u0000-\u0020]','g'),'');
+  if(!s)return'';
+  if(/^(?:[a-z][a-z0-9+.-]*:|\/\/)/i.test(s)&&!/^https?:\/\//i.test(s))return'';
+  return s;
+}
+function escUrl(v){return esc(safeUrl(v));}
+// url('...') de CSS é outro contexto: o navegador decodifica a entidade HTML
+// ANTES do CSS ler, então &#39; volta a ser apóstrofo e escapa do url().
+// Aqui as aspas/parênteses viram percent-encode, que o CSS não desfaz.
+const CSS_URL_MAP={"'":'%27','"':'%22','(':'%28',')':'%29','\\':'%5C'};
+function cssUrl(v){
+  const s=safeUrl(v);
+  if(!s)return'none';
+  // encodeURIComponent NAO escapa apostrofo nem parenteses: mapa explicito.
+  return "url('"+s.replace(/['"()\\]/g,function(c){return CSS_URL_MAP[c]})+"')";
+}
 function catIconName(c){return {food:'food',hotel:'hotel',experience:'compass'}[c]||'pin';}
 function thumbFallback(img,cat){img.parentElement.innerHTML=catIcon(cat);}
 // Os círculos de avatar (dashAvatar, profAvatar) mostram a inicial por
@@ -714,7 +745,7 @@ function thumbFallback(img,cat){img.parentElement.innerHTML=catIcon(cat);}
 function applyAvatar(elId,name,avatarUrl){
   const el=document.getElementById(elId);if(!el)return;
   if(avatarUrl){
-    el.style.backgroundImage=`url('${avatarUrl}')`;el.style.backgroundSize='cover';el.style.backgroundPosition='center';el.textContent='';
+    el.style.backgroundImage=cssUrl(avatarUrl);el.style.backgroundSize='cover';el.style.backgroundPosition='center';el.textContent='';
   }else{
     el.style.backgroundImage='';el.textContent=(name||'?').charAt(0).toUpperCase();
   }
@@ -756,53 +787,83 @@ const S={user:null,trips:[],curTrip:null,curPlace:null,curCity:null,addTrip:null
 let authMode='signin';
 
 // ═══ DATA LAYER (raw fetch — bypasses buggy SB client) ═══
-async function ensureToken(){
-  if(S.token)return S.token;
-  try{const{data}=await sb.auth.getSession();S.token=data?.session?.access_token;}catch(e){}
+// O token de acesso do Supabase vence em 1 HORA. Antes ele era lido uma vez
+// e guardado pra sempre: o SDK renovava por dentro, mas o app seguia
+// mandando o antigo. Depois de ~1h de app aberto TODA requisição voltava
+// 401 e nada disso aparecia na tela — o dbGet devolvia [] e o app ficava
+// vazio (sem viagens, "Sem amigos ainda", perfil zerado) como se não
+// houvesse nada salvo.
+// Agora: o token carrega a validade junto, é renovado antes de vencer, e
+// um 401 força uma renovação + uma segunda tentativa antes de desistir.
+let tokenExp=0;          // epoch em segundos, do próprio expires_at da sessão
+let sessaoAvisada=false; // pra não repetir o toast de sessão expirada
+async function ensureToken(force){
+  const agora=Math.floor(Date.now()/1000);
+  // 60s de margem: não vale começar uma requisição com um token que vence no meio dela
+  if(!force&&S.token&&tokenExp-agora>60)return S.token;
+  try{
+    // getSession() renova sozinho quando o token já venceu
+    const{data}=await sb.auth.getSession();
+    S.token=(data&&data.session&&data.session.access_token)||null;
+    tokenExp=(data&&data.session&&data.session.expires_at)||0;
+    if(S.token)sessaoAvisada=false;
+  }catch(e){console.error('ensureToken',e)}
   return S.token;
 }
+function avisaSessaoExpirada(){
+  if(sessaoAvisada)return;
+  sessaoAvisada=true;
+  // Tela vazia sem explicação foi exatamente o sintoma que ninguém entendeu.
+  toast('Sessão expirada','Recarrega a página pra continuar.','alert');
+}
+// Todo acesso ao Supabase passa por aqui: monta o header com o token válido
+// e, se vier 401/403, renova o token e tenta UMA vez mais.
+async function sbFetch(path,opts,extraHeaders){
+  const monta=async(force)=>{
+    const tk=await ensureToken(force);
+    const h=Object.assign({'apikey':SB_KEY,'Authorization':'Bearer '+tk},extraHeaders||{});
+    return fetch(SB_URL+path,Object.assign({},opts,{headers:h}));
+  };
+  let r=await monta(false);
+  if(r.status===401||r.status===403){
+    r=await monta(true);
+    if(r.status===401||r.status===403)avisaSessaoExpirada();
+  }
+  return r;
+}
 async function dbGet(table,query){
-  await ensureToken();
-  const r=await fetch(SB_URL+'/rest/v1/'+table+'?'+query,{
-    headers:{'apikey':SB_KEY,'Authorization':'Bearer '+S.token}
-  });
-  if(!r.ok){console.error('dbGet error',table,await r.text());return[]}
+  const r=await sbFetch('/rest/v1/'+table+'?'+query,{});
+  if(!r.ok){console.error('dbGet error',table,r.status,await r.text());return[]}
   return await r.json();
 }
 async function dbInsert(table,obj){
-  await ensureToken();
-  const r=await fetch(SB_URL+'/rest/v1/'+table,{
+  const r=await sbFetch('/rest/v1/'+table,{
     method:'POST',
-    headers:{'Content-Type':'application/json','apikey':SB_KEY,'Authorization':'Bearer '+S.token,'Prefer':'return=representation'},
     body:JSON.stringify(obj)
-  });
+  },{'Content-Type':'application/json','Prefer':'return=representation'});
   const body=await r.json();
   if(!r.ok){console.error('dbInsert error',table,body);return{error:body,data:null}}
   return{error:null,data:Array.isArray(body)?body[0]:body};
 }
 async function dbUpdate(table,id,obj){
-  await ensureToken();
-  const r=await fetch(SB_URL+'/rest/v1/'+table+'?id=eq.'+id,{
+  const r=await sbFetch('/rest/v1/'+table+'?id=eq.'+encodeURIComponent(id),{
     method:'PATCH',
-    headers:{'Content-Type':'application/json','apikey':SB_KEY,'Authorization':'Bearer '+S.token,'Prefer':'return=representation'},
     body:JSON.stringify(obj)
-  });
-  if(!r.ok){console.error('dbUpdate error',table,await r.text());return{error:true}}
+  },{'Content-Type':'application/json','Prefer':'return=representation'});
+  if(!r.ok){console.error('dbUpdate error',table,r.status,await r.text());return{error:true}}
   return{error:null};
 }
 // Storage também via fetch direto, mesmo motivo do resto: nunca o SDK JS.
 // Path por pasta do usuário (uploads/{user_id}/...) é o que a policy de
 // RLS do bucket espera pra deixar cada um escrever só na própria pasta.
 async function uploadToStorage(file,prefix){
-  await ensureToken();
   const ext=(file.name.split('.').pop()||'jpg').toLowerCase().replace(/[^a-z0-9]/g,'')||'jpg';
   const path=S.user.id+'/'+prefix+'-'+Date.now()+'.'+ext;
-  const r=await fetch(SB_URL+'/storage/v1/object/uploads/'+path,{
+  const r=await sbFetch('/storage/v1/object/uploads/'+path,{
     method:'POST',
-    headers:{'apikey':SB_KEY,'Authorization':'Bearer '+S.token,'Content-Type':file.type||'application/octet-stream','x-upsert':'true'},
     body:file
-  });
-  if(!r.ok){console.error('uploadToStorage error',await r.text());return null}
+  },{'Content-Type':file.type||'application/octet-stream','x-upsert':'true'});
+  if(!r.ok){console.error('uploadToStorage error',r.status,await r.text());return null}
   return SB_URL+'/storage/v1/object/public/uploads/'+path;
 }
 // ═══ RECORTE DE FOTO ═══
@@ -880,22 +941,16 @@ function confirmCrop(){
   },'image/jpeg',0.9);
 }
 async function dbDelete(table,id){
-  await ensureToken();
-  const r=await fetch(SB_URL+'/rest/v1/'+table+'?id=eq.'+id,{
-    method:'DELETE',
-    headers:{'apikey':SB_KEY,'Authorization':'Bearer '+S.token}
-  });
-  if(!r.ok){console.error('dbDelete error',table,await r.text());return{error:true}}
+  const r=await sbFetch('/rest/v1/'+table+'?id=eq.'+encodeURIComponent(id),{method:'DELETE'});
+  if(!r.ok){console.error('dbDelete error',table,r.status,await r.text());return{error:true}}
   return{error:null};
 }
 async function dbRpc(fn,params){
-  await ensureToken();
-  const r=await fetch(SB_URL+'/rest/v1/rpc/'+fn,{
+  const r=await sbFetch('/rest/v1/rpc/'+fn,{
     method:'POST',
-    headers:{'Content-Type':'application/json','apikey':SB_KEY,'Authorization':'Bearer '+S.token},
     body:JSON.stringify(params||{})
-  });
-  if(!r.ok){console.error('dbRpc error',fn,await r.text());return[]}
+  },{'Content-Type':'application/json'});
+  if(!r.ok){console.error('dbRpc error',fn,r.status,await r.text());return[]}
   return await r.json();
 }
 
@@ -904,9 +959,12 @@ async function init(){
   if(!sb){goTo('login');return}
   sb.auth.onAuthStateChange(async(ev,sess)=>{
     try{
+      // Primeiro o token, SEMPRE, fora do guard de `!S.user`: TOKEN_REFRESHED
+      // chega de hora em hora com a sessão já aberta, e era exatamente esse
+      // evento que o guard descartava — o app seguia com o token vencido.
+      if(sess?.access_token){S.token=sess.access_token;tokenExp=sess.expires_at||0;sessaoAvisada=false}
       if((ev==='SIGNED_IN'||ev==='INITIAL_SESSION'||ev==='TOKEN_REFRESHED')&&sess?.user&&!S.user){
         S.user=sess.user;
-        S.token=sess.access_token;
         // Troca de tela PRIMEIRO: o dashboard já mostra nome/avatar na hora e os
         // cards entram conforme os dados chegam. Antes, esperava o carregamento
         // inteiro terminar antes de sair da tela de loading — o usuário ficava
@@ -914,7 +972,7 @@ async function init(){
         goTo('dashboard');
         try{await loadDashboard()}catch(e){console.error('Dashboard error:',e)}
       }
-      if(ev==='SIGNED_OUT'){S.user=null;S.token=null;goTo('login')}
+      if(ev==='SIGNED_OUT'){S.user=null;S.token=null;tokenExp=0;goTo('login')}
     }catch(e){console.error('Auth error:',e);goTo('login')}
   });
   // Safety: if still on loading after 3s, force login
@@ -1040,7 +1098,7 @@ function refreshTripMetas(){
 function tripCardHTML(t){
   const flag=flagFor((t.destinations&&t.destinations[0])||t.name);
   const grad=destGradient((t.destinations&&t.destinations[0])||t.name);
-  return `<div class="trip-card" onclick="openTrip('${t.id}')"><div class="tc-photo" id="tcbg-${t.id}" style="background-image:${grad}"></div><div class="tc-stub"><div class="tc-stub-top"><span class="tc-flag">${flag}</span></div><div class="tc-name">${t.name}</div><div class="tc-meta" id="tcmeta-${t.id}">${tripMetaText(t)}</div></div></div>`;
+  return `<div class="trip-card" onclick="openTrip('${esc(t.id)}')"><div class="tc-photo" id="tcbg-${esc(t.id)}" style="background-image:${grad}"></div><div class="tc-stub"><div class="tc-stub-top"><span class="tc-flag">${flag}</span></div><div class="tc-name">${esc(t.name)}</div><div class="tc-meta" id="tcmeta-${esc(t.id)}">${esc(tripMetaText(t))}</div></div></div>`;
 }
 // Pastas por continente lembram se estão abertas/fechadas entre sessões
 function regionOpenKey(region){return 'spot_region_open_'+region}
@@ -1102,7 +1160,9 @@ function drillTo(kind,value){
   LS.mode='spots';LS.sort='rating';LS.cat='';LS.country='';LS.city='';LS.cityQuery='';
   LS[kind]=value;renderList();
 }
-function chip(label,on,handler){return `<div class="filter-chip${on?' on':''}" onclick="${handler}">${label}</div>`}
+function chip(label,on,handler){return `<div class="filter-chip${on?' on':''}" onclick="${handler}">${esc(label)}</div>`}
+// Limpar o filtro sem interpolar o valor no onclick (cidade/país vem de fora)
+function clearListFilter(k){LS[k]='';renderList()}
 
 function renderList(){
   const kicker=document.getElementById('listKicker');
@@ -1140,17 +1200,17 @@ function renderList(){
     f+=chip('Comer',LS.cat==='food',"setListFilter('cat','food')");
     f+=chip('Ficar',LS.cat==='hotel',"setListFilter('cat','hotel')");
     f+=chip('Experiências',LS.cat==='experience',"setListFilter('cat','experience')");
-    if(LS.city)f+=chip('✕ '+LS.city,true,"setListFilter('city','"+String(LS.city).replace(/'/g,"\\'")+"')");
-    if(LS.country)f+=chip('✕ '+LS.country,true,"setListFilter('country','"+String(LS.country).replace(/'/g,"\\'")+"')");
+    if(LS.city)f+=chip('✕ '+LS.city,true,"clearListFilter('city')");
+    if(LS.country)f+=chip('✕ '+LS.country,true,"clearListFilter('country')");
 
     if(!list.length)h='<div class="empty-state"><div class="ei">'+icon('pin')+'</div><h3>Nenhum spot aqui</h3><p>Ajusta os filtros ou salva lugares nas suas viagens.</p></div>';
     list.forEach((s,i)=>{
       const nota=s.my_rating?('★ '+fmtRating(s.my_rating)):(s.rating_google?('☆ '+fmtRating(s.rating_google)):'');
       // <img> em vez de background-image: só assim dá pra detectar foto quebrada
       // (referência do Google expirada) e disparar o auto-conserto
-      const thumb=s.photo_url?`<div class="lthumb"><img src="${s.photo_url}" style="width:100%;height:100%;object-fit:cover;border-radius:inherit" onerror="onSpotPhotoError(this,'${s.id}','${s.category}')"></div>`:`<div class="lthumb">${catIcon(s.category)}</div>`;
+      const thumb=s.photo_url?`<div class="lthumb"><img src="${escUrl(s.photo_url)}" style="width:100%;height:100%;object-fit:cover;border-radius:inherit" onerror="onSpotPhotoError(this,'${esc(s.id)}','${esc(s.category)}')"></div>`:`<div class="lthumb">${catIcon(s.category)}</div>`;
       const local=[cityOf(s),s._country].filter(Boolean).join(' · ');
-      h+=`<div class="lrow" onclick="openSpotFromList(${i})"><span class="lrank">${i+1}</span>${thumb}<div class="lmain"><div class="lname">${s.name||''}</div><div class="lmeta">${local}</div></div><div class="lright">${nota?`<span class="lrating">${nota}</span>`:''}<div class="place-status"><span class="status-dot dot-${s.status==='been'?'been':'want'}"></span><span class="place-status-label">${s.status==='been'?'Fui':'Quero ir'}</span></div></div></div>`;
+      h+=`<div class="lrow" onclick="openSpotFromList(${i})"><span class="lrank">${i+1}</span>${thumb}<div class="lmain"><div class="lname">${esc(s.name)}</div><div class="lmeta">${esc(local)}</div></div><div class="lright">${nota?`<span class="lrating">${esc(nota)}</span>`:''}<div class="place-status"><span class="status-dot dot-${s.status==='been'?'been':'want'}"></span><span class="place-status-label">${s.status==='been'?'Fui':'Quero ir'}</span></div></div></div>`;
     });
   }
 
@@ -1163,7 +1223,7 @@ function renderList(){
     kicker.textContent=list.length+(list.length===1?' cidade':' cidades');
     if(!list.length)h='<div class="empty-state"><div class="ei">'+icon('city')+'</div><h3>Nenhuma cidade ainda</h3><p>As cidades aparecem conforme você salva spots.</p></div>';
     list.forEach((c,i)=>{
-      h+=`<div class="lrow" onclick="drillFromList(${i},'city')"><span class="lflag">${flagFor(c.country)}</span><div class="lmain"><div class="lname">${c.city}</div><div class="lmeta">${c.country||''}</div></div><span class="lcount">${c.n} ${c.n===1?'spot':'spots'}</span></div>`;
+      h+=`<div class="lrow" onclick="drillFromList(${i},'city')"><span class="lflag">${flagFor(c.country)}</span><div class="lmain"><div class="lname">${esc(c.city)}</div><div class="lmeta">${esc(c.country)}</div></div><span class="lcount">${c.n} ${c.n===1?'spot':'spots'}</span></div>`;
     });
   }
 
@@ -1181,7 +1241,7 @@ function renderList(){
     kicker.textContent=list.length+(list.length===1?' país':' países');
     list.forEach((c,i)=>{
       const meta=[c.viagens?c.viagens+(c.viagens===1?' viagem':' viagens'):'',c.spots?c.spots+(c.spots===1?' spot':' spots'):''].filter(Boolean).join(' · ')||'sem spots ainda';
-      h+=`<div class="lrow" onclick="drillFromList(${i},'country')"><span class="lflag">${flagFor(c.country)}</span><div class="lmain"><div class="lname">${c.country}</div><div class="lmeta">${meta}</div></div><span class="lcount">${regionFor(c.country)}</span></div>`;
+      h+=`<div class="lrow" onclick="drillFromList(${i},'country')"><span class="lflag">${flagFor(c.country)}</span><div class="lmain"><div class="lname">${esc(c.country)}</div><div class="lmeta">${esc(meta)}</div></div><span class="lcount">${regionFor(c.country)}</span></div>`;
     });
   }
 
@@ -1194,7 +1254,7 @@ function renderList(){
     list.forEach((t,i)=>{
       const sp=(t._spots||[]).length;
       const meta=t.dates&&t.dates!=='__quickvisit__'?t.dates:'';
-      h+=`<div class="lrow" onclick="openTripFromList(${i})"><span class="lflag">${flagFor((t.destinations&&t.destinations[0])||t.name)}</span><div class="lmain"><div class="lname">${t.name}</div><div class="lmeta">${meta}</div></div><span class="lcount">${sp} ${sp===1?'spot':'spots'}</span></div>`;
+      h+=`<div class="lrow" onclick="openTripFromList(${i})"><span class="lflag">${flagFor((t.destinations&&t.destinations[0])||t.name)}</span><div class="lmain"><div class="lname">${esc(t.name)}</div><div class="lmeta">${esc(meta)}</div></div><span class="lcount">${sp} ${sp===1?'spot':'spots'}</span></div>`;
     });
   }
 
@@ -1251,7 +1311,7 @@ async function deleteTrip(){
   // Delete spots first, then the trip
   await dbDelete('spots','trip_id=eq.'+id).catch(()=>{});
   // dbDelete uses id=eq, but spots are deleted by trip_id — do it directly
-  await fetch(SB_URL+'/rest/v1/spots?trip_id=eq.'+id,{method:'DELETE',headers:{'apikey':SB_KEY,'Authorization':'Bearer '+S.token}}).catch(()=>{});
+  await sbFetch('/rest/v1/spots?trip_id=eq.'+encodeURIComponent(id),{method:'DELETE'}).catch(()=>{});
   const{error}=await dbDelete('trips',id);
   if(!error){
     S.trips=S.trips.filter(t=>t.id!==id);
@@ -1287,7 +1347,7 @@ async function loadTrip(t){
   // usa backgroundImage, nunca o atalho `background` — o atalho reseta
   // background-size/position e a foto renderiza no tamanho natural, cortada no canto
   heroEl.style.backgroundImage=destGradient(dest);
-  fetchCityPhoto(dest).then(url=>{if(url)heroEl.style.backgroundImage=`url('${url}')`});
+  fetchCityPhoto(dest).then(url=>{if(url)heroEl.style.backgroundImage=cssUrl(url)});
   // O Dashboard já busca os spots de TODAS as viagens numa única query em
   // lote (ver loadDashboard). Rebuscar aqui era uma ida a mais ao banco,
   // sempre, só pra pegar o que já estava na mão — por isso abrir uma
@@ -1329,16 +1389,19 @@ function renderTripBody(){
   const country=(t.destinations&&t.destinations[0])||t.name;
   const month=tripClimateMonth(t);
   let h='';
-  for(const[city,spots]of Object.entries(byCity)){
-    const cityEsc=String(city).replace(/'/g,"\\'");
+  // Ordem das cidades guardada num array: o onclick passa o INDICE, nao o
+  // nome da cidade (nome vem do Places/do usuario e pode ter aspas ou HTML).
+  TRIP_CITY_ORDER=Object.keys(byCity);
+  TRIP_CITY_ORDER.forEach((city,ci)=>{
+    const spots=byCity[city];
     const cityIdSafe=String(city).replace(/[^a-zA-Z0-9]/g,'_');
     const counts={food:0,hotel:0,experience:0};spots.forEach(s=>{if(counts[s.category]!==undefined)counts[s.category]++});
-    h+=`<div class="city-card" onclick="openCityScreen('${cityEsc}')"><div class="city-card-top"><div><div class="city-card-name">${city}</div><div class="city-card-climate" id="clima-${cityIdSafe}"></div></div><div class="city-card-count">${spots.length} ${spots.length===1?'spot':'spots'}</div></div><div class="city-card-breakdown">`;
+    h+=`<div class="city-card" onclick="openCityFromTrip(${ci})"><div class="city-card-top"><div><div class="city-card-name">${esc(city)}</div><div class="city-card-climate" id="clima-${cityIdSafe}"></div></div><div class="city-card-count">${spots.length} ${spots.length===1?'spot':'spots'}</div></div><div class="city-card-breakdown">`;
     h+=[['food','Comer'],['hotel','Ficar'],['experience','Experiências']].filter(([c])=>counts[c]>0).map(([c,label])=>
       `<div class="city-card-item">${icon(c==='food'?'food':c==='hotel'?'hotel':'compass')} ${label} ${counts[c]}</div>`
     ).join('');
     h+=`</div></div>`;
-  }
+  });
   b.innerHTML=h;
   Object.keys(byCity).forEach(city=>{
     const cityIdSafe=String(city).replace(/[^a-zA-Z0-9]/g,'_');
@@ -1351,6 +1414,10 @@ function renderTripBody(){
 }
 // ═══ TELA DA CIDADE (dedicada, aberta ao tocar num card acima) ═══
 let curCityCat='food';
+// Cidades da viagem na ordem em que os cards foram desenhados. O card manda o
+// índice; o nome sai daqui, nunca do HTML.
+let TRIP_CITY_ORDER=[];
+function openCityFromTrip(i){const c=TRIP_CITY_ORDER[i];if(c!=null)openCityScreen(c)}
 function updateCityHeader(){
   const t=S.curTrip;if(!t||!S.curCity)return;
   const spots=(t._spots||[]).filter(s=>cityOf(s)===S.curCity);
@@ -1369,7 +1436,7 @@ function openCityScreen(city){
   updateCityHeader();
   const heroEl=document.getElementById('cityHeroImg');
   heroEl.style.backgroundImage=destGradient(city);
-  fetchCityPhoto(city).then(url=>{if(url&&S.curCity===city)heroEl.style.backgroundImage=`url('${url}')`});
+  fetchCityPhoto(city).then(url=>{if(url&&S.curCity===city)heroEl.style.backgroundImage=cssUrl(url)});
   renderCityBody();
   goTo('city');
 }
@@ -1387,8 +1454,8 @@ function renderCityBody(){
   spots.forEach(s=>{
     const bc=s.category==='food'?'bar-food':s.category==='hotel'?'bar-hotel':'bar-experience';
     const dot=s.status==='been'?'dot-been':'dot-want';
-    const thumb=s.photo_url?`<div class="place-thumb"><img src="${s.photo_url}" style="width:100%;height:100%;object-fit:cover;border-radius:inherit" onerror="onSpotPhotoError(this,'${s.id}','${s.category}')"></div>`:`<div class="place-thumb">${catIcon(s.category)}</div>`;
-    h+=`<div class="place-row" onclick="openPlace('${s.id}')"><div class="place-bar ${bc}"></div><div class="place-row-main">${thumb}<div class="place-row-info"><div class="place-row-name">${s.name}</div><div class="place-row-note">${s.my_note||''}</div></div><div class="place-row-right"><span class="place-type-tag">${s.place_type||catLabel(s.category)}</span><div class="place-status"><span class="status-dot ${dot}"></span><span class="place-status-label">${s.status==='been'?'Fui':'Quero ir'}</span></div></div></div></div>`;
+    const thumb=s.photo_url?`<div class="place-thumb"><img src="${escUrl(s.photo_url)}" style="width:100%;height:100%;object-fit:cover;border-radius:inherit" onerror="onSpotPhotoError(this,'${esc(s.id)}','${esc(s.category)}')"></div>`:`<div class="place-thumb">${catIcon(s.category)}</div>`;
+    h+=`<div class="place-row" onclick="openPlace('${esc(s.id)}')"><div class="place-bar ${bc}"></div><div class="place-row-main">${thumb}<div class="place-row-info"><div class="place-row-name">${esc(s.name)}</div><div class="place-row-note">${esc(s.my_note)}</div></div><div class="place-row-right"><span class="place-type-tag">${esc(s.place_type||catLabel(s.category))}</span><div class="place-status"><span class="status-dot ${dot}"></span><span class="place-status-label">${s.status==='been'?'Fui':'Quero ir'}</span></div></div></div></div>`;
   });
   b.innerHTML=h;
 }
@@ -1412,23 +1479,23 @@ async function openPlace(id,origin){
   const cid=cityOf(s)||s.name;
   const aindaNesteSpot=()=>S.curPlace&&S.curPlace.id===s.id;
   if(s.photo_url){
-    phEl.style.backgroundImage=`url('${s.photo_url}')`;
+    phEl.style.backgroundImage=cssUrl(s.photo_url);
     // background-image não dispara erro quando a URL falha. O probe carrega a
     // mesma imagem só pra detectar a quebra e acionar o auto-conserto.
     const probe=new Image();
     probe.onerror=()=>{
       if(!aindaNesteSpot())return;
       phEl.style.backgroundImage=destGradient(cid);
-      healSpotPhoto(s.id).then(u=>{if(u&&aindaNesteSpot())phEl.style.backgroundImage=`url('${u}')`});
+      healSpotPhoto(s.id).then(u=>{if(u&&aindaNesteSpot())phEl.style.backgroundImage=cssUrl(u)});
     };
     probe.src=s.photo_url;
   }
-  else{phEl.style.backgroundImage=destGradient(cid);fetchCityPhoto(cid).then(u=>{if(u&&aindaNesteSpot())phEl.style.backgroundImage=`url('${u}')`})}
+  else{phEl.style.backgroundImage=destGradient(cid);fetchCityPhoto(cid).then(u=>{if(u&&aindaNesteSpot())phEl.style.backgroundImage=cssUrl(u)})}
   let ig='';
-  if(s.address)ig+=`<div class="info-cell wide"><div class="info-cell-icon">${icon('pin')}</div><div class="info-cell-label">Endereço</div><div class="info-cell-value">${s.address}</div></div>`;
-  if(cityOf(s))ig+=`<div class="info-cell"><div class="info-cell-icon">${icon('city')}</div><div class="info-cell-label">Cidade</div><div class="info-cell-value">${cityOf(s)}</div></div>`;
+  if(s.address)ig+=`<div class="info-cell wide"><div class="info-cell-icon">${icon('pin')}</div><div class="info-cell-label">Endereço</div><div class="info-cell-value">${esc(s.address)}</div></div>`;
+  if(cityOf(s))ig+=`<div class="info-cell"><div class="info-cell-icon">${icon('city')}</div><div class="info-cell-label">Cidade</div><div class="info-cell-value">${esc(cityOf(s))}</div></div>`;
   if(s.rating_google)ig+=`<div class="info-cell"><div class="info-cell-icon">${icon('star')}</div><div class="info-cell-label">Google</div><div class="info-cell-value">${fmtRating(s.rating_google)}</div></div>`;
-  if(!ig)ig=`<div class="info-cell wide"><div class="info-cell-icon">${icon('pin')}</div><div class="info-cell-label">Local</div><div class="info-cell-value">${cityOf(s)||'—'}</div></div>`;
+  if(!ig)ig=`<div class="info-cell wide"><div class="info-cell-icon">${icon('pin')}</div><div class="info-cell-label">Local</div><div class="info-cell-value">${esc(cityOf(s)||'—')}</div></div>`;
   document.getElementById('placeInfoGrid').innerHTML=ig;
   renderPlaceLinks(s);
   setStatus(s.status||'want',false);
@@ -1446,13 +1513,13 @@ function renderPlaceLinks(s){
     let rh=`<a class="reserve-btn" href="https://www.thefork.com/search?query=${q}" target="_blank" rel="noopener">${icon('food')} Reservar mesa</a>`;
     if(s.website_url){
       const isInstagram=/instagram\.com/i.test(s.website_url);
-      rh+=`<a class="reserve-btn" href="${s.website_url}" target="_blank" rel="noopener">${icon(isInstagram?'instagram':'menu')} ${isInstagram?'Abrir Instagram':'Ver cardápio'}</a>`;
+      rh+=`<a class="reserve-btn" href="${escUrl(s.website_url)}" target="_blank" rel="noopener">${icon(isInstagram?'instagram':'menu')} ${isInstagram?'Abrir Instagram':'Ver cardápio'}</a>`;
     }else if(s.maps_url){
-      rh+=`<a class="reserve-btn" href="${s.maps_url}" target="_blank" rel="noopener">${icon('mapPin')} Ver no Google Maps</a>`;
+      rh+=`<a class="reserve-btn" href="${escUrl(s.maps_url)}" target="_blank" rel="noopener">${icon('mapPin')} Ver no Google Maps</a>`;
     }
     reserveWrap.innerHTML=rh;
   }else if(s.category==='hotel'||s.category==='experience'){
-    reserveWrap.innerHTML=s.maps_url?`<a class="reserve-btn" href="${s.maps_url}" target="_blank" rel="noopener">${icon('mapPin')} Ver no Google Maps</a>`:'';
+    reserveWrap.innerHTML=s.maps_url?`<a class="reserve-btn" href="${escUrl(s.maps_url)}" target="_blank" rel="noopener">${icon('mapPin')} Ver no Google Maps</a>`:'';
   }else{
     reserveWrap.innerHTML='';
   }
@@ -1477,7 +1544,7 @@ async function saveReview(){
 // ═══ ADD SPOT FLOW ═══
 function populateTripOpts(){
   const c=document.getElementById('tripOptions');
-  c.innerHTML=S.trips.map(t=>`<div class="trip-option" onclick="selTripForSpot('${t.id}')"><div class="trip-option-img" style="background-image:${destGradient((t.destinations&&t.destinations[0])||t.name)}">${flagFor((t.destinations&&t.destinations[0])||'')}</div><div><div class="trip-option-name">${t.name}</div><div class="trip-option-meta">${(t._spots||[]).length} spots</div></div><div class="trip-option-arrow">›</div></div>`).join('');
+  c.innerHTML=S.trips.map(t=>`<div class="trip-option" onclick="selTripForSpot('${esc(t.id)}')"><div class="trip-option-img" style="background-image:${destGradient((t.destinations&&t.destinations[0])||t.name)}">${flagFor((t.destinations&&t.destinations[0])||'')}</div><div><div class="trip-option-name">${esc(t.name)}</div><div class="trip-option-meta">${(t._spots||[]).length} spots</div></div><div class="trip-option-arrow">›</div></div>`).join('');
 }
 // Pula direto pra ficha de nota: usado quando viagem, categoria e lugar já
 // são todos conhecidos (Explorar, check-in) — nada a perguntar.
@@ -1565,9 +1632,9 @@ async function runExplore(){
 function renderExploreResults(){
   const body=document.getElementById('exploreBody');
   body.innerHTML=EXPLORE.items.map((p,i)=>{
-    const thumb=p.photo_url?`<div class="lthumb" style="width:64px;height:64px"><img src="${p.photo_url}" style="width:100%;height:100%;object-fit:cover;border-radius:inherit" onerror="thumbFallback(this,'${EXPLORE.cat}')"></div>`:`<div class="lthumb" style="width:64px;height:64px">${catIcon(EXPLORE.cat)}</div>`;
+    const thumb=p.photo_url?`<div class="lthumb" style="width:64px;height:64px"><img src="${escUrl(p.photo_url)}" style="width:100%;height:100%;object-fit:cover;border-radius:inherit" onerror="thumbFallback(this,'${esc(EXPLORE.cat)}')"></div>`:`<div class="lthumb" style="width:64px;height:64px">${catIcon(EXPLORE.cat)}</div>`;
     const local=[p.city,p.country].filter(Boolean).join(' · ');
-    return`<div class="lrow"><span class="lrank">${i+1}</span>${thumb}<div class="lmain"><div class="lname">${p.name}</div><div class="lmeta">${local}${local?' · ':''}${p.count} avaliações</div></div><div class="lright"><span class="lrating">★ ${fmtRating(p.rating)}</span><button class="req-btn req-accept" style="padding:6px 14px;font-size:11.5px" onclick="addExploreSpot(${i})">Adicionar</button></div></div>`;
+    return`<div class="lrow"><span class="lrank">${i+1}</span>${thumb}<div class="lmain"><div class="lname">${esc(p.name)}</div><div class="lmeta">${esc(local)}${local?' · ':''}${esc(p.count)} avaliações</div></div><div class="lright"><span class="lrating">★ ${fmtRating(p.rating)}</span><button class="req-btn req-accept" style="padding:6px 14px;font-size:11.5px" onclick="addExploreSpot(${i})">Adicionar</button></div></div>`;
   }).join('');
 }
 function addExploreSpot(i){
@@ -1636,8 +1703,8 @@ function showNearbySuggestions(){
         return{name:p.displayName?.text||'',icon:catIcon(S.addCat),city,country,address:addr,photo_url:photoFull,photo_thumb:photoThumb,rating_google:p.rating?String(p.rating):'',website_url:p.websiteUri||'',maps_url:p.googleMapsUri||''};
       });
       r.innerHTML='<div class="search-nearby-label">Perto de você</div>'+S_nearbyResults.map((p,i)=>{
-        const thumb=p.photo_thumb?'<div class="sr-icon"><img src="'+p.photo_thumb+'" loading="eager" style="width:100%;height:100%;object-fit:cover;border-radius:12px"></div>':'<div class="sr-icon">'+p.icon+'</div>';
-        return '<div class="search-result" onclick="pickNearbyResult('+i+')">'+thumb+'<div><div class="sr-name">'+p.name+'</div><div class="sr-meta">'+p.address.substring(0,50)+(p.rating_google?' · '+p.rating_google:'')+'</div></div></div>';
+        const thumb=p.photo_thumb?'<div class="sr-icon"><img src="'+escUrl(p.photo_thumb)+'" loading="eager" style="width:100%;height:100%;object-fit:cover;border-radius:12px"></div>':'<div class="sr-icon">'+p.icon+'</div>';
+        return '<div class="search-result" onclick="pickNearbyResult('+i+')">'+thumb+'<div><div class="sr-name">'+esc(p.name)+'</div><div class="sr-meta">'+esc(p.address.substring(0,50)+(p.rating_google?' · '+p.rating_google:''))+'</div></div></div>';
       }).join('');
     }catch(e){console.error('showNearbySuggestions',e)}
   },function(){/* negada ou indisponível: fica no texto padrão, sem drama */},{timeout:6000,maximumAge:5*60*1000});
@@ -1776,8 +1843,8 @@ function searchPlaces(v){
       });
       if(myReqId!==searchReqId)return;
       r.innerHTML=S.searchResults.map((p,i)=>{
-        const thumb=p.photo_thumb?'<div class="sr-icon"><img src="'+p.photo_thumb+'" loading="eager" style="width:100%;height:100%;object-fit:cover;border-radius:12px"></div>':'<div class="sr-icon">'+p.icon+'</div>';
-        return '<div class="search-result" onclick="pickSearchResult('+i+')">'+thumb+'<div><div class="sr-name">'+p.name+'</div><div class="sr-meta">'+p.address.substring(0,50)+(p.rating_google?' · '+p.rating_google:'')+'</div></div></div>';
+        const thumb=p.photo_thumb?'<div class="sr-icon"><img src="'+escUrl(p.photo_thumb)+'" loading="eager" style="width:100%;height:100%;object-fit:cover;border-radius:12px"></div>':'<div class="sr-icon">'+p.icon+'</div>';
+        return '<div class="search-result" onclick="pickSearchResult('+i+')">'+thumb+'<div><div class="sr-name">'+esc(p.name)+'</div><div class="sr-meta">'+esc(p.address.substring(0,50)+(p.rating_google?' · '+p.rating_google:''))+'</div></div></div>';
       }).join('');
     }catch(e){
       if(myReqId!==searchReqId)return;
@@ -1818,7 +1885,7 @@ function pickPlace(p){
 }
 // ── Country mismatch handling ──
 function showCountryMismatch(placeCountry,tripCountry){
-  document.getElementById('cmText').innerHTML=`Esse lugar fica em <strong>${placeCountry}</strong>, não na <strong>${tripCountry}</strong>.`;
+  document.getElementById('cmText').innerHTML=`Esse lugar fica em <strong>${esc(placeCountry)}</strong>, não na <strong>${esc(tripCountry)}</strong>.`;
   // Does a trip for the correct country already exist?
   const existing=S.trips.find(t=>((t.destinations&&t.destinations[0])||t.name)===placeCountry);
   const btn=document.getElementById('cmMoveBtn');
@@ -2088,7 +2155,7 @@ function filterNewTripCity(v){
       list.innerHTML=newTripCityResults.map((r,i)=>{
         const mainName=r.city||r.country;
         const subLabel=r.city?r.country:'País (sem cidade específica)';
-        return `<div class="dest-result" onclick="selectNewTripCity(${i})"><span class="dest-flag">${flagFor(r.country)}</span><div><div class="dest-name">${mainName}</div><div class="dest-region">${subLabel}</div></div></div>`;
+        return `<div class="dest-result" onclick="selectNewTripCity(${i})"><span class="dest-flag">${flagFor(r.country)}</span><div><div class="dest-name">${esc(mainName)}</div><div class="dest-region">${esc(subLabel)}</div></div></div>`;
       }).join('');
     }catch(e){list.innerHTML='<div class="search-loading">Erro ao buscar</div>'}
   },350);
@@ -2411,7 +2478,7 @@ function onSpotPhotoFileChosen(input){
     const{error}=await dbUpdate('spots',s.id,{photo_url:url});
     if(error){toast('Erro','Não foi possível salvar a foto.');return}
     s.photo_url=url;
-    document.getElementById('placeHeroImg').style.backgroundImage=`url('${url}')`;
+    document.getElementById('placeHeroImg').style.backgroundImage=cssUrl(url);
     toast('Foto atualizada','','check');
   });
 }
@@ -2420,7 +2487,7 @@ function onSpotPhotoError(img,id,cat){
   const box=img.parentElement;
   thumbFallback(img,cat);
   healSpotPhoto(id).then(url=>{
-    if(url&&box)box.innerHTML='<img src="'+url+'" style="width:100%;height:100%;object-fit:cover;border-radius:inherit">';
+    if(url&&box)box.innerHTML='<img src="'+escUrl(url)+'" style="width:100%;height:100%;object-fit:cover;border-radius:inherit">';
   });
 }
 // Cache for city photos so we don't refetch
@@ -2474,7 +2541,7 @@ async function fillTripPhotos(){
     if(!el)return;
     const dest=(t.destinations&&t.destinations[0])||t.name;
     const url=await fetchCityPhoto(dest);
-    if(url&&el){el.style.backgroundImage=`url('${url}')`}
+    if(url&&el){el.style.backgroundImage=cssUrl(url)}
   }));
 }
 // Gradient fallback per destination (shows instantly, photo loads on top)
@@ -2547,7 +2614,7 @@ async function loadProfile(){
   const chips=document.getElementById('countryChips');
   if(visited.length){
     const homeName=homeCountryName();
-    chips.innerHTML=visited.map(c=>`<div class="country-chip">${flagFor(c)} ${c}${c===homeName?'<span class="chip-home-tag">mora aqui</span>':''}</div>`).join('');
+    chips.innerHTML=visited.map(c=>`<div class="country-chip">${flagFor(c)} ${esc(c)}${c===homeName?'<span class="chip-home-tag">mora aqui</span>':''}</div>`).join('');
   }else{
     chips.innerHTML='<div class="country-chips-empty">Crie viagens para pintar o mundo 🌍</div>';
   }
@@ -2742,7 +2809,7 @@ async function startLoginPhotos(){
         const img=new Image();
         img.onload=()=>{
           const el=document.getElementById('lphoto-'+i);
-          if(el){el.style.backgroundImage=`url('${url}')`;el.style.backgroundSize='cover';el.style.backgroundPosition='center';el.classList.add('has-photo')}
+          if(el){el.style.backgroundImage=cssUrl(url);el.style.backgroundSize='cover';el.style.backgroundPosition='center';el.classList.add('has-photo')}
         };
         img.src=url;
       }
@@ -2803,6 +2870,12 @@ function timeAgo(iso){
   if(d<30)return'há '+d+(d===1?' dia':' dias');
   return'há '+Math.floor(d/30)+(Math.floor(d/30)===1?' mês':' meses');
 }
+// Nome de exibição de outra pessoa. Vale pra amigo (linha completa do
+// profiles) e pra pedido pendente (só id/nome/username/avatar, sem e-mail).
+function friendName(p){
+  if(!p)return'Alguém';
+  return p.display_name||(p.username?'@'+p.username:null)||p.email||'Alguém';
+}
 function initials(name){
   if(!name)return'?';
   return name.replace(/^@/,'').trim().slice(0,2).toUpperCase();
@@ -2821,11 +2894,19 @@ async function loadFriends(){
   const friendIds=accepted.map(r=>r.follower_id===uid?r.following_id:r.follower_id);
   const incomingIds=incoming.map(r=>r.follower_id);
   const outgoingIds=outgoing.map(r=>r.following_id);
-  const allIds=[...new Set([...friendIds,...incomingIds,...outgoingIds])];
-
-  let profiles=[];
-  if(allIds.length)profiles=await dbGet('profiles',`id=in.(${allIds.join(',')})`);
-  const pmap={};profiles.forEach(p=>pmap[p.id]=p);
+  const pmap={};
+  // Amigo aceito: linha do profiles direto (é o que a política libera).
+  if(friendIds.length){
+    const profiles=await dbGet('profiles',`id=in.(${friendIds.join(',')})`);
+    (profiles||[]).forEach(p=>pmap[p.id]=p);
+  }
+  // Pedido pendente: nome vem por RPC. A política de profiles só libera
+  // amigo ACEITO — um pedido que você nunca aceitou não dá mais acesso ao
+  // seu e-mail. A RPC devolve id/nome/username/avatar e nada além disso.
+  if(incomingIds.length||outgoingIds.length){
+    const pend=await dbRpc('pending_request_profiles',{});
+    (pend||[]).forEach(p=>{if(!pmap[p.id])pmap[p.id]=p});
+  }
 
   let feedItems=[];
   if(friendIds.length){
@@ -2834,14 +2915,14 @@ async function loadFriends(){
       dbGet('spots',`user_id=in.(${friendIds.join(',')})&status=eq.been&order=created_at.desc&limit=15`)
     ]);
     trips.forEach(t=>{
-      const p=pmap[t.user_id];const name=p?(p.display_name||(p.username?'@'+p.username:p.email)):'Alguém';
-      const verb=t.status==='done'?'marcou <b>'+t.name+'</b> como visitado':'está planejando uma viagem para <b>'+t.name+'</b>';
-      feedItems.push({user_id:t.user_id,created_at:t.created_at,html:'<b>'+name+'</b> '+verb});
+      const p=pmap[t.user_id];const name=friendName(p);
+      const verb=t.status==='done'?'marcou <b>'+esc(t.name)+'</b> como visitado':'está planejando uma viagem para <b>'+esc(t.name)+'</b>';
+      feedItems.push({user_id:t.user_id,created_at:t.created_at,html:'<b>'+esc(name)+'</b> '+verb});
     });
     spots.forEach(sp=>{
-      const p=pmap[sp.user_id];const name=p?(p.display_name||(p.username?'@'+p.username:p.email)):'Alguém';
-      const loc=sp.city?' em '+sp.city:'';
-      feedItems.push({user_id:sp.user_id,created_at:sp.created_at,html:'<b>'+name+'</b> adicionou <b>'+sp.name+'</b>'+loc});
+      const p=pmap[sp.user_id];const name=friendName(p);
+      const loc=sp.city?' em '+esc(sp.city):'';
+      feedItems.push({user_id:sp.user_id,created_at:sp.created_at,html:'<b>'+esc(name)+'</b> adicionou <b>'+esc(sp.name)+'</b>'+loc});
     });
     feedItems.sort((a,b)=>new Date(b.created_at)-new Date(a.created_at));
     feedItems=feedItems.slice(0,25);
@@ -2851,8 +2932,8 @@ async function loadFriends(){
   if(incoming.length){
     h+='<div class="section-head"><span class="section-title">Pedidos de amizade</span></div>';
     incoming.forEach(r=>{
-      const p=pmap[r.follower_id];const name=p?(p.display_name||(p.username?'@'+p.username:p.email)):'Alguém';
-      h+=`<div class="req-card"><div class="feed-avatar">${initials(name)}</div><div style="flex:1"><div class="req-name">${name}</div>${p&&p.username?`<div class="req-email">@${p.username}</div>`:''}</div><button class="req-btn req-accept" onclick="respondRequest('${r.id}',true)">Aceitar</button><button class="req-btn req-decline" onclick="respondRequest('${r.id}',false)">Recusar</button></div>`;
+      const p=pmap[r.follower_id];const name=friendName(p);
+      h+=`<div class="req-card"><div class="feed-avatar">${esc(initials(name))}</div><div style="flex:1"><div class="req-name">${esc(name)}</div>${p&&p.username?`<div class="req-email">@${esc(p.username)}</div>`:''}</div><button class="req-btn req-accept" onclick="respondRequest('${esc(r.id)}',true)">Aceitar</button><button class="req-btn req-decline" onclick="respondRequest('${esc(r.id)}',false)">Recusar</button></div>`;
     });
   }
 
@@ -2863,16 +2944,16 @@ async function loadFriends(){
     h+='<div class="empty-state"><div class="ei">'+icon('globe')+'</div><p>Seus amigos ainda não têm atividade</p></div>';
   }else{
     feedItems.forEach(it=>{
-      const p=pmap[it.user_id];const name=p?(p.display_name||(p.username?'@'+p.username:p.email)):'Alguém';
-      h+=`<div class="feed-item"><div class="feed-avatar">${initials(name)}</div><div><div class="feed-text">${it.html}</div><div class="feed-time">${timeAgo(it.created_at)}</div></div></div>`;
+      const p=pmap[it.user_id];const name=friendName(p);
+      h+=`<div class="feed-item"><div class="feed-avatar">${esc(initials(name))}</div><div><div class="feed-text">${it.html}</div><div class="feed-time">${esc(timeAgo(it.created_at))}</div></div></div>`;
     });
   }
 
   if(outgoing.length){
     h+='<div class="section-head" style="margin-top:20px"><span class="section-title">Pedidos enviados</span></div>';
     outgoing.forEach(r=>{
-      const p=pmap[r.following_id];const name=p?(p.display_name||(p.username?'@'+p.username:p.email)):'Alguém';
-      h+=`<div class="req-card"><div class="feed-avatar">${initials(name)}</div><div style="flex:1"><div class="req-name">${name}</div></div><button class="req-btn req-decline" onclick="cancelRequest('${r.id}')">Cancelar</button></div>`;
+      const p=pmap[r.following_id];const name=friendName(p);
+      h+=`<div class="req-card"><div class="feed-avatar">${esc(initials(name))}</div><div style="flex:1"><div class="req-name">${esc(name)}</div></div><button class="req-btn req-decline" onclick="cancelRequest('${esc(r.id)}')">Cancelar</button></div>`;
     });
   }
 

@@ -2,5 +2,22 @@
 # uma versão antiga depois do deploy (o iPhone, com o app na tela de início,
 # é o caso mais teimoso: mantém cache próprio e ignora must-revalidate).
 # no-store garante que todo carregamento pegue a versão publicada.
+#
+# ═══ CSP — trave de segurança em cima do escape de HTML ═══
+# O app é todo inline (onclick= no HTML, <script> no arquivo), então
+# script-src precisa de 'unsafe-inline' e a CSP NÃO impede código injetado
+# de rodar. O que ela impede é o dano: connect-src e img-src só deixam falar
+# com os endpoints conhecidos, então um script injetado não consegue mandar
+# o token de acesso pra fora. É a segunda linha de defesa, não a primeira —
+# a primeira é o esc() em todo innerHTML.
+# Se entrar endpoint novo (ex: API da Anthropic via /api/), incluir aqui.
+#
+# unsplash.com (sem o api.) está em connect-src porque a própria Unsplash
+# REDIRECIONA pra unsplash.com/developers quando a chave falha, e a CSP vale
+# pro destino do redirect: sem isso o fetch morre em exceção antes do código
+# ler o status 403, e o backoff de 10min da cota nunca era acionado.
 /*
   Cache-Control: no-store, no-cache, must-revalidate, max-age=0
+  Content-Security-Policy: default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://unpkg.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: blob: https://kzidnilsyrvauzgelsqd.supabase.co https://places.googleapis.com https://images.unsplash.com; connect-src 'self' https://kzidnilsyrvauzgelsqd.supabase.co https://places.googleapis.com https://api.unsplash.com https://unsplash.com https://cdn.jsdelivr.net https://unpkg.com; object-src 'none'; base-uri 'none'; form-action 'none'; frame-ancestors 'none'
+  Referrer-Policy: strict-origin-when-cross-origin
+  X-Content-Type-Options: nosniff
