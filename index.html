@@ -392,7 +392,12 @@ body{font-family:'DM Sans',sans-serif;background:var(--dark);max-width:430px;mar
 .cat-option .co-name{font-size:12px;font-weight:500;color:var(--ink2)}
 .cat-option.sel .co-name,.cat-option.sel .co-icon{color:#fff}
 .search-wrap{padding:0 24px 12px;position:relative}
-.search-wrap .si{position:absolute;left:38px;top:14px;font-size:15px;pointer-events:none}
+/* A lupa mora dentro do .search-field, que envolve só o input. Antes ela era
+   posicionada relativa ao .search-wrap com left:38px — número que só fechava
+   com o padding de 24px daquele container. Em qualquer campo com padding
+   diferente (o do Explorar usa 0) a lupa ia pra cima do texto. */
+.search-field{position:relative}
+.search-field .si{position:absolute;left:14px;top:14px;font-size:15px;pointer-events:none}
 .search-input{width:100%;background:rgba(234,231,224,.05);border:1px solid var(--border);border-radius:var(--r-sm);padding:14px 16px 14px 42px;font-size:15px;font-family:'DM Sans',sans-serif;color:var(--ink);outline:none;box-shadow:var(--shadow-inset)}
 .search-input:focus{border-color:var(--ink3)}
 .search-powered{display:flex;align-items:center;gap:5px;padding:2px 24px 10px}
@@ -549,7 +554,7 @@ svg.ic path,svg.ic circle,svg.ic line,svg.ic polyline,svg.ic rect{fill:none;stro
       <div class="list-title" id="listTitle">—</div>
     </div>
   </div>
-  <div class="search-wrap" id="listCitySearchWrap" style="display:none;padding:14px 20px 0"><span class="si" data-ic="search"></span><input class="search-input" id="listCitySearch" placeholder="Buscar cidade..." oninput="setListCityQuery(this.value)"></div>
+  <div class="search-wrap" id="listCitySearchWrap" style="display:none;padding:14px 20px 0"><div class="search-field"><span class="si" data-ic="search"></span><input class="search-input" id="listCitySearch" placeholder="Buscar cidade..." oninput="setListCityQuery(this.value)"></div></div>
   <div class="list-filters" id="listFilters"></div>
   <div class="list-body" id="listBody"></div>
   <div class="bottom-nav"><div class="nav-item active" onclick="goTo('dashboard');loadDashboard()"><div class="nav-icon" data-ic="map"></div><div class="nav-label">Viagens</div></div><div class="nav-item" onclick="goTo('explore');loadExplore()"><div class="nav-icon" data-ic="search"></div><div class="nav-label">Explorar</div></div><div class="nav-item" onclick="goTo('friends');loadFriends()"><div class="nav-icon" data-ic="users"></div><div class="nav-label">Amigos</div></div><div class="nav-item" onclick="goTo('profile');loadProfile()"><div class="nav-icon" data-ic="user"></div><div class="nav-label">Perfil</div></div></div>
@@ -574,7 +579,7 @@ svg.ic path,svg.ic circle,svg.ic line,svg.ic polyline,svg.ic rect{fill:none;stro
   <div class="dash-top" style="padding-bottom:18px">
     <div class="dash-top-row"><div><div class="dash-hello">Explorar</div><div class="dash-name" style="font-size:26px">Tendências por lugar</div></div></div>
     <div class="search-wrap" style="padding:0;display:flex;gap:8px;align-items:center">
-      <div style="flex:1;position:relative"><span class="si" data-ic="search"></span><input class="search-input" id="exploreCitySearch" placeholder="Buscar cidade..." onkeydown="if(event.key==='Enter')runExplore()"></div>
+      <div class="search-field" style="flex:1"><span class="si" data-ic="search"></span><input class="search-input" id="exploreCitySearch" placeholder="Buscar cidade..." onkeydown="if(event.key==='Enter')runExplore()"></div>
       <button class="req-btn req-accept" style="height:48px;padding:0 16px" onclick="runExplore()">Ir</button>
     </div>
   </div>
@@ -641,7 +646,7 @@ svg.ic path,svg.ic circle,svg.ic line,svg.ic polyline,svg.ic rect{fill:none;stro
   <div class="d-section"><div class="sec-label">Minha nota</div><div class="note-card"><div class="note-glow"></div><div class="note-quote" id="placeNote"></div><div class="note-attr" id="placeNoteAttr"></div></div></div>
   <div class="d-section"><div class="sec-label">Informações</div><div class="info-grid" id="placeInfoGrid"></div><div id="placeReserveWrap"></div></div>
   <div class="d-section"><div class="sec-label">Status</div><div class="status-toggle"><button class="toggle-btn sel-want" id="t-want" onclick="setStatus('want')">Quero ir</button><button class="toggle-btn" id="t-been" onclick="setStatus('been')">Fui</button><button class="toggle-btn" id="t-skip" onclick="setStatus('skip')">Pular</button></div></div>
-  <div class="d-section"><div class="sec-label">Minha avaliação</div><div class="stars-row"><button class="star-btn" onclick="rateStar(1)" data-ic="star"></button><button class="star-btn" onclick="rateStar(2)" data-ic="star"></button><button class="star-btn" onclick="rateStar(3)" data-ic="star"></button><button class="star-btn" onclick="rateStar(4)" data-ic="star"></button><button class="star-btn" onclick="rateStar(5)" data-ic="star"></button></div><textarea class="review-area" id="reviewText" rows="3" placeholder="O que você achou?"></textarea><button class="action-btn" onclick="saveReview()">Salvar avaliação</button><button class="delete-link" onclick="deleteSpot()">Excluir este spot</button></div>
+  <div class="d-section"><div class="sec-label">Minha avaliação</div><div class="stars-row" id="placeStars"><button class="star-btn" onclick="rateStar(1)" data-ic="star"></button><button class="star-btn" onclick="rateStar(2)" data-ic="star"></button><button class="star-btn" onclick="rateStar(3)" data-ic="star"></button><button class="star-btn" onclick="rateStar(4)" data-ic="star"></button><button class="star-btn" onclick="rateStar(5)" data-ic="star"></button></div><textarea class="review-area" id="reviewText" rows="3" placeholder="O que você achou?"></textarea><button class="action-btn" id="saveReviewBtn" onclick="saveReview()">Salvar avaliação</button><button class="delete-link" onclick="deleteSpot()">Excluir este spot</button></div>
 </div>
 
 <!-- OVERLAYS -->
@@ -650,7 +655,7 @@ svg.ic path,svg.ic circle,svg.ic line,svg.ic polyline,svg.ic rect{fill:none;stro
 
 <div class="overlay" id="ov-cat" onclick="closeOut(event,'ov-cat')"><div class="sheet"><button class="sheet-close" onclick="closeOv('ov-cat')" data-ic="close" aria-label="Fechar"></button><div class="sheet-handle"></div><div class="sheet-title">Qual categoria?</div><div class="step-dots"><div class="step-dot done"></div><div class="step-dot active"></div><div class="step-dot"></div><div class="step-dot"></div></div><div class="cat-options"><div class="cat-option" id="co-food" onclick="pickCat('food')"><div class="co-icon" data-ic="food"></div><div class="co-name">Comer & Beber</div></div><div class="cat-option" id="co-hotel" onclick="pickCat('hotel')"><div class="co-icon" data-ic="hotel"></div><div class="co-name">Onde Ficar</div></div><div class="cat-option" id="co-experience" onclick="pickCat('experience')"><div class="co-icon" data-ic="compass"></div><div class="co-name">Experiências</div></div></div></div></div>
 
-<div class="overlay" id="ov-search" onclick="closeOut(event,'ov-search')"><div class="sheet"><button class="sheet-close" onclick="closeOv('ov-search')" data-ic="close" aria-label="Fechar"></button><div class="sheet-handle"></div><div class="sheet-title">Buscar lugar</div><div class="step-dots"><div class="step-dot done"></div><div class="step-dot done"></div><div class="step-dot active"></div><div class="step-dot"></div></div><div class="search-wrap"><span class="si" data-ic="search"></span><input class="search-input" id="placeSearch" placeholder="Nome do lugar..." oninput="searchPlaces(this.value)"></div><div class="search-powered"><span>Resultados via</span><strong>Google Places</strong></div><div id="searchResults"><div class="search-loading">Digite para buscar...</div></div></div></div>
+<div class="overlay" id="ov-search" onclick="closeOut(event,'ov-search')"><div class="sheet"><button class="sheet-close" onclick="closeOv('ov-search')" data-ic="close" aria-label="Fechar"></button><div class="sheet-handle"></div><div class="sheet-title">Buscar lugar</div><div class="step-dots"><div class="step-dot done"></div><div class="step-dot done"></div><div class="step-dot active"></div><div class="step-dot"></div></div><div class="search-wrap"><div class="search-field"><span class="si" data-ic="search"></span><input class="search-input" id="placeSearch" placeholder="Nome do lugar..." oninput="searchPlaces(this.value)"></div></div><div class="search-powered"><span>Resultados via</span><strong>Google Places</strong></div><div id="searchResults"><div class="search-loading">Digite para buscar...</div></div></div></div>
 
 <div class="overlay" id="ov-note" onclick="closeOut(event,'ov-note')"><div class="sheet"><button class="sheet-close" onclick="closeOv('ov-note')" data-ic="close" aria-label="Fechar"></button><div class="sheet-handle"></div><div class="sheet-title">Adicionar spot</div><div class="note-place-row"><div class="note-place-icon" id="selIcon" data-ic="food"></div><div><div class="note-place-name" id="selName"></div><div class="note-place-meta" id="selMeta"></div></div></div>
 <div class="status-choice"><button class="status-opt active" id="stWant" onclick="setSpotStatus('want')"><div class="so-emoji" data-ic="bookmark"></div><div class="so-label">Quero ir</div></button><button class="status-opt" id="stBeen" onclick="setSpotStatus('been')"><div class="so-emoji" data-ic="check"></div><div class="so-label">Já fui</div></button></div>
@@ -1013,8 +1018,13 @@ function hideAuthErr(){document.getElementById('authError').classList.remove('sh
 async function signOut(){if(!confirm('Sair do Spot?'))return;try{await sb.auth.signOut()}catch(e){}S.user=null;S.token=null;S.trips=[];location.reload()}
 
 // ═══ DASHBOARD ═══
+let dashboardReqId=0;
 async function loadDashboard(){
   if(!S.user)return;
+  // Só a execução mais nova pode escrever no estado. A antiga desiste no
+  // primeiro checkpoint depois de cada await.
+  const meuReq=++dashboardReqId;
+  const atropelado=()=>meuReq!==dashboardReqId;
   const meta=S.user.user_metadata||{};
   let name=meta.full_name||meta.name||S.user.email.split('@')[0].split('.')[0];
   name=name.split(' ')[0];name=name.charAt(0).toUpperCase()+name.slice(1).toLowerCase();
@@ -1023,6 +1033,7 @@ async function loadDashboard(){
   refreshAvatars(name);
   const emEl=document.getElementById('dashEmail');if(emEl)emEl.textContent=S.user.email+' · sair';
   const trips=await dbGet('trips','user_id=eq.'+S.user.id+'&order=created_at.desc');
+  if(atropelado())return;
   S.trips=trips||[];
   let ts=0,ctrs=new Set(),cities=new Set();
   S.trips.forEach(t=>{t._spots=[];t._spotsLoaded=false});
@@ -1036,6 +1047,9 @@ async function loadDashboard(){
     const byId={};S.trips.forEach(t=>{byId[t.id]=t});
     const ids=S.trips.map(t=>t.id).join(',');
     const allSpots=await dbGet('spots','trip_id=in.('+ids+')&order=created_at.asc');
+    // Checkpoint aqui é o que importa: sem ele, o _spotsLoaded=true abaixo
+    // marcava como "carregado" a lista de viagens de OUTRA execução.
+    if(atropelado())return;
     (allSpots||[]).forEach(s=>{const t=byId[s.trip_id];if(t)t._spots.push(s)});
   }
   S.trips.forEach(t=>{t._spotsLoaded=true});
@@ -1186,7 +1200,7 @@ function renderList(){
     if(LS.cat)list=list.filter(s=>s.category===LS.cat);
     if(LS.country)list=list.filter(s=>s._country===LS.country);
     if(LS.city)list=list.filter(s=>cityOf(s)===LS.city);
-    if(LS.cityQuery)list=list.filter(s=>cityOf(s).toLowerCase().includes(LS.cityQuery.toLowerCase()));
+    if(LS.cityQuery){const q=normName(LS.cityQuery);list=list.filter(s=>normName(cityOf(s)).includes(q))}
     if(LS.sort==='rating')list.sort((a,b)=>(parseFloat(b.my_rating)||0)-(parseFloat(a.my_rating)||0)||(parseFloat(b.rating_google)||0)-(parseFloat(a.rating_google)||0));
     else if(LS.sort==='name')list.sort((a,b)=>(a.name||'').localeCompare(b.name||'','pt-BR'));
     LS.items=list;
@@ -1266,6 +1280,9 @@ function renderList(){
 function openSpotFromList(i){const s=LS.items[i];if(!s)return;const t=S.trips.find(x=>x.id===s._tripId);if(!t)return;S.curTrip=t;openPlace(s.id,'list')}
 function backFromPlace(){
   if(S.placeOrigin==='list'){goTo('list');renderList();return}
+  // Aberto de dentro da tela da cidade, o voltar tem que devolver PRA cidade.
+  // Antes caía sempre na tela da viagem, um nível acima de onde a pessoa estava.
+  if(S.placeOrigin==='city'&&S.curCity){goTo('city');updateCityHeader();renderCityBody();return}
   goTo('trip');loadTrip(S.curTrip);
 }
 function openTripFromList(i){const t=LS.items[i];if(t)openTrip(t.id)}
@@ -1455,7 +1472,7 @@ function renderCityBody(){
     const bc=s.category==='food'?'bar-food':s.category==='hotel'?'bar-hotel':'bar-experience';
     const dot=s.status==='been'?'dot-been':'dot-want';
     const thumb=s.photo_url?`<div class="place-thumb"><img src="${escUrl(s.photo_url)}" style="width:100%;height:100%;object-fit:cover;border-radius:inherit" onerror="onSpotPhotoError(this,'${esc(s.id)}','${esc(s.category)}')"></div>`:`<div class="place-thumb">${catIcon(s.category)}</div>`;
-    h+=`<div class="place-row" onclick="openPlace('${esc(s.id)}')"><div class="place-bar ${bc}"></div><div class="place-row-main">${thumb}<div class="place-row-info"><div class="place-row-name">${esc(s.name)}</div><div class="place-row-note">${esc(s.my_note)}</div></div><div class="place-row-right"><span class="place-type-tag">${esc(s.place_type||catLabel(s.category))}</span><div class="place-status"><span class="status-dot ${dot}"></span><span class="place-status-label">${s.status==='been'?'Fui':'Quero ir'}</span></div></div></div></div>`;
+    h+=`<div class="place-row" onclick="openPlace('${esc(s.id)}','city')"><div class="place-bar ${bc}"></div><div class="place-row-main">${thumb}<div class="place-row-info"><div class="place-row-name">${esc(s.name)}</div><div class="place-row-note">${esc(s.my_note)}</div></div><div class="place-row-right"><span class="place-type-tag">${esc(s.place_type||catLabel(s.category))}</span><div class="place-status"><span class="status-dot ${dot}"></span><span class="place-status-label">${s.status==='been'?'Fui':'Quero ir'}</span></div></div></div></div>`;
   });
   b.innerHTML=h;
 }
@@ -1499,7 +1516,7 @@ async function openPlace(id,origin){
   document.getElementById('placeInfoGrid').innerHTML=ig;
   renderPlaceLinks(s);
   setStatus(s.status||'want',false);
-  document.querySelectorAll('.star-btn').forEach((b,i)=>b.classList.toggle('lit',i<(s.my_rating||0)));
+  document.querySelectorAll('#placeStars .star-btn').forEach((b,i)=>b.classList.toggle('lit',i<(s.my_rating||0)));
   document.getElementById('reviewText').value=s.my_review||'';
   goTo('place');
 }
@@ -1532,12 +1549,27 @@ async function setStatus(s,save=true){
   if(save&&S.curPlace){await dbUpdate('spots',S.curPlace.id,{status:s});S.curPlace.status=s}
 }
 function cycleStatus(){document.getElementById('placeChip').classList.contains('chip-want')?setStatus('been'):setStatus('want')}
-function rateStar(n){document.querySelectorAll('.star-btn').forEach((s,i)=>s.classList.toggle('lit',i<n))}
+// Escopado em #placeStars: o seletor global também acendia/apagava as estrelas
+// da ficha de "adicionar spot", que é outro grupo de .star-btn no mesmo DOM.
+function rateStar(n){document.querySelectorAll('#placeStars .star-btn').forEach((s,i)=>s.classList.toggle('lit',i<n))}
 async function saveReview(){
-  if(!S.curPlace)return;const r=document.querySelectorAll('.star-btn.lit').length,rv=document.getElementById('reviewText').value.trim();
-  const btn=document.querySelector('.action-btn');btn.textContent='Salvando...';btn.disabled=true;
-  await dbUpdate('spots',S.curPlace.id,{my_rating:r,my_review:rv});
-  btn.textContent='Salvo ✓';setTimeout(()=>{btn.textContent='Salvar avaliação';btn.disabled=false},2000);
+  if(!S.curPlace)return;
+  const r=document.querySelectorAll('#placeStars .star-btn.lit').length;
+  const rv=document.getElementById('reviewText').value.trim();
+  // getElementById, não querySelector('.action-btn'): o primeiro .action-btn do
+  // documento é o "Sair da conta" da tela de Perfil, então salvar uma avaliação
+  // reescrevia o botão de logout pra "Salvando..." e depois pra "Salvar
+  // avaliação" — o logout ficava com o rótulo errado até recarregar.
+  const btn=document.getElementById('saveReviewBtn');
+  btn.textContent='Salvando...';btn.disabled=true;
+  const{error}=await dbUpdate('spots',S.curPlace.id,{my_rating:r,my_review:rv});
+  btn.disabled=false;
+  if(error){btn.textContent='Salvar avaliação';toast('Erro','Não foi possível salvar a avaliação.');return}
+  // Espelha no objeto em memória (é a mesma referência que vive em
+  // S.curTrip._spots) — sem isso a nota estava salva no banco mas a tela
+  // mostrava a antiga ao reabrir o spot, e a lista continuava desatualizada.
+  S.curPlace.my_rating=r;S.curPlace.my_review=rv;
+  btn.textContent='Salvo ✓';setTimeout(()=>{btn.textContent='Salvar avaliação'},2000);
   toast('Avaliação salva!','','star');
 }
 
@@ -1619,9 +1651,7 @@ async function runExplore(){
       const addr=p.formattedAddress||'';
       const c=cityFromComponents(p.addressComponents)||extractCityFromAddr(addr);
       const country=countryFromComponents(p.addressComponents);
-      const ref=p.photos&&p.photos[0]&&p.photos[0].name;
-      const photo=ref?'https://places.googleapis.com/v1/'+ref+'/media?maxWidthPx=400&key='+GAPI:'';
-      return{name:p.displayName?.text||'',address:addr,city:c,country,rating:String(p.rating),count:p.userRatingCount,photo_url:photo,website_url:p.websiteUri||'',maps_url:p.googleMapsUri||''};
+      return{name:p.displayName?.text||'',address:addr,city:c,country,rating:String(p.rating),count:p.userRatingCount,photo_url:placePhotoUrl(p,400),website_url:p.websiteUri||'',maps_url:p.googleMapsUri||''};
     });
     renderExploreResults();
   }catch(e){
@@ -1652,6 +1682,16 @@ const GAPI='AIzaSyDYUDC3BkvUYSjlBVX2C6BZ8pMmycxfYUQ';
 // aparecem em qualquer busca por tipo/categoria. Não é o tipo de lugar que
 // alguém quer sugerir como spot, então nunca deve aparecer — nem no
 // Explorar, nem em "Perto de você", nem no check-in.
+// Monta as URLs de foto de um resultado do Places. Estava copiado em duas
+// buscas e simplesmente esquecido na terceira (o check-in), que é por isso
+// que spot de check-in nunca tinha foto.
+function placePhotoUrl(p,largura){
+  const ref=(p&&p.photos&&p.photos[0]&&p.photos[0].name)||'';
+  return ref?'https://places.googleapis.com/v1/'+ref+'/media?maxWidthPx='+largura+'&key='+GAPI:'';
+}
+function placePhotoUrls(p){
+  return{full:placePhotoUrl(p,800),thumb:placePhotoUrl(p,200)};
+}
 const IRRELEVANT_PLACE_TYPES=new Set(['gas_station','convenience_store','supermarket','grocery_store','car_repair','car_wash','atm','bank','pharmacy','hardware_store']);
 function isIrrelevantPlace(p){return(p.types||[]).some(t=>IRRELEVANT_PLACE_TYPES.has(t))}
 // Distância real em metros entre duas coordenadas — usado pra conferir de
@@ -1697,10 +1737,8 @@ function showNearbySuggestions(){
         const addr=p.formattedAddress||'';
         const city=cityFromComponents(p.addressComponents)||extractCityFromAddr(addr);
         const country=countryFromComponents(p.addressComponents);
-        const ref=p.photos&&p.photos[0]&&p.photos[0].name;
-        const photoThumb=ref?'https://places.googleapis.com/v1/'+ref+'/media?maxWidthPx=200&key='+GAPI:'';
-        const photoFull=ref?'https://places.googleapis.com/v1/'+ref+'/media?maxWidthPx=800&key='+GAPI:'';
-        return{name:p.displayName?.text||'',icon:catIcon(S.addCat),city,country,address:addr,photo_url:photoFull,photo_thumb:photoThumb,rating_google:p.rating?String(p.rating):'',website_url:p.websiteUri||'',maps_url:p.googleMapsUri||''};
+        const fotos=placePhotoUrls(p);
+        return{name:p.displayName?.text||'',icon:catIcon(S.addCat),city,country,address:addr,photo_url:fotos.full,photo_thumb:fotos.thumb,rating_google:p.rating?String(p.rating):'',website_url:p.websiteUri||'',maps_url:p.googleMapsUri||''};
       });
       r.innerHTML='<div class="search-nearby-label">Perto de você</div>'+S_nearbyResults.map((p,i)=>{
         const thumb=p.photo_thumb?'<div class="sr-icon"><img src="'+escUrl(p.photo_thumb)+'" loading="eager" style="width:100%;height:100%;object-fit:cover;border-radius:12px"></div>':'<div class="sr-icon">'+p.icon+'</div>';
@@ -1728,7 +1766,7 @@ function maybeShowCheckin(){
     try{
       const resp=await fetch('https://places.googleapis.com/v1/places:searchNearby',{
         method:'POST',
-        headers:{'Content-Type':'application/json','X-Goog-Api-Key':GAPI,'X-Goog-FieldMask':'places.displayName,places.formattedAddress,places.addressComponents,places.rating,places.userRatingCount,places.types,places.websiteUri,places.googleMapsUri,places.location'},
+        headers:{'Content-Type':'application/json','X-Goog-Api-Key':GAPI,'X-Goog-FieldMask':'places.displayName,places.formattedAddress,places.addressComponents,places.rating,places.userRatingCount,places.types,places.websiteUri,places.googleMapsUri,places.location,places.photos'},
         // rankPreference:DISTANCE fazia o pin literalmente mais próximo ganhar
         // mesmo sendo irrelevante — sem isso, o padrão é por relevância.
         // 'bakery'/'cafe'/'bar' ampliam pra restaurante, padaria, café e bar.
@@ -1775,7 +1813,8 @@ function maybeShowCheckin(){
       const addr=p.formattedAddress||'';
       const city=cityFromComponents(p.addressComponents)||extractCityFromAddr(addr);
       const country=countryFromComponents(p.addressComponents);
-      CHECKIN.place={name,meta:addr,icon:catIcon('food'),city,country,address:addr,rating_google:p.rating?String(p.rating):'',website_url:p.websiteUri||'',maps_url:p.googleMapsUri||'',category:'food'};
+      const fotos=placePhotoUrls(p);
+      CHECKIN.place={name,meta:addr,icon:catIcon('food'),city,country,address:addr,photo_url:fotos.full,photo_thumb:fotos.thumb,rating_google:p.rating?String(p.rating):'',website_url:p.websiteUri||'',maps_url:p.googleMapsUri||'',category:'food'};
       document.getElementById('checkinName').textContent=name;
       document.getElementById('checkinBanner').style.display='flex';
     }catch(e){console.error('maybeShowCheckin',e)}
@@ -1798,7 +1837,7 @@ function checkinIgnore(){
 function checkinAdd(){
   const p=CHECKIN.place;if(!p)return;
   document.getElementById('checkinBanner').style.display='none';
-  const place={name:p.name,meta:p.meta,icon:p.icon,city:p.city,country:p.country,address:p.address,rating_google:p.rating_google,website_url:p.website_url,maps_url:p.maps_url};
+  const place={name:p.name,meta:p.meta,icon:p.icon,city:p.city,country:p.country,address:p.address,photo_url:p.photo_url||'',photo_thumb:p.photo_thumb||'',rating_google:p.rating_google,website_url:p.website_url,maps_url:p.maps_url};
   CHECKIN.place=null;
   // Categoria já é sabida (check-in só busca comer/beber) e "Já fui" é o
   // padrão óbvio — você está literalmente lá. Viagem: se só existir uma que
@@ -1836,10 +1875,8 @@ function searchPlaces(v){
         const city=cityFromComponents(p.addressComponents)||extractCityFromAddr(addr);
         const country=countryFromComponents(p.addressComponents);
         const rating=p.rating?String(p.rating):'';
-        const photoRef=p.photos?.[0]?.name||'';
-        const photoThumb=photoRef?'https://places.googleapis.com/v1/'+photoRef+'/media?maxWidthPx=200&key='+GAPI:'';
-        const photoFull=photoRef?'https://places.googleapis.com/v1/'+photoRef+'/media?maxWidthPx=800&key='+GAPI:'';
-        return{name,meta:addr,icon:catIcon(S.addCat),city,country,address:addr,photo_url:photoFull,photo_thumb:photoThumb,rating_google:rating,website_url:p.websiteUri||'',maps_url:p.googleMapsUri||''};
+        const fotos=placePhotoUrls(p);
+        return{name,meta:addr,icon:catIcon(S.addCat),city,country,address:addr,photo_url:fotos.full,photo_thumb:fotos.thumb,rating_google:rating,website_url:p.websiteUri||'',maps_url:p.googleMapsUri||''};
       });
       if(myReqId!==searchReqId)return;
       r.innerHTML=S.searchResults.map((p,i)=>{
@@ -2458,8 +2495,7 @@ async function healSpotPhoto(id){
       patch.insta_checked=true;s.insta_checked=true;
     }
     if(p.googleMapsUri&&!s.maps_url){patch.maps_url=p.googleMapsUri;s.maps_url=p.googleMapsUri}
-    const ref=p.photos&&p.photos[0]&&p.photos[0].name;
-    const url=ref?'https://places.googleapis.com/v1/'+ref+'/media?maxWidthPx=800&key='+GAPI:'';
+    const url=placePhotoUrl(p,800);
     // se a URL veio igual, a falha não era referência expirada — não regrava
     if(url&&url!==s.photo_url){patch.photo_url=url;s.photo_url=url}
     if(!Object.keys(patch).length)return null;
