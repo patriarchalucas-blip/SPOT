@@ -362,11 +362,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--dark);max-width:430px;mar
 .friend-row-name{flex:1;font-size:14.5px;font-weight:500;color:var(--ink);min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .friend-row-user{font-family:'IBM Plex Mono',monospace;font-size:11.5px;color:var(--ink3)}
 .friend-row-arrow{color:var(--ink3);font-size:17px;flex-shrink:0}
-/* Cidade dentro da viagem do amigo: título + spots embaixo, numa tela só —
-   não vale uma tela de cidade separada só pra leitura. */
-.fcity-head{display:flex;align-items:baseline;justify-content:space-between;margin:22px 0 8px}
-.fcity-name{font-family:'Fraunces',serif;font-size:17px;font-weight:600;color:var(--ink)}
-.fcity-count{font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--ink3)}
+
 .profile-avatar{width:54px;height:54px;border-radius:50%;background:var(--green);color:var(--dark);display:flex;align-items:center;justify-content:center;font-size:22px;font-weight:600;flex-shrink:0;box-shadow:var(--shadow-md),0 0 0 3px rgba(234,231,224,.06)}
 .profile-avatar-wrap{position:relative;cursor:pointer;flex-shrink:0}
 .avatar-edit-badge{position:absolute;bottom:-2px;right:-2px;width:22px;height:22px;border-radius:50%;background:var(--terra);color:#fff;display:flex;align-items:center;justify-content:center;font-size:11px;border:2px solid #0b1620}
@@ -664,9 +660,14 @@ svg.ic path,svg.ic circle,svg.ic line,svg.ic polyline,svg.ic rect{fill:none;stro
 <div class="screen" id="friends">
   <div class="dash-top" style="padding-bottom:20px">
     <div class="dash-top-row">
-      <div><div class="dash-hello">Amigos</div><div class="dash-name" style="font-size:24px">Feed</div></div>
+      <div><div class="dash-hello">Amigos</div><div class="dash-name" style="font-size:24px">Seu círculo</div></div>
     </div>
   </div>
+  <div id="friendsRequests" style="display:none;padding:0 24px"></div>
+  <div class="cat-tabs-wrap"><div class="cat-tabs">
+    <div class="cat-tab active" id="fTab-amigos" onclick="switchFriendsTab('amigos',this)"><div class="ct-icon" data-ic="users"></div><div>Meus amigos</div><div class="ct-count" id="fTabCount-amigos">0</div></div>
+    <div class="cat-tab" id="fTab-recente" onclick="switchFriendsTab('recente',this)"><div class="ct-icon" data-ic="globe"></div><div>Recente</div><div class="ct-count" id="fTabCount-recente">0</div></div>
+  </div></div>
   <div class="dash-body" id="friendsContainer"></div>
   <button class="fab" onclick="showOv('ov-addfriend')">+</button>
   <div class="bottom-nav"><div class="nav-item" onclick="goTo('dashboard');loadDashboard()"><div class="nav-icon" data-ic="map"></div><div class="nav-label">Viagens</div></div><div class="nav-item" onclick="goTo('explore');loadExplore()"><div class="nav-icon" data-ic="search"></div><div class="nav-label">Explorar</div></div><div class="nav-item active" onclick="goTo('friends');loadFriends()"><div class="nav-icon" data-ic="users"></div><div class="nav-label" style="color:var(--ink);font-weight:600">Amigos</div></div><div class="nav-item" onclick="goTo('profile');loadProfile()"><div class="nav-icon" data-ic="user"></div><div class="nav-label">Perfil</div></div></div>
@@ -704,6 +705,12 @@ svg.ic path,svg.ic circle,svg.ic line,svg.ic polyline,svg.ic rect{fill:none;stro
     </div>
   </div>
   <div class="trip-body" id="ftBody"></div>
+</div>
+
+<div class="screen" id="friendCity">
+  <div class="trip-hero"><div class="trip-hero-img" id="fcHeroImg"></div><div class="trip-float"></div><div class="trip-hero-content"><button class="back-btn" onclick="goTo('friendTrip')" data-ic="back" aria-label="Voltar"></button><div><div class="trip-hero-label" id="fcLabel"></div><div class="trip-hero-name" id="fcName"></div><div class="trip-hero-meta" id="fcMeta"></div></div></div></div>
+  <div class="cat-tabs-wrap"><div class="cat-tabs"><div class="cat-tab active" onclick="switchFriendCityCat('food',this)"><div class="ct-icon" data-ic="food"></div><div>Comer & Beber</div><div class="ct-count" id="fcCnt-food">0</div></div><div class="cat-tab" onclick="switchFriendCityCat('hotel',this)"><div class="ct-icon" data-ic="hotel"></div><div>Onde Ficar</div><div class="ct-count" id="fcCnt-hotel">0</div></div><div class="cat-tab" onclick="switchFriendCityCat('experience',this)"><div class="ct-icon" data-ic="compass"></div><div>Experiências</div><div class="ct-count" id="fcCnt-experience">0</div></div></div></div>
+  <div class="trip-body" id="fcBody"></div>
 </div>
 
 <div class="screen" id="place">
@@ -1461,40 +1468,59 @@ function tripClimateMonth(t){
   if(t.date_start){const m=new Date(t.date_start+'T00:00:00').getMonth();if(!isNaN(m))return m+1}
   return new Date().getMonth()+1;
 }
-function renderTripBody(){
-  const t=S.curTrip,b=document.getElementById('tripBody');
-  if(!t)return;
-  const hasSpots=t._spots&&t._spots.length;
-  if(!hasSpots&&!t.initial_city){b.innerHTML=`<div class="empty-state" style="padding:40px 24px"><div class="ei">${icon('pin')}</div><h3>Nenhum spot aqui</h3><p>Toca no + para adicionar</p></div>`;return}
+// Agrupa os spots de uma viagem por cidade, na ordem em que aparecem.
+// `initialCity` cria o card vazio da cidade escolhida na criação da viagem.
+function agruparPorCidade(spots,initialCity){
   rebuildCityCanon();
   const byCity={};
-  if(t.initial_city){const c0=cityOf({city:t.initial_city})||t.initial_city;byCity[c0]=byCity[c0]||[]}
-  (t._spots||[]).forEach(s=>{const c=cityOf(s)||'Outros';(byCity[c]=byCity[c]||[]).push(s)});
-  const country=(t.destinations&&t.destinations[0])||t.name;
-  const month=tripClimateMonth(t);
+  if(initialCity){const c0=cityOf({city:initialCity})||initialCity;byCity[c0]=byCity[c0]||[]}
+  (spots||[]).forEach(s=>{const c=cityOf(s)||'Outros';(byCity[c]=byCity[c]||[]).push(s)});
+  return byCity;
+}
+// Desenha os cards de cidade e pendura a temperatura média quando ela chega.
+// Usado pela tela da própria viagem E pela tela da viagem de um amigo — o
+// card é o mesmo, então duplicar o HTML só garantiria que os dois divergissem
+// na primeira mudança. `prefixoId` separa os ids de clima das duas telas
+// (as duas podem ter a mesma cidade), `handler` é o nome da função de clique.
+function cityCardsHTML(byCity,country,month,handler,prefixoId){
+  const ordem=Object.keys(byCity);
   let h='';
-  // Ordem das cidades guardada num array: o onclick passa o INDICE, nao o
-  // nome da cidade (nome vem do Places/do usuario e pode ter aspas ou HTML).
-  TRIP_CITY_ORDER=Object.keys(byCity);
-  TRIP_CITY_ORDER.forEach((city,ci)=>{
+  ordem.forEach((city,ci)=>{
     const spots=byCity[city];
-    const cityIdSafe=String(city).replace(/[^a-zA-Z0-9]/g,'_');
+    const cityIdSafe=prefixoId+String(city).replace(/[^a-zA-Z0-9]/g,'_');
     const counts={food:0,hotel:0,experience:0};spots.forEach(s=>{if(counts[s.category]!==undefined)counts[s.category]++});
-    h+=`<div class="city-card" onclick="openCityFromTrip(${ci})"><div class="city-card-top"><div><div class="city-card-name">${esc(city)}</div><div class="city-card-climate" id="clima-${cityIdSafe}"></div></div><div class="city-card-count">${spots.length} ${spots.length===1?'spot':'spots'}</div></div><div class="city-card-breakdown">`;
+    // onclick recebe o ÍNDICE, nunca o nome da cidade (vem do Places/do
+    // usuário e pode ter aspas ou HTML)
+    h+=`<div class="city-card" onclick="${handler}(${ci})"><div class="city-card-top"><div><div class="city-card-name">${esc(city)}</div><div class="city-card-climate" id="${cityIdSafe}"></div></div><div class="city-card-count">${spots.length} ${spots.length===1?'spot':'spots'}</div></div><div class="city-card-breakdown">`;
     h+=[['food','pra comer'],['hotel','pra ficar'],['experience','experiências']].filter(([c])=>counts[c]>0).map(([c,label])=>
       `<div class="city-card-item" title="${counts[c]} ${label}" aria-label="${counts[c]} ${label}">${icon(c==='food'?'food':c==='hotel'?'hotel':'compass')} ${counts[c]}</div>`
     ).join('');
     h+=`</div></div>`;
   });
-  b.innerHTML=h;
+  return{html:h,ordem:ordem};
+}
+function pendurarClima(byCity,country,month,prefixoId){
   Object.keys(byCity).forEach(city=>{
-    const cityIdSafe=String(city).replace(/[^a-zA-Z0-9]/g,'_');
+    const cityIdSafe=prefixoId+String(city).replace(/[^a-zA-Z0-9]/g,'_');
     fetchCityClimate(city,country,month).then(temp=>{
       if(temp==null)return;
-      const el=document.getElementById('clima-'+cityIdSafe);
+      const el=document.getElementById(cityIdSafe);
       if(el)el.textContent=Math.round(temp)+'°C em média';
     });
   });
+}
+function renderTripBody(){
+  const t=S.curTrip,b=document.getElementById('tripBody');
+  if(!t)return;
+  const hasSpots=t._spots&&t._spots.length;
+  if(!hasSpots&&!t.initial_city){b.innerHTML=`<div class="empty-state" style="padding:40px 24px"><div class="ei">${icon('pin')}</div><h3>Nenhum spot aqui</h3><p>Toca no + para adicionar</p></div>`;return}
+  const byCity=agruparPorCidade(t._spots,t.initial_city);
+  const country=(t.destinations&&t.destinations[0])||t.name;
+  const month=tripClimateMonth(t);
+  const{html,ordem}=cityCardsHTML(byCity,country,month,'openCityFromTrip','clima-');
+  TRIP_CITY_ORDER=ordem;
+  b.innerHTML=html;
+  pendurarClima(byCity,country,month,'clima-');
 }
 // ═══ TELA DA CIDADE (dedicada, aberta ao tocar num card acima) ═══
 let curCityCat='food';
@@ -3081,6 +3107,18 @@ function initials(name){
   if(!name)return'?';
   return name.replace(/^@/,'').trim().slice(0,2).toUpperCase();
 }
+// Aba visível na tela Amigos. Guardada entre visitas: quem entra pra ver a
+// lista de amigos normalmente quer a lista de novo na próxima vez.
+let friendsTab='amigos';
+// O que a última busca trouxe. Separar buscar de desenhar é o que permite
+// trocar de aba sem ir ao banco de novo.
+let FRIENDS_DATA=null;
+function switchFriendsTab(aba,el){
+  friendsTab=aba;
+  document.querySelectorAll('#friends .cat-tab').forEach(x=>x.classList.remove('active'));
+  if(el)el.classList.add('active');
+  renderFriendsTab();
+}
 async function loadFriends(){
   const uid=S.user.id;
   const c=document.getElementById('friendsContainer');
@@ -3129,61 +3167,79 @@ async function loadFriends(){
     feedItems=feedItems.slice(0,25);
   }
 
-  let h='';
+  // Nome de todo mundo que aparece na tela vai pro mapa, pra abrir o perfil
+  // já com o nome certo em vez de "Amigo".
+  friendIds.forEach(fid=>{FRIEND_NOMES[fid]=friendName(pmap[fid])});
+  feedItems.forEach(it=>{FRIEND_NOMES[it.user_id]=friendName(pmap[it.user_id])});
+
+  FRIENDS_DATA={friendIds,incoming,outgoing,pmap,feedItems};
+  renderFriendsTab();
+}
+function renderFriendsTab(){
+  const d=FRIENDS_DATA;if(!d)return;
+  const c=document.getElementById('friendsContainer');
+  const{friendIds,incoming,outgoing,pmap,feedItems}=d;
+
+  // ── pedidos recebidos: fora das abas, sempre à vista ──
+  const reqBox=document.getElementById('friendsRequests');
   if(incoming.length){
-    h+='<div class="section-head"><span class="section-title">Pedidos de amizade</span></div>';
-    incoming.forEach(r=>{
-      const p=pmap[r.follower_id];const name=friendName(p);
-      h+=`<div class="req-card"><div class="feed-avatar">${esc(initials(name))}</div><div style="flex:1"><div class="req-name">${esc(name)}</div>${p&&p.username?`<div class="req-email">@${esc(p.username)}</div>`:''}</div><button class="req-btn req-accept" onclick="respondRequest('${esc(r.id)}',true)">Aceitar</button><button class="req-btn req-decline" onclick="respondRequest('${esc(r.id)}',false)">Recusar</button></div>`;
-    });
-  }
+    reqBox.style.display='block';
+    reqBox.innerHTML='<div class="section-head" style="margin-top:4px"><span class="section-title">Pedidos de amizade</span><span class="section-title" style="color:var(--terra)">'+incoming.length+'</span></div>'
+      +incoming.map(r=>{
+        const p=pmap[r.follower_id];const name=friendName(p);
+        return `<div class="req-card"><div class="feed-avatar">${esc(initials(name))}</div><div style="flex:1"><div class="req-name">${esc(name)}</div>${p&&p.username?`<div class="req-email">@${esc(p.username)}</div>`:''}</div><button class="req-btn req-accept" onclick="respondRequest('${esc(r.id)}',true)">Aceitar</button><button class="req-btn req-decline" onclick="respondRequest('${esc(r.id)}',false)">Recusar</button></div>`;
+      }).join('');
+  }else{reqBox.style.display='none';reqBox.innerHTML=''}
 
-  // Lista de amigos: cada linha abre o perfil dele. O onclick passa o id
-  // (uuid do banco, não texto de usuário) e o nome só como rótulo imediato,
-  // pra tela não abrir vazia enquanto o perfil carrega.
-  if(friendIds.length){
-    h+='<div class="section-head"><span class="section-title">Meus amigos</span><span class="section-title" style="color:var(--ink3);font-weight:400">'+friendIds.length+'</span></div>';
-    friendIds.forEach(fid=>{
-      const p=pmap[fid];const nome=friendName(p);
-      FRIEND_NOMES[fid]=nome;
-      h+='<div class="friend-row" onclick="openFriend(\''+esc(fid)+'\')">'
-        +'<div class="feed-avatar">'+esc(initials(nome))+'</div>'
-        +'<div class="friend-row-name">'+esc(nome)+'</div>'
-        +(p&&p.username?'<div class="friend-row-user">@'+esc(p.username)+'</div>':'')
-        +'<div class="friend-row-arrow">\u203a</div></div>';
-    });
-  }
+  document.getElementById('fTabCount-amigos').textContent=friendIds.length;
+  document.getElementById('fTabCount-recente').textContent=feedItems.length;
+  document.querySelectorAll('#friends .cat-tab').forEach(x=>x.classList.remove('active'));
+  const tabEl=document.getElementById('fTab-'+friendsTab);
+  if(tabEl)tabEl.classList.add('active');
 
-  h+='<div class="section-head"><span class="section-title">Recente</span></div>';
-  if(!friendIds.length){
-    h+='<div class="empty-state"><div class="ei">'+icon('users')+'</div><h3>Sem amigos ainda</h3><p>Toca no + pra adicionar um amigo pelo username</p></div>';
-  }else if(!feedItems.length){
-    h+='<div class="empty-state"><div class="ei">'+icon('globe')+'</div><p>Seus amigos ainda não têm atividade</p></div>';
+  let h='';
+  if(friendsTab==='amigos'){
+    if(!friendIds.length){
+      h+='<div class="empty-state"><div class="ei">'+icon('users')+'</div><h3>Sem amigos ainda</h3><p>Toca no + pra adicionar um amigo pelo username</p></div>';
+    }else{
+      // cada linha abre o perfil; o onclick passa só o id (uuid do banco)
+      h+=friendIds.map(fid=>{
+        const p=pmap[fid];const nome=friendName(p);
+        return '<div class="friend-row" onclick="openFriend(\''+esc(fid)+'\')">'
+          +'<div class="feed-avatar">'+esc(initials(nome))+'</div>'
+          +'<div class="friend-row-name">'+esc(nome)+'</div>'
+          +(p&&p.username?'<div class="friend-row-user">@'+esc(p.username)+'</div>':'')
+          +'<div class="friend-row-arrow">\u203a</div></div>';
+      }).join('');
+    }
+    // pedidos enviados são informativos — moram junto da lista, não no feed
+    if(outgoing.length){
+      h+='<div class="section-head" style="margin-top:24px"><span class="section-title">Pedidos enviados</span></div>';
+      h+=outgoing.map(r=>{
+        const p=pmap[r.following_id];const name=friendName(p);
+        return `<div class="req-card"><div class="feed-avatar">${esc(initials(name))}</div><div style="flex:1"><div class="req-name">${esc(name)}</div></div><button class="req-btn req-decline" onclick="cancelRequest('${esc(r.id)}')">Cancelar</button></div>`;
+      }).join('');
+    }
   }else{
-    feedItems.forEach(it=>{
-      const p=pmap[it.user_id];const name=friendName(p);
-      FRIEND_NOMES[it.user_id]=name;
-      // o item inteiro leva ao perfil de quem fez a atividade — é o gesto
-      // que todo mundo tenta por instinto
-      h+=`<div class="feed-item" style="cursor:pointer" onclick="openFriend('${esc(it.user_id)}')"><div class="feed-avatar">${esc(initials(name))}</div><div><div class="feed-text">${it.html}</div><div class="feed-time">${esc(timeAgo(it.created_at))}</div></div></div>`;
-    });
+    if(!friendIds.length){
+      h+='<div class="empty-state"><div class="ei">'+icon('users')+'</div><h3>Sem amigos ainda</h3><p>Adiciona alguém pra ver a atividade aqui</p></div>';
+    }else if(!feedItems.length){
+      h+='<div class="empty-state"><div class="ei">'+icon('globe')+'</div><h3>Nada por aqui ainda</h3><p>Seus amigos ainda não marcaram viagens nem lugares</p></div>';
+    }else{
+      h+=feedItems.map(it=>{
+        const name=friendName(pmap[it.user_id]);
+        // o item inteiro leva ao perfil de quem fez a atividade
+        return `<div class="feed-item" style="cursor:pointer" onclick="openFriend('${esc(it.user_id)}')"><div class="feed-avatar">${esc(initials(name))}</div><div><div class="feed-text">${it.html}</div><div class="feed-time">${esc(timeAgo(it.created_at))}</div></div></div>`;
+      }).join('');
+    }
   }
-
-  if(outgoing.length){
-    h+='<div class="section-head" style="margin-top:20px"><span class="section-title">Pedidos enviados</span></div>';
-    outgoing.forEach(r=>{
-      const p=pmap[r.following_id];const name=friendName(p);
-      h+=`<div class="req-card"><div class="feed-avatar">${esc(initials(name))}</div><div style="flex:1"><div class="req-name">${esc(name)}</div></div><button class="req-btn req-decline" onclick="cancelRequest('${esc(r.id)}')">Cancelar</button></div>`;
-    });
-  }
-
   h+='<div style="height:40px"></div>';
   c.innerHTML=h;
 }
 // ═══ PERFIL DE AMIGO (só leitura) ═══
 // As políticas da 008 já liberam trips/spots de quem é amigo ACEITO, então
 // aqui é leitura normal — não precisa de função especial no banco.
-const FRIEND={id:null,profile:null,trips:[],visiveis:[],trip:null};
+const FRIEND={id:null,profile:null,trips:[],visiveis:[],trip:null,city:null};
 // Nome já conhecido de cada amigo, preenchido ao desenhar a aba Amigos. Serve
 // só pra tela abrir com o nome certo em vez de "Amigo" enquanto o perfil
 // carrega — evita passar texto de outra pessoa dentro de um atributo onclick.
@@ -3276,35 +3332,77 @@ function openFriendTrip(i){
   renderFriendTripBody();
   goTo('friendTrip');
 }
-// Cidades e spots na MESMA tela: em leitura não há o que fazer numa tela de
-// cidade separada, e é um toque menos no celular.
+// Cards de cidade, iguais aos da viagem própria (mesmo helper). A primeira
+// versão juntava cidade e spots numa tela só; a navegação em dois níveis é a
+// que combina com o resto do app.
+let FRIEND_CITY_ORDER=[];
+let fcCat='food';
+function openFriendCityFromTrip(i){
+  const city=FRIEND_CITY_ORDER[i];
+  if(city!=null)openFriendCity(city);
+}
+function openFriendCity(city){
+  const t=FRIEND.trip;if(!t)return;
+  FRIEND.city=city;fcCat='food';
+  document.querySelectorAll('#friendCity .cat-tab').forEach(x=>x.classList.remove('active'));
+  document.querySelector('#friendCity .cat-tab').classList.add('active');
+  document.getElementById('fcLabel').textContent=(t.destinations||[]).map(d=>flagFor(d)).join(' ');
+  document.getElementById('fcName').textContent=city;
+  updateFriendCityHeader();
+  const hero=document.getElementById('fcHeroImg');
+  hero.style.backgroundImage=destGradient(city);
+  fetchCityPhoto(city).then(url=>{if(url&&FRIEND.city===city)hero.style.backgroundImage=cssUrl(url)});
+  renderFriendCityBody();
+  goTo('friendCity');
+}
+function updateFriendCityHeader(){
+  const t=FRIEND.trip;if(!t||!FRIEND.city)return;
+  const daCidade=(t._spots||[]).filter(s=>cityOf(s)===FRIEND.city);
+  document.getElementById('fcMeta').textContent=daCidade.length+(daCidade.length===1?' spot':' spots');
+  ['food','hotel','experience'].forEach(c=>{
+    document.getElementById('fcCnt-'+c).textContent=daCidade.filter(s=>s.category===c).length;
+  });
+}
+function switchFriendCityCat(cat,el){
+  fcCat=cat;
+  document.querySelectorAll('#friendCity .cat-tab').forEach(x=>x.classList.remove('active'));
+  if(el)el.classList.add('active');
+  renderFriendCityBody();
+}
+function renderFriendCityBody(){
+  const t=FRIEND.trip,b=document.getElementById('fcBody');
+  if(!t||!FRIEND.city)return;
+  const spots=(t._spots||[]).filter(s=>cityOf(s)===FRIEND.city&&s.category===fcCat);
+  if(!spots.length){b.innerHTML=`<div class="empty-state" style="padding:40px 24px"><div class="ei">${catIcon(fcCat)}</div><h3>Nada aqui</h3><p>Seu amigo não salvou nada dessa categoria nesta cidade.</p></div>`;return}
+  b.innerHTML=spots.map(s=>friendSpotRowHTML(s)).join('');
+}
+// Linha de spot do amigo. Sem onclick: é leitura, não existe tela de detalhe
+// do spot de outra pessoa.
+function friendSpotRowHTML(s){
+  const bc=s.category==='food'?'bar-food':s.category==='hotel'?'bar-hotel':'bar-experience';
+  const dot=s.status==='been'?'dot-been':'dot-want';
+  const thumb=s.photo_url
+    ?'<div class="place-thumb"><img src="'+escUrl(s.photo_url)+'" style="width:100%;height:100%;object-fit:cover;border-radius:inherit" onerror="thumbFallback(this,\''+esc(s.category)+'\')"></div>'
+    :'<div class="place-thumb">'+catIcon(s.category)+'</div>';
+  const nota=s.my_rating?'★ '+fmtRating(s.my_rating):'';
+  return '<div class="place-row" style="cursor:default"><div class="place-bar '+bc+'"></div><div class="place-row-main">'+thumb
+    +'<div class="place-row-info"><div class="place-row-name">'+esc(s.name)+'</div><div class="place-row-note">'+esc(s.my_note)+'</div></div>'
+    +'<div class="place-row-right">'+(nota?'<span class="lrating">'+esc(nota)+'</span>':'')
+    +'<span class="place-type-tag">'+esc(subcatLabel(s.subcategory)||s.place_type||catLabel(s.category))+'</span>'
+    +'<div class="place-status"><span class="status-dot '+dot+'"></span><span class="place-status-label">'+(s.status==='been'?'Fui':'Quero ir')+'</span></div></div></div></div>';
+}
 function renderFriendTripBody(){
   const t=FRIEND.trip,b=document.getElementById('ftBody');
   if(!t)return;
-  const spots=t._spots||[];
-  if(!spots.length){b.innerHTML='<div class="empty-state" style="padding:40px 24px"><div class="ei">'+icon('pin')+'</div><h3>Nenhum spot nesta viagem</h3></div>';return}
-  const byCity={};
-  spots.forEach(s=>{const c=cityOf(s)||'Outros';(byCity[c]=byCity[c]||[]).push(s)});
-  let h='';
-  for(const cidade of Object.keys(byCity)){
-    const lista=byCity[cidade];
-    h+='<div class="fcity-head"><span class="fcity-name">'+esc(cidade)+'</span><span class="fcity-count">'+lista.length+' '+(lista.length===1?'spot':'spots')+'</span></div>';
-    h+=lista.map(s=>{
-      const bc=s.category==='food'?'bar-food':s.category==='hotel'?'bar-hotel':'bar-experience';
-      const dot=s.status==='been'?'dot-been':'dot-want';
-      const thumb=s.photo_url
-        ?'<div class="place-thumb"><img src="'+escUrl(s.photo_url)+'" style="width:100%;height:100%;object-fit:cover;border-radius:inherit" onerror="thumbFallback(this,\''+esc(s.category)+'\')"></div>'
-        :'<div class="place-thumb">'+catIcon(s.category)+'</div>';
-      const nota=s.my_rating?'★ '+fmtRating(s.my_rating):'';
-      // sem onclick: é leitura, não existe tela de detalhe do spot do amigo
-      return '<div class="place-row" style="cursor:default"><div class="place-bar '+bc+'"></div><div class="place-row-main">'+thumb
-        +'<div class="place-row-info"><div class="place-row-name">'+esc(s.name)+'</div><div class="place-row-note">'+esc(s.my_note)+'</div></div>'
-        +'<div class="place-row-right">'+(nota?'<span class="lrating">'+esc(nota)+'</span>':'')
-        +'<span class="place-type-tag">'+esc(subcatLabel(s.subcategory)||s.place_type||catLabel(s.category))+'</span>'
-        +'<div class="place-status"><span class="status-dot '+dot+'"></span><span class="place-status-label">'+(s.status==='been'?'Fui':'Quero ir')+'</span></div></div></div></div>';
-    }).join('');
-  }
-  b.innerHTML=h;
+  if(!(t._spots||[]).length){b.innerHTML='<div class="empty-state" style="padding:40px 24px"><div class="ei">'+icon('pin')+'</div><h3>Nenhum spot nesta viagem</h3></div>';return}
+  const byCity=agruparPorCidade(t._spots,t.initial_city);
+  const country=(t.destinations&&t.destinations[0])||t.name;
+  const month=tripClimateMonth(t);
+  // mesmo helper da viagem própria — o card é o mesmo
+  const{html,ordem}=cityCardsHTML(byCity,country,month,'openFriendCityFromTrip','fclima-');
+  FRIEND_CITY_ORDER=ordem;
+  b.innerHTML=html;
+  pendurarClima(byCity,country,month,'fclima-');
 }
 async function respondRequest(followId,accept){
   if(accept){
