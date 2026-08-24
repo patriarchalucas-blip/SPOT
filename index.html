@@ -1593,8 +1593,9 @@ function renderCityBody(){
   spots.forEach(s=>{
     const bc=s.category==='food'?'bar-food':s.category==='hotel'?'bar-hotel':'bar-experience';
     const dot=s.status==='been'?'dot-been':'dot-want';
+    const tag=spotTag(s);
     const thumb=s.photo_url?`<div class="place-thumb"><img src="${escUrl(s.photo_url)}" style="width:100%;height:100%;object-fit:cover;border-radius:inherit" onerror="onSpotPhotoError(this,'${esc(s.id)}','${esc(s.category)}')"></div>`:`<div class="place-thumb">${catIcon(s.category)}</div>`;
-    h+=`<div class="place-row" onclick="openPlace('${esc(s.id)}','city')"><div class="place-bar ${bc}"></div><div class="place-row-main">${thumb}<div class="place-row-info"><div class="place-row-name">${esc(s.name)}</div><div class="place-row-note">${esc(s.my_note)}</div></div><div class="place-row-right"><span class="place-type-tag">${esc(subcatLabel(s.subcategory)||s.place_type||catLabel(s.category))}</span><div class="place-status"><span class="status-dot ${dot}"></span><span class="place-status-label">${s.status==='been'?'Fui':'Quero ir'}</span></div></div></div></div>`;
+    h+=`<div class="place-row" onclick="openPlace('${esc(s.id)}','city')"><div class="place-bar ${bc}"></div><div class="place-row-main">${thumb}<div class="place-row-info"><div class="place-row-name">${esc(s.name)}</div><div class="place-row-note">${esc(s.my_note)}</div></div><div class="place-row-right">${tag?`<span class="place-type-tag">${esc(tag)}</span>`:''}<div class="place-status"><span class="status-dot ${dot}"></span><span class="place-status-label">${s.status==='been'?'Fui':'Quero ir'}</span></div></div></div></div>`;
   });
   b.innerHTML=h;
 }
@@ -2482,6 +2483,18 @@ const EXP_SUBCATS=[
   {key:'passeio',label:'Passeio',ic:'compass',types:['tourist_attraction','travel_agency','boat_tour_agency','sightseeing_tour_agency','amusement_park','water_park','observation_deck','ferry_terminal','cable_car']}
 ];
 function subcatByKey(k){return EXP_SUBCATS.find(s=>s.key===k)||null}
+// Rótulos que a etiqueta da linha NÃO deve repetir: são o nome da própria
+// categoria, que a aba ativa e a barra colorida da linha já dizem.
+const TAGS_REDUNDANTES=['Comer & Beber','Onde Ficar','Experiência'];
+// A etiqueta só aparece quando diz algo novo. place_type sempre foi gravado
+// como catLabel(categoria), ou seja "Comer & Beber" em toda linha de comida —
+// ruído repetido. Com subcategoria ("Natureza") ela volta a ter conteúdo.
+function spotTag(s){
+  const sub=subcatLabel(s&&s.subcategory);
+  if(sub)return sub;
+  const pt=(s&&s.place_type)||'';
+  return TAGS_REDUNDANTES.includes(pt)?'':pt;
+}
 function subcatLabel(k){const s=subcatByKey(k);return s?s.label:''}
 // Cultura e Passeio dividem 'tourist_attraction'. A ordem do EXP_SUBCATS
 // decide o empate, e Cultura vem primeiro de propósito: um ponto turístico
@@ -3414,10 +3427,11 @@ function friendSpotRowHTML(s){
     ?'<div class="place-thumb"><img src="'+escUrl(s.photo_url)+'" style="width:100%;height:100%;object-fit:cover;border-radius:inherit" onerror="thumbFallback(this,\''+esc(s.category)+'\')"></div>'
     :'<div class="place-thumb">'+catIcon(s.category)+'</div>';
   const nota=s.my_rating?'★ '+fmtRating(s.my_rating):'';
+  const tag=spotTag(s);
   return '<div class="place-row" style="cursor:default"><div class="place-bar '+bc+'"></div><div class="place-row-main">'+thumb
     +'<div class="place-row-info"><div class="place-row-name">'+esc(s.name)+'</div><div class="place-row-note">'+esc(s.my_note)+'</div></div>'
     +'<div class="place-row-right">'+(nota?'<span class="lrating">'+esc(nota)+'</span>':'')
-    +'<span class="place-type-tag">'+esc(subcatLabel(s.subcategory)||s.place_type||catLabel(s.category))+'</span>'
+    +(tag?'<span class="place-type-tag">'+esc(tag)+'</span>':'')
     +'<div class="place-status"><span class="status-dot '+dot+'"></span><span class="place-status-label">'+(s.status==='been'?'Fui':'Quero ir')+'</span></div></div></div></div>';
 }
 function renderFriendTripBody(){
