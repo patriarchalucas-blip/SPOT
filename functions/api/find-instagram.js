@@ -29,6 +29,11 @@ export async function onRequestPost(context) {
 
   const query = String(body.query || '').trim();
   if (!query) return json({ error: 'missing_query' }, 400);
+  // Nome e cidade separados: a query junta os dois e não dá pra saber onde um
+  // termina. Sem o nome isolado não dá pra conferir se o perfil é do lugar.
+  // Compatível com chamada antiga (só query): aí name cai pra query inteira.
+  const name = String(body.name || query).trim();
+  const city = String(body.city || '').trim();
   if (!env.BRAVE_API_KEY || !env.SPOT_KV) {
     // Configuração ainda não feita no painel do Cloudflare — falha em
     // silêncio pro app, nunca trava a experiência do usuário por isso.
@@ -70,9 +75,74 @@ export async function onRequestPost(context) {
 
   const data = await braveResp.json();
   const results = (data.web && data.web.results) || [];
-  const hit = results.find((r) => /instagram\.com\/[a-zA-Z0-9._]+\/?($|\?|#)/i.test(r.url || ''));
+  const hit = escolherPerfil(results, name, city);
 
-  return json({ instagram_url: hit ? hit.url : null });
+  return json({ instagram_url: hit || null });
+}
+
+// ═══ ESCOLHA DO PERFIL ═══
+// Antes isto era um results.find() que pegava O PRIMEIRO link de instagram.com
+// que aparecesse, sem conferir se tinha qualquer relação com o lugar. Buscar
+// "Dinho's" devolvia o perfil de uma marca de JEANS de mesmo nome, e esse link
+// era gravado no banco como website_url do restaurante — virando o botão
+// "Abrir Instagram" apontando pra loja de roupa.
+//
+// Regra agora: só aceita com EVIDÊNCIA. Ou o @ é praticamente o nome do lugar,
+// ou o resultado menciona a cidade (e aí basta uma semelhança de nome).
+// Na dúvida devolve null: o app já cai no site do Google ou no link do Maps,
+// e ficar sem Instagram é muito melhor que apontar pro Instagram errado.
+
+function norm(x) {
+  return String(x || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+}
+// só letras e números: "Dinho's Place" e "dinhos_place" viram a mesma coisa
+function soAlnum(x) { return norm(x).replace(/[^a-z0-9]/g, '') }
+
+// Aceita só URL de PERFIL. /p/, /reel/, /explore/ etc. são post e página
+// interna — nunca servem como "o Instagram do lugar".
+const NAO_E_PERFIL = new Set(['p', 'reel', 'reels', 'tv', 'explore', 'stories', 'accounts', 'directory', 'about', 'developer', 'legal']);
+function handleDe(url) {
+  const m = String(url || '').match(/instagram\.com\/([a-zA-Z0-9._]+)/i);
+  if (!m) return '';
+  const h = m[1].replace(/\.$/, '');
+  return NAO_E_PERFIL.has(h.toLowerCase()) ? '' : h;
+}
+
+function escolherPerfil(results, name, city) {
+  const nomeAlnum = soAlnum(name);
+  if (!nomeAlnum) return null;
+  const nomeNorm = norm(name);
+  const cidadeNorm = norm(city);
+
+  for (const r of results) {
+    const handle = handleDe(r.url);
+    if (!handle) continue;
+    const h = soAlnum(handle);
+    const texto = norm((r.title || '') + ' ' + (r.description || ''));
+
+    // Quanto o @ se parece com o nome do lugar
+    let semelhanca = 0;
+    if (h === nomeAlnum) semelhanca = 3;                                  // @dinhosplace para "Dinho's Place"
+    else if (h.startsWith(nomeAlnum) || nomeAlnum.startsWith(h)) semelhanca = 2;
+    else if (h.includes(nomeAlnum) || nomeAlnum.includes(h)) semelhanca = 1;
+
+    const citaCidade = !!cidadeNorm && texto.includes(cidadeNorm);
+    // Perfil oficial abre o título com o próprio nome:
+    // "Dinho's Place (@dinhosplace) • Instagram photos and videos".
+    // Isso separa o perfil DO lugar de um agregador que só CITA o lugar.
+    const tituloAbreComNome = norm(r.title || '').startsWith(nomeNorm);
+
+    // Aceita por dois caminhos, os dois exigindo evidência:
+    //   1. o @ É o nome do lugar — basta por si só
+    //   2. o resultado se apresenta como o lugar (@ parecido OU título abrindo
+    //      com o nome) E menciona a cidade
+    // O caso do jeans morre aqui: @dinhosjeans chega só a semelhanca 2, o
+    // título abre com "Dinho's Jeans" (não com o nome salvo) e a página da
+    // marca não fala da cidade do restaurante.
+    if (semelhanca === 3) return r.url;
+    if (citaCidade && (semelhanca >= 1 || tituloAbreComNome)) return r.url;
+  }
+  return null;
 }
 
 function json(obj, status) {

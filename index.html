@@ -1128,7 +1128,7 @@ async function loadDashboard(){
   }
   S.trips.forEach(t=>{t._spotsLoaded=true});
   rebuildCityCanon(); // funde "Split" e "Split-Dalmatia County" antes de contar
-  autoBackfillPlaceLinks(); // silencioso, uma vez por sessão — não bloqueia nada
+  revalidarInstagramsAntigos().then(autoBackfillPlaceLinks); // silencioso, não bloqueia nada
   maybeShowCheckin(); // idem — só aparece se achar algo, nunca trava a tela
   for(const t of S.trips){
     ts+=t._spots.length;
@@ -2581,6 +2581,29 @@ function pickBestPlaceMatch(places,wantedName){
   // salvar — evita pegar uma filial/duplicata incompleta em vez da principal.
   return candidatos.find(p=>p.websiteUri)||candidatos.find(p=>p.photos&&p.photos.length)||candidatos[0];
 }
+// O critério de aceitar um perfil do Instagram mudou (antes pegava o primeiro
+// link que aparecesse, sem conferir se era do lugar — foi assim que um
+// restaurante ficou com o Instagram de uma marca de jeans de mesmo nome).
+// Os links gravados com o critério antigo continuariam lá pra sempre, porque
+// insta_checked=true faz o spot nunca mais ser verificado. Isso desmarca uma
+// vez só, e o backfill normal rebusca com a regra nova. Client-side de
+// propósito: não custa uma rodada de SQL manual.
+const INSTA_RECHECK_FLAG='spot_insta_recheck_v2';
+async function revalidarInstagramsAntigos(){
+  try{
+    if(localStorage.getItem(INSTA_RECHECK_FLAG))return;
+    const alvos=[];
+    (S.trips||[]).forEach(t=>(t._spots||[]).forEach(s=>{
+      if(s.category==='food'&&/instagram.com/i.test(s.website_url||''))alvos.push(s);
+    }));
+    for(const s of alvos){
+      const{error}=await dbUpdate('spots',s.id,{insta_checked:false,website_url:null});
+      if(error)return; // deu ruim: não marca a flag, tenta de novo na próxima
+      s.insta_checked=false;s.website_url=null;
+    }
+    localStorage.setItem(INSTA_RECHECK_FLAG,'1');
+  }catch(e){/* nunca trava o app por causa disso */}
+}
 // Backfill de site (comida) e link de Maps (qualquer categoria) — automático,
 // silencioso, UMA busca por spot cobrindo os dois campos (evita 2 chamadas
 // quando 1 já resolve). Só olha campos ainda NULL/não verificados — spot já
@@ -2603,7 +2626,7 @@ async function findInstagramViaBrave(name,city){
     const resp=await fetch('/api/find-instagram',{
       method:'POST',
       headers:Object.assign({'Content-Type':'application/json'},tk?{'Authorization':'Bearer '+tk}:{}),
-      body:JSON.stringify({query:name+(city?' '+city:'')})
+      body:JSON.stringify({query:name+(city?' '+city:''),name,city})
     });
     if(!resp.ok)return'';
     const d=await resp.json();
