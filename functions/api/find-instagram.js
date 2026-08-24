@@ -1,3 +1,4 @@
+import{quemEsta,podeGastar}from './_auth.js';
 // Cloudflare Pages Function — roda no servidor da Cloudflare, nunca no
 // navegador do usuário. Existe só pra isso: esconder a chave da Brave (que
 // não pode ir pro client, senão qualquer um que abrir o app pode usá-la) e
@@ -9,6 +10,12 @@
 // atingido, devolve instagram_url:null e o app simplesmente cai pro
 // fallback que já existe (Google Maps) — sem erro, sem cobrança extra.
 const MONTHLY_CAP = 900;
+// Teto por usuário. Diferente da /api/climate, aqui NÃO existe cache: toda
+// chamada consome uma busca da Brave. Então não há caminho "de graça" pra
+// liberar sem token — quem não está logado é recusado antes de qualquer coisa.
+// 150/mês por pessoa é muito acima do uso real (o backfill roda uma vez por
+// spot de comida) e impede que uma conta só zere as 900 do mês.
+const USER_CAP = 150;
 
 export async function onRequestPost(context) {
   const { request, env } = context;
@@ -26,6 +33,15 @@ export async function onRequestPost(context) {
     // Configuração ainda não feita no painel do Cloudflare — falha em
     // silêncio pro app, nunca trava a experiência do usuário por isso.
     return json({ instagram_url: null, configured: false });
+  }
+
+  // Sem cache aqui, então toda chamada gasta: exige estar logado sempre.
+  // Se isso recusar, o app cai no fallback que já existe (link do Google
+  // Maps) — o usuário não vê erro nenhum.
+  const quem = await quemEsta(request, env);
+  if (!quem.permitir) return json({ instagram_url: null, unauthorized: true }, 401);
+  if (!await podeGastar(env, 'brave', quem.uid, 1, USER_CAP)) {
+    return json({ instagram_url: null, capped: true, scope: 'user' });
   }
 
   const monthKey = new Date().toISOString().slice(0, 7); // "2026-08"

@@ -1,3 +1,4 @@
+import{quemEsta,podeGastar}from './_auth.js';
 // Cloudflare Pages Function — temperatura média histórica por cidade+mês,
 // via Visual Crossing (mesmo padrão da find-instagram.js: chave só no
 // servidor, nunca no navegador).
@@ -13,6 +14,12 @@
 // no mês e para de consultar bem antes do limite grátis de 1000/dia
 // (~30.000/mês), com margem de sobra.
 const MONTHLY_RECORD_CAP=9000;
+// Teto por usuário: cada cidade+mês nova custa ~90 registros (3 anos x ~30
+// dias), então 2700 são ~30 cidades novas por pessoa por mês. Uma viagem tem
+// 2 a 5 cidades — é folga de sobra pra uso real, e impede que uma conta só
+// queime os ~100 lugares do teto global.
+const USER_RECORD_CAP=2700;
+
 
 export async function onRequestPost(context){
   const{request,env}=context;
@@ -27,7 +34,18 @@ export async function onRequestPost(context){
 
   const cacheKey='climate_'+normKey(city+'|'+country+'|'+month);
   const cached=await env.SPOT_KV.get(cacheKey);
+  // Cache é liberado pra qualquer um DE PROPÓSITO: responder daqui não gasta
+  // cota nem expõe nada, e é o caminho da esmagadora maioria das chamadas.
+  // Consequência boa: quem estiver com o app aberto durante um deploy (JS
+  // antigo, sem mandar o token) continua vendo a temperatura das cidades dele.
   if(cached)return json(JSON.parse(cached));
+
+  // Daqui pra baixo a chamada VAI gastar cota paga — só pra quem está logado.
+  const quem=await quemEsta(request,env);
+  if(!quem.permitir)return json({avg_temp:null,unauthorized:true},401);
+  if(!await podeGastar(env,'climate',quem.uid,90,USER_RECORD_CAP)){
+    return json({avg_temp:null,capped:true,scope:'user'});
+  }
 
   const monthKey='climate_records_'+new Date().toISOString().slice(0,7);
   const usedRecords=parseInt((await env.SPOT_KV.get(monthKey))||'0',10);
@@ -58,10 +76,16 @@ export async function onRequestPost(context){
   }
   await env.SPOT_KV.put(monthKey,String(usedRecords+recordsGastos),{expirationTtl:60*60*24*40});
 
-  const result=allTemps.length
+  const deuCerto=allTemps.length>0;
+  const result=deuCerto
     ?{avg_temp:Math.round((allTemps.reduce((a,b)=>a+b,0)/allTemps.length)*10)/10,years_used:years.length}
     :{avg_temp:null};
-  await env.SPOT_KV.put(cacheKey,JSON.stringify(result),{expirationTtl:60*60*24*180});
+  // Sucesso guarda por 6 meses (clima histórico não muda). FALHA guarda por 6
+  // HORAS: antes o "não consegui" era gravado com os mesmos 6 meses, então uma
+  // única falha de rede condenava aquela cidade a nunca mais mostrar
+  // temperatura, mesmo muito depois da API ter voltado ao normal.
+  const ttl=deuCerto?60*60*24*180:60*60*6;
+  await env.SPOT_KV.put(cacheKey,JSON.stringify(result),{expirationTtl:ttl});
   return json(result);
 }
 

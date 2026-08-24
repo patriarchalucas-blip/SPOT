@@ -1458,7 +1458,12 @@ async function loadTrip(t){
 // hoje); sem data, usa o mês atual.
 async function fetchCityClimate(city,country,month){
   try{
-    const resp=await fetch('/api/climate',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({city,country,month})});
+    const tk=await ensureToken();
+    const resp=await fetch('/api/climate',{
+      method:'POST',
+      headers:Object.assign({'Content-Type':'application/json'},tk?{'Authorization':'Bearer '+tk}:{}),
+      body:JSON.stringify({city,country,month})
+    });
     if(!resp.ok)return null;
     const d=await resp.json();
     return(typeof d.avg_temp==='number')?d.avg_temp:null;
@@ -2594,9 +2599,10 @@ let placeLinksBackfillRunning=false;
 // não estiver configurado ainda.
 async function findInstagramViaBrave(name,city){
   try{
+    const tk=await ensureToken();
     const resp=await fetch('/api/find-instagram',{
       method:'POST',
-      headers:{'Content-Type':'application/json'},
+      headers:Object.assign({'Content-Type':'application/json'},tk?{'Authorization':'Bearer '+tk}:{}),
       body:JSON.stringify({query:name+(city?' '+city:'')})
     });
     if(!resp.ok)return'';
