@@ -91,9 +91,17 @@ body{font-family:'DM Sans',sans-serif;background:var(--dark);max-width:430px;mar
    que escapar disso: como relative ele entra no fluxo e empurra o topo pra
    673px. Daí o seletor mais específico. Sem z-index de propósito — fica atrás
    dos irmãos, que ganham z-index:1 daquela regra. */
-.dash-top>.dash-mapa{position:absolute;right:-14%;top:30px;width:88%;opacity:0;transition:opacity .5s ease;pointer-events:none;z-index:auto}
+/* Centralizado, e dimensionado pela ALTURA — não pela largura. Com width:88%
+   a altura virava 88% x largura x 0.525: no desktop dava 416px dentro de um
+   painel de 280px, e o mapa era serrado ao meio (a América do Sul ficava
+   cortada bem na linha dos scorecards). O max-width segura a sangria lateral
+   no celular, onde 80% de altura pediria 503px de largura numa tela de 375 e
+   comeria a Oceania e o Alasca. O aspect-ratio deixa a altura se ajustar
+   sozinha quando o max-width entra em ação.
+*/
+.dash-top>.dash-mapa{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);height:80%;max-width:116%;aspect-ratio:800/355;opacity:0;transition:opacity .5s ease;pointer-events:none;z-index:auto}
 .dash-mapa.pronto{opacity:.5}
-.dash-mapa svg{width:100%;height:auto;display:block}
+.dash-mapa svg{width:100%;height:100%;display:block}
 .dash-wordmark{font-family:'Cinzel',serif;font-size:19px;letter-spacing:.14em;color:var(--ink)}
 /* A frase inteira é o contador de países e abre a lista deles. */
 .dash-paises{display:inline-flex;align-items:baseline;gap:7px;margin-bottom:22px;cursor:pointer;-webkit-tap-highlight-color:transparent}
@@ -3088,7 +3096,11 @@ async function renderMiniMapa(){
     }
   }catch(e){/* sem d3 cai na projeção simples */}
   const{paths,vb}=gerarPathsMundo(visitedGeo);
-  wrap.innerHTML=`<svg viewBox="${vb.x} ${vb.y} ${vb.w} ${vb.h}" preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">${paths}</svg>`;
+  // Corta a Antártida do enquadramento (só aqui — o mapa do Perfil é navegável
+  // e mostra o mundo inteiro). Aquela faixa no rodapé empurrava os continentes
+  // pra cima e desequilibrava o conjunto.
+  const alturaSemPolo=Math.round(vb.h*0.845);
+  wrap.innerHTML=`<svg viewBox="${vb.x} ${vb.y} ${vb.w} ${alturaSemPolo}" preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">${paths}</svg>`;
   wrap.classList.add('pronto');
 }
 async function renderWorldMap(visited){
