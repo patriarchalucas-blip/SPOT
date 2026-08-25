@@ -400,10 +400,14 @@ body{font-family:'DM Sans',sans-serif;background:var(--dark);max-width:430px;mar
 .action-btn{display:block;width:100%;background:var(--terra);color:#fff;border:none;border-radius:var(--r-sm);padding:16px;font-family:'DM Sans',sans-serif;font-size:15px;font-weight:600;cursor:pointer;margin-top:14px;margin-bottom:16px;box-shadow:var(--shadow-terra)}
 .reserve-btn{display:block;text-align:center;width:100%;box-sizing:border-box;background:transparent;color:var(--ink);border:1.5px solid var(--ink3);border-radius:var(--r-sm);padding:14px;font-family:'DM Sans',sans-serif;font-size:14px;font-weight:600;text-decoration:none;margin-top:12px}
 .reserve-btn:active{background:rgba(234,231,224,.06)}
-.req-card{display:flex;align-items:center;gap:12px;background:var(--white);border:1px solid var(--border);border-radius:var(--r);padding:13px 14px;margin-bottom:10px;box-shadow:var(--shadow-sm)}
-.req-name{font-size:14.5px;font-weight:600;color:var(--ink);flex:1}
+.req-card{display:flex;align-items:center;gap:9px;background:var(--white);border:1px solid var(--border);border-radius:var(--r);padding:13px 14px;margin-bottom:10px;box-shadow:var(--shadow-sm)}
+.req-card>div[style*="flex:1"]{min-width:0}
+.req-name{font-size:14.5px;font-weight:600;color:var(--ink);flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .req-email{font-size:12px;color:var(--ink3);margin-top:3px}
-.req-btn{border:none;border-radius:9px;padding:9px 14px;font-family:'DM Sans',sans-serif;font-size:13px;font-weight:600;cursor:pointer}
+/* flex-shrink:0 + nowrap: sem isso, avatar + nome + dois botões numa linha de
+   375px espremiam os botões até o "Recusar" deformar. O nome é que cede
+   espaço (tem ellipsis), não os botões. */
+.req-btn{border:none;border-radius:9px;padding:9px 13px;font-family:'DM Sans',sans-serif;font-size:13px;font-weight:600;cursor:pointer;flex-shrink:0;white-space:nowrap}
 .req-accept{background:var(--terra);color:#fff}
 .req-decline{background:rgba(234,231,224,.07);color:var(--ink3)}
 .feed-item{display:flex;gap:13px;padding:15px 0;border-bottom:1px solid var(--border)}
@@ -762,7 +766,7 @@ svg.ic path,svg.ic circle,svg.ic line,svg.ic polyline,svg.ic rect{fill:none;stro
     <div class="cat-tab" id="fTab-recente" onclick="switchFriendsTab('recente',this)"><div class="ct-icon" data-ic="globe"></div><div>Recente</div><div class="ct-count" id="fTabCount-recente">0</div></div>
   </div></div>
   <div class="dash-body" id="friendsContainer"></div>
-  <button class="fab" onclick="showOv('ov-addfriend')">+</button>
+  <button class="fab" onclick="mostrarErroAmigo('');showOv('ov-addfriend')">+</button>
   <div class="bottom-nav"><div class="nav-item" onclick="goTo('dashboard');loadDashboard()"><div class="nav-icon" data-ic="map"></div><div class="nav-label">Viagens</div></div><div class="nav-item" onclick="goTo('explore');loadExplore()"><div class="nav-icon" data-ic="search"></div><div class="nav-label">Explorar</div></div><div class="nav-item active" onclick="goTo('friends');loadFriends()"><div class="nav-icon" data-ic="users"></div><div class="nav-label" style="color:var(--ink);font-weight:600">Amigos</div></div><div class="nav-item" onclick="goTo('profile');loadProfile()"><div class="nav-icon" data-ic="user"></div><div class="nav-label">Perfil</div></div></div>
 </div>
 
@@ -806,6 +810,36 @@ svg.ic path,svg.ic circle,svg.ic line,svg.ic polyline,svg.ic rect{fill:none;stro
   <div class="trip-body" id="fcBody"></div>
 </div>
 
+<div class="screen" id="friendPlace">
+  <div class="place-hero">
+    <div class="place-hero-img" id="fpHeroImg"></div>
+    <div class="hero-overlay"></div>
+    <button class="hero-back" onclick="goTo('friendCity')" data-ic="back" aria-label="Voltar"></button>
+    <div class="hero-chip" id="fpChip"></div>
+    <div class="hero-bottom">
+      <div class="hero-type" id="fpType"></div>
+      <div class="hero-name" id="fpName"></div>
+    </div>
+  </div>
+  <div class="place-body">
+    <div class="d-section" id="fpNoteSection">
+      <div class="sec-label" id="fpNoteLabel">A nota dele</div>
+      <div class="note-card"><div class="note-glow"></div><div class="note-quote" id="fpNote"></div></div>
+    </div>
+    <div class="d-section" id="fpRatingSection" style="display:none">
+      <div class="sec-label" id="fpRatingLabel">A avaliação dele</div>
+      <div class="stars-row" id="fpStars" style="pointer-events:none"></div>
+      <div class="note-quote" id="fpReview" style="margin-top:10px;display:none"></div>
+    </div>
+    <div class="d-section">
+      <div class="sec-label">Informações</div>
+      <div class="info-grid" id="fpInfoGrid"></div>
+      <div id="fpLinksWrap"></div>
+    </div>
+    <div style="height:40px"></div>
+  </div>
+</div>
+
 <div class="screen" id="place">
   <div class="place-hero"><div class="place-hero-img" id="placeHeroImg"></div><div class="hero-overlay"></div><button class="hero-back" onclick="backFromPlace()" data-ic="back" aria-label="Voltar"></button><button class="hero-photo-btn" onclick="document.getElementById('spotPhotoFileInput').click()" data-ic="edit" aria-label="Trocar foto"></button><input type="file" id="spotPhotoFileInput" accept="image/*" style="display:none" onchange="onSpotPhotoFileChosen(this)"><div class="hero-chip chip-want" id="placeChip" onclick="cycleStatus()">Quero ir</div><div class="hero-bottom"><div class="hero-type" id="placeType"></div><div class="hero-name" id="placeName"></div></div></div>
   <div class="d-section"><div class="sec-label">Minha nota</div><div class="note-card"><div class="note-glow"></div><div class="note-quote" id="placeNote"></div><div class="note-attr" id="placeNoteAttr"></div></div></div>
@@ -833,7 +867,7 @@ svg.ic path,svg.ic circle,svg.ic line,svg.ic polyline,svg.ic rect{fill:none;stro
 <div class="overlay" id="ov-mismatch" onclick="closeOut(event,'ov-mismatch')"><div class="sheet"><button class="sheet-close" onclick="closeOv('ov-mismatch')" data-ic="close" aria-label="Fechar"></button><div class="sheet-handle"></div><div class="sheet-title">País diferente</div><div class="cm-text" id="cmText"></div><button class="sheet-cta" id="cmMoveBtn">Mover</button><button class="delete-link" style="color:var(--ink3)" onclick="keepInThisTripAnyway()">Adicionar nesta viagem mesmo assim</button></div></div>
 <div class="overlay" id="ov-newtrip" onclick="closeOut(event,'ov-newtrip')"><div class="sheet"><button class="sheet-close" onclick="closeOv('ov-newtrip')" data-ic="close" aria-label="Fechar"></button><div class="sheet-handle"></div><div class="sheet-title">Para qual cidade?</div><div class="nt-label">Cidade da viagem — o país é identificado sozinho</div><div class="dest-search-wrap"><span class="dsi" data-ic="search"></span><input class="nt-input" style="padding-left:44px" id="countrySearch" placeholder="Buscar cidade..." oninput="filterNewTripCity(this.value)"></div><div id="countryList"></div><div class="nt-label" style="margin-top:8px">Datas (opcional)</div><div class="dates-row"><input class="nt-input" type="date" id="tripStart"><input class="nt-input" type="date" id="tripEnd"></div><button class="sheet-cta" id="createTripBtn" onclick="createTrip()" style="opacity:.4;pointer-events:none">Selecione uma cidade</button></div></div>
 <div class="overlay" id="ov-quickvisit" onclick="closeOut(event,'ov-quickvisit')"><div class="sheet"><button class="sheet-close" onclick="closeOv('ov-quickvisit')" data-ic="close" aria-label="Fechar"></button><div class="sheet-handle"></div><div class="sheet-title" id="quickVisitTitle">Qual país você já visitou?</div><div class="nt-label">País</div><div class="dest-search-wrap"><span class="dsi" data-ic="search"></span><input class="nt-input" style="padding-left:44px" id="countrySearch2" placeholder="Buscar país..." oninput="filterCountries2(this.value)"></div><div id="countryList2"></div><button class="sheet-cta" id="createVisitBtn" onclick="markVisited()" style="opacity:.4;pointer-events:none">Selecione um país</button></div></div>
-<div class="overlay" id="ov-addfriend" onclick="closeOut(event,'ov-addfriend')"><div class="sheet"><button class="sheet-close" onclick="closeOv('ov-addfriend')" data-ic="close" aria-label="Fechar"></button><div class="sheet-handle"></div><div class="sheet-title">Adicionar amigo</div><div class="nt-label">Username do amigo</div><input class="nt-input" id="friendUsernameInput" type="text" placeholder="username_do_amigo" autocapitalize="none" oninput="document.getElementById('friendAddErr').textContent=''"><div class="auth-error" id="friendAddErr"></div><button class="sheet-cta" id="sendReqBtn" onclick="sendFriendRequest()">Enviar pedido</button><div class="conv-ou"><span>ou</span></div><button class="secondary-link" id="convidarBtn" style="margin-top:0" onclick="compartilharConvite()">Convidar por link</button><div class="conv-dica">Quem abrir o link entra já como seu amigo, sem precisar do seu username.</div></div></div>
+<div class="overlay" id="ov-addfriend" onclick="closeOut(event,'ov-addfriend')"><div class="sheet"><button class="sheet-close" onclick="closeOv('ov-addfriend')" data-ic="close" aria-label="Fechar"></button><div class="sheet-handle"></div><div class="sheet-title">Adicionar amigo</div><div class="nt-label">Username do amigo</div><input class="nt-input" id="friendUsernameInput" type="text" placeholder="username_do_amigo" autocapitalize="none" oninput="mostrarErroAmigo('')"><div class="auth-error" id="friendAddErr"></div><button class="sheet-cta" id="sendReqBtn" onclick="sendFriendRequest()">Enviar pedido</button><div class="conv-ou"><span>ou</span></div><button class="secondary-link" id="convidarBtn" style="margin-top:0" onclick="compartilharConvite()">Convidar por link</button><div class="conv-dica">Quem abrir o link entra já como seu amigo, sem precisar do seu username.</div></div></div>
 
 <div class="overlay" id="ov-editdates" onclick="closeOut(event,'ov-editdates')"><div class="sheet"><button class="sheet-close" onclick="closeOv('ov-editdates')" data-ic="close" aria-label="Fechar"></button><div class="sheet-handle"></div><div class="sheet-title">Datas da viagem</div><div class="nt-label">Deixe em branco se não for uma viagem com data definida (ex: seu país de origem)</div><div class="dates-row"><input class="nt-input" type="date" id="editStart"><input class="nt-input" type="date" id="editEnd"></div><button class="sheet-cta" onclick="saveEditDates()">Salvar</button><button class="delete-link" onclick="clearEditDates()">Limpar datas (não é uma viagem)</button></div></div><div class="toast" id="toast"><div class="toast-icon" id="toastIcon"></div><div class="toast-body"><div class="toast-title" id="toastTitle"></div><div class="toast-msg" id="toastMsg"></div></div></div>
 
@@ -1219,6 +1253,13 @@ async function handleAuth(){
   // onAuthStateChange will handle the rest
 }
 function showAuthErr(m){const e=document.getElementById('authError');e.textContent=m;e.classList.add('show')}
+// Mesma coisa pra ficha de amigo: escrever no elemento NÃO basta, ele começa
+// escondido. Passa a ser o único jeito de mexer nessa mensagem.
+function mostrarErroAmigo(m){
+  const e=document.getElementById('friendAddErr');
+  e.textContent=m||'';
+  e.classList.toggle('show',!!m);
+}
 function hideAuthErr(){document.getElementById('authError').classList.remove('show')}
 async function signOut(){if(!confirm('Sair do Spot?'))return;try{await sb.auth.signOut()}catch(e){}S.user=null;S.token=null;S.trips=[];location.reload()}
 
@@ -3532,7 +3573,7 @@ function renderFriendsTab(){
 // ═══ PERFIL DE AMIGO (só leitura) ═══
 // As políticas da 008 já liberam trips/spots de quem é amigo ACEITO, então
 // aqui é leitura normal — não precisa de função especial no banco.
-const FRIEND={id:null,profile:null,trips:[],visiveis:[],trip:null,city:null};
+const FRIEND={id:null,profile:null,trips:[],visiveis:[],trip:null,city:null,spot:null};
 // Nome já conhecido de cada amigo, preenchido ao desenhar a aba Amigos. Serve
 // só pra tela abrir com o nome certo em vez de "Amigo" enquanto o perfil
 // carrega — evita passar texto de outra pessoa dentro de um atributo onclick.
@@ -3662,16 +3703,85 @@ function switchFriendCityCat(cat,el){
   if(el)el.classList.add('active');
   renderFriendCityBody();
 }
+// ── detalhe do spot do amigo (só leitura) ──
+// A tela da cidade do amigo listava os spots sem clique, o que não faz
+// sentido: o endereço, a nota, a avaliação e o link do Instagram são
+// justamente o que interessa ver de quem você conhece.
+function abrirSpotDoAmigo(i){
+  const s=(FRIEND_CITY_SPOTS||[])[i];
+  if(!s)return;
+  FRIEND.spot=s;
+  const nome=(FRIEND.profile&&friendName(FRIEND.profile))||'seu amigo';
+  const primeiro=String(nome).split(' ')[0];
+
+  document.getElementById('fpName').textContent=s.name||'';
+  document.getElementById('fpType').textContent=(subcatLabel(s.subcategory)||catLabel(s.category))+(cityOf(s)?' · '+cityOf(s):'');
+
+  const chip=document.getElementById('fpChip');
+  const m={want:['chip-want','Quer ir'],been:['chip-been','Já foi'],skip:['','Pulou']};
+  const est=m[s.status]||m.want;
+  chip.className='hero-chip '+est[0];chip.textContent=est[1];
+
+  const hero=document.getElementById('fpHeroImg');
+  hero.style.backgroundImage=destGradient(cityOf(s)||s.name);
+  if(s.photo_url){
+    const probe=new Image();
+    probe.onload=()=>{if(FRIEND.spot===s)hero.style.backgroundImage=cssUrl(s.photo_url)};
+    probe.src=s.photo_url;
+  }
+
+  // a nota pessoal é o coração do app — sem ela, some a seção
+  const secNota=document.getElementById('fpNoteSection');
+  if(s.my_note){
+    document.getElementById('fpNoteLabel').textContent='A nota de '+primeiro;
+    document.getElementById('fpNote').textContent='"'+s.my_note+'"';
+    secNota.style.display='';
+  }else{secNota.style.display='none'}
+
+  const secNota2=document.getElementById('fpRatingSection');
+  const nota=parseInt(s.my_rating,10)||0;
+  if(nota||s.my_review){
+    document.getElementById('fpRatingLabel').textContent='A avaliação de '+primeiro;
+    document.getElementById('fpStars').innerHTML=Array.from({length:5},(_,k)=>
+      '<button class="star-btn'+(k<nota?' lit':'')+'" tabindex="-1">'+icon('star')+'</button>').join('');
+    const rev=document.getElementById('fpReview');
+    if(s.my_review){rev.textContent='"'+s.my_review+'"';rev.style.display=''}else{rev.style.display='none'}
+    secNota2.style.display='';
+  }else{secNota2.style.display='none'}
+
+  let ig='';
+  if(s.address)ig+=`<div class="info-cell wide"><div class="info-cell-icon">${icon('pin')}</div><div class="info-cell-label">Endereço</div><div class="info-cell-value">${esc(s.address)}</div></div>`;
+  if(cityOf(s))ig+=`<div class="info-cell"><div class="info-cell-icon">${icon('city')}</div><div class="info-cell-label">Cidade</div><div class="info-cell-value">${esc(cityOf(s))}</div></div>`;
+  if(s.rating_google)ig+=`<div class="info-cell"><div class="info-cell-icon">${icon('star')}</div><div class="info-cell-label">Google</div><div class="info-cell-value">${fmtRating(s.rating_google)}</div></div>`;
+  if(!ig)ig=`<div class="info-cell wide"><div class="info-cell-icon">${icon('pin')}</div><div class="info-cell-label">Local</div><div class="info-cell-value">${esc(cityOf(s)||'—')}</div></div>`;
+  document.getElementById('fpInfoGrid').innerHTML=ig;
+
+  // mesmos links da tela própria: Ligar, Instagram/cardápio, Maps
+  let rh='';
+  const tel=telHref(s.phone);
+  if(s.category==='food'&&tel)rh+=`<a class="reserve-btn" href="${esc(tel)}">${icon('food')} Ligar · ${esc(s.phone)}</a>`;
+  if(s.website_url){
+    const insta=/instagram\.com/i.test(s.website_url);
+    rh+=`<a class="reserve-btn" href="${escUrl(s.website_url)}" target="_blank" rel="noopener">${icon(insta?'instagram':'menu')} ${insta?'Abrir Instagram':'Ver site'}</a>`;
+  }
+  if(s.maps_url)rh+=`<a class="reserve-btn" href="${escUrl(s.maps_url)}" target="_blank" rel="noopener">${icon('mapPin')} Ver no Google Maps</a>`;
+  document.getElementById('fpLinksWrap').innerHTML=rh;
+
+  goTo('friendPlace');
+}
 function renderFriendCityBody(){
   const t=FRIEND.trip,b=document.getElementById('fcBody');
   if(!t||!FRIEND.city)return;
   const spots=(t._spots||[]).filter(s=>cityOf(s)===FRIEND.city&&s.category===fcCat);
-  if(!spots.length){b.innerHTML=`<div class="empty-state" style="padding:40px 24px"><div class="ei">${catIcon(fcCat)}</div><h3>Nada aqui</h3><p>Seu amigo não salvou nada dessa categoria nesta cidade.</p></div>`;return}
-  b.innerHTML=spots.map(s=>friendSpotRowHTML(s)).join('');
+  if(!spots.length){b.innerHTML=`<div class="empty-state" style="padding:40px 24px"><div class="ei">${catIcon(fcCat)}</div><h3>Nada aqui</h3><p>Seu amigo não salvou nada dessa categoria nesta cidade.</p></div>`;FRIEND_CITY_SPOTS=[];return}
+  // guarda a ordem exibida: o clique manda o ÍNDICE, não o id no HTML
+  FRIEND_CITY_SPOTS=spots;
+  b.innerHTML=spots.map((s,i)=>friendSpotRowHTML(s,i)).join('');
 }
-// Linha de spot do amigo. Sem onclick: é leitura, não existe tela de detalhe
-// do spot de outra pessoa.
-function friendSpotRowHTML(s){
+let FRIEND_CITY_SPOTS=[];
+// Linha de spot do amigo. Clicável quando vem com índice (tela da cidade);
+// sem índice fica estática (a viagem lista por cidade, não por spot).
+function friendSpotRowHTML(s,i){
   const bc=s.category==='food'?'bar-food':s.category==='hotel'?'bar-hotel':'bar-experience';
   const dot=s.status==='been'?'dot-been':'dot-want';
   const thumb=s.photo_url
@@ -3679,7 +3789,8 @@ function friendSpotRowHTML(s){
     :'<div class="place-thumb">'+catIcon(s.category)+'</div>';
   const nota=s.my_rating?'★ '+fmtRating(s.my_rating):'';
   const tag=spotTag(s);
-  return '<div class="place-row" style="cursor:default"><div class="place-bar '+bc+'"></div><div class="place-row-main">'+thumb
+  const clique=(i==null)?' style="cursor:default"':' onclick="abrirSpotDoAmigo('+i+')"';
+  return '<div class="place-row"'+clique+'><div class="place-bar '+bc+'"></div><div class="place-row-main">'+thumb
     +'<div class="place-row-info"><div class="place-row-name">'+esc(s.name)+'</div><div class="place-row-note">'+esc(s.my_note)+'</div></div>'
     +'<div class="place-row-right">'+(nota?'<span class="lrating">'+esc(nota)+'</span>':'')
     +(tag?'<span class="place-type-tag">'+esc(tag)+'</span>':'')
@@ -3812,30 +3923,29 @@ async function resgatarConvitePendente(){
 
 async function sendFriendRequest(){
   const username=document.getElementById('friendUsernameInput').value.trim().toLowerCase().replace(/^@/,'');
-  const errEl=document.getElementById('friendAddErr');
-  if(!username){errEl.textContent='Digita um username';return}
+  if(!username){mostrarErroAmigo('Digita um username');return}
   const btn=document.getElementById('sendReqBtn');btn.textContent='Buscando...';btn.style.pointerEvents='none';
   const matches=await dbRpc('find_profile_by_username',{uname:username});
   if(!matches.length){
     btn.textContent='Enviar pedido';btn.style.pointerEvents='auto';
-    errEl.textContent='Não encontramos ninguém com esse username no Spot.';
+    mostrarErroAmigo('Não encontramos ninguém com esse username no Spot.');
     return;
   }
   const target=matches[0];
   if(target.id===S.user.id){
     btn.textContent='Enviar pedido';btn.style.pointerEvents='auto';
-    errEl.textContent='Esse é o seu próprio username 🙂';
+    mostrarErroAmigo('Esse é o seu próprio username 🙂');
     return;
   }
   const existing=await dbGet('follows',`or=(and(follower_id.eq.${S.user.id},following_id.eq.${target.id}),and(follower_id.eq.${target.id},following_id.eq.${S.user.id}))`);
   if(existing.length){
     btn.textContent='Enviar pedido';btn.style.pointerEvents='auto';
-    errEl.textContent=existing[0].status==='accepted'?'Vocês já são amigos!':'Já existe um pedido entre vocês.';
+    mostrarErroAmigo(existing[0].status==='accepted'?'Vocês já são amigos!':'Já existe um pedido entre vocês.');
     return;
   }
   const{error}=await dbInsert('follows',{follower_id:S.user.id,following_id:target.id,status:'pending'});
   btn.textContent='Enviar pedido';btn.style.pointerEvents='auto';
-  if(error){errEl.textContent='Erro ao enviar. Tenta de novo.';return}
+  if(error){mostrarErroAmigo('Erro ao enviar. Tenta de novo.');return}
   closeOv('ov-addfriend');
   document.getElementById('friendUsernameInput').value='';
   toast('Pedido enviado','Assim que aceitar, vocês veem a atividade um do outro.','send');
