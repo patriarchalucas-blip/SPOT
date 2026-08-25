@@ -29,7 +29,12 @@ body{font-family:'DM Sans',sans-serif;background:var(--dark);max-width:430px;mar
 
 /* SCREENS */
 .screen{display:none;flex-direction:column;min-height:100vh}
-@keyframes screenIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+/* Só opacity: o translateY(8px) que existia aqui deixava um transform colado
+   na .screen, e transform faz position:fixed passar a se medir pela TELA em
+   vez do viewport. Efeito: a barra de navegação saía do lugar — no Perfil,
+   que é mais alto que a tela, ela ia ~370px pra baixo e simplesmente não
+   aparecia. O deslize de 8px não valia esse preço; o fade fica. */
+@keyframes screenIn{from{opacity:0}to{opacity:1}}
 .screen.active{animation:screenIn .28s ease}
 .screen.active{display:flex}
 
@@ -90,7 +95,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--dark);max-width:430px;mar
 .stat-block:active{transform:scale(.96)}
 .stat-n{font-family:var(--mono);font-weight:600;font-size:21px;color:var(--ink);line-height:1.1}
 .stat-l{font-size:11.5px;color:var(--ink3);margin-top:4px}
-.dash-body{padding:8px 24px 100px}
+.dash-body{padding:8px 24px calc(104px + env(safe-area-inset-bottom, 0px))}
 .section-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;margin-top:24px}
 .checkin-banner{display:flex;gap:13px;align-items:flex-start;margin:16px 24px 0;padding:16px;background:linear-gradient(160deg,rgba(193,85,47,.16),rgba(193,85,47,.05));border:1px solid rgba(193,85,47,.35);border-radius:var(--r);box-shadow:var(--shadow-sm);animation:checkinIn .25s ease}
 @keyframes checkinIn{from{opacity:0;transform:translateY(-6px)}to{opacity:1;transform:translateY(0)}}
@@ -162,13 +167,35 @@ body{font-family:'DM Sans',sans-serif;background:var(--dark);max-width:430px;mar
 .empty-state p{font-size:14px;line-height:1.55}
 
 /* FAB */
-.fab{position:fixed;bottom:78px;right:calc(50% - 215px + 24px);width:56px;height:56px;background:var(--terra);border-radius:50%;display:flex;align-items:center;justify-content:center;cursor:pointer;z-index:50;font-size:26px;font-weight:300;color:#fff;border:none;font-family:'DM Sans',sans-serif;line-height:1;box-shadow:var(--shadow-terra)}
+.fab{position:fixed;bottom:calc(96px + env(safe-area-inset-bottom, 0px));right:calc(50% - 215px + 24px);width:56px;height:56px;background:var(--terra);border-radius:50%;display:flex;align-items:center;justify-content:center;cursor:pointer;z-index:50;font-size:26px;font-weight:300;color:#fff;border:none;font-family:'DM Sans',sans-serif;line-height:1;box-shadow:var(--shadow-terra)}
 .fab:active{opacity:.8}
 @media(max-width:430px){.fab{right:24px}}
 
 /* BOTTOM NAV */
-.bottom-nav{position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:430px;background:var(--dark);border-top:1px solid var(--border);display:flex;padding:6px 6px 18px;gap:4px;z-index:40;box-shadow:0 -8px 24px rgba(0,0,0,.35)}
-@media(max-width:430px){.bottom-nav{width:100%;left:0;transform:none}}
+/* Pílula flutuante em vez de faixa colada na borda. O que dava o ar de
+   "barra de sistema antiga" era encostar nos três lados com uma border-top:
+   descolar do fundo, arredondar e jogar sombra é o que muda a percepção.
+   O padding-bottom de 18px existia pra escapar da home bar do iPhone; agora
+   quem faz isso é o env(safe-area-inset-bottom), que o arquivo não usava em
+   lugar nenhum — em iPhone sem home bar a barra desce os 18px de sobra. */
+.bottom-nav{
+  position:fixed;
+  bottom:calc(13px + env(safe-area-inset-bottom, 0px));
+  left:50%;transform:translateX(-50%);
+  width:min(430px, calc(100% - 26px));
+  background:rgba(11,22,32,.82);
+  -webkit-backdrop-filter:blur(16px) saturate(160%);
+  backdrop-filter:blur(16px) saturate(160%);
+  border:1px solid rgba(234,231,224,.09);
+  border-radius:24px;
+  display:flex;padding:6px;gap:2px;z-index:40;
+  box-shadow:0 12px 32px rgba(0,0,0,.42), 0 2px 8px rgba(0,0,0,.28);
+}
+/* Sem blur no navegador que não suporta: aí o fundo vira opaco, senão a
+   barra ficaria semitransparente por cima do conteúdo, ilegível. */
+@supports not ((backdrop-filter:blur(1px)) or (-webkit-backdrop-filter:blur(1px))){
+  .bottom-nav{background:var(--dark)}
+}
 
 /* ═══ HOVER (só em dispositivos com mouse — não afeta toque) ═══ */
 @media(hover:hover){
@@ -207,7 +234,15 @@ body{font-family:'DM Sans',sans-serif;background:var(--dark);max-width:430px;mar
     width:240px;height:100vh;flex-direction:column;justify-content:flex-start;
     align-items:stretch;gap:4px;padding:32px 16px;border-top:none;
     border-right:1px solid var(--border);z-index:60;
+    /* aqui é coluna lateral, não pílula: desfaz o que vale só no mobile */
+    border-radius:0;box-shadow:none;background:var(--dark);
+    -webkit-backdrop-filter:none;backdrop-filter:none;
   }
+  /* Especificidade extra de propósito: a regra base de .nav-item aparece
+     DEPOIS desta media query no arquivo, e @media não soma especificidade —
+     escrito como .nav-item simples, isto não teria efeito nenhum. */
+  .bottom-nav .nav-item{border-radius:var(--r-sm)}
+  .bottom-nav .nav-item:active{transform:none}
   .nav-item{flex:none;flex-direction:row;justify-content:flex-start;gap:12px;padding:12px 14px;transition:background .15s}
   .nav-item:hover{background:rgba(234,231,224,.04)}
   .nav-item.active{background:rgba(234,231,224,.07)}
@@ -216,8 +251,11 @@ body{font-family:'DM Sans',sans-serif;background:var(--dark);max-width:430px;mar
   .fab{right:calc(240px + 40px);bottom:40px}
   #tripsContainer{max-width:620px}
 }
-.nav-item{flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;cursor:pointer;padding:9px 0 5px;border-radius:var(--r-sm);transition:background .15s}
-.nav-item.active{background:rgba(193,85,47,.14)}
+.nav-item{flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;cursor:pointer;padding:9px 0 7px;border-radius:18px;transition:background .15s,transform .12s}
+.nav-item:active{transform:scale(.94)}
+/* Cápsula do ativo: mesma cor de acento de antes, só arredondada junto com a
+   pílula — quadrada dentro de uma barra redonda era o que destoava. */
+.nav-item.active{background:rgba(193,85,47,.16)}
 .nav-icon{font-size:21px;height:24px;display:flex;align-items:center}
 .nav-label{font-size:10.5px;font-weight:500;color:var(--ink3)}
 .nav-item.active .nav-label{color:var(--ink);font-weight:600}
