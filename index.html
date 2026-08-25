@@ -119,6 +119,12 @@ body{font-family:'DM Sans',sans-serif;background:var(--dark);max-width:430px;mar
 .stats-strip{display:flex;gap:8px}
 .stat-block{flex:1;background:linear-gradient(160deg,rgba(234,231,224,.08),rgba(234,231,224,.02));border:1px solid var(--border);border-radius:var(--r-sm);padding:13px 8px;text-align:center;box-shadow:var(--shadow-sm);cursor:pointer;transition:transform .15s,border-color .15s}
 .stat-block:active{transform:scale(.96)}
+/* No Dashboard o scorecard fica POR CIMA do mapa, e com fundo translúcido o
+   mapa aparecia através dele — dava pra ver a Patagônia dentro do card
+   "cidades". Aqui o fundo é opaco, na mesma cor que a versão translúcida
+   aparentava ter sobre o fundo escuro (nada muda visualmente fora isso).
+   O perfil do amigo usa .stat-block sem mapa atrás, então continua igual. */
+.dash-top .stat-block{background:linear-gradient(160deg,#1D272F,#131E27)}
 .stat-n{font-family:var(--mono);font-weight:600;font-size:21px;color:var(--ink);line-height:1.1}
 .stat-l{font-size:11.5px;color:var(--ink3);margin-top:4px}
 .dash-body{padding:8px 24px calc(104px + env(safe-area-inset-bottom, 0px))}
