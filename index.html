@@ -455,7 +455,19 @@ body{font-family:'DM Sans',sans-serif;background:var(--dark);max-width:430px;mar
 .hs-l{font-size:11.5px;color:var(--ink3);margin-top:4px}
 .hs-div{display:none}
 .profile-body{padding:24px 22px;background:var(--surface);border-radius:var(--r) var(--r) 0 0}
-.country-chips{display:flex;flex-wrap:wrap;gap:8px;margin-top:4px}
+/* Lista em linhas, não chips. Chip de largura variável quebrando linha deixa
+   a borda direita serrilhada, e o selo "mora aqui" inchava um chip no meio da
+   fila. Linha é o mesmo padrão que a tela de lista e a de amigos já usam, a
+   borda fica reta com 3 ou 30 países, e sobra lugar pra contagem de spots —
+   que diz algo, ao contrário do chip que só repetia o nome. */
+.country-row{display:flex;align-items:center;gap:11px;padding:11px 0;border-bottom:1px solid var(--border);cursor:pointer}
+.country-row:last-of-type{border-bottom:none}
+.cr-flag{font-size:17px;flex-shrink:0;line-height:1}
+.cr-name{flex:1;font-size:14.5px;color:var(--ink);min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.cr-count{font-family:var(--mono);font-size:11px;color:var(--ink3);flex-shrink:0}
+.cr-home{font-family:var(--mono);font-size:9.5px;letter-spacing:.04em;color:var(--terra);background:rgba(193,85,47,.14);border-radius:var(--r-pill);padding:2px 7px;flex-shrink:0}
+.country-vertodos{display:block;padding:12px 0 2px;font-size:12.5px;color:var(--ink3);cursor:pointer}
+.country-chips{display:block;margin-top:4px}
 .country-chip{background:var(--white);border:1px solid var(--border);border-radius:var(--r-pill);padding:8px 14px;font-size:13px;color:var(--ink2);display:flex;align-items:center;gap:6px}
 .chip-home-tag{font-family:var(--mono);font-size:9.5px;letter-spacing:.04em;color:var(--terra);background:rgba(193,85,47,.14);border-radius:var(--r-pill);padding:2px 7px;margin-left:2px}
 .country-chips-empty{color:var(--ink3);font-size:14px;padding:8px 0}
@@ -3029,14 +3041,45 @@ async function loadProfile(){
   const hl=document.getElementById('heroHeadline');
   if(visited.length===0){hl.innerHTML='Comece a explorar o mundo'}
   else{hl.innerHTML=`Você já explorou <b>${pct}%</b> do mundo`}
-  const chips=document.getElementById('countryChips');
-  if(visited.length){
-    const homeName=homeCountryName();
-    chips.innerHTML=visited.map(c=>`<div class="country-chip">${flagFor(c)} ${esc(c)}${c===homeName?'<span class="chip-home-tag">mora aqui</span>':''}</div>`).join('');
-  }else{
-    chips.innerHTML='<div class="country-chips-empty">Crie viagens para pintar o mundo 🌍</div>';
-  }
+  renderListaDePaises(visited);
   renderWorldMap(visited);
+}
+// Lista de países visitados. Mostra os primeiros e joga o resto pra tela de
+// lista que já existe (a mesma que abre pelo contador do Dashboard) — sem
+// construir tela nova pra isso.
+const PAISES_NO_PERFIL=6;
+function renderListaDePaises(visited){
+  const box=document.getElementById('countryChips');
+  if(!visited.length){
+    box.innerHTML='<div class="country-chips-empty">Crie viagens para pintar o mundo</div>';
+    return;
+  }
+  const homeName=homeCountryName();
+  // quantos spots em cada país, pra linha dizer algo além do nome
+  const porPais={};
+  (S.trips||[]).forEach(t=>{
+    const p=(t.destinations&&t.destinations[0])||t.name;
+    if(p)porPais[p]=(porPais[p]||0)+((t._spots||[]).length);
+  });
+  // Só por quantidade de spots. Mandar o país onde mora pro fim fazia ele
+  // sumir da lista assim que houvesse países demais — e ele é justamente o
+  // que mais diz sobre a pessoa.
+  const ordenado=visited.slice().sort((a,b)=>
+    (porPais[b]||0)-(porPais[a]||0)||a.localeCompare(b,'pt-BR'));
+  const mostrar=ordenado.slice(0,PAISES_NO_PERFIL);
+  let h=mostrar.map(c=>{
+    const n=porPais[c]||0;
+    const direita=c===homeName
+      ?'<span class="cr-home">mora aqui</span>'
+      :'<span class="cr-count">'+(n?n+(n===1?' spot':' spots'):'—')+'</span>';
+    return '<div class="country-row" onclick="drillTo(\'country\',\''+esc(String(c).replace(/[\\\\\']/g,''))+'\');goTo(\'list\')">'
+      +'<span class="cr-flag">'+flagFor(c)+'</span>'
+      +'<span class="cr-name">'+esc(c)+'</span>'+direita+'</div>';
+  }).join('');
+  if(ordenado.length>PAISES_NO_PERFIL){
+    h+='<div class="country-vertodos" onclick="openList(\'countries\')">Ver todos os '+ordenado.length+' \u203a</div>';
+  }
+  box.innerHTML=h;
 }
 // ── World map via d3-geo (Natural Earth projection, proper shapes) ──
 let worldGeoData=null;
