@@ -467,6 +467,14 @@ body{font-family:'DM Sans',sans-serif;background:var(--dark);max-width:430px;mar
 .cr-count{font-family:var(--mono);font-size:11px;color:var(--ink3);flex-shrink:0}
 .cr-home{font-family:var(--mono);font-size:9.5px;letter-spacing:.04em;color:var(--terra);background:rgba(193,85,47,.14);border-radius:var(--r-pill);padding:2px 7px;flex-shrink:0}
 .country-vertodos{display:block;padding:12px 0 2px;font-size:12.5px;color:var(--ink3);cursor:pointer}
+/* separador "ou" entre enviar pedido e convidar por link */
+.conv-ou{display:flex;align-items:center;gap:10px;margin:16px 0 12px;color:var(--ink3);font-size:11px;font-family:var(--mono)}
+.conv-ou::before,.conv-ou::after{content:'';flex:1;height:1px;background:var(--border)}
+.conv-dica{font-size:11.5px;color:var(--ink3);text-align:center;margin-top:10px;line-height:1.5}
+/* faixa de quem convidou, na tela de login */
+.convite-faixa{display:flex;align-items:center;gap:11px;background:rgba(193,85,47,.14);border:1px solid rgba(193,85,47,.3);border-radius:var(--r);padding:12px 14px;margin-bottom:18px}
+.convite-quem{font-size:13.5px;color:var(--ink);line-height:1.4}
+.convite-quem b{font-weight:600}
 .country-chips{display:block;margin-top:4px}
 .country-chip{background:var(--white);border:1px solid var(--border);border-radius:var(--r-pill);padding:8px 14px;font-size:13px;color:var(--ink2);display:flex;align-items:center;gap:6px}
 .chip-home-tag{font-family:var(--mono);font-size:9.5px;letter-spacing:.04em;color:var(--terra);background:rgba(193,85,47,.14);border-radius:var(--r-pill);padding:2px 7px;margin-left:2px}
@@ -605,6 +613,7 @@ svg.ic path,svg.ic circle,svg.ic line,svg.ic polyline,svg.ic rect{fill:none;stro
         <svg class="brand-wordmark" viewBox="0 81 269 74" height="44" role="img" aria-label="Spot"><text x="0" y="150" font-family="Cinzel" font-weight="500" font-size="100" letter-spacing="6" fill="#f4ede1">SP</text><circle cx="159.3" cy="118" r="30" fill="none" stroke="#c1552f" stroke-width="8"/><ellipse cx="159.3" cy="118" rx="36" ry="11" fill="none" stroke="#c1552f" stroke-width="5" transform="rotate(-22 159.3 118)"/><text x="201.4" y="150" font-family="Cinzel" font-weight="500" font-size="100" letter-spacing="6" fill="#f4ede1">T</text></svg>
       </div>
       <div class="tagline">seus lugares · sua voz</div>
+      <div class="convite-faixa" id="conviteFaixa" style="display:none"><div class="ei" data-ic="users" style="font-size:19px;color:var(--terra)"></div><div class="convite-quem" id="conviteQuem"></div></div>
       <div class="form-stack">
         <div class="auth-error" id="authError"></div>
         <div id="loginButtons">
@@ -824,7 +833,7 @@ svg.ic path,svg.ic circle,svg.ic line,svg.ic polyline,svg.ic rect{fill:none;stro
 <div class="overlay" id="ov-mismatch" onclick="closeOut(event,'ov-mismatch')"><div class="sheet"><button class="sheet-close" onclick="closeOv('ov-mismatch')" data-ic="close" aria-label="Fechar"></button><div class="sheet-handle"></div><div class="sheet-title">País diferente</div><div class="cm-text" id="cmText"></div><button class="sheet-cta" id="cmMoveBtn">Mover</button><button class="delete-link" style="color:var(--ink3)" onclick="keepInThisTripAnyway()">Adicionar nesta viagem mesmo assim</button></div></div>
 <div class="overlay" id="ov-newtrip" onclick="closeOut(event,'ov-newtrip')"><div class="sheet"><button class="sheet-close" onclick="closeOv('ov-newtrip')" data-ic="close" aria-label="Fechar"></button><div class="sheet-handle"></div><div class="sheet-title">Para qual cidade?</div><div class="nt-label">Cidade da viagem — o país é identificado sozinho</div><div class="dest-search-wrap"><span class="dsi" data-ic="search"></span><input class="nt-input" style="padding-left:44px" id="countrySearch" placeholder="Buscar cidade..." oninput="filterNewTripCity(this.value)"></div><div id="countryList"></div><div class="nt-label" style="margin-top:8px">Datas (opcional)</div><div class="dates-row"><input class="nt-input" type="date" id="tripStart"><input class="nt-input" type="date" id="tripEnd"></div><button class="sheet-cta" id="createTripBtn" onclick="createTrip()" style="opacity:.4;pointer-events:none">Selecione uma cidade</button></div></div>
 <div class="overlay" id="ov-quickvisit" onclick="closeOut(event,'ov-quickvisit')"><div class="sheet"><button class="sheet-close" onclick="closeOv('ov-quickvisit')" data-ic="close" aria-label="Fechar"></button><div class="sheet-handle"></div><div class="sheet-title" id="quickVisitTitle">Qual país você já visitou?</div><div class="nt-label">País</div><div class="dest-search-wrap"><span class="dsi" data-ic="search"></span><input class="nt-input" style="padding-left:44px" id="countrySearch2" placeholder="Buscar país..." oninput="filterCountries2(this.value)"></div><div id="countryList2"></div><button class="sheet-cta" id="createVisitBtn" onclick="markVisited()" style="opacity:.4;pointer-events:none">Selecione um país</button></div></div>
-<div class="overlay" id="ov-addfriend" onclick="closeOut(event,'ov-addfriend')"><div class="sheet"><button class="sheet-close" onclick="closeOv('ov-addfriend')" data-ic="close" aria-label="Fechar"></button><div class="sheet-handle"></div><div class="sheet-title">Adicionar amigo</div><div class="nt-label">Username do amigo</div><input class="nt-input" id="friendUsernameInput" type="text" placeholder="username_do_amigo" autocapitalize="none" oninput="document.getElementById('friendAddErr').textContent=''"><div class="auth-error" id="friendAddErr"></div><button class="sheet-cta" id="sendReqBtn" onclick="sendFriendRequest()">Enviar pedido</button></div></div>
+<div class="overlay" id="ov-addfriend" onclick="closeOut(event,'ov-addfriend')"><div class="sheet"><button class="sheet-close" onclick="closeOv('ov-addfriend')" data-ic="close" aria-label="Fechar"></button><div class="sheet-handle"></div><div class="sheet-title">Adicionar amigo</div><div class="nt-label">Username do amigo</div><input class="nt-input" id="friendUsernameInput" type="text" placeholder="username_do_amigo" autocapitalize="none" oninput="document.getElementById('friendAddErr').textContent=''"><div class="auth-error" id="friendAddErr"></div><button class="sheet-cta" id="sendReqBtn" onclick="sendFriendRequest()">Enviar pedido</button><div class="conv-ou"><span>ou</span></div><button class="secondary-link" id="convidarBtn" style="margin-top:0" onclick="compartilharConvite()">Convidar por link</button><div class="conv-dica">Quem abrir o link entra já como seu amigo, sem precisar do seu username.</div></div></div>
 
 <div class="overlay" id="ov-editdates" onclick="closeOut(event,'ov-editdates')"><div class="sheet"><button class="sheet-close" onclick="closeOv('ov-editdates')" data-ic="close" aria-label="Fechar"></button><div class="sheet-handle"></div><div class="sheet-title">Datas da viagem</div><div class="nt-label">Deixe em branco se não for uma viagem com data definida (ex: seu país de origem)</div><div class="dates-row"><input class="nt-input" type="date" id="editStart"><input class="nt-input" type="date" id="editEnd"></div><button class="sheet-cta" onclick="saveEditDates()">Salvar</button><button class="delete-link" onclick="clearEditDates()">Limpar datas (não é uma viagem)</button></div></div><div class="toast" id="toast"><div class="toast-icon" id="toastIcon"></div><div class="toast-body"><div class="toast-title" id="toastTitle"></div><div class="toast-msg" id="toastMsg"></div></div></div>
 
@@ -984,13 +993,19 @@ function avisaSessaoExpirada(){
 async function sbFetch(path,opts,extraHeaders){
   const monta=async(force)=>{
     const tk=await ensureToken(force);
-    const h=Object.assign({'apikey':SB_KEY,'Authorization':'Bearer '+tk},extraHeaders||{});
+    // Sem sessão, manda a anon key como Bearer — é o papel 'anon' do Supabase,
+    // que é o certo pra chamada anônima (ex.: quem abre um link de convite e
+    // ainda não tem conta). Antes ia 'Bearer null', o banco recusava, e o app
+    // ainda avisava "sessão expirada" pra quem nunca teve sessão.
+    const h=Object.assign({'apikey':SB_KEY,'Authorization':'Bearer '+(tk||SB_KEY)},extraHeaders||{});
     return fetch(SB_URL+path,Object.assign({},opts,{headers:h}));
   };
   let r=await monta(false);
   if(r.status===401||r.status===403){
     r=await monta(true);
-    if(r.status===401||r.status===403)avisaSessaoExpirada();
+    // Só avisa quem de fato TINHA sessão: pra visitante anônimo, 401 é a
+    // resposta esperada do RLS, não uma sessão que venceu.
+    if((r.status===401||r.status===403)&&S.user)avisaSessaoExpirada();
   }
   return r;
 }
@@ -1119,7 +1134,9 @@ async function dbRpc(fn,params){
 
 // ═══ INIT ═══
 async function init(){
-  if(!sb){goTo('login');return}
+  capturarConviteDaURL();
+  if(!sb){goTo('login');mostrarQuemConvidou();return}
+  mostrarQuemConvidou();
   sb.auth.onAuthStateChange(async(ev,sess)=>{
     try{
       // Primeiro o token, SEMPRE, fora do guard de `!S.user`: TOKEN_REFRESHED
@@ -1134,6 +1151,9 @@ async function init(){
         // olhando tela parada por todo o tempo das requisições.
         goTo('dashboard');
         try{await loadDashboard()}catch(e){console.error('Dashboard error:',e)}
+        // depois do dashboard: se a pessoa chegou por um link de convite, a
+        // amizade é criada agora que existe sessão
+        try{await resgatarConvitePendente()}catch(e){console.error('convite:',e)}
       }
       if(ev==='SIGNED_OUT'){S.user=null;S.token=null;tokenExp=0;goTo('login')}
     }catch(e){console.error('Auth error:',e);goTo('login')}
@@ -3688,6 +3708,108 @@ async function respondRequest(followId,accept){
   }
   loadFriends();
 }
+// ═══ CONVITE POR LINK ═══
+// Manda um link no WhatsApp, a pessoa abre, cria conta e já entra como sua
+// amiga — sem precisar descobrir seu username.
+//
+// O link carrega um CÓDIGO ALEATÓRIO, não o seu username. Com username no
+// link, qualquer um digitaria o de qualquer pessoa e viraria amigo sem ser
+// aceito — o mesmo furo que a migração 008 fechou. O código só existe porque
+// você mandou criar, então tê-lo prova que recebeu o link de você.
+const CONVITE_GUARDADO='spot_convite_pendente';
+
+function novoCodigoConvite(){
+  // 16 chars de crypto, sem confundir 0/O e 1/l na hora de ler ou digitar
+  const alfabeto='ABCDEFGHJKMNPQRSTUVWXYZ23456789';
+  const b=new Uint8Array(16);
+  crypto.getRandomValues(b);
+  return Array.from(b,x=>alfabeto[x%alfabeto.length]).join('');
+}
+function linkDoConvite(codigo){
+  return location.origin+'/?c='+encodeURIComponent(codigo);
+}
+// Reaproveita o convite ativo se já existir — o link que você já mandou pros
+// outros continua valendo em vez de virar lixo a cada toque no botão.
+async function obterOuCriarConvite(){
+  const meus=await dbGet('invites','user_id=eq.'+encodeURIComponent(S.user.id)+'&revoked=is.false&order=created_at.desc&limit=1');
+  if(meus&&meus.length)return meus[0].code;
+  const codigo=novoCodigoConvite();
+  const{error}=await dbInsert('invites',{code:codigo,user_id:S.user.id});
+  if(error)return null;
+  return codigo;
+}
+async function compartilharConvite(){
+  const btn=document.getElementById('convidarBtn');
+  const rotulo=btn.textContent;
+  btn.textContent='Gerando...';btn.style.pointerEvents='none';
+  const codigo=await obterOuCriarConvite();
+  btn.textContent=rotulo;btn.style.pointerEvents='auto';
+  if(!codigo){toast('Erro','Não foi possível criar o convite. Falta rodar a migração 011?');return}
+  const url=linkDoConvite(codigo);
+  const nome=(S.profile&&S.profile.display_name)||'Um amigo';
+  const texto=nome+' te convidou pro Spot — os lugares favoritos de quem você conhece.';
+  // navigator.share abre a folha nativa do celular (WhatsApp, mensagens...).
+  // Sem ela (desktop), copia. Sem as duas, mostra o link pra copiar na mão.
+  try{
+    if(navigator.share){
+      await navigator.share({title:'Spot',text:texto,url});
+      return;
+    }
+  }catch(e){
+    if(e&&e.name==='AbortError')return; // a pessoa fechou a folha; não é erro
+  }
+  try{
+    await navigator.clipboard.writeText(url);
+    toast('Link copiado','Cole no WhatsApp pra convidar.','check');
+  }catch(e){
+    prompt('Copie o link do convite:',url);
+  }
+}
+
+// ── do outro lado: quem abriu o link ──
+// O código vai pro localStorage porque o login com Google sai do app e volta,
+// e a query string se perde no caminho.
+function capturarConviteDaURL(){
+  try{
+    const c=new URLSearchParams(location.search).get('c');
+    if(!c)return;
+    localStorage.setItem(CONVITE_GUARDADO,c);
+    // tira da barra de endereço pra não ficar sendo recompartilhado sem querer
+    history.replaceState(null,'',location.pathname);
+  }catch(e){}
+}
+async function mostrarQuemConvidou(){
+  let c=null;
+  try{c=localStorage.getItem(CONVITE_GUARDADO)}catch(e){}
+  if(!c)return;
+  const faixa=document.getElementById('conviteFaixa');
+  const dono=await dbRpc('invite_owner',{invite_code:c});
+  // Sem resposta, só não mostra a faixa — NÃO descarta o código. dbRpc devolve
+  // [] tanto pra "não achei" quanto pra "não consegui perguntar" (rede fora,
+  // função ausente), e jogar fora um convite legítimo por causa de uma falha
+  // temporária é pior que não mostrar o nome de quem convidou. Quem decide se
+  // o convite vale é o resgate, que tem resposta clara.
+  if(!dono||!dono.length)return;
+  const p=dono[0];
+  const nome=p.display_name||(p.username?'@'+p.username:'Alguém');
+  document.getElementById('conviteQuem').innerHTML='<b>'+esc(nome)+'</b> te convidou pro Spot';
+  faixa.style.display='flex';
+}
+// Chamado depois do login. Silencioso quando não há convite guardado.
+async function resgatarConvitePendente(){
+  let c=null;
+  try{c=localStorage.getItem(CONVITE_GUARDADO)}catch(e){}
+  if(!c)return;
+  const r=await dbRpc('redeem_invite',{invite_code:c});
+  const status=Array.isArray(r)?r[0]:r;
+  // 'sem_sessao' é o único caso em que vale tentar de novo depois; nos outros
+  // o convite já cumpriu (ou nunca ia cumprir) o papel dele.
+  if(status!=='sem_sessao'){
+    try{localStorage.removeItem(CONVITE_GUARDADO)}catch(e){}
+  }
+  if(status==='ok')toast('Vocês são amigos','Já dá pra ver as viagens um do outro.','users');
+}
+
 async function sendFriendRequest(){
   const username=document.getElementById('friendUsernameInput').value.trim().toLowerCase().replace(/^@/,'');
   const errEl=document.getElementById('friendAddErr');
