@@ -572,7 +572,7 @@ svg.ic path,svg.ic circle,svg.ic line,svg.ic polyline,svg.ic rect{fill:none;stro
         </div>
         <div id="emailForm" style="display:none">
           <input class="field" type="email" id="authEmail" placeholder="seu@email.com">
-          <input class="field" type="password" id="authPassword" placeholder="senha (mín. 6 caracteres)">
+          <input class="field" type="password" id="authPassword" placeholder="senha" autocomplete="current-password">
           <button class="btn-primary" id="authBtn" onclick="handleAuth()">Entrar</button>
           <div class="login-toggle" onclick="toggleAuthMode()"><span id="authToggleText">Não tem conta? <span>Cadastre-se</span></span></div>
           <div class="login-back" onclick="hideEmailForm()">← voltar</div>
@@ -1110,12 +1110,39 @@ function toggleAuthMode(){
   authMode=authMode==='signin'?'signup':'signin';
   document.getElementById('authBtn').textContent=authMode==='signup'?'Criar conta':'Entrar';
   document.getElementById('authToggleText').innerHTML=authMode==='signup'?'Já tem conta? <span>Entrar</span>':'Não tem conta? <span>Cadastre-se</span>';
+  // No cadastro o campo avisa a exigência antes de a pessoa digitar, em vez de
+  // só reclamar depois. E o autocomplete certo faz o gerenciador de senhas
+  // oferecer uma senha nova em vez de tentar preencher a antiga.
+  const campoPw=document.getElementById('authPassword');
+  if(campoPw){
+    campoPw.placeholder=authMode==='signup'?'senha (8+ com letras e números)':'senha';
+    campoPw.setAttribute('autocomplete',authMode==='signup'?'new-password':'current-password');
+  }
+}
+// Senhas que qualquer lista de força bruta tenta nas primeiras tentativas.
+// Não é uma blocklist séria (isso é o HaveIBeenPwned, plano Pro) — é só para
+// os casos mais óbvios não passarem.
+const SENHAS_OBVIAS=['12345678','123456789','1234567890','senha123','password',
+  'password1','qwerty123','abc12345','11111111','00000000','iloveyou','princesa',
+  'brasil123','flamengo','corinthians','spot1234','admin123','trocar123'];
+// Devolve '' se a senha serve, ou o motivo da recusa.
+function problemaNaSenha(pw){
+  if(pw.length<8)return'A senha precisa de pelo menos 8 caracteres.';
+  const temLetra=/[a-zA-Z]/.test(pw), temNumero=/[0-9]/.test(pw);
+  if(!temLetra||!temNumero)return'Mistura letras e números — só um dos dois é fácil de adivinhar.';
+  const simples=pw.toLowerCase().replace(/[^a-z0-9]/g,'');
+  if(SENHAS_OBVIAS.includes(simples))return'Essa senha é uma das mais tentadas que existem. Escolhe outra.';
+  if(/^(.)\1+$/.test(pw))return'Caractere repetido não protege nada.';
+  return'';
 }
 async function handleAuth(){
   const email=document.getElementById('authEmail').value.trim();
   const pw=document.getElementById('authPassword').value;
   if(!email||!pw){showAuthErr('Preencha email e senha');return}
-  if(pw.length<6){showAuthErr('Senha mín. 6 caracteres');return}
+  if(authMode==='signup'){
+    const problema=problemaNaSenha(pw);
+    if(problema){showAuthErr(problema);return}
+  }else if(pw.length<6){showAuthErr('Senha mín. 6 caracteres');return}
   const btn=document.getElementById('authBtn');btn.disabled=true;btn.textContent='...';
   hideAuthErr();
   let r;
@@ -1685,11 +1712,27 @@ async function openPlace(id,origin){
 // Botões de ação na tela do spot — extraído pra função própria porque o
 // backfill automático precisa redesenhar isso quando o link chega depois
 // (a tela pode já estar aberta quando a busca em segundo plano termina).
+// "Reservar mesa" apontava pro TheFork com /search?query=NOME. Duas falhas
+// somadas: o TheFork DESCARTA a query e redireciona pra uma lista de
+// restaurantes de Paris (testado), e ele encerrou as operações no Brasil em
+// 2021 — não havia o que reservar. Virou "Ligar": o telefone vem do Google
+// Places, funciona em qualquer país, e é o que se faz de fato pra reservar.
+// Sem telefone salvo o botão simplesmente não aparece, em vez de existir
+// levando pra lugar nenhum.
+function telHref(fone){
+  // Só dígitos e + no href. E exige 6+ dígitos: sem isso, qualquer lixo no
+  // campo (o Google devolvendo algo estranho, ou o banco editado à mão)
+  // gerava um botão "Ligar" com texto absurdo e um tel: que não discava nada.
+  const limpo=String(fone||'').replace(/[^0-9+]/g,'');
+  const digitos=limpo.replace(/[^0-9]/g,'').length;
+  return digitos>=6?'tel:'+limpo:'';
+}
 function renderPlaceLinks(s){
   const reserveWrap=document.getElementById('placeReserveWrap');
   if(s.category==='food'){
-    const q=encodeURIComponent(s.name+(cityOf(s)?' '+cityOf(s):''));
-    let rh=`<a class="reserve-btn" href="https://www.thefork.com/search?query=${q}" target="_blank" rel="noopener">${icon('food')} Reservar mesa</a>`;
+    let rh='';
+    const tel=telHref(s.phone);
+    if(tel)rh+=`<a class="reserve-btn" href="${esc(tel)}">${icon('food')} Ligar · ${esc(s.phone)}</a>`;
     if(s.website_url){
       const isInstagram=/instagram\.com/i.test(s.website_url);
       rh+=`<a class="reserve-btn" href="${escUrl(s.website_url)}" target="_blank" rel="noopener">${icon(isInstagram?'instagram':'menu')} ${isInstagram?'Abrir Instagram':'Ver cardápio'}</a>`;
@@ -1827,7 +1870,7 @@ async function runExplore(){
   try{
     const resp=await fetch('https://places.googleapis.com/v1/places:searchText',{
       method:'POST',
-      headers:{'Content-Type':'application/json','X-Goog-Api-Key':GAPI,'X-Goog-FieldMask':'places.displayName,places.formattedAddress,places.addressComponents,places.photos,places.rating,places.userRatingCount,places.websiteUri,places.googleMapsUri,places.types'},
+      headers:{'Content-Type':'application/json','X-Goog-Api-Key':GAPI,'X-Goog-FieldMask':'places.displayName,places.formattedAddress,places.addressComponents,places.photos,places.rating,places.userRatingCount,places.websiteUri,places.googleMapsUri,places.types,places.nationalPhoneNumber'},
       body:JSON.stringify({textQuery:`${termo} em ${city}`,languageCode:'pt-BR',maxResultCount:20})
     });
     const data=await resp.json();
@@ -1840,7 +1883,7 @@ async function runExplore(){
       const addr=p.formattedAddress||'';
       const c=cityFromComponents(p.addressComponents)||extractCityFromAddr(addr);
       const country=countryFromComponents(p.addressComponents);
-      return{name:p.displayName?.text||'',address:addr,city:c,country,rating:String(p.rating),count:p.userRatingCount,subcat:guessSubcat(p.types),photo_url:placePhotoUrl(p,400),website_url:p.websiteUri||'',maps_url:p.googleMapsUri||''};
+      return{name:p.displayName?.text||'',address:addr,city:c,country,rating:String(p.rating),count:p.userRatingCount,subcat:guessSubcat(p.types),phone:p.nationalPhoneNumber||'',photo_url:placePhotoUrl(p,400),website_url:p.websiteUri||'',maps_url:p.googleMapsUri||''};
     });
     renderExploreResults();
   }catch(e){
@@ -1858,7 +1901,7 @@ function renderExploreResults(){
 }
 function addExploreSpot(i){
   const t=EXPLORE.items[i];if(!t)return;
-  S.explorePick={name:t.name,meta:t.address,icon:catIcon(EXPLORE.cat),city:t.city,country:t.country,address:t.address,subcat:t.subcat||'',photo_url:t.photo_url,rating_google:t.rating,website_url:t.website_url,maps_url:t.maps_url};
+  S.explorePick={name:t.name,meta:t.address,icon:catIcon(EXPLORE.cat),city:t.city,country:t.country,address:t.address,subcat:t.subcat||'',phone:t.phone||'',photo_url:t.photo_url,rating_google:t.rating,website_url:t.website_url,maps_url:t.maps_url};
   // Categoria já foi escolhida na aba do Explorar (Comer/Ficar/Experiências)
   // antes de buscar — perguntar de novo seria repetir uma decisão já feita.
   S.explorePickCat=EXPLORE.cat;
@@ -1914,7 +1957,7 @@ function showNearbySuggestions(){
     try{
       const resp=await fetch('https://places.googleapis.com/v1/places:searchNearby',{
         method:'POST',
-        headers:{'Content-Type':'application/json','X-Goog-Api-Key':GAPI,'X-Goog-FieldMask':'places.displayName,places.formattedAddress,places.addressComponents,places.photos,places.rating,places.userRatingCount,places.websiteUri,places.googleMapsUri,places.types'},
+        headers:{'Content-Type':'application/json','X-Goog-Api-Key':GAPI,'X-Goog-FieldMask':'places.displayName,places.formattedAddress,places.addressComponents,places.photos,places.rating,places.userRatingCount,places.websiteUri,places.googleMapsUri,places.types,places.nationalPhoneNumber'},
         body:JSON.stringify({includedTypes:[tipo],maxResultCount:8,locationRestriction:{circle:{center:{latitude,longitude},radius:600}}})
       });
       const data=await resp.json();
@@ -1927,7 +1970,7 @@ function showNearbySuggestions(){
         const city=cityFromComponents(p.addressComponents)||extractCityFromAddr(addr);
         const country=countryFromComponents(p.addressComponents);
         const fotos=placePhotoUrls(p);
-        return{name:p.displayName?.text||'',icon:catIcon(S.addCat),city,country,address:addr,subcat:guessSubcat(p.types),photo_url:fotos.full,photo_thumb:fotos.thumb,rating_google:p.rating?String(p.rating):'',website_url:p.websiteUri||'',maps_url:p.googleMapsUri||''};
+        return{name:p.displayName?.text||'',icon:catIcon(S.addCat),city,country,address:addr,subcat:guessSubcat(p.types),phone:p.nationalPhoneNumber||'',photo_url:fotos.full,photo_thumb:fotos.thumb,rating_google:p.rating?String(p.rating):'',website_url:p.websiteUri||'',maps_url:p.googleMapsUri||''};
       });
       r.innerHTML='<div class="search-nearby-label">Perto de você</div>'+S_nearbyResults.map((p,i)=>{
         const thumb=p.photo_thumb?'<div class="sr-icon"><img src="'+escUrl(p.photo_thumb)+'" loading="eager" style="width:100%;height:100%;object-fit:cover;border-radius:12px"></div>':'<div class="sr-icon">'+p.icon+'</div>';
@@ -2003,7 +2046,7 @@ function maybeShowCheckin(){
       const city=cityFromComponents(p.addressComponents)||extractCityFromAddr(addr);
       const country=countryFromComponents(p.addressComponents);
       const fotos=placePhotoUrls(p);
-      CHECKIN.place={name,meta:addr,icon:catIcon('food'),city,country,address:addr,subcat:'',photo_url:fotos.full,photo_thumb:fotos.thumb,rating_google:p.rating?String(p.rating):'',website_url:p.websiteUri||'',maps_url:p.googleMapsUri||'',category:'food'};
+      CHECKIN.place={name,meta:addr,icon:catIcon('food'),city,country,address:addr,subcat:'',phone:p.nationalPhoneNumber||'',photo_url:fotos.full,photo_thumb:fotos.thumb,rating_google:p.rating?String(p.rating):'',website_url:p.websiteUri||'',maps_url:p.googleMapsUri||'',category:'food'};
       document.getElementById('checkinName').textContent=name;
       document.getElementById('checkinBanner').style.display='flex';
     }catch(e){console.error('maybeShowCheckin',e)}
@@ -2026,7 +2069,7 @@ function checkinIgnore(){
 function checkinAdd(){
   const p=CHECKIN.place;if(!p)return;
   document.getElementById('checkinBanner').style.display='none';
-  const place={name:p.name,meta:p.meta,icon:p.icon,city:p.city,country:p.country,address:p.address,photo_url:p.photo_url||'',photo_thumb:p.photo_thumb||'',rating_google:p.rating_google,website_url:p.website_url,maps_url:p.maps_url};
+  const place={name:p.name,meta:p.meta,icon:p.icon,city:p.city,country:p.country,address:p.address,phone:p.phone||'',photo_url:p.photo_url||'',photo_thumb:p.photo_thumb||'',rating_google:p.rating_google,website_url:p.website_url,maps_url:p.maps_url};
   CHECKIN.place=null;
   // Categoria já é sabida (check-in só busca comer/beber) e "Já fui" é o
   // padrão óbvio — você está literalmente lá. Viagem: se só existir uma que
@@ -2051,7 +2094,7 @@ function searchPlaces(v){
     try{
       const resp=await fetch('https://places.googleapis.com/v1/places:searchText',{
         method:'POST',
-        headers:{'Content-Type':'application/json','X-Goog-Api-Key':GAPI,'X-Goog-FieldMask':'places.id,places.displayName,places.formattedAddress,places.addressComponents,places.location,places.photos,places.rating,places.websiteUri,places.googleMapsUri,places.types'},
+        headers:{'Content-Type':'application/json','X-Goog-Api-Key':GAPI,'X-Goog-FieldMask':'places.id,places.displayName,places.formattedAddress,places.addressComponents,places.location,places.photos,places.rating,places.websiteUri,places.googleMapsUri,places.types,places.nationalPhoneNumber'},
         body:JSON.stringify({textQuery:v,languageCode:'pt-BR',maxResultCount:6})
       });
       if(myReqId!==searchReqId)return; // busca mais nova já foi disparada, ignora essa resposta atrasada
@@ -2065,7 +2108,7 @@ function searchPlaces(v){
         const country=countryFromComponents(p.addressComponents);
         const rating=p.rating?String(p.rating):'';
         const fotos=placePhotoUrls(p);
-        return{name,meta:addr,icon:catIcon(S.addCat),city,country,address:addr,subcat:guessSubcat(p.types),photo_url:fotos.full,photo_thumb:fotos.thumb,rating_google:rating,website_url:p.websiteUri||'',maps_url:p.googleMapsUri||''};
+        return{name,meta:addr,icon:catIcon(S.addCat),city,country,address:addr,subcat:guessSubcat(p.types),phone:p.nationalPhoneNumber||'',photo_url:fotos.full,photo_thumb:fotos.thumb,rating_google:rating,website_url:p.websiteUri||'',maps_url:p.googleMapsUri||''};
       });
       if(myReqId!==searchReqId)return;
       r.innerHTML=S.searchResults.map((p,i)=>{
@@ -2194,15 +2237,19 @@ async function saveSpot(addAnother){
   const rec={user_id:S.user.id,trip_id:t.id,name:p.name,category:S.addCat,my_note:note,city:p.city||'',address:p.address||'',photo_url:p.photo_url||'',place_type:catLabel(S.addCat),rating_google:p.rating_google||'',status:addStatus,website_url:p.website_url||'',maps_url:p.maps_url||''};
   // Só faz sentido em experiência — nas outras categorias a coluna fica nula
   if(S.addCat==='experience'&&addSubcat)rec.subcategory=addSubcat;
+  if(p.phone)rec.phone=p.phone;
   if(addStatus==='been'&&addRating>0)rec.my_rating=addRating;
   let{data,error}=await dbInsert('spots',rec);
   // A coluna subcategory vem da migração 009. Se ela ainda não foi rodada, o
   // Postgres recusa o insert INTEIRO por causa de uma coluna desconhecida — e
   // o spot não seria salvo. Retenta sem ela: perder a subcategoria é bem
   // melhor que perder o spot. Mesmo espírito da cascata do createTrip.
-  if(error&&rec.subcategory){
-    console.warn('insert sem subcategory (migração 009 ainda não rodou?)');
-    delete rec.subcategory;
+  // Colunas que vêm de migração: se ela ainda não rodou, o Postgres recusa o
+  // insert INTEIRO por causa de uma coluna desconhecida e o spot não seria
+  // salvo. Retenta sem os opcionais — perder o campo é melhor que perder o spot.
+  if(error&&(rec.subcategory||rec.phone)){
+    console.warn('insert sem colunas opcionais (migração 009/010 ainda não rodou?)');
+    delete rec.subcategory;delete rec.phone;
     ({data,error}=await dbInsert('spots',rec));
   }
   if(!error&&data){
@@ -2692,21 +2739,26 @@ async function autoBackfillPlaceLinks(){
   (S.trips||[]).forEach(t=>(t._spots||[]).forEach(s=>{
     const precisaInstagram=s.category==='food'&&!s.insta_checked;
     const precisaMaps=s.maps_url===null;
-    if(precisaInstagram||precisaMaps)targets.push(s);
+    // Telefone só interessa em comida (é o botão "Ligar"). undefined significa
+    // que a coluna nem veio do banco (migração 010 não rodou) — aí não insiste.
+    const precisaFone=s.category==='food'&&s.phone===null;
+    if(precisaInstagram||precisaMaps||precisaFone)targets.push(s);
   }));
   for(const s of targets){
     try{
       const precisaInstagram=s.category==='food'&&!s.insta_checked;
+      const precisaFone=s.category==='food'&&s.phone===null;
       const patch={};
-      let googleSite='',mapsUrl=null;
-      if(precisaInstagram||s.maps_url===null){
+      let googleSite='',mapsUrl=null,fone='';
+      if(precisaInstagram||s.maps_url===null||precisaFone){
         const resp=await fetch('https://places.googleapis.com/v1/places:searchText',{
           method:'POST',
-          headers:{'Content-Type':'application/json','X-Goog-Api-Key':GAPI,'X-Goog-FieldMask':'places.displayName,places.websiteUri,places.googleMapsUri'},
+          headers:{'Content-Type':'application/json','X-Goog-Api-Key':GAPI,'X-Goog-FieldMask':'places.displayName,places.websiteUri,places.googleMapsUri,places.nationalPhoneNumber'},
           body:JSON.stringify({textQuery:s.name+(cityOf(s)?' '+cityOf(s):''),languageCode:'pt-BR',maxResultCount:5})
         });
         const d=await resp.json();
         const best=pickBestPlaceMatch(d.places,s.name);
+        fone=(best&&best.nationalPhoneNumber)||'';
         googleSite=(best&&best.websiteUri)||'';
         mapsUrl=(best&&best.googleMapsUri)||'';
       }
@@ -2722,7 +2774,14 @@ async function autoBackfillPlaceLinks(){
         patch.insta_checked=true;
       }
       if(s.maps_url===null)patch.maps_url=mapsUrl||'';
-      await dbUpdate('spots',s.id,patch); // grava mesmo vazio: marca como já verificado
+      // grava '' quando não achou: marca como já procurado e não repete
+      if(precisaFone)patch.phone=fone;
+      let{error:erroPatch}=await dbUpdate('spots',s.id,patch); // grava mesmo vazio: marca como já verificado
+      if(erroPatch&&'phone' in patch){
+        // coluna phone ainda não existe (migração 010): salva o resto
+        delete patch.phone;
+        if(Object.keys(patch).length)await dbUpdate('spots',s.id,patch);
+      }
       Object.assign(s,patch);
       // Se o usuário já estiver olhando pra esse spot específico quando a
       // busca em segundo plano termina, atualiza os botões na hora — sem
@@ -2798,7 +2857,9 @@ function onSpotPhotoError(img,id,cat){
   });
 }
 // Cache for city photos so we don't refetch
-const UNSPLASH_KEY='1fwslJzsd0FfmwxGEdvRVbqZtpBUVsoxpAjYb47dZXo';
+// A chave do Unsplash saiu daqui: vive só em functions/api/city-photo.js,
+// como env var do Cloudflare. Enquanto estava neste arquivo ela funcionava de
+// qualquer origem (testado) — bastava copiar do código pra gastar a cota.
 // Limpeza única: versão anterior do cache podia guardar bloqueios de 1h
 // criados enquanto a cota estava esgotada, travando fotos bem depois
 // da cota já ter voltado. Invalida tudo uma vez só.
@@ -2821,19 +2882,29 @@ async function fetchCityPhoto(query){
     if(c&&c.exp&&Date.now()<c.exp)return c.url||'';
     if(typeof c==='string')return c; // formato antigo (positivo, sem expiração)
   }
-  // Se o Unsplash bloqueou recentemente, não martela de novo — usa gradiente
+  // Se a cota estourou há pouco, não martela de novo — usa gradiente
   if(Date.now()<unsplashBlockedUntil)return'';
+  // Passa por /api/city-photo em vez de chamar o Unsplash direto. Dois motivos:
+  // a chave sai do navegador (ela funciona de qualquer origem, então quem
+  // copiasse do código usava a cota), e o cache passa a ser COMPARTILHADO no
+  // servidor. Isso é o que mais importa: o limite do Unsplash é 50/hora pra
+  // chave inteira, e o cache em localStorage era por aparelho — seis pessoas
+  // abrindo "Split" gastavam seis requisições pela mesma foto. Agora custa uma.
   try{
-    const resp=await fetch('https://api.unsplash.com/search/photos?query='+encodeURIComponent(query)+'&per_page=10&orientation=landscape&client_id='+UNSPLASH_KEY);
-    if(resp.status===403||resp.status===429){
+    const tk=await ensureToken();
+    const resp=await fetch('/api/city-photo',{
+      method:'POST',
+      headers:Object.assign({'Content-Type':'application/json'},tk?{'Authorization':'Bearer '+tk}:{}),
+      body:JSON.stringify({query})
+    });
+    if(!resp.ok)return'';
+    const d=await resp.json();
+    if(d.quotaExceeded||d.capped){
       setUnsplashBlock(10*60*1000);
-      if(!window.__unsplashWarned){window.__unsplashWarned=true;toast('Fotos pausadas','Cota do Unsplash esgotada, volta em ~10min. Gradiente por enquanto.','alert')}
+      if(!window.__unsplashWarned){window.__unsplashWarned=true;toast('Fotos pausadas','Cota de fotos esgotada, volta em breve. Gradiente por enquanto.','alert')}
       return'';
     }
-    const data=await resp.json();
-    const results=data.results||[];
-    const pick=results.length?results[Math.floor(Math.random()*Math.min(results.length,6))]:null;
-    const url=pick?pick.urls.regular:'';
+    const url=d.url||'';
     if(url){cityPhotoCache[query]=url;savePhotoCache()}
     else{cityPhotoCache[query]={url:'',exp:Date.now()+60*60*1000};savePhotoCache()} // sem resultado: não retenta por 1h
     return url;
