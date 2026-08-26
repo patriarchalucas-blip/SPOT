@@ -103,8 +103,20 @@ body{font-family:'DM Sans',sans-serif;background:var(--dark);max-width:430px;mar
    cruzava a faixa dos scorecards e ficava tapado por três blocos opacos —
    parecia desformatado. Aqui ele respira atrás do wordmark e da frase, e os
    scorecards ficam abaixo dele, sem se sobrepor. */
-.dash-top>.dash-mapa{position:absolute;left:50%;top:12px;transform:translateX(-50%);height:56%;max-width:112%;aspect-ratio:800/355;opacity:0;transition:opacity .5s ease;cursor:pointer;z-index:0}
-.dash-mapa.pronto{opacity:.5}
+/* Duas coisas que faziam o mapa parecer figura colada em vez de fundo:
+   1. Ele não chegava às bordas — a largura vinha da altura (aspect-ratio) e
+      sobravam 18px de cada lado, deixando o mapa solto no meio do painel.
+      Agora a LARGURA manda e passa das bordas, então ele sangra.
+   2. Terminava em corte seco na linha dos scorecards. A máscara dissolve a
+      base, então o mapa se apaga no fundo em vez de ser cortado. */
+/* 104%, não 126%: sangrar demais cortava a Ásia e a Oceania fora da tela, e
+   num app de viagem isso significa não ver um país que você visitou. Assim
+   preenche a largura inteira (sem a margem que deixava o mapa solto no meio)
+   perdendo só uns 7px de água de cada lado. */
+.dash-top>.dash-mapa{position:absolute;left:50%;top:8px;transform:translateX(-50%);width:104%;aspect-ratio:800/355;opacity:0;transition:opacity .5s ease;cursor:pointer;z-index:0;
+  -webkit-mask-image:linear-gradient(to bottom,#000 0,#000 62%,transparent 96%);
+  mask-image:linear-gradient(to bottom,#000 0,#000 62%,transparent 96%)}
+.dash-mapa.pronto{opacity:.55}
 /* o conteúdo fica na frente do mapa, e o mapa segue clicável na área livre */
 .dash-top-row,.dash-paises,.stats-strip{position:relative;z-index:1}
 .dash-mapa svg{width:100%;height:100%;display:block}
