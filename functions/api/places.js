@@ -49,9 +49,12 @@ export async function onRequestPost(context) {
   let body;
   try { body = await request.json() } catch (e) { return json({ error: 'bad_request' }, 400) }
 
+  // Validação de entrada ANTES de qualquer outra coisa. A checagem da env var
+  // ficava aqui em cima e engolia as recusas: sem a chave configurada, um
+  // pedido malformado voltava 200 {configured:false} e não dava pra testar
+  // nenhuma das defesas antes de a chave existir.
   const op = String(body.op || '');
   if (!OPS[op]) return json({ error: 'op_invalida' }, 400);
-  if (!env.GOOGLE_PLACES_KEY) return json({ places: [], configured: false });
 
   const mascara = filtrarMascara(body.fields);
   if (!mascara) return json({ error: 'sem_campos' }, 400);
@@ -75,6 +78,7 @@ export async function onRequestPost(context) {
   // Daqui pra baixo custa dinheiro de verdade — só pra quem está logado.
   const quem = await quemEsta(request, env);
   if (!quem.permitir) return json({ places: [], unauthorized: true }, 401);
+  if (!env.GOOGLE_PLACES_KEY) return json({ places: [], configured: false });
   if (!await podeGastar(env, 'places', quem.uid, 1, CAP_USUARIO)) {
     return json({ places: [], capped: true, scope: 'user' });
   }
