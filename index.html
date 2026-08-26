@@ -113,9 +113,12 @@ body{font-family:'DM Sans',sans-serif;background:var(--dark);max-width:430px;mar
    num app de viagem isso significa não ver um país que você visitou. Assim
    preenche a largura inteira (sem a margem que deixava o mapa solto no meio)
    perdendo só uns 7px de água de cada lado. */
-.dash-top>.dash-mapa{position:absolute;left:50%;top:8px;transform:translateX(-50%);width:104%;aspect-ratio:800/355;opacity:0;transition:opacity .5s ease;cursor:pointer;z-index:0;
-  -webkit-mask-image:linear-gradient(to bottom,#000 0,#000 62%,transparent 96%);
-  mask-image:linear-gradient(to bottom,#000 0,#000 62%,transparent 96%)}
+/* SEM máscara de dissolução. Tentei uma pra suavizar o rodapé e o efeito foi
+   apagar os continentes do sul: a América do Sul ocupa de 54% a 83% da altura
+   do mapa e o fade começava em 62%, ou seja comia o Brasil e o cone sul
+   (Argentina termina em y=348 de 355). Como há terra até quase a borda, não
+   existe faixa onde dissolver sem comer país. O mapa aparece inteiro. */
+.dash-top>.dash-mapa{position:absolute;left:50%;top:6px;transform:translateX(-50%);width:100%;aspect-ratio:800/355;opacity:0;transition:opacity .5s ease;cursor:pointer;z-index:0}
 .dash-mapa.pronto{opacity:.55}
 /* o conteúdo fica na frente do mapa, e o mapa segue clicável na área livre */
 .dash-top-row,.dash-paises,.stats-strip{position:relative;z-index:1}
