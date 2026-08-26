@@ -31,7 +31,7 @@ const TTL_BUSCA = 60 * 60 * 24 * 7;
 
 // Campos que o app usa hoje. Pedir além disso custa mais caro por requisição,
 // então o que não está aqui é descartado em vez de repassado.
-const CAMPOS_OK = new Set([
+export const CAMPOS_OK = new Set([
   'places.id', 'places.displayName', 'places.formattedAddress', 'places.addressComponents',
   'places.location', 'places.photos', 'places.rating', 'places.userRatingCount',
   'places.websiteUri', 'places.googleMapsUri', 'places.types', 'places.primaryType',
@@ -127,7 +127,7 @@ export async function onRequestPost(context) {
 // Cada campo é copiado por nome e com teto. O que o navegador mandar além
 // disso não existe daqui pra frente.
 
-function montarTexto(b) {
+export function montarTexto(b) {
   const q = String(b.textQuery || '').trim().slice(0, 200);
   if (!q) return null;
   const p = { textQuery: q, maxResultCount: limitar(b.maxResultCount, 1, 20, 10) };
@@ -137,7 +137,7 @@ function montarTexto(b) {
   return p;
 }
 
-function montarPerto(b) {
+export function montarPerto(b) {
   const tipos = Array.isArray(b.includedTypes)
     ? b.includedTypes.slice(0, 10).map(t => String(t).slice(0, 40)) : [];
   if (!tipos.length) return null;
@@ -156,12 +156,12 @@ function montarPerto(b) {
   return p;
 }
 
-function filtrarMascara(campos) {
+export function filtrarMascara(campos) {
   const lista = String(campos || '').split(',').map(s => s.trim()).filter(s => CAMPOS_OK.has(s));
   return lista.length ? [...new Set(lista)].join(',') : null;
 }
 
-function limitar(v, min, max, padrao) {
+export function limitar(v, min, max, padrao) {
   const n = Number(v);
   if (!isFinite(n)) return padrao;
   return Math.min(max, Math.max(min, Math.round(n)));

@@ -1,0 +1,62 @@
+# Roda a cada push e em todo pull request.
+#
+# O QUE ISSO PEGA. Os três defeitos que chegaram em produção nesta última
+# rodada teriam falhado aqui antes de subir:
+#   - a CSP sem o domínio pro qual a foto do Places redireciona (toda foto de
+#     estabelecimento quebrada);
+#   - a chave do Google voltando pro index.html;
+#   - a lógica de cidade devolvendo distrito no lugar da cidade.
+#
+# O QUE ISSO NÃO PEGA, e é melhor estar escrito: nada aqui abre um navegador.
+# Layout, posição de elemento e sobreposição de tela continuam sem rede de
+# proteção — foi assim que a barra inferior foi parar 372px fora da tela e o
+# mapa cobriu a tela de amigo. Testar isso precisa de navegador de verdade.
+#
+# E MAIS UMA COISA: o deploy da Cloudflare dispara pelo push, em paralelo com
+# isto. Ou seja, hoje o CI AVISA, não impede. Pra impedir de verdade, o
+# caminho é trabalhar por pull request e ligar branch protection exigindo que
+# este check passe antes do merge.
+
+name: CI
+
+on:
+  push:
+    branches: ['**']
+  pull_request:
+
+jobs:
+  testes:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      # Sem npm install de propósito: o projeto não tem dependência nenhuma e
+      # não tem build. O runner de teste vem no próprio Node.
+      - name: Testes
+        run: node --test
+
+      - name: O script do app tem sintaxe válida
+        run: |
+          node -e "
+          const fs = require('fs');
+          const html = fs.readFileSync('index.html', 'utf8');
+          const blocos = [...html.matchAll(/<script(?![^>]*\bsrc=)[^>]*>([\s\S]*?)<\/script>/g)];
+          if (!blocos.length) { console.error('nenhum script inline no index.html'); process.exit(1) }
+          blocos.forEach((b, i) => {
+            try { new Function(b[1]) }
+            catch (e) { console.error('bloco ' + (i+1) + ' com erro de sintaxe: ' + e.message); process.exit(1) }
+          });
+          console.log(blocos.length + ' bloco(s) de script conferido(s)');
+          "
+
+      - name: As functions têm sintaxe válida
+        run: |
+          for f in functions/api/*.js; do
+            cp "$f" "/tmp/$(basename "$f" .js).mjs"
+            node --check "/tmp/$(basename "$f" .js).mjs" || exit 1
+          done
+          echo "functions conferidas"

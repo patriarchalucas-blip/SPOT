@@ -26,7 +26,7 @@ const CAP_MENSAL = 30000;
 const TTL_OK = 60 * 60 * 24 * 7;   // o link do CDN não é eterno; 7 dias é conservador
 const TTL_FALHA = 60 * 10;
 
-const REF_OK = /^places\/[A-Za-z0-9_-]{1,120}\/photos\/[A-Za-z0-9_-]{1,300}$/;
+export const REF_OK = /^places\/[A-Za-z0-9_-]{1,120}\/photos\/[A-Za-z0-9_-]{1,300}$/;
 
 export async function onRequestGet(context) {
   const { request, env } = context;
