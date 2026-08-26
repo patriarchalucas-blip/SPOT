@@ -2048,7 +2048,7 @@ async function runExplore(){
       const addr=p.formattedAddress||'';
       const c=cityFromComponents(p.addressComponents)||extractCityFromAddr(addr);
       const country=countryFromComponents(p.addressComponents);
-      return{name:p.displayName?.text||'',address:addr,city:c,country,rating:String(p.rating),count:p.userRatingCount,subcat:guessSubcat(p.types),phone:p.nationalPhoneNumber||'',photo_url:placePhotoUrl(p,400),website_url:p.websiteUri||'',maps_url:p.googleMapsUri||''};
+      return{name:p.displayName?.text||'',address:addr,city:c,country,region:regionFromComponents(p.addressComponents),rating:String(p.rating),count:p.userRatingCount,subcat:guessSubcat(p.types),phone:p.nationalPhoneNumber||'',photo_url:placePhotoUrl(p,400),website_url:p.websiteUri||'',maps_url:p.googleMapsUri||''};
     });
     renderExploreResults();
   }catch(e){
@@ -2135,7 +2135,7 @@ function showNearbySuggestions(){
         const city=cityFromComponents(p.addressComponents)||extractCityFromAddr(addr);
         const country=countryFromComponents(p.addressComponents);
         const fotos=placePhotoUrls(p);
-        return{name:p.displayName?.text||'',icon:catIcon(S.addCat),city,country,address:addr,subcat:guessSubcat(p.types),phone:p.nationalPhoneNumber||'',photo_url:fotos.full,photo_thumb:fotos.thumb,rating_google:p.rating?String(p.rating):'',website_url:p.websiteUri||'',maps_url:p.googleMapsUri||''};
+        return{name:p.displayName?.text||'',icon:catIcon(S.addCat),city,country,region:regionFromComponents(p.addressComponents),address:addr,subcat:guessSubcat(p.types),phone:p.nationalPhoneNumber||'',photo_url:fotos.full,photo_thumb:fotos.thumb,rating_google:p.rating?String(p.rating):'',website_url:p.websiteUri||'',maps_url:p.googleMapsUri||''};
       });
       r.innerHTML='<div class="search-nearby-label">Perto de você</div>'+S_nearbyResults.map((p,i)=>{
         const thumb=p.photo_thumb?'<div class="sr-icon"><img src="'+escUrl(p.photo_thumb)+'" loading="eager" style="width:100%;height:100%;object-fit:cover;border-radius:12px"></div>':'<div class="sr-icon">'+p.icon+'</div>';
@@ -2211,7 +2211,7 @@ function maybeShowCheckin(){
       const city=cityFromComponents(p.addressComponents)||extractCityFromAddr(addr);
       const country=countryFromComponents(p.addressComponents);
       const fotos=placePhotoUrls(p);
-      CHECKIN.place={name,meta:addr,icon:catIcon('food'),city,country,address:addr,subcat:'',phone:p.nationalPhoneNumber||'',photo_url:fotos.full,photo_thumb:fotos.thumb,rating_google:p.rating?String(p.rating):'',website_url:p.websiteUri||'',maps_url:p.googleMapsUri||'',category:'food'};
+      CHECKIN.place={name,meta:addr,icon:catIcon('food'),city,country,region:regionFromComponents(p.addressComponents),address:addr,subcat:'',phone:p.nationalPhoneNumber||'',photo_url:fotos.full,photo_thumb:fotos.thumb,rating_google:p.rating?String(p.rating):'',website_url:p.websiteUri||'',maps_url:p.googleMapsUri||'',category:'food'};
       document.getElementById('checkinName').textContent=name;
       document.getElementById('checkinBanner').style.display='flex';
     }catch(e){console.error('maybeShowCheckin',e)}
@@ -2273,7 +2273,7 @@ function searchPlaces(v){
         const country=countryFromComponents(p.addressComponents);
         const rating=p.rating?String(p.rating):'';
         const fotos=placePhotoUrls(p);
-        return{name,meta:addr,icon:catIcon(S.addCat),city,country,address:addr,subcat:guessSubcat(p.types),phone:p.nationalPhoneNumber||'',photo_url:fotos.full,photo_thumb:fotos.thumb,rating_google:rating,website_url:p.websiteUri||'',maps_url:p.googleMapsUri||''};
+        return{name,meta:addr,icon:catIcon(S.addCat),city,country,region:regionFromComponents(p.addressComponents),address:addr,subcat:guessSubcat(p.types),phone:p.nationalPhoneNumber||'',photo_url:fotos.full,photo_thumb:fotos.thumb,rating_google:rating,website_url:p.websiteUri||'',maps_url:p.googleMapsUri||''};
       });
       if(myReqId!==searchReqId)return;
       r.innerHTML=S.searchResults.map((p,i)=>{
@@ -2442,6 +2442,34 @@ function resetNoteSheet(){
   document.querySelectorAll('#addStars .star-btn').forEach(b=>b.style.color='rgba(0,0,0,0.1)');
   const nf=document.getElementById('noteField');nf.value='';nf.classList.remove('error');
 }
+// ═══ METRÓPOLE FATIADA EM DISTRITOS ═══
+// Tóquio não é uma cidade no Google: são 23. Um restaurante em Shibuya volta
+// com a cidade "Shibuya", outro em Shinjuku volta "Shinjuku", e o app contava
+// as duas como cidades diferentes — o mesmo que contar Tatuapé e Pinheiros
+// como duas cidades em vez de São Paulo. Isso inflava o contador de cidades,
+// que é um número que a tela mostra.
+//
+// O sinal que resolve não está na API: os `types` de Tokyo e de Lazio são
+// idênticos, não há como perguntar ao Google "isto é um distrito?". Mas o app
+// já sabe a resposta por outro caminho — a VIAGEM tem uma cidade, escolhida
+// pela pessoa. Se a divisão administrativa do lugar é a cidade da viagem, o
+// que veio como cidade é distrito dela.
+//
+//   viagem Tóquio + spot cuja divisão é Tóquio  -> Tóquio   (era Shibuya)
+//   viagem Tóquio + spot em Hakone (Kanagawa)   -> Hakone   (é cidade mesmo)
+//   viagem Roma   + spot cuja divisão é Lazio   -> Roma     (não bate, intacto)
+//   viagem Paris  + divisão Île-de-France       -> Paris    (não bate, intacto)
+//
+// Vale pra qualquer metrópole do mundo sem lista nenhuma: o que faz Tóquio
+// funcionar é a comparação, não o nome dela estar escrito em algum lugar.
+async function resolverCidadeDoSpot(p,trip){
+  const cidade=await canonizarCidade(p.city||'',p.country||'');
+  const daViagem=trip&&trip.initial_city;
+  if(!daViagem||!p.region)return cidade;
+  if(cityCore(cidade)===cityCore(daViagem))return daViagem;
+  const divisao=await canonizarCidade(p.region,p.country||'');
+  return (divisao&&cityCore(divisao)===cityCore(daViagem))?daViagem:cidade;
+}
 async function saveSpot(addAnother){
   const note=document.getElementById('noteField').value.trim(); // optional now
   const btn=document.getElementById('saveSpotBtn'),btn2=document.getElementById('saveAndAddBtn');
@@ -2450,7 +2478,7 @@ async function saveSpot(addAnother){
   const t=S.addTrip,p=S.selPlace;
   // Canoniza antes de gravar: o banco passa a guardar um nome só por cidade,
   // e todo o resto do app (cards, contagem, foto) enxerga esse nome.
-  const cidade=await canonizarCidade(p.city||'',p.country||'');
+  const cidade=await resolverCidadeDoSpot(p,t);
   const rec={user_id:S.user.id,trip_id:t.id,name:p.name,category:S.addCat,my_note:note,city:cidade,address:p.address||'',photo_url:p.photo_url||'',place_type:catLabel(S.addCat),rating_google:p.rating_google||'',status:addStatus,website_url:p.website_url||'',maps_url:p.maps_url||''};
   // Só faz sentido em experiência — nas outras categorias a coluna fica nula
   if(S.addCat==='experience'&&addSubcat)rec.subcategory=addSubcat;
@@ -2765,6 +2793,13 @@ function normalizeCountry(country){
   if(c)return c.name;
   const map={'Brazil':'Brasil','Croatia':'Croácia','Italy':'Itália','France':'França','Spain':'Espanha','Greece':'Grécia','Japan':'Japão','Thailand':'Tailândia','Indonesia':'Indonésia','Morocco':'Marrocos','United States':'Estados Unidos','Germany':'Alemanha','United Kingdom':'Reino Unido','Mexico':'México','Colombia':'Colômbia','Turkey':'Turquia','Türkiye':'Turquia','Egypt':'Egito','India':'Índia','China':'China','Australia':'Austrália','Canada':'Canadá','Switzerland':'Suíça','Austria':'Áustria','Netherlands':'Holanda','Belgium':'Bélgica','Czechia':'República Tcheca','Hungary':'Hungria','Poland':'Polônia','Norway':'Noruega','Sweden':'Suécia','Denmark':'Dinamarca','Ireland':'Irlanda','South Africa':'África do Sul','South Korea':'Coreia do Sul','Singapore':'Singapura','Vietnam':'Vietnã','Philippines':'Filipinas','Bosnia and Herzegovina':'Bósnia e Herzegovina','Jordan':'Jordânia','New Zealand':'Nova Zelândia','Peru':'Peru','Argentina':'Argentina','Chile':'Chile','Portugal':'Portugal','Montenegro':'Montenegro'};
   return map[country]||country;
+}
+// A divisão administrativa do lugar (estado, prefeitura, província). Sozinha
+// não vale nada; serve pra comparar com a cidade da viagem — ver saveSpot.
+function regionFromComponents(comps){
+  if(!comps||!comps.length)return'';
+  const c=comps.find(x=>(x.types||[]).includes('administrative_area_level_1'));
+  return c?c.longText:'';
 }
 function countryFromComponents(comps){
   if(!comps||!comps.length)return'';
