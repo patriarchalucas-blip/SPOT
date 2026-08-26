@@ -430,6 +430,11 @@ body{font-family:'DM Sans',sans-serif;background:var(--dark);max-width:430px;mar
 #profile{background:#0b1620;overflow-y:auto}
 /* Identidade: quem você é, em tamanho de gente. */
 .profile-ident{display:flex;align-items:center;gap:15px;padding:40px 22px 14px;background:#0b1620;position:relative;z-index:5}
+/* Engrenagem: o que é ajuste de conta sai da lista de conteúdo e vem pra cá,
+   onde todo app põe. Antes "editar bio" e "sair da conta" dividiam a mesma
+   lista com "marcar país visitado", que é conteúdo, não configuração. */
+.prof-config-btn{margin-left:auto;width:38px;height:38px;flex-shrink:0;background:rgba(234,231,224,.06);border:1px solid var(--border);border-radius:50%;color:var(--ink2);font-size:19px;display:flex;align-items:center;justify-content:center;cursor:pointer}
+.prof-config-btn:active{opacity:.6}
 .profile-ident-txt{min-width:0}
 .profile-user{font-family:var(--mono);font-size:12px;color:var(--ink3);margin-top:3px}
 .profile-bio{padding:0 22px 18px;background:#0b1620;font-size:13.5px;color:var(--ink2);line-height:1.55;position:relative;z-index:5}
@@ -734,6 +739,7 @@ svg.ic path,svg.ic circle,svg.ic line,svg.ic polyline,svg.ic rect{fill:none;stro
     </div>
     <input type="file" id="avatarFileInput" accept="image/*" style="display:none" onchange="onAvatarFileChosen(this)">
     <div class="profile-ident-txt"><div class="profile-name" id="profName">—</div><div class="profile-user" id="profUser"></div></div>
+    <button class="prof-config-btn" onclick="abrirConfig()" data-ic="gear" aria-label="Configurações"></button>
   </div>
   <div class="profile-bio" id="profBio" style="display:none"></div>
 
@@ -743,8 +749,6 @@ svg.ic path,svg.ic circle,svg.ic line,svg.ic polyline,svg.ic rect{fill:none;stro
     <div class="prof-acoes">
       <div class="prof-linha" onclick="openVisitedCountryPicker()"><span class="pl-ic" data-ic="globe"></span><span class="pl-txt">Marcar país que já visitei</span><span class="pl-seta">›</span></div>
       <div class="prof-linha" onclick="openHomeCountryPicker()"><span class="pl-ic" data-ic="pin"></span><span class="pl-txt">Marcar país onde moro</span><span class="pl-seta">›</span></div>
-      <div class="prof-linha" onclick="abrirEditarPerfil()"><span class="pl-ic" data-ic="edit"></span><span class="pl-txt">Nome de usuário e bio</span><span class="pl-seta">›</span></div>
-      <div class="prof-linha prof-sair" onclick="signOut()"><span class="pl-txt">Sair da conta</span></div>
     </div>
     <div class="prof-email" id="profEmail"></div>
     <div style="height:40px"></div>
@@ -881,13 +885,16 @@ svg.ic path,svg.ic circle,svg.ic line,svg.ic polyline,svg.ic rect{fill:none;stro
 <div class="overlay" id="ov-mismatch" onclick="closeOut(event,'ov-mismatch')"><div class="sheet"><button class="sheet-close" onclick="closeOv('ov-mismatch')" data-ic="close" aria-label="Fechar"></button><div class="sheet-handle"></div><div class="sheet-title">País diferente</div><div class="cm-text" id="cmText"></div><button class="sheet-cta" id="cmMoveBtn">Mover</button><button class="delete-link" style="color:var(--ink3)" onclick="keepInThisTripAnyway()">Adicionar nesta viagem mesmo assim</button></div></div>
 <div class="overlay" id="ov-newtrip" onclick="closeOut(event,'ov-newtrip')"><div class="sheet"><button class="sheet-close" onclick="closeOv('ov-newtrip')" data-ic="close" aria-label="Fechar"></button><div class="sheet-handle"></div><div class="sheet-title">Para qual cidade?</div><div class="nt-label">Cidade da viagem — o país é identificado sozinho</div><div class="dest-search-wrap"><span class="dsi" data-ic="search"></span><input class="nt-input" style="padding-left:44px" id="countrySearch" placeholder="Buscar cidade..." oninput="filterNewTripCity(this.value)"></div><div id="countryList"></div><div class="nt-label" style="margin-top:8px">Datas (opcional)</div><div class="dates-row"><input class="nt-input" type="date" id="tripStart"><input class="nt-input" type="date" id="tripEnd"></div><button class="sheet-cta" id="createTripBtn" onclick="createTrip()" style="opacity:.4;pointer-events:none">Selecione uma cidade</button></div></div>
 <div class="overlay" id="ov-quickvisit" onclick="closeOut(event,'ov-quickvisit')"><div class="sheet"><button class="sheet-close" onclick="closeOv('ov-quickvisit')" data-ic="close" aria-label="Fechar"></button><div class="sheet-handle"></div><div class="sheet-title" id="quickVisitTitle">Qual país você já visitou?</div><div class="nt-label">País</div><div class="dest-search-wrap"><span class="dsi" data-ic="search"></span><input class="nt-input" style="padding-left:44px" id="countrySearch2" placeholder="Buscar país..." oninput="filterCountries2(this.value)"></div><div id="countryList2"></div><button class="sheet-cta" id="createVisitBtn" onclick="markVisited()" style="opacity:.4;pointer-events:none">Selecione um país</button></div></div>
-<div class="overlay" id="ov-editperfil" onclick="closeOut(event,'ov-editperfil')"><div class="sheet"><button class="sheet-close" onclick="closeOv('ov-editperfil')" data-ic="close" aria-label="Fechar"></button><div class="sheet-handle"></div><div class="sheet-title">Editar perfil</div>
+<div class="overlay" id="ov-editperfil" onclick="closeOut(event,'ov-editperfil')"><div class="sheet"><button class="sheet-close" onclick="closeOv('ov-editperfil')" data-ic="close" aria-label="Fechar"></button><div class="sheet-handle"></div><div class="sheet-title">Configurações</div>
+<div class="prof-linha" style="border-top:1px solid var(--border)" onclick="document.getElementById('avatarFileInput').click()"><span class="pl-ic" data-ic="user"></span><span class="pl-txt">Trocar foto de perfil</span><span class="pl-seta">›</span></div>
+<div style="height:16px"></div>
 <div class="nt-label">Seu nome de usuário</div>
 <div style="display:flex;gap:8px;margin-bottom:4px"><input class="nt-input" id="usernameInput" placeholder="seu_username" style="flex:1" autocapitalize="none" oninput="document.getElementById('usernameStatus').textContent=''"><button class="req-btn req-accept" style="padding:0 18px" onclick="saveUsername()">Salvar</button></div>
 <div class="feed-time" id="usernameStatus" style="margin-bottom:18px"></div>
 <div class="nt-label">Bio</div>
 <textarea class="note-input" id="bioInput" rows="2" placeholder="Uma frase sobre como você viaja" style="margin-bottom:8px"></textarea>
-<button class="sheet-cta" onclick="saveBio()">Salvar bio</button></div></div>
+<button class="sheet-cta" onclick="saveBio()">Salvar bio</button>
+<div class="prof-linha prof-sair" style="margin-top:22px;border-top:1px solid var(--border);border-bottom:none" onclick="signOut()"><span class="pl-txt">Sair da conta</span></div></div></div>
 
 <div class="overlay" id="ov-addfriend" onclick="closeOut(event,'ov-addfriend')"><div class="sheet"><button class="sheet-close" onclick="closeOv('ov-addfriend')" data-ic="close" aria-label="Fechar"></button><div class="sheet-handle"></div><div class="sheet-title">Adicionar amigo</div><div class="nt-label">Username do amigo</div><input class="nt-input" id="friendUsernameInput" type="text" placeholder="digite aqui" autocapitalize="none" oninput="mostrarErroAmigo('')"><div class="auth-error" id="friendAddErr"></div><button class="sheet-cta" id="sendReqBtn" onclick="sendFriendRequest()">Enviar pedido</button><div class="conv-ou"><span>ou</span></div><button class="secondary-link" id="convidarBtn" style="margin-top:0" onclick="compartilharConvite()">Convidar por link</button><div class="conv-dica">Quem abrir o link entra já como seu amigo, sem precisar do seu username.</div></div></div>
 
@@ -931,7 +938,8 @@ alert:'<circle cx="12" cy="12" r="9"/><path d="M12 7.5v6"/><path d="M12 16v.01"/
 send:'<path d="M22 2 11 13"/><path d="M22 2 15 22l-4-9-9-4 20-7Z"/>',
 menu:'<path d="M4 6.5h16"/><path d="M4 12h16"/><path d="M4 17.5h10"/>',
 instagram:'<rect x="3.5" y="3.5" width="17" height="17" rx="5"/><circle cx="12" cy="12" r="4.2"/><path d="M16.3 7.3v.01"/>',
-mapPin:'<path d="M12 21c4-4.4 6-7.7 6-10.5a6 6 0 1 0-12 0C6 13.3 8 16.6 12 21Z"/><path d="M9 10.5l1.7 1.7L15 8.3"/>'
+mapPin:'<path d="M12 21c4-4.4 6-7.7 6-10.5a6 6 0 1 0-12 0C6 13.3 8 16.6 12 21Z"/><path d="M9 10.5l1.7 1.7L15 8.3"/>',
+gear:'<circle cx="12" cy="12" r="3.1"/><path d="M12 3.2v2.4M12 18.4v2.4M4.8 4.8l1.7 1.7M17.5 17.5l1.7 1.7M3.2 12h2.4M18.4 12h2.4M4.8 19.2l1.7-1.7M17.5 6.5l1.7-1.7"/>'
 };
 function icon(n,c){return '<svg class="ic'+(c?' '+c:'')+'" viewBox="0 0 24 24" aria-hidden="true">'+(ICONS[n]||ICONS.pin)+'</svg>';}
 // ═══ ESCAPE DE HTML (obrigatório em TODO innerHTML) ═══
@@ -3098,7 +3106,7 @@ function visitedCityCount(){
   S.trips.forEach(t=>(t._spots||[]).forEach(s=>{const c=cityOf(s);if(c)set.add(c)}));
   return set.size;
 }
-function abrirEditarPerfil(){
+function abrirConfig(){
   const p=S.profile||{};
   document.getElementById('usernameInput').value=p.username||'';
   document.getElementById('bioInput').value=p.bio||'';
