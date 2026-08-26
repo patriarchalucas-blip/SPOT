@@ -98,6 +98,36 @@ Motivo da existência: o visual original (fundo creme `#f4ede1` + serifada de al
 - **Placar entre amigos** (gamificação) — Lucas achou "fraco", não vale reintroduzir sem uma abordagem nova.
 - **Importar notas soltas via IA** — colar bagunçado (bloco de notas/WhatsApp) e a IA separa em lugares estruturados. Mesma peça de infra do recap/explorar.
 
+## Estado do banco (migrações aplicadas)
+
+Todas as migrações de `migrations/` já foram rodadas no Supabase — 001 a 011.
+Conferido em 25/08/2026. Isso inclui:
+
+- **008** — RLS de verdade em `follows`, `profiles`, `trips` e `spots`. Antes disso a
+  política de INSERT em `follows` não checava o `status`, então dava pra virar amigo
+  de alguém sem ser aceito. Rodar `migrations/008_verificar.sql` devolve 8 linhas OK.
+- **009** — `spots.subcategory` (subcategoria de experiência).
+- **010** — `spots.phone` (o botão "Ligar" que substituiu o TheFork).
+- **011** — tabela `invites` + `invite_owner()` + `redeem_invite()` (convite por link).
+
+**Como conferir o schema sem pedir SQL ao Lucas:** a anon key está no `index.html` e o
+PostgREST valida a coluna antes da permissão. Então
+`curl "$SB_URL/rest/v1/spots?select=<coluna>&limit=1"` com `apikey`+`Authorization`
+devolve **400 `42703`** se a coluna não existe e **200 `[]`** se existe (o `[]` é o RLS
+barrando, o que de brinde confirma que ele está ligado).
+
+## Acesso ao GitHub
+
+O push é por **SSH** (`git@github.com:patriarchalucas-blip/SPOT.git`), com a chave em
+`~/.ssh/id_ed25519` registrada na conta como "Claude Code - notebook Lucas".
+
+Não havia credencial HTTPS do GitHub nesta máquina em momento nenhum — as guardadas no
+Windows Credential Manager são do GitLab. O que funcionava antes vinha do ambiente do
+agente e se perdia a cada reinício de sessão, o que gerou uma tarde inteira de upload
+manual pela interface do GitHub. **Se o push falhar com "could not read Username",
+confira se o remote voltou pra HTTPS** — não tente autenticar por HTTPS, não há
+credencial pra isso.
+
 ## Como Lucas trabalha (importante pro Claude Code também)
 
 - Prefere que decisões de escopo grande (redesign, arquitetura) sejam **discutidas antes de executar** — ele literalmente diz "não execute ainda" quando quer só pensar junto, e "execute" quando quer que rode. Respeitar isso.
