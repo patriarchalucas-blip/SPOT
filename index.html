@@ -2123,7 +2123,7 @@ function showNearbySuggestions(){
       const resp=await fetch('https://places.googleapis.com/v1/places:searchNearby',{
         method:'POST',
         headers:{'Content-Type':'application/json','X-Goog-Api-Key':GAPI,'X-Goog-FieldMask':'places.displayName,places.formattedAddress,places.addressComponents,places.photos,places.rating,places.userRatingCount,places.websiteUri,places.googleMapsUri,places.types,places.nationalPhoneNumber'},
-        body:JSON.stringify({includedTypes:[tipo],maxResultCount:8,locationRestriction:{circle:{center:{latitude,longitude},radius:600}}})
+        body:JSON.stringify({includedTypes:[tipo],maxResultCount:8,languageCode:'pt-BR',locationRestriction:{circle:{center:{latitude,longitude},radius:600}}})
       });
       const data=await resp.json();
       if(si&&si.value.trim())return;
@@ -2172,7 +2172,7 @@ function maybeShowCheckin(){
         // faz sentido perguntar "você está aqui?" de algo que você já sabe
         // que está (diferente de "ah é, tem esse restaurante aqui" que é o
         // caso real de uso). Hotel também saiu — não é "check-in" o alvo ali.
-        body:JSON.stringify({includedTypes:['restaurant','bakery','cafe','bar'],maxResultCount:15,locationRestriction:{circle:{center:{latitude,longitude},radius:45}}})
+        body:JSON.stringify({includedTypes:['restaurant','bakery','cafe','bar'],maxResultCount:15,languageCode:'pt-BR',locationRestriction:{circle:{center:{latitude,longitude},radius:45}}})
       });
       const data=await resp.json();
       // O locationRestriction do Google é só uma dica de área — não é garantia
@@ -2289,13 +2289,62 @@ function searchPlaces(v){
 }
 function cityFromComponents(comps){
   if(!comps||!comps.length)return'';
-  // Prioridade: locality > postal_town > administrative_area_level_2.
-  // administrative_area_level_1 ficou de fora de propósito: é estado/condado, não
-  // cidade. Quando o lugar não tinha `locality` a gente caía nele e gravava
-  // "Split-Dalmatia County" em vez de "Split" — foi isso que duplicou a contagem.
-  // Sem nenhum dos três, quem responde é o extractCityFromAddr de quem chama.
+  // Prioridade: locality > postal_town > adm1 > adm2.
+  //
+  // `locality` continua mandando: é ela que dá "Split" em vez de
+  // "Split-Dalmatia County", o defeito que duplicou a contagem uma vez.
+  //
+  // O que mudou foi a ordem dos dois seguintes. Onde NÃO existe locality —
+  // Seul, Bangkok, Pequim, Xangai, Hong Kong, Istambul, Machu Picchu — o adm2
+  // devolve a subdivisão de dentro ("Fatih" no lugar de Istambul, "Urubamba"
+  // no lugar de Cusco) e o adm1 devolve a cidade que a pessoa reconhece.
+  // Medido na API, não deduzido. Os Bálcãs inteiros têm locality, então nada
+  // do que já está salvo muda de nome por causa disso.
   const byType=(t)=>comps.find(c=>(c.types||[]).includes(t))?.longText;
-  return byType('locality')||byType('postal_town')||byType('administrative_area_level_2')||'';
+  return byType('locality')||byType('postal_town')||byType('administrative_area_level_1')||byType('administrative_area_level_2')||'';
+}
+
+// ═══ NOME CANÔNICO DE CIDADE ═══
+// O Google devolve a MESMA cidade com grafias diferentes conforme o lugar
+// consultado — "Amsterdam" e "Amsterdã", "Mexico City" e "Ciudad de México",
+// "New York" e "Nova Iorque" — mesmo com languageCode:'pt-BR'. Cada grafia
+// virava um card e uma foto separados.
+//
+// Em vez de uma lista de cidades minha (que eu teria que alimentar toda vez
+// que alguém viajasse pra um lugar novo), quem responde é o próprio Google:
+// pergunta o nome uma vez, guarda a resposta. Vale pro mundo inteiro sem
+// manutenção — "Krung Thep Maha Nakhon" vira Bangkok e "İstanbul" vira
+// Istambul pelo mesmo caminho que "Amsterdam" vira Amsterdã.
+let cidadeCanonCache={};
+try{cidadeCanonCache=JSON.parse(localStorage.getItem('spot_cidade_canon')||'{}')}catch(e){cidadeCanonCache={}}
+async function canonizarCidade(nome,pais){
+  if(!nome)return'';
+  const chave=nome+'|'+(pais||'');
+  if(cidadeCanonCache[chave]!==undefined)return cidadeCanonCache[chave]||nome;
+  const consulta=async(estrito)=>{
+    const corpo={textQuery:nome+(pais?', '+pais:''),languageCode:'pt-BR',maxResultCount:1};
+    if(estrito){corpo.includedType='locality';corpo.strictTypeFiltering=true}
+    const r=await fetch('https://places.googleapis.com/v1/places:searchText',{
+      method:'POST',
+      headers:{'Content-Type':'application/json','X-Goog-Api-Key':GAPI,'X-Goog-FieldMask':'places.displayName,places.types'},
+      body:JSON.stringify(corpo)
+    });
+    return ((await r.json()).places||[])[0]||null;
+  };
+  let achado='';
+  try{
+    let p=await consulta(true);
+    // Tóquio e Seul não são `locality` no Google (são prefeitura e cidade
+    // especial), então a busca estrita não acha nenhuma das duas. A segunda
+    // tentativa aceita divisão administrativa, mas só o que for lugar
+    // político — sem esse filtro "Lazio" traz o time de futebol.
+    if(!p)p=await consulta(false);
+    const t=(p&&p.types)||[];
+    if(p&&t.includes('political'))achado=(p.displayName&&p.displayName.text)||'';
+  }catch(e){/* offline ou cota: fica com o nome que veio do endereço */}
+  cidadeCanonCache[chave]=achado;
+  try{localStorage.setItem('spot_cidade_canon',JSON.stringify(cidadeCanonCache))}catch(e){}
+  return achado||nome;
 }
 function extractCityFromAddr(addr){
   if(!addr)return'';
@@ -2399,7 +2448,10 @@ async function saveSpot(addAnother){
   btn.disabled=true;btn2.disabled=true;
   (addAnother?btn2:btn).textContent='Salvando...';
   const t=S.addTrip,p=S.selPlace;
-  const rec={user_id:S.user.id,trip_id:t.id,name:p.name,category:S.addCat,my_note:note,city:p.city||'',address:p.address||'',photo_url:p.photo_url||'',place_type:catLabel(S.addCat),rating_google:p.rating_google||'',status:addStatus,website_url:p.website_url||'',maps_url:p.maps_url||''};
+  // Canoniza antes de gravar: o banco passa a guardar um nome só por cidade,
+  // e todo o resto do app (cards, contagem, foto) enxerga esse nome.
+  const cidade=await canonizarCidade(p.city||'',p.country||'');
+  const rec={user_id:S.user.id,trip_id:t.id,name:p.name,category:S.addCat,my_note:note,city:cidade,address:p.address||'',photo_url:p.photo_url||'',place_type:catLabel(S.addCat),rating_google:p.rating_google||'',status:addStatus,website_url:p.website_url||'',maps_url:p.maps_url||''};
   // Só faz sentido em experiência — nas outras categorias a coluna fica nula
   if(S.addCat==='experience'&&addSubcat)rec.subcategory=addSubcat;
   if(p.phone)rec.phone=p.phone;
@@ -2451,6 +2503,7 @@ async function createTrip(){
   let dates='';if(s&&e)dates=fmtD(s)+' – '+fmtD(e);else if(s)dates='A partir de '+fmtD(s);
   const btn=document.getElementById('createTripBtn');btn.textContent='Criando...';btn.style.pointerEvents='none';
   // store dates as raw ISO too, for smart status
+  if(cidadeEscolhida)cidadeEscolhida=await canonizarCidade(cidadeEscolhida,name);
   let{data,error}=await dbInsert('trips',{user_id:S.user.id,name,destinations:[name],dates,date_start:s||null,date_end:e||null,status:'planning',initial_city:cidadeEscolhida||null});
   // Degrada aos poucos se colunas novas ainda não existirem (migração não rodada):
   // 1) sem colunas de data, com initial_city  2) com colunas de data, sem initial_city  3) nenhuma das duas
