@@ -428,6 +428,20 @@ body{font-family:'DM Sans',sans-serif;background:var(--dark);max-width:430px;mar
 .cm-text{font-size:15px;line-height:1.5;color:var(--ink2);margin:8px 0 20px}
 /* ── Profile / World Map (Been-style) ── */
 #profile{background:#0b1620;overflow-y:auto}
+/* Identidade: quem você é, em tamanho de gente. */
+.profile-ident{display:flex;align-items:center;gap:15px;padding:40px 22px 14px;background:#0b1620;position:relative;z-index:5}
+.profile-ident-txt{min-width:0}
+.profile-user{font-family:var(--mono);font-size:12px;color:var(--ink3);margin-top:3px}
+.profile-bio{padding:0 22px 18px;background:#0b1620;font-size:13.5px;color:var(--ink2);line-height:1.55;position:relative;z-index:5}
+/* Ações em linha, no lugar de três estilos de botão diferentes. */
+.prof-acoes{margin-top:26px;border-top:1px solid var(--border)}
+.prof-linha{display:flex;align-items:center;gap:12px;padding:15px 2px;border-bottom:1px solid var(--border);cursor:pointer}
+.prof-linha:active{opacity:.6}
+.pl-ic{color:var(--ink3);font-size:17px;display:flex;flex-shrink:0}
+.pl-txt{flex:1;font-size:14.5px;color:var(--ink)}
+.pl-seta{color:var(--ink3);font-size:17px;flex-shrink:0}
+.prof-sair .pl-txt{color:var(--red)}
+.prof-email{font-family:var(--mono);font-size:11px;color:var(--ink3);text-align:center;margin-top:22px}
 .profile-header-bar{display:flex;align-items:center;gap:14px;padding:40px 22px 16px;background:#0b1620;position:relative;z-index:5}
 /* ═══ PERFIL DE AMIGO (só leitura) ═══ */
 .friend-top{display:flex;align-items:center;gap:14px;padding:40px 22px 14px;background:#0b1620;position:relative;z-index:5}
@@ -443,7 +457,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--dark);max-width:430px;mar
 .friend-row-user{font-family:'IBM Plex Mono',monospace;font-size:11.5px;color:var(--ink3)}
 .friend-row-arrow{color:var(--ink3);font-size:17px;flex-shrink:0}
 
-.profile-avatar{width:54px;height:54px;border-radius:50%;background:var(--green);color:var(--dark);display:flex;align-items:center;justify-content:center;font-size:22px;font-weight:600;flex-shrink:0;box-shadow:var(--shadow-md),0 0 0 3px rgba(234,231,224,.06)}
+.profile-avatar{width:64px;height:64px;border-radius:50%;background:var(--green);color:var(--dark);display:flex;align-items:center;justify-content:center;font-size:22px;font-weight:600;flex-shrink:0;box-shadow:var(--shadow-md),0 0 0 3px rgba(234,231,224,.06)}
 .profile-avatar-wrap{position:relative;cursor:pointer;flex-shrink:0}
 .avatar-edit-badge{position:absolute;bottom:-2px;right:-2px;width:22px;height:22px;border-radius:50%;background:var(--terra);color:#fff;display:flex;align-items:center;justify-content:center;font-size:11px;border:2px solid #0b1620}
 .avatar-edit-badge svg{width:11px;height:11px}
@@ -724,37 +738,26 @@ svg.ic path,svg.ic circle,svg.ic line,svg.ic polyline,svg.ic rect{fill:none;stro
 </div>
 
 <div class="screen" id="profile">
-  <div class="profile-header-bar">
+  <div class="profile-ident">
     <div class="profile-avatar-wrap" onclick="document.getElementById('avatarFileInput').click()">
       <div class="profile-avatar" id="profAvatar">?</div>
       <div class="avatar-edit-badge" data-ic="edit"></div>
     </div>
     <input type="file" id="avatarFileInput" accept="image/*" style="display:none" onchange="onAvatarFileChosen(this)">
-    <div><div class="profile-name" id="profName">—</div><div class="profile-email" id="profEmail"></div></div>
+    <div class="profile-ident-txt"><div class="profile-name" id="profName">—</div><div class="profile-user" id="profUser"></div></div>
   </div>
+  <div class="profile-bio" id="profBio" style="display:none"></div>
 
-  <div class="profile-statline">
-    <div class="hero-headline" id="heroHeadline">Comece a explorar o mundo</div>
-    <div class="hero-stats">
-      <div class="hs-item"><span class="hs-n" id="wsCountries">0</span><span class="hs-l">países</span></div>
-      <div class="hs-div"></div>
-      <div class="hs-item"><span class="hs-n" id="wsCities">0</span><span class="hs-l">cidades</span></div>
-      <div class="hs-div"></div>
-      <div class="hs-item"><span class="hs-n" id="wsContinents">0</span><span class="hs-l">continentes</span></div>
-    </div>
-  </div>
   <div class="profile-body">
-    <div class="section-head"><span class="section-title">Seu username</span></div>
-    <div style="display:flex;gap:8px;margin-bottom:4px"><input class="nt-input" id="usernameInput" placeholder="seu_username" style="flex:1" oninput="document.getElementById('usernameStatus').textContent=''"><button class="req-btn req-accept" style="padding:0 18px" onclick="saveUsername()">Salvar</button></div>
-    <div class="feed-time" id="usernameStatus" style="margin-bottom:20px"></div>
-    <div class="section-head"><span class="section-title">Bio</span></div>
-    <textarea class="note-input" id="bioInput" rows="2" placeholder="Uma frase sobre como você viaja" style="margin-bottom:8px"></textarea>
-    <button class="req-btn req-accept" style="padding:0 18px;height:38px;margin-bottom:20px" onclick="saveBio()">Salvar bio</button>
-    <div class="section-head"><span class="section-title">Países que conheço</span></div>
+    <div class="section-head"><span class="section-title">Onde já estive</span></div>
     <div class="country-chips" id="countryChips"></div>
-    <div class="new-trip-btn" style="margin:16px 0 0" onclick="openVisitedCountryPicker()"><div class="new-trip-icon" data-ic="globe"></div><div class="new-trip-text">Marcar país que já visitei</div></div>
-    <div class="new-trip-btn" style="margin:10px 0 0" onclick="openHomeCountryPicker()"><div class="new-trip-icon" data-ic="pin"></div><div class="new-trip-text">Marcar país onde moro</div></div>
-    <button class="action-btn" style="margin-top:24px;background:var(--surface);color:var(--ink2);border:1px solid var(--border)" onclick="signOut()">Sair da conta</button>
+    <div class="prof-acoes">
+      <div class="prof-linha" onclick="openVisitedCountryPicker()"><span class="pl-ic" data-ic="globe"></span><span class="pl-txt">Marcar país que já visitei</span><span class="pl-seta">›</span></div>
+      <div class="prof-linha" onclick="openHomeCountryPicker()"><span class="pl-ic" data-ic="pin"></span><span class="pl-txt">Marcar país onde moro</span><span class="pl-seta">›</span></div>
+      <div class="prof-linha" onclick="abrirEditarPerfil()"><span class="pl-ic" data-ic="edit"></span><span class="pl-txt">Nome de usuário e bio</span><span class="pl-seta">›</span></div>
+      <div class="prof-linha prof-sair" onclick="signOut()"><span class="pl-txt">Sair da conta</span></div>
+    </div>
+    <div class="prof-email" id="profEmail"></div>
     <div style="height:40px"></div>
   </div>
   <div class="bottom-nav"><div class="nav-item" onclick="goTo('dashboard');loadDashboard()"><div class="nav-icon" data-ic="map"></div><div class="nav-label">Viagens</div></div><div class="nav-item" onclick="goTo('explore');loadExplore()"><div class="nav-icon" data-ic="search"></div><div class="nav-label">Explorar</div></div><div class="nav-item" onclick="goTo('friends');loadFriends()"><div class="nav-icon" data-ic="users"></div><div class="nav-label">Amigos</div></div><div class="nav-item active" onclick="goTo('profile');loadProfile()"><div class="nav-icon" data-ic="user"></div><div class="nav-label" style="color:var(--ink);font-weight:600">Perfil</div></div></div>
@@ -889,6 +892,14 @@ svg.ic path,svg.ic circle,svg.ic line,svg.ic polyline,svg.ic rect{fill:none;stro
 <div class="overlay" id="ov-mismatch" onclick="closeOut(event,'ov-mismatch')"><div class="sheet"><button class="sheet-close" onclick="closeOv('ov-mismatch')" data-ic="close" aria-label="Fechar"></button><div class="sheet-handle"></div><div class="sheet-title">País diferente</div><div class="cm-text" id="cmText"></div><button class="sheet-cta" id="cmMoveBtn">Mover</button><button class="delete-link" style="color:var(--ink3)" onclick="keepInThisTripAnyway()">Adicionar nesta viagem mesmo assim</button></div></div>
 <div class="overlay" id="ov-newtrip" onclick="closeOut(event,'ov-newtrip')"><div class="sheet"><button class="sheet-close" onclick="closeOv('ov-newtrip')" data-ic="close" aria-label="Fechar"></button><div class="sheet-handle"></div><div class="sheet-title">Para qual cidade?</div><div class="nt-label">Cidade da viagem — o país é identificado sozinho</div><div class="dest-search-wrap"><span class="dsi" data-ic="search"></span><input class="nt-input" style="padding-left:44px" id="countrySearch" placeholder="Buscar cidade..." oninput="filterNewTripCity(this.value)"></div><div id="countryList"></div><div class="nt-label" style="margin-top:8px">Datas (opcional)</div><div class="dates-row"><input class="nt-input" type="date" id="tripStart"><input class="nt-input" type="date" id="tripEnd"></div><button class="sheet-cta" id="createTripBtn" onclick="createTrip()" style="opacity:.4;pointer-events:none">Selecione uma cidade</button></div></div>
 <div class="overlay" id="ov-quickvisit" onclick="closeOut(event,'ov-quickvisit')"><div class="sheet"><button class="sheet-close" onclick="closeOv('ov-quickvisit')" data-ic="close" aria-label="Fechar"></button><div class="sheet-handle"></div><div class="sheet-title" id="quickVisitTitle">Qual país você já visitou?</div><div class="nt-label">País</div><div class="dest-search-wrap"><span class="dsi" data-ic="search"></span><input class="nt-input" style="padding-left:44px" id="countrySearch2" placeholder="Buscar país..." oninput="filterCountries2(this.value)"></div><div id="countryList2"></div><button class="sheet-cta" id="createVisitBtn" onclick="markVisited()" style="opacity:.4;pointer-events:none">Selecione um país</button></div></div>
+<div class="overlay" id="ov-editperfil" onclick="closeOut(event,'ov-editperfil')"><div class="sheet"><button class="sheet-close" onclick="closeOv('ov-editperfil')" data-ic="close" aria-label="Fechar"></button><div class="sheet-handle"></div><div class="sheet-title">Editar perfil</div>
+<div class="nt-label">Seu nome de usuário</div>
+<div style="display:flex;gap:8px;margin-bottom:4px"><input class="nt-input" id="usernameInput" placeholder="seu_username" style="flex:1" autocapitalize="none" oninput="document.getElementById('usernameStatus').textContent=''"><button class="req-btn req-accept" style="padding:0 18px" onclick="saveUsername()">Salvar</button></div>
+<div class="feed-time" id="usernameStatus" style="margin-bottom:18px"></div>
+<div class="nt-label">Bio</div>
+<textarea class="note-input" id="bioInput" rows="2" placeholder="Uma frase sobre como você viaja" style="margin-bottom:8px"></textarea>
+<button class="sheet-cta" onclick="saveBio()">Salvar bio</button></div></div>
+
 <div class="overlay" id="ov-addfriend" onclick="closeOut(event,'ov-addfriend')"><div class="sheet"><button class="sheet-close" onclick="closeOv('ov-addfriend')" data-ic="close" aria-label="Fechar"></button><div class="sheet-handle"></div><div class="sheet-title">Adicionar amigo</div><div class="nt-label">Username do amigo</div><input class="nt-input" id="friendUsernameInput" type="text" placeholder="digite aqui" autocapitalize="none" oninput="mostrarErroAmigo('')"><div class="auth-error" id="friendAddErr"></div><button class="sheet-cta" id="sendReqBtn" onclick="sendFriendRequest()">Enviar pedido</button><div class="conv-ou"><span>ou</span></div><button class="secondary-link" id="convidarBtn" style="margin-top:0" onclick="compartilharConvite()">Convidar por link</button><div class="conv-dica">Quem abrir o link entra já como seu amigo, sem precisar do seu username.</div></div></div>
 
 <div class="overlay" id="ov-editdates" onclick="closeOut(event,'ov-editdates')"><div class="sheet"><button class="sheet-close" onclick="closeOv('ov-editdates')" data-ic="close" aria-label="Fechar"></button><div class="sheet-handle"></div><div class="sheet-title">Datas da viagem</div><div class="nt-label">Deixe em branco se não for uma viagem com data definida (ex: seu país de origem)</div><div class="dates-row"><input class="nt-input" type="date" id="editStart"><input class="nt-input" type="date" id="editEnd"></div><button class="sheet-cta" onclick="saveEditDates()">Salvar</button><button class="delete-link" onclick="clearEditDates()">Limpar datas (não é uma viagem)</button></div></div><div class="toast" id="toast"><div class="toast-icon" id="toastIcon"></div><div class="toast-body"><div class="toast-title" id="toastTitle"></div><div class="toast-msg" id="toastMsg"></div></div></div>
@@ -3098,6 +3109,13 @@ function visitedCityCount(){
   S.trips.forEach(t=>(t._spots||[]).forEach(s=>{const c=cityOf(s);if(c)set.add(c)}));
   return set.size;
 }
+function abrirEditarPerfil(){
+  const p=S.profile||{};
+  document.getElementById('usernameInput').value=p.username||'';
+  document.getElementById('bioInput').value=p.bio||'';
+  document.getElementById('usernameStatus').textContent='';
+  showOv('ov-editperfil');
+}
 async function loadProfile(){
   if(!S.user)return;
   const meta=S.user.user_metadata||{};
@@ -3107,6 +3125,9 @@ async function loadProfile(){
   document.getElementById('profAvatar').textContent=name.charAt(0).toUpperCase();
   document.getElementById('profEmail').textContent=S.user.email;
   const p=await fetchOwnProfile(true);
+  document.getElementById('profUser').textContent=p.username?'@'+p.username:'';
+  const bio=document.getElementById('profBio');
+  if(p.bio){bio.textContent=p.bio;bio.style.display='block'}else{bio.style.display='none'}
   document.getElementById('usernameInput').value=p.username||'';
   document.getElementById('bioInput').value=p.bio||'';
   applyAvatar('dashAvatar',name,p.avatar_url);
@@ -3114,18 +3135,10 @@ async function loadProfile(){
   // Load trips + their spots (for city count) if missing
   if(!S.trips.length){const trips=await dbGet('trips','user_id=eq.'+S.user.id);S.trips=trips||[]}
   for(const t of S.trips){if(!t._spots){const sp=await dbGet('spots','trip_id=eq.'+t.id);t._spots=sp||[]}}
-  const visited=visitedCountryNames();
-  const conts=new Set();
-  visited.forEach(c=>{const region=regionFor(c);if(region&&region!=='Outros')conts.add(region)});
-  const pct=Math.round(visited.length/195*100);
-  document.getElementById('wsCountries').textContent=visited.length+'/'+COUNTRIES.length;
-  document.getElementById('wsCities').textContent=visitedCityCount();
-  document.getElementById('wsContinents').textContent=conts.size;
-  // Headline
-  const hl=document.getElementById('heroHeadline');
-  if(visited.length===0){hl.innerHTML='Comece a explorar o mundo'}
-  else{hl.innerHTML=`Você já explorou <b>${pct}%</b> do mundo`}
-  renderListaDePaises(visited);
+  // Os contadores de países/cidades/continentes saíram daqui: o Dashboard já
+  // mostra os mesmos números, e mostrava com denominador diferente ("X/243"
+  // contra "de 195"), o que só gerava dúvida sobre qual estava certo.
+  renderListaDePaises(visitedCountryNames());
 }
 // Lista de países visitados. Mostra os primeiros e joga o resto pra tela de
 // lista que já existe (a mesma que abre pelo contador do Dashboard) — sem
