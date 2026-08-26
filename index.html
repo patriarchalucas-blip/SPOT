@@ -99,8 +99,14 @@ body{font-family:'DM Sans',sans-serif;background:var(--dark);max-width:430px;mar
    comeria a Oceania e o Alasca. O aspect-ratio deixa a altura se ajustar
    sozinha quando o max-width entra em ação.
 */
-.dash-top>.dash-mapa{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);height:80%;max-width:116%;aspect-ratio:800/355;opacity:0;transition:opacity .5s ease;pointer-events:none;z-index:auto}
+/* O mapa ocupa a METADE DE CIMA do painel, não o centro. Centralizado, ele
+   cruzava a faixa dos scorecards e ficava tapado por três blocos opacos —
+   parecia desformatado. Aqui ele respira atrás do wordmark e da frase, e os
+   scorecards ficam abaixo dele, sem se sobrepor. */
+.dash-top>.dash-mapa{position:absolute;left:50%;top:12px;transform:translateX(-50%);height:56%;max-width:112%;aspect-ratio:800/355;opacity:0;transition:opacity .5s ease;cursor:pointer;z-index:0}
 .dash-mapa.pronto{opacity:.5}
+/* o conteúdo fica na frente do mapa, e o mapa segue clicável na área livre */
+.dash-top-row,.dash-paises,.stats-strip{position:relative;z-index:1}
 .dash-mapa svg{width:100%;height:100%;display:block}
 .dash-wordmark{font-family:'Cinzel',serif;font-size:19px;letter-spacing:.14em;color:var(--ink)}
 /* A frase inteira é o contador de países e abre a lista deles. */
@@ -451,6 +457,9 @@ body{font-family:'DM Sans',sans-serif;background:var(--dark);max-width:430px;mar
 .wm-country.visited{fill:#4E9490}
 .map-zoom-hint{position:absolute;bottom:10px;left:0;right:0;text-align:center;color:rgba(255,255,255,0.5);font-size:11px;letter-spacing:.04em;pointer-events:none;z-index:2}
 .profile-statline{background:#0b1620;padding:20px 22px 24px}
+.mapa-topo{display:flex;align-items:center;gap:12px;padding:40px 20px 14px;background:var(--dark)}
+.mapa-topo .back-btn{position:static;flex-shrink:0}
+.mapa-titulo{font-family:'Fraunces',serif;font-size:19px;color:var(--ink)}
 .hero-headline{text-align:center;color:var(--ink);font-family:'Fraunces',serif;font-weight:400;font-size:19px;font-style:italic;margin:0 0 18px;line-height:1.4}
 .hero-headline b{color:var(--green);font-style:normal;font-weight:600}
 .hero-stats{display:flex;gap:8px}
@@ -723,10 +732,7 @@ svg.ic path,svg.ic circle,svg.ic line,svg.ic polyline,svg.ic rect{fill:none;stro
     <input type="file" id="avatarFileInput" accept="image/*" style="display:none" onchange="onAvatarFileChosen(this)">
     <div><div class="profile-name" id="profName">—</div><div class="profile-email" id="profEmail"></div></div>
   </div>
-  <div class="profile-map-block">
-    <div class="world-map-wrap" id="worldMapWrap"></div>
-    <div class="map-zoom-hint">toque para dar zoom</div>
-  </div>
+
   <div class="profile-statline">
     <div class="hero-headline" id="heroHeadline">Comece a explorar o mundo</div>
     <div class="hero-stats">
@@ -810,6 +816,16 @@ svg.ic path,svg.ic circle,svg.ic line,svg.ic polyline,svg.ic rect{fill:none;stro
   <div class="trip-body" id="fcBody"></div>
 </div>
 
+<div class="screen" id="mapaMundi">
+  <div class="mapa-topo">
+    <button class="back-btn" onclick="fecharMapaMundi()" data-ic="back" aria-label="Voltar"></button>
+    <div class="mapa-titulo" id="mapaTitulo">—</div>
+  </div>
+  <div class="world-map-wrap" id="worldMapWrap"></div>
+  <div class="map-zoom-hint">arraste e dê zoom com dois dedos</div>
+  <div class="dash-body" id="mapaPaises"></div>
+</div>
+
 <div class="screen" id="friendPlace">
   <div class="place-hero">
     <div class="place-hero-img" id="fpHeroImg"></div>
@@ -867,7 +883,7 @@ svg.ic path,svg.ic circle,svg.ic line,svg.ic polyline,svg.ic rect{fill:none;stro
 <div class="overlay" id="ov-mismatch" onclick="closeOut(event,'ov-mismatch')"><div class="sheet"><button class="sheet-close" onclick="closeOv('ov-mismatch')" data-ic="close" aria-label="Fechar"></button><div class="sheet-handle"></div><div class="sheet-title">País diferente</div><div class="cm-text" id="cmText"></div><button class="sheet-cta" id="cmMoveBtn">Mover</button><button class="delete-link" style="color:var(--ink3)" onclick="keepInThisTripAnyway()">Adicionar nesta viagem mesmo assim</button></div></div>
 <div class="overlay" id="ov-newtrip" onclick="closeOut(event,'ov-newtrip')"><div class="sheet"><button class="sheet-close" onclick="closeOv('ov-newtrip')" data-ic="close" aria-label="Fechar"></button><div class="sheet-handle"></div><div class="sheet-title">Para qual cidade?</div><div class="nt-label">Cidade da viagem — o país é identificado sozinho</div><div class="dest-search-wrap"><span class="dsi" data-ic="search"></span><input class="nt-input" style="padding-left:44px" id="countrySearch" placeholder="Buscar cidade..." oninput="filterNewTripCity(this.value)"></div><div id="countryList"></div><div class="nt-label" style="margin-top:8px">Datas (opcional)</div><div class="dates-row"><input class="nt-input" type="date" id="tripStart"><input class="nt-input" type="date" id="tripEnd"></div><button class="sheet-cta" id="createTripBtn" onclick="createTrip()" style="opacity:.4;pointer-events:none">Selecione uma cidade</button></div></div>
 <div class="overlay" id="ov-quickvisit" onclick="closeOut(event,'ov-quickvisit')"><div class="sheet"><button class="sheet-close" onclick="closeOv('ov-quickvisit')" data-ic="close" aria-label="Fechar"></button><div class="sheet-handle"></div><div class="sheet-title" id="quickVisitTitle">Qual país você já visitou?</div><div class="nt-label">País</div><div class="dest-search-wrap"><span class="dsi" data-ic="search"></span><input class="nt-input" style="padding-left:44px" id="countrySearch2" placeholder="Buscar país..." oninput="filterCountries2(this.value)"></div><div id="countryList2"></div><button class="sheet-cta" id="createVisitBtn" onclick="markVisited()" style="opacity:.4;pointer-events:none">Selecione um país</button></div></div>
-<div class="overlay" id="ov-addfriend" onclick="closeOut(event,'ov-addfriend')"><div class="sheet"><button class="sheet-close" onclick="closeOv('ov-addfriend')" data-ic="close" aria-label="Fechar"></button><div class="sheet-handle"></div><div class="sheet-title">Adicionar amigo</div><div class="nt-label">Username do amigo</div><input class="nt-input" id="friendUsernameInput" type="text" placeholder="username_do_amigo" autocapitalize="none" oninput="mostrarErroAmigo('')"><div class="auth-error" id="friendAddErr"></div><button class="sheet-cta" id="sendReqBtn" onclick="sendFriendRequest()">Enviar pedido</button><div class="conv-ou"><span>ou</span></div><button class="secondary-link" id="convidarBtn" style="margin-top:0" onclick="compartilharConvite()">Convidar por link</button><div class="conv-dica">Quem abrir o link entra já como seu amigo, sem precisar do seu username.</div></div></div>
+<div class="overlay" id="ov-addfriend" onclick="closeOut(event,'ov-addfriend')"><div class="sheet"><button class="sheet-close" onclick="closeOv('ov-addfriend')" data-ic="close" aria-label="Fechar"></button><div class="sheet-handle"></div><div class="sheet-title">Adicionar amigo</div><div class="nt-label">Username do amigo</div><input class="nt-input" id="friendUsernameInput" type="text" placeholder="digite aqui" autocapitalize="none" oninput="mostrarErroAmigo('')"><div class="auth-error" id="friendAddErr"></div><button class="sheet-cta" id="sendReqBtn" onclick="sendFriendRequest()">Enviar pedido</button><div class="conv-ou"><span>ou</span></div><button class="secondary-link" id="convidarBtn" style="margin-top:0" onclick="compartilharConvite()">Convidar por link</button><div class="conv-dica">Quem abrir o link entra já como seu amigo, sem precisar do seu username.</div></div></div>
 
 <div class="overlay" id="ov-editdates" onclick="closeOut(event,'ov-editdates')"><div class="sheet"><button class="sheet-close" onclick="closeOv('ov-editdates')" data-ic="close" aria-label="Fechar"></button><div class="sheet-handle"></div><div class="sheet-title">Datas da viagem</div><div class="nt-label">Deixe em branco se não for uma viagem com data definida (ex: seu país de origem)</div><div class="dates-row"><input class="nt-input" type="date" id="editStart"><input class="nt-input" type="date" id="editEnd"></div><button class="sheet-cta" onclick="saveEditDates()">Salvar</button><button class="delete-link" onclick="clearEditDates()">Limpar datas (não é uma viagem)</button></div></div><div class="toast" id="toast"><div class="toast-icon" id="toastIcon"></div><div class="toast-body"><div class="toast-title" id="toastTitle"></div><div class="toast-msg" id="toastMsg"></div></div></div>
 
@@ -1278,28 +1294,27 @@ async function loadDashboard(){
   document.getElementById('dashAvatar').textContent=name.charAt(0).toUpperCase();
   refreshAvatars(name);
 
-  const trips=await dbGet('trips','user_id=eq.'+S.user.id+'&order=created_at.desc');
+  // Viagens e spots AO MESMO TEMPO. Antes os spots eram buscados por
+  // trip_id=in.(ids), o que obrigava a esperar as viagens chegarem primeiro —
+  // dois round-trips em fila. Filtrando por user_id (que o RLS já garante ser
+  // só o seu) as duas consultas saem juntas e a tela monta de uma vez, em vez
+  // de aparecer em etapas: cards, depois scorecards, depois mapa.
+  // A geometria do mapa começa a carregar aqui também, junto das consultas.
+  const geoPronta=carregarGeoMundo().catch(()=>false);
+  const [trips,allSpots]=await Promise.all([
+    dbGet('trips','user_id=eq.'+S.user.id+'&order=created_at.desc'),
+    dbGet('spots','user_id=eq.'+S.user.id+'&order=created_at.asc')
+  ]);
   if(atropelado())return;
   S.trips=trips||[];
   let ts=0,ctrs=new Set(),cities=new Set();
-  S.trips.forEach(t=>{t._spots=[];t._spotsLoaded=false});
-  // Desenha os cards JÁ, com uma só ida ao banco. Os spots (contagens) chegam
-  // na sequência e só atualizam o texto — o usuário não fica olhando tela vazia.
-  renderTrips();populateTripOpts();
-  const visivelAntes=S.trips.filter(t=>!isNonTrip(t)).map(t=>t.id).join(',');
-  // TODOS os spots numa única query (antes: uma por viagem, em série — somava
-  // um round-trip inteiro por viagem antes de qualquer card aparecer)
-  if(S.trips.length){
-    const byId={};S.trips.forEach(t=>{byId[t.id]=t});
-    const ids=S.trips.map(t=>t.id).join(',');
-    const allSpots=await dbGet('spots','trip_id=in.('+ids+')&order=created_at.asc');
-    // Checkpoint aqui é o que importa: sem ele, o _spotsLoaded=true abaixo
-    // marcava como "carregado" a lista de viagens de OUTRA execução.
-    if(atropelado())return;
-    (allSpots||[]).forEach(s=>{const t=byId[s.trip_id];if(t)t._spots.push(s)});
-  }
+  const byId={};
+  S.trips.forEach(t=>{t._spots=[];t._spotsLoaded=false;byId[t.id]=t});
+  (allSpots||[]).forEach(s=>{const t=byId[s.trip_id];if(t)t._spots.push(s)});
   S.trips.forEach(t=>{t._spotsLoaded=true});
+  const visivelAntes=S.trips.filter(t=>!isNonTrip(t)).map(t=>t.id).join(',');
   rebuildCityCanon(); // funde "Split" e "Split-Dalmatia County" antes de contar
+  renderTrips();populateTripOpts();
   revalidarInstagramsAntigos().then(autoBackfillPlaceLinks); // silencioso, não bloqueia nada
   maybeShowCheckin(); // idem — só aparece se achar algo, nunca trava a tela
   for(const t of S.trips){
@@ -1323,7 +1338,9 @@ async function loadDashboard(){
   document.getElementById('dashPaisesN').textContent=ctrs.size;
   const convite=document.getElementById('dashConvite');
   if(convite)convite.style.display=ctrs.size?'none':'block';
-  renderMiniMapa(); // sem await: a geometria é pesada e não pode atrasar a tela
+  // A geometria já vinha carregando desde o começo desta função, em paralelo
+  // com as consultas — aqui ela normalmente já chegou.
+  geoPronta.then(()=>renderMiniMapa());
   // Só redesenha tudo se a lista visível mudou (ex.: migração __quickvisit__).
   // Caso normal: atualiza só o texto — sem piscada e sem rebuscar as fotos.
   const visivelAgora=S.trips.filter(t=>!isNonTrip(t)).map(t=>t.id).join(',');
@@ -3103,14 +3120,14 @@ async function loadProfile(){
   if(visited.length===0){hl.innerHTML='Comece a explorar o mundo'}
   else{hl.innerHTML=`Você já explorou <b>${pct}%</b> do mundo`}
   renderListaDePaises(visited);
-  renderWorldMap(visited);
 }
 // Lista de países visitados. Mostra os primeiros e joga o resto pra tela de
 // lista que já existe (a mesma que abre pelo contador do Dashboard) — sem
 // construir tela nova pra isso.
 const PAISES_NO_PERFIL=6;
-function renderListaDePaises(visited){
-  const box=document.getElementById('countryChips');
+function renderListaDePaises(visited,alvo){
+  const box=document.getElementById(alvo||'countryChips');
+  if(!box)return;
   if(!visited.length){
     box.innerHTML='<div class="country-chips-empty">Crie viagens para pintar o mundo</div>';
     return;
@@ -3144,12 +3161,26 @@ function renderListaDePaises(visited){
 }
 // ── World map via d3-geo (Natural Earth projection, proper shapes) ──
 let worldGeoData=null;
+// Só d3-geo (35 KB) + d3-array (16 KB), no lugar do d3 inteiro (273 KB). O app
+// usa exatamente duas funções do pacote: geoNaturalEarth1 e geoPath.
+async function carregarD3Geo(){
+  if(typeof d3!=='undefined'&&d3.geoNaturalEarth1)return;
+  await loadScript(['https://cdn.jsdelivr.net/npm/d3-array@3/dist/d3-array.min.js','https://unpkg.com/d3-array@3/dist/d3-array.min.js']);
+  await loadScript(['https://cdn.jsdelivr.net/npm/d3-geo@3/dist/d3-geo.min.js','https://unpkg.com/d3-geo@3/dist/d3-geo.min.js']);
+}
 const MAP_W=800, MAP_H=420;
 // Carrega os contornos do mundo (topojson + d3). É a parte cara: ~700 KB de
 // geometria, só de CDN. Roda UMA vez por sessão e fica em worldGeoData.
 let carregandoGeo=null;
+const GEO_CACHE='spot_geo_mundo_v1';
 async function carregarGeoMundo(){
   if(worldGeoData)return true;
+  // Cache local antes de qualquer rede: a segunda abertura do app não baixa
+  // nada, o mapa aparece junto com o resto.
+  try{
+    const salvo=localStorage.getItem(GEO_CACHE);
+    if(salvo){worldGeoData=JSON.parse(salvo);return true}
+  }catch(e){}
   // duas telas podem pedir o mapa ao mesmo tempo — uma promessa só pras duas
   if(carregandoGeo)return carregandoGeo;
   carregandoGeo=(async()=>{
@@ -3157,8 +3188,15 @@ async function carregarGeoMundo(){
       if(typeof topojson==='undefined'){
         await loadScript(['https://unpkg.com/topojson-client@3/dist/topojson-client.min.js','https://cdn.jsdelivr.net/npm/topojson-client@3/dist/topojson-client.min.js']);
       }
-      const topology=await fetch('https://unpkg.com/world-atlas@2.0.2/countries-50m.json').then(r=>r.json()).catch(()=>fetch('https://cdn.jsdelivr.net/npm/world-atlas@2.0.2/countries-50m.json').then(r=>r.json()));
+      // 110m no lugar de 50m: 105 KB contra 738 KB. No tamanho em que os dois
+      // mapas aparecem (mini no topo, e o do Perfil numa tela de celular) a
+      // diferença de detalhe do contorno é invisível — 738 KB era o item mais
+      // pesado do app inteiro, e o último da fila a chegar.
+      const topology=await fetch('https://unpkg.com/world-atlas@2.0.2/countries-110m.json').then(r=>r.json()).catch(()=>fetch('https://cdn.jsdelivr.net/npm/world-atlas@2.0.2/countries-110m.json').then(r=>r.json()));
       worldGeoData=topojson.feature(topology,topology.objects.countries);
+      // Guarda pra próxima abertura: sem isso, cada vez que o app abre são
+      // 105 KB de novo pela mesma geometria, que nunca muda.
+      try{localStorage.setItem(GEO_CACHE,JSON.stringify(worldGeoData))}catch(e){}
       return true;
     }catch(e){carregandoGeo=null;return false}
   })();
@@ -3195,15 +3233,26 @@ function gerarPathsMundo(visitedGeo){
 // Mapa do topo do Dashboard: só decoração, sem zoom e sem toque. Entra DEPOIS
 // que a tela já está desenhada — a geometria é pesada e não pode atrasar a
 // abertura do app. Se falhar, o topo simplesmente fica sem mapa.
+// O mapa grande vira DESTINO, não tela própria: um mapa só no app, alcançado
+// de onde ele já está à vista. Antes eram dois mapas com os mesmos dados e
+// contadores que discordavam entre si.
+let voltarDoMapa='dashboard';
+function abrirMapaMundi(origem){
+  voltarDoMapa=origem||'dashboard';
+  const visited=visitedCountryNames();
+  document.getElementById('mapaTitulo').textContent=visited.length+' de 195 países';
+  goTo('mapaMundi');
+  renderWorldMap(visited);
+  renderListaDePaises(visited,'mapaPaises');
+}
+function fecharMapaMundi(){goTo(voltarDoMapa)}
 async function renderMiniMapa(){
   const wrap=document.getElementById('dashMapa');
   if(!wrap)return;
   const visitedGeo=new Set(visitedCountryNames().map(c=>geoFor(c)).filter(Boolean));
   if(!await carregarGeoMundo())return;
   try{
-    if(typeof d3==='undefined'||!d3.geoNaturalEarth1){
-      await loadScript(['https://cdn.jsdelivr.net/npm/d3@7/dist/d3.min.js','https://unpkg.com/d3@7/dist/d3.min.js']);
-    }
+    await carregarD3Geo();
   }catch(e){/* sem d3 cai na projeção simples */}
   const{paths,vb}=gerarPathsMundo(visitedGeo);
   // Corta a Antártida do enquadramento (só aqui — o mapa do Perfil é navegável
@@ -3212,6 +3261,7 @@ async function renderMiniMapa(){
   const alturaSemPolo=Math.round(vb.h*0.845);
   wrap.innerHTML=`<svg viewBox="${vb.x} ${vb.y} ${vb.w} ${alturaSemPolo}" preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">${paths}</svg>`;
   wrap.classList.add('pronto');
+  wrap.onclick=()=>abrirMapaMundi('dashboard');
 }
 async function renderWorldMap(visited){
   const wrap=document.getElementById('worldMapWrap');
@@ -3223,9 +3273,7 @@ async function renderWorldMap(visited){
     }
   }
   try{
-    if(typeof d3==='undefined'||!d3.geoNaturalEarth1){
-      await loadScript(['https://cdn.jsdelivr.net/npm/d3@7/dist/d3.min.js','https://unpkg.com/d3@7/dist/d3.min.js']);
-    }
+    await carregarD3Geo();
   }catch(e){/* sem d3 cai na projeção simples */}
 
   let paths='',vb;
