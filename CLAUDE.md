@@ -121,6 +121,11 @@ barrando, o que de brinde confirma que ele está ligado).
 O push é por **SSH** (`git@github.com:patriarchalucas-blip/SPOT.git`), com a chave em
 `~/.ssh/id_ed25519` registrada na conta como "Claude Code - notebook Lucas".
 
+**A porta 22 é bloqueada em algumas redes** (funcionou de casa e falhou com
+`Connection timed out` no dia seguinte, provavelmente na rede do trabalho). Por isso
+`~/.ssh/config` aponta `github.com` para `ssh.github.com:443` — a porta do HTTPS, que
+nenhuma rede fecha. Se o push falhar por timeout, confira se esse arquivo existe.
+
 Não havia credencial HTTPS do GitHub nesta máquina em momento nenhum — as guardadas no
 Windows Credential Manager são do GitLab. O que funcionava antes vinha do ambiente do
 agente e se perdia a cada reinício de sessão, o que gerou uma tarde inteira de upload
