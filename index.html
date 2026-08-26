@@ -118,10 +118,15 @@ body{font-family:'DM Sans',sans-serif;background:var(--dark);max-width:430px;mar
    do mapa e o fade começava em 62%, ou seja comia o Brasil e o cone sul
    (Argentina termina em y=348 de 355). Como há terra até quase a borda, não
    existe faixa onde dissolver sem comer país. O mapa aparece inteiro. */
-.dash-top>.dash-mapa{position:absolute;left:50%;top:6px;transform:translateX(-50%);width:100%;aspect-ratio:800/355;opacity:0;transition:opacity .5s ease;cursor:pointer;z-index:0}
+/* O mapa deixou de ser papel de parede e virou um bloco próprio, entre o
+   wordmark e o contador. Como fundo, o "Spot" e o "23 de 195 países" ficavam
+   POR CIMA dele e disputavam leitura — era isso que incomodava. Agora nada
+   cobre o mapa. A margem negativa faz ele sangrar até as bordas apesar do
+   padding lateral do painel. */
+.dash-top>.dash-mapa{position:relative;margin:2px -24px 6px;width:calc(100% + 48px);aspect-ratio:800/355;opacity:0;transition:opacity .5s ease;cursor:pointer}
 .dash-mapa.pronto{opacity:.55}
 /* o conteúdo fica na frente do mapa, e o mapa segue clicável na área livre */
-.dash-top-row,.dash-paises,.stats-strip{position:relative;z-index:1}
+
 .dash-mapa svg{width:100%;height:100%;display:block}
 .dash-wordmark{font-family:'Cinzel',serif;font-size:19px;letter-spacing:.14em;color:var(--ink)}
 /* A frase inteira é o contador de países e abre a lista deles. */
@@ -132,7 +137,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--dark);max-width:430px;mar
 .dash-convite{font-size:12.5px;color:var(--ink3);margin:-16px 0 20px;max-width:230px;line-height:1.45}
 .dash-top::before{content:"";position:absolute;inset:0;pointer-events:none;background:radial-gradient(420px 220px at 12% -20%,rgba(193,85,47,.16),transparent 60%),radial-gradient(360px 200px at 105% 5%,rgba(47,93,98,.22),transparent 55%)}
 .dash-top>*{position:relative;z-index:1}
-.dash-top-row{display:flex;align-items:center;justify-content:space-between;margin-bottom:46px}
+.dash-top-row{display:flex;align-items:center;justify-content:space-between;margin-bottom:6px}
 .dash-hello{font-size:14px;color:var(--ink3);margin-bottom:5px}
 .dash-email{font-size:12.5px;color:var(--ink3);margin-top:9px;cursor:pointer}
 .dash-name{font-family:'Fraunces',serif;font-weight:400;font-size:34px;color:var(--ink);letter-spacing:-.015em;line-height:1.05}
@@ -674,11 +679,11 @@ svg.ic path,svg.ic circle,svg.ic line,svg.ic polyline,svg.ic rect{fill:none;stro
 
 <div class="screen" id="dashboard">
   <div class="dash-top">
-    <div class="dash-mapa" id="dashMapa" aria-hidden="true"></div>
     <div class="dash-top-row">
       <div class="dash-wordmark">Spot</div>
       <div class="avatar" id="dashAvatar" onclick="goTo('profile');loadProfile()" role="button" tabindex="0" aria-label="Abrir seu perfil">?</div>
     </div>
+    <div class="dash-mapa" id="dashMapa" aria-hidden="true"></div>
     <div class="dash-paises" id="dashPaises" onclick="openList('countries')" role="button" tabindex="0"><span class="dp-n" id="dashPaisesN">0</span><span class="dp-t">de 195 países</span></div>
     <div class="dash-convite" id="dashConvite" style="display:none">Crie uma viagem para pintar o primeiro país.</div>
     <div class="stats-strip">
