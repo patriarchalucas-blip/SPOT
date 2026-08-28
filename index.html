@@ -216,6 +216,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--dark);max-width:430px;mar
 .amg-chip:active{opacity:.6}
 .amg-chip b{font-family:var(--mono);font-size:11px;color:var(--green);font-weight:600}
 .amg-varios{font-family:var(--mono);font-size:10.5px;color:var(--green);letter-spacing:.06em}
+.amg-aviso{font-size:13px;color:var(--ink3);line-height:1.5;padding:2px 0 10px}
 .list-filters{display:flex;gap:8px;padding:14px 20px;overflow-x:auto;scrollbar-width:none;background:var(--surface);border-bottom:1px solid var(--border);position:sticky;top:0;z-index:10}
 .list-filters::-webkit-scrollbar{display:none}
 .filter-chip{flex-shrink:0;background:rgba(234,231,224,.06);border:1px solid var(--border);border-radius:var(--r-pill);padding:8px 14px;font-size:12.5px;color:var(--ink2);cursor:pointer;white-space:nowrap;transition:background .15s,border-color .15s,color .15s}
@@ -2054,7 +2055,7 @@ function setExploreCat(c){
   EXPLORE.cat=c;renderExploreFilters();
   // A lista de amigos não depende da categoria — ela some e volta igual se
   // deixar o runExplore redesenhar, o que pisca à toa.
-  if(EXPLORE.city){const g=AMIGOS_LUGAR;runExplore().then(function(){renderAmigosNoLugar(g,EXPLORE.city)})}
+  if(EXPLORE.city)runExplore();
 }
 // ═══ QUEM DOS MEUS AMIGOS JÁ FOI PRA CÁ ═══
 // Antes, saber isso significava abrir o perfil de cada amigo, um por um, e
@@ -2080,17 +2081,23 @@ async function idsDosAmigos(){
   return (aceitos||[]).map(r=>r.follower_id===uid?r.following_id:r.follower_id);
 }
 
-async function buscarAmigosNoLugar(termo){
+async function buscarAmigosNoLugar(termo,tambemCanonico){
   const t=termoSeguro(termo);
-  if(!t)return[];
+  if(!t)return{estado:'vazio',grupos:[],amigos:0};
   const ids=await idsDosAmigos();
-  if(!ids.length)return[];
+  if(!ids.length)return{estado:'sem_amigos',grupos:[],amigos:0};
   const lista=ids.join(',');
 
-  // O nome digitado passa pelo mesmo canonizador que grava os spots, senão
-  // procurar "Tokyo" não acharia o que foi salvo como "Tóquio".
-  const canon=termoSeguro(await canonizarCidade(t,''))||t;
-  const porNome=[t]; if(canon.toLowerCase()!==t.toLowerCase())porNome.push(canon);
+  // A canonização do nome ("Tokyo" -> "Tóquio") passa pelo Google e é a parte
+  // LENTA daqui. Ela não pode estar no caminho da primeira resposta: a busca
+  // sai com o que foi digitado, aparece, e só depois uma segunda passada
+  // procura pelo nome canônico. Antes, um Google lento segurava a seção
+  // inteira e a tela ficava vazia sem explicar por quê.
+  const porNome=[t];
+  if(tambemCanonico){
+    const canon=termoSeguro(await canonizarCidade(t,''));
+    if(canon&&canon.toLowerCase()!==t.toLowerCase())porNome.push(canon);
+  }
 
   // Duas frentes, porque o país não mora no spot: a cidade está em
   // spots.city, e o país está em trips.destinations.
@@ -2106,7 +2113,7 @@ async function buscarAmigosNoLugar(termo){
   const porId={};
   partes.forEach(lista=>(lista||[]).forEach(s=>{porId[s.id]=s}));
   const spots=Object.values(porId);
-  if(!spots.length)return[];
+  if(!spots.length)return{estado:'nada_aqui',grupos:[],amigos:ids.length};
 
   const perfis={};
   const donos=[...new Set(spots.map(s=>s.user_id))];
@@ -2122,8 +2129,9 @@ async function buscarAmigosNoLugar(termo){
     if(!g.photo_url&&s.photo_url)g.photo_url=s.photo_url;
     g.amigos.push({spot:s,perfil:perfis[s.user_id]||null});
   });
-  return Object.values(grupos).sort((a,b)=>
+  const ordenados=Object.values(grupos).sort((a,b)=>
     b.amigos.length-a.amigos.length||notaMedia(b)-notaMedia(a)||a.nome.localeCompare(b.nome,'pt-BR'));
+  return{estado:'ok',grupos:ordenados,amigos:ids.length};
 }
 function chaveDeLugar(nome){
   return String(nome||'').normalize('NFD').replace(/\p{Diacritic}/gu,'')
@@ -2134,10 +2142,19 @@ function notaMedia(g){
   return notas.length?notas.reduce((x,y)=>x+y,0)/notas.length:0;
 }
 
-function renderAmigosNoLugar(grupos,lugar){
+function renderAmigosNoLugar(r,lugar){
   const box=document.getElementById('exploreAmigos');
   if(!box)return;
-  if(!grupos.length){box.innerHTML='';return}
+  const grupos=(r&&r.grupos)||[];
+  // Cada caso vazio diz uma coisa diferente. Devolver a mesma tela em branco
+  // pros três fazia a busca parecer quebrada mesmo quando tinha funcionado.
+  if(!grupos.length){
+    const est=(r&&r.estado)||'vazio';
+    if(est==='carregando'){box.innerHTML=aviso('Procurando entre seus amigos...');return}
+    if(est==='sem_amigos'){box.innerHTML=aviso('Você ainda não tem amigos no Spot. Quando tiver, os lugares que eles marcaram como visitados aparecem aqui.');return}
+    if(est==='nada_aqui'){box.innerHTML=aviso('Nenhum dos seus '+r.amigos+(r.amigos===1?' amigo marcou':' amigos marcou')+' como visitado nada em '+esc(lugar)+'.');return}
+    box.innerHTML='';return;
+  }
   const quantos=new Set(grupos.flatMap(g=>g.amigos.map(a=>a.spot.user_id))).size;
   const linhas=grupos.map((g,i)=>{
     const foto=g.photo_url
@@ -2161,6 +2178,9 @@ function renderAmigosNoLugar(grupos,lugar){
 
 // Abre a ficha do spot COM A NOTA E O TEXTO daquele amigo — é isso que
 // diferencia de mais uma lista de lugares.
+function aviso(txt){
+  return'<div class="amg-bloco"><div class="amg-aviso">'+txt+'</div></div>';
+}
 function abrirSpotAmigoDoExplorar(i,j){
   const g=AMIGOS_LUGAR[i]; if(!g)return;
   const a=g.amigos[j]; if(!a)return;
@@ -2179,10 +2199,23 @@ async function runExplore(){
   body.innerHTML='<div class="search-loading">Buscando tendências...</div>';
   // Os amigos aparecem por conta própria, sem esperar o Google: são consultas
   // diferentes e a mais interessante é a que chega primeiro.
-  buscarAmigosNoLugar(city).then(function(g){
-    AMIGOS_LUGAR=g;
-    if(EXPLORE.city===city)renderAmigosNoLugar(g,city);
-  }).catch(function(e){console.error('amigos no lugar',e)});
+  renderAmigosNoLugar({estado:'carregando',grupos:[]},city);
+  buscarAmigosNoLugar(city,false).then(function(r){
+    if(EXPLORE.city!==city)return;
+    AMIGOS_LUGAR=r.grupos;renderAmigosNoLugar(r,city);
+    // Segunda passada com o nome canônico ("Tokyo" -> "Tóquio"), que depende
+    // do Google e por isso não pode segurar a primeira resposta. Só substitui
+    // se achar MAIS coisa do que a primeira.
+    return buscarAmigosNoLugar(city,true).then(function(r2){
+      if(EXPLORE.city===city&&r2.grupos.length>r.grupos.length){
+        AMIGOS_LUGAR=r2.grupos;renderAmigosNoLugar(r2,city);
+      }
+    });
+  }).catch(function(e){
+    console.error('amigos no lugar',e);
+    const box=document.getElementById('exploreAmigos');
+    if(box)box.innerHTML=aviso('Não consegui consultar seus amigos agora.');
+  });
   const termo={food:'restaurantes',hotel:'hotéis',experience:'pontos turísticos'}[EXPLORE.cat];
   try{
     const resp=await fetch('https://places.googleapis.com/v1/places:searchText',{
