@@ -157,3 +157,29 @@ test('a busca traz "quero ir" junto com "ja fui"', async () => {
     assert.strictEqual(r.grupos[0].spots[0].status, 'been', 'quem foi tem que vir primeiro');
   } finally { A.dbGet = original }
 });
+
+test('a sheet de viagem mostra so os passos que faltam', () => {
+  // Ela tinha quatro pontinhos sempre. Quando o lugar ja vem resolvido
+  // (Explorar, check-in, amigo) so faltam dois — viagem e nota. Passo que nao
+  // existe da a impressao de que o app vai perguntar de novo o que ja sabe.
+  A.avaliar("S.trips=[{id:'t1',name:'Brasil',destinations:['Brasil'],initial_city:'Sao Paulo',_spots:[]}]");
+  A.avaliar("S.explorePick={name:'Rubaiyat',city:'São Paulo'};S.explorePickCat='food'");
+  assert.doesNotThrow(() => A.abrirEscolhaDeViagem());
+  A.avaliar('S.explorePick=null;S.explorePickCat=null');
+  assert.doesNotThrow(() => A.abrirEscolhaDeViagem());
+});
+
+test('a viagem do lugar pesquisado vai pro topo, mesmo com acento diferente', () => {
+  // "Sao Paulo" gravado na viagem e "São Paulo" vindo do spot precisam se
+  // encontrar, senao a ordenacao nao serve pra nada em portugues.
+  assert.ok(A.mesmoLugar('Sao Paulo', 'São Paulo'));
+  assert.ok(A.mesmoLugar('TÓQUIO', 'toquio'));
+  assert.ok(!A.mesmoLugar('Split', 'Sao Paulo'));
+  assert.ok(!A.mesmoLugar('', ''), 'vazio nao pode casar com vazio');
+
+  A.avaliar("S.trips=[{id:'a',name:'Japão',destinations:['Japão'],initial_city:'Tóquio',_spots:[]},"
+    + "{id:'b',name:'Brasil',destinations:['Brasil'],initial_city:'Sao Paulo',_spots:[]}]");
+  A.populateTripOpts('São Paulo');
+  const marcadas = A.avaliar('S.trips.filter(t=>t._sugerida).map(t=>t.name)');
+  assert.deepStrictEqual([...marcadas], ['Brasil']);
+});

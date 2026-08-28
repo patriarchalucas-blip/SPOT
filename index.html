@@ -225,6 +225,8 @@ body{font-family:'DM Sans',sans-serif;background:var(--dark);max-width:430px;mar
 .amg-avatar{width:44px;height:44px;border-radius:50%;flex-shrink:0;background:var(--green);color:#fff;display:flex;align-items:center;justify-content:center;font-family:var(--mono);font-size:14px;letter-spacing:.04em}
 .amg-seta{color:var(--ink3);font-size:19px;flex-shrink:0}
 .amg-quer-selo{font-family:var(--mono);font-size:10.5px;color:var(--amber);letter-spacing:.06em}
+/* "aqui" na viagem que bate com o lugar. E dica, nao escolha automatica. */
+.trip-sug{font-family:var(--mono);font-size:9.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--green);border:1px solid var(--green);border-radius:4px;padding:1px 5px;margin-left:7px;vertical-align:middle}
 .amg-linha{cursor:pointer}
 .amg-linha:active{opacity:.6}
 .amg-chip i{font-family:var(--mono);font-style:normal;font-size:10.5px;letter-spacing:.04em;color:var(--amber)}
@@ -2010,9 +2012,52 @@ async function saveReview(){
 }
 
 // ═══ ADD SPOT FLOW ═══
-function populateTripOpts(){
+// Abre "Em qual viagem?" sabendo o que ja veio pronto.
+//
+// Dois incomodos que essa tela tinha quando o lugar chegava resolvido (vindo
+// do Explorar, do check-in ou de um amigo):
+//
+//   - Os quatro pontinhos de progresso diziam "faltam quatro passos" quando
+//     so faltavam dois. Passo que nao existe assusta, e da a impressao de que
+//     o app vai perguntar de novo coisa que ja sabe — o endereco, o nome.
+//   - A lista de viagens vinha na ordem de sempre, ignorando que o app JA
+//     SABE em que cidade fica o lugar. Se voce procurou Sao Paulo e tem uma
+//     viagem pra Sao Paulo, ela tem que estar em cima.
+function abrirEscolhaDeViagem(){
+  const p=S.explorePick;
+  const jaSabe=!!(p&&S.explorePickCat);
+  const box=document.querySelector('#ov-trip .step-dots');
+  if(box){
+    const total=jaSabe?2:4;
+    box.innerHTML=Array.from({length:total},(_,i)=>
+      '<div class="step-dot'+(i===0?' active':'')+'"></div>').join('');
+  }
+  // showOv chama populateTripOpts() sem argumento por dentro, o que apagaria
+  // a ordenacao. Por isso ele vem PRIMEIRO e a lista e montada depois.
+  showOv('ov-trip');
+  populateTripOpts(jaSabe?(p.city||''):'');
+}
+// Nome comparavel: sem acento, minusculo. "Sao Paulo" e "São Paulo" tem que
+// se encontrar, senao a ordenacao nao serve pra nada em portugues.
+function mesmoLugar(a,b){
+  const n=x=>String(x||'').normalize('NFD').replace(/\p{Diacritic}/gu,'').trim().toLowerCase();
+  return !!n(a)&&n(a)===n(b);
+}
+function populateTripOpts(destaque){
   const c=document.getElementById('tripOptions');
-  c.innerHTML=S.trips.map(t=>`<div class="trip-option" onclick="selTripForSpot('${esc(t.id)}')"><div class="trip-option-img" style="background-image:${destGradient((t.destinations&&t.destinations[0])||t.name)}">${flagFor((t.destinations&&t.destinations[0])||'')}</div><div><div class="trip-option-name">${esc(t.name)}</div><div class="trip-option-meta">${(t._spots||[]).length} spots</div></div><div class="trip-option-arrow">›</div></div>`).join('');
+  let lista=S.trips.slice();
+  if(destaque){
+    // Combina pela cidade da viagem ou pelo destino. Nao escolhe sozinho —
+    // so poe na frente: a viagem certa continua sendo decisao sua.
+    const casa=t=>mesmoLugar(t.initial_city,destaque)
+      ||(t.destinations||[]).some(d=>mesmoLugar(d,destaque))
+      ||mesmoLugar(t.name,destaque);
+    lista.sort((a,b)=>(casa(b)?1:0)-(casa(a)?1:0));
+    lista.forEach(t=>{t._sugerida=casa(t)});
+  }else{
+    lista.forEach(t=>{t._sugerida=false});
+  }
+  c.innerHTML=lista.map(t=>`<div class="trip-option" onclick="selTripForSpot('${esc(t.id)}')"><div class="trip-option-img" style="background-image:${destGradient((t.destinations&&t.destinations[0])||t.name)}">${flagFor((t.destinations&&t.destinations[0])||'')}</div><div><div class="trip-option-name">${esc(t.name)}${t._sugerida?'<span class="trip-sug">aqui</span>':''}</div><div class="trip-option-meta">${(t._spots||[]).length} spots</div></div><div class="trip-option-arrow">›</div></div>`).join('');
 }
 // Pula direto pra ficha de nota: usado quando viagem, categoria e lugar já
 // são todos conhecidos (Explorar, check-in) — nada a perguntar.
@@ -2239,7 +2284,7 @@ function adicionarSpotAbertoDoAmigo(){
   };
   S.explorePickCat=s.category||'food';
   S.explorePickStatus='want';
-  showOv('ov-trip');
+  abrirEscolhaDeViagem();
 }
 
 
@@ -2309,7 +2354,7 @@ function addExploreSpot(i){
   // antes de buscar — perguntar de novo seria repetir uma decisão já feita.
   S.explorePickCat=EXPLORE.cat;
   S.explorePickStatus='want'; // Explorar é descoberta, ainda não foi lá
-  showOv('ov-trip');
+  abrirEscolhaDeViagem();
 }
 const GAPI='AIzaSyDYUDC3BkvUYSjlBVX2C6BZ8pMmycxfYUQ';
 // Posto de gasolina, loja de conveniência, mercado — o Google costuma
@@ -2492,7 +2537,7 @@ function checkinAdd(){
     jumpToNoteSheet(candidatas[0],'food',place,'been');
   }else{
     S.explorePick=place;S.explorePickCat='food';S.explorePickStatus='been';
-    showOv('ov-trip');
+    abrirEscolhaDeViagem();
   }
 }
 let searchTO;
