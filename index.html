@@ -2271,6 +2271,15 @@ function placePhotoUrl(p,largura){
   const ref=(p&&p.photos&&p.photos[0]&&p.photos[0].name)||'';
   return ref?'https://places.googleapis.com/v1/'+ref+'/media?maxWidthPx='+largura+'&key='+GAPI:'';
 }
+// Ponte pro endereco de foto. HOJE ela nao faz nada: a foto vem do Places
+// com a chave na propria URL, que e o estado pro qual o app voltou quando a
+// GOOGLE_PLACES_KEY ainda nao existia.
+//
+// Ela existe assim mesmo porque o render dos amigos ja a chama, e quando o
+// proxy /api/place-photo voltar e aqui que a conversao entra — um lugar so,
+// em vez de sete pontos de exibicao. Foi exatamente isso que quebrou: eu
+// reverti a parte do Places e levei junto uma funcao que outra feature usava.
+function fotoUrl(u){return u||''}
 function placePhotoUrls(p){
   return{full:placePhotoUrl(p,800),thumb:placePhotoUrl(p,200)};
 }
