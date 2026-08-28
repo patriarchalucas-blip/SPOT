@@ -15,7 +15,14 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="Spot">
 <meta name="theme-color" content="#16232A">
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<!-- O SDK do Supabase e servido pelo PROPRIO site, nao por CDN de terceiro.
+     Este script bloqueia o desenho da pagina (esta no head, sem defer, e o
+     codigo inline no fim do body usa supabase.createClient assim que roda).
+     Vindo do cdn.jsdelivr, uma rede que demorasse ou bloqueasse aquele
+     dominio deixava o app em TELA BRANCA — e num app instalado na tela de
+     inicio nao ha barra de endereco pra recarregar. Servido daqui, ele chega
+     junto com o HTML: se o HTML chegou, ele chega. -->
+<script src="/vendor/supabase.js"></script>
 <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;600&family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,500;0,9..144,600;1,9..144,400&family=DM+Sans:wght@300;400;500;600&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}

@@ -99,3 +99,38 @@ test('o manifest e o icone do PWA existem de verdade', () => {
     assert.ok(fs.existsSync(arquivo), 'o index.html aponta pra /' + m[1] + ' e o arquivo nao existe');
   }
 });
+
+// ── o que pode deixar a tela branca ──────────────────────────────────────────
+
+test('nenhum script externo bloqueia o desenho da pagina', () => {
+  // ISTO ACONTECEU. O SDK do Supabase era carregado do cdn.jsdelivr por um
+  // <script src> no <head>, sem defer e sem async. O navegador para de
+  // desenhar a pagina ate esse arquivo chegar — entao uma rede que demorasse
+  // ou bloqueasse aquele dominio deixava o app em TELA BRANCA. E num app
+  // instalado na tela de inicio nao ha barra de endereco pra recarregar: a
+  // unica saida e fechar pela multitarefa.
+  //
+  // Nao da pra so colocar defer: o codigo inline no fim do body usa
+  // supabase.createClient assim que roda, e defer executaria depois dele. A
+  // saida e o arquivo ser servido pelo proprio site — se o HTML chegou, ele
+  // chega junto.
+  const html = lerIndex();
+  const cabeca = html.slice(0, html.indexOf('</head>'));
+  const externos = [...cabeca.matchAll(/<script\b([^>]*)\bsrc=["']([^"']+)["']([^>]*)>/gi)]
+    .filter(m => /^https?:\/\//i.test(m[2]))
+    .filter(m => !/\b(defer|async)\b/i.test(m[1] + m[3]))
+    .map(m => m[2]);
+  assert.deepStrictEqual(externos, [],
+    'script externo bloqueante no <head>: se esse host falhar, o app abre em branco');
+});
+
+test('o arquivo do SDK existe de verdade no repositorio', () => {
+  const fs = require('node:fs'), path = require('node:path');
+  const html = lerIndex();
+  for (const m of html.matchAll(/<script[^>]*src="\/([^"]+\.js)"/g)) {
+    const arquivo = path.join(__dirname, '..', m[1]);
+    assert.ok(fs.existsSync(arquivo),
+      'o index.html carrega /' + m[1] + ' e o arquivo nao esta no repo — tela branca na certa');
+    assert.ok(fs.statSync(arquivo).size > 1000, '/' + m[1] + ' esta vazio ou truncado');
+  }
+});
