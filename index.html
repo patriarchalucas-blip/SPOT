@@ -1545,7 +1545,7 @@ function renderList(){
       const nota=s.my_rating?('★ '+fmtRating(s.my_rating)):(s.rating_google?('☆ '+fmtRating(s.rating_google)):'');
       // <img> em vez de background-image: só assim dá pra detectar foto quebrada
       // (referência do Google expirada) e disparar o auto-conserto
-      const thumb=s.photo_url?`<div class="lthumb"><img src="${escUrl(fotoUrl(s.photo_url))}" style="width:100%;height:100%;object-fit:cover;border-radius:inherit" onerror="onSpotPhotoError(this,'${esc(s.id)}','${esc(s.category)}')"></div>`:`<div class="lthumb">${catIcon(s.category)}</div>`;
+      const thumb=s.photo_url?`<div class="lthumb"><img src="${escUrl(s.photo_url)}" style="width:100%;height:100%;object-fit:cover;border-radius:inherit" onerror="onSpotPhotoError(this,'${esc(s.id)}','${esc(s.category)}')"></div>`:`<div class="lthumb">${catIcon(s.category)}</div>`;
       const local=[cityOf(s),s._country].filter(Boolean).join(' · ');
       h+=`<div class="lrow" onclick="openSpotFromList(${i})"><span class="lrank">${i+1}</span>${thumb}<div class="lmain"><div class="lname">${esc(s.name)}</div><div class="lmeta">${esc(local)}</div></div><div class="lright">${nota?`<span class="lrating">${esc(nota)}</span>`:''}<div class="place-status"><span class="status-dot dot-${s.status==='been'?'been':'want'}"></span><span class="place-status-label">${s.status==='been'?'Fui':'Quero ir'}</span></div></div></div>`;
     });
@@ -1843,7 +1843,7 @@ function renderCityBody(){
     const bc=s.category==='food'?'bar-food':s.category==='hotel'?'bar-hotel':'bar-experience';
     const dot=s.status==='been'?'dot-been':'dot-want';
     const tag=spotTag(s);
-    const thumb=s.photo_url?`<div class="place-thumb"><img src="${escUrl(fotoUrl(s.photo_url))}" style="width:100%;height:100%;object-fit:cover;border-radius:inherit" onerror="onSpotPhotoError(this,'${esc(s.id)}','${esc(s.category)}')"></div>`:`<div class="place-thumb">${catIcon(s.category)}</div>`;
+    const thumb=s.photo_url?`<div class="place-thumb"><img src="${escUrl(s.photo_url)}" style="width:100%;height:100%;object-fit:cover;border-radius:inherit" onerror="onSpotPhotoError(this,'${esc(s.id)}','${esc(s.category)}')"></div>`:`<div class="place-thumb">${catIcon(s.category)}</div>`;
     h+=`<div class="place-row" onclick="openPlace('${esc(s.id)}','city')"><div class="place-bar ${bc}"></div><div class="place-row-main">${thumb}<div class="place-row-info"><div class="place-row-name">${esc(s.name)}</div><div class="place-row-note">${esc(s.my_note)}</div></div><div class="place-row-right">${tag?`<span class="place-type-tag">${esc(tag)}</span>`:''}<div class="place-status"><span class="status-dot ${dot}"></span><span class="place-status-label">${s.status==='been'?'Fui':'Quero ir'}</span></div></div></div></div>`;
   });
   b.innerHTML=h;
@@ -1868,7 +1868,7 @@ async function openPlace(id,origin){
   const cid=cityOf(s)||s.name;
   const aindaNesteSpot=()=>S.curPlace&&S.curPlace.id===s.id;
   if(s.photo_url){
-    phEl.style.backgroundImage=cssUrl(fotoUrl(s.photo_url));
+    phEl.style.backgroundImage=cssUrl(s.photo_url);
     // background-image não dispara erro quando a URL falha. O probe carrega a
     // mesma imagem só pra detectar a quebra e acionar o auto-conserto.
     const probe=new Image();
@@ -1877,7 +1877,7 @@ async function openPlace(id,origin){
       phEl.style.backgroundImage=destGradient(cid);
       healSpotPhoto(s.id).then(u=>{if(u&&aindaNesteSpot())phEl.style.backgroundImage=cssUrl(u)});
     };
-    probe.src=fotoUrl(s.photo_url);
+    probe.src=s.photo_url;
   }
   else{phEl.style.backgroundImage=destGradient(cid);fetchCityPhoto(cid).then(u=>{if(u&&aindaNesteSpot())phEl.style.backgroundImage=cssUrl(u)})}
   let ig='';
@@ -2178,7 +2178,11 @@ async function runExplore(){
   }).catch(function(e){console.error('amigos no lugar',e)});
   const termo={food:'restaurantes',hotel:'hotéis',experience:'pontos turísticos'}[EXPLORE.cat];
   try{
-    const resp=await placesFetch('searchText','places.displayName,places.formattedAddress,places.addressComponents,places.photos,places.rating,places.userRatingCount,places.websiteUri,places.googleMapsUri,places.types,places.nationalPhoneNumber',{textQuery:`${termo} em ${city}`,languageCode:'pt-BR',maxResultCount:20});
+    const resp=await fetch('https://places.googleapis.com/v1/places:searchText',{
+      method:'POST',
+      headers:{'Content-Type':'application/json','X-Goog-Api-Key':GAPI,'X-Goog-FieldMask':'places.displayName,places.formattedAddress,places.addressComponents,places.photos,places.rating,places.userRatingCount,places.websiteUri,places.googleMapsUri,places.types,places.nationalPhoneNumber'},
+      body:JSON.stringify({textQuery:`${termo} em ${city}`,languageCode:'pt-BR',maxResultCount:20})
+    });
     const data=await resp.json();
     let places=(data.places||[]).filter(p=>p.rating&&p.userRatingCount&&!isIrrelevantPlace(p));
     if(!places.length){body.innerHTML='<div class="empty-state"><div class="ei" data-ic="pin"></div><h3>Nada encontrado</h3><p>Tenta um nome de cidade diferente.</p></div>';hydrateIcons(body);EXPLORE.items=[];return}
@@ -2214,24 +2218,7 @@ function addExploreSpot(i){
   S.explorePickStatus='want'; // Explorar é descoberta, ainda não foi lá
   showOv('ov-trip');
 }
-// A chave do Google Places saiu daqui. Ela vive como env var no Cloudflare e
-// só é usada dentro de functions/api/places.js e place-photo.js.
-//
-// Diferente do Unsplash, que só tem cota, o Places COBRA POR REQUISIÇÃO no
-// cartão do dono da conta — e a chave funcionava a partir de qualquer site.
-// Enquanto era eu e mais cinco amigos, ninguém ia procurar; aberto ao público,
-// chave de Maps exposta é alvo conhecido e a fatura chega pra quem paga.
-//
-// O proxy não é um repasse cego: ele aceita duas operações, copia campo por
-// campo com limite e filtra a FieldMask. Ver o comentário lá.
-async function placesFetch(op,campos,corpo){
-  const tk=await ensureToken();
-  return fetch('/api/places',{
-    method:'POST',
-    headers:{'Content-Type':'application/json','Authorization':'Bearer '+(tk||SB_KEY)},
-    body:JSON.stringify(Object.assign({op:op,fields:campos},corpo))
-  });
-}
+const GAPI='AIzaSyDYUDC3BkvUYSjlBVX2C6BZ8pMmycxfYUQ';
 // Posto de gasolina, loja de conveniência, mercado — o Google costuma
 // marcar como 'restaurant' secundário quando tem lanchonete dentro, e
 // aparecem em qualquer busca por tipo/categoria. Não é o tipo de lugar que
@@ -2242,23 +2229,7 @@ async function placesFetch(op,campos,corpo){
 // que spot de check-in nunca tinha foto.
 function placePhotoUrl(p,largura){
   const ref=(p&&p.photos&&p.photos[0]&&p.photos[0].name)||'';
-  return ref?fotoDeLugar(ref,largura):'';
-}
-// O endereço de foto do Places leva a chave dentro da própria URL, e essa URL
-// ia parar no src de um <img> E gravada em spots.photo_url. Agora aponta pra
-// function, que resolve o redirecionamento do lado de cá.
-function fotoDeLugar(ref,largura){
-  return '/api/place-photo?ref='+encodeURIComponent(ref)+'&w='+(largura||400);
-}
-// Compatibilidade com o que já está no banco: todo spot salvo antes disso tem
-// photo_url no formato antigo, com a chave embutida. Em vez de mais uma rodada
-// de SQL, a conversão acontece na leitura — extrai a referência da URL velha e
-// devolve o endereço novo. URL que não for do Places passa intacta.
-const RE_FOTO_ANTIGA=/places\.googleapis\.com\/v1\/(places\/[A-Za-z0-9_-]+\/photos\/[A-Za-z0-9_-]+)\/media\?(?:[^"'\s]*&)?maxWidthPx=(\d+)/;
-function fotoUrl(u){
-  if(!u)return'';
-  const m=String(u).match(RE_FOTO_ANTIGA);
-  return m?fotoDeLugar(m[1],m[2]):u;
+  return ref?'https://places.googleapis.com/v1/'+ref+'/media?maxWidthPx='+largura+'&key='+GAPI:'';
 }
 function placePhotoUrls(p){
   return{full:placePhotoUrl(p,800),thumb:placePhotoUrl(p,200)};
@@ -2294,7 +2265,11 @@ function showNearbySuggestions(){
     const{latitude,longitude}=pos.coords;
     const tipo={food:'restaurant',hotel:'lodging',experience:'tourist_attraction'}[S.addCat]||'point_of_interest';
     try{
-      const resp=await placesFetch('searchNearby','places.displayName,places.formattedAddress,places.addressComponents,places.photos,places.rating,places.userRatingCount,places.websiteUri,places.googleMapsUri,places.types,places.nationalPhoneNumber',{includedTypes:[tipo],maxResultCount:8,languageCode:'pt-BR',locationRestriction:{circle:{center:{latitude,longitude},radius:600}}});
+      const resp=await fetch('https://places.googleapis.com/v1/places:searchNearby',{
+        method:'POST',
+        headers:{'Content-Type':'application/json','X-Goog-Api-Key':GAPI,'X-Goog-FieldMask':'places.displayName,places.formattedAddress,places.addressComponents,places.photos,places.rating,places.userRatingCount,places.websiteUri,places.googleMapsUri,places.types,places.nationalPhoneNumber'},
+        body:JSON.stringify({includedTypes:[tipo],maxResultCount:8,languageCode:'pt-BR',locationRestriction:{circle:{center:{latitude,longitude},radius:600}}})
+      });
       const data=await resp.json();
       if(si&&si.value.trim())return;
       let places=(data.places||[]).filter(p=>p.rating&&p.userRatingCount&&!isIrrelevantPlace(p));
@@ -2331,7 +2306,9 @@ function maybeShowCheckin(){
   navigator.geolocation.getCurrentPosition(async(pos)=>{
     const{latitude,longitude}=pos.coords;
     try{
-      const resp=await placesFetch('searchNearby','places.displayName,places.formattedAddress,places.addressComponents,places.rating,places.userRatingCount,places.types,places.websiteUri,places.googleMapsUri,places.location,places.photos',
+      const resp=await fetch('https://places.googleapis.com/v1/places:searchNearby',{
+        method:'POST',
+        headers:{'Content-Type':'application/json','X-Goog-Api-Key':GAPI,'X-Goog-FieldMask':'places.displayName,places.formattedAddress,places.addressComponents,places.rating,places.userRatingCount,places.types,places.websiteUri,places.googleMapsUri,places.location,places.photos'},
         // rankPreference:DISTANCE fazia o pin literalmente mais próximo ganhar
         // mesmo sendo irrelevante — sem isso, o padrão é por relevância.
         // 'bakery'/'cafe'/'bar' ampliam pra restaurante, padaria, café e bar.
@@ -2340,7 +2317,8 @@ function maybeShowCheckin(){
         // faz sentido perguntar "você está aqui?" de algo que você já sabe
         // que está (diferente de "ah é, tem esse restaurante aqui" que é o
         // caso real de uso). Hotel também saiu — não é "check-in" o alvo ali.
-        {includedTypes:['restaurant','bakery','cafe','bar'],maxResultCount:15,languageCode:'pt-BR',locationRestriction:{circle:{center:{latitude,longitude},radius:45}}});
+        body:JSON.stringify({includedTypes:['restaurant','bakery','cafe','bar'],maxResultCount:15,languageCode:'pt-BR',locationRestriction:{circle:{center:{latitude,longitude},radius:45}}})
+      });
       const data=await resp.json();
       // O locationRestriction do Google é só uma dica de área — não é garantia
       // de raio exato. Recalcula a distância real (Haversine) e reforça um
@@ -2424,7 +2402,11 @@ function searchPlaces(v){
   const myReqId=++searchReqId;
   searchTO=setTimeout(async()=>{
     try{
-      const resp=await placesFetch('searchText','places.id,places.displayName,places.formattedAddress,places.addressComponents,places.location,places.photos,places.rating,places.websiteUri,places.googleMapsUri,places.types,places.nationalPhoneNumber',{textQuery:v,languageCode:'pt-BR',maxResultCount:6});
+      const resp=await fetch('https://places.googleapis.com/v1/places:searchText',{
+        method:'POST',
+        headers:{'Content-Type':'application/json','X-Goog-Api-Key':GAPI,'X-Goog-FieldMask':'places.id,places.displayName,places.formattedAddress,places.addressComponents,places.location,places.photos,places.rating,places.websiteUri,places.googleMapsUri,places.types,places.nationalPhoneNumber'},
+        body:JSON.stringify({textQuery:v,languageCode:'pt-BR',maxResultCount:6})
+      });
       if(myReqId!==searchReqId)return; // busca mais nova já foi disparada, ignora essa resposta atrasada
       const data=await resp.json();
       if(myReqId!==searchReqId)return;
@@ -2487,7 +2469,11 @@ async function canonizarCidade(nome,pais){
   const consulta=async(estrito)=>{
     const corpo={textQuery:nome+(pais?', '+pais:''),languageCode:'pt-BR',maxResultCount:1};
     if(estrito){corpo.includedType='locality';corpo.strictTypeFiltering=true}
-    const r=await placesFetch('searchText','places.displayName,places.types',corpo);
+    const r=await fetch('https://places.googleapis.com/v1/places:searchText',{
+      method:'POST',
+      headers:{'Content-Type':'application/json','X-Goog-Api-Key':GAPI,'X-Goog-FieldMask':'places.displayName,places.types'},
+      body:JSON.stringify(corpo)
+    });
     return ((await r.json()).places||[])[0]||null;
   };
   let achado='';
@@ -2832,7 +2818,11 @@ function filterNewTripCity(v){
   const myReqId=++newTripReqId;
   newTripSearchTO=setTimeout(async()=>{
     try{
-      const resp=await placesFetch('searchText','places.displayName,places.formattedAddress,places.addressComponents,places.types',{textQuery:v,languageCode:'pt-BR',maxResultCount:6});
+      const resp=await fetch('https://places.googleapis.com/v1/places:searchText',{
+        method:'POST',
+        headers:{'Content-Type':'application/json','X-Goog-Api-Key':GAPI,'X-Goog-FieldMask':'places.displayName,places.formattedAddress,places.addressComponents,places.types'},
+        body:JSON.stringify({textQuery:v,languageCode:'pt-BR',maxResultCount:6})
+      });
       if(myReqId!==newTripReqId)return;
       const data=await resp.json();
       if(myReqId!==newTripReqId)return;
@@ -3159,7 +3149,11 @@ async function autoBackfillPlaceLinks(){
       const patch={};
       let googleSite='',mapsUrl=null,fone='';
       if(precisaInstagram||s.maps_url===null||precisaFone){
-        const resp=await placesFetch('searchText','places.displayName,places.websiteUri,places.googleMapsUri,places.nationalPhoneNumber',{textQuery:s.name+(cityOf(s)?' '+cityOf(s):''),languageCode:'pt-BR',maxResultCount:5});
+        const resp=await fetch('https://places.googleapis.com/v1/places:searchText',{
+          method:'POST',
+          headers:{'Content-Type':'application/json','X-Goog-Api-Key':GAPI,'X-Goog-FieldMask':'places.displayName,places.websiteUri,places.googleMapsUri,places.nationalPhoneNumber'},
+          body:JSON.stringify({textQuery:s.name+(cityOf(s)?' '+cityOf(s):''),languageCode:'pt-BR',maxResultCount:5})
+        });
         const d=await resp.json();
         const best=pickBestPlaceMatch(d.places,s.name);
         fone=(best&&best.nationalPhoneNumber)||'';
@@ -3203,7 +3197,11 @@ async function healSpotPhoto(id){
   if(!s||!s.name)return null;
   photoHealing.add(id);
   try{
-    const resp=await placesFetch('searchText','places.displayName,places.photos,places.addressComponents,places.websiteUri,places.googleMapsUri',{textQuery:s.name+(cityOf(s)?' '+cityOf(s):''),languageCode:'pt-BR',maxResultCount:5});
+    const resp=await fetch('https://places.googleapis.com/v1/places:searchText',{
+      method:'POST',
+      headers:{'Content-Type':'application/json','X-Goog-Api-Key':GAPI,'X-Goog-FieldMask':'places.displayName,places.photos,places.addressComponents,places.websiteUri,places.googleMapsUri'},
+      body:JSON.stringify({textQuery:s.name+(cityOf(s)?' '+cityOf(s):''),languageCode:'pt-BR',maxResultCount:5})
+    });
     const d=await resp.json();
     const p=pickBestPlaceMatch(d.places,s.name);
     if(!p)return null;
@@ -4049,8 +4047,8 @@ function abrirSpotDoAmigo(i){
   hero.style.backgroundImage=destGradient(cityOf(s)||s.name);
   if(s.photo_url){
     const probe=new Image();
-    probe.onload=()=>{if(FRIEND.spot===s)hero.style.backgroundImage=cssUrl(fotoUrl(s.photo_url))};
-    probe.src=fotoUrl(s.photo_url);
+    probe.onload=()=>{if(FRIEND.spot===s)hero.style.backgroundImage=cssUrl(s.photo_url)};
+    probe.src=s.photo_url;
   }
 
   // a nota pessoal é o coração do app — sem ela, some a seção
@@ -4108,7 +4106,7 @@ function friendSpotRowHTML(s,i){
   const bc=s.category==='food'?'bar-food':s.category==='hotel'?'bar-hotel':'bar-experience';
   const dot=s.status==='been'?'dot-been':'dot-want';
   const thumb=s.photo_url
-    ?'<div class="place-thumb"><img src="'+escUrl(fotoUrl(s.photo_url))+'" style="width:100%;height:100%;object-fit:cover;border-radius:inherit" onerror="thumbFallback(this,\''+esc(s.category)+'\')"></div>'
+    ?'<div class="place-thumb"><img src="'+escUrl(s.photo_url)+'" style="width:100%;height:100%;object-fit:cover;border-radius:inherit" onerror="thumbFallback(this,\''+esc(s.category)+'\')"></div>'
     :'<div class="place-thumb">'+catIcon(s.category)+'</div>';
   const nota=s.my_rating?'★ '+fmtRating(s.my_rating):'';
   const tag=spotTag(s);
