@@ -95,10 +95,15 @@ function carregarApp() {
     location: { href: 'https://localhost/', origin: 'https://localhost', search: '', pathname: '/', hash: '', replace: nada, assign: nada, reload: nada },
     navigator: { geolocation: { getCurrentPosition: nada }, userAgent: 'node', language: 'pt-BR', onLine: true, share: undefined, clipboard: { writeText: () => Promise.resolve() } },
     history: { pushState: nada, replaceState: nada, back: nada },
-    // Os timers do app precisam existir (várias funções agendam algo), mas não
-    // podem segurar o processo. Sem o unref, o teste passa e o node fica
-    // pendurado pra sempre num setInterval do app — foi o que aconteceu.
-    setTimeout: (fn, ms, ...a) => { const t = setTimeout(fn, ms, ...a); if (t && t.unref) t.unref(); return t },
+    // setInterval do app roda pra sempre e seguraria o processo depois que os
+    // testes acabam — por isso o unref.
+    //
+    // setTimeout fica INTEIRO de propósito. Eu tinha posto unref nos dois, e
+    // aí um teste que espera um timeout do app (o prazo do comPrazo, por
+    // exemplo) morria com "Promise resolution is still pending but the event
+    // loop has already resolved": o node não esperava o próprio timer que o
+    // teste precisava. Timeout termina sozinho; não precisa de unref.
+    setTimeout,
     setInterval: (fn, ms, ...a) => { const t = setInterval(fn, ms, ...a); if (t && t.unref) t.unref(); return t },
     clearTimeout, clearInterval, queueMicrotask,
     Promise, JSON, Math, Date, Intl, URL, URLSearchParams, TextEncoder, TextDecoder,

@@ -2609,6 +2609,19 @@ function cityFromComponents(comps){
 // Istambul pelo mesmo caminho que "Amsterdam" vira Amsterdã.
 let cidadeCanonCache={};
 try{cidadeCanonCache=JSON.parse(localStorage.getItem('spot_cidade_canon')||'{}')}catch(e){cidadeCanonCache={}}
+// Espera uma promessa por um tempo e desiste com um valor de reserva.
+//
+// Toda chamada ao Google daqui e OPCIONAL: melhora o nome, nunca decide se a
+// operacao acontece. Sem prazo, um fetch que nunca responde (rede de celular
+// oscilando, DNS travado, API muda) deixa a tela em "Criando..." ou
+// "Salvando..." pra sempre — sem erro, sem saida, sem nem dar pra tentar de
+// novo. A promessa original continua correndo; so paramos de espera-la.
+function comPrazo(promessa,ms,reserva){
+  return Promise.race([
+    Promise.resolve(promessa).catch(()=>reserva),
+    new Promise(r=>setTimeout(()=>r(reserva),ms))
+  ]);
+}
 async function canonizarCidade(nome,pais){
   if(!nome)return'';
   const chave=nome+'|'+(pais||'');
@@ -2755,11 +2768,14 @@ function resetNoteSheet(){
 // Vale pra qualquer metrópole do mundo sem lista nenhuma: o que faz Tóquio
 // funcionar é a comparação, não o nome dela estar escrito em algum lugar.
 async function resolverCidadeDoSpot(p,trip){
-  const cidade=await canonizarCidade(p.city||'',p.country||'');
+  // Mesmo raciocinio do createTrip: salvar o spot nao pode depender do Google
+  // responder. O prazo devolve o nome cru e a gravacao segue.
+  const bruto=p.city||'';
+  const cidade=await comPrazo(canonizarCidade(bruto,p.country||''),3000,bruto);
   const daViagem=trip&&trip.initial_city;
   if(!daViagem||!p.region)return cidade;
   if(cityCore(cidade)===cityCore(daViagem))return daViagem;
-  const divisao=await canonizarCidade(p.region,p.country||'');
+  const divisao=await comPrazo(canonizarCidade(p.region,p.country||''),3000,'');
   return (divisao&&cityCore(divisao)===cityCore(daViagem))?daViagem:cidade;
 }
 async function saveSpot(addAnother){
@@ -2818,12 +2834,21 @@ async function saveSpot(addAnother){
 async function createTrip(){
   if(!selectedNewTripCity){return}
   const name=selectedNewTripCity.country;
-  const cidadeEscolhida=selectedNewTripCity.city;
+  // let, nao const: a linha que canoniza o nome logo abaixo reatribui isso.
+  // Com const, criar viagem lancava "Assignment to constant variable" TODA vez
+  // que uma cidade era escolhida — a funcao morria antes do insert, o botao
+  // ja tinha virado "Criando..." e nunca mais voltava. Ficou assim em
+  // producao por um dia inteiro.
+  let cidadeEscolhida=selectedNewTripCity.city;
   const s=document.getElementById('tripStart').value,e=document.getElementById('tripEnd').value;
   let dates='';if(s&&e)dates=fmtD(s)+' – '+fmtD(e);else if(s)dates='A partir de '+fmtD(s);
   const btn=document.getElementById('createTripBtn');btn.textContent='Criando...';btn.style.pointerEvents='none';
   // store dates as raw ISO too, for smart status
-  if(cidadeEscolhida)cidadeEscolhida=await canonizarCidade(cidadeEscolhida,name);
+  // Canonizar o nome da cidade e cosmetico; criar a viagem e essencial. O
+  // cosmetico nao pode segurar o essencial: com prazo, uma rede ruim ou um
+  // Google mudo atrasam no maximo 3 segundos e a viagem e criada com o nome
+  // que a pessoa escolheu.
+  if(cidadeEscolhida)cidadeEscolhida=await comPrazo(canonizarCidade(cidadeEscolhida,name),3000,cidadeEscolhida);
   let{data,error}=await dbInsert('trips',{user_id:S.user.id,name,destinations:[name],dates,date_start:s||null,date_end:e||null,status:'planning',initial_city:cidadeEscolhida||null});
   // Degrada aos poucos se colunas novas ainda não existirem (migração não rodada):
   // 1) sem colunas de data, com initial_city  2) com colunas de data, sem initial_city  3) nenhuma das duas
