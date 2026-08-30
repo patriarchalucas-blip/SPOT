@@ -233,6 +233,23 @@ body{font-family:'DM Sans',sans-serif;background:var(--dark);max-width:430px;mar
 .cr-tirar{flex-shrink:0;width:34px;height:34px;margin-left:6px;margin-right:-6px;border:none;background:none;color:var(--ink3);display:flex;align-items:center;justify-content:center;cursor:pointer;border-radius:50%}
 .cr-tirar:active{opacity:.5;background:rgba(168,52,44,.12);color:var(--red)}
 .cr-tirar svg{width:15px;height:15px}
+.section-sub{font-family:var(--mono);font-size:10.5px;color:var(--ink3);letter-spacing:.06em;margin-left:auto}
+.est-cidade{border-bottom:1px solid var(--border)}
+.est-topo{display:flex;align-items:center;gap:10px;padding:14px 2px;cursor:pointer;min-height:48px}
+.est-topo:active{opacity:.6}
+.est-bandeira{font-size:17px;flex-shrink:0}
+.est-cnome{font-size:14.5px;color:var(--ink);font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.est-meta{font-family:var(--mono);font-size:10.5px;color:var(--ink3);margin-left:auto;flex-shrink:0}
+.est-seta{color:var(--ink3);font-size:17px;flex-shrink:0;transition:transform .2s ease}
+.est-cidade.aberta .est-seta{transform:rotate(90deg)}
+.est-lista{padding:0 0 8px}
+.est-spot{display:flex;align-items:center;gap:10px;padding:10px 2px 10px 14px;cursor:pointer;min-height:44px;border-top:1px solid var(--border)}
+.est-spot:active{opacity:.6}
+.est-ic{color:var(--ink3);display:flex;flex-shrink:0}
+.est-ic svg{width:16px;height:16px}
+.est-nome{flex:1;font-size:13.5px;color:var(--ink2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.est-nota{font-family:var(--mono);font-size:12px;color:var(--green);font-weight:600;flex-shrink:0}
+.est-quer{font-family:var(--mono);font-size:10px;color:var(--amber);letter-spacing:.06em;flex-shrink:0}
 .amg-linha{cursor:pointer}
 .amg-linha:active{opacity:.6}
 .amg-chip i{font-family:var(--mono);font-style:normal;font-size:10.5px;letter-spacing:.04em;color:var(--amber)}
@@ -811,7 +828,9 @@ svg.ic path,svg.ic circle,svg.ic line,svg.ic polyline,svg.ic rect{fill:none;stro
   <div class="profile-bio" id="profBio" style="display:none"></div>
 
   <div class="profile-body">
-    <div class="section-head"><span class="section-title">Onde já estive</span></div>
+    <div class="section-head"><span class="section-title">Meus lugares</span><span class="section-sub" id="estanteResumo"></span></div>
+    <div id="estante"></div>
+    <div class="section-head" style="margin-top:26px"><span class="section-title">Onde já estive</span></div>
     <div class="country-chips" id="countryChips"></div>
     <div class="prof-acoes">
       <div class="prof-linha" onclick="openVisitedCountryPicker()"><span class="pl-ic" data-ic="globe"></span><span class="pl-txt">Marcar país que já visitei</span><span class="pl-seta">›</span></div>
@@ -3573,6 +3592,7 @@ async function loadProfile(){
   // Os contadores de países/cidades/continentes saíram daqui: o Dashboard já
   // mostra os mesmos números, e mostrava com denominador diferente ("X/243"
   // contra "de 195"), o que só gerava dúvida sobre qual estava certo.
+  renderEstante();
   renderListaDePaises(visitedCountryNames());
 }
 // Lista de países visitados. Mostra os primeiros e joga o resto pra tela de
@@ -3603,6 +3623,72 @@ async function desmarcarPais(c,ev){
   }
   renderTrips();populateTripOpts();loadProfile();
   toast(c+' saiu do mapa','','trash');
+}
+// ═══ A ESTANTE ═══
+// O Perfil era uma tela de repetição: mapa e contadores que o Dashboard já
+// mostrava, mais nome/bio/sair que foram pra Configurações. Sobrava um lugar
+// sem conteúdo próprio.
+//
+// Aqui ficam os lugares, agrupados por cidade — que é a unidade que a pessoa
+// usa pra lembrar ("o que eu comi em Lisboa?"). Cada cidade abre e fecha:
+// fechada cabe uma lista longa na tela, aberta mostra tudo daquele lugar.
+//
+// A ordem é por quantidade de lugares. Cidade onde a pessoa mais registrou é
+// onde ela mais viveu o app, e é o que ela quer ver primeiro.
+let ESTANTE_ABERTA = {};
+function renderEstante(){
+  const box=document.getElementById('estante');
+  if(!box)return;
+  const spots=allSpotsFlat();
+  const resumo=document.getElementById('estanteResumo');
+  if(!spots.length){
+    box.innerHTML='<div class="amg-aviso">Os lugares que você salvar aparecem aqui, separados por cidade.</div>';
+    if(resumo)resumo.textContent='';
+    return;
+  }
+  const byCity=agruparPorCidade(spots);
+  const paisDe={};
+  spots.forEach(s=>{const c=cityOf(s)||'Outros';if(!paisDe[c])paisDe[c]=s._country||''});
+  const cidades=Object.keys(byCity).filter(c=>byCity[c].length)
+    .sort((a,b)=>byCity[b].length-byCity[a].length||a.localeCompare(b,'pt-BR'));
+  if(resumo)resumo.textContent=spots.length+(spots.length===1?' lugar · ':' lugares · ')
+    +cidades.length+(cidades.length===1?' cidade':' cidades');
+
+  box.innerHTML=cidades.map(function(c){
+    const lista=byCity[c].slice().sort(function(x,y){
+      // Avaliado primeiro, e entre os avaliados a nota manda. Quem ainda não
+      // foi fica embaixo: é intenção, não memória.
+      const fx=x.status==='been',fy=y.status==='been';
+      if(fx!==fy)return fx?-1:1;
+      return (Number(y.my_rating)||0)-(Number(x.my_rating)||0)
+        ||String(x.name).localeCompare(String(y.name),'pt-BR');
+    });
+    const notas=lista.filter(s=>s.status==='been'&&Number(s.my_rating)>0).map(s=>Number(s.my_rating));
+    const media=notas.length?(notas.reduce((a,b)=>a+b,0)/notas.length):0;
+    const aberta=!!ESTANTE_ABERTA[c];
+    const meta=[lista.length+(lista.length===1?' lugar':' lugares')];
+    if(media)meta.push('média '+media.toFixed(1));
+    const linhas=aberta?lista.map(function(s){
+      const nota=s.status==='been'&&Number(s.my_rating)>0
+        ?'<span class="est-nota">'+fmtRating(s.my_rating)+'</span>'
+        :(s.status==='been'?'':'<span class="est-quer">quero ir</span>');
+      return'<div class="est-spot" onclick="openPlace(\''+esc(s.id)+'\',\'profile\')">'
+        +'<span class="est-ic">'+catIcon(s.category)+'</span>'
+        +'<span class="est-nome">'+esc(s.name)+'</span>'+nota+'</div>';
+    }).join(''):'';
+    return'<div class="est-cidade'+(aberta?' aberta':'')+'">'
+      +'<div class="est-topo" onclick="alternarCidadeDaEstante(\''+esc(String(c).replace(/[\\\\\']/g,''))+'\')">'
+      +'<span class="est-bandeira">'+(paisDe[c]?flagFor(paisDe[c]):'')+'</span>'
+      +'<span class="est-cnome">'+esc(c)+'</span>'
+      +'<span class="est-meta">'+esc(meta.join(' · '))+'</span>'
+      +'<span class="est-seta">›</span></div>'
+      +'<div class="est-lista">'+linhas+'</div></div>';
+  }).join('');
+  hydrateIcons(box);
+}
+function alternarCidadeDaEstante(c){
+  ESTANTE_ABERTA[c]=!ESTANTE_ABERTA[c];
+  renderEstante();
 }
 function renderListaDePaises(visited,alvo){
   const box=document.getElementById(alvo||'countryChips');
