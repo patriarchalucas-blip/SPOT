@@ -66,7 +66,22 @@ function carregarApp() {
     body: el, head: el, documentElement: el, readyState: 'complete',
     cookie: '', title: '', hidden: false, visibilityState: 'visible'
   };
-  const armazem = { getItem: () => null, setItem: nada, removeItem: nada, clear: nada, key: () => null, length: 0 };
+  // localStorage de verdade, em memória. Era um casco que devolvia null e
+  // engolia tudo — com ele, qualquer teste sobre algo guardado no aparelho
+  // (cache, "já vi isso", migração já feita) passava sem exercitar nada: o
+  // valor gravado nunca voltava.
+  function armazemEmMemoria() {
+    const m = new Map();
+    return {
+      getItem: (k) => (m.has(String(k)) ? m.get(String(k)) : null),
+      setItem: (k, v) => { m.set(String(k), String(v)) },
+      removeItem: (k) => { m.delete(String(k)) },
+      clear: () => m.clear(),
+      key: (i) => [...m.keys()][i] ?? null,
+      get length() { return m.size }
+    };
+  }
+  const armazem = armazemEmMemoria();
 
   // O SDK do Supabase entra por <script src> na página. Aqui ele é um casco:
   // toda a camada de dados do app usa fetch direto, e o SDK só é usado para
@@ -88,7 +103,7 @@ function carregarApp() {
 
   const ctx = {
     console: { log: nada, warn: nada, error: nada, info: nada, debug: nada },
-    document: doc, localStorage: armazem, sessionStorage: armazem, supabase,
+    document: doc, localStorage: armazem, sessionStorage: armazemEmMemoria(), supabase,
     // Rede desligada: teste não fala com o Google, com o Supabase nem com
     // ninguém. Qualquer chamada devolve vazio.
     fetch: () => Promise.resolve({ ok: true, status: 200, json: () => Promise.resolve({}), text: () => Promise.resolve('') }),

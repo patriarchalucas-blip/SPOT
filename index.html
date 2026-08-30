@@ -867,10 +867,10 @@ svg.ic path,svg.ic circle,svg.ic line,svg.ic polyline,svg.ic rect{fill:none;stro
   <div class="friend-bio" id="friendBio" style="display:none"></div>
   <div class="dash-body">
     <div class="stats-strip">
-      <div class="stat-block" style="cursor:default"><div class="stat-n" id="fStatTrips">0</div><div class="stat-l">viagens</div></div>
-      <div class="stat-block" style="cursor:default"><div class="stat-n" id="fStatSpots">0</div><div class="stat-l">spots</div></div>
-      <div class="stat-block" style="cursor:default"><div class="stat-n" id="fStatCities">0</div><div class="stat-l">cidades</div></div>
-      <div class="stat-block" style="cursor:default"><div class="stat-n" id="fStatCountries">0</div><div class="stat-l">países</div></div>
+      <div class="stat-block" onclick="abrirDetalheAmigo('trips')"><div class="stat-n" id="fStatTrips">0</div><div class="stat-l">viagens</div></div>
+      <div class="stat-block" onclick="abrirDetalheAmigo('spots')"><div class="stat-n" id="fStatSpots">0</div><div class="stat-l">spots</div></div>
+      <div class="stat-block" onclick="abrirDetalheAmigo('cities')"><div class="stat-n" id="fStatCities">0</div><div class="stat-l">cidades</div></div>
+      <div class="stat-block" onclick="abrirDetalheAmigo('countries')"><div class="stat-n" id="fStatCountries">0</div><div class="stat-l">países</div></div>
     </div>
     <div class="section-head"><span class="section-title">Viagens</span></div>
     <div id="friendTripsList"></div>
@@ -972,6 +972,8 @@ svg.ic path,svg.ic circle,svg.ic line,svg.ic polyline,svg.ic rect{fill:none;stro
 <div class="overlay" id="ov-mismatch" onclick="closeOut(event,'ov-mismatch')"><div class="sheet"><button class="sheet-close" onclick="closeOv('ov-mismatch')" data-ic="close" aria-label="Fechar"></button><div class="sheet-handle"></div><div class="sheet-title">País diferente</div><div class="cm-text" id="cmText"></div><button class="sheet-cta" id="cmMoveBtn">Mover</button><button class="delete-link" style="color:var(--ink3)" onclick="keepInThisTripAnyway()">Adicionar nesta viagem mesmo assim</button></div></div>
 <div class="overlay" id="ov-newtrip" onclick="closeOut(event,'ov-newtrip')"><div class="sheet"><button class="sheet-close" onclick="closeOv('ov-newtrip')" data-ic="close" aria-label="Fechar"></button><div class="sheet-handle"></div><div class="sheet-title">Para qual cidade?</div><div class="nt-label">Cidade da viagem — o país é identificado sozinho</div><div class="dest-search-wrap"><span class="dsi" data-ic="search"></span><input class="nt-input" style="padding-left:44px" id="countrySearch" placeholder="Buscar cidade..." oninput="filterNewTripCity(this.value)"></div><div id="countryList"></div><button class="sheet-cta" id="createTripBtn" onclick="createTrip()" style="opacity:.4;pointer-events:none">Selecione uma cidade</button></div></div>
 <div class="overlay" id="ov-quickvisit" onclick="closeOut(event,'ov-quickvisit')"><div class="sheet"><button class="sheet-close" onclick="closeOv('ov-quickvisit')" data-ic="close" aria-label="Fechar"></button><div class="sheet-handle"></div><div class="sheet-title" id="quickVisitTitle">Qual país você já visitou?</div><div class="nt-label">País</div><div class="dest-search-wrap"><span class="dsi" data-ic="search"></span><input class="nt-input" style="padding-left:44px" id="countrySearch2" placeholder="Buscar país..." oninput="filterCountries2(this.value)"></div><div id="countryList2"></div><button class="sheet-cta" id="createVisitBtn" onclick="markVisited()" style="opacity:.4;pointer-events:none">Selecione um país</button></div></div>
+<div class="overlay" id="ov-detalheamigo" onclick="closeOut(event,'ov-detalheamigo')"><div class="sheet"><button class="sheet-close" onclick="closeOv('ov-detalheamigo')" data-ic="close" aria-label="Fechar"></button><div class="sheet-handle"></div><div class="sheet-title" id="daTitulo">—</div><div id="daCorpo"></div></div></div>
+
 <div class="overlay" id="ov-editperfil" onclick="closeOut(event,'ov-editperfil')"><div class="sheet"><button class="sheet-close" onclick="closeOv('ov-editperfil')" data-ic="close" aria-label="Fechar"></button><div class="sheet-handle"></div><div class="sheet-title">Configurações</div>
 <div class="prof-linha" onclick="document.getElementById('avatarFileInput').click()"><span class="pl-ic" data-ic="user"></span><span class="pl-txt">Trocar foto de perfil</span><span class="pl-seta">›</span></div>
 <div style="height:18px"></div>
@@ -4296,10 +4298,33 @@ let friendsTab='amigos';
 // O que a última busca trouxe. Separar buscar de desenhar é o que permite
 // trocar de aba sem ir ao banco de novo.
 let FRIENDS_DATA=null;
+// O contador de "Recente" mostrava o TOTAL do feed, pra sempre. Um numero que
+// nunca muda depois de lido nao avisa nada — vira enfeite, e a pessoa para de
+// olhar. Agora ele conta so o que chegou DEPOIS da ultima vez que a aba foi
+// aberta, e some quando nao ha novidade.
+//
+// A marca vive no aparelho, nao no banco: "ja vi isso" e sobre este aparelho
+// aqui, e guardar no servidor custaria uma coluna e uma escrita por abertura
+// pra resolver algo que o localStorage resolve.
+const FEED_VISTO='spot_feed_visto_em';
+function feedVistoEm(){try{return localStorage.getItem(FEED_VISTO)||''}catch(e){return''}}
+function marcarFeedComoVisto(){
+  try{localStorage.setItem(FEED_VISTO,new Date().toISOString())}catch(e){}
+}
+// created_at vem como ISO ('2026-08-30T14:02:11Z'), entao comparar texto ja
+// ordena certo — nao precisa virar Date pra isso.
+function novidadesNoFeed(items){
+  const visto=feedVistoEm();
+  if(!visto)return (items||[]).length;   // primeira vez: tudo e novidade
+  return (items||[]).filter(i=>String(i.created_at||'')>visto).length;
+}
 function switchFriendsTab(aba,el){
   friendsTab=aba;
   document.querySelectorAll('#friends .cat-tab').forEach(x=>x.classList.remove('active'));
   if(el)el.classList.add('active');
+  // Abrir a aba JA e ter visto. Marca antes de desenhar pra o contador sumir
+  // no mesmo toque, sem precisar sair e voltar.
+  if(aba==='recente')marcarFeedComoVisto();
   renderFriendsTab();
 }
 async function loadFriends(){
@@ -4356,6 +4381,9 @@ async function loadFriends(){
   feedItems.forEach(it=>{FRIEND_NOMES[it.user_id]=friendName(pmap[it.user_id])});
 
   FRIENDS_DATA={friendIds,incoming,outgoing,pmap,feedItems};
+  // Carregou com a aba Recente ja aberta (voltando de outra tela, por
+  // exemplo): tambem conta como visto.
+  if(friendsTab==='recente')marcarFeedComoVisto();
   renderFriendsTab();
 }
 function renderFriendsTab(){
@@ -4375,7 +4403,12 @@ function renderFriendsTab(){
   }else{reqBox.style.display='none';reqBox.innerHTML=''}
 
   document.getElementById('fTabCount-amigos').textContent=friendIds.length;
-  document.getElementById('fTabCount-recente').textContent=feedItems.length;
+  // Se a aba aberta e a Recente, ja esta visto — nao adianta anunciar o que a
+  // pessoa esta olhando agora.
+  const novas=friendsTab==='recente'?0:novidadesNoFeed(feedItems);
+  const elNovas=document.getElementById('fTabCount-recente');
+  elNovas.textContent=novas||'';
+  elNovas.style.display=novas?'':'none';
   document.querySelectorAll('#friends .cat-tab').forEach(x=>x.classList.remove('active'));
   const tabEl=document.getElementById('fTab-'+friendsTab);
   if(tabEl)tabEl.classList.add('active');
@@ -4465,6 +4498,111 @@ async function openFriend(id){
   }
   FRIEND.trips.forEach(t=>{t._spotsLoaded=true});
   renderFriendProfile();
+}
+// Os quatro numeros do topo do perfil de um amigo eram so numeros. Abrir cada
+// um responde a pergunta que o numero levanta — e no caso de "paises", a
+// resposta e diferente da lista de viagens: entram tambem os paises que ele so
+// MARCOU como visitados, sem nenhum spot. Sao os que nao aparecem em lugar
+// nenhum da tela hoje.
+function abrirDetalheAmigo(modo){
+  const nome=String(friendName(FRIEND.profile)||'Seu amigo').split(' ')[0];
+  const todas=FRIEND.trips||[];
+  const visiveis=todas.filter(t=>!isNonTrip(t));
+  const titulos={trips:'Viagens de '+nome,spots:'Lugares de '+nome,
+    cities:'Cidades de '+nome,countries:'Países de '+nome};
+  document.getElementById('daTitulo').textContent=titulos[modo]||nome;
+  const corpo=document.getElementById('daCorpo');
+  let h='';
+
+  if(modo==='countries'){
+    // Conta viagens e spots por pais, e marca quem entrou so pela marcacao de
+    // "ja visitei" — sem isso a lista misturaria "morei um mes la" com
+    // "passei uma vez".
+    const porPais={};
+    todas.forEach(t=>{
+      (t.destinations||[]).forEach(d=>{
+        const g=porPais[d]||(porPais[d]={spots:0,viagens:0});
+        g.spots+=(t._spots||[]).length;
+        if(!isNonTrip(t))g.viagens++;
+      });
+    });
+    const lista=Object.keys(porPais).sort((a,b)=>
+      porPais[b].spots-porPais[a].spots||a.localeCompare(b,'pt-BR'));
+    h=lista.map(function(p){
+      const g=porPais[p];
+      const meta=g.spots?(g.spots+(g.spots===1?' lugar':' lugares'))
+        :(g.viagens?'sem lugares salvos':'só marcou que foi');
+      return'<div class="country-row" style="cursor:default">'
+        +'<span class="cr-flag">'+flagFor(p)+'</span>'
+        +'<span class="cr-name">'+esc(p)+'</span>'
+        +'<span class="cr-count">'+esc(meta)+'</span></div>';
+    }).join('');
+    if(!lista.length)h='<div class="amg-aviso">'+esc(nome)+' ainda não marcou nenhum país.</div>';
+  }
+
+  else if(modo==='cities'){
+    const porCidade={};
+    todas.forEach(t=>{
+      const pais=(t.destinations&&t.destinations[0])||t.name;
+      (t._spots||[]).forEach(s=>{
+        const c=cityOf(s);if(!c)return;
+        const g=porCidade[c]||(porCidade[c]={n:0,pais:pais});
+        g.n++;
+      });
+    });
+    const lista=Object.keys(porCidade).sort((a,b)=>
+      porCidade[b].n-porCidade[a].n||a.localeCompare(b,'pt-BR'));
+    h=lista.map(c=>'<div class="country-row" style="cursor:default">'
+      +'<span class="cr-flag">'+flagFor(porCidade[c].pais)+'</span>'
+      +'<span class="cr-name">'+esc(c)+'</span>'
+      +'<span class="cr-count">'+porCidade[c].n+(porCidade[c].n===1?' lugar':' lugares')+'</span></div>').join('');
+    if(!lista.length)h='<div class="amg-aviso">'+esc(nome)+' ainda não salvou lugares.</div>';
+  }
+
+  else if(modo==='spots'){
+    // Agrupado por cidade, como a estante do proprio perfil: e assim que se
+    // lembra de um lugar ("o que ele comeu em Lisboa?").
+    const porCidade={};
+    todas.forEach(t=>(t._spots||[]).forEach(s=>{
+      const c=cityOf(s)||'Outros';
+      (porCidade[c]=porCidade[c]||[]).push(s);
+    }));
+    const cidades=Object.keys(porCidade).sort((a,b)=>
+      porCidade[b].length-porCidade[a].length||a.localeCompare(b,'pt-BR'));
+    h=cidades.map(function(c){
+      const linhas=porCidade[c].slice().sort((x,y)=>
+        (y.status==='been')-(x.status==='been')||(Number(y.my_rating)||0)-(Number(x.my_rating)||0))
+        .map(function(s){
+          const nota=s.status==='been'&&Number(s.my_rating)>0
+            ?'<span class="est-nota">'+fmtRating(s.my_rating)+'</span>'
+            :(s.status==='been'?'':'<span class="est-quer">quer ir</span>');
+          return'<div class="est-spot" style="cursor:default">'
+            +'<span class="est-ic">'+catIcon(s.category)+'</span>'
+            +'<span class="est-nome">'+esc(s.name)+'</span>'+nota+'</div>';
+        }).join('');
+      return'<div class="est-cidade aberta"><div class="est-topo" style="cursor:default">'
+        +'<span class="est-cnome">'+esc(c)+'</span>'
+        +'<span class="est-meta">'+porCidade[c].length+(porCidade[c].length===1?' lugar':' lugares')+'</span>'
+        +'</div><div class="est-lista">'+linhas+'</div></div>';
+    }).join('');
+    if(!cidades.length)h='<div class="amg-aviso">'+esc(nome)+' ainda não salvou lugares.</div>';
+  }
+
+  else{ // trips
+    h=visiveis.map(t=>{
+      const pais=(t.destinations&&t.destinations[0])||t.name;
+      const n=(t._spots||[]).length;
+      return'<div class="country-row" style="cursor:default">'
+        +'<span class="cr-flag">'+flagFor(pais)+'</span>'
+        +'<span class="cr-name">'+esc(t.name)+'</span>'
+        +'<span class="cr-count">'+(n?n+(n===1?' lugar':' lugares'):'—')+'</span></div>';
+    }).join('');
+    if(!visiveis.length)h='<div class="amg-aviso">'+esc(nome)+' ainda não tem viagens.</div>';
+  }
+
+  corpo.innerHTML=h;
+  hydrateIcons(corpo);
+  showOv('ov-detalheamigo');
 }
 function renderFriendProfile(){
   const visiveis=FRIEND.trips.filter(t=>!isNonTrip(t));
