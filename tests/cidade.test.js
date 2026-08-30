@@ -208,3 +208,35 @@ test('a lista de distritos tem exatamente 23 e nao cresce', () => {
   // arquivo inteiro existe pra evitar.
   assert.strictEqual(A.avaliar('TOQUIO_DISTRITOS.size'), 23);
 });
+
+test('a mesma cidade nos dois alfabetos conta como uma so', () => {
+  // Montenegro, Servia, Russia, Bulgaria e Macedonia escrevem as cidades em
+  // latino E cirilico, e o Google devolve ora um ora outro. Sem juntar, o app
+  // mostra duas linhas — e a cirilica parece nome errado pra quem le em
+  // latino: "Котор" vira "Kotop".
+  for (const [latino, cirilico] of [['Kotor', 'Котор'], ['Beograd', 'Београд'],
+    ['Moskva', 'Москва'], ['Sofia', 'София'], ['Skopje', 'Скопје']]) {
+    assert.strictEqual(A.cityCore(latino), A.cityCore(cirilico),
+      latino + ' e ' + cirilico + ' deveriam ser a mesma cidade');
+  }
+});
+
+test('o nome exibido fica no alfabeto latino', () => {
+  // O app inteiro esta em portugues; cirilico no meio da lista parece erro.
+  const canon = A.buildCityCanon(['Котор', 'Kotor', 'Београд', 'Beograd']);
+  assert.strictEqual(canon['Котор'], 'Kotor');
+  assert.strictEqual(canon['Kotor'], 'Kotor');
+  assert.strictEqual(canon['Београд'], 'Beograd');
+});
+
+test('transliterar nao pode fundir cidades diferentes', () => {
+  assert.notStrictEqual(A.cityCore('Kotor'), A.cityCore('Split'));
+  assert.notStrictEqual(A.cityCore('Moskva'), A.cityCore('Minsk'));
+  assert.notStrictEqual(A.cityCore('Москва'), A.cityCore('Минск'));
+});
+
+test('nome sem cirilico passa intacto', () => {
+  assert.strictEqual(A.cityCore('São Paulo'), 'sao paulo');
+  assert.strictEqual(A.cityCore('Bragança Paulista'), 'braganca paulista');
+  assert.strictEqual(A.cityCore('Tóquio'), 'toquio');
+});

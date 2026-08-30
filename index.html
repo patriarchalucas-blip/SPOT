@@ -3269,9 +3269,27 @@ const CITY_ADMIN_RE=new RegExp('\\b'+CITY_ADMIN_SRC+'\\b','gi');
 // Reduz o nome salvo a um "núcleo" comparável, sem acento e sem descritor
 // administrativo. Duas cidades só se fundem se o núcleo for IDÊNTICO — fundir por
 // prefixo seria frouxo demais e juntaria "Porto Alegre" com "Porto".
+// Cirilico -> latino. Montenegro, Servia, Russia, Bulgaria, Ucrania e
+// Macedonia escrevem as mesmas cidades nos dois alfabetos, e o Google devolve
+// ora um ora outro. "Котор" e "Kotor" sao a MESMA cidade — sem isto o app
+// mostra duas linhas, e a segunda parece "Kotop" pra quem le em latino.
+//
+// Sao 33 letras, nao uma lista de cidades: vale pra qualquer nome escrito em
+// cirilico, hoje e sempre, sem eu ter que alimentar nada.
+const CIRILICO={'а':'a','б':'b','в':'v','г':'g','д':'d','е':'e','ё':'e','ж':'z','з':'z',
+'и':'i','й':'j','к':'k','л':'l','м':'m','н':'n','о':'o','п':'p','р':'r','с':'s','т':'t',
+'у':'u','ф':'f','х':'h','ц':'c','ч':'c','ш':'s','щ':'s','ъ':'','ы':'y','ь':'','э':'e',
+'ю':'u','я':'a','ђ':'d','ј':'j','љ':'lj','њ':'nj','ћ':'c','џ':'dz','є':'e','і':'i',
+'ї':'i','ґ':'g','ѕ':'dz','ќ':'k','ѓ':'g'};
+function doCirilico(s){
+  return String(s||'').replace(/[\u0400-\u04FF]/g,ch=>{
+    const min=ch.toLowerCase();
+    return CIRILICO[min]!==undefined?CIRILICO[min]:ch;
+  });
+}
 function cityCore(raw){
   if(!raw)return'';
-  let v=String(raw).normalize('NFD').replace(/\p{Diacritic}/gu,'').trim();
+  let v=doCirilico(String(raw)).normalize('NFD').replace(/\p{Diacritic}/gu,'').trim();
   // Convenção de condado composto ("Split-Dalmatia County", "Primorje-Gorski
   // Kotar County"): a cidade é a parte antes do hífen. Só vale quando há uma
   // palavra administrativa junto, senão "Baden-Baden" viraria "Baden".
@@ -3288,7 +3306,12 @@ function buildCityCanon(raws){
   });
   const map={};
   Object.values(groups).forEach(list=>{
-    const label=list.slice().sort((a,b)=>a.length-b.length||b.localeCompare(a,'pt-BR'))[0];
+    // Entre "Kotor" e "Котор", ganha o alfabeto latino: o app inteiro esta em
+    // portugues, e cirilico no meio da lista parece nome errado ("Kotop").
+    const emCirilico=s=>/[\u0400-\u04FF]/.test(s);
+    const label=list.slice().sort((a,b)=>
+      (emCirilico(a)?1:0)-(emCirilico(b)?1:0)
+      ||a.length-b.length||b.localeCompare(a,'pt-BR'))[0];
     list.forEach(r=>{map[r]=label});
   });
   return map;
