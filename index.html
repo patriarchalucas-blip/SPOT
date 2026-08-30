@@ -976,11 +976,11 @@ svg.ic path,svg.ic circle,svg.ic line,svg.ic polyline,svg.ic rect{fill:none;stro
 <div class="prof-linha" onclick="document.getElementById('avatarFileInput').click()"><span class="pl-ic" data-ic="user"></span><span class="pl-txt">Trocar foto de perfil</span><span class="pl-seta">›</span></div>
 <div style="height:18px"></div>
 <div class="nt-label">Seu nome de usuário</div>
-<div style="display:flex;gap:8px;margin-bottom:4px"><input class="nt-input" id="usernameInput" placeholder="seu_username" style="flex:1" autocapitalize="none" oninput="document.getElementById('usernameStatus').textContent=''"><button class="req-btn req-accept" style="padding:0 18px" onclick="saveUsername()">Salvar</button></div>
+<input class="nt-input" id="usernameInput" placeholder="seu_username" style="margin-bottom:4px" autocapitalize="none" oninput="document.getElementById('usernameStatus').textContent=''">
 <div class="feed-time" id="usernameStatus" style="margin-bottom:18px"></div>
 <div class="nt-label">Bio</div>
 <textarea class="note-input" id="bioInput" rows="2" placeholder="Uma frase sobre como você viaja" style="margin-bottom:8px"></textarea>
-<button class="sheet-cta" onclick="saveBio()">Salvar bio</button>
+<button class="sheet-cta" id="btnSalvarPerfil" onclick="salvarPerfil()">Salvar</button>
 <div class="prof-linha prof-sair" style="margin-top:10px;border-top:1px solid var(--border);border-bottom:none;padding-bottom:26px" onclick="signOut()"><span class="pl-txt">Sair da conta</span></div></div></div>
 
 <div class="overlay" id="ov-addfriend" onclick="closeOut(event,'ov-addfriend')"><div class="sheet"><button class="sheet-close" onclick="closeOv('ov-addfriend')" data-ic="close" aria-label="Fechar"></button><div class="sheet-handle"></div><div class="sheet-title">Adicionar amigo</div><div class="nt-label">Username do amigo</div><input class="nt-input" id="friendUsernameInput" type="text" placeholder="digite aqui" autocapitalize="none" oninput="mostrarErroAmigo('')"><div class="auth-error" id="friendAddErr"></div><button class="sheet-cta" id="sendReqBtn" onclick="sendFriendRequest()">Enviar pedido</button><div class="conv-ou"><span>ou</span></div><button class="secondary-link" id="convidarBtn" style="margin-top:0" onclick="compartilharConvite()">Convidar por link</button><div class="conv-dica">Quem abrir o link entra já como seu amigo, sem precisar do seu username.</div></div></div>
@@ -2300,18 +2300,58 @@ function abrirAmigoNoLugar(i){
   renderFriendCityBody();
   goTo('friendCity');
 }
-// Mesma coisa, chamada de dentro da ficha aberta do amigo.
-function adicionarSpotAbertoDoAmigo(){
+// O pais costuma ser o ultimo pedaco do endereco que o Google devolve
+// ("..., São Paulo - SP, 01419-002, Brasil").
+function paisDoEndereco(addr){
+  const partes=String(addr||'').split(',').map(x=>x.trim()).filter(Boolean);
+  if(!partes.length)return'';
+  const bruto=normalizeCountry(partes[partes.length-1]);
+  return COUNTRIES.some(c=>c.name===bruto)?bruto:'';
+}
+// A viagem que ja cobre este lugar, se existir. Cidade vale mais que pais:
+// duas viagens pro Brasil e uma delas e a de Sao Paulo.
+function viagemQueCobre(cidade,pais){
+  const t=S.trips||[];
+  const porCidade=t.filter(x=>!isNonTrip(x)&&mesmoLugar(x.initial_city,cidade));
+  if(porCidade.length)return porCidade[0];
+  const porPais=t.filter(x=>!isNonTrip(x)&&(
+    mesmoLugar(x.name,pais)||(x.destinations||[]).some(d=>mesmoLugar(d,pais))));
+  if(porPais.length)return porPais[0];
+  return null;
+}
+
+// Adicionar um lugar de amigo NAO pergunta mais a viagem.
+//
+// Perguntar era pedir uma decisao que o app ja tem como tomar: o lugar vem com
+// cidade e endereco, e a viagem certa e a que cobre aquele destino. Quando nao
+// existe nenhuma, o certo tambem nao e perguntar — e criar, que e o que a
+// pessoa faria em seguida de qualquer jeito.
+//
+// So sobra pergunta quando o proprio endereco nao diz o pais, porque ai nem
+// criar da pra fazer sem chutar.
+async function adicionarSpotAbertoDoAmigo(){
   const s=FRIEND.spot; if(!s)return;
+  const cidade=cityOf(s)||'';
+  const pais=paisDoEndereco(s.address);
   S.explorePick={
     name:s.name,meta:s.address||'',icon:catIcon(s.category),
-    city:cityOf(s)||'',country:'',address:s.address||'',
+    city:cidade,country:pais,address:s.address||'',
     subcat:s.subcategory||'',phone:s.phone||'',photo_url:s.photo_url||'',
     rating_google:s.rating_google||'',website_url:s.website_url||'',maps_url:s.maps_url||''
   };
   S.explorePickCat=s.category||'food';
   S.explorePickStatus='want';
-  abrirEscolhaDeViagem();
+
+  let viagem=viagemQueCobre(cidade,pais);
+  if(!viagem&&pais){
+    const{data,error}=await dbInsert('trips',{user_id:S.user.id,name:pais,
+      destinations:[pais],dates:'',status:'planning',initial_city:cidade||null});
+    if(!error&&data){data._spots=[];data._spotsLoaded=true;S.trips.unshift(data);viagem=data}
+  }
+  if(!viagem){abrirEscolhaDeViagem();return}
+  const p=S.explorePick,cat=S.explorePickCat,st=S.explorePickStatus;
+  S.explorePick=null;S.explorePickCat=null;S.explorePickStatus=null;
+  jumpToNoteSheet(viagem,cat,p,st);
 }
 
 
@@ -4780,39 +4820,51 @@ async function cancelRequest(followId){
   await dbDelete('follows',followId);
   loadFriends();
 }
-async function saveUsername(){
-  const raw=document.getElementById('usernameInput').value.trim().toLowerCase().replace(/^@/,'');
-  const statusEl=document.getElementById('usernameStatus');
-  if(!/^[a-z0-9_]{3,20}$/.test(raw)){
-    statusEl.style.color=var_red();statusEl.textContent='Use 3-20 letras, números ou _ (sem espaço/acento)';
-    return;
-  }
-  const existing=await dbRpc('find_profile_by_username',{uname:raw});
-  if(existing.length&&existing[0].id!==S.user.id){
-    statusEl.style.color=var_red();statusEl.textContent='Esse username já está em uso';
-    return;
-  }
-  // upsert real: se o profile ainda não existe (edge case de conta criada antes do trigger), insere; senão atualiza
-  const mine=await dbGet('profiles',`id=eq.${S.user.id}`);
-  let error;
-  if(mine.length){
-    ({error}=await dbUpdate('profiles',S.user.id,{username:raw}));
-  }else{
-    ({error}=await dbInsert('profiles',{id:S.user.id,email:S.user.email,display_name:S.user.email.split('@')[0],username:raw}));
-  }
-  if(error){statusEl.style.color=var_red();statusEl.textContent='Erro ao salvar. Tenta de novo.';return}
-  statusEl.style.color='';statusEl.textContent='Salvo! Seus amigos já podem te encontrar por @'+raw;
-}
 function var_red(){return getComputedStyle(document.documentElement).getPropertyValue('--red')}
-async function saveBio(){
+// Um botao so. Eram dois — "Salvar" do username e "Salvar bio" — e a tela
+// pedia duas confirmacoes pra uma edicao so; dava pra sair achando que tinha
+// salvado tendo salvado metade.
+async function salvarPerfil(){
+  const btn=document.getElementById('btnSalvarPerfil');
+  const statusEl=document.getElementById('usernameStatus');
+  const raw=document.getElementById('usernameInput').value.trim().toLowerCase().replace(/^@/,'');
   const bio=document.getElementById('bioInput').value.trim();
-  const mine=await dbGet('profiles',`id=eq.${S.user.id}`);
+  const patch={bio};
+
+  if(raw){
+    if(!/^[a-z0-9_]{3,20}$/.test(raw)){
+      statusEl.style.color=var_red();
+      statusEl.textContent='Use 3-20 letras, números ou _ (sem espaço/acento)';
+      return;
+    }
+    // So consulta duplicidade se o username mudou: senao e uma ida ao banco
+    // pra confirmar o que ja e seu.
+    const atual=(S.profile&&S.profile.username)||'';
+    if(raw!==atual){
+      const existente=await dbRpc('find_profile_by_username',{uname:raw});
+      if(existente.length&&existente[0].id!==S.user.id){
+        statusEl.style.color=var_red();
+        statusEl.textContent='Esse username já está em uso';
+        return;
+      }
+    }
+    patch.username=raw;
+  }
+
+  if(btn){btn.textContent='Salvando...';btn.style.pointerEvents='none'}
+  const mine=await dbGet('profiles','id=eq.'+S.user.id);
   let error;
-  if(mine.length){({error}=await dbUpdate('profiles',S.user.id,{bio}))}
-  else{({error}=await dbInsert('profiles',{id:S.user.id,email:S.user.email,display_name:S.user.email.split('@')[0],bio}))}
-  if(error){toast('Erro','Não foi possível salvar a bio.');return}
-  S.profile=S.profile||{};S.profile.bio=bio;
-  toast('Bio salva','','check');
+  if(mine.length){({error}=await dbUpdate('profiles',S.user.id,patch))}
+  else{({error}=await dbInsert('profiles',Object.assign(
+    {id:S.user.id,email:S.user.email,display_name:S.user.email.split('@')[0]},patch)))}
+  if(btn){btn.textContent='Salvar';btn.style.pointerEvents=''}
+  if(error){toast('Erro','Não foi possível salvar.');return}
+
+  S.profile=Object.assign(S.profile||{},patch);
+  statusEl.textContent='';
+  closeOv('ov-editperfil');
+  loadProfile();
+  toast('Salvo','','check');
 }
 function onAvatarFileChosen(input){
   const file=input.files&&input.files[0];if(!file)return;
