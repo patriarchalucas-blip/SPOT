@@ -71,12 +71,6 @@ test('a subdivisao ganha da divisao — troca consciente', () => {
   assert.strictEqual(A.cityFromComponents(LUGARES.machu_picchu), 'Urubamba');
 });
 
-test('temSubdivisao distingue hierarquia completa de metropole fatiada', () => {
-  // E este sinal que impede a regra de Toquio de engolir Braganca.
-  assert.strictEqual(A.temSubdivisao(BRASIL.braganca), true);
-  assert.strictEqual(A.temSubdivisao(LUGARES.senso_ji), false);
-  assert.strictEqual(A.temSubdivisao(LUGARES.akihabara), false);
-});
 
 test('o pais sai em portugues e casa com a lista que pinta o mapa', () => {
   const COUNTRIES = A.avaliar('COUNTRIES');
@@ -108,16 +102,6 @@ test('todo pais de COUNTRIES tem nome geografico pro mapa e bandeira', () => {
 
 // ── metropole fatiada em distritos ───────────────────────────────────────────
 
-test('distrito de metropole vira a cidade da viagem', async () => {
-  // Tóquio nao e uma cidade no Google, sao 23. Sem isso o app contava
-  // Shibuya, Shinjuku e Taito como tres cidades — o mesmo que contar Tatuape
-  // e Pinheiros no lugar de Sao Paulo.
-  const viagem = { initial_city: 'Tóquio' };
-  for (const lugar of ['Shibuya', 'Taito City', 'Shinjuku City']) {
-    const r = await A.resolverCidadeDoSpot({ city: lugar, region: 'Tóquio', country: 'Japão' }, viagem);
-    assert.strictEqual(r, 'Tóquio', lugar + ' deveria virar Tóquio');
-  }
-});
 
 test('cidade de verdade na mesma prefeitura NAO e engolida', () => {
   // A trava do teste acima: Hakone fica em Kanagawa, nao em Tóquio.
@@ -152,30 +136,6 @@ test('cidade com hifen no nome proprio nao e cortada', () => {
   assert.strictEqual(A.cityCore('Split-Dalmatia County'), 'split');
 });
 
-test('a regra da metropole nao junta cidade vizinha do mesmo estado', async () => {
-  // O defeito relatado: spots de Bragança Paulista caindo na lista de São
-  // Paulo. A regra que junta os distritos de Tóquio comparava a divisão do
-  // lugar com a cidade da viagem — e no Brasil o estado de São Paulo tem o
-  // mesmo nome da cidade, então tudo do interior era engolido.
-  const original = A.canonizarCidade;
-  A.canonizarCidade = async (n) => n;
-  try {
-    const casos = [
-      [{ city: 'Bragança Paulista', region: 'São Paulo', country: 'Brasil', temSubdivisao: true }, 'São Paulo', 'Bragança Paulista'],
-      [{ city: 'Santos', region: 'São Paulo', country: 'Brasil', temSubdivisao: true }, 'São Paulo', 'Santos'],
-      [{ city: 'Petrópolis', region: 'Rio de Janeiro', country: 'Brasil', temSubdivisao: true }, 'Rio de Janeiro', 'Petrópolis'],
-      // Tóquio continua juntando: lá não há adm2, sinal de que a localidade é
-      // distrito e não cidade.
-      [{ city: 'Taito City', region: 'Tóquio', country: 'Japão', temSubdivisao: false }, 'Tóquio', 'Tóquio'],
-      [{ city: 'Shibuya', region: 'Tóquio', country: 'Japão', temSubdivisao: false }, 'Tóquio', 'Tóquio'],
-      [{ city: 'Hakone', region: 'Kanagawa', country: 'Japão', temSubdivisao: true }, 'Tóquio', 'Hakone']
-    ];
-    for (const [p, viagem, esperado] of casos) {
-      const r = await A.resolverCidadeDoSpot(p, { initial_city: viagem });
-      assert.strictEqual(r, esperado, p.city + ' na viagem ' + viagem + ' virou ' + r);
-    }
-  } finally { A.canonizarCidade = original }
-});
 
 test('viagem nao pede mais data', () => {
   // Uma viagem no Spot nao e um evento com comeco e fim: a mesma pessoa pode
@@ -186,4 +146,56 @@ test('viagem nao pede mais data', () => {
     assert.ok(!html.includes('id="' + id + '"'), 'o campo de data ' + id + ' voltou');
   }
   assert.ok(!html.includes('openEditDates'), 'o botao de editar datas voltou');
+});
+
+// ═══ O CRITERIO, EM UM TESTE SO ═══
+// A cidade e o MUNICIPIO: a menor unidade administrativa que o Google
+// reconhece. Sem regra especial, sem lista, sem pais privilegiado.
+//
+// Existia aqui uma regra que juntava os distritos de Toquio comparando a
+// divisao do lugar com a cidade da viagem. Ela morreu: nao havia sinal que
+// separasse "Shibuya e bairro de Toquio" de "Braganca e cidade vizinha de Sao
+// Paulo" (quatro caminhos testados, todos falharam em algum caso), e juntar
+// era o lado errado — quem mora em Toquio diz "vou em Shibuya".
+
+test('mesma regra em qualquer pais: a cidade e o municipio', async () => {
+  const original = A.canonizarCidade;
+  A.canonizarCidade = async (n) => n;
+  try {
+    const casos = [
+      // Brasil: municipios vizinhos nunca se fundem, nem com viagem homonima
+      [{ city: 'Bragança Paulista', country: 'Brasil' }, 'São Paulo', 'Bragança Paulista'],
+      [{ city: 'Guarulhos', country: 'Brasil' }, 'São Paulo', 'Guarulhos'],
+      [{ city: 'Santos', country: 'Brasil' }, 'São Paulo', 'Santos'],
+      [{ city: 'Petrópolis', country: 'Brasil' }, 'Rio de Janeiro', 'Petrópolis'],
+      [{ city: 'São Paulo', country: 'Brasil' }, 'São Paulo', 'São Paulo'],
+      // Japao: os distritos de Toquio seguem a MESMA regra e ficam separados
+      [{ city: 'Shibuya', country: 'Japão' }, 'Tóquio', 'Shibuya'],
+      [{ city: 'Taito City', country: 'Japão' }, 'Tóquio', 'Taito City'],
+      [{ city: 'Hakone', country: 'Japão' }, 'Tóquio', 'Hakone'],
+      // e a viagem nao influencia mais nada
+      [{ city: 'Kyoto', country: 'Japão' }, 'Tóquio', 'Kyoto']
+    ];
+    for (const [p, viagem, esperado] of casos) {
+      const r = await A.resolverCidadeDoSpot(p, { initial_city: viagem });
+      assert.strictEqual(r, esperado,
+        p.city + ' numa viagem "' + viagem + '" virou "' + r + '"');
+    }
+  } finally { A.canonizarCidade = original }
+});
+
+test('a cidade da viagem nao influencia mais a cidade do spot', async () => {
+  // Trava explicita: se alguem reintroduzir a comparacao com a viagem, isto
+  // reprova. O mesmo lugar tem que dar o mesmo nome em qualquer viagem.
+  const original = A.canonizarCidade;
+  A.canonizarCidade = async (n) => n;
+  try {
+    const lugar = { city: 'Bragança Paulista', country: 'Brasil' };
+    const a = await A.resolverCidadeDoSpot(lugar, { initial_city: 'São Paulo' });
+    const b = await A.resolverCidadeDoSpot(lugar, { initial_city: 'Bragança Paulista' });
+    const c = await A.resolverCidadeDoSpot(lugar, {});
+    assert.strictEqual(a, b);
+    assert.strictEqual(b, c);
+    assert.strictEqual(a, 'Bragança Paulista');
+  } finally { A.canonizarCidade = original }
 });
