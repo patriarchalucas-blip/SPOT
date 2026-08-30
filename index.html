@@ -981,6 +981,8 @@ svg.ic path,svg.ic circle,svg.ic line,svg.ic polyline,svg.ic rect{fill:none;stro
 <div class="nt-label">Bio</div>
 <textarea class="note-input" id="bioInput" rows="2" placeholder="Uma frase sobre como você viaja" style="margin-bottom:8px"></textarea>
 <button class="sheet-cta" onclick="saveBio()">Salvar bio</button>
+<div class="prof-linha" style="border-top:1px solid var(--border)" id="btnRevisarCidades" onclick="revisarCidadesAgora()"><span class="pl-ic" data-ic="city"></span><span class="pl-txt">Revisar cidades dos meus lugares</span><span class="pl-seta">›</span></div>
+<div id="revisaoResultado"></div>
 <div class="prof-linha prof-sair" style="margin-top:10px;border-top:1px solid var(--border);border-bottom:none;padding-bottom:26px" onclick="signOut()"><span class="pl-txt">Sair da conta</span></div></div></div>
 
 <div class="overlay" id="ov-addfriend" onclick="closeOut(event,'ov-addfriend')"><div class="sheet"><button class="sheet-close" onclick="closeOv('ov-addfriend')" data-ic="close" aria-label="Fechar"></button><div class="sheet-handle"></div><div class="sheet-title">Adicionar amigo</div><div class="nt-label">Username do amigo</div><input class="nt-input" id="friendUsernameInput" type="text" placeholder="digite aqui" autocapitalize="none" oninput="mostrarErroAmigo('')"><div class="auth-error" id="friendAddErr"></div><button class="sheet-cta" id="sendReqBtn" onclick="sendFriendRequest()">Enviar pedido</button><div class="conv-ou"><span>ou</span></div><button class="secondary-link" id="convidarBtn" style="margin-top:0" onclick="compartilharConvite()">Convidar por link</button><div class="conv-dica">Quem abrir o link entra já como seu amigo, sem precisar do seu username.</div></div></div>
@@ -3346,11 +3348,26 @@ function mesmoEstabelecimento(a,b){
   if(!x||!y)return false;
   return x===y||x.includes(y)||y.includes(x);
 }
-async function corrigirCidadesAntigas(){
-  if(!S.user)return;
-  const feitos=jaConferidos();
-  const alvos=allSpotsFlat().filter(s=>s.name&&s.address&&!feitos.has(s.id)).slice(0,MIGR_TETO);
-  if(!alvos.length)return;
+// `opcoes.forcar` ignora o registro de "ja conferidos" e o teto — usado pelo
+// botao de Configuracoes. `opcoes.silencioso` e o modo automatico da abertura.
+//
+// Ela DEVOLVE um resumo porque a primeira versao era muda: quando nada
+// acontecia, nao havia como saber se era porque nao havia o que corrigir, se
+// os spots nao tinham endereco, se a busca nao achava, ou se estava quebrada.
+// Ficamos duas rodadas no escuro por causa disso.
+async function corrigirCidadesAntigas(opcoes){
+  const o=opcoes||{};
+  const r={total:0,elegiveis:0,semEndereco:0,naoAchou:0,outroLugar:0,jaCerto:0,corrigidos:0,erro:0,exemplos:[]};
+  if(!S.user)return r;
+  const todos=allSpotsFlat();
+  r.total=todos.length;
+  const feitos=o.forcar?new Set():jaConferidos();
+  const comEndereco=todos.filter(s=>s.name&&s.address);
+  r.semEndereco=todos.length-comEndereco.length;
+  const pendentes=comEndereco.filter(s=>!feitos.has(s.id));
+  const alvos=o.forcar?pendentes:pendentes.slice(0,MIGR_TETO);
+  r.elegiveis=alvos.length;
+  if(!alvos.length)return r;
   let mudou=0;
   const olhados=[];
   for(const s of alvos){
@@ -3365,32 +3382,69 @@ async function corrigirCidadesAntigas(){
       });
       const d=await resp.json();
       const p=pickBestPlaceMatch(d.places,s.name);
+      if(!p){r.naoAchou++;r.exemplos.push(s.name+': o Google nao achou');olhados.push(s.id);continue}
       // pickBestPlaceMatch tem um fallback proposital: sem nome parecido, ele
       // devolve o primeiro resultado mesmo. Isso serve pra procurar Instagram,
       // onde errar custa um link torto — aqui custaria MOVER O SPOT DE CIDADE.
       // Entao a checagem de nome e refeita, e sem ela nada e gravado.
-      if(!p||!mesmoEstabelecimento(p.displayName&&p.displayName.text,s.name)){
+      const achado=(p.displayName&&p.displayName.text)||'';
+      if(!mesmoEstabelecimento(achado,s.name)){
+        r.outroLugar++;
+        r.exemplos.push(s.name+': achou "'+achado+'"');
         olhados.push(s.id);continue;
       }
       const nova=cityFromComponents(p.addressComponents);
-      if(nova&&nova!==s.city){
-        const{error}=await dbUpdate('spots',s.id,{city:nova});
-        if(!error){
-          const real=findSpotById(s.id);
-          if(real)real.city=nova;
-          mudou++;
-        }
+      if(!nova){r.naoAchou++;r.exemplos.push(s.name+': sem cidade no endereco');olhados.push(s.id);continue}
+      if(nova===s.city){r.jaCerto++;olhados.push(s.id);continue}
+      const{error}=await dbUpdate('spots',s.id,{city:nova});
+      if(error){r.erro++}
+      else{
+        const real=findSpotById(s.id);
+        if(real)real.city=nova;
+        mudou++;
+        r.exemplos.push(s.name+': '+s.city+' -> '+nova);
       }
       olhados.push(s.id);
-    }catch(e){/* rede/cota: tenta de novo na proxima abertura */}
+    }catch(e){r.erro++;r.exemplos.push(s.name+': '+(e&&e.message||'falhou'))}
   }
   marcarConferido(olhados);
+  r.corrigidos=mudou;
   if(mudou){
     rebuildCityCanon();
     renderTrips();
     if(document.getElementById('estante'))renderEstante();
-    toast(mudou===1?'1 cidade corrigida':mudou+' cidades corrigidas','','check');
+    if(!o.silencioso)toast(mudou===1?'1 cidade corrigida':mudou+' cidades corrigidas','','check');
   }
+  return r;
+}
+// Botao em Configuracoes. Roda em TODOS os spots, ignorando o que ja foi
+// conferido, e conta o que aconteceu — inclusive quando nao houve nada a
+// fazer, que e a informacao que faltava.
+async function revisarCidadesAgora(){
+  // Mexe so no rotulo: trocar o textContent da linha inteira apagaria o icone
+  // e a seta que moram dentro dela.
+  const btn=document.getElementById('btnRevisarCidades');
+  const rot=btn&&btn.querySelector('.pl-txt');
+  if(btn){if(rot)rot.textContent='Revisando...';btn.style.pointerEvents='none'}
+  let r;
+  try{ r=await corrigirCidadesAntigas({forcar:true,silencioso:true}) }
+  catch(e){ r={erro:1,exemplos:[String(e&&e.message||e)]} }
+  if(btn){if(rot)rot.textContent='Revisar cidades dos meus lugares';btn.style.pointerEvents=''}
+  const linhas=[
+    r.total+' lugares no total',
+    r.semEndereco?r.semEndereco+' sem endereço salvo (não dá pra conferir)':'',
+    r.jaCerto?r.jaCerto+' já estavam certos':'',
+    r.corrigidos?r.corrigidos+' corrigidos':'',
+    r.naoAchou?r.naoAchou+' não encontrados no Google':'',
+    r.outroLugar?r.outroLugar+' com nome que não bateu':'',
+    r.erro?r.erro+' com erro':''
+  ].filter(Boolean);
+  const box=document.getElementById('revisaoResultado');
+  if(box){
+    box.innerHTML='<div class="amg-aviso">'+esc(linhas.join(' · '))+
+      (r.exemplos&&r.exemplos.length?'<br><br>'+r.exemplos.slice(0,8).map(esc).join('<br>'):'')+'</div>';
+  }
+  if(r.corrigidos)loadProfile();
 }
 
 // ═══ FOTOS: auto-conserto ═══
