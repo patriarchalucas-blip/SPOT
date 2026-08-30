@@ -142,4 +142,23 @@ function app() {
   return cache;
 }
 
-module.exports = { RAIZ, lerIndex, lerHeaders, lerArquivo, scriptDoApp, app };
+// Substitui uma função do app por outra, EXIGINDO que ela exista antes.
+//
+// Isto existe por causa de um erro que passou três vezes. Eu escrevia
+// `A.placesFetch = async () => ...` num teste; se o app não tivesse mais essa
+// função, a atribuição simplesmente CRIAVA ela. O teste passava verde e a
+// produção quebrava com "placesFetch is not defined" — o teste estava
+// verificando o meu próprio stub, não o app.
+//
+// Agora trocar algo que não existe reprova na hora, com o nome do que sumiu.
+function trocar(A, nome, implementacao) {
+  if (typeof A[nome] !== 'function') {
+    throw new Error('o teste tenta substituir "' + nome + '", que NAO EXISTE no app. '
+      + 'Ou o nome esta errado, ou a funcao foi removida e quem a chama esta quebrado.');
+  }
+  const antes = A[nome];
+  A[nome] = implementacao;
+  return () => { A[nome] = antes };
+}
+
+module.exports = { RAIZ, lerIndex, lerHeaders, lerArquivo, scriptDoApp, app, trocar };

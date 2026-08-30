@@ -1,6 +1,6 @@
 const { test } = require('node:test');
 const assert = require('node:assert');
-const { app } = require('./_ajuda.js');
+const { app, trocar } = require('./_ajuda.js');
 
 const A = app();
 
@@ -26,11 +26,15 @@ function cenario(resposta) {
      address:'R. Principal 10, Bragança Paulista - SP',status:'been',my_rating:8,my_note:''}]}]`);
   A.avaliar("localStorage.removeItem('spot_cidades_conferidas_v1')");
   const gravados = [];
-  A.dbUpdate = async (tabela, id, patch) => { gravados.push({ id, patch }); return { error: null } };
-  A.placesFetch = async () => ({ json: async () => resposta });
-  A.toast = () => {};
-  A.renderTrips = () => {};
-  A.renderEstante = () => {};
+  // trocar() EXIGE que a funcao exista. Antes eu escrevia A.placesFetch = ...
+  // direto: se o app nao tivesse mais essa funcao, a atribuicao criava ela, o
+  // teste passava verde e a producao quebrava com "not defined". Foi assim que
+  // esta migracao subiu sem funcionar.
+  trocar(A, 'dbUpdate', async (tabela, id, patch) => { gravados.push({ id, patch }); return { error: null } });
+  trocar(A, 'fetch', async () => ({ ok: true, json: async () => resposta }));
+  trocar(A, 'toast', () => {});
+  trocar(A, 'renderTrips', () => {});
+  trocar(A, 'renderEstante', () => {});
   return gravados;
 }
 
@@ -81,14 +85,14 @@ test('nao repete o mesmo spot na proxima abertura', async () => {
 
 test('erro de rede nao derruba nada e deixa pra proxima', async () => {
   cenario({ places: [] });
-  A.placesFetch = async () => { throw new Error('rede fora') };
+  trocar(A, 'fetch', async () => { throw new Error('rede fora') });
   await assert.doesNotReject(() => A.corrigirCidadesAntigas());
 });
 
 test('spot sem endereco e ignorado', async () => {
   const gravados = cenario({ places: [] });
   A.avaliar("S.trips[0]._spots[0].address=''");
-  A.placesFetch = async () => { throw new Error('nao devia nem chamar') };
+  trocar(A, 'fetch', async () => { throw new Error('nao devia nem chamar') });
   await A.corrigirCidadesAntigas();
   assert.strictEqual(gravados.length, 0);
 });
@@ -96,6 +100,28 @@ test('spot sem endereco e ignorado', async () => {
 test('sem usuario logado a migracao nem comeca', async () => {
   cenario({ places: [] });
   A.avaliar('S.user=null');
-  A.placesFetch = async () => { throw new Error('nao devia chamar sem sessao') };
+  trocar(A, 'fetch', async () => { throw new Error('nao devia chamar sem sessao') });
   await assert.doesNotReject(() => A.corrigirCidadesAntigas());
+});
+
+test('spot sem foto tenta a foto do LUGAR antes da foto da cidade', async () => {
+  // Ficava sem foto pra sempre: o auto-conserto so dispara quando uma imagem
+  // FALHA, e sem photo_url nao havia imagem pra falhar. O app caia direto na
+  // foto generica da cidade — a mesma paisagem em todo restaurante de Sao
+  // Paulo.
+  A.avaliar("S.user={id:'eu'}");
+  A.avaliar(`S.trips=[{id:'t1',name:'Brasil',destinations:['Brasil'],_spotsLoaded:true,_spots:[
+    {id:'sf',trip_id:'t1',name:'Saiko',category:'food',city:'São Paulo',status:'been',photo_url:''}]}]`);
+  A.avaliar('photoHealing.clear()');
+  const restaura = [];
+  restaura.push(trocar(A, 'dbUpdate', async () => ({ error: null })));
+  restaura.push(trocar(A, 'fetch', async () => ({
+    ok: true,
+    json: async () => ({ places: [{ displayName: { text: 'Saiko Sushi' }, photos: [{ name: 'places/X/photos/Y' }], addressComponents: [] }] })
+  })));
+  try {
+    const url = await A.healSpotPhoto('sf');
+    assert.ok(url, 'nao achou foto pro spot que estava sem nenhuma');
+    assert.ok(url.includes('places/X/photos/Y'), url);
+  } finally { restaura.forEach(f => f()) }
 });
