@@ -2589,28 +2589,68 @@ function searchPlaces(v){
     }
   },250);
 }
+// Os 23 distritos especiais de Toquio. Sao a UNICA anomalia deste tipo no
+// mundo: em qualquer outra metropole o Google devolve a cidade em `locality`
+// — Osaka devolve "Osaka", Sapporo devolve "Sapporo", Seul devolve "Seoul".
+// So Toquio devolve o distrito, porque legalmente a cidade de Toquio nao
+// existe: sao 23 municipios sob uma metropole.
+//
+// Antes disso eu tentei cinco regras automaticas. A ultima, "sem nivel de
+// municipio no endereco, sobe pra divisao", parecia certa e teria destruido o
+// Japao: 12 de 18 cidades testadas subiriam, e quase todas erradas —
+//
+//   Yokohama -> Kanagawa      (3,7 milhoes de habitantes)
+//   Nagoya   -> Aichi
+//   Kobe     -> Hyogo
+//   Sapporo  -> Hokkaido
+//   Kamakura -> Kanagawa
+//
+// porque no Japao o padrao e prefeitura + cidade, SEM o nivel intermediario.
+// Nao ha sinal na API que separe "Shibuya e distrito de Toquio" de "Yokohama
+// e cidade propria": a diferenca nao e estrutural.
+//
+// Esta lista tem 23 nomes definidos por lei japonesa desde 1947 e nao cresce.
+// E o oposto de uma lista de cidades do mundo, que eu teria que alimentar a
+// cada destino novo — esta se escreve uma vez e acaba.
+const TOQUIO_DISTRITOS=new Set(['chiyoda','chuo','minato','shinjuku','bunkyo','taito',
+'sumida','koto','shinagawa','meguro','ota','setagaya','shibuya','nakano','suginami',
+'toshima','kita','arakawa','itabashi','nerima','adachi','katsushika','edogawa']);
+// So conta como distrito de Toquio se a divisao TAMBEM for Toquio. Osaka e
+// Sapporo tambem tem bairros chamados Kita e Chuo; sem esta segunda condicao,
+// um endereco de la seria lido como Toquio.
+function distritoDeToquio(loc,adm1){
+  const n=x=>String(x||'').normalize('NFD').replace(/\p{Diacritic}/gu,'')
+    .replace(/[^a-z0-9]/gi,'').toLowerCase();
+  const a=n(adm1);
+  if(a!=='tokyo'&&a!=='toquio'&&a!=='tokyoto')return false;
+  // O Google escreve o distrito de tres jeitos: "Shibuya", "Shinjuku City" e
+  // "Taito-ku". Testa as variantes em vez de cortar em cadeia — cortar
+  // "city" e depois "ku" transformava "shinjukucity" em "shinju".
+  const base=n(loc);
+  return [base,base.replace(/city$/,''),base.replace(/ku$/,''),base.replace(/city$/,'').replace(/ku$/,'')]
+    .some(v=>TOQUIO_DISTRITOS.has(v));
+}
 function cityFromComponents(comps){
   if(!comps||!comps.length)return'';
-  // Prioridade: locality > postal_town > adm2 > adm1.
-  //
-  // Eu tinha posto adm1 na frente do adm2 pra resolver Istambul e Machu
-  // Picchu, onde o adm2 devolve um bairro ("Fatih", "Urubamba"). Foi um erro
-  // caro: NO BRASIL o municipio mora no adm2 e o ESTADO no adm1, e a maioria
-  // dos lugares nem tem locality. Com adm1 na frente:
-  //
-  //   Braganca Paulista  -> "Sao Paulo"
-  //   Campos do Jordao   -> "Sao Paulo"
-  //   Santos             -> "Sao Paulo"
-  //
-  // Tres cidades diferentes viravam uma so. Fundir cidades distintas e MUITO
-  // pior que ser especifico demais: "Fatih" no lugar de Istambul e um bairro
-  // da cidade certa, da pra viver com isso; ja "Sao Paulo" no lugar de
-  // Braganca e informacao errada e perda de dado.
-  //
-  // Onde nao ha locality NEM adm2 (Seul, Bangkok, Akihabara) o adm1 continua
-  // sendo a unica resposta que existe, e uma boa.
   const byType=(t)=>comps.find(c=>(c.types||[]).includes(t))?.longText;
-  return byType('locality')||byType('postal_town')||byType('administrative_area_level_2')||byType('administrative_area_level_1')||'';
+  const loc=byType('locality')||byType('postal_town');
+  const adm2=byType('administrative_area_level_2');
+  const adm1=byType('administrative_area_level_1');
+
+  // ═══ CRITERIO: A CIDADE E O MUNICIPIO ═══
+  //
+  // locality -> adm2 -> adm1. A localidade e a cidade, sempre, com a unica
+  // excecao dos 23 distritos de Toquio explicada acima.
+  //
+  //   Braganca Paulista, Guarulhos, Santos, Petropolis   cidades, separadas
+  //   Yokohama, Nagoya, Kobe, Sapporo, Hakone            cidades, separadas
+  //   Shibuya, Shinjuku, Taito                           distritos, viram Toquio
+  //
+  // A ordem adm2 antes de adm1 importa: no Brasil o MUNICIPIO mora no adm2 e
+  // o ESTADO no adm1, e trocar isso fez Braganca, Santos e Campos do Jordao
+  // virarem todos "Sao Paulo" — o estado de mesmo nome da capital.
+  if(loc)return distritoDeToquio(loc,adm1)?'Tóquio':loc;
+  return adm2||adm1||'';
 }
 // ═══ NOME CANÔNICO DE CIDADE ═══
 // O Google devolve a MESMA cidade com grafias diferentes conforme o lugar
