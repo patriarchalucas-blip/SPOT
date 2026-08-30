@@ -227,6 +227,12 @@ body{font-family:'DM Sans',sans-serif;background:var(--dark);max-width:430px;mar
 .amg-quer-selo{font-family:var(--mono);font-size:10.5px;color:var(--amber);letter-spacing:.06em}
 /* "aqui" na viagem que bate com o lugar. E dica, nao escolha automatica. */
 .trip-sug{font-family:var(--mono);font-size:9.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--green);border:1px solid var(--green);border-radius:4px;padding:1px 5px;margin-left:7px;vertical-align:middle}
+/* 34px de alvo, encostado na borda direita: a linha inteira ja e clicavel
+   (abre o pais), entao o botao precisa ser facil de acertar E dificil de
+   acertar sem querer. */
+.cr-tirar{flex-shrink:0;width:34px;height:34px;margin-left:6px;margin-right:-6px;border:none;background:none;color:var(--ink3);display:flex;align-items:center;justify-content:center;cursor:pointer;border-radius:50%}
+.cr-tirar:active{opacity:.5;background:rgba(168,52,44,.12);color:var(--red)}
+.cr-tirar svg{width:15px;height:15px}
 .amg-linha{cursor:pointer}
 .amg-linha:active{opacity:.6}
 .amg-chip i{font-family:var(--mono);font-style:normal;font-size:10.5px;letter-spacing:.04em;color:var(--amber)}
@@ -3567,6 +3573,31 @@ async function loadProfile(){
 // lista que já existe (a mesma que abre pelo contador do Dashboard) — sem
 // construir tela nova pra isso.
 const PAISES_NO_PERFIL=6;
+// "Marcar país que já visitei" cria uma viagem escondida (dates
+// '__quickvisit__'), e viagem escondida nao aparece em "Minhas viagens" — que
+// e o unico lugar do app onde existe botao de excluir. Resultado: dava pra
+// marcar um pais por engano e nao havia NENHUM caminho pra desmarcar.
+//
+// So vale pra pais que existe apenas como marcacao. Se houver viagem de
+// verdade pra la, com spots, a linha nao ganha o botao: apagar ali dentro
+// levaria os spots junto, e o caminho certo pra isso e excluir a viagem.
+function paisSoMarcado(c){
+  const doPais=(S.trips||[]).filter(t=>((t.destinations&&t.destinations[0])||t.name)===c);
+  return doPais.length>0&&doPais.every(t=>isQuickVisit(t));
+}
+async function desmarcarPais(c,ev){
+  if(ev){ev.stopPropagation();ev.preventDefault()}
+  if(!paisSoMarcado(c))return;
+  if(!confirm('Tirar '+c+' do seu mapa?'))return;
+  const alvos=(S.trips||[]).filter(t=>((t.destinations&&t.destinations[0])||t.name)===c&&isQuickVisit(t));
+  for(const t of alvos){
+    const{error}=await dbDelete('trips',t.id);
+    if(error){toast('Erro','Não consegui tirar agora. Tenta de novo.');return}
+    S.trips=S.trips.filter(x=>x.id!==t.id);
+  }
+  renderTrips();populateTripOpts();loadProfile();
+  toast(c+' saiu do mapa','','trash');
+}
 function renderListaDePaises(visited,alvo){
   const box=document.getElementById(alvo||'countryChips');
   if(!box)return;
@@ -3592,14 +3623,20 @@ function renderListaDePaises(visited,alvo){
     const direita=c===homeName
       ?'<span class="cr-home">mora aqui</span>'
       :'<span class="cr-count">'+(n?n+(n===1?' spot':' spots'):'—')+'</span>';
-    return '<div class="country-row" onclick="drillTo(\'country\',\''+esc(String(c).replace(/[\\\\\']/g,''))+'\');goTo(\'list\')">'
+    const seguro=esc(String(c).replace(/[\\\\\']/g,''));
+    // Botao so em pais que e apenas marcacao — ver paisSoMarcado.
+    const tirar=paisSoMarcado(c)
+      ?'<button class="cr-tirar" onclick="desmarcarPais(\''+seguro+'\',event)" aria-label="Tirar '+esc(c)+' do mapa">'+icon('close')+'</button>'
+      :'';
+    return '<div class="country-row" onclick="drillTo(\'country\',\''+seguro+'\');goTo(\'list\')">'
       +'<span class="cr-flag">'+flagFor(c)+'</span>'
-      +'<span class="cr-name">'+esc(c)+'</span>'+direita+'</div>';
+      +'<span class="cr-name">'+esc(c)+'</span>'+direita+tirar+'</div>';
   }).join('');
   if(ordenado.length>PAISES_NO_PERFIL){
     h+='<div class="country-vertodos" onclick="openList(\'countries\')">Ver todos os '+ordenado.length+' \u203a</div>';
   }
   box.innerHTML=h;
+  hydrateIcons(box);
 }
 // ── World map via d3-geo (Natural Earth projection, proper shapes) ──
 let worldGeoData=null;
