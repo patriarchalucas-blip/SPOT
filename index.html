@@ -1417,6 +1417,7 @@ async function loadDashboard(){
   rebuildCityCanon(); // funde "Split" e "Split-Dalmatia County" antes de contar
   renderTrips();populateTripOpts();
   revalidarInstagramsAntigos().then(autoBackfillPlaceLinks); // silencioso, não bloqueia nada
+  corrigirCidadesAntigas(); // idem — conserta o que a regra velha gravou errado
   maybeShowCheckin(); // idem — só aparece se achar algo, nunca trava a tela
   for(const t of S.trips){
     ts+=t._spots.length;
@@ -3286,6 +3287,90 @@ function cityOf(s){
   const raw=(s&&s.city)||'';
   if(!raw)return'';
   return (S.cityCanon&&S.cityCanon[raw])||raw;
+}
+
+// ═══ CIDADES: auto-conserto ═══
+//
+// Enquanto o criterio de cidade estava errado, spots foram gravados com o nome
+// da divisao no lugar do municipio — Braganca Paulista, Santos e Campos do
+// Jordao viraram todos "Sao Paulo", que e o ESTADO de mesmo nome da capital.
+// O criterio novo so vale pro que for salvo daqui pra frente; o que ja esta no
+// banco continua errado.
+//
+// Em vez de mais uma rodada de SQL, o conserto acontece sozinho ao abrir o
+// app: relê o endereco de cada spot no Google, recalcula a cidade pela regra
+// atual e regrava quando muda.
+//
+// TRES CUIDADOS, porque corrigir errado e pior que nao corrigir:
+//
+//  1. So aceita a correcao se o nome do lugar encontrado bater com o salvo
+//     (pickBestPlaceMatch). Busca por nome generico traz outro
+//     estabelecimento, e a "correcao" moveria o spot pra cidade errada.
+//  2. So grava se a cidade nova for diferente E nao vazia.
+//  3. Um teto por sessao. Com muitos spots, isso sao muitas chamadas pagas de
+//     uma vez; o resto continua na proxima abertura, ate acabar.
+const MIGR_CIDADE='spot_cidades_conferidas_v1';
+const MIGR_TETO=25;
+function jaConferidos(){
+  try{return new Set(JSON.parse(localStorage.getItem(MIGR_CIDADE)||'[]'))}catch(e){return new Set()}
+}
+function marcarConferido(ids){
+  try{
+    const s=jaConferidos();ids.forEach(i=>s.add(i));
+    localStorage.setItem(MIGR_CIDADE,JSON.stringify([...s].slice(-4000)));
+  }catch(e){}
+}
+// Nome do Google x nome salvo. Um contem o outro depois de tirar acento e
+// pontuacao — "Padaria Bragantina" casa com "Padaria Bragantina - Centro",
+// mas nao com "Outra Coisa".
+function mesmoEstabelecimento(a,b){
+  const n=x=>String(x||'').normalize('NFD').replace(/\p{Diacritic}/gu,'')
+    .replace(/[^\p{L}\p{N}]+/gu,' ').replace(/\s+/g,' ').trim().toLowerCase();
+  const x=n(a),y=n(b);
+  if(!x||!y)return false;
+  return x===y||x.includes(y)||y.includes(x);
+}
+async function corrigirCidadesAntigas(){
+  if(!S.user)return;
+  const feitos=jaConferidos();
+  const alvos=allSpotsFlat().filter(s=>s.name&&s.address&&!feitos.has(s.id)).slice(0,MIGR_TETO);
+  if(!alvos.length)return;
+  let mudou=0;
+  const olhados=[];
+  for(const s of alvos){
+    try{
+      // O endereco salvo e a melhor pista: e o mesmo texto que o Google
+      // devolveu quando o spot foi criado.
+      const resp=await placesFetch('searchText','places.displayName,places.addressComponents',
+        {textQuery:s.name+' '+s.address,languageCode:'pt-BR',maxResultCount:3});
+      const d=await resp.json();
+      const p=pickBestPlaceMatch(d.places,s.name);
+      // pickBestPlaceMatch tem um fallback proposital: sem nome parecido, ele
+      // devolve o primeiro resultado mesmo. Isso serve pra procurar Instagram,
+      // onde errar custa um link torto — aqui custaria MOVER O SPOT DE CIDADE.
+      // Entao a checagem de nome e refeita, e sem ela nada e gravado.
+      if(!p||!mesmoEstabelecimento(p.displayName&&p.displayName.text,s.name)){
+        olhados.push(s.id);continue;
+      }
+      const nova=cityFromComponents(p.addressComponents);
+      if(nova&&nova!==s.city){
+        const{error}=await dbUpdate('spots',s.id,{city:nova});
+        if(!error){
+          const real=findSpotById(s.id);
+          if(real)real.city=nova;
+          mudou++;
+        }
+      }
+      olhados.push(s.id);
+    }catch(e){/* rede/cota: tenta de novo na proxima abertura */}
+  }
+  marcarConferido(olhados);
+  if(mudou){
+    rebuildCityCanon();
+    renderTrips();
+    if(document.getElementById('estante'))renderEstante();
+    toast(mudou===1?'1 cidade corrigida':mudou+' cidades corrigidas','','check');
+  }
 }
 
 // ═══ FOTOS: auto-conserto ═══
