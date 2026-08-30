@@ -981,8 +981,6 @@ svg.ic path,svg.ic circle,svg.ic line,svg.ic polyline,svg.ic rect{fill:none;stro
 <div class="nt-label">Bio</div>
 <textarea class="note-input" id="bioInput" rows="2" placeholder="Uma frase sobre como você viaja" style="margin-bottom:8px"></textarea>
 <button class="sheet-cta" onclick="saveBio()">Salvar bio</button>
-<div class="prof-linha" style="border-top:1px solid var(--border)" id="btnRevisarCidades" onclick="revisarCidadesAgora()"><span class="pl-ic" data-ic="city"></span><span class="pl-txt">Revisar cidades dos meus lugares</span><span class="pl-seta">›</span></div>
-<div id="revisaoResultado"></div>
 <div class="prof-linha prof-sair" style="margin-top:10px;border-top:1px solid var(--border);border-bottom:none;padding-bottom:26px" onclick="signOut()"><span class="pl-txt">Sair da conta</span></div></div></div>
 
 <div class="overlay" id="ov-addfriend" onclick="closeOut(event,'ov-addfriend')"><div class="sheet"><button class="sheet-close" onclick="closeOv('ov-addfriend')" data-ic="close" aria-label="Fechar"></button><div class="sheet-handle"></div><div class="sheet-title">Adicionar amigo</div><div class="nt-label">Username do amigo</div><input class="nt-input" id="friendUsernameInput" type="text" placeholder="digite aqui" autocapitalize="none" oninput="mostrarErroAmigo('')"><div class="auth-error" id="friendAddErr"></div><button class="sheet-cta" id="sendReqBtn" onclick="sendFriendRequest()">Enviar pedido</button><div class="conv-ou"><span>ou</span></div><button class="secondary-link" id="convidarBtn" style="margin-top:0" onclick="compartilharConvite()">Convidar por link</button><div class="conv-dica">Quem abrir o link entra já como seu amigo, sem precisar do seu username.</div></div></div>
@@ -3440,36 +3438,6 @@ async function corrigirCidadesAntigas(opcoes){
   }
   return r;
 }
-// Botao em Configuracoes. Roda em TODOS os spots, ignorando o que ja foi
-// conferido, e conta o que aconteceu — inclusive quando nao houve nada a
-// fazer, que e a informacao que faltava.
-async function revisarCidadesAgora(){
-  // Mexe so no rotulo: trocar o textContent da linha inteira apagaria o icone
-  // e a seta que moram dentro dela.
-  const btn=document.getElementById('btnRevisarCidades');
-  const rot=btn&&btn.querySelector('.pl-txt');
-  if(btn){if(rot)rot.textContent='Revisando...';btn.style.pointerEvents='none'}
-  let r;
-  try{ r=await corrigirCidadesAntigas({forcar:true,silencioso:true}) }
-  catch(e){ r={erro:1,exemplos:[String(e&&e.message||e)]} }
-  if(btn){if(rot)rot.textContent='Revisar cidades dos meus lugares';btn.style.pointerEvents=''}
-  const linhas=[
-    r.total+' lugares no total',
-    r.semEndereco?r.semEndereco+' sem endereço salvo (não dá pra conferir)':'',
-    r.jaCerto?r.jaCerto+' já estavam certos':'',
-    r.corrigidos?r.corrigidos+' corrigidos':'',
-    r.naoAchou?r.naoAchou+' não encontrados no Google':'',
-    r.outroLugar?r.outroLugar+' com nome que não bateu':'',
-    r.erro?r.erro+' com erro':''
-  ].filter(Boolean);
-  const box=document.getElementById('revisaoResultado');
-  if(box){
-    box.innerHTML='<div class="amg-aviso">'+esc(linhas.join(' · '))+
-      (r.exemplos&&r.exemplos.length?'<br><br>'+r.exemplos.slice(0,8).map(esc).join('<br>'):'')+'</div>';
-  }
-  if(r.corrigidos)loadProfile();
-}
-
 // ═══ FOTOS: auto-conserto ═══
 // A referência de foto do Google Places expira com o tempo. Quando isso acontece
 // a URL guardada em spots.photo_url para de responder e sobra um quadrado vazio.
