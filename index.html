@@ -767,7 +767,7 @@ svg.ic path,svg.ic circle,svg.ic line,svg.ic polyline,svg.ic rect{fill:none;stro
 </div>
 
 <div class="screen" id="trip">
-  <div class="trip-hero"><div class="trip-hero-img" id="tripHeroImg"></div><div class="trip-float" id="tripFloat"></div><div class="trip-hero-content"><button class="back-btn" onclick="goTo('dashboard');loadDashboard()" data-ic="back" aria-label="Voltar"></button><button class="trip-del-btn" style="right:64px" onclick="openEditDates()" data-ic="edit" aria-label="Editar datas"></button><button class="trip-del-btn" onclick="deleteTrip()" data-ic="trash" aria-label="Excluir viagem"></button><div><div class="trip-hero-label" id="tripLabel"></div><div class="trip-hero-name" id="tripName"></div><div class="trip-hero-meta" id="tripMeta"></div></div></div></div>
+  <div class="trip-hero"><div class="trip-hero-img" id="tripHeroImg"></div><div class="trip-float" id="tripFloat"></div><div class="trip-hero-content"><button class="back-btn" onclick="goTo('dashboard');loadDashboard()" data-ic="back" aria-label="Voltar"></button><button class="trip-del-btn" onclick="deleteTrip()" data-ic="trash" aria-label="Excluir viagem"></button><div><div class="trip-hero-label" id="tripLabel"></div><div class="trip-hero-name" id="tripName"></div><div class="trip-hero-meta" id="tripMeta"></div></div></div></div>
   <div class="trip-body" id="tripBody"></div>
   <button class="fab" onclick="addSpotToCurrentTrip()">+</button>
   <div class="bottom-nav"><div class="nav-item active" onclick="goTo('dashboard');loadDashboard()"><div class="nav-icon" data-ic="map"></div><div class="nav-label" style="color:var(--ink);font-weight:600">Viagens</div></div><div class="nav-item" onclick="goTo('explore');loadExplore()"><div class="nav-icon" data-ic="search"></div><div class="nav-label">Explorar</div></div><div class="nav-item" onclick="goTo('friends');loadFriends()"><div class="nav-icon" data-ic="users"></div><div class="nav-label">Amigos</div></div><div class="nav-item" onclick="goTo('profile');loadProfile()"><div class="nav-icon" data-ic="user"></div><div class="nav-label">Perfil</div></div></div>
@@ -951,7 +951,7 @@ svg.ic path,svg.ic circle,svg.ic line,svg.ic polyline,svg.ic rect{fill:none;stro
 <button class="sheet-cta" id="saveSpotBtn" onclick="saveSpot(false)">Salvar spot</button><button class="secondary-link" id="saveAndAddBtn" onclick="saveSpot(true)">Salvar e adicionar outro</button></div></div>
 
 <div class="overlay" id="ov-mismatch" onclick="closeOut(event,'ov-mismatch')"><div class="sheet"><button class="sheet-close" onclick="closeOv('ov-mismatch')" data-ic="close" aria-label="Fechar"></button><div class="sheet-handle"></div><div class="sheet-title">País diferente</div><div class="cm-text" id="cmText"></div><button class="sheet-cta" id="cmMoveBtn">Mover</button><button class="delete-link" style="color:var(--ink3)" onclick="keepInThisTripAnyway()">Adicionar nesta viagem mesmo assim</button></div></div>
-<div class="overlay" id="ov-newtrip" onclick="closeOut(event,'ov-newtrip')"><div class="sheet"><button class="sheet-close" onclick="closeOv('ov-newtrip')" data-ic="close" aria-label="Fechar"></button><div class="sheet-handle"></div><div class="sheet-title">Para qual cidade?</div><div class="nt-label">Cidade da viagem — o país é identificado sozinho</div><div class="dest-search-wrap"><span class="dsi" data-ic="search"></span><input class="nt-input" style="padding-left:44px" id="countrySearch" placeholder="Buscar cidade..." oninput="filterNewTripCity(this.value)"></div><div id="countryList"></div><div class="nt-label" style="margin-top:8px">Datas (opcional)</div><div class="dates-row"><input class="nt-input" type="date" id="tripStart"><input class="nt-input" type="date" id="tripEnd"></div><button class="sheet-cta" id="createTripBtn" onclick="createTrip()" style="opacity:.4;pointer-events:none">Selecione uma cidade</button></div></div>
+<div class="overlay" id="ov-newtrip" onclick="closeOut(event,'ov-newtrip')"><div class="sheet"><button class="sheet-close" onclick="closeOv('ov-newtrip')" data-ic="close" aria-label="Fechar"></button><div class="sheet-handle"></div><div class="sheet-title">Para qual cidade?</div><div class="nt-label">Cidade da viagem — o país é identificado sozinho</div><div class="dest-search-wrap"><span class="dsi" data-ic="search"></span><input class="nt-input" style="padding-left:44px" id="countrySearch" placeholder="Buscar cidade..." oninput="filterNewTripCity(this.value)"></div><div id="countryList"></div><button class="sheet-cta" id="createTripBtn" onclick="createTrip()" style="opacity:.4;pointer-events:none">Selecione uma cidade</button></div></div>
 <div class="overlay" id="ov-quickvisit" onclick="closeOut(event,'ov-quickvisit')"><div class="sheet"><button class="sheet-close" onclick="closeOv('ov-quickvisit')" data-ic="close" aria-label="Fechar"></button><div class="sheet-handle"></div><div class="sheet-title" id="quickVisitTitle">Qual país você já visitou?</div><div class="nt-label">País</div><div class="dest-search-wrap"><span class="dsi" data-ic="search"></span><input class="nt-input" style="padding-left:44px" id="countrySearch2" placeholder="Buscar país..." oninput="filterCountries2(this.value)"></div><div id="countryList2"></div><button class="sheet-cta" id="createVisitBtn" onclick="markVisited()" style="opacity:.4;pointer-events:none">Selecione um país</button></div></div>
 <div class="overlay" id="ov-editperfil" onclick="closeOut(event,'ov-editperfil')"><div class="sheet"><button class="sheet-close" onclick="closeOv('ov-editperfil')" data-ic="close" aria-label="Fechar"></button><div class="sheet-handle"></div><div class="sheet-title">Configurações</div>
 <div class="prof-linha" onclick="document.getElementById('avatarFileInput').click()"><span class="pl-ic" data-ic="user"></span><span class="pl-txt">Trocar foto de perfil</span><span class="pl-seta">›</span></div>
@@ -966,7 +966,7 @@ svg.ic path,svg.ic circle,svg.ic line,svg.ic polyline,svg.ic rect{fill:none;stro
 
 <div class="overlay" id="ov-addfriend" onclick="closeOut(event,'ov-addfriend')"><div class="sheet"><button class="sheet-close" onclick="closeOv('ov-addfriend')" data-ic="close" aria-label="Fechar"></button><div class="sheet-handle"></div><div class="sheet-title">Adicionar amigo</div><div class="nt-label">Username do amigo</div><input class="nt-input" id="friendUsernameInput" type="text" placeholder="digite aqui" autocapitalize="none" oninput="mostrarErroAmigo('')"><div class="auth-error" id="friendAddErr"></div><button class="sheet-cta" id="sendReqBtn" onclick="sendFriendRequest()">Enviar pedido</button><div class="conv-ou"><span>ou</span></div><button class="secondary-link" id="convidarBtn" style="margin-top:0" onclick="compartilharConvite()">Convidar por link</button><div class="conv-dica">Quem abrir o link entra já como seu amigo, sem precisar do seu username.</div></div></div>
 
-<div class="overlay" id="ov-editdates" onclick="closeOut(event,'ov-editdates')"><div class="sheet"><button class="sheet-close" onclick="closeOv('ov-editdates')" data-ic="close" aria-label="Fechar"></button><div class="sheet-handle"></div><div class="sheet-title">Datas da viagem</div><div class="nt-label">Deixe em branco se não for uma viagem com data definida (ex: seu país de origem)</div><div class="dates-row"><input class="nt-input" type="date" id="editStart"><input class="nt-input" type="date" id="editEnd"></div><button class="sheet-cta" onclick="saveEditDates()">Salvar</button><button class="delete-link" onclick="clearEditDates()">Limpar datas (não é uma viagem)</button></div></div><div class="toast" id="toast"><div class="toast-icon" id="toastIcon"></div><div class="toast-body"><div class="toast-title" id="toastTitle"></div><div class="toast-msg" id="toastMsg"></div></div></div>
+<div class="toast" id="toast"><div class="toast-icon" id="toastIcon"></div><div class="toast-body"><div class="toast-title" id="toastTitle"></div><div class="toast-msg" id="toastMsg"></div></div></div>
 
 <div class="cropper-overlay" id="cropperOverlay">
   <div class="cropper-hint">Arraste pra posicionar</div>
@@ -1642,13 +1642,6 @@ function drillFromList(i,kind){
   drillTo(kind,kind==='city'?it.city:it.country);
 }
 
-// ═══ TRIP VIEW ═══
-function openEditDates(){
-  if(!S.curTrip)return;
-  document.getElementById('editStart').value=S.curTrip.date_start||'';
-  document.getElementById('editEnd').value=S.curTrip.date_end||'';
-  document.getElementById('ov-editdates').classList.add('show');
-}
 function fmtDateBR(iso){
   if(!iso)return'';
   const[y,m,d]=iso.split('-');const ms=['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'];
@@ -1663,14 +1656,6 @@ async function applyTripDates(start,end){
   closeOv('ov-editdates');
   loadTrip(S.curTrip);
   toast('Datas atualizadas','');
-}
-function saveEditDates(){
-  const start=document.getElementById('editStart').value;
-  const end=document.getElementById('editEnd').value;
-  applyTripDates(start,end);
-}
-function clearEditDates(){
-  applyTripDates('','');
 }
 async function deleteTrip(){
   if(!S.curTrip)return;
@@ -2337,7 +2322,7 @@ async function runExplore(){
       const addr=p.formattedAddress||'';
       const c=cityFromComponents(p.addressComponents)||extractCityFromAddr(addr);
       const country=countryFromComponents(p.addressComponents);
-      return{name:p.displayName?.text||'',address:addr,city:c,country,region:regionFromComponents(p.addressComponents),rating:String(p.rating),count:p.userRatingCount,subcat:guessSubcat(p.types),phone:p.nationalPhoneNumber||'',photo_url:placePhotoUrl(p,400),website_url:p.websiteUri||'',maps_url:p.googleMapsUri||''};
+      return{name:p.displayName?.text||'',address:addr,city:c,country,region:regionFromComponents(p.addressComponents),temSubdivisao:temSubdivisao(p.addressComponents),rating:String(p.rating),count:p.userRatingCount,subcat:guessSubcat(p.types),phone:p.nationalPhoneNumber||'',photo_url:placePhotoUrl(p,400),website_url:p.websiteUri||'',maps_url:p.googleMapsUri||''};
     });
     renderExploreResults();
   }catch(e){
@@ -2433,7 +2418,7 @@ function showNearbySuggestions(){
         const city=cityFromComponents(p.addressComponents)||extractCityFromAddr(addr);
         const country=countryFromComponents(p.addressComponents);
         const fotos=placePhotoUrls(p);
-        return{name:p.displayName?.text||'',icon:catIcon(S.addCat),city,country,region:regionFromComponents(p.addressComponents),address:addr,subcat:guessSubcat(p.types),phone:p.nationalPhoneNumber||'',photo_url:fotos.full,photo_thumb:fotos.thumb,rating_google:p.rating?String(p.rating):'',website_url:p.websiteUri||'',maps_url:p.googleMapsUri||''};
+        return{name:p.displayName?.text||'',icon:catIcon(S.addCat),city,country,region:regionFromComponents(p.addressComponents),temSubdivisao:temSubdivisao(p.addressComponents),address:addr,subcat:guessSubcat(p.types),phone:p.nationalPhoneNumber||'',photo_url:fotos.full,photo_thumb:fotos.thumb,rating_google:p.rating?String(p.rating):'',website_url:p.websiteUri||'',maps_url:p.googleMapsUri||''};
       });
       r.innerHTML='<div class="search-nearby-label">Perto de você</div>'+S_nearbyResults.map((p,i)=>{
         const thumb=p.photo_thumb?'<div class="sr-icon"><img src="'+escUrl(p.photo_thumb)+'" loading="eager" style="width:100%;height:100%;object-fit:cover;border-radius:12px"></div>':'<div class="sr-icon">'+p.icon+'</div>';
@@ -2509,7 +2494,7 @@ function maybeShowCheckin(){
       const city=cityFromComponents(p.addressComponents)||extractCityFromAddr(addr);
       const country=countryFromComponents(p.addressComponents);
       const fotos=placePhotoUrls(p);
-      CHECKIN.place={name,meta:addr,icon:catIcon('food'),city,country,region:regionFromComponents(p.addressComponents),address:addr,subcat:'',phone:p.nationalPhoneNumber||'',photo_url:fotos.full,photo_thumb:fotos.thumb,rating_google:p.rating?String(p.rating):'',website_url:p.websiteUri||'',maps_url:p.googleMapsUri||'',category:'food'};
+      CHECKIN.place={name,meta:addr,icon:catIcon('food'),city,country,region:regionFromComponents(p.addressComponents),temSubdivisao:temSubdivisao(p.addressComponents),address:addr,subcat:'',phone:p.nationalPhoneNumber||'',photo_url:fotos.full,photo_thumb:fotos.thumb,rating_google:p.rating?String(p.rating):'',website_url:p.websiteUri||'',maps_url:p.googleMapsUri||'',category:'food'};
       document.getElementById('checkinName').textContent=name;
       document.getElementById('checkinBanner').style.display='flex';
     }catch(e){console.error('maybeShowCheckin',e)}
@@ -2571,7 +2556,7 @@ function searchPlaces(v){
         const country=countryFromComponents(p.addressComponents);
         const rating=p.rating?String(p.rating):'';
         const fotos=placePhotoUrls(p);
-        return{name,meta:addr,icon:catIcon(S.addCat),city,country,region:regionFromComponents(p.addressComponents),address:addr,subcat:guessSubcat(p.types),phone:p.nationalPhoneNumber||'',photo_url:fotos.full,photo_thumb:fotos.thumb,rating_google:rating,website_url:p.websiteUri||'',maps_url:p.googleMapsUri||''};
+        return{name,meta:addr,icon:catIcon(S.addCat),city,country,region:regionFromComponents(p.addressComponents),temSubdivisao:temSubdivisao(p.addressComponents),address:addr,subcat:guessSubcat(p.types),phone:p.nationalPhoneNumber||'',photo_url:fotos.full,photo_thumb:fotos.thumb,rating_google:rating,website_url:p.websiteUri||'',maps_url:p.googleMapsUri||''};
       });
       if(myReqId!==searchReqId)return;
       r.innerHTML=S.searchResults.map((p,i)=>{
@@ -2587,19 +2572,30 @@ function searchPlaces(v){
 }
 function cityFromComponents(comps){
   if(!comps||!comps.length)return'';
-  // Prioridade: locality > postal_town > adm1 > adm2.
+  // Prioridade: locality > postal_town > adm2 > adm1.
   //
-  // `locality` continua mandando: é ela que dá "Split" em vez de
-  // "Split-Dalmatia County", o defeito que duplicou a contagem uma vez.
+  // Eu tinha posto adm1 na frente do adm2 pra resolver Istambul e Machu
+  // Picchu, onde o adm2 devolve um bairro ("Fatih", "Urubamba"). Foi um erro
+  // caro: NO BRASIL o municipio mora no adm2 e o ESTADO no adm1, e a maioria
+  // dos lugares nem tem locality. Com adm1 na frente:
   //
-  // O que mudou foi a ordem dos dois seguintes. Onde NÃO existe locality —
-  // Seul, Bangkok, Pequim, Xangai, Hong Kong, Istambul, Machu Picchu — o adm2
-  // devolve a subdivisão de dentro ("Fatih" no lugar de Istambul, "Urubamba"
-  // no lugar de Cusco) e o adm1 devolve a cidade que a pessoa reconhece.
-  // Medido na API, não deduzido. Os Bálcãs inteiros têm locality, então nada
-  // do que já está salvo muda de nome por causa disso.
+  //   Braganca Paulista  -> "Sao Paulo"
+  //   Campos do Jordao   -> "Sao Paulo"
+  //   Santos             -> "Sao Paulo"
+  //
+  // Tres cidades diferentes viravam uma so. Fundir cidades distintas e MUITO
+  // pior que ser especifico demais: "Fatih" no lugar de Istambul e um bairro
+  // da cidade certa, da pra viver com isso; ja "Sao Paulo" no lugar de
+  // Braganca e informacao errada e perda de dado.
+  //
+  // Onde nao ha locality NEM adm2 (Seul, Bangkok, Akihabara) o adm1 continua
+  // sendo a unica resposta que existe, e uma boa.
   const byType=(t)=>comps.find(c=>(c.types||[]).includes(t))?.longText;
-  return byType('locality')||byType('postal_town')||byType('administrative_area_level_1')||byType('administrative_area_level_2')||'';
+  return byType('locality')||byType('postal_town')||byType('administrative_area_level_2')||byType('administrative_area_level_1')||'';
+}
+// A presenca de adm2 diz se a hierarquia esta completa — ver resolverCidadeDoSpot.
+function temSubdivisao(comps){
+  return !!(comps||[]).find(c=>(c.types||[]).includes('administrative_area_level_2'));
 }
 
 // ═══ NOME CANÔNICO DE CIDADE ═══
@@ -2726,10 +2722,26 @@ function setSpotStatus(s){
   document.getElementById('stBeen').classList.toggle('active',s==='been');
   // Show rating only when "já fui"
   document.getElementById('ratingRow').style.display=(s==='been')?'block':'none';
+  atualizarBotaoSalvar();
 }
 function setAddRating(n){
   addRating=n;
   document.querySelectorAll('#addStars .star-btn').forEach((b,i)=>b.style.color=i<n?'#f5a623':'rgba(0,0,0,0.1)');
+  atualizarBotaoSalvar();
+}
+// O botao diz POR QUE nao dá pra salvar, em vez de so ficar apagado. Botao
+// desabilitado sem explicacao e a forma mais rapida de fazer alguem achar que
+// o app travou — que e exatamente o que aconteceu com o "Criando...".
+function atualizarBotaoSalvar(){
+  const falta=addStatus==='been'&&!(addRating>0);
+  ['saveSpotBtn','saveAndAddBtn'].forEach(id=>{
+    const b=document.getElementById(id);
+    if(!b)return;
+    b.style.opacity=falta?'.45':'';
+    b.style.pointerEvents=falta?'none':'';
+  });
+  const b=document.getElementById('saveSpotBtn');
+  if(b)b.textContent=falta?'Dê uma nota para salvar':'Salvar spot';
 }
 // Subcategoria escolhida na ficha de adicionar. Começa no palpite vindo dos
 // types do Places (o usuário só confirma) e '' quando o Google não deu pista.
@@ -2744,6 +2756,7 @@ function renderSubcatChips(){
 function pickAddSubcat(k){addSubcat=(addSubcat===k?'':k);renderSubcatChips()}
 function resetNoteSheet(){
   addStatus='want';addRating=0;
+  setTimeout(atualizarBotaoSalvar,0);
   addSubcat=(S.addCat==='experience'&&S.selPlace&&S.selPlace.subcat)||'';
   document.getElementById('subcatRow').style.display=S.addCat==='experience'?'block':'none';
   if(S.addCat==='experience')renderSubcatChips();
@@ -2781,10 +2794,28 @@ async function resolverCidadeDoSpot(p,trip){
   const daViagem=trip&&trip.initial_city;
   if(!daViagem||!p.region)return cidade;
   if(cityCore(cidade)===cityCore(daViagem))return daViagem;
+  // A regra que junta os distritos de Toquio compara a divisao do lugar com a
+  // cidade da viagem. Ela SO pode valer onde a hierarquia esta incompleta —
+  // sem adm2. Com adm2 presente, a divisao e um estado de verdade, e comparar
+  // com ele engole cidade vizinha: viagem "Sao Paulo" + spot em Braganca
+  // Paulista (adm1 = estado de Sao Paulo) virava "Sao Paulo".
+  //
+  //   Toquio:   locality "Taito City", SEM adm2   -> junta, vira Toquio
+  //   Braganca: adm2 "Braganca Paulista" presente -> nao junta, fica Braganca
+  //
+  // O sinal saiu dos dados, nao de lista de cidade: onde o Google entrega o
+  // nivel de municipio, a localidade ja e uma cidade de verdade.
+  if(p.temSubdivisao)return cidade;
   const divisao=await comPrazo(canonizarCidade(p.region,p.country||''),3000,'');
   return (divisao&&cityCore(divisao)===cityCore(daViagem))?daViagem:cidade;
 }
 async function saveSpot(addAnother){
+  // Trava de verdade, alem do botao apagado: se a interface deixar passar por
+  // qualquer motivo, o spot nao entra mudo no banco.
+  if(addStatus==='been'&&!(addRating>0)){
+    toast('Falta a nota','Quantas estrelas esse lugar merece?','alert');
+    return;
+  }
   const note=document.getElementById('noteField').value.trim(); // optional now
   const btn=document.getElementById('saveSpotBtn'),btn2=document.getElementById('saveAndAddBtn');
   btn.disabled=true;btn2.disabled=true;
@@ -2797,7 +2828,7 @@ async function saveSpot(addAnother){
   // Só faz sentido em experiência — nas outras categorias a coluna fica nula
   if(S.addCat==='experience'&&addSubcat)rec.subcategory=addSubcat;
   if(p.phone)rec.phone=p.phone;
-  if(addStatus==='been'&&addRating>0)rec.my_rating=addRating;
+  if(addStatus==='been')rec.my_rating=addRating;
   let{data,error}=await dbInsert('spots',rec);
   // A coluna subcategory vem da migração 009. Se ela ainda não foi rodada, o
   // Postgres recusa o insert INTEIRO por causa de uma coluna desconhecida — e
@@ -2846,8 +2877,9 @@ async function createTrip(){
   // ja tinha virado "Criando..." e nunca mais voltava. Ficou assim em
   // producao por um dia inteiro.
   let cidadeEscolhida=selectedNewTripCity.city;
-  const s=document.getElementById('tripStart').value,e=document.getElementById('tripEnd').value;
-  let dates='';if(s&&e)dates=fmtD(s)+' – '+fmtD(e);else if(s)dates='A partir de '+fmtD(s);
+  // Sem data: ver o comentario em "FORA AS DATAS". Os campos continuam sendo
+  // gravados vazios pra nao mudar o formato das linhas ja existentes.
+  const s='',e='',dates='';
   const btn=document.getElementById('createTripBtn');btn.textContent='Criando...';btn.style.pointerEvents='none';
   // store dates as raw ISO too, for smart status
   // Canonizar o nome da cidade e cosmetico; criar a viagem e essencial. O
@@ -2876,7 +2908,7 @@ async function createTrip(){
     selectedNewTripCity=null;
     document.getElementById('countrySearch').value='';
     document.getElementById('countryList').innerHTML='';
-    document.getElementById('tripStart').value='';document.getElementById('tripEnd').value='';
+
     renderTrips();populateTripOpts();
     document.getElementById('statTrips').textContent=S.trips.filter(t=>!isNonTrip(t)).length;
     toast('Viagem criada','"'+name+'"','suitcase');

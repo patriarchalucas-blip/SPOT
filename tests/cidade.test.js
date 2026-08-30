@@ -35,12 +35,47 @@ test('locality manda quando existe — e por isso os Balcas nao mudam', () => {
   assert.strictEqual(A.cityFromComponents(LUGARES.sagrada), 'Barcelona');
 });
 
-test('sem locality, a divisao responde melhor que a subdivisao', () => {
-  // Fatih e Urubamba ficam DENTRO da cidade que a pessoa reconhece.
-  assert.strictEqual(A.cityFromComponents(LUGARES.hagia_sophia), 'İstanbul');
-  assert.strictEqual(A.cityFromComponents(LUGARES.machu_picchu), 'Cusco');
+// No Brasil o MUNICIPIO vem em adm2 e o ESTADO em adm1, e a maioria dos
+// lugares nem tem locality. Eu tinha posto adm1 na frente do adm2 pra resolver
+// Istambul, e com isso Braganca Paulista, Santos e Campos do Jordao viravam
+// todos "Sao Paulo" — tres cidades fundidas numa.
+const BRASIL = {
+  braganca: comp([['Bragança Paulista', 'administrative_area_level_2'], ['São Paulo', 'administrative_area_level_1'], ['Brasil', 'country']]),
+  santos:   comp([['Santos', 'administrative_area_level_2'], ['São Paulo', 'administrative_area_level_1'], ['Brasil', 'country']]),
+  jordao:   comp([['Campos do Jordão', 'administrative_area_level_2'], ['São Paulo', 'administrative_area_level_1'], ['Brasil', 'country']]),
+  sampa:    comp([['São Paulo', 'administrative_area_level_2'], ['São Paulo', 'administrative_area_level_1'], ['Brasil', 'country']]),
+  petropolis: comp([['Petrópolis', 'locality'], ['Petrópolis', 'administrative_area_level_2'], ['Rio de Janeiro', 'administrative_area_level_1'], ['Brasil', 'country']])
+};
+
+test('cidade do interior nao e engolida pelo estado de mesmo nome', () => {
+  assert.strictEqual(A.cityFromComponents(BRASIL.braganca), 'Bragança Paulista');
+  assert.strictEqual(A.cityFromComponents(BRASIL.santos), 'Santos');
+  assert.strictEqual(A.cityFromComponents(BRASIL.jordao), 'Campos do Jordão');
+  assert.strictEqual(A.cityFromComponents(BRASIL.sampa), 'São Paulo');
+  assert.strictEqual(A.cityFromComponents(BRASIL.petropolis), 'Petrópolis');
+});
+
+test('sem locality NEM subdivisao, a divisao e a unica resposta', () => {
   assert.strictEqual(A.cityFromComponents(LUGARES.gyeongbokgung), 'Seoul');
   assert.strictEqual(A.cityFromComponents(LUGARES.akihabara), 'Tokyo');
+});
+
+test('a subdivisao ganha da divisao — troca consciente', () => {
+  // Aqui a resposta fica PIOR que antes: "Fatih" e um bairro de Istambul,
+  // "Urubamba" e a provincia de Machu Picchu. Foi escolhido assim porque o
+  // erro na outra direcao e muito pior: adm1 na frente funde cidades
+  // diferentes (Braganca virando Sao Paulo), enquanto isto so e especifico
+  // demais dentro do lugar certo. Perder granularidade da pra viver; perder a
+  // cidade, nao.
+  assert.strictEqual(A.cityFromComponents(LUGARES.hagia_sophia), 'Fatih');
+  assert.strictEqual(A.cityFromComponents(LUGARES.machu_picchu), 'Urubamba');
+});
+
+test('temSubdivisao distingue hierarquia completa de metropole fatiada', () => {
+  // E este sinal que impede a regra de Toquio de engolir Braganca.
+  assert.strictEqual(A.temSubdivisao(BRASIL.braganca), true);
+  assert.strictEqual(A.temSubdivisao(LUGARES.senso_ji), false);
+  assert.strictEqual(A.temSubdivisao(LUGARES.akihabara), false);
 });
 
 test('o pais sai em portugues e casa com a lista que pinta o mapa', () => {
@@ -115,4 +150,40 @@ test('cidade com hifen no nome proprio nao e cortada', () => {
   // palavra administrativa junto.
   assert.strictEqual(A.cityCore('Baden-Baden'), 'baden-baden');
   assert.strictEqual(A.cityCore('Split-Dalmatia County'), 'split');
+});
+
+test('a regra da metropole nao junta cidade vizinha do mesmo estado', async () => {
+  // O defeito relatado: spots de Bragança Paulista caindo na lista de São
+  // Paulo. A regra que junta os distritos de Tóquio comparava a divisão do
+  // lugar com a cidade da viagem — e no Brasil o estado de São Paulo tem o
+  // mesmo nome da cidade, então tudo do interior era engolido.
+  const original = A.canonizarCidade;
+  A.canonizarCidade = async (n) => n;
+  try {
+    const casos = [
+      [{ city: 'Bragança Paulista', region: 'São Paulo', country: 'Brasil', temSubdivisao: true }, 'São Paulo', 'Bragança Paulista'],
+      [{ city: 'Santos', region: 'São Paulo', country: 'Brasil', temSubdivisao: true }, 'São Paulo', 'Santos'],
+      [{ city: 'Petrópolis', region: 'Rio de Janeiro', country: 'Brasil', temSubdivisao: true }, 'Rio de Janeiro', 'Petrópolis'],
+      // Tóquio continua juntando: lá não há adm2, sinal de que a localidade é
+      // distrito e não cidade.
+      [{ city: 'Taito City', region: 'Tóquio', country: 'Japão', temSubdivisao: false }, 'Tóquio', 'Tóquio'],
+      [{ city: 'Shibuya', region: 'Tóquio', country: 'Japão', temSubdivisao: false }, 'Tóquio', 'Tóquio'],
+      [{ city: 'Hakone', region: 'Kanagawa', country: 'Japão', temSubdivisao: true }, 'Tóquio', 'Hakone']
+    ];
+    for (const [p, viagem, esperado] of casos) {
+      const r = await A.resolverCidadeDoSpot(p, { initial_city: viagem });
+      assert.strictEqual(r, esperado, p.city + ' na viagem ' + viagem + ' virou ' + r);
+    }
+  } finally { A.canonizarCidade = original }
+});
+
+test('viagem nao pede mais data', () => {
+  // Uma viagem no Spot nao e um evento com comeco e fim: a mesma pessoa pode
+  // ter ido a Paris cinco vezes, e escolher UMA data entre elas nao diz nada.
+  const { lerIndex } = require('./_ajuda.js');
+  const html = lerIndex();
+  for (const id of ['tripStart', 'tripEnd', 'editStart', 'editEnd']) {
+    assert.ok(!html.includes('id="' + id + '"'), 'o campo de data ' + id + ' voltou');
+  }
+  assert.ok(!html.includes('openEditDates'), 'o botao de editar datas voltou');
 });
