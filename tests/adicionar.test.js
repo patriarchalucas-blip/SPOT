@@ -95,3 +95,62 @@ test('o pais sai do fim do endereco e tem que existir na lista', () => {
   assert.strictEqual(A.paisDoEndereco('Rua X, Paisinho Inventado'), '');
   assert.strictEqual(A.paisDoEndereco(''), '');
 });
+
+// ── o botao + tambem parou de perguntar a viagem ───────────────────────────
+// Ele perguntava "Em qual viagem?" ANTES de saber o lugar. Ordem errada: quem
+// escolhe a viagem e o lugar, nao o contrario.
+
+function cenarioFab(trips) {
+  A.avaliar("S.user={id:'eu',email:'l@x.z'}");
+  A.avaliar('S.trips=' + JSON.stringify(trips || []));
+  A.avaliar("S.addTrip=null;S.addCat='food'");
+  const e = { perguntou: false, viagensCriadas: [], notaAberta: false };
+  trocar(A, 'abrirEscolhaDeViagem', () => { e.perguntou = true });
+  trocar(A, 'nextOv', (a, b) => { if (b === 'ov-note') e.notaAberta = true });
+  trocar(A, 'resetNoteSheet', () => {});
+  trocar(A, 'closeOv', () => {});
+  trocar(A, 'dbInsert', async (t, obj) => {
+    e.viagensCriadas.push(obj);
+    return { data: Object.assign({ id: 'nova' }, obj), error: null };
+  });
+  return e;
+}
+
+const LUGAR = {
+  name: 'Rubaiyat', meta: 'Al. Santos 86, São Paulo - SP, Brasil', icon: '',
+  city: 'São Paulo', country: 'Brasil', address: 'Al. Santos 86, São Paulo - SP, Brasil'
+};
+
+test('o + usa a viagem que cobre o lugar, sem perguntar', async () => {
+  const e = cenarioFab([{ id: 't1', name: 'Brasil', destinations: ['Brasil'], initial_city: 'São Paulo', dates: '', _spots: [] }]);
+  await A.pickPlace(LUGAR);
+  assert.strictEqual(e.perguntou, false, 'perguntou a viagem tendo como saber');
+  assert.strictEqual(A.avaliar('S.addTrip && S.addTrip.id'), 't1');
+  assert.ok(e.notaAberta, 'nao chegou na ficha de nota');
+});
+
+test('o + cria a viagem quando nao existe nenhuma', async () => {
+  const e = cenarioFab([]);
+  await A.pickPlace(LUGAR);
+  assert.strictEqual(e.perguntou, false, 'perguntou em vez de criar');
+  assert.strictEqual(e.viagensCriadas.length, 1);
+  assert.strictEqual(e.viagensCriadas[0].name, 'Brasil');
+  assert.strictEqual(e.viagensCriadas[0].initial_city, 'São Paulo');
+});
+
+test('o + so pergunta quando nem o endereco diz o pais', async () => {
+  const e = cenarioFab([]);
+  await A.pickPlace({ name: 'X', meta: 'Rua Sem Pais', icon: '', city: '', country: '', address: 'Rua Sem Pais' });
+  assert.strictEqual(e.viagensCriadas.length, 0, 'criou viagem chutando o pais');
+  assert.strictEqual(e.perguntou, true);
+});
+
+test('dentro de uma viagem, ela continua mandando', async () => {
+  // Entrar numa viagem e apertar + ja diz qual e: o lugar nao pode sobrepor.
+  const e = cenarioFab([{ id: 't1', name: 'Japão', destinations: ['Japão'], initial_city: 'Tóquio', dates: '', _spots: [] }]);
+  A.avaliar("S.addTrip={id:'t9',name:'Japão',destinations:['Japão'],initial_city:'Tóquio'}");
+  trocar(A, 'showCountryMismatch', () => { e.avisouPais = true });
+  await A.pickPlace(LUGAR);
+  assert.strictEqual(e.viagensCriadas.length, 0, 'criou viagem tendo uma escolhida');
+  assert.ok(e.avisouPais, 'nao avisou que o lugar e de outro pais');
+});

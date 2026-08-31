@@ -963,12 +963,12 @@ svg.ic path,svg.ic circle,svg.ic line,svg.ic polyline,svg.ic rect{fill:none;stro
 </div>
 
 <!-- OVERLAYS -->
-<div class="overlay" id="ov-fabchoice" onclick="closeOut(event,'ov-fabchoice')"><div class="sheet"><button class="sheet-close" onclick="closeOv('ov-fabchoice')" data-ic="close" aria-label="Fechar"></button><div class="sheet-handle"></div><div class="sheet-title">O que você quer fazer?</div><div class="new-trip-btn" onclick="nextOv('ov-fabchoice','ov-newtrip')"><div class="new-trip-icon" data-ic="suitcase"></div><div class="new-trip-text">Nova viagem</div></div><div class="new-trip-btn" onclick="nextOv('ov-fabchoice','ov-trip')"><div class="new-trip-icon" data-ic="pin"></div><div class="new-trip-text">Adicionar spot</div></div></div></div>
+<div class="overlay" id="ov-fabchoice" onclick="closeOut(event,'ov-fabchoice')"><div class="sheet"><button class="sheet-close" onclick="closeOv('ov-fabchoice')" data-ic="close" aria-label="Fechar"></button><div class="sheet-handle"></div><div class="sheet-title">O que você quer fazer?</div><div class="new-trip-btn" onclick="nextOv('ov-fabchoice','ov-newtrip')"><div class="new-trip-icon" data-ic="suitcase"></div><div class="new-trip-text">Nova viagem</div></div><div class="new-trip-btn" onclick="comecarSpotSemViagem()"><div class="new-trip-icon" data-ic="pin"></div><div class="new-trip-text">Adicionar spot</div></div></div></div>
 <div class="overlay" id="ov-trip" onclick="closeOut(event,'ov-trip')"><div class="sheet"><button class="sheet-close" onclick="closeOv('ov-trip')" data-ic="close" aria-label="Fechar"></button><div class="sheet-handle"></div><div class="sheet-title">Em qual viagem?</div><div class="step-dots"><div class="step-dot active"></div><div class="step-dot"></div><div class="step-dot"></div><div class="step-dot"></div></div><div id="tripOptions"></div><div class="new-trip-btn" onclick="nextOv('ov-trip','ov-newtrip')"><div class="new-trip-icon" data-ic="plus"></div><div class="new-trip-text">Nova viagem</div></div></div></div>
 
-<div class="overlay" id="ov-cat" onclick="closeOut(event,'ov-cat')"><div class="sheet"><button class="sheet-close" onclick="closeOv('ov-cat')" data-ic="close" aria-label="Fechar"></button><div class="sheet-handle"></div><div class="sheet-title">Qual categoria?</div><div class="step-dots"><div class="step-dot done"></div><div class="step-dot active"></div><div class="step-dot"></div><div class="step-dot"></div></div><div class="cat-options"><div class="cat-option" id="co-food" onclick="pickCat('food')"><div class="co-icon" data-ic="food"></div><div class="co-name">Comer & Beber</div></div><div class="cat-option" id="co-hotel" onclick="pickCat('hotel')"><div class="co-icon" data-ic="hotel"></div><div class="co-name">Onde Ficar</div></div><div class="cat-option" id="co-experience" onclick="pickCat('experience')"><div class="co-icon" data-ic="compass"></div><div class="co-name">Experiências</div></div></div></div></div>
+<div class="overlay" id="ov-cat" onclick="closeOut(event,'ov-cat')"><div class="sheet"><button class="sheet-close" onclick="closeOv('ov-cat')" data-ic="close" aria-label="Fechar"></button><div class="sheet-handle"></div><div class="sheet-title">Qual categoria?</div><div class="step-dots"><div class="step-dot active"></div><div class="step-dot"></div><div class="step-dot"></div></div><div class="cat-options"><div class="cat-option" id="co-food" onclick="pickCat('food')"><div class="co-icon" data-ic="food"></div><div class="co-name">Comer & Beber</div></div><div class="cat-option" id="co-hotel" onclick="pickCat('hotel')"><div class="co-icon" data-ic="hotel"></div><div class="co-name">Onde Ficar</div></div><div class="cat-option" id="co-experience" onclick="pickCat('experience')"><div class="co-icon" data-ic="compass"></div><div class="co-name">Experiências</div></div></div></div></div>
 
-<div class="overlay" id="ov-search" onclick="closeOut(event,'ov-search')"><div class="sheet"><button class="sheet-close" onclick="closeOv('ov-search')" data-ic="close" aria-label="Fechar"></button><div class="sheet-handle"></div><div class="sheet-title">Buscar lugar</div><div class="step-dots"><div class="step-dot done"></div><div class="step-dot done"></div><div class="step-dot active"></div><div class="step-dot"></div></div><div class="search-wrap"><div class="search-field"><span class="si" data-ic="search"></span><input class="search-input" id="placeSearch" placeholder="Nome do lugar..." oninput="searchPlaces(this.value)"></div></div><div class="search-powered"><span>Resultados via</span><strong>Google Places</strong></div><div id="searchResults"><div class="search-loading">Digite para buscar...</div></div></div></div>
+<div class="overlay" id="ov-search" onclick="closeOut(event,'ov-search')"><div class="sheet"><button class="sheet-close" onclick="closeOv('ov-search')" data-ic="close" aria-label="Fechar"></button><div class="sheet-handle"></div><div class="sheet-title">Buscar lugar</div><div class="step-dots"><div class="step-dot done"></div><div class="step-dot active"></div><div class="step-dot"></div></div><div class="search-wrap"><div class="search-field"><span class="si" data-ic="search"></span><input class="search-input" id="placeSearch" placeholder="Nome do lugar..." oninput="searchPlaces(this.value)"></div></div><div class="search-powered"><span>Resultados via</span><strong>Google Places</strong></div><div id="searchResults"><div class="search-loading">Digite para buscar...</div></div></div></div>
 
 <div class="overlay" id="ov-note" onclick="closeOut(event,'ov-note')"><div class="sheet"><button class="sheet-close" onclick="closeOv('ov-note')" data-ic="close" aria-label="Fechar"></button><div class="sheet-handle"></div><div class="sheet-title">Adicionar spot</div><div class="note-place-row"><div class="note-place-icon" id="selIcon" data-ic="food"></div><div><div class="note-place-name" id="selName"></div><div class="note-place-meta" id="selMeta"></div></div></div>
 <div class="status-choice"><button class="status-opt active" id="stWant" onclick="setSpotStatus('want')"><div class="so-emoji" data-ic="bookmark"></div><div class="so-label">Quero ir</div></button><button class="status-opt" id="stBeen" onclick="setSpotStatus('been')"><div class="so-emoji" data-ic="check"></div><div class="so-label">Já fui</div></button></div>
@@ -2113,11 +2113,13 @@ function populateTripOpts(destaque){
 }
 // Pula direto pra ficha de nota: usado quando viagem, categoria e lugar já
 // são todos conhecidos (Explorar, check-in) — nada a perguntar.
-function jumpToNoteSheet(trip,cat,place,status){
+async function jumpToNoteSheet(trip,cat,place,status){
   S.addTrip=trip;S.addCat=cat;
   // pickPlace já chama resetNoteSheet() por dentro — setSpotStatus tem que
   // vir DEPOIS, senão o reset apaga o status que a gente acabou de marcar.
-  pickPlace(place); // também cuida do check de país trocado, se acontecer
+  // await: pickPlace pode precisar criar a viagem antes de abrir a ficha, e
+  // sem esperar o setSpotStatus abaixo rodava antes de a ficha existir.
+  await pickPlace(place); // também cuida do check de país trocado, se acontecer
   if(status)setSpotStatus(status);
 }
 function selTripForSpot(id){
@@ -2798,7 +2800,47 @@ function extractCityFromAddr(addr){
   return parts[0];
 }
 function pickSearchResult(i){pickPlace(S.searchResults[i])}
-function pickPlace(p){
+// O + perguntava "Em qual viagem?" ANTES de saber o lugar. Era a ordem
+// errada: quem escolhe a viagem e o lugar, nao o contrario. Agora o fluxo e
+// categoria -> buscar o lugar -> pronto, e a viagem cai por conta.
+function comecarSpotSemViagem(){
+  S.addTrip=null;
+  nextOv('ov-fabchoice','ov-cat');
+}
+// Decide a viagem a partir do proprio lugar. Mesma regra do fluxo de amigo:
+// usa a que cobre o destino, cria quando nao existe, e so pergunta quando nem
+// o endereco diz o pais.
+async function viagemParaOLugar(p){
+  const cidade=p.city||'';
+  const pais=p.country||paisDoEndereco(p.address||p.meta||'');
+  let viagem=viagemQueCobre(cidade,pais);
+  if(viagem)return viagem;
+  if(!pais)return null;
+  const{data,error}=await dbInsert('trips',{user_id:S.user.id,name:pais,
+    destinations:[pais],dates:'',status:'planning',initial_city:cidade||null});
+  if(error||!data)return null;
+  data._spots=[];data._spotsLoaded=true;
+  S.trips.unshift(data);
+  return data;
+}
+async function pickPlace(p){
+  // Fluxo do + : a viagem ainda nao existe neste ponto e sai do lugar.
+  if(!S.addTrip){
+    const viagem=await viagemParaOLugar(p);
+    if(!viagem){
+      // Nem o endereco diz o pais: ai nao da pra decidir sem chutar.
+      S.explorePick=p;S.explorePickCat=S.addCat;S.explorePickStatus=null;
+      closeOv('ov-search');
+      abrirEscolhaDeViagem();
+      return;
+    }
+    S.addTrip=viagem;
+    // Viagem recem-decidida a partir do proprio lugar: nao ha pais pra
+    // conferir contra, os dois vem da mesma fonte.
+    S.selPlace=p;document.getElementById('selName').textContent=p.name;document.getElementById('selMeta').textContent=p.meta;
+    document.getElementById('selIcon').innerHTML=p.icon;resetNoteSheet();nextOv('ov-search','ov-note');
+    return;
+  }
   // ── Sanity check: does the place's country match the trip's country? ──
   const tripCountry=(S.addTrip&&S.addTrip.destinations&&S.addTrip.destinations[0])||S.addTrip?.name||'';
   if(p.country&&tripCountry&&p.country!==tripCountry){
