@@ -101,48 +101,64 @@ function soAlnum(x) { return norm(x).replace(/[^a-z0-9]/g, '') }
 // Aceita só URL de PERFIL. /p/, /reel/, /explore/ etc. são post e página
 // interna — nunca servem como "o Instagram do lugar".
 const NAO_E_PERFIL = new Set(['p', 'reel', 'reels', 'tv', 'explore', 'stories', 'accounts', 'directory', 'about', 'developer', 'legal']);
-function handleDe(url) {
+export function handleDe(url) {
   const m = String(url || '').match(/instagram\.com\/([a-zA-Z0-9._]+)/i);
   if (!m) return '';
   const h = m[1].replace(/\.$/, '');
   return NAO_E_PERFIL.has(h.toLowerCase()) ? '' : h;
 }
 
-function escolherPerfil(results, name, city) {
+// Escolhe o MELHOR candidato, não o primeiro que passa.
+//
+// A versão anterior aceitava na hora quando o @ era idêntico ao nome salvo.
+// Parecia seguro e não é: nome curto e comum casa com qualquer negócio. Um
+// spot salvo como "Dinhos" batia exato com o @ de uma loja de jeans, e o
+// Instagram do restaurante virava o da loja — o defeito que voltou duas
+// vezes.
+//
+// Agora todos os resultados são pontuados e o melhor vence, desde que passe
+// de um mínimo. Handle idêntico deixa de ser prova suficiente sozinho: precisa
+// vir com a cidade ou com o título se apresentando como o lugar.
+//
+//   @dinhos, título "Dinho's Jeans", sem a cidade      3  -> recusado
+//   @dinhos + a cidade no texto                        6  -> aceito
+//   @dinhosplace + a cidade                            5  -> aceito
+//   @dinhosplace, título "Dinho's Place", sem cidade   4  -> aceito
+const MINIMO = 4;
+export function escolherPerfil(results, name, city) {
   const nomeAlnum = soAlnum(name);
   if (!nomeAlnum) return null;
   const nomeNorm = norm(name);
   const cidadeNorm = norm(city);
 
-  for (const r of results) {
+  let melhor = null, melhorPonto = 0;
+
+  for (const r of results || []) {
     const handle = handleDe(r.url);
     if (!handle) continue;
     const h = soAlnum(handle);
     const texto = norm((r.title || '') + ' ' + (r.description || ''));
 
     // Quanto o @ se parece com o nome do lugar
-    let semelhanca = 0;
-    if (h === nomeAlnum) semelhanca = 3;                                  // @dinhosplace para "Dinho's Place"
-    else if (h.startsWith(nomeAlnum) || nomeAlnum.startsWith(h)) semelhanca = 2;
-    else if (h.includes(nomeAlnum) || nomeAlnum.includes(h)) semelhanca = 1;
+    let ponto = 0;
+    if (h === nomeAlnum) ponto += 3;                                  // @dinhosplace para "Dinho's Place"
+    else if (h.startsWith(nomeAlnum) || nomeAlnum.startsWith(h)) ponto += 2;
+    else if (h.includes(nomeAlnum) || nomeAlnum.includes(h)) ponto += 1;
+    else continue;                                                     // nem parecido: fora
 
-    const citaCidade = !!cidadeNorm && texto.includes(cidadeNorm);
+    // A cidade é a evidência mais forte de que é o MESMO negócio, e não outro
+    // de nome igual em outro lugar do país.
+    if (cidadeNorm && texto.includes(cidadeNorm)) ponto += 3;
+
     // Perfil oficial abre o título com o próprio nome:
     // "Dinho's Place (@dinhosplace) • Instagram photos and videos".
     // Isso separa o perfil DO lugar de um agregador que só CITA o lugar.
-    const tituloAbreComNome = norm(r.title || '').startsWith(nomeNorm);
+    if (norm(r.title || '').startsWith(nomeNorm)) ponto += 2;
 
-    // Aceita por dois caminhos, os dois exigindo evidência:
-    //   1. o @ É o nome do lugar — basta por si só
-    //   2. o resultado se apresenta como o lugar (@ parecido OU título abrindo
-    //      com o nome) E menciona a cidade
-    // O caso do jeans morre aqui: @dinhosjeans chega só a semelhanca 2, o
-    // título abre com "Dinho's Jeans" (não com o nome salvo) e a página da
-    // marca não fala da cidade do restaurante.
-    if (semelhanca === 3) return r.url;
-    if (citaCidade && (semelhanca >= 1 || tituloAbreComNome)) return r.url;
+    if (ponto > melhorPonto) { melhorPonto = ponto; melhor = r.url }
   }
-  return null;
+
+  return melhorPonto >= MINIMO ? melhor : null;
 }
 
 function json(obj, status) {

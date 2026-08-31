@@ -250,6 +250,14 @@ body{font-family:'DM Sans',sans-serif;background:var(--dark);max-width:430px;mar
 .est-nome{flex:1;font-size:13.5px;color:var(--ink2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .est-nota{font-family:var(--mono);font-size:12px;color:var(--green);font-weight:600;flex-shrink:0}
 .est-quer{font-family:var(--mono);font-size:10px;color:var(--amber);letter-spacing:.06em;flex-shrink:0}
+/* Chips de reserva: pequenos, lado a lado, so o nome. A seta diz que sai do
+   app sem precisar de texto explicando. 44px de altura porque e alvo de toque. */
+.reserva-linha{display:flex;gap:8px;margin-bottom:10px}
+.reserva-chip{flex:1;min-height:44px;display:flex;align-items:center;justify-content:center;gap:6px;
+  border:1px solid var(--border);border-radius:var(--r-sm);background:var(--white);
+  font-size:13px;color:var(--ink2);text-decoration:none;font-weight:600}
+.reserva-chip:active{opacity:.6}
+.reserva-chip::after{content:'↗';font-size:11px;color:var(--ink3);font-weight:400}
 .amg-linha{cursor:pointer}
 .amg-linha:active{opacity:.6}
 .amg-chip i{font-family:var(--mono);font-style:normal;font-size:10.5px;letter-spacing:.04em;color:var(--amber)}
@@ -1975,7 +1983,22 @@ function renderPlaceLinks(s){
       rh+=`<a class="reserve-btn" href="${escUrl(s.maps_url)}" target="_blank" rel="noopener">${icon('mapPin')} Ver no Google Maps</a>`;
     }
     reserveWrap.innerHTML=rh;
-  }else if(s.category==='hotel'||s.category==='experience'){
+  }else if(s.category==='hotel'){
+    // Dois sites, nao um: gente que reserva hotel costuma ter o seu, e
+    // escolher por quem usa seria escolher errado pra metade.
+    //
+    // So o nome, em botao pequeno e lado a lado. NAO uso os logos: redesenhar
+    // marca registrada e problema, e o arquivo oficial vem com licenca de uso
+    // que este app nao tem. O nome tambem se reconhece melhor que um simbolo
+    // solto.
+    const busca=encodeURIComponent([s.name,cityOf(s)].filter(Boolean).join(' '));
+    let rh='<div class="reserva-linha">'
+      +'<a class="reserva-chip" href="https://www.booking.com/searchresults.html?ss='+busca+'" target="_blank" rel="noopener noreferrer">Booking</a>'
+      +'<a class="reserva-chip" href="https://www.hoteis.com/Hotel-Search?destination='+busca+'" target="_blank" rel="noopener noreferrer">Hotéis.com</a>'
+      +'</div>';
+    if(s.maps_url)rh+=`<a class="reserve-btn" href="${escUrl(s.maps_url)}" target="_blank" rel="noopener">${icon('mapPin')} Ver no Google Maps</a>`;
+    reserveWrap.innerHTML=rh;
+  }else if(s.category==='experience'){
     reserveWrap.innerHTML=s.maps_url?`<a class="reserve-btn" href="${escUrl(s.maps_url)}" target="_blank" rel="noopener">${icon('mapPin')} Ver no Google Maps</a>`:'';
   }else{
     reserveWrap.innerHTML='';
@@ -3519,7 +3542,11 @@ function pickBestPlaceMatch(places,wantedName){
 // insta_checked=true faz o spot nunca mais ser verificado. Isso desmarca uma
 // vez só, e o backfill normal rebusca com a regra nova. Client-side de
 // propósito: não custa uma rodada de SQL manual.
-const INSTA_RECHECK_FLAG='spot_insta_recheck_v2';
+// v3: o escolhedor de perfil mudou (ver functions/api/find-instagram.js). Um
+// spot salvo como "Dinhos" batia exato com o @ de uma loja de jeans e ficava
+// com o Instagram dela. Subir a versao faz a revalidacao rodar de novo e
+// reconsultar os que ja tinham sido "checados" pelo criterio velho.
+const INSTA_RECHECK_FLAG='spot_insta_recheck_v3';
 async function revalidarInstagramsAntigos(){
   try{
     if(localStorage.getItem(INSTA_RECHECK_FLAG))return;
@@ -3632,13 +3659,22 @@ async function healSpotPhoto(id){
   if(!s||!s.name)return null;
   photoHealing.add(id);
   try{
-    const resp=await fetch('https://places.googleapis.com/v1/places:searchText',{
-      method:'POST',
-      headers:{'Content-Type':'application/json','X-Goog-Api-Key':GAPI,'X-Goog-FieldMask':'places.displayName,places.photos,places.addressComponents,places.websiteUri,places.googleMapsUri'},
-      body:JSON.stringify({textQuery:s.name+(cityOf(s)?' '+cityOf(s):''),languageCode:'pt-BR',maxResultCount:5})
-    });
-    const d=await resp.json();
-    const p=pickBestPlaceMatch(d.places,s.name);
+    // Duas tentativas. A primeira com a cidade, que e o normal; a segunda so
+    // com o nome, pra quando a cidade gravada esta errada ou desatualizada —
+    // procurar "Saiko Sao Paulo" nao acha nada se o Saiko for de outra cidade,
+    // e o spot ficava sem foto pra sempre por causa de um campo torto.
+    const buscar=async(comCidade)=>{
+      const resp=await fetch('https://places.googleapis.com/v1/places:searchText',{
+        method:'POST',
+        headers:{'Content-Type':'application/json','X-Goog-Api-Key':GAPI,'X-Goog-FieldMask':'places.displayName,places.photos,places.addressComponents,places.websiteUri,places.googleMapsUri'},
+        body:JSON.stringify({textQuery:s.name+(comCidade&&cityOf(s)?' '+cityOf(s):''),languageCode:'pt-BR',maxResultCount:5})
+      });
+      const d=await resp.json();
+      const achado=pickBestPlaceMatch(d.places,s.name);
+      return (achado&&(achado.photos||[]).length)?achado:null;
+    };
+    let p=await buscar(true);
+    if(!p&&cityOf(s))p=await buscar(false);
     if(!p)return null;
     const patch={};
     // De brinde: se a cidade salva é na verdade um condado/estado (spot criado
