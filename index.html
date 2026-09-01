@@ -253,6 +253,27 @@ body{font-family:'DM Sans',sans-serif;background:var(--dark);max-width:430px;mar
 /* Chips de reserva: pequenos, lado a lado, so o nome. A seta diz que sai do
    app sem precisar de texto explicando. 44px de altura porque e alvo de toque. */
 .reserva-titulo{font-family:var(--mono);font-size:10.5px;letter-spacing:.14em;text-transform:uppercase;color:var(--ink3);margin:14px 0 8px}
+.coment-bloco{margin-top:8px}
+.coment-titulo{font-family:var(--mono);font-size:10.5px;letter-spacing:.14em;text-transform:uppercase;color:var(--ink3);margin-bottom:12px}
+.coment-item{display:flex;gap:10px;padding:10px 0;border-top:1px solid var(--border)}
+.coment-av{width:30px;height:30px;border-radius:50%;flex-shrink:0;background:var(--green);color:#fff;
+  display:flex;align-items:center;justify-content:center;font-family:var(--mono);font-size:11px}
+.coment-corpo{flex:1;min-width:0}
+.coment-topo{display:flex;align-items:center;gap:8px}
+.coment-nome{font-size:13px;font-weight:600;color:var(--ink)}
+.coment-quando{font-family:var(--mono);font-size:10px;color:var(--ink3)}
+/* O X fica no fim da linha e so aparece pra quem pode apagar. */
+.coment-x{margin-left:auto;width:30px;height:30px;border:none;background:none;color:var(--ink3);
+  display:flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0}
+.coment-x:active{opacity:.5;color:var(--red)}
+.coment-x svg{width:13px;height:13px}
+.coment-txt{font-size:13.5px;color:var(--ink2);line-height:1.5;margin-top:3px;white-space:pre-wrap;word-break:break-word}
+.coment-escrever{display:flex;gap:8px;align-items:flex-end;margin-top:14px}
+.coment-campo{flex:1;min-height:44px;max-height:120px;padding:12px 14px;border:1px solid var(--border);
+  border-radius:var(--r-sm);background:var(--white);font-family:inherit;font-size:13.5px;color:var(--ink);resize:none}
+.coment-enviar{min-height:44px;padding:0 18px;border:none;border-radius:var(--r-sm);background:var(--green);
+  color:#fff;font-family:inherit;font-size:13.5px;font-weight:600;cursor:pointer;flex-shrink:0}
+.coment-enviar:active{opacity:.75}
 .reserva-linha{display:flex;gap:8px;margin-bottom:10px}
 /* O NOME fica sempre — botao que precisa de uma tela explicando o que e
    esta errado, e a saida certa nao e uma confirmacao a mais (abrir link nao e
@@ -948,11 +969,11 @@ svg.ic path,svg.ic circle,svg.ic line,svg.ic polyline,svg.ic rect{fill:none;stro
   </div>
   <div class="place-body">
     <div class="d-section" id="fpNoteSection">
-      <div class="sec-label" id="fpNoteLabel">A nota dele</div>
+      <div class="sec-label" id="fpNoteLabel">A nota</div>
       <div class="note-card"><div class="note-glow"></div><div class="note-quote" id="fpNote"></div></div>
     </div>
     <div class="d-section" id="fpRatingSection" style="display:none">
-      <div class="sec-label" id="fpRatingLabel">A avaliação dele</div>
+      <div class="sec-label" id="fpRatingLabel">A avaliação</div>
       <div class="stars-row" id="fpStars" style="pointer-events:none"></div>
       <div class="note-quote" id="fpReview" style="margin-top:10px;display:none"></div>
     </div>
@@ -961,6 +982,7 @@ svg.ic path,svg.ic circle,svg.ic line,svg.ic polyline,svg.ic rect{fill:none;stro
       <div class="info-grid" id="fpInfoGrid"></div>
       <button class="sheet-cta" style="margin-top:4px" onclick="adicionarSpotAbertoDoAmigo()">Adicionar à minha lista</button>
       <div id="fpLinksWrap"></div>
+      <div class="coment-bloco" id="fpComentarios"></div>
     </div>
     <div style="height:40px"></div>
   </div>
@@ -970,6 +992,7 @@ svg.ic path,svg.ic circle,svg.ic line,svg.ic polyline,svg.ic rect{fill:none;stro
   <div class="place-hero"><div class="place-hero-img" id="placeHeroImg"></div><div class="hero-overlay"></div><button class="hero-back" onclick="backFromPlace()" data-ic="back" aria-label="Voltar"></button><button class="hero-photo-btn" onclick="document.getElementById('spotPhotoFileInput').click()" data-ic="edit" aria-label="Trocar foto"></button><input type="file" id="spotPhotoFileInput" accept="image/*" style="display:none" onchange="onSpotPhotoFileChosen(this)"><div class="hero-chip chip-want" id="placeChip" onclick="cycleStatus()">Quero ir</div><div class="hero-bottom"><div class="hero-type" id="placeType"></div><div class="hero-name" id="placeName"></div></div></div>
   <div class="d-section"><div class="sec-label">Minha nota</div><div class="note-card"><div class="note-glow"></div><div class="note-quote" id="placeNote"></div><div class="note-attr" id="placeNoteAttr"></div></div></div>
   <div class="d-section"><div class="sec-label">Informações</div><div class="info-grid" id="placeInfoGrid"></div><div id="placeReserveWrap"></div></div>
+  <div class="d-section"><div class="coment-bloco" id="placeComentarios"></div></div>
   <div class="d-section" id="placeSubcatSection" style="display:none"><div class="sec-label">Tipo de experiência</div><div class="subcat-row" id="placeSubcatChips"></div></div>
   <div class="d-section"><div class="sec-label">Status</div><div class="status-toggle"><button class="toggle-btn sel-want" id="t-want" onclick="setStatus('want')">Quero ir</button><button class="toggle-btn" id="t-been" onclick="setStatus('been')">Fui</button><button class="toggle-btn" id="t-skip" onclick="setStatus('skip')">Pular</button></div></div>
   <div class="d-section"><div class="sec-label">Minha avaliação</div><div class="stars-row" id="placeStars"><button class="star-btn" onclick="rateStar(1)" data-ic="star"></button><button class="star-btn" onclick="rateStar(2)" data-ic="star"></button><button class="star-btn" onclick="rateStar(3)" data-ic="star"></button><button class="star-btn" onclick="rateStar(4)" data-ic="star"></button><button class="star-btn" onclick="rateStar(5)" data-ic="star"></button></div><textarea class="review-area" id="reviewText" rows="3" placeholder="O que você achou?"></textarea><button class="action-btn" id="saveReviewBtn" onclick="saveReview()">Salvar avaliação</button><button class="delete-link" onclick="deleteSpot()">Excluir este spot</button></div>
@@ -1959,6 +1982,7 @@ async function openPlace(id,origin){
   if(!ig)ig=`<div class="info-cell wide"><div class="info-cell-icon">${icon('pin')}</div><div class="info-cell-label">Local</div><div class="info-cell-value">${esc(cityOf(s)||'—')}</div></div>`;
   document.getElementById('placeInfoGrid').innerHTML=ig;
   renderPlaceLinks(s);
+  abrirComentarios(s.id,'placeComentarios',s.user_id||(S.user&&S.user.id));
   renderPlaceSubcat();
   setStatus(s.status||'want',false);
   document.querySelectorAll('#placeStars .star-btn').forEach((b,i)=>b.classList.toggle('lit',i<(s.my_rating||0)));
@@ -3558,6 +3582,107 @@ async function corrigirCidadesAntigas(opcoes){
   }
   return r;
 }
+// ═══ COMENTÁRIOS EM SPOT ═══
+//
+// Ver o hotel que a sua tia salvou e nao poder dizer nada sobre ele deixa o
+// app de mao unica: da pra olhar a lista dos outros, nao pra conversar sobre
+// ela. Isto fecha esse laco.
+//
+// QUEM VE: exatamente quem ja via o spot — o dono e os amigos dele. Nao e
+// mensagem privada entre duas pessoas: se dois amigos comentam o mesmo hotel,
+// os dois se leem, e o valor acumula em vez de se repetir.
+//
+// A politica de leitura no banco (migrations/012) reaproveita a visibilidade
+// do PROPRIO spot em vez de escrever uma regra nova. Se um dia a visibilidade
+// de spot mudar, esta acompanha sozinha — duas regras separadas divergem na
+// primeira mudanca.
+let COMENTARIOS={};      // spot_id -> lista carregada
+let COMENT_PERFIS={};    // user_id -> perfil, pra nao rebuscar a cada render
+
+async function carregarComentarios(spotId){
+  if(!spotId)return[];
+  const lista=await dbGet('spot_comments','spot_id=eq.'+encodeURIComponent(spotId)+'&order=created_at.asc');
+  COMENTARIOS[spotId]=lista||[];
+  // Nome e avatar de quem comentou. So busca quem ainda nao esta em maos.
+  const faltando=[...new Set((lista||[]).map(c=>c.user_id))].filter(id=>!COMENT_PERFIS[id]);
+  if(faltando.length){
+    const perfis=await dbGet('profiles','id=in.('+faltando.join(',')+')');
+    (perfis||[]).forEach(p=>{COMENT_PERFIS[p.id]=p});
+  }
+  return COMENTARIOS[spotId];
+}
+
+function renderComentarios(spotId,alvo,donoDoSpot){
+  const box=document.getElementById(alvo);
+  if(!box)return;
+  const lista=COMENTARIOS[spotId]||[];
+  const meu=S.user&&S.user.id;
+  const linhas=lista.map(function(c){
+    const p=COMENT_PERFIS[c.user_id];
+    const nome=friendName(p);
+    // Apaga quem escreveu — e tambem o dono do spot, que precisa poder tirar
+    // comentario indesejado do registro dele sem depender do autor.
+    const podeApagar=c.user_id===meu||donoDoSpot===meu;
+    const x=podeApagar
+      ?'<button class="coment-x" onclick="apagarComentario(\''+esc(c.id)+'\',\''+esc(spotId)+'\',\''+esc(alvo)+'\',\''+esc(donoDoSpot||'')+'\')" aria-label="Apagar comentário">'+icon('close')+'</button>'
+      :'';
+    return'<div class="coment-item">'
+      +'<div class="coment-av">'+esc(initials(nome))+'</div>'
+      +'<div class="coment-corpo">'
+      +'<div class="coment-topo"><span class="coment-nome">'+esc(nome)+'</span>'
+      +'<span class="coment-quando">'+esc(timeAgo(c.created_at))+'</span>'+x+'</div>'
+      +'<div class="coment-txt">'+esc(c.body)+'</div></div></div>';
+  }).join('');
+
+  const titulo=lista.length
+    ?(lista.length===1?'1 comentário':lista.length+' comentários')
+    :'Comentários';
+  box.innerHTML='<div class="coment-titulo">'+titulo+'</div>'+linhas
+    +'<div class="coment-escrever">'
+    +'<textarea class="coment-campo" id="campo-'+esc(alvo)+'" rows="1" maxlength="1000" placeholder="Escreva algo sobre esse lugar..."></textarea>'
+    +'<button class="coment-enviar" onclick="enviarComentario(\''+esc(spotId)+'\',\''+esc(alvo)+'\',\''+esc(donoDoSpot||'')+'\')">Enviar</button>'
+    +'</div>';
+  hydrateIcons(box);
+}
+
+async function abrirComentarios(spotId,alvo,donoDoSpot){
+  const box=document.getElementById(alvo);
+  if(box)box.innerHTML='<div class="coment-titulo">Comentários</div><div class="amg-aviso">Carregando...</div>';
+  try{
+    await carregarComentarios(spotId);
+    renderComentarios(spotId,alvo,donoDoSpot);
+  }catch(e){
+    // A tabela vem da migracao 012. Enquanto ela nao rodar, a secao some em
+    // vez de mostrar erro — o resto da ficha continua inteiro.
+    if(box)box.innerHTML='';
+  }
+}
+
+async function enviarComentario(spotId,alvo,donoDoSpot){
+  const campo=document.getElementById('campo-'+alvo);
+  if(!campo)return;
+  const texto=campo.value.trim();
+  if(!texto)return;
+  campo.value='';
+  const{data,error}=await dbInsert('spot_comments',{spot_id:spotId,user_id:S.user.id,body:texto});
+  if(error){
+    campo.value=texto;   // devolve o que a pessoa escreveu, nao some com ele
+    toast('Não enviou','Tenta de novo em alguns segundos.','alert');
+    return;
+  }
+  (COMENTARIOS[spotId]=COMENTARIOS[spotId]||[]).push(data);
+  if(!COMENT_PERFIS[S.user.id])COMENT_PERFIS[S.user.id]=S.profile||{id:S.user.id,display_name:(S.user.email||'').split('@')[0]};
+  renderComentarios(spotId,alvo,donoDoSpot);
+}
+
+async function apagarComentario(id,spotId,alvo,donoDoSpot){
+  if(!confirm('Apagar esse comentário?'))return;
+  const{error}=await dbDelete('spot_comments',id);
+  if(error){toast('Não consegui apagar','','alert');return}
+  COMENTARIOS[spotId]=(COMENTARIOS[spotId]||[]).filter(c=>c.id!==id);
+  renderComentarios(spotId,alvo,donoDoSpot);
+}
+
 // ═══ FOTOS: auto-conserto ═══
 // A referência de foto do Google Places expira com o tempo. Quando isso acontece
 // a URL guardada em spots.photo_url para de responder e sobra um quadrado vazio.
@@ -4448,9 +4573,20 @@ async function loadFriends(){
 
   let feedItems=[];
   if(friendIds.length){
-    const[trips,spots]=await Promise.all([
+    // Comentario entra no feed junto com o resto. Ele vem em DUAS pontas: o
+    // que seus amigos comentaram, e o que comentaram nos SEUS spots — que e
+    // como voce fica sabendo que responderam voce.
+    //
+    // A tabela vem da migracao 012; enquanto ela nao rodar, a consulta falha e
+    // o .catch devolve lista vazia. O feed continua inteiro sem ela.
+    const meusSpots=allSpotsFlat().map(x=>x.id);
+    const[trips,spots,comentDeAmigos,comentNosMeus]=await Promise.all([
       dbGet('trips',`user_id=in.(${friendIds.join(',')})&dates=not.in.(__quickvisit__,__home__)&order=created_at.desc&limit=15`),
-      dbGet('spots',`user_id=in.(${friendIds.join(',')})&status=eq.been&order=created_at.desc&limit=15`)
+      dbGet('spots',`user_id=in.(${friendIds.join(',')})&status=eq.been&order=created_at.desc&limit=15`),
+      dbGet('spot_comments',`user_id=in.(${friendIds.join(',')})&order=created_at.desc&limit=15`).catch(()=>[]),
+      meusSpots.length
+        ? dbGet('spot_comments',`spot_id=in.(${meusSpots.join(',')})&user_id=neq.${uid}&order=created_at.desc&limit=15`).catch(()=>[])
+        : Promise.resolve([])
     ]);
     trips.forEach(t=>{
       const p=pmap[t.user_id];const name=friendName(p);
@@ -4461,6 +4597,21 @@ async function loadFriends(){
       const p=pmap[sp.user_id];const name=friendName(p);
       const loc=sp.city?' em '+esc(sp.city):'';
       feedItems.push({user_id:sp.user_id,created_at:sp.created_at,html:'<b>'+esc(name)+'</b> adicionou <b>'+esc(sp.name)+'</b>'+loc});
+    });
+    // Nome do lugar comentado: dos spots dos amigos que ja vieram acima, ou
+    // dos seus. Sem ele o item diria so "comentou em algo".
+    const nomeDoSpot={};
+    (spots||[]).forEach(sp=>{nomeDoSpot[sp.id]=sp.name});
+    allSpotsFlat().forEach(sp=>{nomeDoSpot[sp.id]=sp.name});
+    const jaVistos=new Set();
+    [...(comentDeAmigos||[]),...(comentNosMeus||[])].forEach(c=>{
+      if(jaVistos.has(c.id))return;   // um comentario de amigo NO seu spot cai nas duas consultas
+      jaVistos.add(c.id);
+      const p=pmap[c.user_id];const name=friendName(p);
+      const onde=nomeDoSpot[c.spot_id]?' em <b>'+esc(nomeDoSpot[c.spot_id])+'</b>':'';
+      const trecho=String(c.body||'').slice(0,60)+(String(c.body||'').length>60?'…':'');
+      feedItems.push({user_id:c.user_id,created_at:c.created_at,
+        html:'<b>'+esc(name)+'</b> comentou'+onde+': '+esc(trecho)});
     });
     feedItems.sort((a,b)=>new Date(b.created_at)-new Date(a.created_at));
     feedItems=feedItems.slice(0,25);
@@ -4851,6 +5002,7 @@ function abrirSpotDoAmigo(i){
   }
   if(s.maps_url)rh+=`<a class="reserve-btn" href="${escUrl(s.maps_url)}" target="_blank" rel="noopener">${icon('mapPin')} Ver no Google Maps</a>`;
   document.getElementById('fpLinksWrap').innerHTML=rh;
+  abrirComentarios(s.id,'fpComentarios',s.user_id);
 
   goTo('friendPlace');
 }
