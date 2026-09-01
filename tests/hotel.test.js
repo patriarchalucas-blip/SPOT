@@ -25,7 +25,9 @@ test('hotel ganha Booking e Hoteis.com, com o nome e a cidade na busca', () => {
 
 test('os dois links saem do app com seguranca', () => {
   const h = linksDe({ id: 'h1', name: 'Hotel X', category: 'hotel', city: 'Lisboa' });
-  const chips = h.match(/<a class="reserva-chip"[^>]*>/g) || [];
+  // A classe ganhou o modificador da marca (reserva-chip reserva-booking), entao
+  // o padrao nao pode exigir que ela termine ali.
+  const chips = h.match(/<a class="reserva-chip[^"]*"[^>]*>/g) || [];
   assert.strictEqual(chips.length, 2);
   for (const c of chips) {
     assert.ok(c.includes('target="_blank"'), 'abre por cima do app');

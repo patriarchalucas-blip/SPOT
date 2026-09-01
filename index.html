@@ -252,12 +252,25 @@ body{font-family:'DM Sans',sans-serif;background:var(--dark);max-width:430px;mar
 .est-quer{font-family:var(--mono);font-size:10px;color:var(--amber);letter-spacing:.06em;flex-shrink:0}
 /* Chips de reserva: pequenos, lado a lado, so o nome. A seta diz que sai do
    app sem precisar de texto explicando. 44px de altura porque e alvo de toque. */
+.reserva-titulo{font-family:var(--mono);font-size:10.5px;letter-spacing:.14em;text-transform:uppercase;color:var(--ink3);margin:14px 0 8px}
 .reserva-linha{display:flex;gap:8px;margin-bottom:10px}
-.reserva-chip{flex:1;min-height:44px;display:flex;align-items:center;justify-content:center;gap:6px;
-  border:1px solid var(--border);border-radius:var(--r-sm);background:var(--white);
-  font-size:13px;color:var(--ink2);text-decoration:none;font-weight:600}
+/* O NOME fica sempre — botao que precisa de uma tela explicando o que e
+   esta errado, e a saida certa nao e uma confirmacao a mais (abrir link nao e
+   acao destrutiva; confirmar so cobra um toque extra pra sempre). O
+   "minimalista" vem do PESO: fundo do proprio app, traco fino, e a cor da
+   marca so num ponto de 7px — identifica sem virar duas barras de cor forte
+   competindo com a tela.
+   E o logotipo continua de fora: arte de marca registrada num app da problema
+   quando ele cresce, e o arquivo oficial so vem com licenca pra quem entra no
+   programa de afiliados deles. */
+.reserva-chip{flex:1;min-height:46px;display:flex;align-items:center;justify-content:center;gap:7px;
+  border:1px solid var(--border);border-radius:var(--r-sm);background:transparent;
+  font-size:13.5px;color:var(--ink);text-decoration:none;font-weight:600}
 .reserva-chip:active{opacity:.6}
-.reserva-chip::after{content:'↗';font-size:11px;color:var(--ink3);font-weight:400}
+.reserva-chip::before{content:'';width:7px;height:7px;border-radius:50%;flex-shrink:0}
+.reserva-chip::after{content:'↗';font-size:10.5px;color:var(--ink3);font-weight:400}
+.reserva-booking::before{background:#0071c2}
+.reserva-hoteis::before{background:#D32F2F}
 .amg-linha{cursor:pointer}
 .amg-linha:active{opacity:.6}
 .amg-chip i{font-family:var(--mono);font-style:normal;font-size:10.5px;letter-spacing:.04em;color:var(--amber)}
@@ -1992,9 +2005,9 @@ function renderPlaceLinks(s){
     // que este app nao tem. O nome tambem se reconhece melhor que um simbolo
     // solto.
     const busca=encodeURIComponent([s.name,cityOf(s)].filter(Boolean).join(' '));
-    let rh='<div class="reserva-linha">'
-      +'<a class="reserva-chip" href="https://www.booking.com/searchresults.html?ss='+busca+'" target="_blank" rel="noopener noreferrer">Booking</a>'
-      +'<a class="reserva-chip" href="https://www.hoteis.com/Hotel-Search?destination='+busca+'" target="_blank" rel="noopener noreferrer">Hotéis.com</a>'
+    let rh='<div class="reserva-titulo">Reservar</div><div class="reserva-linha">'
+      +'<a class="reserva-chip reserva-booking" href="https://www.booking.com/searchresults.html?ss='+busca+'" target="_blank" rel="noopener noreferrer">Booking.com</a>'
+      +'<a class="reserva-chip reserva-hoteis" href="https://www.hoteis.com/Hotel-Search?destination='+busca+'" target="_blank" rel="noopener noreferrer">Hotéis.com</a>'
       +'</div>';
     if(s.maps_url)rh+=`<a class="reserve-btn" href="${escUrl(s.maps_url)}" target="_blank" rel="noopener">${icon('mapPin')} Ver no Google Maps</a>`;
     reserveWrap.innerHTML=rh;
