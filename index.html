@@ -627,9 +627,31 @@ body{font-family:'DM Sans',sans-serif;background:var(--dark);max-width:430px;mar
 .country-chips-empty{color:var(--ink3);font-size:14px;padding:8px 0}
 
 /* OVERLAYS */
-.overlay{position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:200;display:none;align-items:flex-end;backdrop-filter:blur(4px)}
+/* --kb e a altura do teclado do celular, medida em tempo real pelo
+   visualViewport (ver "TECLADO" no JS). Sem teclado ela vale 0 e nada disso
+   muda. Com teclado, a ficha inteira sobe pra cima dele em vez de ficar
+   escondida atras — o `vh` do iOS nao encolhe quando o teclado abre, entao
+   sem essa conta o fim da ficha fica embaixo do teclado. */
+.overlay{position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:200;display:none;align-items:flex-end;backdrop-filter:blur(4px);padding-bottom:var(--kb,0px)}
 .overlay.show{display:flex}
-.sheet{background:var(--white);border-radius:24px 24px 0 0;width:100%;max-width:430px;margin:0 auto;max-height:90vh;overflow-y:auto;scrollbar-width:none;animation:slideUp .28s ease;position:relative;box-shadow:var(--shadow-lg)}
+.sheet{background:var(--white);border-radius:24px 24px 0 0;width:100%;max-width:430px;margin:0 auto;max-height:calc(90vh - var(--kb,0px));overflow-y:auto;scrollbar-width:none;animation:slideUp .28s ease;position:relative;box-shadow:var(--shadow-lg)}
+/* Ficha de lista longa: quem rola e a LISTA, nao a ficha. Assim titulo,
+   busca e botao ficam parados enquanto a lista encolhe ao digitar — antes a
+   ficha inteira encolhia junto e os resultados desciam pro pe da tela. */
+.sheet-fixa{display:flex;flex-direction:column;overflow:hidden;height:max(220px,calc(90vh - var(--kb,0px)))}
+.sheet-fixa .lista-rolante{flex:1;min-height:0;overflow-y:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none}
+.sheet-fixa .lista-rolante::-webkit-scrollbar{display:none}
+.sheet-fixa .sheet-cta{flex:none;margin-bottom:24px}
+.lista-grupo{position:sticky;top:0;background:var(--white);font-family:'IBM Plex Mono',monospace;font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--ink3);padding:12px 24px 6px;z-index:1}
+.dest-result.on{background:rgba(193,85,47,.08)}
+/* Vazio o circulo tem que ficar VAZIO: com o check sempre desenhado (so
+   pintado da cor do fundo) ele reaparecia em qualquer tema que nao fosse
+   exatamente aquela cor, e ai todo pais parecia selecionado. */
+.dest-check{margin-left:auto;width:22px;height:22px;border-radius:50%;border:1.5px solid var(--border);flex:none;display:flex;align-items:center;justify-content:center;color:transparent}
+.dest-check svg{width:14px;height:14px}
+.dest-result.on .dest-check{background:var(--terra);border-color:var(--terra);color:#fff}
+.dest-result.ja{opacity:.45;pointer-events:none}
+.dest-ja-tag{margin-left:auto;font-family:'IBM Plex Mono',monospace;font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--ink3)}
 .sheet::-webkit-scrollbar{display:none}
 @keyframes slideUp{from{transform:translateY(100%)}to{transform:translateY(0)}}
 .sheet-handle{width:36px;height:4px;border-radius:2px;background:var(--border);margin:12px auto 20px}
@@ -980,7 +1002,7 @@ svg.ic path,svg.ic circle,svg.ic line,svg.ic polyline,svg.ic rect{fill:none;stro
     <div class="d-section">
       <div class="sec-label">Informações</div>
       <div class="info-grid" id="fpInfoGrid"></div>
-      <button class="sheet-cta" style="margin-top:4px" onclick="adicionarSpotAbertoDoAmigo()">Adicionar à minha lista</button>
+      <button class="sheet-cta" style="margin-top:4px" onclick="adicionarSpotAbertoDoAmigo(this)">Adicionar à minha lista</button>
       <div id="fpLinksWrap"></div>
       <div class="coment-bloco" id="fpComentarios"></div>
     </div>
@@ -1015,7 +1037,7 @@ svg.ic path,svg.ic circle,svg.ic line,svg.ic polyline,svg.ic rect{fill:none;stro
 
 <div class="overlay" id="ov-mismatch" onclick="closeOut(event,'ov-mismatch')"><div class="sheet"><button class="sheet-close" onclick="closeOv('ov-mismatch')" data-ic="close" aria-label="Fechar"></button><div class="sheet-handle"></div><div class="sheet-title">País diferente</div><div class="cm-text" id="cmText"></div><button class="sheet-cta" id="cmMoveBtn">Mover</button><button class="delete-link" style="color:var(--ink3)" onclick="keepInThisTripAnyway()">Adicionar nesta viagem mesmo assim</button></div></div>
 <div class="overlay" id="ov-newtrip" onclick="closeOut(event,'ov-newtrip')"><div class="sheet"><button class="sheet-close" onclick="closeOv('ov-newtrip')" data-ic="close" aria-label="Fechar"></button><div class="sheet-handle"></div><div class="sheet-title">Para qual cidade?</div><div class="nt-label">Cidade da viagem — o país é identificado sozinho</div><div class="dest-search-wrap"><span class="dsi" data-ic="search"></span><input class="nt-input" style="padding-left:44px" id="countrySearch" placeholder="Buscar cidade..." oninput="filterNewTripCity(this.value)"></div><div id="countryList"></div><button class="sheet-cta" id="createTripBtn" onclick="createTrip()" style="opacity:.4;pointer-events:none">Selecione uma cidade</button></div></div>
-<div class="overlay" id="ov-quickvisit" onclick="closeOut(event,'ov-quickvisit')"><div class="sheet"><button class="sheet-close" onclick="closeOv('ov-quickvisit')" data-ic="close" aria-label="Fechar"></button><div class="sheet-handle"></div><div class="sheet-title" id="quickVisitTitle">Qual país você já visitou?</div><div class="nt-label">País</div><div class="dest-search-wrap"><span class="dsi" data-ic="search"></span><input class="nt-input" style="padding-left:44px" id="countrySearch2" placeholder="Buscar país..." oninput="filterCountries2(this.value)"></div><div id="countryList2"></div><button class="sheet-cta" id="createVisitBtn" onclick="markVisited()" style="opacity:.4;pointer-events:none">Selecione um país</button></div></div>
+<div class="overlay" id="ov-quickvisit" onclick="closeOut(event,'ov-quickvisit')"><div class="sheet sheet-fixa"><button class="sheet-close" onclick="closeOv('ov-quickvisit')" data-ic="close" aria-label="Fechar"></button><div class="sheet-handle"></div><div class="sheet-title" id="quickVisitTitle">Quais países você já visitou?</div><div class="dest-search-wrap"><span class="dsi" data-ic="search"></span><input class="nt-input" style="padding-left:44px" id="countrySearch2" placeholder="Buscar país..." oninput="filterCountries2(this.value)"></div><div class="lista-rolante" id="countryList2"></div><button class="sheet-cta" id="createVisitBtn" onclick="markVisited()" style="opacity:.4;pointer-events:none">Selecione um país</button></div></div>
 <div class="overlay" id="ov-detalheamigo" onclick="closeOut(event,'ov-detalheamigo')"><div class="sheet"><button class="sheet-close" onclick="closeOv('ov-detalheamigo')" data-ic="close" aria-label="Fechar"></button><div class="sheet-handle"></div><div class="sheet-title" id="daTitulo">—</div><div id="daCorpo"></div></div></div>
 
 <div class="overlay" id="ov-editperfil" onclick="closeOut(event,'ov-editperfil')"><div class="sheet"><button class="sheet-close" onclick="closeOv('ov-editperfil')" data-ic="close" aria-label="Fechar"></button><div class="sheet-handle"></div><div class="sheet-title">Configurações</div>
@@ -1142,11 +1164,38 @@ document.addEventListener('focusin',function(e){
   if(!el.matches||!el.matches('input,textarea'))return;
   const sheet=el.closest('.sheet');
   if(!sheet)return;
+  // Ficha de lista longa ja sobe inteira pelo --kb e tem botao fixo: rolar
+  // dentro dela so jogaria a lista pra fora da vista.
+  if(sheet.classList.contains('sheet-fixa'))return;
   setTimeout(function(){
     const cta=sheet.querySelector('.sheet-cta')||sheet.querySelector('.secondary-link');
     if(cta)cta.scrollIntoView({block:'end',behavior:'smooth'});
   },300);
 });
+// ═══ TECLADO ═══
+// O teclado do celular nao encolhe o `vh` (nem no iOS nem no Chrome Android
+// com o comportamento padrao), entao qualquer ficha dimensionada em vh fica
+// com o fim dela escondida atras do teclado. Era o que acontecia ao buscar
+// pais: a lista encolhia ao digitar e os resultados restantes caiam justamente
+// na faixa coberta. visualViewport e a unica medida que sabe da existencia do
+// teclado — daqui ela vira a variavel --kb, e o CSS resolve o resto.
+(function(){
+  const vv=window.visualViewport;
+  if(!vv)return;   // navegador sem visualViewport: fica como era, sem piorar
+  let ultimo=-1;
+  function medir(){
+    // A conta so vale quando a pagina nao esta com zoom: com pinch-zoom, a
+    // diferenca de altura e o zoom, nao o teclado.
+    const bruto=window.innerHeight-(vv.height+vv.offsetTop);
+    const kb=vv.scale>1.01?0:Math.max(0,Math.round(bruto));
+    if(kb===ultimo)return;
+    ultimo=kb;
+    document.documentElement.style.setProperty('--kb',kb+'px');
+  }
+  vv.addEventListener('resize',medir);
+  vv.addEventListener('scroll',medir);
+  medir();
+})();
 const SB_URL='https://kzidnilsyrvauzgelsqd.supabase.co';
 const SB_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imt6aWRuaWxzeXJ2YXV6Z2Vsc3FkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODEyODE5NDAsImV4cCI6MjA5Njg1Nzk0MH0.BMgiP_lTe8mCfe0eSPNUCksXatOntuWAhcqGtR8hco4';
 let sb;
@@ -1219,6 +1268,19 @@ async function dbInsert(table,obj){
   const body=await r.json();
   if(!r.ok){console.error('dbInsert error',table,body);return{error:body,data:null}}
   return{error:null,data:Array.isArray(body)?body[0]:body};
+}
+// Insert de varias linhas de uma vez. dbInsert existe pra UMA linha e devolve
+// body[0]; mudar o retorno dele quebraria todas as chamadas de hoje, entao a
+// versao em lote vive ao lado e devolve o array inteiro.
+async function dbInsertMany(table,linhas){
+  if(!linhas||!linhas.length)return{error:null,data:[]};
+  const r=await sbFetch('/rest/v1/'+table,{
+    method:'POST',
+    body:JSON.stringify(linhas)
+  },{'Content-Type':'application/json','Prefer':'return=representation'});
+  const body=await r.json();
+  if(!r.ok){console.error('dbInsertMany error',table,body);return{error:body,data:null}}
+  return{error:null,data:Array.isArray(body)?body:[body]};
 }
 async function dbUpdate(table,id,obj){
   const r=await sbFetch('/rest/v1/'+table+'?id=eq.'+encodeURIComponent(id),{
@@ -2376,7 +2438,14 @@ function paisDoEndereco(addr){
 // duas viagens pro Brasil e uma delas e a de Sao Paulo.
 function viagemQueCobre(cidade,pais){
   const t=S.trips||[];
-  const porCidade=t.filter(x=>!isNonTrip(x)&&mesmoLugar(x.initial_city,cidade));
+  // A cidade da viagem nao mora so em initial_city: uma viagem que ja tem
+  // spots em Paris cobre Paris, mesmo tendo nascido sem cidade inicial (todas
+  // as viagens antes da migracao 007 nasceram assim). Se os spots ainda nao
+  // foram carregados, sobra o casamento por pais logo abaixo.
+  const cobre=x=>mesmoLugar(x.initial_city,cidade)
+    ||(x.destinations||[]).some(d=>mesmoLugar(d,cidade))
+    ||(x._spots||[]).some(s=>mesmoLugar(cityOf(s),cidade));
+  const porCidade=cidade?t.filter(x=>!isNonTrip(x)&&cobre(x)):[];
   if(porCidade.length)return porCidade[0];
   const porPais=t.filter(x=>!isNonTrip(x)&&(
     mesmoLugar(x.name,pais)||(x.destinations||[]).some(d=>mesmoLugar(d,pais))));
@@ -2384,38 +2453,93 @@ function viagemQueCobre(cidade,pais){
   return null;
 }
 
-// Adicionar um lugar de amigo NAO pergunta mais a viagem.
+// O pais de um spot de amigo, do sinal mais barato pro mais caro. Nenhum
+// passo e lista fixa: quem responde e sempre a fonte do dado.
+//   1. o endereco que veio junto com o spot;
+//   2. a viagem do PROPRIO amigo que guarda esse spot — ele ja disse o pais
+//      ao criar a viagem, e viagem de amigo e legivel (RLS da 008);
+//   3. o Google, a mesma fonte que decide pais em todo o resto do app.
+// Sem prazo o passo 3 seguraria a tela; com prazo, o pior caso e voltar vazio.
+async function paisDoSpotDeAmigo(s){
+  const doEndereco=paisDoEndereco(s.address);
+  if(doEndereco)return doEndereco;
+  const daViagem=await paisDaViagemDoAmigo(s);
+  if(daViagem)return daViagem;
+  return await comPrazo(paisPeloGoogle(s),4000,'');
+}
+// A viagem do amigo costuma estar carregada (veio do perfil dele). Quando o
+// spot chegou pelo Explorar ela nao esta, e ai vale uma consulta so.
+async function paisDaViagemDoAmigo(s){
+  if(!s||!s.trip_id)return'';
+  let t=(FRIEND.trips||[]).find(x=>x.id===s.trip_id);
+  if(!t){
+    try{const r=await dbGet('trips','id=eq.'+encodeURIComponent(s.trip_id));t=r&&r[0]}catch(e){}
+  }
+  if(!t)return'';
+  // Viagem se chama pelo pais por convencao (ver createTrip), mas convencao
+  // nao e garantia: viagem antiga pode ter nome livre. Só vale se for pais.
+  const bruto=normalizeCountry((t.destinations&&t.destinations[0])||t.name||'');
+  return COUNTRIES.some(c=>c.name===bruto)?bruto:'';
+}
+async function paisPeloGoogle(s){
+  const consulta=[s&&s.name,s&&s.address].filter(Boolean).join(', ');
+  if(!consulta)return'';
+  try{
+    const r=await fetch('https://places.googleapis.com/v1/places:searchText',{
+      method:'POST',
+      headers:{'Content-Type':'application/json','X-Goog-Api-Key':GAPI,'X-Goog-FieldMask':'places.addressComponents'},
+      body:JSON.stringify({textQuery:consulta,languageCode:'pt-BR',maxResultCount:1})
+    });
+    const p=((await r.json()).places||[])[0];
+    return p?countryFromComponents(p.addressComponents):'';
+  }catch(e){return''}
+}
+// Adicionar um lugar de amigo NAO pergunta NADA.
 //
-// Perguntar era pedir uma decisao que o app ja tem como tomar: o lugar vem com
-// cidade e endereco, e a viagem certa e a que cobre aquele destino. Quando nao
-// existe nenhuma, o certo tambem nao e perguntar — e criar, que e o que a
-// pessoa faria em seguida de qualquer jeito.
-//
-// So sobra pergunta quando o proprio endereco nao diz o pais, porque ai nem
-// criar da pra fazer sem chutar.
-async function adicionarSpotAbertoDoAmigo(){
+// Perguntar era pedir de volta uma decisao que o app ja tem tomada: o spot
+// chega com nome, endereco, cidade, categoria e foto. A viagem certa e a que
+// cobre aquele destino; quando nao existe nenhuma, o certo tambem nao e
+// perguntar — e criar, que e o que a pessoa faria em seguida de qualquer jeito.
+// Se voce abriu o card de Paris do seu amigo, o lugar vai pra Paris, viagem
+// nova ou nao.
+async function adicionarSpotAbertoDoAmigo(btn){
   const s=FRIEND.spot; if(!s)return;
+  // paisDoSpotDeAmigo pode ir ate o Google: sem aviso, o toque parece morto.
+  const rotulo=btn&&btn.textContent;
+  if(btn){btn.textContent='Adicionando...';btn.style.pointerEvents='none'}
+  const restaura=()=>{if(btn){btn.textContent=rotulo;btn.style.pointerEvents=''}};
+
   const cidade=cityOf(s)||'';
-  const pais=paisDoEndereco(s.address);
-  S.explorePick={
+  const pais=await paisDoSpotDeAmigo(s);
+  const lugar={
     name:s.name,meta:s.address||'',icon:catIcon(s.category),
     city:cidade,country:pais,address:s.address||'',
     subcat:s.subcategory||'',phone:s.phone||'',photo_url:s.photo_url||'',
     rating_google:s.rating_google||'',website_url:s.website_url||'',maps_url:s.maps_url||''
   };
-  S.explorePickCat=s.category||'food';
-  S.explorePickStatus='want';
+  const cat=s.category||'food';
 
   let viagem=viagemQueCobre(cidade,pais);
-  if(!viagem&&pais){
-    const{data,error}=await dbInsert('trips',{user_id:S.user.id,name:pais,
-      destinations:[pais],dates:'',status:'planning',initial_city:cidade||null});
-    if(!error&&data){data._spots=[];data._spotsLoaded=true;S.trips.unshift(data);viagem=data}
+  if(!viagem){
+    // Residuo assumido: sem pais, a viagem nasce com o nome da cidade. Fica
+    // fora do mapa-mundi (que conta pais), mas o lugar nao se perde e nao ha
+    // pergunta — e o mapa se acerta quando uma viagem de pais aparecer.
+    const nome=pais||cidade;
+    if(nome){
+      const{data,error}=await dbInsert('trips',{user_id:S.user.id,name:nome,
+        destinations:[nome],dates:'',status:'planning',initial_city:cidade||null});
+      if(!error&&data){data._spots=[];data._spotsLoaded=true;S.trips.unshift(data);viagem=data}
+    }
   }
-  if(!viagem){abrirEscolhaDeViagem();return}
-  const p=S.explorePick,cat=S.explorePickCat,st=S.explorePickStatus;
-  S.explorePick=null;S.explorePickCat=null;S.explorePickStatus=null;
-  jumpToNoteSheet(viagem,cat,p,st);
+  restaura();
+  if(!viagem){
+    // Aqui o spot nao tem nem cidade nem pais: nao ha o que deduzir, e ai
+    // perguntar e a unica saida honesta.
+    S.explorePick=lugar;S.explorePickCat=cat;S.explorePickStatus='want';
+    abrirEscolhaDeViagem();
+    return;
+  }
+  jumpToNoteSheet(viagem,cat,lugar,'want');
 }
 
 
@@ -2879,8 +3003,12 @@ async function pickPlace(p){
     return;
   }
   // ── Sanity check: does the place's country match the trip's country? ──
+  // So faz sentido comparar pais com pais. Viagem pode se chamar pela cidade
+  // ("Paris"), e ai a comparacao contra "França" acusava troca de pais que
+  // nao existe — era o alerta pulando no meio de adicionar lugar de amigo.
   const tripCountry=(S.addTrip&&S.addTrip.destinations&&S.addTrip.destinations[0])||S.addTrip?.name||'';
-  if(p.country&&tripCountry&&p.country!==tripCountry){
+  const viagemEhPais=COUNTRIES.some(c=>c.name===tripCountry);
+  if(p.country&&tripCountry&&viagemEhPais&&p.country!==tripCountry){
     S.pendingPlace=p;
     showCountryMismatch(p.country,tripCountry);
     return;
@@ -3119,6 +3247,17 @@ async function createTrip(){
     // que a pessoa adicionar depois cria o próprio card de cidade dele.
     S.curTrip=data;S.addTrip=data;
     goTo('trip');await loadTrip(data);
+    // Se a viagem nasceu NO MEIO de adicionar um lugar ja conhecido (veio de
+    // um spot de amigo ou do Explorar), ela era criada e o lugar era jogado
+    // fora: caia no ov-cat perguntando a categoria de um lugar que ja tinha
+    // categoria, e a pessoa tinha que buscar tudo de novo. Agora a viagem
+    // nova e so o destino — o lugar segue direto pra ficha de nota.
+    const pendente=S.explorePick,catPendente=S.explorePickCat,stPendente=S.explorePickStatus;
+    if(pendente&&catPendente){
+      S.explorePick=null;S.explorePickCat=null;S.explorePickStatus=null;
+      setTimeout(()=>jumpToNoteSheet(data,catPendente,pendente,stPendente),300);
+      return;
+    }
     setTimeout(()=>{
       toast(cidadeEscolhida?'Agora adiciona um lugar em '+cidadeEscolhida:'Agora adiciona seu primeiro lugar','','pin');
       showOv('ov-cat');
@@ -3269,49 +3408,101 @@ function selectNewTripCity(i){
   btn.textContent='Criar viagem';btn.style.opacity='1';btn.style.pointerEvents='auto';
 }
 // ── Quick "mark as already visited" flow (no dates, no spots needed) ──
-let selectedVisitCountry=null;
+
 let quickVisitMode='visited'; // 'visited' | 'home' — mesmo sheet, dois marcadores diferentes
 function openVisitedCountryPicker(){quickVisitMode='visited';showOv('ov-quickvisit')}
 function openHomeCountryPicker(){quickVisitMode='home';showOv('ov-quickvisit')}
+// Marcar pais visitado e quase sempre marcar VARIOS: quem abre essa ficha
+// esta preenchendo o passado inteiro de uma vez, nao um pais so. Um por um
+// custava uma ficha, uma busca e um insert por pais.
+// Marcar onde MORA continua sendo um so — nao existe morar em dois.
+const paisesSelecionados=new Set();   // nomes, no modo 'visited'
+function ehMultiplo(){return quickVisitMode!=='home'}
+// A ordem dos continentes sai do proprio dado (`region` de COUNTRIES),
+// ordenada em pt-BR. País novo na lista entra no continente dele sozinho,
+// sem nenhuma lista de continentes pra manter aqui.
+function agrupadoPorContinente(lista){
+  const grupos=new Map();
+  lista.forEach(c=>{const r=c.region||'Outros';if(!grupos.has(r))grupos.set(r,[]);grupos.get(r).push(c)});
+  return [...grupos.keys()].sort((a,b)=>a.localeCompare(b,'pt-BR')).map(r=>[r,grupos.get(r)]);
+}
 function renderCountryList2(filter){
   const list=document.getElementById('countryList2');
   const f=(filter||'').toLowerCase();
-  const matches=COUNTRIES.filter(c=>!f||c.name.toLowerCase().includes(f));
-  list.innerHTML=matches.map(c=>`<div class="dest-result" onclick='selectCountry2(${JSON.stringify(c).replace(/'/g,"&apos;")})'><span class="dest-flag">${c.flag}</span><div><div class="dest-name">${c.name}</div><div class="dest-region">${c.region}</div></div></div>`).join('')||'<div class="search-loading">Nenhum país encontrado</div>';
+  // Comparacao sem acento: quem digita "servia" tem que achar "Sérvia".
+  const semAcento=x=>String(x||'').normalize('NFD').replace(/\p{Diacritic}/gu,'').toLowerCase();
+  const alvo=semAcento(f);
+  const matches=COUNTRIES.filter(c=>!alvo||semAcento(c.name).includes(alvo));
+  if(!matches.length){list.innerHTML='<div class="search-loading">Nenhum país encontrado</div>';return}
+  const jaTem=new Set(visitedCountryNames());
+  const multi=ehMultiplo();
+  list.innerHTML=agrupadoPorContinente(matches).map(([regiao,paises])=>
+    '<div class="lista-grupo">'+esc(regiao)+'</div>'+paises.map(c=>{
+      // Pais ja marcado aparece marcado, em vez de deixar escolher e so
+      // depois avisar "ja existe" — o aviso chegava tarde demais pra servir.
+      const ja=multi&&jaTem.has(c.name);
+      const on=paisesSelecionados.has(c.name);
+      // Indice, nao o nome: nome dentro de atributo onclick depende de o pais
+      // nao ter aspas nem apostrofo, e isso e sorte, nao garantia.
+      const dir=ja?'':` onclick="toggleCountry2(${COUNTRIES.indexOf(c)})"`;
+      const marca=ja?'<span class="dest-ja-tag">no mapa</span>'
+        :multi?'<span class="dest-check">'+icon('check')+'</span>':'';
+      return `<div class="dest-result${ja?' ja':''}${on?' on':''}"${dir}><span class="dest-flag">${c.flag}</span><div><div class="dest-name">${esc(c.name)}</div></div>${marca}</div>`;
+    }).join('')
+  ).join('');
+  hydrateIcons(list);
 }
 function filterCountries2(v){renderCountryList2(v)}
-function selectCountry2(c){
-  selectedVisitCountry=c;
-  document.getElementById('countrySearch2').value=c.flag+' '+c.name;
-  document.getElementById('countryList2').innerHTML='';
-  const btn=document.getElementById('createVisitBtn');
-  btn.textContent=quickVisitMode==='home'?'Marcar como moradia':'Marcar como visitado';btn.style.opacity='1';btn.style.pointerEvents='auto';
+function toggleCountry2(i){
+  const c=COUNTRIES[i];if(!c)return;
+  const nome=c.name;
+  if(!ehMultiplo()){
+    // Modo moradia: escolher um troca o anterior.
+    paisesSelecionados.clear();paisesSelecionados.add(nome);
+  }else{
+    if(paisesSelecionados.has(nome))paisesSelecionados.delete(nome);else paisesSelecionados.add(nome);
+  }
+  renderCountryList2(document.getElementById('countrySearch2').value);
+  atualizarBotaoVisita();
+}
+function atualizarBotaoVisita(){
+  const btn=document.getElementById('createVisitBtn');if(!btn)return;
+  const n=paisesSelecionados.size;
+  if(!n){btn.textContent='Selecione um país';btn.style.opacity='.4';btn.style.pointerEvents='none';return}
+  btn.style.opacity='1';btn.style.pointerEvents='auto';
+  btn.textContent=!ehMultiplo()?'Marcar como moradia'
+    :n===1?'Marcar 1 país':'Marcar '+n+' países';
 }
 function prepQuickVisit(){
-  selectedVisitCountry=null;
+  paisesSelecionados.clear();
   const cs=document.getElementById('countrySearch2');if(cs)cs.value='';
-  const btn=document.getElementById('createVisitBtn');if(btn){btn.textContent='Selecione um país';btn.style.opacity='.4';btn.style.pointerEvents='none'}
-  document.getElementById('quickVisitTitle').textContent=quickVisitMode==='home'?'Qual país você mora?':'Qual país você já visitou?';
+  atualizarBotaoVisita();
+  document.getElementById('quickVisitTitle').textContent=quickVisitMode==='home'?'Qual país você mora?':'Quais países você já visitou?';
+  const busca=document.getElementById('countrySearch2');
+  if(busca)busca.placeholder=quickVisitMode==='home'?'Buscar país...':'Buscar país (dá pra marcar vários)';
+  const lista=document.getElementById('countryList2');if(lista)lista.scrollTop=0;
   renderCountryList2('');
 }
 async function markVisited(){
-  if(!selectedVisitCountry)return;
-  if(quickVisitMode==='home')return saveHomeCountry(selectedVisitCountry.name);
-  const name=selectedVisitCountry.name;
-  const existing=S.trips.find(t=>((t.destinations&&t.destinations[0])||t.name)===name);
-  if(existing){
-    closeOv('ov-quickvisit');
-    toast('Já existe',`Você já tem uma viagem pra ${name}.`,'alert');
-    return;
-  }
+  if(!paisesSelecionados.size)return;
+  if(quickVisitMode==='home')return saveHomeCountry([...paisesSelecionados][0]);
+  const jaTem=new Set(visitedCountryNames());
+  const nomes=[...paisesSelecionados].filter(n=>!jaTem.has(n));
+  if(!nomes.length){closeOv('ov-quickvisit');return}
   const btn=document.getElementById('createVisitBtn');btn.textContent='Marcando...';btn.style.pointerEvents='none';
-  const{data,error}=await dbInsert('trips',{user_id:S.user.id,name,destinations:[name],dates:'__quickvisit__',status:'done'});
-  if(!error&&data){
-    data._spots=[];S.trips.unshift(data);closeOv('ov-quickvisit');
+  // Um POST só com as linhas todas: 30 países marcados não podem custar 30
+  // idas ao banco.
+  const{data,error}=await dbInsertMany('trips',nomes.map(name=>
+    ({user_id:S.user.id,name,destinations:[name],dates:'__quickvisit__',status:'done'})));
+  if(!error&&data&&data.length){
+    data.forEach(t=>{t._spots=[];S.trips.unshift(t)});
+    paisesSelecionados.clear();
+    closeOv('ov-quickvisit');
     renderTrips();populateTripOpts();loadProfile();
-    toast('Marcado!',`${name} agora está no seu mapa.`,'globe');
+    toast('Marcado!',data.length===1?data[0].name+' agora está no seu mapa.'
+      :data.length+' países agora estão no seu mapa.','globe');
   }else{
-    btn.textContent='Marcar como visitado';btn.style.pointerEvents='auto';
+    atualizarBotaoVisita();
     toast('Erro','Não foi possível marcar. Tenta de novo.');
   }
 }
