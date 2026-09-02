@@ -100,8 +100,8 @@ Motivo da existência: o visual original (fundo creme `#f4ede1` + serifada de al
 
 ## Estado do banco (migrações aplicadas)
 
-Todas as migrações de `migrations/` já foram rodadas no Supabase — 001 a 011.
-Conferido em 25/08/2026. Isso inclui:
+Todas as migrações de `migrations/` já foram rodadas no Supabase — 001 a 012.
+Conferido em 02/09/2026. Isso inclui:
 
 - **008** — RLS de verdade em `follows`, `profiles`, `trips` e `spots`. Antes disso a
   política de INSERT em `follows` não checava o `status`, então dava pra virar amigo
@@ -109,6 +109,11 @@ Conferido em 25/08/2026. Isso inclui:
 - **009** — `spots.subcategory` (subcategoria de experiência).
 - **010** — `spots.phone` (o botão "Ligar" que substituiu o TheFork).
 - **011** — tabela `invites` + `invite_owner()` + `redeem_invite()` (convite por link).
+- **012** — tabela `spot_comments` (comentar no spot de um amigo). Ficou pendente por
+  uma semana enquanto o código já estava em produção: comentar simplesmente não
+  funcionava, e a mensagem de erro ("Tenta de novo em alguns segundos") sugeria
+  problema passageiro. **Tabela** que não existe devolve **404 `PGRST205`** — diferente
+  de coluna, que é 400 `42703`.
 
 **Como conferir o schema sem pedir SQL ao Lucas:** a anon key está no `index.html` e o
 PostgREST valida a coluna antes da permissão. Então
