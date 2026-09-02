@@ -3918,20 +3918,50 @@ function pickBestPlaceMatch(places,wantedName){
 // com o Instagram dela. Subir a versao faz a revalidacao rodar de novo e
 // reconsultar os que ja tinham sido "checados" pelo criterio velho.
 const INSTA_RECHECK_FLAG='spot_insta_recheck_v3';
+// Segunda revalidação, independente da v3 e com flag própria de propósito: a
+// v3 apaga o website_url pra rebuscar, e reaproveitar a flag dela faria isso
+// tudo de novo em Instagram que já está certo. São conjuntos diferentes de
+// spots e problemas diferentes — cada um roda uma vez.
+const INSTA_DESTRAVA_FLAG='spot_insta_destrava_v1';
 async function revalidarInstagramsAntigos(){
   try{
-    if(localStorage.getItem(INSTA_RECHECK_FLAG))return;
-    const alvos=[];
-    (S.trips||[]).forEach(t=>(t._spots||[]).forEach(s=>{
-      if(s.category==='food'&&/instagram.com/i.test(s.website_url||''))alvos.push(s);
-    }));
-    for(const s of alvos){
-      const{error}=await dbUpdate('spots',s.id,{insta_checked:false,website_url:null});
-      if(error)return; // deu ruim: não marca a flag, tenta de novo na próxima
-      s.insta_checked=false;s.website_url=null;
+    if(!localStorage.getItem(INSTA_RECHECK_FLAG)){
+      const alvos=[];
+      (S.trips||[]).forEach(t=>(t._spots||[]).forEach(s=>{
+        if(s.category==='food'&&/instagram.com/i.test(s.website_url||''))alvos.push(s);
+      }));
+      for(const s of alvos){
+        const{error}=await dbUpdate('spots',s.id,{insta_checked:false,website_url:null});
+        if(error)return; // deu ruim: não marca a flag, tenta de novo na próxima
+        s.insta_checked=false;s.website_url=null;
+      }
+      localStorage.setItem(INSTA_RECHECK_FLAG,'1');
     }
-    localStorage.setItem(INSTA_RECHECK_FLAG,'1');
+    await destravarInstagramsNuncaProcurados();
   }catch(e){/* nunca trava o app por causa disso */}
+}
+// Restaurante marcado como "já procurei" quando na verdade a procura nunca
+// aconteceu (teto do mês, sessão caída, Brave fora do ar). Antes do conserto
+// em findInstagramViaBrave esses casos gravavam insta_checked=true igual a uma
+// resposta de verdade, e o spot nunca mais era consultado — ficava sem botão
+// pra sempre. Isso devolve todos eles pra fila UMA vez, agora que uma falha
+// não conta mais como resposta.
+//
+// Só mexe em insta_checked. O website_url que estiver ali é um site de verdade
+// vindo do Google (se fosse Instagram cairia na v3) e continua servindo de
+// fallback — apagar seria trocar um botão por nenhum.
+async function destravarInstagramsNuncaProcurados(){
+  if(localStorage.getItem(INSTA_DESTRAVA_FLAG))return;
+  const alvos=[];
+  (S.trips||[]).forEach(t=>(t._spots||[]).forEach(s=>{
+    if(s.category==='food'&&s.insta_checked&&!/instagram\.com/i.test(s.website_url||''))alvos.push(s);
+  }));
+  for(const s of alvos){
+    const{error}=await dbUpdate('spots',s.id,{insta_checked:false});
+    if(error)return; // não marca a flag: tenta de novo na próxima sessão
+    s.insta_checked=false;
+  }
+  localStorage.setItem(INSTA_DESTRAVA_FLAG,'1');
 }
 // Backfill de site (comida) e link de Maps (qualquer categoria) — automático,
 // silencioso, UMA busca por spot cobrindo os dois campos (evita 2 chamadas
@@ -3942,6 +3972,10 @@ async function revalidarInstagramsAntigos(){
 // trava de "não roda duas vezes ao mesmo tempo" — pode rodar de novo a
 // cada loadDashboard(), sempre pegando o que ainda não foi verificado.
 let placeLinksBackfillRunning=false;
+// Motivo pelo qual a busca de Instagram não está disponível AGORA (teto do mês
+// estourado, sessão caída, function sem config). Vale pra sessão inteira: são
+// condições do ambiente, não do restaurante. Zera ao recarregar a página.
+let braveIndisponivel='';
 // Google Places não expõe Instagram como campo próprio — só um "site"
 // genérico, que às vezes é o Instagram (quando o dono cadastrou assim) e
 // às vezes não é nada. Quando não é nada, essa function serverless (não
@@ -3949,6 +3983,16 @@ let placeLinksBackfillRunning=false;
 // Instagram via busca de verdade. Tem teto de segurança do lado do
 // servidor: nunca passa do crédito grátis, e falha em silêncio se algo
 // não estiver configurado ainda.
+// "Não achei" e "não consegui procurar" são coisas DIFERENTES, e antes viravam
+// a mesma string vazia aqui. Quem chama gravava insta_checked=true nos dois
+// casos, então teto de busca estourado, sessão expirada, Brave fora do ar ou
+// function não configurada ficavam registrados no banco como "esse restaurante
+// não tem Instagram" — para sempre, porque spot checado nunca reprocessa.
+// Era esse o motivo de restaurante sem botão de Instagram.
+//
+// O servidor JÁ distingue (`capped`, `unauthorized`, `configured:false`); só o
+// cliente é que jogava a informação fora. Agora devolve {url, conclusivo}:
+// conclusivo=true só quando a busca realmente rodou e terminou.
 async function findInstagramViaBrave(name,city){
   try{
     const tk=await ensureToken();
@@ -3957,10 +4001,19 @@ async function findInstagramViaBrave(name,city){
       headers:Object.assign({'Content-Type':'application/json'},tk?{'Authorization':'Bearer '+tk}:{}),
       body:JSON.stringify({query:name+(city?' '+city:''),name,city})
     });
-    if(!resp.ok)return'';
+    // 401/403 (sessão) e 429 (limite) não são sobre ESTE restaurante: o
+    // próximo receberia a mesma recusa, depois de gastar mais uma busca no
+    // Google. Param a rodada inteira.
+    if(!resp.ok)return{url:'',conclusivo:false,motivo:'http_'+resp.status,
+      parar:resp.status===401||resp.status===403||resp.status===429};
     const d=await resp.json();
-    return d.instagram_url||'';
-  }catch(e){return''} // sem function configurada ainda, ou offline — nunca quebra o resto
+    if(d.instagram_url)return{url:d.instagram_url,conclusivo:true};
+    if(d.capped)return{url:'',conclusivo:false,motivo:'teto',parar:true};
+    if(d.unauthorized)return{url:'',conclusivo:false,motivo:'sem_sessao',parar:true};
+    if(d.configured===false)return{url:'',conclusivo:false,motivo:'sem_config',parar:true};
+    // Rodou a busca e nenhum perfil passou no critério: isso sim é resposta.
+    return{url:'',conclusivo:true};
+  }catch(e){return{url:'',conclusivo:false,motivo:'rede'}} // offline — nunca quebra o resto
 }
 async function autoBackfillPlaceLinks(){
   if(placeLinksBackfillRunning)return;
@@ -3968,7 +4021,7 @@ async function autoBackfillPlaceLinks(){
   try{
   const targets=[];
   (S.trips||[]).forEach(t=>(t._spots||[]).forEach(s=>{
-    const precisaInstagram=s.category==='food'&&!s.insta_checked;
+    const precisaInstagram=s.category==='food'&&!s.insta_checked&&!braveIndisponivel;
     const precisaMaps=s.maps_url===null;
     // Telefone só interessa em comida (é o botão "Ligar"). undefined significa
     // que a coluna nem veio do banco (migração 010 não rodou) — aí não insiste.
@@ -3977,7 +4030,7 @@ async function autoBackfillPlaceLinks(){
   }));
   for(const s of targets){
     try{
-      const precisaInstagram=s.category==='food'&&!s.insta_checked;
+      const precisaInstagram=s.category==='food'&&!s.insta_checked&&!braveIndisponivel;
       const precisaFone=s.category==='food'&&s.phone===null;
       const patch={};
       let googleSite='',mapsUrl=null,fone='';
@@ -4000,9 +4053,20 @@ async function autoBackfillPlaceLinks(){
         // Google já devolveu um link de Instagram (nesse caso já é o que
         // queremos, buscar de novo seria desperdício).
         const googleJaEInstagram=/instagram\.com/i.test(googleSite);
-        const insta=googleJaEInstagram?googleSite:await findInstagramViaBrave(s.name,cityOf(s));
-        patch.website_url=insta||googleSite; // sem Instagram: cai pro site (se tiver)
-        patch.insta_checked=true;
+        const r=googleJaEInstagram?{url:googleSite,conclusivo:true}
+                                  :await findInstagramViaBrave(s.name,cityOf(s));
+        if(r.url||r.conclusivo){
+          patch.website_url=r.url||googleSite; // procurou e não tem: cai pro site
+          patch.insta_checked=true;
+        }else{
+          // Não deu pra procurar. Grava o que o Google deu (melhor que nada)
+          // mas NÃO marca como verificado — na próxima sessão tenta de novo.
+          if(googleSite)patch.website_url=googleSite;
+          // Teto estourado / sem sessão / sem config valem pra TODOS os spots,
+          // não só pra este: insistir gasta uma busca no Google por spot e
+          // recebe a mesma recusa. Para a rodada e volta no próximo load.
+          if(r.parar){braveIndisponivel=r.motivo;if(Object.keys(patch).length)await dbUpdate('spots',s.id,patch);break}
+        }
       }
       if(s.maps_url===null)patch.maps_url=mapsUrl||'';
       // grava '' quando não achou: marca como já procurado e não repete
