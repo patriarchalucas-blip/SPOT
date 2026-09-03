@@ -89,25 +89,19 @@ export async function onRequestPost(context) {
     if (gastos) await env.SPOT_KV.put(counterKey, String(current + gastos), { expirationTtl: 60 * 60 * 24 * 40 });
   };
 
-  const resultados = urlsDe(await buscar(query + ' instagram'));
-  let hit = escolherPerfil(resultados, name, city);
-
-  // Segunda busca, dirigida ao Instagram, quando a primeira não produziu um
-  // perfil ACEITO. O gatilho tem que ser esse, e não "não veio nenhum link do
-  // instagram.com": no caso do Botanikafé vinha um — o do Jardim Botânico de
-  // SP, outro lugar, recusado com razão. Bastava um link errado no conjunto
-  // pra segunda tentativa nunca acontecer.
+  // UMA busca. Aqui existiu uma segunda, dirigida com `site:instagram.com`,
+  // pra quando a primeira não produzisse perfil aceito. Ela saiu: testada, a
+  // query com `site:` devolve resultado sem relação nenhuma (verbetes de
+  // jardim botânico na Wikipedia) — o operador não é respeitado. Gastava uma
+  // busca do teto por lugar sem Instagram e não melhorava nada.
   //
-  // Custo: lugar que realmente não tem Instagram passa a custar 2 buscas em
-  // vez de 1. É uma vez por spot na vida (insta_checked guarda o resultado),
-  // e os dois tetos continuam valendo — o podeGastar aqui é o que impede o
-  // teto por usuário de contar 1 por chamada e deixar passar o dobro.
-  if (!hit
-      && current + gastos < MONTHLY_CAP
-      && await podeGastar(env, 'brave', quem.uid, 1, USER_CAP)) {
-    const segunda = urlsDe(await buscar(query + ' site:instagram.com'));
-    if (segunda.length) hit = escolherPerfil(resultados.concat(segunda), name, city);
-  }
+  // O limite real não é o número de buscas: é o índice. Perfil do Instagram é
+  // mal indexado por buscador (o Instagram bloqueia crawler), e comércio local
+  // brasileiro é o pior caso. O Google acha porque é o Google; a Brave, não.
+  // Pedir mais resultados é o único ganho barato e sem risco — a Brave cobra
+  // por busca, não por resultado.
+  const resultados = urlsDe(await buscar(query + ' instagram'));
+  const hit = escolherPerfil(resultados, name, city);
 
   await registrar();
   return json({ instagram_url: hit || null });
