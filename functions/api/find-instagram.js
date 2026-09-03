@@ -57,26 +57,59 @@ export async function onRequestPost(context) {
     return json({ instagram_url: null, capped: true });
   }
 
-  let braveResp;
-  try {
-    braveResp = await fetch(
-      'https://api.search.brave.com/res/v1/web/search?q=' + encodeURIComponent(query + ' instagram') + '&count=5',
-      { headers: { Accept: 'application/json', 'X-Subscription-Token': env.BRAVE_API_KEY } }
-    );
-  } catch (e) {
-    return json({ instagram_url: null });
+  // Quantos resultados pedir. Eram 5, e 5 era pouco: buscar "Botanikafé
+  // Jardins instagram" devolve baressp, linktr.ee e Wikipedia antes do
+  // perfil, e o único instagram.com entre os 5 primeiros era o do Jardim
+  // Botânico de SP — outro lugar, corretamente recusado. O perfil existia e
+  // simplesmente não estava no conjunto que chegava aqui.
+  // Pedir mais resultados NÃO custa mais: a Brave cobra por busca, não por
+  // resultado.
+  const COUNT = 20;
+
+  let gastos = 0;
+  async function buscar(q) {
+    let resp;
+    try {
+      resp = await fetch(
+        'https://api.search.brave.com/res/v1/web/search?q=' + encodeURIComponent(q) + '&count=' + COUNT,
+        { headers: { Accept: 'application/json', 'X-Subscription-Token': env.BRAVE_API_KEY } }
+      );
+    } catch (e) {
+      gastos++; // a chamada saiu: conta como gasto mesmo sem resposta
+      return null;
+    }
+    gastos++;
+    if (!resp.ok) return null;
+    try { return (await resp.json()) } catch (e) { return null }
+  }
+  const urlsDe = (d) => ((d && d.web && d.web.results) || []);
+  // Conta o que foi gasto mesmo quando a busca falha — é a chamada que
+  // consome o crédito, não a resposta.
+  const registrar = async () => {
+    if (gastos) await env.SPOT_KV.put(counterKey, String(current + gastos), { expirationTtl: 60 * 60 * 24 * 40 });
+  };
+
+  const resultados = urlsDe(await buscar(query + ' instagram'));
+  let hit = escolherPerfil(resultados, name, city);
+
+  // Segunda busca, dirigida ao Instagram, quando a primeira não produziu um
+  // perfil ACEITO. O gatilho tem que ser esse, e não "não veio nenhum link do
+  // instagram.com": no caso do Botanikafé vinha um — o do Jardim Botânico de
+  // SP, outro lugar, recusado com razão. Bastava um link errado no conjunto
+  // pra segunda tentativa nunca acontecer.
+  //
+  // Custo: lugar que realmente não tem Instagram passa a custar 2 buscas em
+  // vez de 1. É uma vez por spot na vida (insta_checked guarda o resultado),
+  // e os dois tetos continuam valendo — o podeGastar aqui é o que impede o
+  // teto por usuário de contar 1 por chamada e deixar passar o dobro.
+  if (!hit
+      && current + gastos < MONTHLY_CAP
+      && await podeGastar(env, 'brave', quem.uid, 1, USER_CAP)) {
+    const segunda = urlsDe(await buscar(query + ' site:instagram.com'));
+    if (segunda.length) hit = escolherPerfil(resultados.concat(segunda), name, city);
   }
 
-  // Conta a tentativa mesmo se a Brave falhar — é a chamada que gera custo
-  // (ou consome o crédito grátis), não a resposta.
-  await env.SPOT_KV.put(counterKey, String(current + 1), { expirationTtl: 60 * 60 * 24 * 40 });
-
-  if (!braveResp.ok) return json({ instagram_url: null });
-
-  const data = await braveResp.json();
-  const results = (data.web && data.web.results) || [];
-  const hit = escolherPerfil(results, name, city);
-
+  await registrar();
   return json({ instagram_url: hit || null });
 }
 

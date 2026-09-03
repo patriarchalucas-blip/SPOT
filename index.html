@@ -3173,6 +3173,9 @@ async function resolverCidadeDoSpot(p,trip){
   }
   if(!error&&data){
     if(!t._spots)t._spots=[];t._spots.push(data);
+    // Antes de loadDashboard, que é quem dispara o backfill: assim a busca de
+    // Instagram deste spot é a primeira, não a última.
+    spotPrioritario=data.id;
     toast('Spot salvo',note?`"${p.name} · ${note}"`:p.name,'check');
     if(S.curTrip?.id===t.id){
       S.curTrip._spots=t._spots;
@@ -3976,6 +3979,13 @@ let placeLinksBackfillRunning=false;
 // estourado, sessão caída, function sem config). Vale pra sessão inteira: são
 // condições do ambiente, não do restaurante. Zera ao recarregar a página.
 let braveIndisponivel='';
+// Id do spot que deve ser o PRIMEIRO da próxima rodada de backfill.
+//
+// A fila é sequencial, uma busca por spot. Quem acabou de adicionar um lugar
+// entrava no fim dela — atrás de tudo que já estava pendente — e o botão de
+// Instagram só aparecia minutos depois, ou nunca, se o teto do mês estourasse
+// no meio. Mas é justamente esse o spot que a pessoa está olhando agora.
+let spotPrioritario=null;
 // Google Places não expõe Instagram como campo próprio — só um "site"
 // genérico, que às vezes é o Instagram (quando o dono cadastrou assim) e
 // às vezes não é nada. Quando não é nada, essa function serverless (não
@@ -4028,6 +4038,13 @@ async function autoBackfillPlaceLinks(){
     const precisaFone=s.category==='food'&&s.phone===null;
     if(precisaInstagram||precisaMaps||precisaFone)targets.push(s);
   }));
+  // O spot que a pessoa acabou de adicionar fura a fila: é o único que
+  // alguém está olhando neste momento.
+  if(spotPrioritario){
+    const i=targets.findIndex(s=>s.id===spotPrioritario);
+    if(i>0)targets.unshift(targets.splice(i,1)[0]);
+    spotPrioritario=null;
+  }
   for(const s of targets){
     try{
       const precisaInstagram=s.category==='food'&&!s.insta_checked&&!braveIndisponivel;
@@ -4123,10 +4140,17 @@ async function healSpotPhoto(id){
     // automático (ver autoBackfillPlaceLinks).
     if(s.category==='food'&&!s.insta_checked){
       const googleJaEInstagram=/instagram\.com/i.test(p.websiteUri||'');
-      const insta=googleJaEInstagram?p.websiteUri:await findInstagramViaBrave(s.name,cityOf(s));
-      const finalLink=insta||p.websiteUri||'';
-      patch.website_url=finalLink;s.website_url=finalLink;
-      patch.insta_checked=true;s.insta_checked=true;
+      const r=googleJaEInstagram?{url:p.websiteUri,conclusivo:true}
+                                :await findInstagramViaBrave(s.name,cityOf(s));
+      if(r.url||r.conclusivo){
+        const finalLink=r.url||p.websiteUri||'';
+        patch.website_url=finalLink;s.website_url=finalLink;
+        patch.insta_checked=true;s.insta_checked=true;
+      }else if(p.websiteUri&&!s.website_url){
+        // Não deu pra procurar: guarda o site do Google e deixa sem marcar,
+        // pra próxima passada tentar o Instagram de novo.
+        patch.website_url=p.websiteUri;s.website_url=p.websiteUri;
+      }
     }
     if(p.googleMapsUri&&!s.maps_url){patch.maps_url=p.googleMapsUri;s.maps_url=p.googleMapsUri}
     const url=placePhotoUrl(p,800);
