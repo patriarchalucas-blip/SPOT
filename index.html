@@ -3925,7 +3925,7 @@ const INSTA_RECHECK_FLAG='spot_insta_recheck_v3';
 // v3 apaga o website_url pra rebuscar, e reaproveitar a flag dela faria isso
 // tudo de novo em Instagram que já está certo. São conjuntos diferentes de
 // spots e problemas diferentes — cada um roda uma vez.
-const INSTA_DESTRAVA_FLAG='spot_insta_destrava_v1';
+const INSTA_DESTRAVA_FLAG='spot_insta_destrava_v2'; // v2: agora existe o passo do site oficial
 async function revalidarInstagramsAntigos(){
   try{
     if(!localStorage.getItem(INSTA_RECHECK_FLAG)){
@@ -4003,13 +4003,13 @@ let spotPrioritario=null;
 // O servidor JÁ distingue (`capped`, `unauthorized`, `configured:false`); só o
 // cliente é que jogava a informação fora. Agora devolve {url, conclusivo}:
 // conclusivo=true só quando a busca realmente rodou e terminou.
-async function findInstagramViaBrave(name,city){
+async function findInstagramViaBrave(name,city,site){
   try{
     const tk=await ensureToken();
     const resp=await fetch('/api/find-instagram',{
       method:'POST',
       headers:Object.assign({'Content-Type':'application/json'},tk?{'Authorization':'Bearer '+tk}:{}),
-      body:JSON.stringify({query:name+(city?' '+city:''),name,city})
+      body:JSON.stringify({query:name+(city?' '+city:''),name,city,site:site||''})
     });
     // 401/403 (sessão) e 429 (limite) não são sobre ESTE restaurante: o
     // próximo receberia a mesma recusa, depois de gastar mais uma busca no
@@ -4071,7 +4071,7 @@ async function autoBackfillPlaceLinks(){
         // queremos, buscar de novo seria desperdício).
         const googleJaEInstagram=/instagram\.com/i.test(googleSite);
         const r=googleJaEInstagram?{url:googleSite,conclusivo:true}
-                                  :await findInstagramViaBrave(s.name,cityOf(s));
+                                  :await findInstagramViaBrave(s.name,cityOf(s),googleSite);
         if(r.url||r.conclusivo){
           patch.website_url=r.url||googleSite; // procurou e não tem: cai pro site
           patch.insta_checked=true;
@@ -4141,7 +4141,7 @@ async function healSpotPhoto(id){
     if(s.category==='food'&&!s.insta_checked){
       const googleJaEInstagram=/instagram\.com/i.test(p.websiteUri||'');
       const r=googleJaEInstagram?{url:p.websiteUri,conclusivo:true}
-                                :await findInstagramViaBrave(s.name,cityOf(s));
+                                :await findInstagramViaBrave(s.name,cityOf(s),p.websiteUri||'');
       if(r.url||r.conclusivo){
         const finalLink=r.url||p.websiteUri||'';
         patch.website_url=finalLink;s.website_url=finalLink;

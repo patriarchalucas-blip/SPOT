@@ -34,19 +34,30 @@ export async function onRequestPost(context) {
   // Compatível com chamada antiga (só query): aí name cai pra query inteira.
   const name = String(body.name || query).trim();
   const city = String(body.city || '').trim();
+  // Site oficial que o Google Places já devolveu pro lugar, quando existe.
+  const site = String(body.site || '').trim();
+
+  // Toda chamada exige estar logado — inclusive a que só lê o site oficial,
+  // senão isto viraria um buscador de páginas aberto pra qualquer um.
+  const quem = await quemEsta(request, env);
+  if (!quem.permitir) return json({ instagram_url: null, unauthorized: true }, 401);
+
+  // ═══ PASSO 1: o site oficial do lugar ═══
+  // O jeito mais confiável e o mais barato, nesta ordem, e por isso vem antes
+  // da busca: quando o Google já sabe o site do restaurante, o próprio site
+  // costuma linkar o Instagram dele. Isso é o negócio DIZENDO qual é a conta
+  // dele — evidência de dono, não semelhança de nome. Foi o que resolveu o
+  // Botanikafé: botanikafe.com linka instagram.com/botanikafe.
+  //
+  // Não custa nada do teto da Brave: é uma requisição HTTP comum.
+  const doSite = await instagramDoSite(site, name);
+  if (doSite) return json({ instagram_url: doSite, fonte: 'site' });
+
+  // ═══ PASSO 2: busca na web ═══
   if (!env.BRAVE_API_KEY || !env.SPOT_KV) {
     // Configuração ainda não feita no painel do Cloudflare — falha em
     // silêncio pro app, nunca trava a experiência do usuário por isso.
     return json({ instagram_url: null, configured: false });
-  }
-
-  // Sem cache aqui, então toda chamada gasta: exige estar logado sempre.
-  // Se isso recusar, o app cai no fallback que já existe (link do Google
-  // Maps) — o usuário não vê erro nenhum.
-  const quem = await quemEsta(request, env);
-  if (!quem.permitir) return json({ instagram_url: null, unauthorized: true }, 401);
-  if (!await podeGastar(env, 'brave', quem.uid, 1, USER_CAP)) {
-    return json({ instagram_url: null, capped: true, scope: 'user' });
   }
 
   const monthKey = new Date().toISOString().slice(0, 7); // "2026-08"
@@ -55,6 +66,12 @@ export async function onRequestPost(context) {
 
   if (current >= MONTHLY_CAP) {
     return json({ instagram_url: null, capped: true });
+  }
+  // O teto por usuário é cobrado AQUI, e não no começo: quando o passo 1
+  // resolve, nenhuma busca acontece e não há o que cobrar. Cobrar na entrada
+  // gastava a cota da pessoa mesmo quando a resposta saiu de graça.
+  if (!await podeGastar(env, 'brave', quem.uid, 1, USER_CAP)) {
+    return json({ instagram_url: null, capped: true, scope: 'user' });
   }
 
   // Quantos resultados pedir. Eram 5, e 5 era pouco: buscar "Botanikafé
@@ -105,6 +122,57 @@ export async function onRequestPost(context) {
 
   await registrar();
   return json({ instagram_url: hit || null });
+}
+
+// ═══ INSTAGRAM PELO SITE OFICIAL ═══
+//
+// Devolve o perfil que o site do próprio lugar linka, ou '' se não der.
+//
+// O risco aqui não é achar o Instagram de outro restaurante — é achar o da
+// AGÊNCIA que fez o site, que às vezes assina no rodapé. Por isso não vale
+// "o primeiro instagram.com da página": o handle tem que se parecer com o
+// domínio do site ou com o nome do lugar. O handle da agência não se parece
+// com nenhum dos dois.
+const LIMITE_HTML = 400 * 1024; // rodapé e header cabem de sobra; corta site gigante
+export async function instagramDoSite(site, name) {
+  if (!site) return '';
+  let u;
+  try { u = new URL(site) } catch (e) { return '' }
+  // Só http(s), e nada de endereço interno: isto roda no servidor.
+  if (u.protocol !== 'http:' && u.protocol !== 'https:') return '';
+  if (/^(localhost$|127\.|10\.|192\.168\.|169\.254\.|\[)/i.test(u.hostname)) return '';
+  // Se o "site" do Google já É o Instagram, quem chama resolve sem vir aqui.
+  if (/(^|\.)instagram\.com$/i.test(u.hostname)) return '';
+
+  let html;
+  try {
+    const resp = await fetch(u.toString(), {
+      redirect: 'follow',
+      headers: { 'User-Agent': 'Mozilla/5.0 (compatible; SpotBot/1.0)', Accept: 'text/html' },
+      signal: AbortSignal.timeout(8000),
+    });
+    if (!resp.ok) return '';
+    const tipo = resp.headers.get('content-type') || '';
+    if (!/text\/html|application\/xhtml/i.test(tipo)) return '';
+    html = (await resp.text()).slice(0, LIMITE_HTML);
+  } catch (e) { return '' } // fora do ar, lento, bloqueado: só não usa este passo
+
+  // Domínio sem www e sem sufixo: "botanikafe.com" -> "botanikafe"
+  const dominio = soAlnum(u.hostname.replace(/^www\./i, '').split('.')[0]);
+  const nomeAlnum = soAlnum(name);
+
+  const vistos = new Set();
+  for (const m of html.matchAll(/instagram\.com\/([a-zA-Z0-9._]+)/gi)) {
+    const handle = handleDe('instagram.com/' + m[1]);
+    if (!handle || vistos.has(handle.toLowerCase())) continue;
+    vistos.add(handle.toLowerCase());
+    const h = soAlnum(handle);
+    if (!h) continue;
+    const pareceDominio = dominio && (h === dominio || h.includes(dominio) || dominio.includes(h));
+    const pareceNome = nomeAlnum && (h === nomeAlnum || h.includes(nomeAlnum) || nomeAlnum.includes(h));
+    if (pareceDominio || pareceNome) return 'https://www.instagram.com/' + handle + '/';
+  }
+  return '';
 }
 
 // ═══ ESCOLHA DO PERFIL ═══
