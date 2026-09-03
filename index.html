@@ -2081,6 +2081,15 @@ function renderPlaceLinks(s){
     }else if(s.maps_url){
       rh+=`<a class="reserve-btn" href="${escUrl(s.maps_url)}" target="_blank" rel="noopener">${icon('mapPin')} Ver no Google Maps</a>`;
     }
+    // Sem Instagram: um botão pra procurar AGORA, neste spot.
+    //
+    // A busca automática roda em segundo plano e em fila; quando ela não acha
+    // (ou nem chega no spot), não havia nada a fazer além de esperar sem saber
+    // o quê. Este botão tira a espera do caminho e, quando não acha, DIZ POR
+    // QUÊ — não some em silêncio.
+    if(!/instagram\.com/i.test(s.website_url||'')){
+      rh+=`<button class="reserve-btn" id="btnBuscaInsta" onclick="buscarInstagramAgora('${esc(s.id)}',this)">${icon('instagram')} Buscar Instagram</button>`;
+    }
     reserveWrap.innerHTML=rh;
   }else if(s.category==='hotel'){
     // Dois sites, nao um: gente que reserva hotel costuma ter o seu, e
@@ -4011,19 +4020,74 @@ async function findInstagramViaBrave(name,city,site){
       headers:Object.assign({'Content-Type':'application/json'},tk?{'Authorization':'Bearer '+tk}:{}),
       body:JSON.stringify({query:name+(city?' '+city:''),name,city,site:site||''})
     });
-    // 401/403 (sessão) e 429 (limite) não são sobre ESTE restaurante: o
-    // próximo receberia a mesma recusa, depois de gastar mais uma busca no
-    // Google. Param a rodada inteira.
-    if(!resp.ok)return{url:'',conclusivo:false,motivo:'http_'+resp.status,
-      parar:resp.status===401||resp.status===403||resp.status===429};
+    // 401/403 é sessão, mesmo motivo do `unauthorized` do corpo — usa o mesmo
+    // rótulo, senão a mensagem pro usuário sai como "http_401".
+    if(resp.status===401||resp.status===403)return{url:'',conclusivo:false,motivo:'sem_sessao',parar:true};
+    if(!resp.ok)return{url:'',conclusivo:false,motivo:'http_'+resp.status};
     const d=await resp.json();
     if(d.instagram_url)return{url:d.instagram_url,conclusivo:true};
-    if(d.capped)return{url:'',conclusivo:false,motivo:'teto',parar:true};
+    // `parar` só onde NADA pode dar certo — hoje isso é só a sessão.
+    //
+    // Teto e falta de config paravam a rodada inteira aqui, e isso ficou
+    // errado quando o passo do site oficial entrou: ele roda ANTES da busca,
+    // é grátis e funciona mesmo com o teto estourado ou sem chave da Brave.
+    // Parar por causa deles descartava o único caminho que ainda funcionava —
+    // e era o suficiente pra um spot no começo da fila impedir todos os
+    // outros de serem resolvidos pelo site.
+    if(d.capped)return{url:'',conclusivo:false,motivo:'teto'};
+    if(d.configured===false)return{url:'',conclusivo:false,motivo:'sem_config'};
     if(d.unauthorized)return{url:'',conclusivo:false,motivo:'sem_sessao',parar:true};
-    if(d.configured===false)return{url:'',conclusivo:false,motivo:'sem_config',parar:true};
     // Rodou a busca e nenhum perfil passou no critério: isso sim é resposta.
     return{url:'',conclusivo:true};
   }catch(e){return{url:'',conclusivo:false,motivo:'rede'}} // offline — nunca quebra o resto
+}
+// Busca o Instagram de UM spot, na hora, a pedido. Sempre reconsulta: se
+// alguém tocou no botão é porque o resultado guardado não serve.
+const MOTIVO_HUMANO={
+  teto:'Cota de busca do mês esgotada. Vira mês que já volta.',
+  sem_sessao:'Sua sessão caiu. Recarrega a página e tenta de novo.',
+  sem_config:'A busca não está configurada no servidor.',
+  rede:'Sem conexão com o servidor de busca.'
+};
+async function buscarInstagramAgora(id,btn){
+  const s=findSpotById(id);
+  if(!s)return;
+  const rotulo=btn?btn.innerHTML:'';
+  if(btn){btn.innerHTML='Buscando...';btn.style.pointerEvents='none'}
+  const devolve=()=>{if(btn){btn.innerHTML=rotulo;btn.style.pointerEvents=''}};
+  // O site oficial é a melhor fonte e vem do Google. Se o spot já tem um site
+  // gravado, usa; senão pergunta ao Google agora.
+  let site=/instagram\.com/i.test(s.website_url||'')?'':(s.website_url||'');
+  if(!site){
+    try{
+      const resp=await fetch('https://places.googleapis.com/v1/places:searchText',{
+        method:'POST',
+        headers:{'Content-Type':'application/json','X-Goog-Api-Key':GAPI,'X-Goog-FieldMask':'places.displayName,places.websiteUri'},
+        body:JSON.stringify({textQuery:s.name+(cityOf(s)?' '+cityOf(s):''),languageCode:'pt-BR',maxResultCount:5})
+      });
+      const d=await resp.json();
+      const best=pickBestPlaceMatch(d.places,s.name);
+      site=(best&&best.websiteUri)||'';
+    }catch(e){}
+  }
+  const r=await findInstagramViaBrave(s.name,cityOf(s),site);
+  devolve();
+  if(r.url){
+    const{error}=await dbUpdate('spots',s.id,{website_url:r.url,insta_checked:true});
+    if(error){toast('Achei, mas não salvou','Tenta de novo.','alert');return}
+    s.website_url=r.url;s.insta_checked=true;
+    renderPlaceLinks(s);
+    toast('Instagram encontrado','','check');
+    return;
+  }
+  if(r.conclusivo){
+    // Procurou de verdade e não achou. Marca, pra fila automática não repetir.
+    await dbUpdate('spots',s.id,{insta_checked:true});
+    s.insta_checked=true;
+    toast('Não achei o Instagram','Esse lugar pode não ter perfil, ou o nome salvo não bate com ele.','alert');
+    return;
+  }
+  toast('Não deu pra procurar',MOTIVO_HUMANO[r.motivo]||('Motivo: '+(r.motivo||'desconhecido')),'alert');
 }
 async function autoBackfillPlaceLinks(){
   if(placeLinksBackfillRunning)return;
