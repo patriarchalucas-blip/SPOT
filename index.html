@@ -1049,7 +1049,10 @@ svg.ic path,svg.ic circle,svg.ic line,svg.ic polyline,svg.ic rect{fill:none;stro
 <div class="nt-label">Bio</div>
 <textarea class="note-input" id="bioInput" rows="2" placeholder="Uma frase sobre como você viaja" style="margin-bottom:8px"></textarea>
 <button class="sheet-cta" id="btnSalvarPerfil" onclick="salvarPerfil()">Salvar</button>
-<div class="prof-linha prof-sair" style="margin-top:10px;border-top:1px solid var(--border);border-bottom:none;padding-bottom:26px" onclick="signOut()"><span class="pl-txt">Sair da conta</span></div></div></div>
+<div class="prof-linha prof-sair" style="margin-top:10px;border-top:1px solid var(--border);border-bottom:none" onclick="signOut()"><span class="pl-txt">Sair da conta</span></div>
+<div class="prof-linha prof-sair" style="border-bottom:none;padding-bottom:26px" onclick="abrirExcluirConta()"><span class="pl-txt">Excluir minha conta</span></div></div></div>
+
+<div class="overlay" id="ov-excluir" onclick="closeOut(event,'ov-excluir')"><div class="sheet"><button class="sheet-close" onclick="closeOv('ov-excluir')" data-ic="close" aria-label="Fechar"></button><div class="sheet-handle"></div><div class="sheet-title">Excluir minha conta</div><div style="padding:0 24px 4px"><div class="nt-label" style="margin-bottom:10px">Isso apaga de vez, e não tem como desfazer:</div><ul style="margin:0 0 16px;padding-left:20px;font-size:14px;line-height:1.7;color:var(--ink2)"><li>suas viagens e todos os seus lugares</li><li>suas notas, avaliações e comentários</li><li>suas fotos de perfil e de lugares</li><li>seus amigos e os links de convite que você criou</li></ul><div class="nt-label">Para confirmar, digite <b>EXCLUIR</b></div><input class="nt-input" id="confirmaExcluir" placeholder="digite aqui" autocapitalize="characters" autocomplete="off" oninput="atualizarBotaoExcluir()"></div><button class="sheet-cta" id="btnExcluirConta" style="background:var(--red);box-shadow:none;opacity:.4;pointer-events:none" onclick="excluirConta()">Excluir minha conta</button></div></div>
 
 <div class="overlay" id="ov-addfriend" onclick="closeOut(event,'ov-addfriend')"><div class="sheet"><button class="sheet-close" onclick="closeOv('ov-addfriend')" data-ic="close" aria-label="Fechar"></button><div class="sheet-handle"></div><div class="sheet-title">Adicionar amigo</div><div class="nt-label">Username do amigo</div><input class="nt-input" id="friendUsernameInput" type="text" placeholder="digite aqui" autocapitalize="none" oninput="mostrarErroAmigo('')"><div class="auth-error" id="friendAddErr"></div><button class="sheet-cta" id="sendReqBtn" onclick="sendFriendRequest()">Enviar pedido</button><div class="conv-ou"><span>ou</span></div><button class="secondary-link" id="convidarBtn" style="margin-top:0" onclick="compartilharConvite()">Convidar por link</button><div class="conv-dica">Quem abrir o link entra já como seu amigo, sem precisar do seu username.</div></div></div>
 
@@ -1487,6 +1490,75 @@ function mostrarErroAmigo(m){
 }
 function hideAuthErr(){document.getElementById('authError').classList.remove('show')}
 async function signOut(){if(!confirm('Sair do Spot?'))return;try{await sb.auth.signOut()}catch(e){}S.user=null;S.token=null;S.trips=[];location.reload()}
+
+// ═══ EXCLUIR CONTA ═══
+//
+// Exigência da Apple (5.1.1 v) pra publicar na App Store: quem cria conta
+// tem que poder apagá-la no app, sem falar com suporte. Vale pra LGPD também.
+//
+// UMA chamada: delete_my_account() (migração 013) apaga dados, fotos e conta
+// numa transação só.
+//
+// Aqui existiu uma versão em duas etapas — o cliente apagava as fotos pela API
+// de storage e só depois chamava a função. Estava errado, e de um jeito que só
+// aparece quando falha: o cliente não participa da transação do banco, então
+// SEMPRE sobrava uma ordem ruim possível. Apagando foto primeiro, um erro na
+// função deixava a pessoa sem as fotos e com a conta viva. Apagando conta
+// primeiro, um erro no storage deixava as fotos no ar sem dono pra pedir
+// remoção. Apagar a linha de storage.objects dentro da função resolve os dois:
+// a URL pública passa pela tabela, e sem a linha ela devolve 404.
+function abrirExcluirConta(){
+  const c=document.getElementById('confirmaExcluir');
+  if(c)c.value='';
+  atualizarBotaoExcluir();
+  showOv('ov-excluir');
+}
+function atualizarBotaoExcluir(){
+  const btn=document.getElementById('btnExcluirConta');
+  const c=document.getElementById('confirmaExcluir');
+  if(!btn||!c)return;
+  const ok=c.value.trim().toUpperCase()==='EXCLUIR';
+  btn.style.opacity=ok?'1':'.4';
+  btn.style.pointerEvents=ok?'auto':'none';
+}
+async function excluirConta(){
+  const btn=document.getElementById('btnExcluirConta');
+  btn.textContent='Excluindo...';btn.style.pointerEvents='none';
+
+  // Aqui NÃO dá pra usar dbRpc: ele engole o erro e devolve [], e numa
+  // exclusão de conta "não sei se deu certo" é a pior resposta possível.
+  let r;
+  try{
+    r=await sbFetch('/rest/v1/rpc/delete_my_account',{method:'POST',body:'{}'},{'Content-Type':'application/json'});
+  }catch(e){
+    btn.textContent='Excluir minha conta';atualizarBotaoExcluir();
+    toast('Não deu pra excluir','Sem conexão. Sua conta continua intacta.','alert');
+    return;
+  }
+  if(!r.ok){
+    const txt=await r.text().catch(()=>'');
+    console.error('delete_my_account',r.status,txt);
+    btn.textContent='Excluir minha conta';atualizarBotaoExcluir();
+    // Três diagnósticos diferentes, porque levam a três ações diferentes.
+    const falta=r.status===404||/not find|does not exist|PGRST202/i.test(txt);
+    // "permission denied" significa que a função existe mas o dono dela não
+    // tem direito de apagar de auth.users. É a única parte da migração 013
+    // que depende de qual papel rodou o SQL, e não dá pra prever de fora.
+    const semDireito=/permission denied|must be owner|insufficient privilege/i.test(txt);
+    const msg=falta?'Falta rodar a migração 013 no Supabase.'
+      :semDireito?'A função existe mas não tem permissão pra apagar a conta. Rodar a 013 pelo SQL Editor (não por outro cliente) resolve.'
+      :'Sua conta continua intacta. Tenta de novo.';
+    toast('Não deu pra excluir',msg,'alert');
+    return;
+  }
+  // Conta apagada: o token não vale mais nada. Encerra a sessão local e
+  // recarrega — não dá pra "voltar pro app", não existe mais app pra voltar.
+  try{await sb.auth.signOut()}catch(e){}
+  try{localStorage.clear()}catch(e){}
+  S.user=null;S.token=null;S.trips=[];
+  alert('Sua conta foi excluída. Obrigado por ter usado o Spot.');
+  location.replace(location.origin);
+}
 
 // ═══ DASHBOARD ═══
 let dashboardReqId=0;
