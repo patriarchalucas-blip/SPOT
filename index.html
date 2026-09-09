@@ -1113,12 +1113,28 @@ function esc(v){return String(v==null?'':v).replace(/[&<>"'`]/g,function(c){retu
 // data: e vbscript: — website_url/maps_url vêm do Places e photo_url vem do
 // banco, ou seja podem ser qualquer string. Quem escapa pro atributo é o
 // escUrl (href/src) ou o cssUrl (background-image); safeUrl só filtra.
+// Foto do Places gravada no formato antigo traz a CHAVE no proprio endereco
+// (.../media?maxWidthPx=400&key=XXX), e essas URLs estao dentro de
+// spots.photo_url no banco — inclusive nas linhas dos amigos. Reescrever na
+// hora de exibir tira a chave do HTML e do trafego sem depender de migrar
+// linha nenhuma.
+//
+// Isso conserta a EXIBICAO. O valor gravado continua com a chave ate um
+// backfill reescrever a coluna — residuo conhecido, anotado de proposito.
+const RE_FOTO_PLACES=/^https:\/\/places\.googleapis\.com\/v1\/(places\/[^/]+\/photos\/[^/]+)\/media\?(.*)$/i;
+function semChaveDoPlaces(u){
+  const m=String(u||'').match(RE_FOTO_PLACES);
+  if(!m)return u;
+  const w=(m[2].match(/maxWidthPx=(\d+)/)||[])[1]||'400';
+  return'/api/place-photo?ref='+encodeURIComponent(m[1])+'&w='+w;
+}
 function safeUrl(v){
   // controle/espaco fora primeiro: "java\nscript:" passaria pelo teste abaixo
   const s=String(v==null?'':v).replace(new RegExp('[\u0000-\u0020]','g'),'');
   if(!s)return'';
   if(/^(?:[a-z][a-z0-9+.-]*:|\/\/)/i.test(s)&&!/^https?:\/\//i.test(s))return'';
-  return s;
+  // Depois da checagem de esquema, nunca antes: a validacao olha o que veio.
+  return semChaveDoPlaces(s);
 }
 function escUrl(v){return esc(safeUrl(v));}
 // url('...') de CSS é outro contexto: o navegador decodifica a entidade HTML
@@ -2616,7 +2632,7 @@ async function paisPeloGoogle(s){
   const consulta=[s&&s.name,s&&s.address].filter(Boolean).join(', ');
   if(!consulta)return'';
   try{
-    const r=await fetch('https://places.googleapis.com/v1/places:searchText',{
+    const r=await googlePlaces('searchText',{
       method:'POST',
       headers:{'Content-Type':'application/json','X-Goog-Api-Key':GAPI,'X-Goog-FieldMask':'places.addressComponents'},
       body:JSON.stringify({textQuery:consulta,languageCode:'pt-BR',maxResultCount:1})
@@ -2702,7 +2718,7 @@ async function runExplore(){
   });
   const termo={food:'restaurantes',hotel:'hotéis',experience:'pontos turísticos'}[EXPLORE.cat];
   try{
-    const resp=await fetch('https://places.googleapis.com/v1/places:searchText',{
+    const resp=await googlePlaces('searchText',{
       method:'POST',
       headers:{'Content-Type':'application/json','X-Goog-Api-Key':GAPI,'X-Goog-FieldMask':'places.displayName,places.formattedAddress,places.addressComponents,places.photos,places.rating,places.userRatingCount,places.websiteUri,places.googleMapsUri,places.types,places.nationalPhoneNumber'},
       body:JSON.stringify({textQuery:`${termo} em ${city}`,languageCode:'pt-BR',maxResultCount:20})
@@ -2751,9 +2767,58 @@ const GAPI='AIzaSyDYUDC3BkvUYSjlBVX2C6BZ8pMmycxfYUQ';
 // Monta as URLs de foto de um resultado do Places. Estava copiado em duas
 // buscas e simplesmente esquecido na terceira (o check-in), que é por isso
 // que spot de check-in nunca tinha foto.
+// ═══ PONTE PRO GOOGLE PLACES ═══
+//
+// Toda busca de lugar passa por aqui, e daqui vai pra /api/places — a function
+// que guarda a chave no servidor, valida a entrada campo a campo, cacheia e
+// tem teto de gasto. A chave do Places COBRA POR REQUISIÇÃO no cartão do dono
+// da conta, e no client ela é copiável por qualquer um que abra o código.
+//
+// A assinatura imita o `fetch` de propósito: devolve algo com `.ok` e
+// `.json()`, e recebe o mesmo objeto de opções. Assim os 12 pontos de chamada
+// ficaram idênticos ao que eram, trocando só a função — nada de reescrever
+// doze blocos. Essa migração já foi tentada uma vez, foi revertida e levou
+// junto uma função que outra feature usava; quanto menos código muda, menor a
+// chance de repetir isso.
+//
+// FALLBACK: se o proxy não estiver utilizável, cai na chamada direta. Isso é
+// transitório e existe pra que religar o cliente NÃO possa quebrar a busca do
+// app — que é a função central dele. Some junto com o GAPI no passo seguinte,
+// depois de confirmado que a GOOGLE_PLACES_KEY está no Cloudflare.
+async function googlePlaces(op,opts){
+  const h=opts&&opts.headers||{};
+  const mask=h['X-Goog-FieldMask']||h['x-goog-fieldmask']||'';
+  let corpo={};
+  try{corpo=JSON.parse((opts&&opts.body)||'{}')}catch(e){}
+  let motivo='';
+  try{
+    const tk=await ensureToken();
+    const r=await fetch('/api/places',{
+      method:'POST',
+      headers:Object.assign({'Content-Type':'application/json'},tk?{'Authorization':'Bearer '+tk}:{}),
+      body:JSON.stringify(Object.assign({op,fields:mask},corpo))
+    });
+    if(r.ok){
+      const d=await r.json().catch(()=>null);
+      // `capped` NÃO cai pro direto: o teto existe justamente pra segurar o
+      // gasto, e furá-lo por fora tornaria o teto decorativo.
+      if(d&&d.capped)return{ok:true,json:async()=>({places:[]}),capped:true};
+      if(d&&d.configured===false){motivo='sem_chave_no_servidor'}
+      else return{ok:true,json:async()=>(d||{places:[]})};
+    }
+    else if(r.status===404)motivo='function_nao_publicada';
+    else if(r.status===401)motivo='sem_sessao';
+    else if(r.status===400)motivo='payload_recusado';  // bug meu: quero ver no console
+    else return{ok:false,status:r.status,json:async()=>({places:[]})};
+  }catch(e){motivo='rede'}
+  console.warn('places: caiu na chamada direta ('+motivo+')');
+  return fetch('https://places.googleapis.com/v1/places:'+op,opts);
+}
 function placePhotoUrl(p,largura){
   const ref=(p&&p.photos&&p.photos[0]&&p.photos[0].name)||'';
-  return ref?'https://places.googleapis.com/v1/'+ref+'/media?maxWidthPx='+largura+'&key='+GAPI:'';
+  // Sem a chave: /api/place-photo resolve o 302 do Google no servidor e
+  // reencaminha pro CDN, cujo endereço não tem chave nenhuma.
+  return ref?'/api/place-photo?ref='+encodeURIComponent(ref)+'&w='+largura:'';
 }
 // Ponte pro endereco de foto. HOJE ela nao faz nada: a foto vem do Places
 // com a chave na propria URL, que e o estado pro qual o app voltou quando a
@@ -2798,7 +2863,7 @@ function showNearbySuggestions(){
     const{latitude,longitude}=pos.coords;
     const tipo={food:'restaurant',hotel:'lodging',experience:'tourist_attraction'}[S.addCat]||'point_of_interest';
     try{
-      const resp=await fetch('https://places.googleapis.com/v1/places:searchNearby',{
+      const resp=await googlePlaces('searchNearby',{
         method:'POST',
         headers:{'Content-Type':'application/json','X-Goog-Api-Key':GAPI,'X-Goog-FieldMask':'places.displayName,places.formattedAddress,places.addressComponents,places.photos,places.rating,places.userRatingCount,places.websiteUri,places.googleMapsUri,places.types,places.nationalPhoneNumber'},
         body:JSON.stringify({includedTypes:[tipo],maxResultCount:8,languageCode:'pt-BR',locationRestriction:{circle:{center:{latitude,longitude},radius:600}}})
@@ -2839,7 +2904,7 @@ function maybeShowCheckin(){
   navigator.geolocation.getCurrentPosition(async(pos)=>{
     const{latitude,longitude}=pos.coords;
     try{
-      const resp=await fetch('https://places.googleapis.com/v1/places:searchNearby',{
+      const resp=await googlePlaces('searchNearby',{
         method:'POST',
         headers:{'Content-Type':'application/json','X-Goog-Api-Key':GAPI,'X-Goog-FieldMask':'places.displayName,places.formattedAddress,places.addressComponents,places.rating,places.userRatingCount,places.types,places.websiteUri,places.googleMapsUri,places.location,places.photos'},
         // rankPreference:DISTANCE fazia o pin literalmente mais próximo ganhar
@@ -2935,7 +3000,7 @@ function searchPlaces(v){
   const myReqId=++searchReqId;
   searchTO=setTimeout(async()=>{
     try{
-      const resp=await fetch('https://places.googleapis.com/v1/places:searchText',{
+      const resp=await googlePlaces('searchText',{
         method:'POST',
         headers:{'Content-Type':'application/json','X-Goog-Api-Key':GAPI,'X-Goog-FieldMask':'places.id,places.displayName,places.formattedAddress,places.addressComponents,places.location,places.photos,places.rating,places.websiteUri,places.googleMapsUri,places.types,places.nationalPhoneNumber'},
         body:JSON.stringify({textQuery:v,languageCode:'pt-BR',maxResultCount:6})
@@ -3061,7 +3126,7 @@ async function canonizarCidade(nome,pais){
   const consulta=async(estrito)=>{
     const corpo={textQuery:nome+(pais?', '+pais:''),languageCode:'pt-BR',maxResultCount:1};
     if(estrito){corpo.includedType='locality';corpo.strictTypeFiltering=true}
-    const r=await fetch('https://places.googleapis.com/v1/places:searchText',{
+    const r=await googlePlaces('searchText',{
       method:'POST',
       headers:{'Content-Type':'application/json','X-Goog-Api-Key':GAPI,'X-Goog-FieldMask':'places.displayName,places.types'},
       body:JSON.stringify(corpo)
@@ -3502,7 +3567,7 @@ function filterNewTripCity(v){
   const myReqId=++newTripReqId;
   newTripSearchTO=setTimeout(async()=>{
     try{
-      const resp=await fetch('https://places.googleapis.com/v1/places:searchText',{
+      const resp=await googlePlaces('searchText',{
         method:'POST',
         headers:{'Content-Type':'application/json','X-Goog-Api-Key':GAPI,'X-Goog-FieldMask':'places.displayName,places.formattedAddress,places.addressComponents,places.types'},
         body:JSON.stringify({textQuery:v,languageCode:'pt-BR',maxResultCount:6})
@@ -3864,7 +3929,7 @@ async function corrigirCidadesAntigas(opcoes){
     try{
       // O endereco salvo e a melhor pista: e o mesmo texto que o Google
       // devolveu quando o spot foi criado.
-      const resp=await fetch('https://places.googleapis.com/v1/places:searchText',{
+      const resp=await googlePlaces('searchText',{
         method:'POST',
         headers:{'Content-Type':'application/json','X-Goog-Api-Key':GAPI,
           'X-Goog-FieldMask':'places.displayName,places.addressComponents'},
@@ -4182,7 +4247,7 @@ async function buscarInstagramAgora(id,btn){
   let site=/instagram\.com/i.test(s.website_url||'')?'':(s.website_url||'');
   if(!site){
     try{
-      const resp=await fetch('https://places.googleapis.com/v1/places:searchText',{
+      const resp=await googlePlaces('searchText',{
         method:'POST',
         headers:{'Content-Type':'application/json','X-Goog-Api-Key':GAPI,'X-Goog-FieldMask':'places.displayName,places.websiteUri'},
         body:JSON.stringify({textQuery:s.name+(cityOf(s)?' '+cityOf(s):''),languageCode:'pt-BR',maxResultCount:5})
@@ -4238,7 +4303,7 @@ async function autoBackfillPlaceLinks(){
       const patch={};
       let googleSite='',mapsUrl=null,fone='';
       if(precisaInstagram||s.maps_url===null||precisaFone){
-        const resp=await fetch('https://places.googleapis.com/v1/places:searchText',{
+        const resp=await googlePlaces('searchText',{
           method:'POST',
           headers:{'Content-Type':'application/json','X-Goog-Api-Key':GAPI,'X-Goog-FieldMask':'places.displayName,places.websiteUri,places.googleMapsUri,places.nationalPhoneNumber'},
           body:JSON.stringify({textQuery:s.name+(cityOf(s)?' '+cityOf(s):''),languageCode:'pt-BR',maxResultCount:5})
@@ -4302,7 +4367,7 @@ async function healSpotPhoto(id){
     // procurar "Saiko Sao Paulo" nao acha nada se o Saiko for de outra cidade,
     // e o spot ficava sem foto pra sempre por causa de um campo torto.
     const buscar=async(comCidade)=>{
-      const resp=await fetch('https://places.googleapis.com/v1/places:searchText',{
+      const resp=await googlePlaces('searchText',{
         method:'POST',
         headers:{'Content-Type':'application/json','X-Goog-Api-Key':GAPI,'X-Goog-FieldMask':'places.displayName,places.photos,places.addressComponents,places.websiteUri,places.googleMapsUri'},
         body:JSON.stringify({textQuery:s.name+(comCidade&&cityOf(s)?' '+cityOf(s):''),languageCode:'pt-BR',maxResultCount:5})
