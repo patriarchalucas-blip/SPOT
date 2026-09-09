@@ -1496,17 +1496,21 @@ async function signOut(){if(!confirm('Sair do Spot?'))return;try{await sb.auth.s
 // Exigência da Apple (5.1.1 v) pra publicar na App Store: quem cria conta
 // tem que poder apagá-la no app, sem falar com suporte. Vale pra LGPD também.
 //
-// UMA chamada: delete_my_account() (migração 013) apaga dados, fotos e conta
-// numa transação só.
+// Três passos, e cada um existe por um motivo descoberto errando:
 //
-// Aqui existiu uma versão em duas etapas — o cliente apagava as fotos pela API
-// de storage e só depois chamava a função. Estava errado, e de um jeito que só
-// aparece quando falha: o cliente não participa da transação do banco, então
-// SEMPRE sobrava uma ordem ruim possível. Apagando foto primeiro, um erro na
-// função deixava a pessoa sem as fotos e com a conta viva. Apagando conta
-// primeiro, um erro no storage deixava as fotos no ar sem dono pra pedir
-// remoção. Apagar a linha de storage.objects dentro da função resolve os dois:
-// a URL pública passa pela tabela, e sem a linha ela devolve 404.
+//   1. ENSAIO — delete_my_account(true) roda todos os deletes de verdade e
+//      desfaz no fim. Se o caminho estiver quebrado, descobrimos aqui, sem
+//      ter tocado em nada.
+//   2. FOTOS — pela API de storage, do cliente. Não dá pra fazer no banco: o
+//      Supabase tem um gatilho (storage.protect_delete) que proíbe DELETE em
+//      storage.objects por SQL. A tentativa está registrada na migração 014.
+//   3. CONTA — delete_my_account(), a valer.
+//
+// A ordem 2 antes de 3 é deliberada. Ao contrário, um erro no storage deixaria
+// as fotos públicas SEM DONO pra pedir remoção — ninguém mais conseguiria
+// apagá-las. Nesta ordem, o pior caso é perder as fotos e manter a conta, que
+// se resolve tentando de novo. E o passo 1 encolhe até essa chance: o caminho
+// já foi provado antes de a primeira foto ser tocada.
 function abrirExcluirConta(){
   const c=document.getElementById('confirmaExcluir');
   if(c)c.value='';
@@ -1521,34 +1525,80 @@ function atualizarBotaoExcluir(){
   btn.style.opacity=ok?'1':'.4';
   btn.style.pointerEvents=ok?'auto':'none';
 }
+// Apaga tudo que estiver na pasta do usuário no bucket `uploads`. Cada upload
+// vive em uploads/<user_id>/..., então a pasta é a identidade do dono (ver
+// uploadToStorage e a policy da migração 003).
+async function apagarMinhasFotos(){
+  const uid=S.user.id;
+  for(let volta=0;volta<20;volta++){   // teto: não trava se a API repetir página
+    const r=await sbFetch('/storage/v1/object/list/uploads',{
+      method:'POST',
+      body:JSON.stringify({prefix:uid+'/',limit:100,offset:0})
+    },{'Content-Type':'application/json'});
+    if(!r.ok){console.error('list storage',r.status,await r.text().catch(()=>''));return false}
+    const itens=await r.json().catch(()=>null);
+    if(!Array.isArray(itens)||!itens.length)return true;
+    const caminhos=itens.filter(x=>x&&x.name).map(x=>uid+'/'+x.name);
+    if(!caminhos.length)return true;
+    const d=await sbFetch('/storage/v1/object/uploads',{
+      method:'DELETE',
+      body:JSON.stringify({prefixes:caminhos})
+    },{'Content-Type':'application/json'});
+    if(!d.ok){console.error('delete storage',d.status,await d.text().catch(()=>''));return false}
+    if(itens.length<100)return true;   // era a última página
+  }
+  return true;
+}
+// Chama a função e devolve {ok, texto}. Não usa dbRpc de propósito: ele engole
+// o erro e devolve [], e em exclusão de conta "não sei se deu certo" é a pior
+// resposta possível.
+async function chamarExclusao(ensaio){
+  try{
+    const r=await sbFetch('/rest/v1/rpc/delete_my_account',
+      {method:'POST',body:JSON.stringify({dry_run:!!ensaio})},
+      {'Content-Type':'application/json'});
+    const txt=await r.text().catch(()=>'');
+    return{ok:r.ok,status:r.status,texto:txt};
+  }catch(e){return{ok:false,status:0,texto:'',rede:true}}
+}
+function motivoDaFalha(r){
+  if(r.rede)return'Sem conexão. Sua conta continua intacta.';
+  const t=r.texto||'';
+  if(r.status===404||/not find|does not exist|PGRST202/i.test(t))
+    return'Falta rodar a migração 014 no Supabase.';
+  // A função existe mas o dono não tem direito de apagar de auth.users.
+  if(/permission denied|must be owner|insufficient privilege/i.test(t))
+    return'A função existe mas não tem permissão pra apagar a conta. Rodar a 014 pelo SQL Editor resolve.';
+  return'Sua conta continua intacta. Tenta de novo.';
+}
 async function excluirConta(){
   const btn=document.getElementById('btnExcluirConta');
-  btn.textContent='Excluindo...';btn.style.pointerEvents='none';
+  const voltar=()=>{btn.textContent='Excluir minha conta';atualizarBotaoExcluir()};
+  btn.textContent='Verificando...';btn.style.pointerEvents='none';
 
-  // Aqui NÃO dá pra usar dbRpc: ele engole o erro e devolve [], e numa
-  // exclusão de conta "não sei se deu certo" é a pior resposta possível.
-  let r;
-  try{
-    r=await sbFetch('/rest/v1/rpc/delete_my_account',{method:'POST',body:'{}'},{'Content-Type':'application/json'});
-  }catch(e){
-    btn.textContent='Excluir minha conta';atualizarBotaoExcluir();
-    toast('Não deu pra excluir','Sem conexão. Sua conta continua intacta.','alert');
+  // 1) Ensaio: prova o caminho inteiro sem apagar nada.
+  const ensaio=await chamarExclusao(true);
+  if(!ensaio.ok){
+    console.error('ensaio',ensaio.status,ensaio.texto);
+    voltar();
+    toast('Não deu pra excluir',motivoDaFalha(ensaio),'alert');
     return;
   }
+
+  // 2) Fotos. Só agora, com o caminho já provado.
+  btn.textContent='Excluindo...';
+  if(!await apagarMinhasFotos()){
+    voltar();
+    toast('Não deu pra excluir','Não consegui apagar suas fotos. Sua conta continua intacta — tenta de novo.','alert');
+    return;
+  }
+
+  // 3) A conta, a valer.
+  const r=await chamarExclusao(false);
   if(!r.ok){
-    const txt=await r.text().catch(()=>'');
-    console.error('delete_my_account',r.status,txt);
-    btn.textContent='Excluir minha conta';atualizarBotaoExcluir();
-    // Três diagnósticos diferentes, porque levam a três ações diferentes.
-    const falta=r.status===404||/not find|does not exist|PGRST202/i.test(txt);
-    // "permission denied" significa que a função existe mas o dono dela não
-    // tem direito de apagar de auth.users. É a única parte da migração 013
-    // que depende de qual papel rodou o SQL, e não dá pra prever de fora.
-    const semDireito=/permission denied|must be owner|insufficient privilege/i.test(txt);
-    const msg=falta?'Falta rodar a migração 013 no Supabase.'
-      :semDireito?'A função existe mas não tem permissão pra apagar a conta. Rodar a 013 pelo SQL Editor (não por outro cliente) resolve.'
-      :'Sua conta continua intacta. Tenta de novo.';
-    toast('Não deu pra excluir',msg,'alert');
+    console.error('delete_my_account',r.status,r.texto);
+    voltar();
+    toast('Não deu pra excluir',motivoDaFalha(r),'alert');
     return;
   }
   // Conta apagada: o token não vale mais nada. Encerra a sessão local e
