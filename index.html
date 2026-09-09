@@ -4429,6 +4429,16 @@ function onSpotPhotoFileChosen(input){
 }
 // onerror da <img>: troca pelo ícone da categoria agora e tenta consertar pra próxima
 function onSpotPhotoError(img,id,cat){
+  // Se o que falhou foi o PROXY (/api/place-photo) e a URL gravada no banco é
+  // a direta do Google, tenta a direta antes de qualquer outra coisa. Sem isso,
+  // um proxy fora do ar ou mal configurado derruba todas as fotos de uma vez —
+  // e o healSpotPhoto abaixo ainda gastaria uma busca no Google por thumbnail
+  // pra gravar outra URL de proxy que falharia igual. Uma vez só por <img>.
+  const s=findSpotById(id);
+  const cru=s&&s.photo_url;
+  if(!img.dataset.cru&&/\/api\/place-photo/.test(img.src)&&cru&&/^https:\/\/places\.googleapis\.com\//i.test(cru)){
+    img.dataset.cru='1';img.src=cru;return;
+  }
   const box=img.parentElement;
   thumbFallback(img,cat);
   healSpotPhoto(id).then(url=>{

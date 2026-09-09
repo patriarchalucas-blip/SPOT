@@ -26,7 +26,12 @@ const CAP_MENSAL = 30000;
 const TTL_OK = 60 * 60 * 24 * 7;   // o link do CDN não é eterno; 7 dias é conservador
 const TTL_FALHA = 60 * 10;
 
-export const REF_OK = /^places\/[A-Za-z0-9_-]{1,120}\/photos\/[A-Za-z0-9_-]{1,300}$/;
+// O id da foto que o Google devolve hoje tem ~436 caracteres (medido no
+// Botanikafé). O limite anterior era 300, e isso recusava com 400 TODA foto
+// real antes de chegar em qualquer outra checagem — foi o que apagou as fotos
+// de restaurante do app inteiro quando o cliente passou a usar este proxy.
+// 1000 dá folga pra o Google crescer o id sem voltar a quebrar aqui.
+export const REF_OK = /^places\/[A-Za-z0-9_-]{1,120}\/photos\/[A-Za-z0-9_-]{1,1000}$/;
 
 export async function onRequestGet(context) {
   const { request, env } = context;
