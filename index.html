@@ -1121,12 +1121,35 @@ function esc(v){return String(v==null?'':v).replace(/[&<>"'`]/g,function(c){retu
 //
 // Isso conserta a EXIBICAO. O valor gravado continua com a chave ate um
 // backfill reescrever a coluna — residuo conhecido, anotado de proposito.
+// INTERRUPTOR. false = foto vem direto do Google (chave na URL, estado
+// anterior ao proxy). true = foto passa por /api/place-photo.
+//
+// Está em false porque a GOOGLE_PLACES_KEY NÃO está configurada no Cloudflare
+// (09/09/2026): com ela ausente o proxy responde 404 pra todo ref, e ligar a
+// reescrita apagou todas as fotos de restaurante do app. A busca não caiu
+// junto porque tem fallback pro caminho direto — a foto não tinha. Ligar de
+// volta só depois de o proxy responder 302 pra um ref REAL (436 chars, não
+// um inventado — foi testar com ref inventado que deixou isso passar).
+const FOTO_PELO_PROXY=false;
 const RE_FOTO_PLACES=/^https:\/\/places\.googleapis\.com\/v1\/(places\/[^/]+\/photos\/[^/]+)\/media\?(.*)$/i;
+const RE_FOTO_PROXY=/^\/api\/place-photo\?ref=([^&]+)&w=(\d+)$/i;
+// Normaliza a URL de foto pro caminho que está LIGADO, seja o que estiver
+// gravado no banco. Existem linhas nos dois formatos: as antigas com a URL
+// direta, e as gravadas em 08–09/09 com a de proxy. Converter na exibição faz
+// as duas funcionarem sem migrar nada — em qualquer posição do interruptor.
 function semChaveDoPlaces(u){
-  const m=String(u||'').match(RE_FOTO_PLACES);
+  const s=String(u||'');
+  if(FOTO_PELO_PROXY){
+    const m=s.match(RE_FOTO_PLACES);
+    if(!m)return u;
+    const w=(m[2].match(/maxWidthPx=(\d+)/)||[])[1]||'400';
+    return'/api/place-photo?ref='+encodeURIComponent(m[1])+'&w='+w;
+  }
+  const m=s.match(RE_FOTO_PROXY);
   if(!m)return u;
-  const w=(m[2].match(/maxWidthPx=(\d+)/)||[])[1]||'400';
-  return'/api/place-photo?ref='+encodeURIComponent(m[1])+'&w='+w;
+  let ref='';try{ref=decodeURIComponent(m[1])}catch(e){return u}
+  if(!/^places\/[A-Za-z0-9_-]+\/photos\/[A-Za-z0-9_-]+$/.test(ref))return u;
+  return'https://places.googleapis.com/v1/'+ref+'/media?maxWidthPx='+m[2]+'&key='+GAPI;
 }
 function safeUrl(v){
   // controle/espaco fora primeiro: "java\nscript:" passaria pelo teste abaixo
@@ -2816,9 +2839,11 @@ async function googlePlaces(op,opts){
 }
 function placePhotoUrl(p,largura){
   const ref=(p&&p.photos&&p.photos[0]&&p.photos[0].name)||'';
-  // Sem a chave: /api/place-photo resolve o 302 do Google no servidor e
-  // reencaminha pro CDN, cujo endereço não tem chave nenhuma.
-  return ref?'/api/place-photo?ref='+encodeURIComponent(ref)+'&w='+largura:'';
+  if(!ref)return'';
+  // Ver FOTO_PELO_PROXY. Com o proxy ligado, a URL não carrega chave: o
+  // servidor resolve o 302 do Google e reencaminha pro CDN.
+  if(FOTO_PELO_PROXY)return'/api/place-photo?ref='+encodeURIComponent(ref)+'&w='+largura;
+  return'https://places.googleapis.com/v1/'+ref+'/media?maxWidthPx='+largura+'&key='+GAPI;
 }
 // Ponte pro endereco de foto. HOJE ela nao faz nada: a foto vem do Places
 // com a chave na propria URL, que e o estado pro qual o app voltou quando a
