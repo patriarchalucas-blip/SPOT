@@ -629,13 +629,20 @@ body{font-family:'DM Sans',sans-serif;background:var(--dark);max-width:430px;mar
    muda. Com teclado, a ficha inteira sobe pra cima dele em vez de ficar
    escondida atras — o `vh` do iOS nao encolhe quando o teclado abre, entao
    sem essa conta o fim da ficha fica embaixo do teclado. */
-.overlay{position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:200;display:none;align-items:flex-end;backdrop-filter:blur(4px);padding-bottom:var(--kb,0px)}
+/* O overlay É a área visível, medida pelo visualViewport (--vv-t/--vv-h no JS,
+   ver "TECLADO"). Assim `align-items:flex-end` encosta a ficha no topo do
+   teclado sem nenhuma conta minha.
+   A versão anterior usava inset:0 + padding-bottom:--kb, na suposição de que
+   isso empurraria a ficha pra cima. No iPhone do Lucas a ficha foi pra TRÁS
+   do teclado: sobrava só a primeira linha do título. Medir a área visível e
+   ocupar exatamente ela remove a suposição. */
+.overlay{position:fixed;left:0;right:0;top:var(--vv-t,0px);height:var(--vv-h,100dvh);background:rgba(0,0,0,0.5);z-index:200;display:none;align-items:flex-end;backdrop-filter:blur(4px);padding-top:28px}
 .overlay.show{display:flex}
-.sheet{background:var(--white);border-radius:24px 24px 0 0;width:100%;max-width:430px;margin:0 auto;max-height:calc(90vh - var(--kb,0px));overflow-y:auto;scrollbar-width:none;animation:slideUp .28s ease;position:relative;box-shadow:var(--shadow-lg)}
+.sheet{background:var(--white);border-radius:24px 24px 0 0;width:100%;max-width:430px;margin:0 auto;max-height:100%;overflow-y:auto;scrollbar-width:none;animation:slideUp .28s ease;position:relative;box-shadow:var(--shadow-lg)}
 /* Ficha de lista longa: quem rola e a LISTA, nao a ficha. Assim titulo,
    busca e botao ficam parados enquanto a lista encolhe ao digitar — antes a
    ficha inteira encolhia junto e os resultados desciam pro pe da tela. */
-.sheet-fixa{display:flex;flex-direction:column;overflow:hidden;height:max(220px,calc(90vh - var(--kb,0px)))}
+.sheet-fixa{display:flex;flex-direction:column;overflow:hidden;height:100%}
 .sheet-fixa .lista-rolante{flex:1;min-height:0;overflow-y:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none}
 .sheet-fixa .lista-rolante::-webkit-scrollbar{display:none}
 .sheet-fixa .sheet-cta{flex:none;margin-bottom:24px}
@@ -1148,6 +1155,20 @@ function semChaveDoPlaces(u){
   if(!/^places\/[A-Za-z0-9_-]+\/photos\/[A-Za-z0-9_-]+$/.test(ref))return u;
   return'https://places.googleapis.com/v1/'+ref+'/media?maxWidthPx='+m[2]+'&key='+GAPI;
 }
+// Largura sob medida pro tamanho de EXIBICAO. A foto era gravada pedindo
+// 400–800px de largura e usada num thumb de ~90px: o app baixava de 4 a 8
+// vezes mais byte do que mostra, em toda linha de toda lista. Reescrever o
+// maxWidthPx na hora de exibir corta isso sem mexer no que esta gravado.
+//
+// So toca URL de foto do Places (a direta e a de proxy). Qualquer outra passa
+// intacta — foto de perfil no storage, por exemplo.
+function fotoNaLargura(u,w){
+  const s=String(u||'');
+  if(!s)return s;
+  if(RE_FOTO_PLACES.test(s))return s.replace(/maxWidthPx=\d+/,'maxWidthPx='+w);
+  if(RE_FOTO_PROXY.test(s))return s.replace(/&w=\d+$/,'&w='+w);
+  return s;
+}
 function safeUrl(v){
   // controle/espaco fora primeiro: "java\nscript:" passaria pelo teste abaixo
   const s=String(v==null?'':v).replace(new RegExp('[\u0000-\u0020]','g'),'');
@@ -1211,25 +1232,33 @@ document.addEventListener('focusin',function(e){
     if(cta)cta.scrollIntoView({block:'end',behavior:'smooth'});
   },300);
 });
-// ═══ TECLADO ═══
-// O teclado do celular nao encolhe o `vh` (nem no iOS nem no Chrome Android
-// com o comportamento padrao), entao qualquer ficha dimensionada em vh fica
-// com o fim dela escondida atras do teclado. Era o que acontecia ao buscar
-// pais: a lista encolhia ao digitar e os resultados restantes caiam justamente
-// na faixa coberta. visualViewport e a unica medida que sabe da existencia do
-// teclado — daqui ela vira a variavel --kb, e o CSS resolve o resto.
+// ═══ TECLADO / ÁREA VISÍVEL ═══
+// O teclado do celular nao encolhe o `vh`, entao ficha dimensionada em vh
+// termina atras dele. `visualViewport` e a unica medida que sabe do teclado.
+//
+// Aqui eu ja errei uma vez: exportava so a ALTURA do teclado (--kb) e o CSS
+// usava isso como padding-bottom do overlay, supondo que empurraria a ficha
+// pra cima. No iPhone a ficha foi pra tras do teclado — sobrou a primeira
+// linha do titulo. Agora exporta a AREA VISIVEL (topo + altura), o overlay
+// ocupa exatamente ela, e `align-items:flex-end` encosta a ficha no teclado
+// sem conta nenhuma. Menos aritmetica minha, menos suposicao.
 (function(){
   const vv=window.visualViewport;
-  if(!vv)return;   // navegador sem visualViewport: fica como era, sem piorar
-  let ultimo=-1;
+  const raiz=document.documentElement;
+  if(!vv){raiz.style.setProperty('--vv-h','100dvh');return}
+  let ah=-1,at=-1;
   function medir(){
-    // A conta so vale quando a pagina nao esta com zoom: com pinch-zoom, a
-    // diferenca de altura e o zoom, nao o teclado.
-    const bruto=window.innerHeight-(vv.height+vv.offsetTop);
-    const kb=vv.scale>1.01?0:Math.max(0,Math.round(bruto));
-    if(kb===ultimo)return;
-    ultimo=kb;
-    document.documentElement.style.setProperty('--kb',kb+'px');
+    // Com pinch-zoom a altura visivel encolhe por causa do zoom, nao do
+    // teclado: nesse caso volta pra tela inteira em vez de mentir.
+    const zoom=vv.scale>1.01;
+    const h=zoom?window.innerHeight:Math.round(vv.height);
+    const t=zoom?0:Math.round(vv.offsetTop);
+    if(h===ah&&t===at)return;
+    ah=h;at=t;
+    raiz.style.setProperty('--vv-h',h+'px');
+    raiz.style.setProperty('--vv-t',t+'px');
+    // --kb continua exportado: e o numero que a mensagem de diagnostico usa.
+    raiz.style.setProperty('--kb',Math.max(0,window.innerHeight-(h+t))+'px');
   }
   vv.addEventListener('resize',medir);
   vv.addEventListener('scroll',medir);
@@ -1684,6 +1713,7 @@ async function loadDashboard(){
   renderTrips();populateTripOpts();
   revalidarInstagramsAntigos().then(autoBackfillPlaceLinks); // silencioso, não bloqueia nada
   corrigirCidadesAntigas(); // idem — conserta o que a regra velha gravou errado
+  buscarFotosQueFaltam();  // idem — spot que nunca teve foto nunca se consertava
   maybeShowCheckin(); // idem — só aparece se achar algo, nunca trava a tela
   for(const t of S.trips){
     ts+=t._spots.length;
@@ -1861,7 +1891,7 @@ function renderList(){
       const nota=s.my_rating?('★ '+fmtRating(s.my_rating)):(s.rating_google?('☆ '+fmtRating(s.rating_google)):'');
       // <img> em vez de background-image: só assim dá pra detectar foto quebrada
       // (referência do Google expirada) e disparar o auto-conserto
-      const thumb=s.photo_url?`<div class="lthumb"><img src="${escUrl(s.photo_url)}" style="width:100%;height:100%;object-fit:cover;border-radius:inherit" onerror="onSpotPhotoError(this,'${esc(s.id)}','${esc(s.category)}')"></div>`:`<div class="lthumb">${catIcon(s.category)}</div>`;
+      const thumb=s.photo_url?`<div class="lthumb"><img src="${escUrl(fotoNaLargura(s.photo_url,220))}" loading="lazy" decoding="async" style="width:100%;height:100%;object-fit:cover;border-radius:inherit" onerror="onSpotPhotoError(this,'${esc(s.id)}','${esc(s.category)}')"></div>`:`<div class="lthumb">${catIcon(s.category)}</div>`;
       const local=[cityOf(s),s._country].filter(Boolean).join(' · ');
       h+=`<div class="lrow" onclick="openSpotFromList(${i})"><span class="lrank">${i+1}</span>${thumb}<div class="lmain"><div class="lname">${esc(s.name)}</div><div class="lmeta">${esc(local)}</div></div><div class="lright">${nota?`<span class="lrating">${esc(nota)}</span>`:''}<div class="place-status"><span class="status-dot dot-${s.status==='been'?'been':'want'}"></span><span class="place-status-label">${s.status==='been'?'Fui':'Quero ir'}</span></div></div></div>`;
     });
@@ -2147,7 +2177,7 @@ function renderCityBody(){
     const bc=s.category==='food'?'bar-food':s.category==='hotel'?'bar-hotel':'bar-experience';
     const dot=s.status==='been'?'dot-been':'dot-want';
     const tag=spotTag(s);
-    const thumb=s.photo_url?`<div class="place-thumb"><img src="${escUrl(s.photo_url)}" style="width:100%;height:100%;object-fit:cover;border-radius:inherit" onerror="onSpotPhotoError(this,'${esc(s.id)}','${esc(s.category)}')"></div>`:`<div class="place-thumb">${catIcon(s.category)}</div>`;
+    const thumb=s.photo_url?`<div class="place-thumb"><img src="${escUrl(fotoNaLargura(s.photo_url,220))}" loading="lazy" decoding="async" style="width:100%;height:100%;object-fit:cover;border-radius:inherit" onerror="onSpotPhotoError(this,'${esc(s.id)}','${esc(s.category)}')"></div>`:`<div class="place-thumb">${catIcon(s.category)}</div>`;
     h+=`<div class="place-row" onclick="openPlace('${esc(s.id)}','city')"><div class="place-bar ${bc}"></div><div class="place-row-main">${thumb}<div class="place-row-info"><div class="place-row-name">${esc(s.name)}</div><div class="place-row-note">${esc(s.my_note)}</div></div><div class="place-row-right">${tag?`<span class="place-type-tag">${esc(tag)}</span>`:''}<div class="place-status"><span class="status-dot ${dot}"></span><span class="place-status-label">${s.status==='been'?'Fui':'Quero ir'}</span></div></div></div></div>`;
   });
   b.innerHTML=h;
@@ -4446,6 +4476,51 @@ async function autoBackfillPlaceLinks(){
   }
   }finally{placeLinksBackfillRunning=false}
 }
+// ═══ FOTO QUE NUNCA EXISTIU ═══
+//
+// O auto-conserto (healSpotPhoto) só era acionado pelo `onerror` do <img>. Mas
+// o thumbnail é `s.photo_url ? <img onerror=...> : icone-da-categoria`: com
+// photo_url VAZIO não existe <img>, logo não existe onerror, logo o conserto
+// nunca rodava. O spot ficava com o garfo pra sempre.
+//
+// Foi o caso do Saikō • Katsu Sando Shop: conferido que o Google TEM foto dele
+// (achado nas quatro variações de busca, com e sem o "•" e o "ō") — o app
+// simplesmente nunca ia buscar.
+//
+// Teto de 6 por sessão e registro de quem já foi tentado: lugar que
+// genuinamente não tem foto no Google não pode custar uma busca por sessão
+// pra sempre.
+const FOTO_TENTADA='spot_foto_tentada_v1';
+const FOTO_TETO=6;
+function fotosJaTentadas(){
+  try{return new Set(JSON.parse(localStorage.getItem(FOTO_TENTADA)||'[]'))}catch(e){return new Set()}
+}
+function marcarFotoTentada(ids){
+  try{
+    const s=fotosJaTentadas();ids.forEach(i=>s.add(i));
+    localStorage.setItem(FOTO_TENTADA,JSON.stringify([...s].slice(-4000)));
+  }catch(e){}
+}
+async function buscarFotosQueFaltam(){
+  if(!S.user)return;
+  const feitos=fotosJaTentadas();
+  const alvos=allSpotsFlat().filter(s=>s&&s.name&&!s.photo_url&&!feitos.has(s.id)).slice(0,FOTO_TETO);
+  if(!alvos.length)return;
+  const tentados=[];
+  for(const s of alvos){
+    tentados.push(s.id);
+    try{
+      const url=await healSpotPhoto(s.id);
+      // Se achou, redesenha o que estiver na tela — senão a foto só apareceria
+      // no próximo carregamento.
+      if(url){
+        if(document.getElementById('city').classList.contains('active'))renderCityBody();
+        else if(document.getElementById('trip').classList.contains('active'))renderTripBody();
+      }
+    }catch(e){/* uma foto que falha nao pode parar as outras */}
+  }
+  marcarFotoTentada(tentados);
+}
 async function healSpotPhoto(id){
   if(!id||photoHealing.has(id))return null;
   const s=findSpotById(id);
@@ -4532,7 +4607,7 @@ function onSpotPhotoError(img,id,cat){
   const box=img.parentElement;
   thumbFallback(img,cat);
   healSpotPhoto(id).then(url=>{
-    if(url&&box)box.innerHTML='<img src="'+escUrl(url)+'" style="width:100%;height:100%;object-fit:cover;border-radius:inherit">';
+    if(url&&box)box.innerHTML='<img src="'+escUrl(fotoNaLargura(url,220))+'" loading="lazy" decoding="async" style="width:100%;height:100%;object-fit:cover;border-radius:inherit">';
   });
 }
 // Cache for city photos so we don't refetch
@@ -5661,7 +5736,7 @@ function friendSpotRowHTML(s,i){
   const bc=s.category==='food'?'bar-food':s.category==='hotel'?'bar-hotel':'bar-experience';
   const dot=s.status==='been'?'dot-been':'dot-want';
   const thumb=s.photo_url
-    ?'<div class="place-thumb"><img src="'+escUrl(s.photo_url)+'" style="width:100%;height:100%;object-fit:cover;border-radius:inherit" onerror="thumbFallback(this,\''+esc(s.category)+'\')"></div>'
+    ?'<div class="place-thumb"><img src="'+escUrl(fotoNaLargura(s.photo_url,220))+'" loading="lazy" decoding="async" style="width:100%;height:100%;object-fit:cover;border-radius:inherit" onerror="thumbFallback(this,\''+esc(s.category)+'\')"></div>'
     :'<div class="place-thumb">'+catIcon(s.category)+'</div>';
   const nota=s.my_rating?'★ '+fmtRating(s.my_rating):'';
   const tag=spotTag(s);
