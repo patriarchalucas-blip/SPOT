@@ -2135,16 +2135,16 @@ function renderCitySubcatFilter(){
   const t=S.curTrip;
   if(!t||!S.curCity||curCityCat!=='experience'){box.style.display='none';box.innerHTML='';return}
   const daCidade=(t._spots||[]).filter(s=>cityOf(s)===S.curCity&&s.category==='experience');
-  const presentes=EXP_SUBCATS.filter(sc=>daCidade.some(s=>s.subcategory===sc.key));
+  const presentes=EXP_SUBCATS.filter(sc=>daCidade.some(s=>temSubcat(s.subcategory,sc.key)));
   if(!presentes.length){box.style.display='none';box.innerHTML='';return}
   box.style.display='flex';
-  const semClas=daCidade.some(s=>!s.subcategory);
+  const semClas=daCidade.some(s=>!subcatsDe(s.subcategory).length);
   box.innerHTML=`<button class="subcat-chip${curCitySubcat===''?' on':''}" onclick="setCitySubcat('')">Todas ${daCidade.length}</button>`
     +presentes.map(sc=>{
-      const n=daCidade.filter(s=>s.subcategory===sc.key).length;
+      const n=daCidade.filter(s=>temSubcat(s.subcategory,sc.key)).length;
       return `<button class="subcat-chip${curCitySubcat===sc.key?' on':''}" onclick="setCitySubcat('${sc.key}')">${icon(sc.ic)} ${esc(sc.label)} ${n}</button>`;
     }).join('')
-    +(semClas?`<button class="subcat-chip${curCitySubcat==='__sem__'?' on':''}" onclick="setCitySubcat('__sem__')">Sem tipo ${daCidade.filter(s=>!s.subcategory).length}</button>`:'');
+    +(semClas?`<button class="subcat-chip${curCitySubcat==='__sem__'?' on':''}" onclick="setCitySubcat('__sem__')">Sem tipo ${daCidade.filter(s=>!subcatsDe(s.subcategory).length).length}</button>`:'');
 }
 function setCitySubcat(k){curCitySubcat=(curCitySubcat===k?'':k);renderCitySubcatFilter();renderCityBody()}
 // Cidades da viagem na ordem em que os cards foram desenhados. O card manda o
@@ -2184,7 +2184,7 @@ function renderCityBody(){
   const t=S.curTrip;if(!t||!S.curCity)return;
   let spots=(t._spots||[]).filter(s=>cityOf(s)===S.curCity&&s.category===curCityCat);
   if(curCityCat==='experience'&&curCitySubcat){
-    spots=curCitySubcat==='__sem__'?spots.filter(s=>!s.subcategory):spots.filter(s=>s.subcategory===curCitySubcat);
+    spots=curCitySubcat==='__sem__'?spots.filter(s=>!subcatsDe(s.subcategory).length):spots.filter(s=>temSubcat(s.subcategory,curCitySubcat));
   }
   if(!spots.length){b.innerHTML=`<div class="empty-state" style="padding:40px 24px"><div class="ei">${catIcon(curCityCat)}</div><h3>Nenhum spot aqui</h3><p>${curCitySubcat?'Nenhuma experiência desse tipo nesta cidade.':'Toca no + para adicionar'}</p></div>`;return}
   let h='';
@@ -2317,14 +2317,15 @@ function renderPlaceSubcat(){
   if(!s||s.category!=='experience'){sec.style.display='none';return}
   sec.style.display='block';
   document.getElementById('placeSubcatChips').innerHTML=EXP_SUBCATS.map(sc=>
-    `<button class="subcat-chip${s.subcategory===sc.key?' on':''}" onclick="setPlaceSubcat('${sc.key}')">${icon(sc.ic)} ${esc(sc.label)}</button>`
+    `<button class="subcat-chip${temSubcat(s.subcategory,sc.key)?' on':''}" onclick="setPlaceSubcat('${sc.key}')">${icon(sc.ic)} ${esc(sc.label)}</button>`
   ).join('');
 }
-// Grava na hora, igual ao Status — sem botão de salvar próprio. Tocar na que
-// já está marcada limpa o tipo (é opcional).
+// Grava na hora, igual ao Status — sem botão de salvar próprio. Tocar numa que
+// já está marcada tira só ela; os outros tipos ficam.
 async function setPlaceSubcat(k){
   const s=S.curPlace;if(!s)return;
-  const novo=s.subcategory===k?null:k;
+  const atuais=subcatsDe(s.subcategory);
+  const novo=subcatsPara(atuais.includes(k)?atuais.filter(x=>x!==k):atuais.concat(k))||null;
   const anterior=s.subcategory||null;
   s.subcategory=novo;renderPlaceSubcat();
   const{error}=await dbUpdate('spots',s.id,{subcategory:novo});
@@ -3463,15 +3464,20 @@ let addSubcat='';
 function renderSubcatChips(){
   const box=document.getElementById('subcatChips');
   box.innerHTML=EXP_SUBCATS.map(s=>
-    `<button class="subcat-chip${addSubcat===s.key?' on':''}" onclick="pickAddSubcat('${s.key}')">${icon(s.ic)} ${esc(s.label)}</button>`
+    `<button class="subcat-chip${temSubcat(addSubcat,s.key)?' on':''}" onclick="pickAddSubcat('${s.key}')">${icon(s.ic)} ${esc(s.label)}</button>`
   ).join('');
 }
 // Tocar na que já está marcada desmarca — subcategoria é opcional.
-function pickAddSubcat(k){addSubcat=(addSubcat===k?'':k);renderSubcatChips()}
+// Alterna DENTRO da seleção: marcar um não desmarca os outros.
+function pickAddSubcat(k){
+  const atuais=subcatsDe(addSubcat);
+  addSubcat=subcatsPara(atuais.includes(k)?atuais.filter(x=>x!==k):atuais.concat(k));
+  renderSubcatChips();
+}
 function resetNoteSheet(){
   addStatus='want';addRating=0;
   setTimeout(atualizarBotaoSalvar,0);
-  addSubcat=(S.addCat==='experience'&&S.selPlace&&S.selPlace.subcat)||'';
+  addSubcat=subcatsPara((S.addCat==='experience'&&S.selPlace&&S.selPlace.subcat)||'');
   document.getElementById('subcatRow').style.display=S.addCat==='experience'?'block':'none';
   if(S.addCat==='experience')renderSubcatChips();
   document.getElementById('stWant').classList.add('active');
@@ -3526,7 +3532,7 @@ async function resolverCidadeDoSpot(p,trip){
   const cidade=await resolverCidadeDoSpot(p,t);
   const rec={user_id:S.user.id,trip_id:t.id,name:p.name,category:S.addCat,my_note:note,city:cidade,address:p.address||'',photo_url:p.photo_url||'',place_type:catLabel(S.addCat),rating_google:p.rating_google||'',status:addStatus,website_url:p.website_url||'',maps_url:p.maps_url||''};
   // Só faz sentido em experiência — nas outras categorias a coluna fica nula
-  if(S.addCat==='experience'&&addSubcat)rec.subcategory=addSubcat;
+  if(S.addCat==='experience'&&subcatsDe(addSubcat).length)rec.subcategory=subcatsPara(addSubcat);
   if(p.phone)rec.phone=p.phone;
   if(addStatus==='been')rec.my_rating=addRating;
   let{data,error}=await dbInsert('spots',rec);
@@ -3970,9 +3976,29 @@ const EXP_SUBCATS=[
   {key:'nightlife',label:'Nightlife',ic:'food',types:['night_club','bar','pub','casino','comedy_club','karaoke','wine_bar']},
   {key:'wellness',label:'Wellness',ic:'check',types:['gym','spa','fitness_center','yoga_studio','massage','sauna','wellness_center','beauty_salon','public_bath']},
   {key:'cultura',label:'Cultura',ic:'menu',types:['museum','art_gallery','historical_landmark','church','monument','performing_arts_theater','opera_house','library','cultural_center','historical_place','tourist_attraction']},
-  {key:'passeio',label:'Passeio',ic:'compass',types:['tourist_attraction','travel_agency','boat_tour_agency','sightseeing_tour_agency','amusement_park','water_park','observation_deck','ferry_terminal','cable_car']}
+  {key:'passeio',label:'Passeio',ic:'compass',types:['tourist_attraction','travel_agency','boat_tour_agency','sightseeing_tour_agency','amusement_park','water_park','observation_deck','ferry_terminal','cable_car']},
+  {key:'compras',label:'Compras',ic:'suitcase',types:['shopping_mall','department_store','clothing_store','market','book_store','jewelry_store','gift_shop','shoe_store','home_goods_store','furniture_store','plaza']}
 ];
 function subcatByKey(k){return EXP_SUBCATS.find(s=>s.key===k)||null}
+// ═══ TIPO DE EXPERIÊNCIA: VÁRIOS POR SPOT ═══
+//
+// Um kayak em Dubrovnik é natureza E passeio; um mercado é compras E
+// gastronomia. Escolher um só obrigava a mentir.
+//
+// Guardado na MESMA coluna `subcategory`, separado por vírgula
+// ("natureza,passeio"). Sem migração: valor antigo de um tipo só continua
+// válido e é lido como lista de um elemento, e vazio/nulo vira lista vazia.
+// A ordem gravada é sempre a do EXP_SUBCATS, pra que dois spots com os mesmos
+// tipos tenham a mesma string.
+function subcatsDe(v){
+  if(Array.isArray(v))return v.filter(Boolean);
+  return String(v||'').split(',').map(x=>x.trim()).filter(k=>subcatByKey(k));
+}
+function subcatsPara(lista){
+  const tem=new Set(subcatsDe(lista));
+  return EXP_SUBCATS.filter(s=>tem.has(s.key)).map(s=>s.key).join(',');
+}
+function temSubcat(v,k){return subcatsDe(v).includes(k)}
 // Rótulos que a etiqueta da linha NÃO deve repetir: são o nome da própria
 // categoria, que a aba ativa e a barra colorida da linha já dizem.
 const TAGS_REDUNDANTES=['Comer & Beber','Onde Ficar','Experiência'];
@@ -3985,14 +4011,20 @@ function spotTag(s){
   const pt=(s&&s.place_type)||'';
   return TAGS_REDUNDANTES.includes(pt)?'':pt;
 }
-function subcatLabel(k){const s=subcatByKey(k);return s?s.label:''}
+// Com mais de um tipo, junta com "·" — cabe na etiqueta da linha e no
+// subtítulo do hero sem quebrar.
+function subcatLabel(v){
+  return subcatsDe(v).map(k=>subcatByKey(k).label).join(' · ');
+}
 // Cultura e Passeio dividem 'tourist_attraction'. A ordem do EXP_SUBCATS
 // decide o empate, e Cultura vem primeiro de propósito: um ponto turístico
 // com museu/igreja/monumento é o caso muito mais comum que um tour.
+// Devolve TODOS os tipos que casam, não o primeiro: "Dubrovnik Old Town
+// Kayaking" bate em natureza (marina) e passeio (boat_tour_agency), e o palpite
+// certo é os dois. O usuário desmarca o que não quiser.
 function guessSubcat(types){
   if(!types||!types.length)return'';
-  for(const s of EXP_SUBCATS){if(types.some(t=>s.types.includes(t)))return s.key}
-  return'';
+  return EXP_SUBCATS.filter(s=>types.some(t=>s.types.includes(t))).map(s=>s.key).join(',');
 }
 function catLabel(c){return{food:'Comer & Beber',hotel:'Onde Ficar',experience:'Experiência'}[c]||c}
 function flagFor(n){const c=COUNTRIES.find(x=>x.name===n);return c?c.flag:'🌍'}
