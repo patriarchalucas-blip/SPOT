@@ -252,7 +252,6 @@ body{font-family:'DM Sans',sans-serif;background:var(--dark);max-width:430px;mar
 .est-quer{font-family:var(--mono);font-size:10px;color:var(--amber);letter-spacing:.06em;flex-shrink:0}
 /* Chips de reserva: pequenos, lado a lado, so o nome. A seta diz que sai do
    app sem precisar de texto explicando. 44px de altura porque e alvo de toque. */
-.reserva-titulo{font-family:var(--mono);font-size:10.5px;letter-spacing:.14em;text-transform:uppercase;color:var(--ink3);margin:14px 0 8px}
 .coment-bloco{margin-top:8px}
 .coment-titulo{font-family:var(--mono);font-size:10.5px;letter-spacing:.14em;text-transform:uppercase;color:var(--ink3);margin-bottom:12px}
 .coment-item{display:flex;gap:10px;padding:10px 0;border-top:1px solid var(--border)}
@@ -274,7 +273,6 @@ body{font-family:'DM Sans',sans-serif;background:var(--dark);max-width:430px;mar
 .coment-enviar{min-height:44px;padding:0 18px;border:none;border-radius:var(--r-sm);background:var(--green);
   color:#fff;font-family:inherit;font-size:13.5px;font-weight:600;cursor:pointer;flex-shrink:0}
 .coment-enviar:active{opacity:.75}
-.reserva-linha{display:flex;gap:8px;margin-bottom:10px}
 /* O NOME fica sempre — botao que precisa de uma tela explicando o que e
    esta errado, e a saida certa nao e uma confirmacao a mais (abrir link nao e
    acao destrutiva; confirmar so cobra um toque extra pra sempre). O
@@ -284,14 +282,6 @@ body{font-family:'DM Sans',sans-serif;background:var(--dark);max-width:430px;mar
    E o logotipo continua de fora: arte de marca registrada num app da problema
    quando ele cresce, e o arquivo oficial so vem com licenca pra quem entra no
    programa de afiliados deles. */
-.reserva-chip{flex:1;min-height:46px;display:flex;align-items:center;justify-content:center;gap:7px;
-  border:1px solid var(--border);border-radius:var(--r-sm);background:transparent;
-  font-size:13.5px;color:var(--ink);text-decoration:none;font-weight:600}
-.reserva-chip:active{opacity:.6}
-.reserva-chip::before{content:'';width:7px;height:7px;border-radius:50%;flex-shrink:0}
-.reserva-chip::after{content:'↗';font-size:10.5px;color:var(--ink3);font-weight:400}
-.reserva-booking::before{background:#0071c2}
-.reserva-hoteis::before{background:#D32F2F}
 .amg-linha{cursor:pointer}
 .amg-linha:active{opacity:.6}
 .amg-chip i{font-family:var(--mono);font-style:normal;font-size:10.5px;letter-spacing:.04em;color:var(--amber)}
@@ -1026,7 +1016,7 @@ svg.ic path,svg.ic circle,svg.ic line,svg.ic polyline,svg.ic rect{fill:none;stro
 
 <div class="overlay" id="ov-cat" onclick="closeOut(event,'ov-cat')"><div class="sheet"><button class="sheet-close" onclick="closeOv('ov-cat')" data-ic="close" aria-label="Fechar"></button><div class="sheet-handle"></div><div class="sheet-title">Qual categoria?</div><div class="step-dots"><div class="step-dot active"></div><div class="step-dot"></div><div class="step-dot"></div></div><div class="cat-options"><div class="cat-option" id="co-food" onclick="pickCat('food')"><div class="co-icon" data-ic="food"></div><div class="co-name">Comer & Beber</div></div><div class="cat-option" id="co-hotel" onclick="pickCat('hotel')"><div class="co-icon" data-ic="hotel"></div><div class="co-name">Onde Ficar</div></div><div class="cat-option" id="co-experience" onclick="pickCat('experience')"><div class="co-icon" data-ic="compass"></div><div class="co-name">Experiências</div></div></div></div></div>
 
-<div class="overlay" id="ov-search" onclick="closeOut(event,'ov-search')"><div class="sheet"><button class="sheet-close" onclick="closeOv('ov-search')" data-ic="close" aria-label="Fechar"></button><div class="sheet-handle"></div><div class="sheet-title">Buscar lugar</div><div class="step-dots"><div class="step-dot done"></div><div class="step-dot active"></div><div class="step-dot"></div></div><div class="search-wrap"><div class="search-field"><span class="si" data-ic="search"></span><input class="search-input" id="placeSearch" placeholder="Nome do lugar..." oninput="searchPlaces(this.value)"></div></div><div class="search-powered"><span>Resultados via</span><strong>Google Places</strong></div><div id="searchResults"><div class="search-loading">Digite para buscar...</div></div></div></div>
+<div class="overlay" id="ov-search" onclick="closeOut(event,'ov-search')"><div class="sheet sheet-fixa"><button class="sheet-close" onclick="closeOv('ov-search')" data-ic="close" aria-label="Fechar"></button><div class="sheet-handle"></div><div class="sheet-title">Buscar lugar</div><div class="step-dots"><div class="step-dot done"></div><div class="step-dot active"></div><div class="step-dot"></div></div><div class="search-wrap"><div class="search-field"><span class="si" data-ic="search"></span><input class="search-input" id="placeSearch" placeholder="Nome do lugar..." oninput="searchPlaces(this.value)"></div></div><div class="search-powered"><span>Resultados via</span><strong>Google Places</strong></div><div class="lista-rolante" id="searchResults"><div class="search-loading">Digite para buscar...</div></div></div></div>
 
 <div class="overlay" id="ov-note" onclick="closeOut(event,'ov-note')"><div class="sheet"><button class="sheet-close" onclick="closeOv('ov-note')" data-ic="close" aria-label="Fechar"></button><div class="sheet-handle"></div><div class="sheet-title">Adicionar spot</div><div class="note-place-row"><div class="note-place-icon" id="selIcon" data-ic="food"></div><div><div class="note-place-name" id="selName"></div><div class="note-place-meta" id="selMeta"></div></div></div>
 <div class="status-choice"><button class="status-opt active" id="stWant" onclick="setSpotStatus('want')"><div class="so-emoji" data-ic="bookmark"></div><div class="so-label">Quero ir</div></button><button class="status-opt" id="stBeen" onclick="setSpotStatus('been')"><div class="so-emoji" data-ic="check"></div><div class="so-label">Já fui</div></button></div>
@@ -1036,7 +1026,7 @@ svg.ic path,svg.ic circle,svg.ic line,svg.ic polyline,svg.ic rect{fill:none;stro
 <button class="sheet-cta" id="saveSpotBtn" onclick="saveSpot(false)">Salvar spot</button><button class="secondary-link" id="saveAndAddBtn" onclick="saveSpot(true)">Salvar e adicionar outro</button></div></div>
 
 <div class="overlay" id="ov-mismatch" onclick="closeOut(event,'ov-mismatch')"><div class="sheet"><button class="sheet-close" onclick="closeOv('ov-mismatch')" data-ic="close" aria-label="Fechar"></button><div class="sheet-handle"></div><div class="sheet-title">País diferente</div><div class="cm-text" id="cmText"></div><button class="sheet-cta" id="cmMoveBtn">Mover</button><button class="delete-link" style="color:var(--ink3)" onclick="keepInThisTripAnyway()">Adicionar nesta viagem mesmo assim</button></div></div>
-<div class="overlay" id="ov-newtrip" onclick="closeOut(event,'ov-newtrip')"><div class="sheet"><button class="sheet-close" onclick="closeOv('ov-newtrip')" data-ic="close" aria-label="Fechar"></button><div class="sheet-handle"></div><div class="sheet-title">Para qual cidade?</div><div class="nt-label">Cidade da viagem — o país é identificado sozinho</div><div class="dest-search-wrap"><span class="dsi" data-ic="search"></span><input class="nt-input" style="padding-left:44px" id="countrySearch" placeholder="Buscar cidade..." oninput="filterNewTripCity(this.value)"></div><div id="countryList"></div><button class="sheet-cta" id="createTripBtn" onclick="createTrip()" style="opacity:.4;pointer-events:none">Selecione uma cidade</button></div></div>
+<div class="overlay" id="ov-newtrip" onclick="closeOut(event,'ov-newtrip')"><div class="sheet sheet-fixa"><button class="sheet-close" onclick="closeOv('ov-newtrip')" data-ic="close" aria-label="Fechar"></button><div class="sheet-handle"></div><div class="sheet-title">Para qual cidade?</div><div class="nt-label">Cidade da viagem — o país é identificado sozinho</div><div class="dest-search-wrap"><span class="dsi" data-ic="search"></span><input class="nt-input" style="padding-left:44px" id="countrySearch" placeholder="Buscar cidade..." oninput="filterNewTripCity(this.value)"></div><div class="lista-rolante" id="countryList"></div><button class="sheet-cta" id="createTripBtn" onclick="createTrip()" style="opacity:.4;pointer-events:none">Selecione uma cidade</button></div></div>
 <div class="overlay" id="ov-quickvisit" onclick="closeOut(event,'ov-quickvisit')"><div class="sheet sheet-fixa"><button class="sheet-close" onclick="closeOv('ov-quickvisit')" data-ic="close" aria-label="Fechar"></button><div class="sheet-handle"></div><div class="sheet-title" id="quickVisitTitle">Quais países você já visitou?</div><div class="dest-search-wrap"><span class="dsi" data-ic="search"></span><input class="nt-input" style="padding-left:44px" id="countrySearch2" placeholder="Buscar país..." oninput="filterCountries2(this.value)"></div><div class="lista-rolante" id="countryList2"></div><button class="sheet-cta" id="createVisitBtn" onclick="markVisited()" style="opacity:.4;pointer-events:none">Selecione um país</button></div></div>
 <div class="overlay" id="ov-detalheamigo" onclick="closeOut(event,'ov-detalheamigo')"><div class="sheet"><button class="sheet-close" onclick="closeOv('ov-detalheamigo')" data-ic="close" aria-label="Fechar"></button><div class="sheet-handle"></div><div class="sheet-title" id="daTitulo">—</div><div id="daCorpo"></div></div></div>
 
@@ -2258,20 +2248,11 @@ function renderPlaceLinks(s){
     }
     reserveWrap.innerHTML=rh;
   }else if(s.category==='hotel'){
-    // Dois sites, nao um: gente que reserva hotel costuma ter o seu, e
-    // escolher por quem usa seria escolher errado pra metade.
-    //
-    // So o nome, em botao pequeno e lado a lado. NAO uso os logos: redesenhar
-    // marca registrada e problema, e o arquivo oficial vem com licenca de uso
-    // que este app nao tem. O nome tambem se reconhece melhor que um simbolo
-    // solto.
-    const busca=encodeURIComponent([s.name,cityOf(s)].filter(Boolean).join(' '));
-    let rh='<div class="reserva-titulo">Reservar</div><div class="reserva-linha">'
-      +'<a class="reserva-chip reserva-booking" href="https://www.booking.com/searchresults.html?ss='+busca+'" target="_blank" rel="noopener noreferrer">Booking.com</a>'
-      +'<a class="reserva-chip reserva-hoteis" href="https://www.hoteis.com/Hotel-Search?destination='+busca+'" target="_blank" rel="noopener noreferrer">Hotéis.com</a>'
-      +'</div>';
-    if(s.maps_url)rh+=`<a class="reserve-btn" href="${escUrl(s.maps_url)}" target="_blank" rel="noopener">${icon('mapPin')} Ver no Google Maps</a>`;
-    reserveWrap.innerHTML=rh;
+    // Os chips Booking.com / Hotéis.com sairam (pedido do Lucas, 09/09/2026):
+    // eram busca generica por nome+cidade e nao caiam no hotel certo — link
+    // que leva pro lugar errado e pior que link nenhum. Hotel fica com o
+    // Maps, que e o unico que aponta pro estabelecimento de fato.
+    reserveWrap.innerHTML=s.maps_url?`<a class="reserve-btn" href="${escUrl(s.maps_url)}" target="_blank" rel="noopener">${icon('mapPin')} Ver no Google Maps</a>`:'';
   }else if(s.category==='experience'){
     reserveWrap.innerHTML=s.maps_url?`<a class="reserve-btn" href="${escUrl(s.maps_url)}" target="_blank" rel="noopener">${icon('mapPin')} Ver no Google Maps</a>`:'';
   }else{
@@ -3120,8 +3101,38 @@ function cityFromComponents(comps){
   // A ordem adm2 antes de adm1 importa: no Brasil o MUNICIPIO mora no adm2 e
   // o ESTADO no adm1, e trocar isso fez Braganca, Santos e Campos do Jordao
   // virarem todos "Sao Paulo" — o estado de mesmo nome da capital.
-  if(loc)return distritoDeToquio(loc,adm1)?'Tóquio':loc;
-  return adm2||adm1||'';
+  //
+  // ═══ MUNICIPIO EXPLICITO ACIMA DA LOCALIDADE (Kotor / Dobrota) ═══
+  //
+  // Em Montenegro o Google devolve, pra um hotel em Dobrota:
+  //   locality = Dobrota · administrative_area_level_1 = "Kotor Municipality"
+  // e pra cidade velha: locality = Kotor. Dois cards pra mesma viagem, sendo
+  // que quem foi diz "fui pra Kotor, fiquei em Dobrota". O sinal esta no
+  // proprio rotulo: quando o nivel acima da localidade se apresenta como
+  // MUNICIPIO, ele e a cidade — municipio e, por definicao, o nivel da cidade,
+  // e a localidade abaixo dele e bairro/povoado.
+  //
+  // Nao e lista de lugares: e a PALAVRA de tipo administrativo que o Google
+  // poe no nome (mesma familia do CITY_ADMIN_SRC acima). Braganca (adm2 sem
+  // palavra), Toquio (adm1 "Tokyo"), Sintra (adm2 "Lisboa" e distrito, nao
+  // municipio) nao casam e continuam como estavam.
+  const municipio=nomeDeMunicipio(adm2)||nomeDeMunicipio(adm1);
+  if(loc){
+    if(distritoDeToquio(loc,adm1))return'Tóquio';
+    if(municipio&&!mesmoLugar(municipio,loc))return municipio;
+    return loc;
+  }
+  return municipio||adm2||adm1||'';
+}
+// "Kotor Municipality" -> "Kotor"; "Município de Kotor" -> "Kotor";
+// "Opština Kotor" -> "Kotor". Sem a palavra, devolve '' (nao e municipio
+// declarado). Cobre as grafias que o Google usa nos idiomas dos lugares onde
+// esse padrao aparece, com ou sem preposicao.
+const MUNICIPIO_RE=/\b(municipality|munic[ií]pio|municipio|municipalidad|op[sš]tina|op[cć]ina|kommune|gemeinde|comune)\b/i;
+function nomeDeMunicipio(x){
+  if(!x||!MUNICIPIO_RE.test(x))return'';
+  const nome=String(x).replace(MUNICIPIO_RE,'').replace(/\b(of|de|do|da|di|the)\b/gi,'').replace(/\s+/g,' ').trim();
+  return nome||'';
 }
 // ═══ NOME CANÔNICO DE CIDADE ═══
 // O Google devolve a MESMA cidade com grafias diferentes conforme o lugar
@@ -3405,8 +3416,12 @@ async function resolverCidadeDoSpot(p,trip){
     toast('Spot salvo',note?`"${p.name} · ${note}"`:p.name,'check');
     if(S.curTrip?.id===t.id){
       S.curTrip._spots=t._spots;
-      if(document.getElementById('trip').classList.contains('active'))renderTripBody();
-      else if(document.getElementById('city').classList.contains('active')){updateCityHeader();renderCityBody()}
+      // O card de cidade na tela da viagem SEMPRE e redesenhado, mesmo com a
+      // tela da viagem escondida: quem adiciona de dentro da cidade e volta
+      // encontrava o contador antigo ("2 pra comer, 1 pra ficar") ate
+      // recarregar. Redesenhar um container escondido nao custa nada.
+      renderTripBody();
+      if(document.getElementById('city').classList.contains('active')){updateCityHeader();renderCityBody()}
     }
     await loadDashboard();
     if(addAnother){
@@ -3912,7 +3927,10 @@ function cityOf(s){
 //  2. So grava se a cidade nova for diferente E nao vazia.
 //  3. Um teto por sessao. Com muitos spots, isso sao muitas chamadas pagas de
 //     uma vez; o resto continua na proxima abertura, ate acabar.
-const MIGR_CIDADE='spot_cidades_conferidas_v1';
+// v2 (09/09/2026): o criterio de cidade ganhou a regra do municipio explicito
+// (Kotor/Dobrota). Subir a versao reconfere todos os spots uma vez, 25 por
+// sessao — so grava quando a cidade muda E o nome do lugar confere.
+const MIGR_CIDADE='spot_cidades_conferidas_v2';
 const MIGR_TETO=25;
 function jaConferidos(){
   try{return new Set(JSON.parse(localStorage.getItem(MIGR_CIDADE)||'[]'))}catch(e){return new Set()}
