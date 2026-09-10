@@ -833,7 +833,7 @@ svg.ic path,svg.ic circle,svg.ic line,svg.ic polyline,svg.ic rect{fill:none;stro
     </div>
   </div>
   <div class="dash-body" id="tripsContainer"><div class="section-head"><span class="section-title">Minhas viagens</span></div><div class="empty-state"><div class="ei" data-ic="suitcase"></div><h3>Nenhuma viagem ainda</h3><p>Toca no + para criar sua primeira viagem</p></div></div>
-  <button class="fab" onclick="showOv('ov-fabchoice')">+</button>
+  <button class="fab" onclick="comecarSpotSemViagem()">+</button>
   <div class="bottom-nav"><div class="nav-item active" onclick="goTo('dashboard');loadDashboard()"><div class="nav-icon" data-ic="map"></div><div class="nav-label" style="color:var(--ink);font-weight:600">Viagens</div></div><div class="nav-item" onclick="goTo('explore');loadExplore()"><div class="nav-icon" data-ic="search"></div><div class="nav-label">Explorar</div></div><div class="nav-item" onclick="goTo('friends');loadFriends()"><div class="nav-icon" data-ic="users"></div><div class="nav-label">Amigos</div></div><div class="nav-item" onclick="goTo('profile');loadProfile()"><div class="nav-icon" data-ic="user"></div><div class="nav-label">Perfil</div></div></div>
 </div>
 
@@ -1025,7 +1025,6 @@ svg.ic path,svg.ic circle,svg.ic line,svg.ic polyline,svg.ic rect{fill:none;stro
 </div>
 
 <!-- OVERLAYS -->
-<div class="overlay" id="ov-fabchoice" onclick="closeOut(event,'ov-fabchoice')"><div class="sheet"><button class="sheet-close" onclick="closeOv('ov-fabchoice')" data-ic="close" aria-label="Fechar"></button><div class="sheet-handle"></div><div class="sheet-title">O que você quer fazer?</div><div class="new-trip-btn" onclick="nextOv('ov-fabchoice','ov-newtrip')"><div class="new-trip-icon" data-ic="suitcase"></div><div class="new-trip-text">Nova viagem</div></div><div class="new-trip-btn" onclick="comecarSpotSemViagem()"><div class="new-trip-icon" data-ic="pin"></div><div class="new-trip-text">Adicionar spot</div></div></div></div>
 <div class="overlay" id="ov-trip" onclick="closeOut(event,'ov-trip')"><div class="sheet"><button class="sheet-close" onclick="closeOv('ov-trip')" data-ic="close" aria-label="Fechar"></button><div class="sheet-handle"></div><div class="sheet-title">Em qual viagem?</div><div class="step-dots"><div class="step-dot active"></div><div class="step-dot"></div><div class="step-dot"></div><div class="step-dot"></div></div><div id="tripOptions"></div><div class="new-trip-btn" onclick="nextOv('ov-trip','ov-newtrip')"><div class="new-trip-icon" data-ic="plus"></div><div class="new-trip-text">Nova viagem</div></div></div></div>
 
 <div class="overlay" id="ov-cat" onclick="closeOut(event,'ov-cat')"><div class="sheet"><button class="sheet-close" onclick="closeOv('ov-cat')" data-ic="close" aria-label="Fechar"></button><div class="sheet-handle"></div><div class="sheet-title">Qual categoria?</div><div class="step-dots"><div class="step-dot active"></div><div class="step-dot"></div><div class="step-dot"></div></div><div class="cat-options"><div class="cat-option" id="co-food" onclick="pickCat('food')"><div class="co-icon" data-ic="food"></div><div class="co-name">Comer & Beber</div></div><div class="cat-option" id="co-hotel" onclick="pickCat('hotel')"><div class="co-icon" data-ic="hotel"></div><div class="co-name">Onde Ficar</div></div><div class="cat-option" id="co-experience" onclick="pickCat('experience')"><div class="co-icon" data-ic="compass"></div><div class="co-name">Experiências</div></div></div></div></div>
@@ -3273,9 +3272,20 @@ function pickSearchResult(i){pickPlace(S.searchResults[i])}
 // O + perguntava "Em qual viagem?" ANTES de saber o lugar. Era a ordem
 // errada: quem escolhe a viagem e o lugar, nao o contrario. Agora o fluxo e
 // categoria -> buscar o lugar -> pronto, e a viagem cai por conta.
+// O + do Dashboard vai DIRETO pra categoria.
+//
+// Antes ele abria uma ficha perguntando "o que voce quer fazer?", com "Nova
+// viagem" e "Adicionar spot". Essa pergunta nao se sustenta mais: a viagem sai
+// do endereco do lugar (viagemParaOLugar) — usa a que cobre o destino e cria
+// quando nao existe. Perguntar antes era pedir uma decisao que o app toma
+// melhor depois, com o lugar na mao.
+//
+// Criar viagem na mao nao morreu: continua como saida na ficha "Em qual
+// viagem?", que aparece SO quando nem o endereco diz o pais. Sem isso aquele
+// caso viraria beco sem saida.
 function comecarSpotSemViagem(){
   S.addTrip=null;
-  nextOv('ov-fabchoice','ov-cat');
+  showOv('ov-cat');
 }
 // Decide a viagem a partir do proprio lugar. Mesma regra do fluxo de amigo:
 // usa a que cobre o destino, cria quando nao existe, e so pergunta quando nem
