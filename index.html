@@ -496,6 +496,13 @@ body{font-family:'DM Sans',sans-serif;background:var(--dark);max-width:430px;mar
 .hero-name{font-family:'Fraunces',serif;font-weight:400;font-size:30px;color:#fff;line-height:1.1;letter-spacing:-.015em}
 .d-section{padding:20px 24px;border-bottom:1px solid var(--border)}
 .sec-label{font-size:13px;font-weight:600;color:var(--ink2);margin-bottom:12px}
+/* Linha do titulo com acao a direita — a nota precisava de um "Editar"
+   visivel: o lapis do topo troca a FOTO, e quem quer corrigir a nota nao
+   adivinha isso. */
+.sec-linha{display:flex;align-items:baseline;justify-content:space-between;gap:12px}
+.sec-editar{background:none;border:none;padding:0 0 12px;font-family:var(--mono);font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--terra);cursor:pointer}
+.nota-acoes{display:flex;align-items:center;gap:14px;margin-top:12px}
+.nota-acoes .action-btn{flex:1}
 .note-card{background:var(--white);border:1px solid var(--border);border-radius:var(--r);padding:18px;position:relative;overflow:hidden;box-shadow:var(--shadow-sm)}
 .note-glow{display:none}
 .note-quote{font-family:'Fraunces',serif;font-weight:400;font-size:18px;font-style:italic;color:var(--ink);line-height:1.5;position:relative;z-index:1}
@@ -1002,7 +1009,7 @@ svg.ic path,svg.ic circle,svg.ic line,svg.ic polyline,svg.ic rect{fill:none;stro
 
 <div class="screen" id="place">
   <div class="place-hero"><div class="place-hero-img" id="placeHeroImg"></div><div class="hero-overlay"></div><button class="hero-back" onclick="backFromPlace()" data-ic="back" aria-label="Voltar"></button><button class="hero-photo-btn" onclick="document.getElementById('spotPhotoFileInput').click()" data-ic="edit" aria-label="Trocar foto"></button><input type="file" id="spotPhotoFileInput" accept="image/*" style="display:none" onchange="onSpotPhotoFileChosen(this)"><div class="hero-chip chip-want" id="placeChip" onclick="cycleStatus()">Quero ir</div><div class="hero-bottom"><div class="hero-type" id="placeType"></div><div class="hero-name" id="placeName"></div></div></div>
-  <div class="d-section"><div class="sec-label">Minha nota</div><div class="note-card"><div class="note-glow"></div><div class="note-quote" id="placeNote"></div><div class="note-attr" id="placeNoteAttr"></div></div></div>
+  <div class="d-section"><div class="sec-linha"><div class="sec-label">Minha nota</div><button class="sec-editar" id="btnEditarNota" onclick="editarNota()">Editar</button></div><div class="note-card" id="notaLeitura"><div class="note-glow"></div><div class="note-quote" id="placeNote"></div><div class="note-attr" id="placeNoteAttr"></div></div><div id="notaEdicao" style="display:none"><textarea class="note-input" id="notaTexto" rows="4" placeholder="Por que esse lugar te chamou atenção?"></textarea><div class="nota-acoes"><button class="action-btn" style="margin:0" id="btnSalvarNota" onclick="salvarNota()">Salvar nota</button><button class="secondary-link" style="margin:0" onclick="cancelarNota()">Cancelar</button></div></div></div>
   <div class="d-section"><div class="sec-label">Informações</div><div class="info-grid" id="placeInfoGrid"></div><div id="placeReserveWrap"></div></div>
   <div class="d-section"><div class="coment-bloco" id="placeComentarios"></div></div>
   <div class="d-section" id="placeSubcatSection" style="display:none"><div class="sec-label">Tipo de experiência</div><div class="subcat-row" id="placeSubcatChips"></div></div>
@@ -2292,6 +2299,41 @@ async function setStatus(s,save=true){
   const ch=document.getElementById('placeChip'),m={want:['chip-want','Quero ir'],been:['chip-been','Fui'],skip:['','Pulando']};
   ch.className='hero-chip '+m[s][0];ch.textContent=m[s][1];
   if(save&&S.curPlace){await dbUpdate('spots',S.curPlace.id,{status:s});S.curPlace.status=s}
+}
+// ═══ EDITAR A NOTA ═══
+// A my_note era gravada UMA vez, no saveSpot, e depois so exibida — nao havia
+// caminho nenhum pra corrigir. E ela e o conteudo central do app: a nota
+// pessoal e o que diferencia o Spot de uma lista de lugares. O lapis do hero
+// troca a foto, o que fazia parecer que dava pra editar o spot.
+function editarNota(){
+  const s=S.curPlace;if(!s)return;
+  document.getElementById('notaTexto').value=s.my_note||'';
+  document.getElementById('notaLeitura').style.display='none';
+  document.getElementById('notaEdicao').style.display='';
+  document.getElementById('btnEditarNota').style.display='none';
+  document.getElementById('notaTexto').focus();
+}
+function cancelarNota(){
+  document.getElementById('notaEdicao').style.display='none';
+  document.getElementById('notaLeitura').style.display='';
+  document.getElementById('btnEditarNota').style.display='';
+}
+async function salvarNota(){
+  const s=S.curPlace;if(!s)return;
+  const btn=document.getElementById('btnSalvarNota');
+  const nova=document.getElementById('notaTexto').value.trim();
+  if(nova===(s.my_note||'')){cancelarNota();return}
+  btn.textContent='Salvando...';btn.style.pointerEvents='none';
+  const{error}=await dbUpdate('spots',s.id,{my_note:nova});
+  btn.textContent='Salvar nota';btn.style.pointerEvents='';
+  if(error){toast('Não salvou','Tenta de novo.','alert');return}
+  s.my_note=nova;
+  // A nota aparece na lista da cidade e no card do spot: as duas telas tem que
+  // refletir na hora, senao a antiga fica ali ate recarregar.
+  document.getElementById('placeNote').textContent=nova?`"${nova}"`:'';
+  cancelarNota();
+  if(document.getElementById('city').classList.contains('active'))renderCityBody();
+  toast('Nota salva','','check');
 }
 function cycleStatus(){document.getElementById('placeChip').classList.contains('chip-want')?setStatus('been'):setStatus('want')}
 // Escopado em #placeStars: o seletor global também acendia/apagava as estrelas
