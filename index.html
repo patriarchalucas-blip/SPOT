@@ -546,7 +546,22 @@ body{font-family:'DM Sans',sans-serif;background:var(--dark);max-width:430px;mar
 .friend-search-card{display:flex;align-items:center;gap:12px;background:var(--white);border:1px solid var(--border);border-radius:var(--r);padding:13px 14px;margin-top:10px;box-shadow:var(--shadow-sm)}
 .delete-link{display:block;width:100%;background:none;border:none;color:var(--red);font-size:13px;font-family:'DM Sans',sans-serif;cursor:pointer;padding:8px;margin-bottom:40px;text-decoration:underline;text-underline-offset:3px}
 .secondary-link{display:block;width:100%;background:none;border:none;color:var(--ink3);font-size:13px;font-family:'DM Sans',sans-serif;cursor:pointer;padding:12px 8px 8px;text-decoration:underline;text-underline-offset:3px}
-.cm-text{font-size:15px;line-height:1.5;color:var(--ink2);margin:8px 0 20px}
+/* 24px na horizontal como todo conteudo de ficha. Sem isso o texto do aviso
+   de pais trocado encostava na borda — o titulo alinhado e a frase colada na
+   lateral, que foi o desalinhamento que o Lucas viu no print. */
+.cm-text{font-size:15px;line-height:1.5;color:var(--ink2);margin:8px 0 20px;padding:0 24px}
+/* A linha de status do username fica solta como filha direta da ficha, e
+   .feed-time nao tem padding (ela nasceu dentro do feed, que ja e padded). */
+#usernameStatus{padding:0 24px}
+/* Corpo da ficha de detalhe do amigo: .country-row e .amg-aviso tem
+   padding:...0 de proposito (linha divisoria de ponta a ponta la dentro), so
+   que ninguem dava a margem lateral. */
+#daCorpo{padding:0 24px}
+/* Divisor "ou" e a dica do convite, na ficha de adicionar amigo. */
+.conv-ou,.conv-dica{padding-left:24px;padding-right:24px}
+/* Ficha de excluir conta: o corpo ja tem 24px, entao os filhos que tambem
+   trazem os proprios 24 (nt-label) somavam 48. */
+.ex-corpo .nt-label{padding-left:0;padding-right:0}
 /* ── Profile / World Map (Been-style) ── */
 #profile{background:#0b1620;overflow-y:auto}
 /* Identidade: quem você é, em tamanho de gente. */
@@ -1055,7 +1070,7 @@ svg.ic path,svg.ic circle,svg.ic line,svg.ic polyline,svg.ic rect{fill:none;stro
 <div class="prof-linha prof-sair" style="margin-top:10px;border-top:1px solid var(--border);border-bottom:none" onclick="signOut()"><span class="pl-txt">Sair da conta</span></div>
 <div class="prof-linha prof-sair" style="border-bottom:none;padding-bottom:26px" onclick="abrirExcluirConta()"><span class="pl-txt">Excluir minha conta</span></div></div></div>
 
-<div class="overlay" id="ov-excluir" onclick="closeOut(event,'ov-excluir')"><div class="sheet"><button class="sheet-close" onclick="closeOv('ov-excluir')" data-ic="close" aria-label="Fechar"></button><div class="sheet-handle"></div><div class="sheet-title">Excluir minha conta</div><div style="padding:0 24px 4px"><div class="nt-label" style="margin-bottom:10px">Isso apaga de vez, e não tem como desfazer:</div><ul style="margin:0 0 16px;padding-left:20px;font-size:14px;line-height:1.7;color:var(--ink2)"><li>suas viagens e todos os seus lugares</li><li>suas notas, avaliações e comentários</li><li>suas fotos de perfil e de lugares</li><li>seus amigos e os links de convite que você criou</li></ul><div class="nt-label">Para confirmar, digite <b>EXCLUIR</b></div><input class="nt-input" id="confirmaExcluir" placeholder="digite aqui" autocapitalize="characters" autocomplete="off" oninput="atualizarBotaoExcluir()"></div><button class="sheet-cta" id="btnExcluirConta" style="background:var(--red);box-shadow:none;opacity:.4;pointer-events:none" onclick="excluirConta()">Excluir minha conta</button></div></div>
+<div class="overlay" id="ov-excluir" onclick="closeOut(event,'ov-excluir')"><div class="sheet"><button class="sheet-close" onclick="closeOv('ov-excluir')" data-ic="close" aria-label="Fechar"></button><div class="sheet-handle"></div><div class="sheet-title">Excluir minha conta</div><div class="ex-corpo" style="padding:0 24px 4px"><div class="nt-label" style="margin-bottom:10px">Isso apaga de vez, e não tem como desfazer:</div><ul style="margin:0 0 16px;padding-left:20px;font-size:14px;line-height:1.7;color:var(--ink2)"><li>suas viagens e todos os seus lugares</li><li>suas notas, avaliações e comentários</li><li>suas fotos de perfil e de lugares</li><li>seus amigos e os links de convite que você criou</li></ul><div class="nt-label">Para confirmar, digite <b>EXCLUIR</b></div><input class="nt-input" id="confirmaExcluir" placeholder="digite aqui" autocapitalize="characters" autocomplete="off" oninput="atualizarBotaoExcluir()"></div><button class="sheet-cta" id="btnExcluirConta" style="background:var(--red);box-shadow:none;opacity:.4;pointer-events:none" onclick="excluirConta()">Excluir minha conta</button></div></div>
 
 <div class="overlay" id="ov-addfriend" onclick="closeOut(event,'ov-addfriend')"><div class="sheet"><button class="sheet-close" onclick="closeOv('ov-addfriend')" data-ic="close" aria-label="Fechar"></button><div class="sheet-handle"></div><div class="sheet-title">Adicionar amigo</div><div class="nt-label">Username do amigo</div><input class="nt-input" id="friendUsernameInput" type="text" placeholder="digite aqui" autocapitalize="none" oninput="mostrarErroAmigo('')"><div class="auth-error" id="friendAddErr"></div><button class="sheet-cta" id="sendReqBtn" onclick="sendFriendRequest()">Enviar pedido</button><div class="conv-ou"><span>ou</span></div><button class="secondary-link" id="convidarBtn" style="margin-top:0" onclick="compartilharConvite()">Convidar por link</button><div class="conv-dica">Quem abrir o link entra já como seu amigo, sem precisar do seu username.</div></div></div>
 
