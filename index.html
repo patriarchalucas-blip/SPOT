@@ -1739,9 +1739,11 @@ function tripMetaText(t){
   const sp=t._spots||[];
   const cities=tripCityCount(t);
   const cityTxt=cities>0?(cities+(cities===1?' cidade · ':' cidades · ')):'';
-  const showDates=t.dates&&t.dates!=='__quickvisit__';
-  if(!t._spotsLoaded)return showDates?t.dates:'';
-  return (showDates?t.dates+' · ':'')+cityTxt+sp.length+(sp.length===1?' spot':' spots');
+  // Data saiu do card de proposito (pedido do Lucas, 09/09/2026) — inclusive
+  // das viagens antigas que ainda tem `dates` gravado. O campo continua no
+  // banco; so nao e mais mostrado. O card e sobre o lugar, nao sobre quando.
+  if(!t._spotsLoaded)return'';
+  return cityTxt+sp.length+(sp.length===1?' spot':' spots');
 }
 function refreshTripMetas(){
   S.trips.forEach(t=>{
@@ -1907,7 +1909,10 @@ function renderList(){
     if(!list.length)h='<div class="empty-state"><div class="ei">'+icon('suitcase')+'</div><h3>Nenhuma viagem ainda</h3><p>Toca no + no dashboard para criar.</p></div>';
     list.forEach((t,i)=>{
       const sp=(t._spots||[]).length;
-      const meta=t.dates&&t.dates!=='__quickvisit__'?t.dates:'';
+      // Aqui a linha secundaria era SO a data. Sem data (ver renderTrips),
+      // entra a contagem de cidades — a mesma informacao que o card mostra.
+      const nCid=new Set((t._spots||[]).map(s=>cityOf(s)).filter(Boolean)).size;
+      const meta=nCid?nCid+(nCid===1?' cidade':' cidades'):'';
       h+=`<div class="lrow" onclick="openTripFromList(${i})"><span class="lflag">${flagFor((t.destinations&&t.destinations[0])||t.name)}</span><div class="lmain"><div class="lname">${esc(t.name)}</div><div class="lmeta">${esc(meta)}</div></div><span class="lcount">${sp} ${sp===1?'spot':'spots'}</span></div>`;
     });
   }
@@ -1981,9 +1986,9 @@ async function loadTrip(t){
   if(!t)return;
   document.getElementById('tripFloat').textContent=t.name;
   document.getElementById('tripName').textContent=t.name;
-  const realDates=t.dates&&t.dates!=='__quickvisit__'?t.dates:'';
-  document.getElementById('tripLabel').textContent=(t.destinations||[]).map(d=>flagFor(d)).join(' ')+(realDates?' · '+realDates:'');
-  document.getElementById('tripMeta').textContent=realDates;
+  // Sem data no cabecalho tambem — mesma decisao do card (ver renderTrips).
+  document.getElementById('tripLabel').textContent=(t.destinations||[]).map(d=>flagFor(d)).join(' ');
+  document.getElementById('tripMeta').textContent='';
   const heroEl=document.getElementById('tripHeroImg');
   const dest=(t.destinations&&t.destinations[0])||t.name;
   // usa backgroundImage, nunca o atalho `background` — o atalho reseta
@@ -5448,8 +5453,8 @@ function renderFriendProfile(){
 function openFriendTrip(i){
   const t=(FRIEND.visiveis||[])[i];if(!t)return;
   FRIEND.trip=t;
-  const realDates=t.dates&&t.dates!=='__quickvisit__'?t.dates:'';
-  document.getElementById('ftLabel').textContent=(t.destinations||[]).map(d=>flagFor(d)).join(' ')+(realDates?' · '+realDates:'');
+  // Sem data, igual as viagens proprias (ver renderTrips / loadTrip).
+  document.getElementById('ftLabel').textContent=(t.destinations||[]).map(d=>flagFor(d)).join(' ');
   document.getElementById('ftName').textContent=t.name;
   const n=(t._spots||[]).length;
   document.getElementById('ftMeta').textContent=n+(n===1?' spot':' spots');
