@@ -1728,6 +1728,7 @@ async function loadDashboard(){
   revalidarInstagramsAntigos().then(autoBackfillPlaceLinks); // silencioso, não bloqueia nada
   corrigirCidadesAntigas(); // idem — conserta o que a regra velha gravou errado
   buscarFotosQueFaltam();  // idem — spot que nunca teve foto nunca se consertava
+  corrigirPaisesDesconhecidos(); // idem — viagem que caiu em "Outros"
   maybeShowCheckin(); // idem — só aparece se achar algo, nunca trava a tela
   for(const t of S.trips){
     ts+=t._spots.length;
@@ -3206,6 +3207,24 @@ function cityFromComponents(comps){
   if(loc){
     if(distritoDeToquio(loc,adm1))return'Tóquio';
     if(municipio&&!mesmoLugar(municipio,loc))return municipio;
+    // ═══ DISTRITO DENTRO DO MUNICÍPIO (Lima, Santiago) ═══
+    //
+    // Ele foi pra Lima e o app fez cards de San Isidro e La Molina — como se
+    // uma viagem a São Paulo virasse Itaim Bibi e Tatuapé. O Google devolve,
+    // pra um restaurante em Barranco: locality=Barranco, adm2=Lima.
+    //
+    // Quando existem locality E adm2 e eles DIFEREM, o adm2 é o município e a
+    // locality é distrito dentro dele. Quando são iguais (Sintra/Sintra), a
+    // locality é o município e fica como está.
+    //
+    // A trava: adm2 que se apresenta como divisão administrativa (Provincia
+    // di Modena, Kings County) NÃO é cidade — CITY_ADMIN_TEST, o mesmo teste
+    // que o conserto de cidades antigas já usava.
+    //
+    // Conferido com dado real: Barranco/Miraflores/La Molina -> Lima;
+    // Vitacura/Providencia -> Santiago; Modena fica Modena; Sintra fica
+    // Sintra; Bragança e Santos (sem locality) seguem pelo adm2.
+    if(adm2&&!mesmoLugar(adm2,loc)&&!CITY_ADMIN_TEST.test(adm2))return adm2;
     return loc;
   }
   return municipio||adm2||adm1||'';
@@ -3308,9 +3327,27 @@ function comecarSpotSemViagem(){
 async function viagemParaOLugar(p){
   const cidade=p.city||'';
   const pais=p.country||paisDoEndereco(p.address||p.meta||'');
+  return garantirViagem(cidade,pais);
+}
+// Devolve a viagem que serve pro lugar, criando SO se nao existir nenhuma.
+//
+// A checagem por pais e o que impede viagem duplicada. Aconteceu com a
+// Islandia: duas viagens "Islândia", uma com 1 spot e outra com 0. O
+// viagemQueCobre casa cidade PRIMEIRO, e cidade que difere por acento ou
+// grafia ("Reykjavík" x "Reykjavik") nao casa — dai a segunda tentativa nao
+// encontrava a primeira e criava outra. Comparando tambem so pelo pais, com
+// mesmoLugar (que ignora acento), a segunda reaproveita a primeira.
+//
+// Usado pelo fluxo do + e pelo "adicionar a minha lista" do amigo: os dois
+// criavam viagem por conta propria, cada um do seu jeito.
+async function garantirViagem(cidade,pais){
   let viagem=viagemQueCobre(cidade,pais);
   if(viagem)return viagem;
   if(!pais)return null;
+  // Ja existe viagem desse pais, mesmo que a cidade nao case?
+  const doPais=(S.trips||[]).find(t=>!isNonTrip(t)&&(
+    mesmoLugar(t.name,pais)||(t.destinations||[]).some(d=>mesmoLugar(d,pais))));
+  if(doPais)return doPais;
   const{data,error}=await dbInsert('trips',{user_id:S.user.id,name:pais,
     destinations:[pais],dates:'',status:'planning',initial_city:cidade||null});
   if(error||!data)return null;
@@ -3882,10 +3919,44 @@ function normalizeCountry(country){
   const map={'Brazil':'Brasil','Croatia':'Croácia','Italy':'Itália','France':'França','Spain':'Espanha','Greece':'Grécia','Japan':'Japão','Thailand':'Tailândia','Indonesia':'Indonésia','Morocco':'Marrocos','United States':'Estados Unidos','Germany':'Alemanha','United Kingdom':'Reino Unido','Mexico':'México','Colombia':'Colômbia','Turkey':'Turquia','Türkiye':'Turquia','Egypt':'Egito','India':'Índia','China':'China','Australia':'Austrália','Canada':'Canadá','Switzerland':'Suíça','Austria':'Áustria','Netherlands':'Holanda','Belgium':'Bélgica','Czechia':'República Tcheca','Hungary':'Hungria','Poland':'Polônia','Norway':'Noruega','Sweden':'Suécia','Denmark':'Dinamarca','Ireland':'Irlanda','South Africa':'África do Sul','South Korea':'Coreia do Sul','Singapore':'Singapura','Vietnam':'Vietnã','Philippines':'Filipinas','Bosnia and Herzegovina':'Bósnia e Herzegovina','Jordan':'Jordânia','New Zealand':'Nova Zelândia','Peru':'Peru','Argentina':'Argentina','Chile':'Chile','Portugal':'Portugal','Montenegro':'Montenegro'};
   return map[country]||country;
 }
+// ═══ PAÍS PELO CÓDIGO ISO, NÃO PELO NOME ═══
+//
+// O Google devolve o país no idioma do pedido, e o nome dele NEM SEMPRE é o
+// que está no COUNTRIES: em pt-BR ele diz "Tchéquia" (lista: "República
+// Tcheca") e "Países Baixos" (lista: "Holanda"). Quando não casa, a viagem
+// nasce com um nome que o regionFor não encontra e cai em "Outros" — foi
+// exatamente o que aconteceu com Praga.
+//
+// O `normalizeCountry` tentava resolver isso com um mapa de nomes em inglês,
+// que não serve: em pt-BR o Google nunca diz "Czechia". Consertar aquele mapa
+// seria alimentar uma lista pra sempre, um país por vez, e descobrir cada
+// buraco quando alguém viajasse.
+//
+// O sinal geral está no próprio dado: o componente de país traz `shortText`,
+// que é o código ISO 3166-1 alpha-2 ("CZ", "NL") e não depende de idioma. E a
+// bandeira do COUNTRIES já É esse código — emoji de bandeira é o par de
+// indicadores regionais das duas letras. Então o índice sai da lista que já
+// existe, sem nada novo pra manter.
+const PAIS_POR_CODIGO=(function(){
+  const m={};
+  for(const c of COUNTRIES){
+    const cps=[...(c.flag||'')].map(ch=>ch.codePointAt(0));
+    if(cps.length!==2)continue;
+    const letras=cps.map(cp=>String.fromCharCode(cp-0x1F1E6+65)).join('');
+    if(/^[A-Z]{2}$/.test(letras))m[letras]=c;
+  }
+  return m;
+})();
+function paisPorCodigo(cc){
+  const c=PAIS_POR_CODIGO[String(cc||'').toUpperCase()];
+  return c?c.name:'';
+}
 function countryFromComponents(comps){
   if(!comps||!comps.length)return'';
   const c=comps.find(x=>(x.types||[]).includes('country'));
-  return c?normalizeCountry(c.longText):'';
+  if(!c)return'';
+  // Código primeiro; o nome é só reserva pra resposta sem shortText.
+  return paisPorCodigo(c.shortText)||normalizeCountry(c.longText);
 }
 
 // ═══ HELPERS ═══
@@ -4093,7 +4164,14 @@ async function corrigirCidadesAntigas(opcoes){
         r.exemplos.push(s.name+': achou "'+achado+'"');
         olhados.push(s.id);continue;
       }
-      const nova=cityFromComponents(p.addressComponents);
+      // Canoniza igual ao saveSpot faz. Sem isso este conserto GRAVAVA o nome
+      // cru do componente — foi assim que Praga virou "Hlavní město Praha":
+      // restaurante em Praga nao tem `locality`, so adm2/adm1 em tcheco nao
+      // localizado, e o conserto escrevia isso no banco. Conferido que
+      // "Hlavní město Praha" + pais devolve "Praga".
+      const bruta=cityFromComponents(p.addressComponents);
+      const paisDoSpot=countryFromComponents(p.addressComponents)||paisDoEndereco(s.address);
+      const nova=bruta?await comPrazo(canonizarCidade(bruta,paisDoSpot),3000,bruta):'';
       if(!nova){r.naoAchou++;r.exemplos.push(s.name+': sem cidade no endereco');olhados.push(s.id);continue}
       if(nova===s.city){r.jaCerto++;olhados.push(s.id);continue}
       const{error}=await dbUpdate('spots',s.id,{city:nova});
@@ -4515,6 +4593,55 @@ async function autoBackfillPlaceLinks(){
 // Teto de 6 por sessão e registro de quem já foi tentado: lugar que
 // genuinamente não tem foto no Google não pode custar uma busca por sessão
 // pra sempre.
+// ═══ VIAGEM QUE CAIU EM "OUTROS" ═══
+//
+// Viagem criada ANTES do país passar a sair do código ISO ficou com o nome que
+// o Google deu no idioma dele: "Tchéquia" em vez de "República Tcheca". Como
+// esse nome não está no COUNTRIES, ela perde a bandeira, perde a região e
+// aparece embaixo de "Outros" — foi o que ele viu com Praga.
+//
+// O conserto pergunta ao Google o país da cidade da viagem (ou do endereço do
+// primeiro spot) e usa o CÓDIGO pra achar o nome da lista. Vale pra qualquer
+// país com nome divergente, não só a Tchéquia — a Holanda ("Países Baixos")
+// tinha o mesmo destino.
+const PAIS_CORRIGIDO='spot_pais_corrigido_v1';
+async function corrigirPaisesDesconhecidos(){
+  if(!S.user)return;
+  let feitos;try{feitos=new Set(JSON.parse(localStorage.getItem(PAIS_CORRIGIDO)||'[]'))}catch(e){feitos=new Set()}
+  const alvos=(S.trips||[]).filter(t=>{
+    if(feitos.has(t.id))return false;
+    const nome=(t.destinations&&t.destinations[0])||t.name||'';
+    if(!nome||COUNTRIES.some(c=>c.name===nome))return false;   // já é país conhecido
+    return !!(t.initial_city||(t._spots||[]).some(s=>s.address));
+  }).slice(0,4);
+  if(!alvos.length)return;
+  const tentados=[];let mudou=false;
+  for(const t of alvos){
+    tentados.push(t.id);
+    // A cidade da viagem é a pista mais limpa; sem ela, o endereço de um spot.
+    const pista=t.initial_city||((t._spots||[]).find(s=>s.address)||{}).address||'';
+    if(!pista)continue;
+    try{
+      const resp=await googlePlaces('searchText',{
+        method:'POST',
+        headers:{'Content-Type':'application/json','X-Goog-Api-Key':GAPI,'X-Goog-FieldMask':'places.addressComponents'},
+        body:JSON.stringify({textQuery:pista,languageCode:'pt-BR',maxResultCount:1})
+      });
+      const d=await resp.json();
+      const p=(d.places||[])[0];
+      const novo=p?countryFromComponents(p.addressComponents):'';
+      if(!novo||novo===t.name)continue;
+      const{error}=await dbUpdate('trips',t.id,{name:novo,destinations:[novo]});
+      if(error)continue;
+      t.name=novo;t.destinations=[novo];mudou=true;
+    }catch(e){/* uma viagem que falha nao pode parar as outras */}
+  }
+  try{
+    const s=new Set([...feitos,...tentados]);
+    localStorage.setItem(PAIS_CORRIGIDO,JSON.stringify([...s].slice(-500)));
+  }catch(e){}
+  if(mudou&&document.getElementById('dashboard').classList.contains('active')){renderTrips();loadProfile()}
+}
 const FOTO_TENTADA='spot_foto_tentada_v1';
 const FOTO_TETO=6;
 function fotosJaTentadas(){
