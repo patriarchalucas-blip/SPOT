@@ -4098,7 +4098,10 @@ function cityOf(s){
 // v2 (09/09/2026): o criterio de cidade ganhou a regra do municipio explicito
 // (Kotor/Dobrota). Subir a versao reconfere todos os spots uma vez, 25 por
 // sessao — so grava quando a cidade muda E o nome do lugar confere.
-const MIGR_CIDADE='spot_cidades_conferidas_v2';
+// v3 (09/09/2026): o v2 subiu ANTES da canonizacao entrar no conserto, entao
+// ele gravou nome cru ("Hlavni mesto Praha") e marcou os spots como feitos —
+// eles nunca mais seriam reconsultados. v3 refaz a passagem, agora canonizando.
+const MIGR_CIDADE='spot_cidades_conferidas_v3';
 const MIGR_TETO=25;
 function jaConferidos(){
   try{return new Set(JSON.parse(localStorage.getItem(MIGR_CIDADE)||'[]'))}catch(e){return new Set()}
@@ -4780,7 +4783,26 @@ try{cityPhotoCache=JSON.parse(localStorage.getItem('spot_photo_cache')||'{}')}ca
 let unsplashBlockedUntil=parseInt(localStorage.getItem('spot_unsplash_blocked_until')||'0',10)||0;
 function setUnsplashBlock(ms){unsplashBlockedUntil=Date.now()+ms;try{localStorage.setItem('spot_unsplash_blocked_until',String(unsplashBlockedUntil))}catch(e){}}
 function savePhotoCache(){try{localStorage.setItem('spot_photo_cache',JSON.stringify(cityPhotoCache))}catch(e){}}
-async function fetchCityPhoto(query){
+// Nome alternativo pra buscar foto: o COUNTRIES ja traz o nome em ingles no
+// campo `geo` (o mesmo que casa com o TopoJSON do mapa).
+//
+// Por que existe: a Tchequia ficou sem foto de viagem. O Unsplash e indexado
+// em ingles, e "Republica Tcheca" nao retorna nada. Mas trocar TODO pais pro
+// ingles seria mexer no que ja funciona — a Croacia tem foto com o nome em
+// portugues. Entao a ordem e: tenta o nome do app, e SO se vier vazio tenta o
+// ingles. Zero risco pro que ja esta bom, e uma segunda chance pro resto.
+function nomeEmIngles(q){
+  const c=COUNTRIES.find(x=>x.name===q);
+  return (c&&c.geo&&c.geo!==q)?c.geo:'';
+}
+async function fetchCityPhoto(entrada){
+  if(!entrada)return'';
+  const url=await buscarFotoDe(entrada);
+  if(url)return url;
+  const ingles=nomeEmIngles(entrada);
+  return ingles?buscarFotoDe(ingles):'';
+}
+async function buscarFotoDe(query){
   if(!query)return'';
   // Return cached (persisted) result if we have it — inclui negativos, pra não reconsultar toda hora
   if(cityPhotoCache[query]!==undefined){
