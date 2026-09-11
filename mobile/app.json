@@ -1,0 +1,67 @@
+{
+  "expo": {
+    "name": "Spot",
+    "slug": "spot",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "scheme": "spot",
+    "userInterfaceStyle": "dark",
+    "backgroundColor": "#0b1620",
+    "splash": {
+      "image": "./assets/splash.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#0b1620"
+    },
+    "assetBundlePatterns": ["**/*"],
+    "ios": {
+      "supportsTablet": false,
+      "bundleIdentifier": "app.meuspott.spot",
+      "buildNumber": "1",
+      "config": {
+        "usesNonExemptEncryption": false
+      },
+      "infoPlist": {
+        "NSLocationWhenInUseUsageDescription": "O Spot usa sua localização para sugerir lugares perto de você e registrar check-in nos lugares que você visitou.",
+        "NSCameraUsageDescription": "O Spot usa a câmera para você tirar foto de um lugar que salvou.",
+        "NSPhotoLibraryUsageDescription": "O Spot acessa suas fotos para você escolher a imagem de um lugar ou do seu perfil.",
+        "NSPhotoLibraryAddUsageDescription": "O Spot salva na sua galeria as imagens que você baixar do app.",
+        "ITSAppUsesNonExemptEncryption": false
+      }
+    },
+    "android": {
+      "package": "app.meuspott.spot",
+      "versionCode": 1,
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/icon.png",
+        "backgroundColor": "#0b1620"
+      },
+      "permissions": [
+        "ACCESS_FINE_LOCATION",
+        "ACCESS_COARSE_LOCATION",
+        "CAMERA",
+        "READ_EXTERNAL_STORAGE"
+      ]
+    },
+    "plugins": [
+      [
+        "expo-location",
+        {
+          "locationWhenInUsePermission": "O Spot usa sua localização para sugerir lugares perto de você e registrar check-in."
+        }
+      ],
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "O Spot acessa suas fotos para você escolher a imagem de um lugar ou do seu perfil.",
+          "cameraPermission": "O Spot usa a câmera para você tirar foto de um lugar que salvou."
+        }
+      ]
+    ],
+    "extra": {
+      "eas": {
+        "projectId": "PREENCHER-NO-PRIMEIRO-eas-init"
+      }
+    }
+  }
+}
