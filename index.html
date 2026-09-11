@@ -301,6 +301,11 @@ body{font-family:'DM Sans',sans-serif;background:var(--dark);max-width:430px;mar
 .lrating{font-family:var(--mono);font-size:12.5px;color:var(--amber);font-weight:600;white-space:nowrap}
 .lcount{font-family:var(--mono);font-size:12.5px;color:var(--ink2);background:rgba(234,231,224,.07);border-radius:var(--r-pill);padding:3px 10px;white-space:nowrap}
 .lflag{font-size:22px;flex-shrink:0}
+/* Bandeira desenhada como imagem onde o sistema não tem o glifo (Windows).
+   Dimensionada em `em` pra herdar o tamanho de quem a contém, então cada
+   lugar que já definia font-size pra bandeira continua mandando. O
+   vertical-align alinha com a linha de base do texto ao lado. */
+.bandeira-img{width:1em;height:1em;display:inline-block;vertical-align:-.14em;object-fit:contain}
 
 /* TRIP CARDS */
 /* nome NUNCA corta com "..." — quebra em quantas linhas precisar e o card cresce */
@@ -379,8 +384,15 @@ body{font-family:'DM Sans',sans-serif;background:var(--dark);max-width:430px;mar
   #login{max-width:100%}
   #login .login-inner{max-width:480px;margin:0 auto;padding:64px 40px 56px}
   #login .login-top{justify-content:flex-start}
-  #dashboard,#profile,#friends{margin-left:240px;max-width:900px;padding-bottom:40px}
-  #trip,#place{max-width:640px;margin:0 auto}
+  /* Toda tela precisa sair de baixo da coluna lateral, não só estas três.
+     #explore, #city, #list e #friend ficavam POR BAIXO da barra de 240px:
+     o título saía cortado ("...gar" no lugar de "Explorar") e o campo de
+     busca vazava pela direita. */
+  #dashboard,#profile,#friends,#explore,#city,#list,#friend{margin-left:240px;max-width:900px;padding-bottom:40px}
+  /* Mesmo alinhamento das demais: encostadas na coluna, não centralizadas na
+     janela inteira (centralizar ignorando a barra jogava as duas 120px pra
+     esquerda do centro real). */
+  #trip,#place{margin-left:240px;max-width:640px}
   .bottom-nav{
     position:fixed;top:0;left:0;bottom:auto;transform:none;
     width:240px;height:100vh;flex-direction:column;justify-content:flex-start;
@@ -395,11 +407,19 @@ body{font-family:'DM Sans',sans-serif;background:var(--dark);max-width:430px;mar
      escrito como .nav-item simples, isto não teria efeito nenhum. */
   .bottom-nav .nav-item{border-radius:var(--r-sm)}
   .bottom-nav .nav-item:active{transform:none}
-  .nav-item{flex:none;flex-direction:row;justify-content:flex-start;gap:12px;padding:12px 14px;transition:background .15s}
-  .nav-item:hover{background:rgba(234,231,224,.04)}
-  .nav-item.active{background:rgba(234,231,224,.07)}
-  .nav-icon{height:auto}
-  .nav-label{font-size:14px}
+  /* O comentário acima valia pra TODAS estas regras, e só a do border-radius
+     tinha sido escrita com a especificidade extra. As outras cinco estavam
+     como `.nav-item` simples, perdiam pra regra base que vem depois no
+     arquivo, e o desktop ficava com o `flex:1` do mobile: cada item esticava
+     pra preencher os 100vh da coluna, então a cápsula do item ativo virava um
+     retângulo de ~220px de altura e os itens ficavam espalhados pela tela.
+     O `flex-direction:row` também não pegava, por isso o ícone continuava em
+     cima do rótulo, e a cor de ativo saía terracota em vez da discreta. */
+  .bottom-nav .nav-item{flex:none;flex-direction:row;justify-content:flex-start;gap:12px;padding:12px 14px;transition:background .15s}
+  .bottom-nav .nav-item:hover{background:rgba(234,231,224,.04)}
+  .bottom-nav .nav-item.active{background:rgba(234,231,224,.07)}
+  .bottom-nav .nav-icon{height:auto}
+  .bottom-nav .nav-label{font-size:14px}
   .fab{right:calc(240px + 40px);bottom:40px}
   #tripsContainer{max-width:620px}
 }
@@ -1337,17 +1357,50 @@ async function sbFetch(path,opts,extraHeaders){
   }
   return r;
 }
-async function dbGet(table,query){
-  const r=await sbFetch('/rest/v1/'+table+'?'+query,{});
-  if(!r.ok){console.error('dbGet error',table,r.status,await r.text());return[]}
-  return await r.json();
+// ═══ LISTA VAZIA POR FALHA ≠ LISTA VAZIA DE VERDADE ═══
+//
+// dbGet devolvia [] pra QUALQUER erro: 500 do Supabase, projeto pausado por
+// inatividade, RLS quebrada, Wi-Fi trocando de rede. O app tratava isso como
+// "não tem nada", e o resultado era o Dashboard dizendo "Nenhuma viagem
+// ainda" pra quem tem 12 viagens. Pior que o susto: com S.trips vazio o
+// viagemQueCobre() não acha a viagem que existe e o app CRIA outra
+// duplicada — o mesmo bug dos dois cards da Islândia, por outra porta.
+//
+// A marca vai num defineProperty sem enumerable/writable, então ela não
+// aparece em .length, nem em for..of, nem em JSON.stringify. Os ~70 lugares
+// que só olham o tamanho continuam funcionando sem alteração; quem precisa
+// distinguir as duas coisas pergunta com falhou().
+function listaComFalha(){
+  const a=[];
+  Object.defineProperty(a,'_falhou',{value:true});
+  return a;
 }
+function falhou(x){return !!(x&&x._falhou)}
+async function dbGet(table,query){
+  let r;
+  // sbFetch não tem try/catch e o fetch REJEITA quando a rede cai no meio
+  // (não devolve resposta ruim, lança). Sem isso a exceção subia até o
+  // onclick e o botão ficava morto em "Salvando..." pra sempre.
+  try{r=await sbFetch('/rest/v1/'+table+'?'+query,{})}
+  catch(e){console.error('dbGet rede',table,e);return listaComFalha()}
+  if(!r.ok){console.error('dbGet error',table,r.status,await r.text());return listaComFalha()}
+  try{return await r.json()}
+  catch(e){console.error('dbGet json',table,e);return listaComFalha()}
+}
+// Rede caindo no meio faz o fetch LANÇAR, não devolver resposta ruim. Sem
+// este catch a exceção subia até o onclick, e como não existia handler
+// global o botão ficava morto em "Salvando..." sem toast nenhum. Agora a
+// falha de rede volta pelo mesmo contrato de erro que o resto já trata.
+const ERRO_REDE={message:'Sem conexão. Tenta de novo.',_rede:true};
 async function dbInsert(table,obj){
-  const r=await sbFetch('/rest/v1/'+table,{
-    method:'POST',
-    body:JSON.stringify(obj)
-  },{'Content-Type':'application/json','Prefer':'return=representation'});
-  const body=await r.json();
+  let r,body;
+  try{
+    r=await sbFetch('/rest/v1/'+table,{
+      method:'POST',
+      body:JSON.stringify(obj)
+    },{'Content-Type':'application/json','Prefer':'return=representation'});
+    body=await r.json();
+  }catch(e){console.error('dbInsert rede',table,e);return{error:ERRO_REDE,data:null}}
   if(!r.ok){console.error('dbInsert error',table,body);return{error:body,data:null}}
   return{error:null,data:Array.isArray(body)?body[0]:body};
 }
@@ -1356,20 +1409,43 @@ async function dbInsert(table,obj){
 // versao em lote vive ao lado e devolve o array inteiro.
 async function dbInsertMany(table,linhas){
   if(!linhas||!linhas.length)return{error:null,data:[]};
-  const r=await sbFetch('/rest/v1/'+table,{
-    method:'POST',
-    body:JSON.stringify(linhas)
-  },{'Content-Type':'application/json','Prefer':'return=representation'});
-  const body=await r.json();
+  let r,body;
+  try{
+    r=await sbFetch('/rest/v1/'+table,{
+      method:'POST',
+      body:JSON.stringify(linhas)
+    },{'Content-Type':'application/json','Prefer':'return=representation'});
+    body=await r.json();
+  }catch(e){console.error('dbInsertMany rede',table,e);return{error:ERRO_REDE,data:null}}
   if(!r.ok){console.error('dbInsertMany error',table,body);return{error:body,data:null}}
   return{error:null,data:Array.isArray(body)?body:[body]};
 }
+// ═══ ZERO LINHAS AFETADAS NÃO É SUCESSO ═══
+//
+// Este é o defeito que deixou o bug histórico do `trips` passar batido: a
+// tabela ficou sem política de UPDATE e ninguém percebeu por uma semana.
+// O motivo está aqui. Quando o RLS recusa um PATCH, o PostgREST NÃO devolve
+// erro — devolve 200 com lista vazia. A função pedia
+// `Prefer: return=representation`, nunca lia o corpo, e concluía sucesso.
+//
+// Como todo dbUpdate deste app é por chave primária, lista vazia só pode ser
+// "não existe" ou "o banco recusou". As duas merecem virar erro, senão a
+// próxima política que faltar passa batida exatamente do mesmo jeito.
 async function dbUpdate(table,id,obj){
-  const r=await sbFetch('/rest/v1/'+table+'?id=eq.'+encodeURIComponent(id),{
-    method:'PATCH',
-    body:JSON.stringify(obj)
-  },{'Content-Type':'application/json','Prefer':'return=representation'});
+  let r;
+  try{
+    r=await sbFetch('/rest/v1/'+table+'?id=eq.'+encodeURIComponent(id),{
+      method:'PATCH',
+      body:JSON.stringify(obj)
+    },{'Content-Type':'application/json','Prefer':'return=representation'});
+  }catch(e){console.error('dbUpdate rede',table,e);return{error:ERRO_REDE}}
   if(!r.ok){console.error('dbUpdate error',table,r.status,await r.text());return{error:true}}
+  let linhas=null;
+  try{linhas=await r.json()}catch(e){/* 204 sem corpo: segue como sucesso */}
+  if(Array.isArray(linhas)&&linhas.length===0){
+    console.error('dbUpdate nenhuma linha',table,id,'— RLS recusou ou a linha nao existe');
+    return{error:{message:'O banco não aceitou a alteração.',_semLinha:true}};
+  }
   return{error:null};
 }
 // Storage também via fetch direto, mesmo motivo do resto: nunca o SDK JS.
@@ -1459,18 +1535,50 @@ function confirmCrop(){
     cb(new File([blob],'crop.jpg',{type:'image/jpeg'}));
   },'image/jpeg',0.9);
 }
+// Mesmo raciocínio do dbUpdate: DELETE por PK que não apaga nada é recusa do
+// RLS ou linha inexistente, e voltava como sucesso. Precisa do
+// return=representation pra que exista corpo pra contar.
 async function dbDelete(table,id){
-  const r=await sbFetch('/rest/v1/'+table+'?id=eq.'+encodeURIComponent(id),{method:'DELETE'});
+  let r;
+  try{
+    r=await sbFetch('/rest/v1/'+table+'?id=eq.'+encodeURIComponent(id),
+      {method:'DELETE'},{'Prefer':'return=representation'});
+  }
+  catch(e){console.error('dbDelete rede',table,e);return{error:true}}
   if(!r.ok){console.error('dbDelete error',table,r.status,await r.text());return{error:true}}
+  let linhas=null;
+  try{linhas=await r.json()}catch(e){}
+  if(Array.isArray(linhas)&&linhas.length===0){
+    console.error('dbDelete nenhuma linha',table,id,'— RLS recusou ou a linha nao existe');
+    return{error:true};
+  }
   return{error:null};
 }
+// Apagar por um filtro que não é a PK. dbDelete só sabe id=eq, e o deleteTrip
+// chamava dbDelete('spots','trip_id=eq.<uuid>') — que virava
+// ?id=eq.trip_id%3Deq.<uuid>, uuid inválido, 400 garantido em TODA exclusão
+// de viagem. A chamada não apagava nada e ninguém lia o erro.
+async function dbDeleteOnde(table,filtro){
+  let r;
+  try{r=await sbFetch('/rest/v1/'+table+'?'+filtro,{method:'DELETE'})}
+  catch(e){console.error('dbDeleteOnde rede',table,e);return{error:true}}
+  if(!r.ok){console.error('dbDeleteOnde error',table,r.status,await r.text());return{error:true}}
+  return{error:null};
+}
+// dbRpc devolvia [] pra "perguntei e não achei" E pra "não consegui
+// perguntar". Isso fazia o app afirmar "não existe ninguém com esse
+// username" quando o que houve foi a rede cair. Mesma marca do dbGet.
 async function dbRpc(fn,params){
-  const r=await sbFetch('/rest/v1/rpc/'+fn,{
-    method:'POST',
-    body:JSON.stringify(params||{})
-  },{'Content-Type':'application/json'});
-  if(!r.ok){console.error('dbRpc error',fn,r.status,await r.text());return[]}
-  return await r.json();
+  let r;
+  try{
+    r=await sbFetch('/rest/v1/rpc/'+fn,{
+      method:'POST',
+      body:JSON.stringify(params||{})
+    },{'Content-Type':'application/json'});
+  }catch(e){console.error('dbRpc rede',fn,e);return listaComFalha()}
+  if(!r.ok){console.error('dbRpc error',fn,r.status,await r.text());return listaComFalha()}
+  try{return await r.json()}
+  catch(e){console.error('dbRpc json',fn,e);return listaComFalha()}
 }
 
 // ═══ INIT ═══
@@ -1716,6 +1824,17 @@ async function loadDashboard(){
     dbGet('spots','user_id=eq.'+S.user.id+'&order=created_at.asc')
   ]);
   if(atropelado())return;
+  // Consulta que FALHOU não é conta vazia. Antes, um 500 do Supabase, o
+  // projeto pausado por inatividade ou o Wi-Fi trocando de rede zeravam
+  // S.trips e o Dashboard anunciava "Nenhuma viagem ainda" pra quem tem
+  // doze. E o dano ia além do susto: com S.trips vazio o viagemQueCobre()
+  // não acha a viagem que existe, e o próximo spot adicionado CRIA uma
+  // viagem duplicada do mesmo país — o bug dos dois cards da Islândia por
+  // outra porta. Aqui o estado anterior é preservado e o app avisa.
+  if(falhou(trips)||falhou(allSpots)){
+    toast('Não carregou','Confere a conexão. O que está na tela pode estar desatualizado.','alert');
+    return;
+  }
   S.trips=trips||[];
   let ts=0,ctrs=new Set(),cities=new Set();
   const byId={};
@@ -1794,7 +1913,7 @@ function refreshTripMetas(){
   });
 }
 function tripCardHTML(t){
-  const flag=flagFor((t.destinations&&t.destinations[0])||t.name);
+  const flag=flagHTML((t.destinations&&t.destinations[0])||t.name);
   const grad=destGradient((t.destinations&&t.destinations[0])||t.name);
   return `<div class="trip-card" onclick="openTrip('${esc(t.id)}')"><div class="tc-photo" id="tcbg-${esc(t.id)}" style="background-image:${grad}"></div><div class="tc-stub"><div class="tc-stub-top"><span class="tc-flag">${flag}</span></div><div class="tc-name">${esc(t.name)}</div><div class="tc-meta" id="tcmeta-${esc(t.id)}">${esc(tripMetaText(t))}</div></div></div>`;
 }
@@ -1921,7 +2040,7 @@ function renderList(){
     kicker.textContent=list.length+(list.length===1?' cidade':' cidades');
     if(!list.length)h='<div class="empty-state"><div class="ei">'+icon('city')+'</div><h3>Nenhuma cidade ainda</h3><p>As cidades aparecem conforme você salva spots.</p></div>';
     list.forEach((c,i)=>{
-      h+=`<div class="lrow" onclick="drillFromList(${i},'city')"><span class="lflag">${flagFor(c.country)}</span><div class="lmain"><div class="lname">${esc(c.city)}</div><div class="lmeta">${esc(c.country)}</div></div><span class="lcount">${c.n} ${c.n===1?'spot':'spots'}</span></div>`;
+      h+=`<div class="lrow" onclick="drillFromList(${i},'city')"><span class="lflag">${flagHTML(c.country)}</span><div class="lmain"><div class="lname">${esc(c.city)}</div><div class="lmeta">${esc(c.country)}</div></div><span class="lcount">${c.n} ${c.n===1?'spot':'spots'}</span></div>`;
     });
   }
 
@@ -1939,7 +2058,7 @@ function renderList(){
     kicker.textContent=list.length+(list.length===1?' país':' países');
     list.forEach((c,i)=>{
       const meta=[c.viagens?c.viagens+(c.viagens===1?' viagem':' viagens'):'',c.spots?c.spots+(c.spots===1?' spot':' spots'):''].filter(Boolean).join(' · ')||'sem spots ainda';
-      h+=`<div class="lrow" onclick="drillFromList(${i},'country')"><span class="lflag">${flagFor(c.country)}</span><div class="lmain"><div class="lname">${esc(c.country)}</div><div class="lmeta">${esc(meta)}</div></div><span class="lcount">${regionFor(c.country)}</span></div>`;
+      h+=`<div class="lrow" onclick="drillFromList(${i},'country')"><span class="lflag">${flagHTML(c.country)}</span><div class="lmain"><div class="lname">${esc(c.country)}</div><div class="lmeta">${esc(meta)}</div></div><span class="lcount">${regionFor(c.country)}</span></div>`;
     });
   }
 
@@ -1955,7 +2074,7 @@ function renderList(){
       // entra a contagem de cidades — a mesma informacao que o card mostra.
       const nCid=new Set((t._spots||[]).map(s=>cityOf(s)).filter(Boolean)).size;
       const meta=nCid?nCid+(nCid===1?' cidade':' cidades'):'';
-      h+=`<div class="lrow" onclick="openTripFromList(${i})"><span class="lflag">${flagFor((t.destinations&&t.destinations[0])||t.name)}</span><div class="lmain"><div class="lname">${esc(t.name)}</div><div class="lmeta">${esc(meta)}</div></div><span class="lcount">${sp} ${sp===1?'spot':'spots'}</span></div>`;
+      h+=`<div class="lrow" onclick="openTripFromList(${i})"><span class="lflag">${flagHTML((t.destinations&&t.destinations[0])||t.name)}</span><div class="lmain"><div class="lname">${esc(t.name)}</div><div class="lmeta">${esc(meta)}</div></div><span class="lcount">${sp} ${sp===1?'spot':'spots'}</span></div>`;
     });
   }
 
@@ -1997,10 +2116,25 @@ async function deleteTrip(){
   if(!S.curTrip)return;
   if(!confirm(`Excluir a viagem "${S.curTrip.name}"? Todos os spots dela serão apagados. Isso não pode ser desfeito.`))return;
   const id=S.curTrip.id;
-  // Delete spots first, then the trip
-  await dbDelete('spots','trip_id=eq.'+id).catch(()=>{});
-  // dbDelete uses id=eq, but spots are deleted by trip_id — do it directly
-  await sbFetch('/rest/v1/spots?trip_id=eq.'+encodeURIComponent(id),{method:'DELETE'}).catch(()=>{});
+  // ORDEM, e por que ela é essa: não existe `on delete cascade` em
+  // spots.trip_id (as migrações 013 e 014 registram isso por escrito), então
+  // as duas exclusões são independentes e uma pode falhar sozinha.
+  //
+  //   spots primeiro, trips falha  → viagem vazia na lista. Chato, mas a
+  //                                  pessoa toca em excluir de novo e passa:
+  //                                  DELETE por filtro é idempotente.
+  //   trips primeiro, spots falha  → spots ÓRFÃOS. O loadDashboard os
+  //                                  descarta no byId[s.trip_id], então ficam
+  //                                  invisíveis pro dono — mas o feed dos
+  //                                  amigos busca por user_id, não por
+  //                                  viagem, e eles continuam aparecendo pros
+  //                                  amigos pra sempre, sem ninguém poder
+  //                                  apagar.
+  //
+  // O primeiro é recuperável, o segundo não. Então: spots primeiro, e se
+  // falhar não toca na viagem.
+  const{error:erroSpots}=await dbDeleteOnde('spots','trip_id=eq.'+encodeURIComponent(id));
+  if(erroSpots){toast('Não excluiu','Os spots da viagem não foram apagados. Tenta de novo.','alert');return}
   const{error}=await dbDelete('trips',id);
   if(!error){
     S.trips=S.trips.filter(t=>t.id!==id);
@@ -2029,7 +2163,7 @@ async function loadTrip(t){
   document.getElementById('tripFloat').textContent=t.name;
   document.getElementById('tripName').textContent=t.name;
   // Sem data no cabecalho tambem — mesma decisao do card (ver renderTrips).
-  document.getElementById('tripLabel').textContent=(t.destinations||[]).map(d=>flagFor(d)).join(' ');
+  document.getElementById('tripLabel').innerHTML=flagsHTML(t.destinations);
   document.getElementById('tripMeta').textContent='';
   const heroEl=document.getElementById('tripHeroImg');
   const dest=(t.destinations&&t.destinations[0])||t.name;
@@ -2164,7 +2298,7 @@ function openCityScreen(city){
   document.querySelectorAll('#city .cat-tab').forEach(t=>t.classList.remove('active'));
   document.querySelector('#city .cat-tab').classList.add('active');
   const t=S.curTrip;
-  document.getElementById('cityLabel').textContent=(t.destinations||[]).map(d=>flagFor(d)).join(' ');
+  document.getElementById('cityLabel').innerHTML=flagsHTML(t.destinations);
   document.getElementById('cityName').textContent=city;
   updateCityHeader();
   curCitySubcat='';renderCitySubcatFilter();
@@ -2339,12 +2473,36 @@ async function setPlaceSubcat(k){
   // a etiqueta da linha e o filtro da cidade leem daqui, então redesenha
   if(document.getElementById('city').classList.contains('active')){renderCitySubcatFilter();renderCityBody()}
 }
-async function setStatus(s,save=true){
+// "Fui" / "Quero ir" é a ação central do app — é o que decide o que entra no
+// feed dos amigos e o que conta nas estatísticas. Ela pintava o botão antes
+// de gravar, DESCARTAVA o {error} do dbUpdate e escrevia em memória de
+// qualquer jeito. Numa rede ruim a pessoa marcava dez lugares como visitados,
+// via os dez acenderem, recarregava, e nenhum tinha ficado.
+const STATUS_ROTULO={want:['chip-want','Quero ir'],been:['chip-been','Fui'],skip:['','Pulando']};
+function pintarStatus(s){
   ['want','been','skip'].forEach(k=>document.getElementById('t-'+k).className='toggle-btn');
   document.getElementById('t-'+s).classList.add('sel-'+s);
-  const ch=document.getElementById('placeChip'),m={want:['chip-want','Quero ir'],been:['chip-been','Fui'],skip:['','Pulando']};
-  ch.className='hero-chip '+m[s][0];ch.textContent=m[s][1];
-  if(save&&S.curPlace){await dbUpdate('spots',S.curPlace.id,{status:s});S.curPlace.status=s}
+  const ch=document.getElementById('placeChip');
+  ch.className='hero-chip '+STATUS_ROTULO[s][0];
+  ch.textContent=STATUS_ROTULO[s][1];
+}
+async function setStatus(s,save=true){
+  if(!STATUS_ROTULO[s])return;
+  const spot=S.curPlace;
+  const anterior=spot?spot.status:null;
+  pintarStatus(s);
+  if(!save||!spot)return;
+  const{error}=await dbUpdate('spots',spot.id,{status:s});
+  if(error){
+    // Desfaz o que já estava na tela, mas só se a pessoa ainda está olhando
+    // ESTE spot — se ela já abriu outro, repintar aqui escreveria o status
+    // errado na ficha do outro.
+    if(S.curPlace===spot&&anterior&&STATUS_ROTULO[anterior])pintarStatus(anterior);
+    toast('Não salvou',error.message||'Confere a conexão e tenta de novo.','alert');
+    return;
+  }
+  spot.status=s;
+  if(document.getElementById('city').classList.contains('active'))renderCityBody();
 }
 // ═══ EDITAR A NOTA ═══
 // A my_note era gravada UMA vez, no saveSpot, e depois so exibida — nao havia
@@ -2452,7 +2610,7 @@ function populateTripOpts(destaque){
   }else{
     lista.forEach(t=>{t._sugerida=false});
   }
-  c.innerHTML=lista.map(t=>`<div class="trip-option" onclick="selTripForSpot('${esc(t.id)}')"><div class="trip-option-img" style="background-image:${destGradient((t.destinations&&t.destinations[0])||t.name)}">${flagFor((t.destinations&&t.destinations[0])||'')}</div><div><div class="trip-option-name">${esc(t.name)}${t._sugerida?'<span class="trip-sug">aqui</span>':''}</div><div class="trip-option-meta">${(t._spots||[]).length} spots</div></div><div class="trip-option-arrow">›</div></div>`).join('');
+  c.innerHTML=lista.map(t=>`<div class="trip-option" onclick="selTripForSpot('${esc(t.id)}')"><div class="trip-option-img" style="background-image:${destGradient((t.destinations&&t.destinations[0])||t.name)}">${flagHTML((t.destinations&&t.destinations[0])||'')}</div><div><div class="trip-option-name">${esc(t.name)}${t._sugerida?'<span class="trip-sug">aqui</span>':''}</div><div class="trip-option-meta">${(t._spots||[]).length} spots</div></div><div class="trip-option-arrow">›</div></div>`).join('');
 }
 // Pula direto pra ficha de nota: usado quando viagem, categoria e lugar já
 // são todos conhecidos (Explorar, check-in) — nada a perguntar.
@@ -3778,7 +3936,7 @@ function filterNewTripCity(v){
       list.innerHTML=newTripCityResults.map((r,i)=>{
         const mainName=r.city||r.country;
         const subLabel=r.city?r.country:'País (sem cidade específica)';
-        return `<div class="dest-result" onclick="selectNewTripCity(${i})"><span class="dest-flag">${flagFor(r.country)}</span><div><div class="dest-name">${esc(mainName)}</div><div class="dest-region">${esc(subLabel)}</div></div></div>`;
+        return `<div class="dest-result" onclick="selectNewTripCity(${i})"><span class="dest-flag">${flagHTML(r.country)}</span><div><div class="dest-name">${esc(mainName)}</div><div class="dest-region">${esc(subLabel)}</div></div></div>`;
       }).join('');
     }catch(e){list.innerHTML='<div class="search-loading">Erro ao buscar</div>'}
   },350);
@@ -3831,7 +3989,7 @@ function renderCountryList2(filter){
       const dir=ja?'':` onclick="toggleCountry2(${COUNTRIES.indexOf(c)})"`;
       const marca=ja?'<span class="dest-ja-tag">no mapa</span>'
         :multi?'<span class="dest-check">'+icon('check')+'</span>':'';
-      return `<div class="dest-result${ja?' ja':''}${on?' on':''}"${dir}><span class="dest-flag">${c.flag}</span><div><div class="dest-name">${esc(c.name)}</div></div>${marca}</div>`;
+      return `<div class="dest-result${ja?' ja':''}${on?' on':''}"${dir}><span class="dest-flag">${flagHTML(c.name)}</span><div><div class="dest-name">${esc(c.name)}</div></div>${marca}</div>`;
     }).join('')
   ).join('');
   hydrateIcons(list);
@@ -4028,6 +4186,53 @@ function guessSubcat(types){
 }
 function catLabel(c){return{food:'Comer & Beber',hotel:'Onde Ficar',experience:'Experiência'}[c]||c}
 function flagFor(n){const c=COUNTRIES.find(x=>x.name===n);return c?c.flag:'🌍'}
+
+// ═══ BANDEIRA ONDE NÃO EXISTE GLIFO DE BANDEIRA ═══
+//
+// Bandeira em emoji é um par de "indicadores regionais" (🇧 + 🇷). iOS, Android
+// e macOS desenham o par como uma bandeira. O Windows NÃO tem esse glifo, e aí
+// a fonte desenha os dois indicadores separados — que saem como as LETRAS
+// "BR". É por isso que os cards apareciam com "IS" e "CZ" no notebook e com a
+// bandeira certa no celular.
+//
+// Isso deixou de ser detalhe: a conta de demonstração pro revisor da Apple e
+// as capturas da loja saem de um Windows.
+//
+// A detecção é por medida, não por sniff de navegador (que erra e envelhece):
+// onde HÁ glifo, o par ocupa a largura de um emoji só; onde não há, ocupa o
+// dobro, porque são duas letras.
+let SUPORTA_BANDEIRA=null;
+function suportaBandeira(){
+  if(SUPORTA_BANDEIRA!==null)return SUPORTA_BANDEIRA;
+  try{
+    const ctx=document.createElement('canvas').getContext('2d');
+    ctx.font='16px sans-serif';
+    const par=ctx.measureText('\u{1F1E7}\u{1F1F7}').width;
+    const um=ctx.measureText('\u{1F1E7}').width;
+    SUPORTA_BANDEIRA=!!um&&par<um*1.7;
+  }catch(e){SUPORTA_BANDEIRA=true} // na dúvida, deixa o emoji: é o caso do celular
+  return SUPORTA_BANDEIRA;
+}
+// Twemoji pelo jsDelivr. Caminho conferido com requisição real antes de entrar
+// (200, image/svg+xml). O host precisa estar no img-src do _headers.
+function bandeiraSVG(emoji){
+  const cps=[...emoji].map(ch=>ch.codePointAt(0).toString(16)).join('-');
+  return 'https://cdn.jsdelivr.net/gh/jdecked/twemoji@15.1.0/assets/svg/'+cps+'.svg';
+}
+// Se o CDN sumir ou mudar de caminho um dia, volta pro emoji em vez de deixar
+// ícone de imagem quebrada — degrada pro comportamento de hoje, não pior.
+function bandeiraFalhou(img){
+  img.replaceWith(document.createTextNode(img.getAttribute('data-emoji')||''));
+}
+function flagHTML(n){
+  const e=flagFor(n);
+  if(suportaBandeira())return esc(e);
+  return '<img class="bandeira-img" src="'+esc(bandeiraSVG(e))+'" data-emoji="'+esc(e)+
+         '" alt="'+esc(n||'')+'" onerror="bandeiraFalhou(this)" loading="lazy" decoding="async">';
+}
+// Pros lugares que montavam a lista de bandeiras com textContent: com <img> no
+// meio, texto puro mostraria a tag crua.
+function flagsHTML(lista){return (lista||[]).map(d=>flagHTML(d)).join(' ')}
 
 // ═══ NOTAS ═══
 // Sempre uma casa decimal. Antes "5" e "4.5" apareciam lado a lado e pareciam
@@ -5037,7 +5242,7 @@ function renderEstante(){
     }).join(''):'';
     return'<div class="est-cidade'+(aberta?' aberta':'')+'">'
       +'<div class="est-topo" onclick="alternarCidadeDaEstante(\''+esc(String(c).replace(/[\\\\\']/g,''))+'\')">'
-      +'<span class="est-bandeira">'+(paisDe[c]?flagFor(paisDe[c]):'')+'</span>'
+      +'<span class="est-bandeira">'+(paisDe[c]?flagHTML(paisDe[c]):'')+'</span>'
       +'<span class="est-cnome">'+esc(c)+'</span>'
       +'<span class="est-meta">'+esc(meta.join(' · '))+'</span>'
       +'<span class="est-seta">›</span></div>'
@@ -5080,7 +5285,7 @@ function renderListaDePaises(visited,alvo){
       ?'<button class="cr-tirar" onclick="desmarcarPais(\''+seguro+'\',event)" aria-label="Tirar '+esc(c)+' do mapa">'+icon('close')+'</button>'
       :'';
     return '<div class="country-row" onclick="drillTo(\'country\',\''+seguro+'\');goTo(\'list\')">'
-      +'<span class="cr-flag">'+flagFor(c)+'</span>'
+      +'<span class="cr-flag">'+flagHTML(c)+'</span>'
       +'<span class="cr-name">'+esc(c)+'</span>'+direita+tirar+'</div>';
   }).join('');
   if(ordenado.length>PAISES_NO_PERFIL){
@@ -5686,7 +5891,7 @@ function abrirDetalheAmigo(modo){
       const meta=g.spots?(g.spots+(g.spots===1?' lugar':' lugares'))
         :(g.viagens?'sem lugares salvos':'só marcou que foi');
       return'<div class="country-row" style="cursor:default">'
-        +'<span class="cr-flag">'+flagFor(p)+'</span>'
+        +'<span class="cr-flag">'+flagHTML(p)+'</span>'
         +'<span class="cr-name">'+esc(p)+'</span>'
         +'<span class="cr-count">'+esc(meta)+'</span></div>';
     }).join('');
@@ -5706,7 +5911,7 @@ function abrirDetalheAmigo(modo){
     const lista=Object.keys(porCidade).sort((a,b)=>
       porCidade[b].n-porCidade[a].n||a.localeCompare(b,'pt-BR'));
     h=lista.map(c=>'<div class="country-row" style="cursor:default">'
-      +'<span class="cr-flag">'+flagFor(porCidade[c].pais)+'</span>'
+      +'<span class="cr-flag">'+flagHTML(porCidade[c].pais)+'</span>'
       +'<span class="cr-name">'+esc(c)+'</span>'
       +'<span class="cr-count">'+porCidade[c].n+(porCidade[c].n===1?' lugar':' lugares')+'</span></div>').join('');
     if(!lista.length)h='<div class="amg-aviso">'+esc(nome)+' ainda não salvou lugares.</div>';
@@ -5746,7 +5951,7 @@ function abrirDetalheAmigo(modo){
       const pais=(t.destinations&&t.destinations[0])||t.name;
       const n=(t._spots||[]).length;
       return'<div class="country-row" style="cursor:default">'
-        +'<span class="cr-flag">'+flagFor(pais)+'</span>'
+        +'<span class="cr-flag">'+flagHTML(pais)+'</span>'
         +'<span class="cr-name">'+esc(t.name)+'</span>'
         +'<span class="cr-count">'+(n?n+(n===1?' lugar':' lugares'):'—')+'</span></div>';
     }).join('');
@@ -5778,7 +5983,7 @@ function renderFriendProfile(){
   }
   // Índice no onclick, não o id: mesma razão dos cards de cidade.
   box.innerHTML=visiveis.map((t,i)=>{
-    const flag=flagFor((t.destinations&&t.destinations[0])||t.name);
+    const flag=flagHTML((t.destinations&&t.destinations[0])||t.name);
     const grad=destGradient((t.destinations&&t.destinations[0])||t.name);
     return '<div class="trip-card" onclick="openFriendTrip('+i+')"><div class="tc-photo" id="ftcbg-'+i+'" style="background-image:'+grad+'"></div><div class="tc-stub"><div class="tc-stub-top"><span class="tc-flag">'+flag+'</span></div><div class="tc-name">'+esc(t.name)+'</div><div class="tc-meta">'+esc(tripMetaText(t))+'</div></div></div>';
   }).join('');
@@ -5795,7 +6000,7 @@ function openFriendTrip(i){
   const t=(FRIEND.visiveis||[])[i];if(!t)return;
   FRIEND.trip=t;
   // Sem data, igual as viagens proprias (ver renderTrips / loadTrip).
-  document.getElementById('ftLabel').textContent=(t.destinations||[]).map(d=>flagFor(d)).join(' ');
+  document.getElementById('ftLabel').innerHTML=flagsHTML(t.destinations);
   document.getElementById('ftName').textContent=t.name;
   const n=(t._spots||[]).length;
   document.getElementById('ftMeta').textContent=n+(n===1?' spot':' spots');
@@ -5824,7 +6029,7 @@ function openFriendCity(city){
   voltarDaCidadeDoAmigo='friendTrip';
   document.querySelectorAll('#friendCity .cat-tab').forEach(x=>x.classList.remove('active'));
   document.querySelector('#friendCity .cat-tab').classList.add('active');
-  document.getElementById('fcLabel').textContent=(t.destinations||[]).map(d=>flagFor(d)).join(' ');
+  document.getElementById('fcLabel').innerHTML=flagsHTML(t.destinations);
   document.getElementById('fcName').textContent=city;
   updateFriendCityHeader();
   const hero=document.getElementById('fcHeroImg');
@@ -6083,6 +6288,15 @@ async function sendFriendRequest(){
   if(!username){mostrarErroAmigo('Digita um username');return}
   const btn=document.getElementById('sendReqBtn');btn.textContent='Buscando...';btn.style.pointerEvents='none';
   const matches=await dbRpc('find_profile_by_username',{uname:username});
+  // "Não achei" e "não consegui perguntar" chegavam as duas como lista vazia,
+  // e o app afirmava a primeira. Esta é a porta de entrada de gente nova no
+  // Spot: dizer "seu amigo não usa o Spot" porque a rede caiu manda a pessoa
+  // embora por um motivo falso.
+  if(falhou(matches)){
+    btn.textContent='Enviar pedido';btn.style.pointerEvents='auto';
+    mostrarErroAmigo('Não conseguimos buscar agora. Confere a conexão e tenta de novo.');
+    return;
+  }
   if(!matches.length){
     btn.textContent='Enviar pedido';btn.style.pointerEvents='auto';
     mostrarErroAmigo('Não encontramos ninguém com esse username no Spot.');
@@ -6134,6 +6348,13 @@ async function salvarPerfil(){
     const atual=(S.profile&&S.profile.username)||'';
     if(raw!==atual){
       const existente=await dbRpc('find_profile_by_username',{uname:raw});
+      // Consulta que falhou liberava o username: o app concluía "ninguém tem"
+      // e tentava gravar um nome possivelmente já tomado, tomando 409 depois.
+      if(falhou(existente)){
+        statusEl.style.color=var_red();
+        statusEl.textContent='Não deu pra conferir o username agora. Tenta de novo.';
+        return;
+      }
       if(existente.length&&existente[0].id!==S.user.id){
         statusEl.style.color=var_red();
         statusEl.textContent='Esse username já está em uso';
