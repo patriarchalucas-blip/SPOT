@@ -420,7 +420,15 @@ body{font-family:'DM Sans',sans-serif;background:var(--dark);max-width:430px;mar
   .bottom-nav .nav-item.active{background:rgba(234,231,224,.07)}
   .bottom-nav .nav-icon{height:auto}
   .bottom-nav .nav-label{font-size:14px}
-  .fab{right:calc(240px + 40px);bottom:40px}
+  /* O `right:calc(240px + 40px)` de antes descontava a largura da barra
+     lateral do lado ERRADO: a barra fica à esquerda, então tirar 240px da
+     direita empurrava o botão pra dentro da coluna de conteúdo, bem em cima
+     do terceiro card de estatística ("8 viagens" virava "8 ns").
+     Aqui ele é ancorado ao vão à DIREITA da coluna: 240 da barra + 900 da
+     largura máxima do conteúdo + 40 de respiro. Quando a janela é estreita
+     demais pra existir esse vão, o min() segura o botão dentro da tela em
+     vez de mandá-lo pra fora. */
+  .fab{left:min(calc(240px + 900px + 40px), calc(100vw - 110px));right:auto;bottom:40px}
   #tripsContainer{max-width:620px}
 }
 .nav-item{flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;cursor:pointer;padding:9px 0 7px;border-radius:18px;transition:background .15s,transform .12s}
