@@ -1,16 +1,8 @@
-# O Cloudflare Pages publica TUDO que está versionado no repositório, não só o
-# index.html. Em 11/09/2026 uma verificação no site no ar mostrou que as 15
-# migrações SQL e o CLAUDE.md estavam baixáveis por qualquer pessoa.
+# Vazio de proposito.
 #
-# Juntos eles entregavam: o desenho completo do banco, o texto literal de cada
-# política de permissão, o endereço do projeto Supabase, e a própria lista de
-# fraquezas conhecidas do projeto — inclusive a anotação de que as chaves no
-# cliente são "inaceitáveis se abrir pra estranhos". É um mapa pronto pra quem
-# quiser atacar, e o app está indo pra App Store.
+# A tentativa de bloquear /migrations e /CLAUDE.md por aqui NAO funcionou:
+# no Cloudflare Pages, quando o caminho corresponde a um arquivo real, o
+# arquivo estatico vence e as regras deste arquivo nem sao avaliadas.
+# Verificado no site no ar: continuavam devolvendo 200 com o conteudo.
 #
-# Estas regras devolvem 404 nesses caminhos. A ordem importa: são avaliadas de
-# cima pra baixo, e a rota real do app tem que continuar funcionando.
-/migrations/*      /404.html   404
-/tests/*           /404.html   404
-/CLAUDE.md         /404.html   404
-/.github/*         /404.html   404
+# O bloqueio vive em functions/_middleware.js, que roda ANTES do arquivo.
