@@ -379,58 +379,32 @@ body{font-family:'DM Sans',sans-serif;background:var(--dark);max-width:430px;mar
 }
 
 /* ═══ DESKTOP (site, não coluna de celular flutuando) ═══ */
-@media(min-width:900px){
-  body{max-width:100%;background:var(--surface)}
-  #login{max-width:100%}
-  #login .login-inner{max-width:480px;margin:0 auto;padding:64px 40px 56px}
-  #login .login-top{justify-content:flex-start}
-  /* Toda tela precisa sair de baixo da coluna lateral, não só estas três.
-     #explore, #city, #list e #friend ficavam POR BAIXO da barra de 240px:
-     o título saía cortado ("...gar" no lugar de "Explorar") e o campo de
-     busca vazava pela direita. */
-  #dashboard,#profile,#friends,#explore,#city,#list,#friend{margin-left:240px;max-width:900px;padding-bottom:40px}
-  /* Mesmo alinhamento das demais: encostadas na coluna, não centralizadas na
-     janela inteira (centralizar ignorando a barra jogava as duas 120px pra
-     esquerda do centro real). */
-  #trip,#place{margin-left:240px;max-width:640px}
-  .bottom-nav{
-    position:fixed;top:0;left:0;bottom:auto;transform:none;
-    width:240px;height:100vh;flex-direction:column;justify-content:flex-start;
-    align-items:stretch;gap:4px;padding:32px 16px;border-top:none;
-    border-right:1px solid var(--border);z-index:60;
-    /* aqui é coluna lateral, não pílula: desfaz o que vale só no mobile */
-    border-radius:0;box-shadow:none;background:var(--dark);
-    -webkit-backdrop-filter:none;backdrop-filter:none;
-  }
-  /* Especificidade extra de propósito: a regra base de .nav-item aparece
-     DEPOIS desta media query no arquivo, e @media não soma especificidade —
-     escrito como .nav-item simples, isto não teria efeito nenhum. */
-  .bottom-nav .nav-item{border-radius:var(--r-sm)}
-  .bottom-nav .nav-item:active{transform:none}
-  /* O comentário acima valia pra TODAS estas regras, e só a do border-radius
-     tinha sido escrita com a especificidade extra. As outras cinco estavam
-     como `.nav-item` simples, perdiam pra regra base que vem depois no
-     arquivo, e o desktop ficava com o `flex:1` do mobile: cada item esticava
-     pra preencher os 100vh da coluna, então a cápsula do item ativo virava um
-     retângulo de ~220px de altura e os itens ficavam espalhados pela tela.
-     O `flex-direction:row` também não pegava, por isso o ícone continuava em
-     cima do rótulo, e a cor de ativo saía terracota em vez da discreta. */
-  .bottom-nav .nav-item{flex:none;flex-direction:row;justify-content:flex-start;gap:12px;padding:12px 14px;transition:background .15s}
-  .bottom-nav .nav-item:hover{background:rgba(234,231,224,.04)}
-  .bottom-nav .nav-item.active{background:rgba(234,231,224,.07)}
-  .bottom-nav .nav-icon{height:auto}
-  .bottom-nav .nav-label{font-size:14px}
-  /* O `right:calc(240px + 40px)` de antes descontava a largura da barra
-     lateral do lado ERRADO: a barra fica à esquerda, então tirar 240px da
-     direita empurrava o botão pra dentro da coluna de conteúdo, bem em cima
-     do terceiro card de estatística ("8 viagens" virava "8 ns").
-     Aqui ele é ancorado ao vão à DIREITA da coluna: 240 da barra + 900 da
-     largura máxima do conteúdo + 40 de respiro. Quando a janela é estreita
-     demais pra existir esse vão, o min() segura o botão dentro da tela em
-     vez de mandá-lo pra fora. */
-  .fab{left:min(calc(240px + 900px + 40px), calc(100vw - 110px));right:auto;bottom:40px}
-  #tripsContainer{max-width:620px}
-}
+/* === UM LAYOUT SO, EM TODA TELA ===
+
+   Aqui existia um @media(min-width:900px) que trocava a pilula inferior por
+   uma coluna de navegacao a esquerda e esparramava o conteudo por 900px.
+   Foi removido de proposito.
+
+   O motivo nao e estetico, e de custo: TODO defeito de layout encontrado em
+   11/09/2026 era exclusivo do desktop: capsula do item ativo esticada a
+   220px, telas por baixo da barra lateral com o titulo cortado, botao +
+   sobre o card de estatistica. Nenhum deles aparecia no celular, que e onde
+   o app e usado de verdade e e para onde ele vai na App Store. Dois layouts
+   custavam bug num e entregavam valor no outro.
+
+   Nao foi preciso escrever layout novo: o CSS base ja era feito pra isso.
+   body tem max-width:430px com margin:0 auto, .bottom-nav e centralizada com
+   left:50% + translateX(-50%), .sheet tem o mesmo teto de 430px e o .fab usa
+   right:calc(50% - 215px + 24px), que e exatamente o canto direito de uma
+   coluna de 430px centralizada. E html{background:var(--dark)} ja pintava a
+   area em volta. A media query era a unica coisa que desfazia tudo isso.
+
+   Efeito colateral bem-vindo: a correcao do .fab no desktop deixou de ser
+   necessaria, porque o desktop deixou de ter posicionamento proprio.
+
+   Custo aceito: no notebook sobra area vazia dos lados. Foi decisao do Lucas
+   em 11/09/2026 ("padronize"), sabendo disso. */
+
 .nav-item{flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;cursor:pointer;padding:9px 0 7px;border-radius:18px;transition:background .15s,transform .12s}
 .nav-item:active{transform:scale(.94)}
 /* Cápsula do ativo: mesma cor de acento de antes, só arredondada junto com a
