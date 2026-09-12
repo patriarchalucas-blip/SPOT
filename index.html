@@ -580,6 +580,16 @@ body{font-family:'DM Sans',sans-serif;background:var(--dark);max-width:430px;mar
    espaço (tem ellipsis), não os botões. */
 .req-btn{border:none;border-radius:9px;padding:9px 13px;font-family:'DM Sans',sans-serif;font-size:13px;font-weight:600;cursor:pointer;flex-shrink:0;white-space:nowrap}
 .req-accept{background:var(--terra);color:#fff}
+/* Faixa de "sem conexão". Fixa, não toast: quem abriu o app no avião
+   precisa continuar sabendo que o que está na tela pode estar velho. Fica
+   acima da barra de navegação de baixo pra não cobrir os botões. */
+.aviso-offline{position:fixed;left:12px;right:12px;bottom:calc(74px + env(safe-area-inset-bottom,0px));z-index:60;
+  display:flex;align-items:center;gap:9px;padding:11px 14px;border-radius:11px;
+  background:rgba(22,35,42,.94);border:1px solid rgba(255,255,255,.13);
+  backdrop-filter:blur(10px);color:#EAE7E0;font-size:12.5px;line-height:1.35;
+  box-shadow:0 6px 24px rgba(0,0,0,.3);pointer-events:none}
+.ao-ponto{width:7px;height:7px;border-radius:50%;background:var(--amber);flex-shrink:0}
+@media(min-width:900px){.aviso-offline{left:auto;right:20px;bottom:20px;max-width:340px}}
 /* Resultados da busca de pessoa. Reaproveita .req-card pra linha ficar
    igual à de pedido recebido — é a mesma coisa vista de outro ângulo. */
 .busca-res{margin-top:12px;max-height:46vh;overflow-y:auto;-webkit-overflow-scrolling:touch}
@@ -2018,7 +2028,15 @@ function mostrarErroAmigo(m){
   e.classList.toggle('show',!!m);
 }
 function hideAuthErr(){document.getElementById('authError').classList.remove('show')}
-async function signOut(){if(!confirm('Sair do Spot?'))return;try{await sb.auth.signOut()}catch(e){}S.user=null;S.token=null;S.trips=[];location.reload()}
+async function signOut(){
+  if(!confirm('Sair do Spot?'))return;
+  // Antes do signOut, enquanto S.user ainda existe pra montar a chave: o
+  // cache local guarda viagens e notas, e num aparelho emprestado isso não
+  // pode sobrar pra quem entrar depois.
+  limparDadosLocais();
+  try{await sb.auth.signOut()}catch(e){}
+  S.user=null;S.token=null;S.trips=[];location.reload();
+}
 
 // ═══ EXCLUIR CONTA ═══
 //
@@ -2141,6 +2159,88 @@ async function excluirConta(){
 
 // ═══ DASHBOARD ═══
 let dashboardReqId=0;
+// ═══ OFFLINE ═══
+// Viagem é justamente quando falta sinal: avião, metrô, roaming ruim. E é a
+// primeira coisa da lista que tira o app da classificação de "site
+// embrulhado" na regra 4.2 da App Store.
+//
+// São duas peças. O service worker (sw.js) guarda o app e as fotos já vistas.
+// Isto aqui guarda os SEUS DADOS — viagens, lugares, notas — pra tela abrir
+// cheia sem rede, em vez de abrir e ficar girando.
+const CACHE_DADOS='spot_dados_v1';
+
+function chaveDosDados(){return CACHE_DADOS+'_'+((S.user&&S.user.id)||'')}
+
+// Guarda depois de cada carregamento bem-sucedido. Só o que a tela precisa:
+// as marcas internas (_spots, _spotsLoaded) vão junto porque são o que o
+// render lê, e reconstruí-las na volta custaria mais código que guardá-las.
+function guardarDadosLocais(){
+  if(!S.user)return;
+  try{
+    localStorage.setItem(chaveDosDados(),JSON.stringify({
+      quando:Date.now(),
+      trips:S.trips,
+      profile:S.profile||null
+    }));
+  }catch(e){
+    // Cota estourada: o cache é conveniência, não pode derrubar nada.
+    try{localStorage.removeItem(chaveDosDados())}catch(e2){}
+  }
+}
+
+// Devolve true se conseguiu desenhar a tela com o que estava guardado.
+function usarDadosLocais(){
+  if(!S.user)return false;
+  let g;
+  try{g=JSON.parse(localStorage.getItem(chaveDosDados())||'null')}catch(e){return false}
+  if(!g||!Array.isArray(g.trips)||!g.trips.length)return false;
+  S.trips=g.trips;
+  if(g.profile&&!S.profile)S.profile=g.profile;
+  S.trips.forEach(t=>{if(!Array.isArray(t._spots))t._spots=[];t._spotsLoaded=true});
+  rebuildCityCanon();
+  renderTrips();
+  populateTripOpts();
+  return true;
+}
+
+function limparDadosLocais(){
+  try{localStorage.removeItem(chaveDosDados())}catch(e){}
+}
+
+// ── Aviso de "sem conexão" ───────────────────────────────────────────────
+// Aparece quando o aparelho está offline, e some sozinho quando volta. Não é
+// toast: toast some em 3 segundos e a pessoa que abriu o app no avião precisa
+// continuar sabendo que o que está vendo pode estar velho.
+function pintarAvisoOffline(){
+  const jaTem=document.getElementById('avisoOffline');
+  if(navigator.onLine){if(jaTem)jaTem.remove();return}
+  if(jaTem)return;
+  const d=document.createElement('div');
+  d.id='avisoOffline';
+  d.className='aviso-offline';
+  d.innerHTML='<span class="ao-ponto"></span>Sem conexão — mostrando o que está salvo no aparelho';
+  document.body.appendChild(d);
+}
+function ligarAvisoOffline(){
+  window.addEventListener('online',()=>{
+    pintarAvisoOffline();
+    // Voltou o sinal: recarrega de verdade, sem pedir nada pra pessoa.
+    if(S.user)loadDashboard();
+  });
+  window.addEventListener('offline',pintarAvisoOffline);
+  pintarAvisoOffline();
+}
+
+// Registra o service worker. Falhar aqui não pode quebrar o app: navegador
+// velho, modo anônimo e http:// simplesmente não têm isso.
+function ligarOffline(){
+  ligarAvisoOffline();
+  if(!('serviceWorker'in navigator))return;
+  window.addEventListener('load',()=>{
+    navigator.serviceWorker.register('/sw.js').catch(e=>console.warn('sw:',e&&e.message));
+  });
+}
+
 async function loadDashboard(){
   if(!S.user)return;
   // Só a execução mais nova pode escrever no estado. A antiga desiste no
@@ -2160,6 +2260,10 @@ async function loadDashboard(){
   // só o seu) as duas consultas saem juntas e a tela monta de uma vez, em vez
   // de aparecer em etapas: cards, depois scorecards, depois mapa.
   // A geometria do mapa começa a carregar aqui também, junto das consultas.
+  // Desenha primeiro com o que está no aparelho, depois confere com o banco.
+  // Sem isto, abrir o app sem sinal mostra tela vazia — e com sinal ruim
+  // mostra tela vazia até a consulta voltar.
+  if(!S.trips.length)usarDadosLocais();
   const geoPronta=carregarGeoMundo().catch(()=>false);
   const [trips,allSpots]=await Promise.all([
     dbGet('trips','user_id=eq.'+S.user.id+'&order=created_at.desc'),
@@ -2174,6 +2278,13 @@ async function loadDashboard(){
   // viagem duplicada do mesmo país — o bug dos dois cards da Islândia por
   // outra porta. Aqui o estado anterior é preservado e o app avisa.
   if(falhou(trips)||falhou(allSpots)){
+    // Offline não é erro: é o modo esperado dentro de um avião. O aviso fixo
+    // já está na tela, então um toast de erro por cima só assusta à toa.
+    if(!navigator.onLine){
+      if(!S.trips.length)usarDadosLocais();
+      pintarAvisoOffline();
+      return;
+    }
     toast('Não carregou','Confere a conexão. O que está na tela pode estar desatualizado.','alert');
     return;
   }
@@ -2186,6 +2297,7 @@ async function loadDashboard(){
   const visivelAntes=S.trips.filter(t=>!isNonTrip(t)).map(t=>t.id).join(',');
   rebuildCityCanon(); // funde "Split" e "Split-Dalmatia County" antes de contar
   renderTrips();populateTripOpts();
+  guardarDadosLocais(); // pra próxima abertura sem sinal
   carregarBloqueios(); // quem você bloqueou some do feed, dos amigos e dos comentários
   revalidarInstagramsAntigos().then(autoBackfillPlaceLinks); // silencioso, não bloqueia nada
   corrigirCidadesAntigas(); // idem — conserta o que a regra velha gravou errado
@@ -7426,6 +7538,7 @@ function onAvatarFileChosen(input){
 
 // ═══ START ═══
 init();
+ligarOffline();
 startLoginPhotos();
 
 </script>
