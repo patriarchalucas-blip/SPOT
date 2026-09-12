@@ -1,0 +1,281 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Spot — direção Atlas</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500&family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,600;1,9..144,400&family=DM+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root{
+  --dark:#0B1620; --surf:#101C24; --elev:#16232A;
+  --ink:#EAE7E0; --ink2:#B4BCBF; --ink3:#879499;
+  --borda:rgba(234,231,224,.15); --borda2:rgba(234,231,224,.09);
+  --terra:#c1552f; --terra2:#E0714A;
+  --verde:#2F5D62; --verdeTxt:#8FD3CE; --ambar:#BFA470;
+}
+*{box-sizing:border-box}
+html{background:#060d13}
+body{margin:0;background:#060d13;font-family:'DM Sans',system-ui,sans-serif;color:var(--ink);-webkit-font-smoothing:antialiased}
+.rotulo{font-family:'IBM Plex Mono',monospace;font-size:10px;letter-spacing:.18em;text-transform:uppercase;color:var(--terra);padding:26px 18px 10px;max-width:430px;margin:0 auto}
+.tela{width:100%;max-width:430px;margin:0 auto;height:932px;max-height:100dvh;position:relative;overflow:hidden;background:var(--dark)}
+.mono{font-family:'IBM Plex Mono',monospace}
+.fr{font-family:'Fraunces',Georgia,serif}
+
+/* ── barra de navegação, igual à do app ── */
+.nav{position:absolute;left:13px;right:13px;bottom:14px;height:66px;border-radius:24px;background:rgba(11,22,32,.82);-webkit-backdrop-filter:blur(16px);backdrop-filter:blur(16px);border:1px solid var(--borda2);display:flex;padding:6px;gap:2px;box-shadow:0 12px 32px rgba(0,0,0,.42);z-index:20}
+.nav-i{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;border-radius:18px;color:var(--ink3)}
+.nav-i.on{background:rgba(193,85,47,.16);color:var(--ink)}
+.nav-i span{font-size:10.5px}
+.nav-i.on span{font-weight:600}
+svg{display:block}
+
+/* ── 1. VIAGENS ── */
+.mapa{position:absolute;inset:0 0 auto 0;height:330px;
+  background:
+    radial-gradient(circle at 30% 42%, rgba(193,85,47,.30), transparent 46%),
+    radial-gradient(circle at 78% 28%, rgba(47,93,98,.38), transparent 44%),
+    radial-gradient(rgba(234,231,224,.26) .9px, transparent 1.1px) 0 0/9px 9px,
+    var(--dark)}
+.mapa::after{content:"";position:absolute;inset:0;background:linear-gradient(to bottom,rgba(11,22,32,0) 38%,var(--dark) 100%)}
+.topo{position:relative;z-index:5;display:flex;align-items:center;justify-content:space-between;padding:18px 24px}
+.marca{font-family:'Cinzel',Georgia,serif;font-weight:500;font-size:17px;letter-spacing:.2em;color:var(--ink)}
+.av{width:34px;height:34px;border-radius:50%;background:var(--verde);display:flex;align-items:center;justify-content:center;font-family:'IBM Plex Mono',monospace;font-size:12px;color:#cfe9e6}
+
+/* placar enxuto: uma linha só, no lugar do número gigante + três caixas */
+.placar{position:absolute;top:246px;left:24px;right:24px;z-index:5;display:flex;align-items:baseline;gap:7px;flex-wrap:wrap}
+.placar b{font-family:'IBM Plex Mono',monospace;font-weight:500;font-size:30px;letter-spacing:-.03em;color:var(--ink)}
+.placar i{font-family:'IBM Plex Mono',monospace;font-style:normal;font-size:13px;color:var(--ink3)}
+.placar u{text-decoration:none;font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--ink3);letter-spacing:.06em}
+.ponto{color:rgba(234,231,224,.28);font-size:11px}
+
+.chips{position:absolute;top:312px;left:0;right:0;z-index:5;display:flex;gap:8px;overflow-x:auto;padding:0 24px;scrollbar-width:none}
+.chips::-webkit-scrollbar{display:none}
+.chip{flex:none;font-family:'IBM Plex Mono',monospace;font-size:10.5px;letter-spacing:.12em;text-transform:uppercase;padding:9px 14px;border-radius:100px;border:1px solid rgba(234,231,224,.2);color:var(--ink2);white-space:nowrap}
+.chip.on{background:var(--terra);border-color:var(--terra);color:#fff}
+
+.filme{position:absolute;top:368px;left:0;right:0;z-index:5;display:flex;gap:12px;overflow-x:auto;padding:0 24px 8px;scroll-snap-type:x mandatory;scrollbar-width:none}
+.filme::-webkit-scrollbar{display:none}
+.card{flex:none;width:250px;height:330px;border-radius:20px;overflow:hidden;position:relative;scroll-snap-align:start}
+.card .g{position:absolute;inset:0}
+.card .s{position:absolute;inset:0;background:linear-gradient(160deg,rgba(0,0,0,0) 0%,rgba(11,22,32,.55) 58%,var(--dark) 100%)}
+.card .bd{position:absolute;top:16px;left:16px;font-size:26px}
+.card .pe{position:absolute;left:18px;right:18px;bottom:18px}
+.card .pe h3{font-family:'Fraunces',Georgia,serif;font-weight:400;font-size:32px;line-height:1;margin:0;color:#fff;letter-spacing:-.01em}
+.card .pe p{font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--ink2);margin:8px 0 0}
+.pag{position:absolute;top:716px;left:24px;z-index:5;display:flex;gap:5px}
+.pag i{display:block;height:3px;border-radius:2px;background:rgba(234,231,224,.3);width:8px}
+.pag i.on{width:18px;background:var(--ink)}
+.fab{position:absolute;right:24px;bottom:100px;width:56px;height:56px;border-radius:50%;background:var(--terra);display:flex;align-items:center;justify-content:center;box-shadow:0 6px 18px rgba(193,85,47,.35);z-index:15}
+
+/* ── 2. SPOT ── */
+.foto{position:absolute;inset:0;background:linear-gradient(150deg,#5c3b2e,#8a5340 55%,#3d2a24)}
+.foto::after{content:"";position:absolute;inset:0;background:linear-gradient(to bottom,rgba(11,22,32,.35) 0%,rgba(11,22,32,0) 22%,rgba(11,22,32,.2) 40%,rgba(11,22,32,.92) 58%,var(--dark) 74%)}
+.sp-topo{position:absolute;top:0;left:0;right:0;z-index:6;display:flex;align-items:center;justify-content:space-between;padding:18px 22px}
+.volta{width:36px;height:36px;border-radius:50%;background:rgba(11,22,32,.5);border:1px solid rgba(255,255,255,.16);-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px);display:flex;align-items:center;justify-content:center}
+.st-chip{font-family:'IBM Plex Mono',monospace;font-size:10px;letter-spacing:.14em;text-transform:uppercase;padding:7px 13px;border-radius:100px;background:rgba(78,148,144,.24);border:1px solid rgba(78,148,144,.55);color:var(--verdeTxt);-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px)}
+.sp-baixo{position:absolute;left:0;right:0;bottom:0;z-index:6;padding:0 26px 96px}
+.kicker{font-family:'IBM Plex Mono',monospace;font-size:10.5px;letter-spacing:.16em;text-transform:uppercase;color:var(--ink2)}
+.sp-nome{font-family:'Fraunces',Georgia,serif;font-weight:400;font-size:34px;line-height:1.02;letter-spacing:-.02em;color:#fff;margin:8px 0 0}
+.div-nota{display:flex;align-items:center;gap:10px;margin-top:18px}
+.div-nota span{font-family:'IBM Plex Mono',monospace;font-size:10px;letter-spacing:.16em;text-transform:uppercase;color:var(--terra2);flex:none}
+.div-nota i{flex:1;height:1px;background:rgba(234,231,224,.2)}
+.nota{font-family:'Fraunces',Georgia,serif;font-weight:400;font-size:23px;line-height:1.32;color:var(--ink);margin:11px 0 0;text-wrap:pretty}
+.social{display:flex;align-items:center;gap:10px;margin-top:16px}
+.pilha{display:flex}
+.pilha b{width:24px;height:24px;border-radius:50%;border:2px solid var(--dark);margin-left:-8px;display:flex;align-items:center;justify-content:center;font-family:'IBM Plex Mono',monospace;font-size:9px;font-weight:400;color:#cfe9e6}
+.pilha b:first-child{margin-left:0}
+.social p{margin:0;font-size:13px;color:var(--ink2);flex:1}
+.social p b{color:var(--ink);font-weight:600}
+.social u{text-decoration:none;font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--ink2);white-space:nowrap}
+.acoes{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin-top:18px}
+.acoes a{height:46px;border-radius:12px;background:rgba(234,231,224,.08);border:1px solid var(--borda);display:flex;align-items:center;justify-content:center;gap:7px;font-size:13px;font-weight:500;color:var(--ink);text-decoration:none}
+.seg{display:flex;gap:4px;background:rgba(234,231,224,.06);border-radius:12px;padding:4px;margin-top:14px}
+.seg a{flex:1;text-align:center;padding:11px 0;border-radius:9px;font-size:13px;font-weight:500;color:var(--ink3);text-decoration:none}
+.seg a.on{background:var(--elev);font-weight:600;color:var(--verdeTxt)}
+.aval{display:flex;align-items:center;justify-content:space-between;margin-top:16px}
+.aval span{font-family:'IBM Plex Mono',monospace;font-size:10px;letter-spacing:.16em;text-transform:uppercase;color:var(--ink3)}
+.aval b{display:flex;gap:3px}
+
+/* ── 3. AMIGOS ── */
+.am-topo{display:flex;align-items:center;justify-content:space-between;padding:26px 24px 0}
+.am-topo h1{font-family:'Fraunces',Georgia,serif;font-weight:400;font-size:30px;margin:0;letter-spacing:-.01em}
+.mais{width:40px;height:40px;border-radius:50%;border:1px solid rgba(234,231,224,.2);display:flex;align-items:center;justify-content:center}
+.abas{display:flex;gap:4px;background:rgba(234,231,224,.06);border-radius:12px;padding:4px;margin:18px 24px 0}
+.abas a{flex:1;text-align:center;padding:10px 0;border-radius:9px;font-size:13px;font-weight:500;color:var(--ink3);text-decoration:none;display:flex;align-items:center;justify-content:center;gap:6px}
+.abas a.on{background:var(--elev);font-weight:600;color:var(--ink)}
+.badge{font-family:'IBM Plex Mono',monospace;font-size:10px;background:var(--terra);color:#fff;border-radius:100px;padding:1px 6px}
+.feed{padding:18px 24px 110px;display:flex;flex-direction:column;gap:14px;overflow-y:auto;height:calc(100% - 132px);scrollbar-width:none}
+.feed::-webkit-scrollbar{display:none}
+.fcard{border-radius:20px;background:var(--elev);border:1px solid var(--borda);overflow:hidden;flex:none}
+.fcard .im{height:186px;position:relative}
+.fcard .im .g{position:absolute;inset:0}
+.fcard .im::after{content:"";position:absolute;inset:0;background:linear-gradient(to bottom,rgba(11,22,32,0) 38%,rgba(11,22,32,.88))}
+.quem{position:absolute;top:14px;left:14px;z-index:3;display:flex;align-items:center;gap:8px;background:rgba(11,22,32,.55);-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px);border-radius:100px;padding:5px 12px 5px 5px}
+.quem b{width:24px;height:24px;border-radius:50%;background:var(--verde);display:flex;align-items:center;justify-content:center;font-family:'IBM Plex Mono',monospace;font-size:9px;font-weight:400;color:#cfe9e6}
+.quem span{font-size:12.5px;color:var(--ink)}
+.quem span i{font-style:normal;font-weight:600}
+.quando{position:absolute;top:19px;right:14px;z-index:3;font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--ink2)}
+.im .pe{position:absolute;left:16px;right:16px;bottom:14px;z-index:3}
+.im .pe span{font-family:'IBM Plex Mono',monospace;font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--ink2)}
+.im .pe h3{font-family:'Fraunces',Georgia,serif;font-weight:400;font-size:26px;color:#fff;margin:4px 0 0;line-height:1.05}
+.fcorpo{padding:14px 16px 16px}
+.fcorpo q{font-family:'Fraunces',Georgia,serif;font-style:italic;font-size:17px;line-height:1.35;color:var(--ink);quotes:'\201C' '\201D'}
+.flinha{display:flex;align-items:center;justify-content:space-between;margin-top:14px}
+.salvar{background:var(--terra);color:#fff;font-size:12.5px;font-weight:600;border-radius:100px;padding:9px 15px;text-decoration:none}
+.fcoment{display:flex;align-items:flex-start;gap:11px;padding:2px 2px}
+.fcoment b{width:34px;height:34px;border-radius:50%;background:var(--verde);flex:none;display:flex;align-items:center;justify-content:center;font-family:'IBM Plex Mono',monospace;font-size:10px;font-weight:400;color:#cfe9e6}
+.fcoment p{margin:0;font-size:13.5px;line-height:1.5;color:var(--ink2)}
+.fcoment p i{font-style:normal;font-weight:600;color:var(--ink)}
+.nota-rodape{max-width:430px;margin:0 auto;padding:22px 20px 60px;font-size:12.5px;line-height:1.7;color:var(--ink3);font-family:'IBM Plex Mono',monospace}
+</style>
+</head>
+<body>
+
+<div class="rotulo">1 · Viagens</div>
+<div class="tela">
+  <div class="mapa"></div>
+  <div class="topo"><div class="marca">SPOT</div><div class="av">LP</div></div>
+
+  <div class="placar">
+    <b>23</b><i>/195 países</i>
+    <span class="ponto">·</span><u>48 spots</u>
+    <span class="ponto">·</span><u>19 cidades</u>
+  </div>
+
+  <div class="chips">
+    <div class="chip on">Europa · 3</div>
+    <div class="chip">Ásia · 2</div>
+    <div class="chip">Am. do Sul · 1</div>
+    <div class="chip">África</div>
+  </div>
+
+  <div class="filme">
+    <div class="card"><div class="g" style="background:linear-gradient(150deg,#8a5340,#c1552f 55%,#5c3b2e)"></div><div class="s"></div><div class="bd">🇵🇹</div><div class="pe"><h3>Portugal</h3><p>2 cidades · 7 spots</p></div></div>
+    <div class="card"><div class="g" style="background:linear-gradient(150deg,#25596b,#2F5D62 55%,#16323a)"></div><div class="s"></div><div class="bd">🇭🇷</div><div class="pe"><h3>Croácia</h3><p>1 cidade · 3 spots</p></div></div>
+    <div class="card"><div class="g" style="background:linear-gradient(150deg,#6b5535,#A9915F 55%,#3a2f1d)"></div><div class="s"></div><div class="bd">🇮🇹</div><div class="pe"><h3>Itália</h3><p>3 cidades · 9 spots</p></div></div>
+  </div>
+
+  <div class="pag"><i class="on"></i><i></i><i></i></div>
+
+  <div class="fab"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.8" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg></div>
+
+  <div class="nav">
+    <div class="nav-i on"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M9 20l-6-3V4l6 3m0 13l6-3m-6 3V7m6 10l6 3V7l-6-3m0 13V4"/></svg><span>Viagens</span></div>
+    <div class="nav-i"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="M20 20l-4-4"/></svg><span>Explorar</span></div>
+    <div class="nav-i"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="8" r="3.2"/><path d="M3 20c0-3.3 2.7-5 6-5s6 1.7 6 5"/><path d="M16 5.5a3 3 0 010 5.5M18 20c0-2.6-1-4.2-2.5-5"/></svg><span>Amigos</span></div>
+    <div class="nav-i"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="3.4"/><path d="M5 20c0-3.6 3-6 7-6s7 2.4 7 6"/></svg><span>Perfil</span></div>
+  </div>
+</div>
+
+<div class="rotulo">2 · Spot</div>
+<div class="tela">
+  <div class="foto"></div>
+  <div class="sp-topo">
+    <div class="volta"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5l-7 7 7 7"/></svg></div>
+    <div class="st-chip">Fui</div>
+  </div>
+  <div class="sp-baixo">
+    <div class="kicker">Comer &amp; Beber · Lisboa</div>
+    <h2 class="sp-nome">Cervejaria Ramiro</h2>
+    <div class="div-nota"><span>Minha nota</span><i></i></div>
+    <p class="nota">&ldquo;Camarão à guilho e o prego no pão no fim. Fila de 40 minutos que eu faria de novo.&rdquo;</p>
+    <div class="social">
+      <div class="pilha"><b style="background:#2F5D62">MC</b><b style="background:#6b5535">TV</b></div>
+      <p><b>Marina</b> e <b>Théo</b> comentaram</p>
+      <u>Google 4,6 ★</u>
+    </div>
+    <div class="acoes">
+      <a href="#"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M5 4h4l2 5-2.5 1.5a11 11 0 005 5L15 13l5 2v4a1 1 0 01-1 1A16 16 0 014 5a1 1 0 011-1z"/></svg>Ligar</a>
+      <a href="#"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><rect x="3.5" y="3.5" width="17" height="17" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17" cy="7" r="1.1" fill="currentColor" stroke="none"/></svg>Instagram</a>
+      <a href="#"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21s7-6.4 7-11a7 7 0 10-14 0c0 4.6 7 11 7 11z"/><circle cx="12" cy="10" r="2.5"/></svg>Maps</a>
+    </div>
+    <div class="seg"><a href="#">Quero ir</a><a href="#" class="on">Fui</a><a href="#">Pular</a></div>
+    <div class="aval">
+      <span>Minha avaliação</span>
+      <b>
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="#BFA474"><path d="M12 3l2.6 5.6 6 .8-4.4 4.2 1.1 6.1L12 16.8 6.7 19.7l1.1-6.1L3.4 9.4l6-.8z"/></svg>
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="#BFA474"><path d="M12 3l2.6 5.6 6 .8-4.4 4.2 1.1 6.1L12 16.8 6.7 19.7l1.1-6.1L3.4 9.4l6-.8z"/></svg>
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="#BFA474"><path d="M12 3l2.6 5.6 6 .8-4.4 4.2 1.1 6.1L12 16.8 6.7 19.7l1.1-6.1L3.4 9.4l6-.8z"/></svg>
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="#BFA474"><path d="M12 3l2.6 5.6 6 .8-4.4 4.2 1.1 6.1L12 16.8 6.7 19.7l1.1-6.1L3.4 9.4l6-.8z"/></svg>
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="rgba(234,231,224,.3)" stroke-width="1.6" stroke-linejoin="round"><path d="M12 3l2.6 5.6 6 .8-4.4 4.2 1.1 6.1L12 16.8 6.7 19.7l1.1-6.1L3.4 9.4l6-.8z"/></svg>
+      </b>
+    </div>
+  </div>
+  <div class="nav">
+    <div class="nav-i on"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M9 20l-6-3V4l6 3m0 13l6-3m-6 3V7m6 10l6 3V7l-6-3m0 13V4"/></svg><span>Viagens</span></div>
+    <div class="nav-i"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="M20 20l-4-4"/></svg><span>Explorar</span></div>
+    <div class="nav-i"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="8" r="3.2"/><path d="M3 20c0-3.3 2.7-5 6-5s6 1.7 6 5"/><path d="M16 5.5a3 3 0 010 5.5M18 20c0-2.6-1-4.2-2.5-5"/></svg><span>Amigos</span></div>
+    <div class="nav-i"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="3.4"/><path d="M5 20c0-3.6 3-6 7-6s7 2.4 7 6"/></svg><span>Perfil</span></div>
+  </div>
+</div>
+
+<div class="rotulo">3 · Amigos</div>
+<div class="tela">
+  <div class="am-topo">
+    <h1>Amigos</h1>
+    <div class="mais"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--ink)" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="10" cy="8" r="3.4"/><path d="M3.5 20c0-3.6 2.9-6 6.5-6 1.4 0 2.7.36 3.7 1"/><path d="M18 14v6M15 17h6"/></svg></div>
+  </div>
+  <div class="abas"><a href="#" class="on">Recente</a><a href="#">Amigos</a><a href="#">Pedidos <span class="badge">2</span></a></div>
+  <div class="feed">
+    <div class="fcard">
+      <div class="im"><div class="g" style="background:linear-gradient(150deg,#8a5340,#c1552f 60%,#4a2f26)"></div>
+        <div class="quem"><b>MC</b><span><i>Marina</i> foi</span></div>
+        <div class="quando">há 2 h</div>
+        <div class="pe"><span>Comer &amp; Beber · Lisboa 🇵🇹</span><h3>Cervejaria Ramiro</h3></div>
+      </div>
+      <div class="fcorpo">
+        <q>Fui por causa da nota do Lucas. A fila valeu, o camarão vale mais.</q>
+        <div class="flinha">
+          <b style="display:flex;gap:3px">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="#BFA474"><path d="M12 3l2.6 5.6 6 .8-4.4 4.2 1.1 6.1L12 16.8 6.7 19.7l1.1-6.1L3.4 9.4l6-.8z"/></svg>
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="#BFA474"><path d="M12 3l2.6 5.6 6 .8-4.4 4.2 1.1 6.1L12 16.8 6.7 19.7l1.1-6.1L3.4 9.4l6-.8z"/></svg>
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="#BFA474"><path d="M12 3l2.6 5.6 6 .8-4.4 4.2 1.1 6.1L12 16.8 6.7 19.7l1.1-6.1L3.4 9.4l6-.8z"/></svg>
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="#BFA474"><path d="M12 3l2.6 5.6 6 .8-4.4 4.2 1.1 6.1L12 16.8 6.7 19.7l1.1-6.1L3.4 9.4l6-.8z"/></svg>
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="#BFA474"><path d="M12 3l2.6 5.6 6 .8-4.4 4.2 1.1 6.1L12 16.8 6.7 19.7l1.1-6.1L3.4 9.4l6-.8z"/></svg>
+          </b>
+          <a class="salvar" href="#">+ minha lista</a>
+        </div>
+      </div>
+    </div>
+    <div class="fcard">
+      <div class="im" style="height:130px"><div class="g" style="background:linear-gradient(150deg,#25596b,#2F5D62 60%,#14262c)"></div>
+        <div class="quem"><b style="background:#6b5535">TV</b><span><i>Théo</i> foi</span></div>
+        <div class="quando">ontem</div>
+        <div class="pe"><span>Natureza · Quioto 🇯🇵</span><h3>Fushimi Inari</h3></div>
+      </div>
+      <div class="fcorpo">
+        <q>Chega às 6h. Às 8h já não é o mesmo lugar.</q>
+        <div class="flinha">
+          <b style="display:flex;gap:3px">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="#BFA474"><path d="M12 3l2.6 5.6 6 .8-4.4 4.2 1.1 6.1L12 16.8 6.7 19.7l1.1-6.1L3.4 9.4l6-.8z"/></svg>
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="#BFA474"><path d="M12 3l2.6 5.6 6 .8-4.4 4.2 1.1 6.1L12 16.8 6.7 19.7l1.1-6.1L3.4 9.4l6-.8z"/></svg>
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="#BFA474"><path d="M12 3l2.6 5.6 6 .8-4.4 4.2 1.1 6.1L12 16.8 6.7 19.7l1.1-6.1L3.4 9.4l6-.8z"/></svg>
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="#BFA474"><path d="M12 3l2.6 5.6 6 .8-4.4 4.2 1.1 6.1L12 16.8 6.7 19.7l1.1-6.1L3.4 9.4l6-.8z"/></svg>
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="rgba(234,231,224,.3)" stroke-width="1.6" stroke-linejoin="round"><path d="M12 3l2.6 5.6 6 .8-4.4 4.2 1.1 6.1L12 16.8 6.7 19.7l1.1-6.1L3.4 9.4l6-.8z"/></svg>
+          </b>
+          <a class="salvar" href="#">+ minha lista</a>
+        </div>
+      </div>
+    </div>
+    <div class="fcoment">
+      <b>BC</b>
+      <p><i>Bea</i> comentou em <i>Bar do Mineiro</i>: &ldquo;Pastel de feijão às 11h da manhã. Sem culpa.&rdquo;</p>
+    </div>
+  </div>
+  <div class="nav">
+    <div class="nav-i"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M9 20l-6-3V4l6 3m0 13l6-3m-6 3V7m6 10l6 3V7l-6-3m0 13V4"/></svg><span>Viagens</span></div>
+    <div class="nav-i"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="M20 20l-4-4"/></svg><span>Explorar</span></div>
+    <div class="nav-i on"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="8" r="3.2"/><path d="M3 20c0-3.3 2.7-5 6-5s6 1.7 6 5"/><path d="M16 5.5a3 3 0 010 5.5M18 20c0-2.6-1-4.2-2.5-5"/></svg><span>Amigos</span></div>
+    <div class="nav-i"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="3.4"/><path d="M5 20c0-3.6 3-6 7-6s7 2.4 7 6"/></svg><span>Perfil</span></div>
+  </div>
+</div>
+
+<div class="nota-rodape">
+  Preview estático da direção Atlas. Fotos e mapa são cor sólida — no app entram<br>
+  a foto real do lugar e o mapa-múndi que já existe. Nada aqui funciona.
+</div>
+
+</body>
+</html>
