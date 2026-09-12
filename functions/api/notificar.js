@@ -32,7 +32,6 @@ const EXPO = 'https://exp.host/--/api/v2/push/send';
 const TEXTOS = {
   pedido:     (nome) => ({ title: 'Pedido de amizade', body: `${nome} quer te seguir no Spot` }),
   aceite:     (nome) => ({ title: 'Vocês são amigos',  body: `${nome} aceitou seu pedido. Já dá pra ver as viagens.` }),
-  lugar:      (nome, extra) => ({ title: 'Lugar novo', body: extra ? `${nome} foi em ${extra}` : `${nome} marcou um lugar novo` }),
   comentario: (nome, extra) => ({ title: 'Comentário', body: extra ? `${nome} comentou em ${extra}` : `${nome} comentou no seu lugar` })
 };
 

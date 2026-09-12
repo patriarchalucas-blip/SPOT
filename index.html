@@ -3041,24 +3041,6 @@ async function setPlaceSubcat(k){
 // qualquer jeito. Numa rede ruim a pessoa marcava dez lugares como visitados,
 // via os dez acenderem, recarregava, e nenhum tinha ficado.
 const STATUS_ROTULO={want:['chip-want','Quero ir'],been:['chip-been','Fui'],skip:['','Pulando']};
-// Avisa os amigos quando um lugar vira "já fui". É o único evento que sai
-// pra mais de uma pessoa, e é justamente o que dá vida ao feed: hoje o lugar
-// novo de um amigo só aparece pra quem abre o app por acaso.
-//
-// Sem await e sem travar nada: o status já foi gravado quando isto roda.
-function avisarAmigosDoLugar(spot){
-  if(!spot||!S.user)return;
-  dbGet('follows','status=eq.accepted&or=(follower_id.eq.'+S.user.id+',following_id.eq.'+S.user.id+')')
-    .then(vinc=>{
-      if(falhou(vinc))return;
-      const amigos=new Set();
-      vinc.forEach(v=>{
-        const outro=v.follower_id===S.user.id?v.following_id:v.follower_id;
-        if(outro&&outro!==S.user.id&&!estaBloqueado(outro))amigos.add(outro);
-      });
-      amigos.forEach(a=>avisar('lugar',a,spot.name||''));
-    }).catch(()=>{});
-}
 function pintarStatus(s){
   ['want','been','skip'].forEach(k=>document.getElementById('t-'+k).className='toggle-btn');
   document.getElementById('t-'+s).classList.add('sel-'+s);
@@ -3081,11 +3063,7 @@ async function setStatus(s,save=true){
     toast('Não salvou',error.message||'Confere a conexão e tenta de novo.','alert');
     return;
   }
-  const eraOutro=anterior!==s;
   spot.status=s;
-  // Só quando VIRA "já fui", e só se mudou: repintar o mesmo status não é
-  // novidade pra ninguém e avisaria os amigos duas vezes.
-  if(s==='been'&&eraOutro)avisarAmigosDoLugar(spot);
   if(document.getElementById('city').classList.contains('active'))renderCityBody();
 }
 // ═══ EDITAR A NOTA ═══
@@ -4396,10 +4374,6 @@ async function resolverCidadeDoSpot(p,trip){
     // Antes de loadDashboard, que é quem dispara o backfill: assim a busca de
     // Instagram deste spot é a primeira, não a última.
     spotPrioritario=data.id;
-    // Este é o caminho principal do feed: a maioria dos lugares nasce já como
-    // "já fui", sem passar pelo setStatus. Sem isto aqui, o amigo só ficaria
-    // sabendo dos lugares que MUDARAM de status depois.
-    if(addStatus==='been')avisarAmigosDoLugar(data);
     toast('Spot salvo',note?`"${p.name} · ${note}"`:p.name,'check');
     if(S.curTrip?.id===t.id){
       S.curTrip._spots=t._spots;

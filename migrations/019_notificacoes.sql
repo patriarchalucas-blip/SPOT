@@ -78,10 +78,12 @@ grant execute on function public.esquecer_meus_aparelhos() to authenticated;
 -- "qualquer um notifica qualquer um". Aqui, mesmo com a chave de serviço, o
 -- banco só devolve endereço quando o vínculo justifica.
 --
--- Tipos aceitos, e o que cada um exige:
+-- Tipos aceitos, e o que cada um exige. "Amigo marcou lugar novo" foi
+-- deliberadamente deixado DE FORA: um amigo em viagem geraria 5 a 10 avisos
+-- num dia, que é o caminho mais curto pra pessoa desligar tudo. Se voltar um
+-- dia, volta agrupado (um por amigo por dia), não um por lugar.
 --   pedido    — mandei pedido de amizade: exige pedido pendente MEU pra ele
 --   aceite    — aceitei o pedido dele: exige amizade aceita
---   lugar     — marquei um lugar como visitado: exige amizade aceita
 --   comentario— comentei no lugar dele: exige amizade aceita
 --
 -- Bloqueio derruba tudo, nos dois sentidos.
@@ -119,7 +121,7 @@ as $$
         )
       end
     )
-    and tipo in ('pedido', 'aceite', 'lugar', 'comentario');
+    and tipo in ('pedido', 'aceite', 'comentario');
 $$;
 
 -- Ninguém do navegador pode chamar isto: devolveria endereço de entrega de
