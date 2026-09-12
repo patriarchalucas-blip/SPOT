@@ -574,8 +574,14 @@ body{font-family:'DM Sans',sans-serif;background:var(--dark);max-width:430px;mar
    público. Linha de texto continua existindo pra viagem marcada e comentário,
    que não têm foto nem nota pra sustentar um card. */
 .fd-card{border-radius:20px;background:var(--elev,#16232A);border:1px solid var(--border);overflow:hidden;margin-bottom:14px}
-.fd-img{height:186px;position:relative;background-color:#16232A;cursor:pointer}
-.fd-img::after{content:"";position:absolute;inset:0;background:linear-gradient(to bottom,rgba(11,22,32,0) 38%,rgba(11,22,32,.88))}
+.fd-img{height:186px;position:relative;background-color:#16232A;background-size:cover;background-position:center;cursor:pointer;overflow:hidden}
+/* A foto entra POR CIMA do degradê da categoria. Se ela falhar — referência
+   do Google expira — o onerror remove o <img> e o degradê que já estava
+   atrás aparece, em vez de um retângulo chapado. */
+.fd-foto{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;z-index:1}
+/* z-index 2: acima da foto (1) e abaixo do texto (3), senão o escurecido
+   fica atrás da imagem e o nome do lugar some no claro da foto. */
+.fd-img::after{content:"";position:absolute;inset:0;z-index:2;background:linear-gradient(to bottom,rgba(11,22,32,0) 38%,rgba(11,22,32,.88))}
 .fd-quem{position:absolute;top:14px;left:14px;z-index:3;display:flex;align-items:center;gap:8px;background:rgba(11,22,32,.55);-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px);border-radius:999px;padding:5px 12px 5px 5px;max-width:calc(100% - 90px)}
 .fd-av{width:24px;height:24px;border-radius:50%;background:var(--green);display:flex;align-items:center;justify-content:center;font-family:var(--mono);font-size:9px;color:#cfe9e6;flex-shrink:0}
 .fd-quem-t{font-size:12.5px;color:var(--ink);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
@@ -6065,10 +6071,20 @@ function cardDeVisita(it,i,nome){
   const sp=it.spot;
   const cidade=cityOf(sp)||sp.city||'';
   const rotulo=[sp.place_type||catLabel(sp.category),cidade].filter(Boolean).join(' · ');
-  // Sem foto cai no mesmo degradê que o resto do app usa, em vez de buraco.
-  const fundo=sp.photo_url
-    ? 'background-image:'+cssUrl(fotoNaLargura(semChaveDoPlaces(sp.photo_url),760))+';background-size:cover;background-position:center'
-    : 'background-image:'+destGradient(sp.name||cidade);
+  // O degradê da categoria fica SEMPRE no fundo, e a foto entra por cima como
+  // <img>. Duas razões pra não usar background-image, que foi meu primeiro
+  // desenho e estava errado:
+  //   1. fundo de CSS não avisa quando a imagem falha, e referência de foto
+  //      do Google expira. O card ficava um retângulo chapado, enquanto o
+  //      resto do app se recupera via onerror.
+  //   2. a limpeza de URL recusa esquema fora de http(s) e devolvia vazio,
+  //      virando `background-image:none` — pior ainda que o degradê.
+  // Com <img>, a falha só descobre o degradê que já estava atrás.
+  const foto=safeUrl(fotoNaLargura(semChaveDoPlaces(sp.photo_url),760));
+  const fundo='background-image:'+destGradient(sp.name||cidade);
+  const camadaFoto=foto
+    ? '<img class="fd-foto" src="'+escUrl(foto)+'" alt="" loading="lazy" decoding="async" onerror="this.remove()">'
+    : '';
   const nota=String(sp.my_note||'').trim();
   const estrelas=estrelasHTML(sp.my_rating,14);
   const salvo=jaNaMinhaLista(sp);
@@ -6077,6 +6093,7 @@ function cardDeVisita(it,i,nome){
   const temCorpo=nota||estrelas||!salvo;
   return '<div class="fd-card">'
     +'<div class="fd-img" style="'+fundo+'" onclick="abrirVisitaDoFeed('+i+')">'
+      +camadaFoto
       +'<div class="fd-quem"><span class="fd-av">'+esc(initials(nome))+'</span>'
       +'<span class="fd-quem-t"><b>'+esc(nome)+'</b> foi</span></div>'
       +'<div class="fd-quando">'+esc(timeAgo(it.created_at))+'</div>'
