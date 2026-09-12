@@ -552,6 +552,21 @@ body{font-family:'DM Sans',sans-serif;background:var(--dark);max-width:430px;mar
 .req-btn{border:none;border-radius:9px;padding:9px 13px;font-family:'DM Sans',sans-serif;font-size:13px;font-weight:600;cursor:pointer;flex-shrink:0;white-space:nowrap}
 .req-accept{background:var(--terra);color:#fff}
 .req-decline{background:rgba(234,231,224,.07);color:var(--ink3)}
+/* ═══ TELA DE AMIGOS — direção Atlas ═══
+   Cabeçalho enxuto com o botão de adicionar ao lado do título (antes era um
+   FAB flutuante, que não faz sentido aqui: nesta tela não se adiciona spot).
+   Abas viram controle segmentado com TRÊS opções, e "Pedidos" deixa de ser
+   uma faixa solta acima da lista pra virar aba própria. */
+.am-topo{display:flex;align-items:center;justify-content:space-between;gap:14px;padding:calc(26px + env(safe-area-inset-top,0px)) 24px 0;flex:none}
+.am-titulo{font-family:'Fraunces',serif;font-weight:400;font-size:30px;margin:0;letter-spacing:-.01em;color:var(--ink)}
+.am-add{width:40px;height:40px;flex:none;border-radius:50%;border:1px solid rgba(234,231,224,.2);background:transparent;color:var(--ink);display:flex;align-items:center;justify-content:center;cursor:pointer}
+.am-add:active{transform:scale(.94)}
+.am-abas{display:flex;gap:4px;background:rgba(234,231,224,.06);border-radius:12px;padding:4px;margin:18px 24px 0;flex:none}
+.am-abas button{flex:1;min-height:40px;padding:10px 0;border:none;border-radius:9px;background:transparent;font-family:inherit;font-size:13px;font-weight:500;color:var(--ink3);cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px;transition:background .15s,color .15s}
+.am-abas button.on{background:var(--elev,#16232A);font-weight:600;color:var(--ink)}
+.am-badge{font-family:var(--mono);font-size:10px;background:var(--terra);color:#fff;border-radius:999px;padding:1px 6px;line-height:1.5}
+.am-abas button.on .am-badge{background:var(--terra)}
+
 /* ═══ CARD DE VISITA NO FEED ═══
    O feed era uma lista de linhas de texto. A visita de um amigo agora vem
    como card com foto, nome do lugar e a NOTA que ele escreveu — é onde a
@@ -966,18 +981,15 @@ svg.ic path,svg.ic circle,svg.ic line,svg.ic polyline,svg.ic rect{fill:none;stro
 </div>
 
 <div class="screen" id="friends">
-  <div class="dash-top" style="padding-bottom:20px">
-    <div class="dash-top-row">
-      <div><div class="dash-hello">Amigos</div><div class="dash-name" style="font-size:24px">Seu círculo</div></div>
-    </div>
+  <div class="am-topo">
+    <h1 class="am-titulo">Amigos</h1>
+    <button class="am-add" onclick="mostrarErroAmigo('');showOv('ov-addfriend')" aria-label="Adicionar amigo">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="10" cy="8" r="3.4"/><path d="M3.5 20c0-3.6 2.9-6 6.5-6 1.4 0 2.7.36 3.7 1"/><path d="M18 14v6M15 17h6"/></svg>
+    </button>
   </div>
-  <div id="friendsRequests" style="display:none;padding:0 24px"></div>
-  <div class="cat-tabs-wrap"><div class="cat-tabs">
-    <div class="cat-tab active" id="fTab-amigos" onclick="switchFriendsTab('amigos',this)"><div class="ct-icon" data-ic="users"></div><div>Meus amigos</div><div class="ct-count" id="fTabCount-amigos">0</div></div>
-    <div class="cat-tab" id="fTab-recente" onclick="switchFriendsTab('recente',this)"><div class="ct-icon" data-ic="globe"></div><div>Recente</div><div class="ct-count" id="fTabCount-recente">0</div></div>
-  </div></div>
-  <div class="dash-body" id="friendsContainer"></div>
-  <button class="fab" onclick="mostrarErroAmigo('');showOv('ov-addfriend')">+</button>
+  <div class="am-abas" id="amAbas"></div>
+  <div class="dash-body" id="friendsContainer" style="padding-top:16px"></div>
+  <div id="friendsRequests" style="display:none"></div>
   <div class="bottom-nav"><div class="nav-item" onclick="goTo('dashboard');loadDashboard()"><div class="nav-icon" data-ic="map"></div><div class="nav-label">Viagens</div></div><div class="nav-item" onclick="goTo('explore');loadExplore()"><div class="nav-icon" data-ic="search"></div><div class="nav-label">Explorar</div></div><div class="nav-item active" onclick="goTo('friends');loadFriends()"><div class="nav-icon" data-ic="users"></div><div class="nav-label" style="color:var(--ink);font-weight:600">Amigos</div></div><div class="nav-item" onclick="goTo('profile');loadProfile()"><div class="nav-icon" data-ic="user"></div><div class="nav-label">Perfil</div></div></div>
 </div>
 
@@ -5892,7 +5904,9 @@ function initials(name){
 }
 // Aba visível na tela Amigos. Guardada entre visitas: quem entra pra ver a
 // lista de amigos normalmente quer a lista de novo na próxima vez.
-let friendsTab='amigos';
+// O feed é o motivo de voltar no app; a lista de nomes é a parte estática.
+// Abrir em 'amigos' escondia atrás de um toque justamente o que muda.
+let friendsTab='recente';
 // O que a última busca trouxe. Separar buscar de desenhar é o que permite
 // trocar de aba sem ir ao banco de novo.
 let FRIENDS_DATA=null;
@@ -5916,10 +5930,8 @@ function novidadesNoFeed(items){
   if(!visto)return (items||[]).length;   // primeira vez: tudo e novidade
   return (items||[]).filter(i=>String(i.created_at||'')>visto).length;
 }
-function switchFriendsTab(aba,el){
+function switchFriendsTab(aba){
   friendsTab=aba;
-  document.querySelectorAll('#friends .cat-tab').forEach(x=>x.classList.remove('active'));
-  if(el)el.classList.add('active');
   // Abrir a aba JA e ter visto. Marca antes de desenhar pra o contador sumir
   // no mesmo toque, sem precisar sair e voltar.
   if(aba==='recente')marcarFeedComoVisto();
@@ -6115,31 +6127,51 @@ async function salvarDoFeed(i,btn){
 function renderFriendsTab(){
   const d=FRIENDS_DATA;if(!d)return;
   const c=document.getElementById('friendsContainer');
-  const{friendIds,incoming,outgoing,pmap,feedItems}=d;
+  const{friendIds,pmap,feedItems}=d;
 
-  // ── pedidos recebidos: fora das abas, sempre à vista ──
-  const reqBox=document.getElementById('friendsRequests');
-  if(incoming.length){
-    reqBox.style.display='block';
-    reqBox.innerHTML='<div class="section-head" style="margin-top:4px"><span class="section-title">Pedidos de amizade</span><span class="section-title" style="color:var(--terra)">'+incoming.length+'</span></div>'
-      +incoming.map(r=>{
-        const p=pmap[r.follower_id];const name=friendName(p);
-        return `<div class="req-card"><div class="feed-avatar">${esc(initials(name))}</div><div style="flex:1"><div class="req-name">${esc(name)}</div>${p&&p.username?`<div class="req-email">@${esc(p.username)}</div>`:''}</div><button class="req-btn req-accept" onclick="respondRequest('${esc(r.id)}',true)">Aceitar</button><button class="req-btn req-decline" onclick="respondRequest('${esc(r.id)}',false)">Recusar</button></div>`;
-      }).join('');
-  }else{reqBox.style.display='none';reqBox.innerHTML=''}
+  // Pedido recebido saiu da faixa fixa acima da lista e virou aba própria.
+  // Bloqueado não gera pedido visível: bloquear tem que surtir efeito em toda
+  // superfície, não só na lista de amigos.
+  const incoming=(d.incoming||[]).filter(r=>!estaBloqueado(r.follower_id));
+  const outgoing=(d.outgoing||[]).filter(r=>!estaBloqueado(r.following_id));
 
-  document.getElementById('fTabCount-amigos').textContent=friendIds.length;
-  // Se a aba aberta e a Recente, ja esta visto — nao adianta anunciar o que a
-  // pessoa esta olhando agora.
+  // Abas segmentadas, três opções. "Pedidos" só existe quando há pedido —
+  // aba permanentemente vazia é ruído.
+  // Se a aba aberta é a Recente, já está visto: não adianta anunciar o que a
+  // pessoa está olhando agora.
   const novas=friendsTab==='recente'?0:novidadesNoFeed(feedItems);
-  const elNovas=document.getElementById('fTabCount-recente');
-  elNovas.textContent=novas||'';
-  elNovas.style.display=novas?'':'none';
-  document.querySelectorAll('#friends .cat-tab').forEach(x=>x.classList.remove('active'));
-  const tabEl=document.getElementById('fTab-'+friendsTab);
-  if(tabEl)tabEl.classList.add('active');
+  const pendentes=incoming.length;
+  const abas=[['recente','Recente',novas],['amigos','Amigos',0]];
+  if(pendentes||friendsTab==='pedidos')abas.push(['pedidos','Pedidos',pendentes]);
+  document.getElementById('amAbas').innerHTML=abas.map(([id,rot,n])=>
+    '<button class="'+(friendsTab===id?'on':'')+'" onclick="switchFriendsTab(\''+id+'\')">'+rot
+    +(n?' <span class="am-badge">'+n+'</span>':'')+'</button>').join('');
 
   let h='';
+  if(friendsTab==='pedidos'){
+    if(!incoming.length&&!outgoing.length){
+      h+='<div class="empty-state"><div class="ei">'+icon('users')+'</div><h3>Nenhum pedido</h3><p>Pedidos recebidos e enviados aparecem aqui</p></div>';
+    }
+    if(incoming.length){
+      h+='<div class="section-head"><span class="section-title">Recebidos</span></div>';
+      h+=incoming.map(r=>{
+        const p=pmap[r.follower_id];const name=friendName(p);
+        return '<div class="req-card"><div class="feed-avatar">'+esc(initials(name))+'</div>'
+          +'<div style="flex:1;min-width:0"><div class="req-name">'+esc(name)+'</div></div>'
+          +'<button class="req-btn req-decline" onclick="respondRequest(\''+esc(r.id)+'\',false)">Recusar</button>'
+          +'<button class="req-btn req-accept" onclick="respondRequest(\''+esc(r.id)+'\',true)">Aceitar</button></div>';
+      }).join('');
+    }
+    if(outgoing.length){
+      h+='<div class="section-head"'+(incoming.length?' style="margin-top:24px"':'')+'><span class="section-title">Enviados</span></div>';
+      h+=outgoing.map(r=>{
+        const p=pmap[r.following_id];const name=friendName(p);
+        return '<div class="req-card"><div class="feed-avatar">'+esc(initials(name))+'</div>'
+          +'<div style="flex:1;min-width:0"><div class="req-name">'+esc(name)+'</div></div>'
+          +'<button class="req-btn req-decline" onclick="cancelRequest(\''+esc(r.id)+'\')">Cancelar</button></div>';
+      }).join('');
+    }
+  }else
   if(friendsTab==='amigos'){
     if(!friendIds.length){
       h+='<div class="empty-state"><div class="ei">'+icon('users')+'</div><h3>Sem amigos ainda</h3><p>Toca no + pra adicionar um amigo pelo username</p></div>';
@@ -6154,14 +6186,7 @@ function renderFriendsTab(){
           +'<div class="friend-row-arrow">\u203a</div></div>';
       }).join('');
     }
-    // pedidos enviados são informativos — moram junto da lista, não no feed
-    if(outgoing.length){
-      h+='<div class="section-head" style="margin-top:24px"><span class="section-title">Pedidos enviados</span></div>';
-      h+=outgoing.map(r=>{
-        const p=pmap[r.following_id];const name=friendName(p);
-        return `<div class="req-card"><div class="feed-avatar">${esc(initials(name))}</div><div style="flex:1"><div class="req-name">${esc(name)}</div></div><button class="req-btn req-decline" onclick="cancelRequest('${esc(r.id)}')">Cancelar</button></div>`;
-      }).join('');
-    }
+    // Pedidos enviados saíram daqui: agora moram na aba Pedidos.
   }else{
     if(!friendIds.length){
       h+='<div class="empty-state"><div class="ei">'+icon('users')+'</div><h3>Sem amigos ainda</h3><p>Adiciona alguém pra ver a atividade aqui</p></div>';
