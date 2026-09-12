@@ -16,6 +16,23 @@ import{quemEsta,podeGastar}from './_auth.js';
 //
 // Teto mensal como as outras: a cota é por hora, mas um contador mensal
 // impede que um laço queime tudo repetidamente.
+// As 20 cidades do fundo da tela de entrada. Elas são pedidas por quem ainda
+// NÃO fez login — e o resto deste arquivo exige sessão para gastar cota.
+// Sem esta lista a tela de entrada fica só com gradiente para sempre: ninguém
+// logado busca "Lisbon Portugal" espontaneamente, então o cache nunca enche.
+//
+// É seguro abrir só para elas: a lista é fechada, cada uma custa UMA consulta
+// a cada 6 meses (o TTL do cache), e o teto mensal continua valendo por cima.
+const CIDADES_DA_ENTRADA = new Set([
+  'Dubrovnik Croatia', 'Tokyo Japan skyline', 'Santorini Greece',
+  'Paris France Eiffel Tower', 'Marrakech Morocco', 'Rome Italy Colosseum',
+  'Kyoto Japan temple', 'Lisbon Portugal', 'Barcelona Spain Sagrada',
+  'New York City skyline', 'Machu Picchu Peru', 'Cape Town South Africa',
+  'Venice Italy canal', 'Istanbul Turkey', 'Bali Indonesia temple',
+  'Rio de Janeiro Brazil', 'Amsterdam Netherlands canal',
+  'Prague Czech Republic', 'Kotor Montenegro bay', 'Petra Jordan'
+].map(normKey));
+
 const MONTHLY_CAP = 1200;
 const USER_CAP = 80;
 
@@ -42,11 +59,15 @@ export async function onRequestPost(context) {
   // cota nem expõe nada, e é o caminho da maioria das chamadas.
   if (cached) return responder(context, JSON.parse(cached));
 
-  // Daqui pra baixo gasta cota de verdade — só pra quem está logado.
-  const quem = await quemEsta(request, env);
-  if (!quem.permitir) return json({ url: '', unauthorized: true }, 401);
-  if (!await podeGastar(env, 'unsplash', quem.uid, 1, USER_CAP)) {
-    return json({ url: '', capped: true, scope: 'user' });
+  // Daqui pra baixo gasta cota de verdade — só pra quem está logado, ou para
+  // uma das cidades fixas da tela de entrada (ver CIDADES_DA_ENTRADA).
+  const daEntrada = CIDADES_DA_ENTRADA.has(normKey(query));
+  if (!daEntrada) {
+    const quem = await quemEsta(request, env);
+    if (!quem.permitir) return json({ url: '', unauthorized: true }, 401);
+    if (!await podeGastar(env, 'unsplash', quem.uid, 1, USER_CAP)) {
+      return json({ url: '', capped: true, scope: 'user' });
+    }
   }
 
   const mes = new Date().toISOString().slice(0, 7);

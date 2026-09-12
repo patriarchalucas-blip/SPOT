@@ -75,6 +75,22 @@ body{font-family:'DM Sans',sans-serif;background:var(--dark);max-width:430px;mar
 .tagline{font-size:13px;color:rgba(255,255,255,0.6);letter-spacing:.1em;text-transform:uppercase;margin-bottom:28px}
 .form-stack{display:flex;flex-direction:column;gap:12px}
 .field{background:rgba(255,255,255,0.1);border:1px solid rgba(255,255,255,0.2);border-radius:var(--r-sm);padding:17px 18px;font-size:15px;font-family:'DM Sans',sans-serif;color:#fff;outline:none;width:100%;backdrop-filter:blur(10px);margin-bottom:2px;box-shadow:var(--shadow-inset)}
+/* Campo preenchido pelo navegador vinha azul-claro com texto preto — cor do
+   Chrome, não nossa, e numa tela azul-petróleo ela entra como corpo estranho.
+   O fundo do autofill não aceita background; a sombra interna gigante é o
+   único jeito de cobrir, e o -webkit-text-fill-color é o único que vence a
+   cor do texto. Repetido no :hover/:focus/:active porque o Chrome reaplica
+   em cada um desses estados. */
+.field:-webkit-autofill,
+.field:-webkit-autofill:hover,
+.field:-webkit-autofill:focus,
+.field:-webkit-autofill:active{
+  -webkit-text-fill-color:#fff;
+  -webkit-box-shadow:0 0 0 1000px #1b2c39 inset;
+  box-shadow:0 0 0 1000px #1b2c39 inset;
+  caret-color:#fff;
+  transition:background-color 9999s ease-in-out 0s;
+}
 .field::placeholder{color:rgba(255,255,255,0.5)}.field:focus{border-color:rgba(255,255,255,0.4)}
 .btn-primary{background:#EAE7E0;color:var(--dark);border:none;border-radius:var(--r-sm);padding:18px;font-family:'DM Sans',sans-serif;font-size:15px;font-weight:600;cursor:pointer;width:100%;margin-top:4px}
 .btn-primary:active{opacity:.85}.btn-primary:disabled{opacity:.5}
