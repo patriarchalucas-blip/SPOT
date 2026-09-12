@@ -830,6 +830,7 @@ svg.ic path,svg.ic circle,svg.ic line,svg.ic polyline,svg.ic rect{fill:none;stro
           <input class="field" type="password" id="authPassword" placeholder="senha" autocomplete="current-password">
           <button class="btn-primary" id="authBtn" onclick="handleAuth()">Entrar</button>
           <div class="login-toggle" onclick="toggleAuthMode()"><span id="authToggleText">Não tem conta? <span>Cadastre-se</span></span></div>
+          <div class="login-toggle" id="linkEsqueci" onclick="pedirRecuperacao()"><span>Esqueci minha senha</span></div>
           <div class="login-back" onclick="hideEmailForm()">← voltar</div>
         </div>
       </div>
@@ -1090,6 +1091,8 @@ svg.ic path,svg.ic circle,svg.ic line,svg.ic polyline,svg.ic rect{fill:none;stro
 <div class="overlay" id="ov-excluir" onclick="closeOut(event,'ov-excluir')"><div class="sheet"><button class="sheet-close" onclick="closeOv('ov-excluir')" data-ic="close" aria-label="Fechar"></button><div class="sheet-handle"></div><div class="sheet-title">Excluir minha conta</div><div class="ex-corpo" style="padding:0 24px 4px"><div class="nt-label" style="margin-bottom:10px">Isso apaga de vez, e não tem como desfazer:</div><ul style="margin:0 0 16px;padding-left:20px;font-size:14px;line-height:1.7;color:var(--ink2)"><li>suas viagens e todos os seus lugares</li><li>suas notas, avaliações e comentários</li><li>suas fotos de perfil e de lugares</li><li>seus amigos e os links de convite que você criou</li></ul><div class="nt-label">Para confirmar, digite <b>EXCLUIR</b></div><input class="nt-input" id="confirmaExcluir" placeholder="digite aqui" autocapitalize="characters" autocomplete="off" oninput="atualizarBotaoExcluir()"></div><button class="sheet-cta" id="btnExcluirConta" style="background:var(--red);box-shadow:none;opacity:.4;pointer-events:none" onclick="excluirConta()">Excluir minha conta</button></div></div>
 
 <div class="overlay" id="ov-addfriend" onclick="closeOut(event,'ov-addfriend')"><div class="sheet"><button class="sheet-close" onclick="closeOv('ov-addfriend')" data-ic="close" aria-label="Fechar"></button><div class="sheet-handle"></div><div class="sheet-title">Adicionar amigo</div><div class="nt-label">Username do amigo</div><input class="nt-input" id="friendUsernameInput" type="text" placeholder="digite aqui" autocapitalize="none" oninput="mostrarErroAmigo('')"><div class="auth-error" id="friendAddErr"></div><button class="sheet-cta" id="sendReqBtn" onclick="sendFriendRequest()">Enviar pedido</button><div class="conv-ou"><span>ou</span></div><button class="secondary-link" id="convidarBtn" style="margin-top:0" onclick="compartilharConvite()">Convidar por link</button><div class="conv-dica">Quem abrir o link entra já como seu amigo, sem precisar do seu username.</div></div></div>
+
+<div class="overlay" id="ov-novasenha"><div class="sheet"><div class="sheet-handle"></div><div class="sheet-title">Escolha uma senha nova</div><div class="den-sobre">Você chegou pelo link de recuperação. Defina a nova senha para entrar.</div><div class="nt-label" style="padding:0 24px">Nova senha</div><input class="nt-input" id="novaSenha" type="password" autocomplete="new-password" placeholder="8+ caracteres, com letras e números"><div class="auth-error show" id="erroNovaSenha" style="padding:0 24px;min-height:18px;background:none;border:none"></div><button class="sheet-cta" id="btnNovaSenha" onclick="salvarNovaSenha()">Salvar e entrar</button></div></div>
 
 <div class="overlay" id="ov-denuncia" onclick="closeOut(event,'ov-denuncia')"><div class="sheet"><button class="sheet-close" onclick="closeOv('ov-denuncia')" data-ic="close" aria-label="Fechar"></button><div class="sheet-handle"></div><div class="sheet-title">Denunciar</div><div class="den-sobre" id="denunciaSobre"></div><div class="nt-label" style="padding:0 24px">O que houve?</div><div class="den-motivos" id="denunciaMotivos"></div><div class="nt-label" style="padding:0 24px">Quer contar mais? (opcional)</div><textarea class="nt-input" id="denunciaDetalhe" rows="3" maxlength="1000" placeholder="Descreva o problema"></textarea><button class="sheet-cta" id="btnEnviarDenuncia" onclick="enviarDenuncia()">Enviar denúncia</button><div class="conv-dica">Analisamos toda denúncia em até 24 horas. Se quiser parar de ver essa pessoa agora, você também pode bloquear.</div></div></div>
 
@@ -1593,7 +1596,15 @@ async function init(){
       // chega de hora em hora com a sessão já aberta, e era exatamente esse
       // evento que o guard descartava — o app seguia com o token vencido.
       if(sess?.access_token){S.token=sess.access_token;tokenExp=sess.expires_at||0;sessaoAvisada=false}
-      if((ev==='SIGNED_IN'||ev==='INITIAL_SESSION'||ev==='TOKEN_REFRESHED')&&sess?.user&&!S.user){
+      // Volta do link de "esqueci minha senha": a sessão existe, mas a pessoa
+      // ainda não escolheu senha nova. Tem que abrir a ficha ANTES de qualquer
+      // coisa levar ela pro dashboard, senão ela entra e nunca troca a senha.
+      if(ev==='PASSWORD_RECOVERY'){
+        goTo('login');
+        abrirNovaSenha();
+        return;
+      }
+      if((ev==='SIGNED_IN'||ev==='INITIAL_SESSION'||ev==='TOKEN_REFRESHED')&&sess?.user&&!S.user&&!emRecuperacao){
         S.user=sess.user;
         // Troca de tela PRIMEIRO: o dashboard já mostra nome/avatar na hora e os
         // cards entram conforme os dados chegam. Antes, esperava o carregamento
@@ -1651,6 +1662,73 @@ function problemaNaSenha(pw){
   if(/^(.)\1+$/.test(pw))return'Caractere repetido não protege nada.';
   return'';
 }
+// ═══ ESQUECI MINHA SENHA ═══
+//
+// Não existia caminho de volta: quem criava conta por e-mail e esquecia a
+// senha ficava fora pra sempre. Com 6 amigos dava pra resolver na mão no
+// painel; indo pra App Store, não dá.
+//
+// O fluxo tem duas pontas. Aqui pede o e-mail. A pessoa clica no link que
+// chega, volta pro app já com sessão em modo de recuperação, e o evento
+// PASSWORD_RECOVERY abre a ficha de senha nova.
+let emRecuperacao=false;
+
+async function pedirRecuperacao(){
+  const email=document.getElementById('authEmail').value.trim();
+  if(!email){showAuthErr('Escreve seu e-mail primeiro, aí eu mando o link.');return}
+  const link=document.getElementById('linkEsqueci');
+  const antes=link.innerHTML;
+  link.innerHTML='<span>Enviando...</span>';link.style.pointerEvents='none';
+  let erro=null;
+  try{
+    const r=await sb.auth.resetPasswordForEmail(email,{redirectTo:location.origin});
+    erro=r&&r.error;
+  }catch(e){erro=e}
+  link.innerHTML=antes;link.style.pointerEvents='';
+  if(erro){showAuthErr('Não consegui enviar agora. Tenta de novo em alguns minutos.');return}
+  hideAuthErr();
+  // Resposta igual exista ou não a conta: dizer "esse e-mail não tem conta"
+  // entrega pra qualquer um quem está cadastrado.
+  toast('Link enviado','Se existir conta com esse e-mail, o link chega em instantes.','check');
+}
+
+function abrirNovaSenha(){
+  emRecuperacao=true;
+  document.getElementById('novaSenha').value='';
+  document.getElementById('erroNovaSenha').textContent='';
+  showOv('ov-novasenha');
+}
+
+async function salvarNovaSenha(){
+  const pw=document.getElementById('novaSenha').value;
+  const erroEl=document.getElementById('erroNovaSenha');
+  const problema=problemaNaSenha(pw);
+  if(problema){erroEl.textContent=problema;return}
+  erroEl.textContent='';
+  const btn=document.getElementById('btnNovaSenha');
+  const antes=btn.textContent;
+  btn.textContent='Salvando...';btn.style.pointerEvents='none';
+  let erro=null;
+  try{
+    const r=await sb.auth.updateUser({password:pw});
+    erro=r&&r.error;
+  }catch(e){erro=e}
+  btn.textContent=antes;btn.style.pointerEvents='';
+  if(erro){erroEl.textContent=(erro.message||'Não consegui salvar. Tenta de novo.');return}
+  emRecuperacao=false;
+  closeOv('ov-novasenha');
+  toast('Senha trocada','Você já está dentro.','check');
+  // A sessão de recuperação vira sessão normal depois da troca.
+  if(!S.user){
+    const{data}=await sb.auth.getSession();
+    if(data&&data.session&&data.session.user){
+      S.user=data.session.user;
+      goTo('dashboard');
+      try{await loadDashboard()}catch(e){console.error(e)}
+    }
+  }
+}
+
 async function handleAuth(){
   const email=document.getElementById('authEmail').value.trim();
   const pw=document.getElementById('authPassword').value;
