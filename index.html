@@ -1219,7 +1219,16 @@ function esc(v){return String(v==null?'':v).replace(/[&<>"'`]/g,function(c){retu
 // junto porque tem fallback pro caminho direto — a foto não tinha. Ligar de
 // volta só depois de o proxy responder 302 pra um ref REAL (436 chars, não
 // um inventado — foi testar com ref inventado que deixou isso passar).
-const FOTO_PELO_PROXY=false;
+// Ligado em 11/09/2026, depois de confirmar com uma referência REAL de foto
+// (477 caracteres) que /api/place-photo responde 302 pro servidor de imagem
+// do Google. Ficou desligado meses porque a GOOGLE_PLACES_KEY não existia no
+// Cloudflare — e eu tinha "testado" antes com uma ref inventada e curta, que
+// passava na regex e não provava nada.
+//
+// O que muda: a URL da foto para de carregar a chave, e o destino resolvido
+// fica guardado no cache do Cloudflare. A segunda pessoa que vir a mesma foto
+// não custa chamada de API.
+const FOTO_PELO_PROXY=true;
 const RE_FOTO_PLACES=/^https:\/\/places\.googleapis\.com\/v1\/(places\/[^/]+\/photos\/[^/]+)\/media\?(.*)$/i;
 const RE_FOTO_PROXY=/^\/api\/place-photo\?ref=([^&]+)&w=(\d+)$/i;
 // Normaliza a URL de foto pro caminho que está LIGADO, seja o que estiver
