@@ -578,7 +578,12 @@ body{font-family:'DM Sans',sans-serif;background:var(--dark);max-width:430px;mar
 /* A foto entra POR CIMA do degradê da categoria. Se ela falhar — referência
    do Google expira — o onerror remove o <img> e o degradê que já estava
    atrás aparece, em vez de um retângulo chapado. */
-.fd-foto{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;z-index:1}
+/* Entra suave em cima do degradê. Sem isso a foto aparece de estalo quando
+   chega, e a demora dos dois saltos de rede lê como defeito em vez de
+   carregamento. O degradê já está pintado desde o primeiro quadro, então
+   nunca há buraco branco. */
+.fd-foto{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;z-index:1;opacity:0;transition:opacity .4s ease}
+@media(prefers-reduced-motion:reduce){.fd-foto{transition:none}}
 /* z-index 2: acima da foto (1) e abaixo do texto (3), senão o escurecido
    fica atrás da imagem e o nome do lugar some no claro da foto. */
 .fd-img::after{content:"";position:absolute;inset:0;z-index:2;background:linear-gradient(to bottom,rgba(11,22,32,0) 38%,rgba(11,22,32,.88))}
@@ -6082,8 +6087,15 @@ function cardDeVisita(it,i,nome){
   // Com <img>, a falha só descobre o degradê que já estava atrás.
   const foto=safeUrl(fotoNaLargura(semChaveDoPlaces(sp.photo_url),760));
   const fundo='background-image:'+destGradient(sp.name||cidade);
+  // O primeiro card é o que a pessoa vê ao abrir a aba: carrega sem espera e
+  // com prioridade. Os de baixo continuam preguiçosos, pra não disputar banda
+  // com ele. A foto do Places custa DOIS saltos de rede (o endereço responde
+  // 302 pro servidor de imagem do Google), então o primeiro byte demora.
+  const urgente=i===0;
   const camadaFoto=foto
-    ? '<img class="fd-foto" src="'+escUrl(foto)+'" alt="" loading="lazy" decoding="async" onerror="this.remove()">'
+    ? '<img class="fd-foto" src="'+escUrl(foto)+'" alt=""'
+      +(urgente?' fetchpriority="high"':' loading="lazy"')
+      +' decoding="async" onload="this.style.opacity=1" onerror="this.remove()">'
     : '';
   const nota=String(sp.my_note||'').trim();
   const estrelas=estrelasHTML(sp.my_rating,14);
