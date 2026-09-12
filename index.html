@@ -389,6 +389,11 @@ body{font-family:'DM Sans',sans-serif;background:var(--dark);max-width:430px;mar
 @supports not ((backdrop-filter:blur(1px)) or (-webkit-backdrop-filter:blur(1px))){
   .bottom-nav{background:var(--dark)}
 }
+/* Dentro da casca nativa quem desenha a navegação é o app, não a página.
+   A barra daqui sai, mas o espaço que ela ocupava FICA: a barra nativa
+   flutua no mesmo lugar, e sem a folga o último item de cada lista ficaria
+   escondido atrás dela. */
+body.na-casca .bottom-nav{display:none}
 
 /* ═══ HOVER (só em dispositivos com mouse — não afeta toque) ═══ */
 @media(hover:hover){
@@ -2159,6 +2164,57 @@ async function excluirConta(){
 
 // ═══ DASHBOARD ═══
 let dashboardReqId=0;
+// ═══ BARRA DE ABAS NATIVA ═══
+// Dentro da casca, quem desenha a navegação de baixo é o app nativo, não esta
+// página. A barra daqui some e a de lá assume — o toque passa a responder na
+// hora, sem esperar o WebView processar evento.
+//
+// Isso é também o que permite migrar o app tela por tela: com a navegação
+// FORA da página, uma aba pode virar nativa sem arrastar as outras junto.
+//
+// No navegador comum nada disto acontece e a barra de sempre continua lá.
+// Função, não constante: guardar a resposta no carregamento assume que a
+// casca injeta a ponte ANTES deste script rodar. Ela injeta — mas é uma
+// suposição de ordem que eu não consigo testar daqui, e se um dia mudar o
+// sintoma seria a barra nativa simplesmente nunca aparecer, sem erro nenhum.
+function naCasca(){return !!(window.ReactNativeWebView&&window.ReactNativeWebView.postMessage)}
+
+// As quatro telas que têm aba. O resto (viagem, cidade, lugar, telas de
+// amigo) são telas de detalhe: nelas a barra some, igual ao site hoje.
+const ABAS_DO_APP={dashboard:1,explore:1,friends:1,profile:1};
+
+function falarComACasca(msg){
+  if(!naCasca())return;
+  try{window.ReactNativeWebView.postMessage(JSON.stringify(msg))}catch(e){}
+}
+
+// Chamado a cada troca de tela, inclusive pelo voltar de dentro da página.
+// A barra nativa REFLETE o app; ela nunca decide sozinha onde a pessoa está.
+function avisarTelaAtual(id){
+  falarComACasca({tipo:'tela',aba:id,comAbas:!!ABAS_DO_APP[id]});
+}
+
+// Chamado PELA casca quando alguém toca numa aba. Precisa fazer o mesmo que o
+// toque na barra web faz — inclusive carregar os dados da aba, senão trocar
+// de aba mostraria a tela certa com o conteúdo da última visita.
+window.irParaAba=function(id){
+  if(!ABAS_DO_APP[id])return;
+  goTo(id);
+  if(id==='dashboard')loadDashboard();
+  else if(id==='explore')loadExplore();
+  else if(id==='friends')loadFriends();
+  else if(id==='profile')loadProfile();
+};
+
+function ligarAbasNativas(){
+  if(!naCasca())return;
+  document.body.classList.add('na-casca');
+  // Quem já está na tela quando isto roda: sem este primeiro aviso, a barra
+  // só apareceria na primeira troca de tela.
+  const atual=document.querySelector('.screen.active');
+  if(atual)avisarTelaAtual(atual.id);
+}
+
 // ═══ NOTIFICAÇÃO ═══
 // Só existe dentro da casca nativa: a casca pede a permissão ao iOS, pega o
 // endereço de entrega do aparelho e entrega aqui, porque quem sabe qual conta
@@ -6455,7 +6511,12 @@ function initMapZoom(baseVB){
   },{passive:false});
   svg.addEventListener('touchend',()=>{pts={}});
 }
-function goTo(id){document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));document.getElementById(id).classList.add('active');window.scrollTo(0,0)}
+function goTo(id){
+  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  window.scrollTo(0,0);
+  avisarTelaAtual(id);
+}
 function showOv(id){populateTripOpts();if(id==='ov-newtrip')prepNewTrip();if(id==='ov-quickvisit')prepQuickVisit();document.getElementById(id).classList.add('show')}
 function closeOv(id){document.getElementById(id).classList.remove('show')}
 function closeOut(e,id){if(e.target===document.getElementById(id))closeOv(id)}
@@ -7604,6 +7665,7 @@ function onAvatarFileChosen(input){
 init();
 ligarOffline();
 ligarNotificacoes();
+ligarAbasNativas();
 startLoginPhotos();
 
 </script>

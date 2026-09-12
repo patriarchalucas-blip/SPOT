@@ -17,7 +17,11 @@
 //   4. Permissão de localização e de câmera pedidas pelo aparelho, com texto
 //      em português explicando pra quê.
 //   5. Área segura, barra de status e splash tratados nativamente.
-//   6. Notificação no celular — pedido de amizade, lugar novo de um amigo,
+//   6. Barra de abas NATIVA. A primeira coisa que o revisor toca já não é
+//      HTML: o toque responde na hora, sem esperar o WebView. É também a
+//      peça que permite migrar o resto tela por tela — com a navegação fora
+//      da página, cada aba pode virar nativa no seu tempo.
+//   7. Notificação no celular — pedido de amizade, lugar novo de um amigo,
 //      comentário. É a coisa da lista da 4.2 que o navegador mais claramente
 //      não faz, e a que resolve um problema real: hoje um pedido de amizade
 //      fica parado até a pessoa abrir o app por acaso.
@@ -36,7 +40,8 @@ import {
   Text,
   View,
 } from 'react-native';
-import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
+import { SafeAreaProvider, SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
+import BarraDeAbas from './BarraDeAbas';
 import { StatusBar } from 'expo-status-bar';
 import { WebView } from 'react-native-webview';
 import * as Notifications from 'expo-notifications';
@@ -120,6 +125,13 @@ export default function App() {
   // Guardado aqui porque o endereço costuma chegar ANTES de o site terminar
   // de carregar. Sem guardar, ele se perde e a pessoa nunca recebe nada.
   const enderecoRef = useRef(null);
+  const margem = useSafeAreaInsets();
+  // Qual aba está acesa e se a barra deve aparecer. Quem manda nisso é o
+  // SITE, não a barra: ele tem telas de detalhe (viagem, cidade, lugar) que
+  // escondem a navegação, e o botão de voltar dele muda de tela sem passar
+  // por aqui. A barra reflete o app, nunca o contrário.
+  const [abaAtiva, setAbaAtiva] = useState('dashboard');
+  const [mostrarAbas, setMostrarAbas] = useState(false);
 
   // Entrega o endereço pro site, que é quem sabe qual conta está logada.
   const entregarEndereco = useCallback(() => {
@@ -180,7 +192,25 @@ export default function App() {
     }
     if (dados && dados.tipo === 'compartilhar' && typeof dados.texto === 'string') {
       Share.share({ message: dados.texto }).catch(() => {});
+      return;
     }
+    // O site diz em que tela está. Sem isso a barra acenderia a aba errada
+    // assim que a pessoa usasse o voltar de dentro da página.
+    if (dados && dados.tipo === 'tela') {
+      if (typeof dados.aba === 'string') setAbaAtiva(dados.aba);
+      setMostrarAbas(!!dados.comAbas);
+    }
+  }, []);
+
+  // Tocar numa aba não navega nada aqui: manda o SITE trocar de tela, que é
+  // quem sabe carregar os dados daquela aba. Acender a aba localmente antes
+  // da resposta deixa o toque instantâneo; se o site discordar, ele corrige
+  // na mensagem de volta.
+  const trocarDeAba = useCallback((tela) => {
+    setAbaAtiva(tela);
+    webRef.current?.injectJavaScript(
+      'window.irParaAba && window.irParaAba(' + JSON.stringify(tela) + ');true;'
+    );
   }, []);
 
   // Decide o que navega dentro e o que sai pro sistema.
@@ -218,43 +248,53 @@ export default function App() {
     <SafeAreaProvider>
       <StatusBar style="light" />
       <SafeAreaView style={estilo.fundo} edges={['top', 'left', 'right']}>
-        <WebView
-          ref={webRef}
-          source={{ uri: SITE }}
-          style={estilo.web}
-          containerStyle={estilo.fundo}
-          // Sem isso o WKWebView não entrega a posição pro site.
-          geolocationEnabled
-          mediaPlaybackRequiresUserAction={false}
-          allowsInlineMediaPlayback
-          // Puxar pra baixo no topo recarrega; no resto do app não interfere.
-          pullToRefreshEnabled
-          // Sem destaque cinza no toque, que denuncia navegador.
-          allowsLinkPreview={false}
-          originWhitelist={['https://*', 'http://*']}
-          onShouldStartLoadWithRequest={aoNavegar}
-          onMessage={aoReceberMensagem}
-          onLoadStart={() => setCarregando(true)}
-          onLoadEnd={() => {
-            setCarregando(false);
-            // Toda vez que o site termina de carregar, inclusive depois de
-            // recarregar: o endereço vive no app, não na página.
-            entregarEndereco();
-          }}
-          onNavigationStateChange={(s) => setPodeVoltar(!!s.canGoBack)}
-          onError={() => {
-            setCarregando(false);
-            setSemRede(true);
-          }}
-          onHttpError={(e) => {
-            // 4xx/5xx na própria página inicial é falha de verdade; erro de um
-            // recurso solto (uma foto) não deve derrubar a tela.
-            const { statusCode, url } = e.nativeEvent;
-            if (url === SITE || url === SITE + '/') {
-              if (statusCode >= 500) setSemRede(true);
-            }
-          }}
-        />
+        <View style={estilo.pilha}>
+          <WebView
+            ref={webRef}
+            source={{ uri: SITE }}
+            style={estilo.web}
+            containerStyle={estilo.fundo}
+            // Sem isso o WKWebView não entrega a posição pro site.
+            geolocationEnabled
+            mediaPlaybackRequiresUserAction={false}
+            allowsInlineMediaPlayback
+            // Puxar pra baixo no topo recarrega; no resto do app não interfere.
+            pullToRefreshEnabled
+            // Sem destaque cinza no toque, que denuncia navegador.
+            allowsLinkPreview={false}
+            originWhitelist={['https://*', 'http://*']}
+            onShouldStartLoadWithRequest={aoNavegar}
+            onMessage={aoReceberMensagem}
+            onLoadStart={() => {
+              setCarregando(true);
+              // Recarregou: até o site dizer onde está, a barra some. Melhor
+              // nenhuma barra que uma barra apontando pra tela errada.
+              setMostrarAbas(false);
+            }}
+            onLoadEnd={() => {
+              setCarregando(false);
+              // Toda vez que o site termina de carregar, inclusive depois de
+              // recarregar: o endereço vive no app, não na página.
+              entregarEndereco();
+            }}
+            onNavigationStateChange={(s) => setPodeVoltar(!!s.canGoBack)}
+            onError={() => {
+              setCarregando(false);
+              setSemRede(true);
+            }}
+            onHttpError={(e) => {
+              // 4xx/5xx na própria página inicial é falha de verdade; erro de um
+              // recurso solto (uma foto) não deve derrubar a tela.
+              const { statusCode, url } = e.nativeEvent;
+              if (url === SITE || url === SITE + '/') {
+                if (statusCode >= 500) setSemRede(true);
+              }
+            }}
+          />
+          {mostrarAbas ? (
+            <BarraDeAbas ativa={abaAtiva} aoTocar={trocarDeAba} margemDeBaixo={margem.bottom} />
+          ) : null}
+        </View>
         {carregando ? (
           <View style={estilo.carregando} pointerEvents="none">
             <ActivityIndicator size="large" color={TERRA} />
@@ -267,6 +307,10 @@ export default function App() {
 
 const estilo = StyleSheet.create({
   fundo: { flex: 1, backgroundColor: TINTA },
+  // Empilha a barra por cima do WebView em vez de dividir a tela: o site
+  // continua ocupando a altura inteira e a barra flutua, exatamente como a
+  // .bottom-nav do CSS faz hoje.
+  pilha: { flex: 1 },
   web: { flex: 1, backgroundColor: TINTA },
   carregando: {
     ...StyleSheet.absoluteFillObject,
