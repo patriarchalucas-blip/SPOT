@@ -558,14 +558,35 @@ body{font-family:'DM Sans',sans-serif;background:var(--dark);max-width:430px;mar
    título em Fraunces grande e sozinho (sem a linha pequena por cima, que era
    ruído), e o rótulo de seção como etiqueta de ficha. Nada de estrutura muda. */
 #explore .dash-hello,#friends .dash-hello{display:none}
-#explore .dash-name{font-family:'Fraunces',serif;font-weight:400;font-size:30px;letter-spacing:-.01em;margin:0 0 16px}
+#explore .dash-name{margin:0 0 16px}
 #explore .search-field{border-radius:12px}
 #explore .req-accept{border-radius:12px}
-/* Filtros do Explorar e das listas ganham o mesmo chip do resto do app. */
 #explore .list-filters .chip,.list-filters .chip{min-height:38px}
-#profile .profile-name{font-family:'Fraunces',serif;font-weight:400;font-size:27px;letter-spacing:-.01em}
-#profile .profile-user{font-family:var(--mono);font-size:11.5px;letter-spacing:.06em;color:var(--ink3)}
-#profile .sec-label,#profile .section-title{font-family:var(--mono);font-size:10px;letter-spacing:.16em;text-transform:uppercase;color:var(--ink3);font-weight:500}
+
+/* Resultado do Explorar: card com foto, igual ao feed. Quem escolhe onde ir
+   decide pela foto e pelo nome, não pela posição num ranking. */
+.ex-card{border-radius:20px;background:var(--elev,#16232A);border:1px solid var(--border);overflow:hidden;margin-bottom:14px}
+.ex-img{height:170px;position:relative;background-color:#16232A;background-size:cover;background-position:center;cursor:pointer;overflow:hidden}
+.ex-img::after{content:"";position:absolute;inset:0;z-index:2;background:linear-gradient(to bottom,rgba(11,22,32,.4) 0%,rgba(11,22,32,0) 24%,rgba(11,22,32,0) 40%,rgba(11,22,32,.9) 100%)}
+.ex-foto{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;z-index:1;opacity:0;transition:opacity .4s ease}
+@media(prefers-reduced-motion:reduce){.ex-foto{transition:none}}
+.ex-nota{position:absolute;top:13px;right:13px;z-index:3;font-family:var(--mono);font-size:11px;color:var(--ink);background:rgba(11,22,32,.55);-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px);border-radius:999px;padding:5px 11px}
+.ex-estrela{color:#BFA474}
+.ex-pe{position:absolute;left:16px;right:16px;bottom:13px;z-index:3}
+.ex-k{display:block;font-family:var(--mono);font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--ink2)}
+.ex-nome{font-family:'Fraunces',serif;font-weight:400;font-size:24px;color:#fff;margin:4px 0 0;line-height:1.08;letter-spacing:-.01em;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical}
+.ex-corpo-card{padding:12px 16px 14px;display:flex;align-items:center;justify-content:space-between;gap:12px}
+.ex-aval{font-family:var(--mono);font-size:11px;color:var(--ink3)}
+
+/* Perfil: placar em uma linha, igual ao de Viagens, no lugar das caixas. */
+#profile .profile-user{letter-spacing:.06em}
+#profile .stats-strip{display:flex;flex-wrap:wrap;align-items:baseline;gap:8px;background:none;border:none;padding:0}
+#profile .stat-block{flex:none;background:none;border:none;border-radius:0;padding:0;box-shadow:none;display:inline-flex;align-items:baseline;gap:5px}
+#profile .stat-n{font-family:var(--mono);font-size:14px;font-weight:500;color:var(--ink)}
+#profile .stat-l{font-family:var(--mono);font-size:11px;color:var(--ink3);margin-top:0;letter-spacing:.05em}
+#profile .section-title{font-family:var(--mono);font-size:10px;letter-spacing:.16em;text-transform:uppercase;color:var(--ink3);font-weight:500}
+/* Linhas de configuração viram ficha, com a etiqueta em monoespacada. */
+#profile .prof-linha .pl-txt{font-size:14.5px}
 
 /* ═══ TELA DE VIAGENS — direção Atlas ═══
    Placar em UMA linha no lugar do número gigante mais três caixas: eram quase
@@ -644,6 +665,16 @@ body{font-family:'DM Sans',sans-serif;background:var(--dark);max-width:430px;mar
 #place .toggle-btn.sel-been{background:var(--elev,#16232A);font-weight:600;color:#8FD3CE}
 #place .toggle-btn.sel-want{background:var(--elev,#16232A);font-weight:600;color:#DDCBA4}
 #place .toggle-btn.sel-skip{background:var(--elev,#16232A);font-weight:600;color:var(--ink)}
+
+/* Linha social: rodapé da nota. Avatares de quem comentou, nomes, e a nota do
+   Google — as três coisas que antes moravam longe uma da outra. */
+.sp-social{display:flex;align-items:center;gap:10px;margin-top:16px;cursor:pointer;min-height:44px}
+.sp-pilha{display:flex;flex:none}
+.sp-av{width:24px;height:24px;border-radius:50%;background:var(--green);border:2px solid var(--dark);margin-left:-8px;display:flex;align-items:center;justify-content:center;font-family:var(--mono);font-size:9px;font-weight:400;color:#cfe9e6;position:relative}
+.sp-pilha .sp-av:first-child{margin-left:0}
+.sp-txt{flex:1;min-width:0;font-size:13px;color:var(--ink2);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.sp-txt i{font-style:normal;font-weight:600;color:var(--ink)}
+.sp-google{flex:none;font-family:var(--mono);font-size:11px;color:var(--ink2);white-space:nowrap}
 
 /* Informações vira ficha compacta. Eram três cartões altos com ícone em cima
    ocupando meia tela, repetindo a cidade que já está no cabeçalho e o endereço
@@ -1210,7 +1241,7 @@ svg.ic path,svg.ic circle,svg.ic line,svg.ic polyline,svg.ic rect{fill:none;stro
 
 <div class="screen" id="place">
   <div class="place-hero"><div class="place-hero-img" id="placeHeroImg"></div><div class="hero-overlay"></div><button class="hero-back" onclick="backFromPlace()" data-ic="back" aria-label="Voltar"></button><button class="hero-photo-btn" onclick="document.getElementById('spotPhotoFileInput').click()" data-ic="edit" aria-label="Trocar foto"></button><input type="file" id="spotPhotoFileInput" accept="image/*" style="display:none" onchange="onSpotPhotoFileChosen(this)"><div class="hero-chip chip-want" id="placeChip" onclick="cycleStatus()">Quero ir</div><div class="hero-bottom"><div class="hero-type" id="placeType"></div><div class="hero-name" id="placeName"></div></div></div>
-  <div class="d-section"><div class="sec-linha"><div class="sec-label">Minha nota</div><button class="sec-editar" id="btnEditarNota" onclick="editarNota()">Editar</button></div><div class="note-card" id="notaLeitura"><div class="note-glow"></div><div class="note-quote" id="placeNote"></div><div class="note-attr" id="placeNoteAttr"></div></div><div id="notaEdicao" style="display:none"><textarea class="note-input" id="notaTexto" rows="4" placeholder="Por que esse lugar te chamou atenção?"></textarea><div class="nota-acoes"><button class="action-btn" style="margin:0" id="btnSalvarNota" onclick="salvarNota()">Salvar nota</button><button class="secondary-link" style="margin:0" onclick="cancelarNota()">Cancelar</button></div></div></div>
+  <div class="d-section"><div class="sec-linha"><div class="sec-label">Minha nota</div><button class="sec-editar" id="btnEditarNota" onclick="editarNota()">Editar</button></div><div class="note-card" id="notaLeitura"><div class="note-glow"></div><div class="note-quote" id="placeNote"></div><div class="note-attr" id="placeNoteAttr"></div></div><div id="notaEdicao" style="display:none"><textarea class="note-input" id="notaTexto" rows="4" placeholder="Por que esse lugar te chamou atenção?"></textarea><div class="nota-acoes"><button class="action-btn" style="margin:0" id="btnSalvarNota" onclick="salvarNota()">Salvar nota</button><button class="secondary-link" style="margin:0" onclick="cancelarNota()">Cancelar</button></div></div><div class="sp-social" id="placeSocial" style="display:none"></div></div>
   <div class="d-section"><div class="sec-label">Informações</div><div class="info-grid" id="placeInfoGrid"></div><div id="placeReserveWrap"></div></div>
   <div class="d-section"><div class="coment-bloco" id="placeComentarios"></div></div>
   <div class="d-section" id="placeSubcatSection" style="display:none"><div class="sec-label">Tipo de experiência</div><div class="subcat-row" id="placeSubcatChips"></div></div>
@@ -3296,12 +3327,33 @@ async function runExplore(){
     body.innerHTML='<div class="empty-state"><div class="ei" data-ic="alert"></div><h3>Erro ao buscar</h3><p>Tenta de novo em alguns segundos.</p></div>';hydrateIcons(body);
   }
 }
+// Resultado do Explorar vira card com foto, na mesma linguagem do feed.
+// Era uma linha de lista com selo de 64px, número de posição e "1.243
+// avaliações" — informação de diretório, não de descoberta. Quem está
+// escolhendo onde ir decide pela foto e pelo nome, não pela posição no
+// ranking.
 function renderExploreResults(){
   const body=document.getElementById('exploreBody');
   body.innerHTML=EXPLORE.items.map((p,i)=>{
-    const thumb=p.photo_url?`<div class="lthumb" style="width:64px;height:64px"><img src="${escUrl(p.photo_url)}" style="width:100%;height:100%;object-fit:cover;border-radius:inherit" onerror="thumbFallback(this,'${esc(EXPLORE.cat)}')"></div>`:`<div class="lthumb" style="width:64px;height:64px">${catIcon(EXPLORE.cat)}</div>`;
+    const foto=safeUrl(fotoNaLargura(semChaveDoPlaces(p.photo_url),760));
     const local=[p.city,p.country].filter(Boolean).join(' · ');
-    return`<div class="lrow"><span class="lrank">${i+1}</span>${thumb}<div class="lmain"><div class="lname">${esc(p.name)}</div><div class="lmeta">${esc(local)}${local?' · ':''}${esc(p.count)} avaliações</div></div><div class="lright"><span class="lrating">★ ${fmtRating(p.rating)}</span><button class="req-btn req-accept" style="padding:6px 14px;font-size:11.5px" onclick="addExploreSpot(${i})">Adicionar</button></div></div>`;
+    // fmtRating(0) devolve "0.0", que é verdadeiro: sem este teste, lugar sem
+    // avaliação exibia a etiqueta "0.0 ★", que parece nota péssima e não
+    // ausência de nota.
+    const nota=Number(p.rating)>0?fmtRating(p.rating):'';
+    return '<div class="ex-card">'
+      +'<div class="ex-img" style="background-image:'+destGradient(p.name||local)+'" onclick="addExploreSpot('+i+')">'
+        +(foto?'<img class="ex-foto" src="'+escUrl(foto)+'" alt=""'+(i===0?' fetchpriority="high"':' loading="lazy"')+' decoding="async" onload="this.style.opacity=1" onerror="this.remove()">':'')
+        +(nota?'<span class="ex-nota">'+esc(nota)+' <span class="ex-estrela">★</span></span>':'')
+        +'<div class="ex-pe">'
+          +(local?'<span class="ex-k">'+esc(local)+'</span>':'')
+          +'<h3 class="ex-nome">'+esc(p.name)+'</h3>'
+        +'</div>'
+      +'</div>'
+      +'<div class="ex-corpo-card">'
+        +'<span class="ex-aval">'+esc(p.count||0)+' avaliações no Google</span>'
+        +'<button class="fd-salvar" onclick="addExploreSpot('+i+')">+ minha lista</button>'
+      +'</div></div>';
   }).join('');
 }
 function addExploreSpot(i){
@@ -4809,6 +4861,45 @@ function renderComentarios(spotId,alvo,donoDoSpot){
   hydrateIcons(box);
 }
 
+// ═══ LINHA SOCIAL DO SPOT ═══
+//
+// É a peça mais característica do modelo e a que faltava: logo abaixo da
+// nota, quem comentou (avatares empilhados + nomes) e a nota do Google, tudo
+// numa linha. Antes essas duas informações moravam longe uma da outra — o
+// bloco de comentários lá embaixo e a nota do Google num cartão de
+// "Informações". Aqui elas viram o rodapé da nota, que é onde a pessoa já
+// está olhando.
+function renderSocialDoSpot(spotId,spot){
+  const el=document.getElementById('placeSocial');
+  if(!el)return;
+  const lista=(COMENTARIOS[spotId]||[]).filter(c=>!estaBloqueado(c.user_id));
+  // Mesmo cuidado do Explorar: fmtRating(0) é "0.0", que é verdadeiro.
+  const google=(spot&&Number(spot.rating_google)>0)?fmtRating(spot.rating_google):'';
+  if(!lista.length&&!google){el.style.display='none';el.innerHTML='';return}
+
+  // Uma bolinha por pessoa distinta, no máximo três, na ordem em que
+  // comentaram.
+  const vistos=[];
+  lista.forEach(c=>{if(c.user_id&&!vistos.includes(c.user_id))vistos.push(c.user_id)});
+  const nomes=vistos.map(id=>String(friendName(COMENT_PERFIS[id])||'Alguém').split(' ')[0]);
+  const pilha=vistos.slice(0,3).map((id,i)=>
+    '<b class="sp-av" style="z-index:'+(3-i)+'">'+esc(initials(friendName(COMENT_PERFIS[id])))+'</b>').join('');
+
+  let texto='';
+  if(nomes.length===1)texto='<i>'+esc(nomes[0])+'</i> comentou';
+  else if(nomes.length===2)texto='<i>'+esc(nomes[0])+'</i> e <i>'+esc(nomes[1])+'</i> comentaram';
+  else if(nomes.length>2)texto='<i>'+esc(nomes[0])+'</i>, <i>'+esc(nomes[1])+'</i> e mais '+(nomes.length-2)+' comentaram';
+
+  el.style.display='';
+  el.innerHTML=(pilha?'<span class="sp-pilha">'+pilha+'</span>':'')
+    +'<span class="sp-txt">'+(texto||'Ninguém comentou ainda')+'</span>'
+    +(google?'<span class="sp-google">Google '+esc(google)+' <span class="ex-estrela">★</span></span>':'');
+  el.onclick=()=>{
+    const box=document.getElementById('placeComentarios');
+    if(box)box.scrollIntoView({behavior:'smooth',block:'center'});
+  };
+}
+
 async function abrirComentarios(spotId,alvo,donoDoSpot){
   const box=document.getElementById(alvo);
   if(box)box.innerHTML='<div class="coment-titulo">Comentários</div><div class="amg-aviso">Carregando...</div>';
@@ -4820,6 +4911,10 @@ async function abrirComentarios(spotId,alvo,donoDoSpot){
     // vez de mostrar erro — o resto da ficha continua inteiro.
     if(box)box.innerHTML='';
   }
+  // A linha social é desenhada mesmo se os comentários falharem: a nota do
+  // Google sozinha já justifica a linha, e sumir com ela deixaria um buraco
+  // entre a nota e as ações.
+  if(alvo==='placeComentarios')renderSocialDoSpot(spotId,S.curPlace);
 }
 
 async function enviarComentario(spotId,alvo,donoDoSpot){
