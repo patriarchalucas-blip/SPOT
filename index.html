@@ -1986,7 +1986,21 @@ async function handleAuth(){
   if(authMode==='signup')r=await sb.auth.signUp({email,password:pw});
   else r=await sb.auth.signInWithPassword({email,password:pw});
   if(r.error){showAuthErr(r.error.message);btn.disabled=false;btn.textContent=authMode==='signup'?'Criar conta':'Entrar';return}
-  if(authMode==='signup'&&!r.data.session){showAuthErr('Verifique seu email para confirmar');btn.disabled=false;btn.textContent='Criar conta';return}
+  if(authMode==='signup'&&!r.data.session){
+    // Cadastro num email que JÁ TEM conta não devolve erro: o Supabase esconde
+    // isso de propósito, senão qualquer um descobre quem tem conta testando
+    // emails. O sinal é a lista de identidades vir vazia — é o jeito
+    // documentado de detectar, e sem ele a pessoa é mandada esperar um email
+    // de confirmação que nunca vai chegar, porque não há nada a confirmar.
+    const u=r.data&&r.data.user;
+    if(u&&Array.isArray(u.identities)&&u.identities.length===0){
+      showAuthErr('Esse email já tem conta. Toque em "Entrar".');
+      btn.disabled=false;btn.textContent='Criar conta';
+      return;
+    }
+    showAuthErr('Enviamos um link de confirmação pro seu email. Confere também o spam.');
+    btn.disabled=false;btn.textContent='Criar conta';return;
+  }
   // onAuthStateChange will handle the rest
 }
 function showAuthErr(m){const e=document.getElementById('authError');e.textContent=m;e.classList.add('show')}
