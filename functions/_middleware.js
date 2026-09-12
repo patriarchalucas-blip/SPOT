@@ -23,12 +23,15 @@ const BLOQUEADOS = [
   /^\/migrations(\/|$)/i,
   /^\/tests(\/|$)/i,
   /^\/\.github(\/|$)/i,
-  /^\/CLAUDE\.md$/i,
-  /^\/readme\.md$/i,
   /^\/pyproject\.toml$/i,
-  // Qualquer .sql ou .md solto na raiz, para não depender de eu lembrar de
-  // atualizar esta lista a cada arquivo novo.
-  /\.(sql|toml)$/i,
+  // O projeto do app nativo. Nada ali é servido ao navegador, e o eas.json
+  // vai receber o Apple ID e o Team ID na hora do envio — não pode ficar
+  // aberto na web esperando eu lembrar de bloquear depois.
+  /^\/mobile(\/|$)/i,
+  // Qualquer .sql, .toml ou .md em qualquer pasta. Lista por extensão em vez
+  // de por nome para não depender de eu lembrar a cada arquivo novo: o site
+  // não serve nenhum desses formatos, então bloquear todos é seguro.
+  /\.(sql|toml|md)$/i,
 ];
 
 export async function onRequest(context) {

@@ -2711,6 +2711,7 @@ async function openPlace(id,origin){
   if(s.photo_url){
     phEl.style.backgroundImage=cssUrl(s.photo_url);
     pintarCreditoSpot('placeFotoCredito',s);
+    buscarCreditoAtrasado(s,'placeFotoCredito',aindaNesteSpot);
     // background-image não dispara erro quando a URL falha. O probe carrega a
     // mesma imagem só pra detectar a quebra e acionar o auto-conserto.
     const probe=new Image();
@@ -3503,6 +3504,23 @@ function guardarCreditoCidade(url,c){
   try{localStorage.setItem('spot_credito_foto',JSON.stringify(CREDITO_CIDADE))}catch(e){}
 }
 function limparCredito(elId){const el=document.getElementById(elId);if(el)el.innerHTML=''}
+// Foto do Google é a que veio da API (direta ou pelo proxy). A que o próprio
+// usuário enviou vive no storage do Supabase e não tem autor a creditar.
+function fotoEhDoGoogle(u){
+  const s=String(u||'');
+  return s.indexOf('https://places.googleapis.com/')===0||s.indexOf('/api/place-photo')===0;
+}
+// Spot salvo ANTES de existir a coluna de crédito tem foto do Google e nenhum
+// autor gravado — e ficaria assim para sempre, porque o auto-conserto só roda
+// quando a foto QUEBRA. Exibir foto do Google sem crédito é o que os termos
+// deles proíbem, então aqui o app vai buscar o autor uma vez, quando a ficha
+// do lugar é aberta. Uma consulta por spot antigo, nunca mais.
+function buscarCreditoAtrasado(s,elId,aindaVale){
+  if(!s||s.photo_author||!fotoEhDoGoogle(s.photo_url))return;
+  healSpotPhoto(s.id,true).then(()=>{
+    if(aindaVale())pintarCreditoSpot(elId,s);
+  }).catch(()=>{});
+}
 // safeUrl devolve '' pra endereço que não seja http(s) — e href="" recarrega
 // a própria página. Sem link é melhor que link que não leva a lugar nenhum.
 function linkCredito(url,texto){
@@ -5251,6 +5269,9 @@ function renderBloqueados(){
 // Aqui a gente detecta a falha, rebusca a foto atual do lugar e regrava no banco —
 // conserta de vez, uma vez só por spot, sem precisar de SQL.
 const photoHealing=new Set();
+// Uma tentativa por spot por sessão: se o Google não devolver autor, não
+// adianta insistir toda vez que a ficha abrir.
+const creditoJaBuscado=new Set();
 function findSpotById(id){
   for(const t of (S.trips||[])){const s=(t._spots||[]).find(x=>x.id===id);if(s)return s}
   return null;
@@ -5622,10 +5643,15 @@ async function buscarFotosQueFaltam(){
   }
   marcarFotoTentada(tentados);
 }
-async function healSpotPhoto(id){
+// soCredito=true: a foto está boa, o que falta é o nome de quem a tirou.
+// Nesse modo a URL da foto não é regravada — trocar uma foto que funciona
+// por outra só para pegar o crédito seria mudar o que o usuário já viu.
+async function healSpotPhoto(id,soCredito){
   if(!id||photoHealing.has(id))return null;
   const s=findSpotById(id);
   if(!s||!s.name)return null;
+  if(soCredito&&creditoJaBuscado.has(id))return null;
+  if(soCredito)creditoJaBuscado.add(id);
   photoHealing.add(id);
   try{
     // Duas tentativas. A primeira com a cidade, que e o normal; a segunda so
@@ -5670,15 +5696,25 @@ async function healSpotPhoto(id){
       }
     }
     if(p.googleMapsUri&&!s.maps_url){patch.maps_url=p.googleMapsUri;s.maps_url=p.googleMapsUri}
-    const url=placePhotoUrl(p,800);
-    // se a URL veio igual, a falha não era referência expirada — não regrava
-    if(url&&url!==s.photo_url){
-      patch.photo_url=url;s.photo_url=url;
-      // Foto nova, autor novo: o crédito TEM que acompanhar a foto, senão o
-      // app passa a exibir uma foto com o nome de quem tirou a anterior.
-      const a=autorDaFoto(p);
-      patch.photo_author=a.nome||null;s.photo_author=a.nome||null;
-      patch.photo_author_url=a.url||null;s.photo_author_url=a.url||null;
+    const a=autorDaFoto(p);
+    if(soCredito){
+      // A foto continua a mesma; só o nome de quem a tirou entra. O Google
+      // devolve as fotos de um lugar na mesma ordem, então a primeira é a
+      // mesma que já está gravada — é o autor dela que vem aqui.
+      if(a.nome){
+        patch.photo_author=a.nome;s.photo_author=a.nome;
+        patch.photo_author_url=a.url||null;s.photo_author_url=a.url||null;
+      }
+    }else{
+      const url=placePhotoUrl(p,800);
+      // se a URL veio igual, a falha não era referência expirada — não regrava
+      if(url&&url!==s.photo_url){
+        patch.photo_url=url;s.photo_url=url;
+        // Foto nova, autor novo: o crédito TEM que acompanhar a foto, senão o
+        // app passa a exibir uma foto com o nome de quem tirou a anterior.
+        patch.photo_author=a.nome||null;s.photo_author=a.nome||null;
+        patch.photo_author_url=a.url||null;s.photo_author_url=a.url||null;
+      }
     }
     if(!Object.keys(patch).length)return null;
     // Coluna de crédito vem da migração 017: se ela ainda não rodou, o
