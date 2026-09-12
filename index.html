@@ -300,6 +300,19 @@ body{font-family:'DM Sans',sans-serif;background:var(--dark);max-width:430px;mar
 .lright{flex-shrink:0;display:flex;flex-direction:column;align-items:flex-end;gap:5px}
 .lrating{font-family:var(--mono);font-size:12.5px;color:var(--amber);font-weight:600;white-space:nowrap}
 .lcount{font-family:var(--mono);font-size:12.5px;color:var(--ink2);background:rgba(234,231,224,.07);border-radius:var(--r-pill);padding:3px 10px;white-space:nowrap}
+/* Denúncia e bloqueio — exigência 1.2 da Apple. Alvos de toque com 44px de
+   altura mínima, que é o mínimo que a Apple também espera. */
+.den-sobre{padding:0 24px 12px;font-size:13.5px;color:var(--ink3);font-family:var(--mono)}
+.den-motivos{display:flex;flex-direction:column;gap:7px;padding:0 24px 14px}
+.den-motivo{text-align:left;min-height:44px;padding:11px 14px;border:1px solid var(--border);border-radius:var(--r-sm);background:transparent;color:var(--ink2);font-size:14px;font-family:inherit;cursor:pointer;transition:border-color .15s,color .15s}
+.den-motivo.on{border-color:var(--ink);color:var(--ink);font-weight:500}
+.lista-bloqueados{padding:0 24px 8px;display:flex;flex-direction:column;gap:10px;max-height:46vh;overflow-y:auto}
+.blq-linha{display:flex;align-items:center;gap:11px;min-height:44px}
+.blq-nome{flex:1;min-width:0;font-size:14.5px;color:var(--ink);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.blq-desfazer{flex:none;min-height:36px;padding:7px 13px;border:1px solid var(--border);border-radius:999px;background:transparent;color:var(--ink2);font-size:12.5px;font-family:var(--mono);cursor:pointer}
+/* Botão de denunciar dentro do comentário: discreto, mas alcançável. */
+.coment-den{flex:none;background:none;border:none;color:var(--ink3);font-size:11px;font-family:var(--mono);cursor:pointer;padding:4px 6px;margin-left:2px}
+.friend-mais{margin-left:auto;flex:none;width:44px;height:44px;display:flex;align-items:center;justify-content:center;background:rgba(11,22,32,.5);border:1px solid rgba(255,255,255,.16);border-radius:50%;color:#fff;cursor:pointer}
 .lflag{font-size:22px;flex-shrink:0}
 /* Bandeira desenhada como imagem onde o sistema não tem o glifo (Windows).
    Dimensionada em `em` pra herdar o tamanho de quem a contém, então cada
@@ -948,6 +961,7 @@ svg.ic path,svg.ic circle,svg.ic line,svg.ic polyline,svg.ic rect{fill:none;stro
     <button class="back-btn" onclick="backToFriends()" data-ic="back" aria-label="Voltar"></button>
     <div class="profile-avatar" id="friendAvatar">?</div>
     <div class="friend-id"><div class="friend-name" id="friendName">—</div><div class="friend-user" id="friendUser"></div></div>
+    <button class="friend-mais" onclick="abrirAcoesDoAmigo()" data-ic="menu" aria-label="Mais opções"></button>
   </div>
   <div class="friend-bio" id="friendBio" style="display:none"></div>
   <div class="dash-body">
@@ -1070,11 +1084,16 @@ svg.ic path,svg.ic circle,svg.ic line,svg.ic polyline,svg.ic rect{fill:none;stro
 <textarea class="note-input" id="bioInput" rows="2" placeholder="Uma frase sobre como você viaja" style="margin-bottom:8px"></textarea>
 <button class="sheet-cta" id="btnSalvarPerfil" onclick="salvarPerfil()">Salvar</button>
 <div class="prof-linha prof-sair" style="margin-top:10px;border-top:1px solid var(--border);border-bottom:none" onclick="signOut()"><span class="pl-txt">Sair da conta</span></div>
+<div class="prof-linha" onclick="abrirBloqueados()"><span class="pl-txt">Pessoas bloqueadas</span></div>
 <div class="prof-linha prof-sair" style="border-bottom:none;padding-bottom:26px" onclick="abrirExcluirConta()"><span class="pl-txt">Excluir minha conta</span></div></div></div>
 
 <div class="overlay" id="ov-excluir" onclick="closeOut(event,'ov-excluir')"><div class="sheet"><button class="sheet-close" onclick="closeOv('ov-excluir')" data-ic="close" aria-label="Fechar"></button><div class="sheet-handle"></div><div class="sheet-title">Excluir minha conta</div><div class="ex-corpo" style="padding:0 24px 4px"><div class="nt-label" style="margin-bottom:10px">Isso apaga de vez, e não tem como desfazer:</div><ul style="margin:0 0 16px;padding-left:20px;font-size:14px;line-height:1.7;color:var(--ink2)"><li>suas viagens e todos os seus lugares</li><li>suas notas, avaliações e comentários</li><li>suas fotos de perfil e de lugares</li><li>seus amigos e os links de convite que você criou</li></ul><div class="nt-label">Para confirmar, digite <b>EXCLUIR</b></div><input class="nt-input" id="confirmaExcluir" placeholder="digite aqui" autocapitalize="characters" autocomplete="off" oninput="atualizarBotaoExcluir()"></div><button class="sheet-cta" id="btnExcluirConta" style="background:var(--red);box-shadow:none;opacity:.4;pointer-events:none" onclick="excluirConta()">Excluir minha conta</button></div></div>
 
 <div class="overlay" id="ov-addfriend" onclick="closeOut(event,'ov-addfriend')"><div class="sheet"><button class="sheet-close" onclick="closeOv('ov-addfriend')" data-ic="close" aria-label="Fechar"></button><div class="sheet-handle"></div><div class="sheet-title">Adicionar amigo</div><div class="nt-label">Username do amigo</div><input class="nt-input" id="friendUsernameInput" type="text" placeholder="digite aqui" autocapitalize="none" oninput="mostrarErroAmigo('')"><div class="auth-error" id="friendAddErr"></div><button class="sheet-cta" id="sendReqBtn" onclick="sendFriendRequest()">Enviar pedido</button><div class="conv-ou"><span>ou</span></div><button class="secondary-link" id="convidarBtn" style="margin-top:0" onclick="compartilharConvite()">Convidar por link</button><div class="conv-dica">Quem abrir o link entra já como seu amigo, sem precisar do seu username.</div></div></div>
+
+<div class="overlay" id="ov-denuncia" onclick="closeOut(event,'ov-denuncia')"><div class="sheet"><button class="sheet-close" onclick="closeOv('ov-denuncia')" data-ic="close" aria-label="Fechar"></button><div class="sheet-handle"></div><div class="sheet-title">Denunciar</div><div class="den-sobre" id="denunciaSobre"></div><div class="nt-label" style="padding:0 24px">O que houve?</div><div class="den-motivos" id="denunciaMotivos"></div><div class="nt-label" style="padding:0 24px">Quer contar mais? (opcional)</div><textarea class="nt-input" id="denunciaDetalhe" rows="3" maxlength="1000" placeholder="Descreva o problema"></textarea><button class="sheet-cta" id="btnEnviarDenuncia" onclick="enviarDenuncia()">Enviar denúncia</button><div class="conv-dica">Analisamos toda denúncia em até 24 horas. Se quiser parar de ver essa pessoa agora, você também pode bloquear.</div></div></div>
+
+<div class="overlay" id="ov-bloqueados" onclick="closeOut(event,'ov-bloqueados')"><div class="sheet"><button class="sheet-close" onclick="closeOv('ov-bloqueados')" data-ic="close" aria-label="Fechar"></button><div class="sheet-handle"></div><div class="sheet-title">Pessoas bloqueadas</div><div class="lista-bloqueados" id="listaBloqueados"></div><div class="conv-dica">Quem você bloqueia não vê que foi bloqueado, e deixa de aparecer pra você.</div></div></div>
 
 <div class="toast" id="toast"><div class="toast-icon" id="toastIcon"></div><div class="toast-body"><div class="toast-title" id="toastTitle"></div><div class="toast-msg" id="toastMsg"></div></div></div>
 
@@ -1826,6 +1845,7 @@ async function loadDashboard(){
   const visivelAntes=S.trips.filter(t=>!isNonTrip(t)).map(t=>t.id).join(',');
   rebuildCityCanon(); // funde "Split" e "Split-Dalmatia County" antes de contar
   renderTrips();populateTripOpts();
+  carregarBloqueios(); // quem você bloqueou some do feed, dos amigos e dos comentários
   revalidarInstagramsAntigos().then(autoBackfillPlaceLinks); // silencioso, não bloqueia nada
   corrigirCidadesAntigas(); // idem — conserta o que a regra velha gravou errado
   buscarFotosQueFaltam();  // idem — spot que nunca teve foto nunca se consertava
@@ -4450,7 +4470,9 @@ async function carregarComentarios(spotId){
 function renderComentarios(spotId,alvo,donoDoSpot){
   const box=document.getElementById(alvo);
   if(!box)return;
-  const lista=COMENTARIOS[spotId]||[];
+  // Conteúdo de quem você bloqueou não aparece. É metade do que a diretriz
+  // 1.2 da Apple pede: bloquear tem que surtir efeito visível, não só gravar.
+  const lista=(COMENTARIOS[spotId]||[]).filter(c=>!estaBloqueado(c.user_id));
   const meu=S.user&&S.user.id;
   const linhas=lista.map(function(c){
     const p=COMENT_PERFIS[c.user_id];
@@ -4461,11 +4483,20 @@ function renderComentarios(spotId,alvo,donoDoSpot){
     const x=podeApagar
       ?'<button class="coment-x" onclick="apagarComentario(\''+esc(c.id)+'\',\''+esc(spotId)+'\',\''+esc(alvo)+'\',\''+esc(donoDoSpot||'')+'\')" aria-label="Apagar comentário">'+icon('close')+'</button>'
       :'';
+    // Denunciar só o que é dos outros. Os argumentos são uuid e valor de
+    // enum, nunca texto digitado — o escape de HTML não protegeria aqui.
+    // O rótulo NÃO vai no onclick: nome é texto que o outro usuário escolhe, e
+    // dentro de um manipulador em linha o navegador desfaz a escapatória de
+    // HTML antes do JS ler — um apóstrofo no nome fecharia a string. Só uuid
+    // aqui; o rótulo é montado dentro da função, a partir do id.
+    const den=(c.user_id&&c.user_id!==meu)
+      ?'<button class="coment-den" onclick="abrirDenuncia(\'comentario\',\''+esc(c.id)+'\',\''+esc(c.user_id)+'\')" aria-label="Denunciar comentário">Denunciar</button>'
+      :'';
     return'<div class="coment-item">'
       +'<div class="coment-av">'+esc(initials(nome))+'</div>'
       +'<div class="coment-corpo">'
       +'<div class="coment-topo"><span class="coment-nome">'+esc(nome)+'</span>'
-      +'<span class="coment-quando">'+esc(timeAgo(c.created_at))+'</span>'+x+'</div>'
+      +'<span class="coment-quando">'+esc(timeAgo(c.created_at))+'</span>'+den+x+'</div>'
       +'<div class="coment-txt">'+esc(c.body)+'</div></div></div>';
   }).join('');
 
@@ -4516,6 +4547,157 @@ async function apagarComentario(id,spotId,alvo,donoDoSpot){
   if(error){toast('Não consegui apagar','','alert');return}
   COMENTARIOS[spotId]=(COMENTARIOS[spotId]||[]).filter(c=>c.id!==id);
   renderComentarios(spotId,alvo,donoDoSpot);
+}
+
+// ═══ DENUNCIAR E BLOQUEAR ═══
+//
+// Exigência da Apple (diretriz 1.2) pra qualquer app com conteúdo escrito por
+// outra pessoa — e o Spot tem comentário em spot de amigo. Sem isto, a
+// primeira submissão é reprovada. Tabelas vêm da migração 016.
+//
+// Decisão de produto: bloquear é mais forte que desfazer amizade. Ele desfaz
+// a amizade nos dois sentidos E esconde o conteúdo da pessoa. A pessoa
+// bloqueada não é avisada — saber disso só gera retaliação.
+
+let BLOQUEADOS=new Set();
+
+async function carregarBloqueios(){
+  if(!S.user)return;
+  const linhas=await dbGet('bloqueios','bloqueador_id=eq.'+S.user.id+'&select=bloqueado_id');
+  // Consulta que falhou não é "não bloqueei ninguém": manter a lista antiga é
+  // o lado seguro, porque esvaziar faria conteúdo bloqueado reaparecer.
+  if(falhou(linhas))return;
+  BLOQUEADOS=new Set((linhas||[]).map(b=>b.bloqueado_id));
+}
+
+function estaBloqueado(userId){return !!userId&&BLOQUEADOS.has(userId)}
+
+async function bloquearUsuario(userId,nome){
+  if(!userId||userId===S.user.id)return;
+  const quem=nome||'essa pessoa';
+  if(!confirm('Bloquear '+quem+'?\n\nVocês deixam de ser amigos, e você não vê mais o conteúdo dessa pessoa. Ela não é avisada.'))return;
+  const{error}=await dbInsert('bloqueios',{bloqueador_id:S.user.id,bloqueado_id:userId});
+  // Chave duplicada significa que já estava bloqueado — não é falha.
+  const jaEstava=error&&String(error.code||'')==='23505';
+  if(error&&!jaEstava){toast('Não bloqueou','Confere a conexão e tenta de novo.','alert');return}
+  BLOQUEADOS.add(userId);
+  // Desfaz a amizade nos dois sentidos. Bloquear e continuar amigo não faz
+  // sentido, e deixaria o conteúdo dele voltando pelo feed.
+  const vinculos=await dbGet('follows',
+    'or=(and(follower_id.eq.'+S.user.id+',following_id.eq.'+userId+'),'
+    +'and(follower_id.eq.'+userId+',following_id.eq.'+S.user.id+'))&select=id');
+  if(!falhou(vinculos))for(const v of (vinculos||[]))await dbDelete('follows',v.id);
+  toast('Bloqueado','Você não vê mais o conteúdo dessa pessoa.','check');
+  FRIENDS_DATA=null;
+  if(document.getElementById('friends').classList.contains('active'))loadFriends();
+  if(document.getElementById('friend').classList.contains('active'))goTo('friends');
+}
+
+async function desbloquearUsuario(userId){
+  if(!userId)return;
+  const r=await sbFetch('/rest/v1/bloqueios?bloqueador_id=eq.'+encodeURIComponent(S.user.id)
+    +'&bloqueado_id=eq.'+encodeURIComponent(userId),{method:'DELETE'});
+  if(!r||!r.ok){toast('Não desbloqueou','Tenta de novo.','alert');return}
+  BLOQUEADOS.delete(userId);
+  toast('Desbloqueado','','check');
+  renderBloqueados();
+}
+
+// ── Denúncia ──────────────────────────────────────────────────────────────
+const MOTIVOS_DENUNCIA=[
+  'Conteúdo ofensivo ou de ódio',
+  'Spam ou propaganda',
+  'Conteúdo sexual',
+  'Assédio a alguém',
+  'Informação falsa sobre o lugar',
+  'Outro'
+];
+let DENUNCIA_ALVO=null;
+
+// O rótulo é montado AQUI, a partir do id, e entra por textContent. Ele nunca
+// viaja dentro de um onclick: nome é texto que o outro usuário escolhe, e em
+// manipulador em linha o navegador desfaz a escapatória de HTML antes do JS
+// ler, então um apóstrofo no nome fecharia a string e o resto viraria código.
+const ROTULO_DENUNCIA={comentario:'Comentário de ',spot:'Lugar salvo por ',perfil:'Perfil de '};
+function abrirDenuncia(tipo,alvoId,donoId){
+  DENUNCIA_ALVO={tipo:tipo,alvo_id:alvoId,dono_id:donoId||null};
+  const quem=donoId?friendName(COMENT_PERFIS[donoId]):'';
+  document.getElementById('denunciaSobre').textContent=(ROTULO_DENUNCIA[tipo]||'')+(quem||'alguém');
+  document.getElementById('denunciaDetalhe').value='';
+  const box=document.getElementById('denunciaMotivos');
+  box.innerHTML=MOTIVOS_DENUNCIA.map((m,i)=>
+    '<button class="den-motivo" data-i="'+i+'" onclick="escolherMotivo('+i+')">'+esc(m)+'</button>').join('');
+  escolherMotivo(0);
+  showOv('ov-denuncia');
+}
+function escolherMotivo(i){
+  if(!DENUNCIA_ALVO)return;
+  DENUNCIA_ALVO.motivo=MOTIVOS_DENUNCIA[i];
+  document.querySelectorAll('#denunciaMotivos .den-motivo').forEach(b=>{
+    b.classList.toggle('on',Number(b.getAttribute('data-i'))===i);
+  });
+}
+async function enviarDenuncia(){
+  if(!DENUNCIA_ALVO||!DENUNCIA_ALVO.motivo)return;
+  const btn=document.getElementById('btnEnviarDenuncia');
+  const antes=btn.textContent;
+  btn.textContent='Enviando...';btn.style.pointerEvents='none';
+  const detalhe=document.getElementById('denunciaDetalhe').value.trim();
+  const{error}=await dbInsert('denuncias',{
+    autor_id:S.user.id,
+    tipo:DENUNCIA_ALVO.tipo,
+    alvo_id:DENUNCIA_ALVO.alvo_id,
+    dono_id:DENUNCIA_ALVO.dono_id,
+    motivo:DENUNCIA_ALVO.motivo,
+    detalhe:detalhe||null
+  });
+  btn.textContent=antes;btn.style.pointerEvents='';
+  // Denunciar duas vezes a mesma coisa não é erro do ponto de vista de quem usa.
+  const repetida=error&&String(error.code||'')==='23505';
+  if(error&&!repetida){toast('Não enviou','Confere a conexão e tenta de novo.','alert');return}
+  closeOv('ov-denuncia');
+  toast('Denúncia enviada','Vamos analisar em até 24 horas.','check');
+}
+
+// Menu do perfil do amigo. Usa confirm/prompt do sistema em vez de mais uma
+// ficha: são duas ações, e o nome do amigo nunca entra em HTML por aqui.
+function abrirAcoesDoAmigo(){
+  const id=FRIEND&&FRIEND.id;
+  if(!id)return;
+  const nome=document.getElementById('friendName').textContent||'essa pessoa';
+  const escolha=prompt('O que você quer fazer com '+nome+'?\n\n1 — Denunciar o perfil\n2 — Bloquear\n\nDigite 1 ou 2 e confirme.');
+  if(escolha==='1'){
+    COMENT_PERFIS[id]=COMENT_PERFIS[id]||{display_name:nome};
+    abrirDenuncia('perfil',id,id);
+  }else if(escolha==='2'){
+    bloquearUsuario(id,nome);
+  }
+}
+
+// ── Lista de bloqueados, no Perfil ────────────────────────────────────────
+async function abrirBloqueados(){
+  showOv('ov-bloqueados');
+  const box=document.getElementById('listaBloqueados');
+  box.innerHTML='<div class="amg-aviso">Carregando...</div>';
+  await carregarBloqueios();
+  const ids=[...BLOQUEADOS];
+  if(ids.length){
+    const perfis=await dbGet('profiles','id=in.('+ids.join(',')+')&select=id,display_name,username,avatar_url');
+    if(!falhou(perfis))(perfis||[]).forEach(p=>{COMENT_PERFIS[p.id]=p});
+  }
+  renderBloqueados();
+}
+function renderBloqueados(){
+  const box=document.getElementById('listaBloqueados');
+  if(!box)return;
+  const ids=[...BLOQUEADOS];
+  if(!ids.length){box.innerHTML='<div class="amg-aviso">Você não bloqueou ninguém.</div>';return}
+  box.innerHTML=ids.map(function(id){
+    const nome=friendName(COMENT_PERFIS[id])||'Alguém';
+    return'<div class="blq-linha"><div class="coment-av">'+esc(initials(nome))+'</div>'
+      +'<div class="blq-nome">'+esc(nome)+'</div>'
+      +'<button class="blq-desfazer" onclick="desbloquearUsuario(\''+esc(id)+'\')">Desbloquear</button></div>';
+  }).join('');
 }
 
 // ═══ FOTOS: auto-conserto ═══
@@ -5652,9 +5834,13 @@ async function loadFriends(){
     dbGet('follows',`status=eq.pending&follower_id=eq.${uid}`)
   ]);
 
-  const friendIds=accepted.map(r=>r.follower_id===uid?r.following_id:r.follower_id);
-  const incomingIds=incoming.map(r=>r.follower_id);
-  const outgoingIds=outgoing.map(r=>r.following_id);
+  // Bloqueado não aparece em lugar nenhum da tela de amigos — nem como amigo,
+  // nem como pedido recebido. Bloquear já desfaz a amizade, mas a lista pode
+  // estar em memória de antes, e um pedido novo pode chegar depois.
+  await carregarBloqueios();
+  const friendIds=accepted.map(r=>r.follower_id===uid?r.following_id:r.follower_id).filter(id=>!estaBloqueado(id));
+  const incomingIds=incoming.map(r=>r.follower_id).filter(id=>!estaBloqueado(id));
+  const outgoingIds=outgoing.map(r=>r.following_id).filter(id=>!estaBloqueado(id));
   const pmap={};
   // Amigo aceito: linha do profiles direto (é o que a política libera).
   if(friendIds.length){
