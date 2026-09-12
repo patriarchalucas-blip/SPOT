@@ -552,6 +552,44 @@ body{font-family:'DM Sans',sans-serif;background:var(--dark);max-width:430px;mar
 .req-btn{border:none;border-radius:9px;padding:9px 13px;font-family:'DM Sans',sans-serif;font-size:13px;font-weight:600;cursor:pointer;flex-shrink:0;white-space:nowrap}
 .req-accept{background:var(--terra);color:#fff}
 .req-decline{background:rgba(234,231,224,.07);color:var(--ink3)}
+/* ═══ TELA DE VIAGENS — direção Atlas ═══
+   Placar em UMA linha no lugar do número gigante mais três caixas: eram quase
+   500px de métrica antes de aparecer conteúdo, e o primeiro card de viagem
+   começava no fim da tela. Continua tudo clicável, só parou de ocupar meia
+   tela. Foi o único ponto do modelo que o Lucas concordou em enxugar. */
+#dashboard .dash-paises{margin-bottom:0;gap:6px}
+#dashboard .dp-n{font-family:var(--mono);font-weight:500;font-size:30px;letter-spacing:-.03em}
+#dashboard .dp-t{font-family:var(--mono);font-size:13px;color:var(--ink3)}
+.placar-linha{display:flex;align-items:baseline;gap:8px;flex-wrap:wrap;margin-bottom:18px}
+.placar-sep{color:rgba(234,231,224,.28);font-size:11px}
+#dashboard .stats-strip{display:contents}
+#dashboard .stat-block{flex:none;background:none;border:none;border-radius:0;padding:0;box-shadow:none;display:inline-flex;align-items:baseline;gap:5px;text-align:left}
+#dashboard .stat-n{font-size:13px;font-weight:500;color:var(--ink2)}
+#dashboard .stat-l{font-family:var(--mono);font-size:11px;margin-top:0;letter-spacing:.05em}
+
+/* Continentes: trilho horizontal no lugar das pastas que abriam e fechavam. */
+.cont-trilho{display:flex;gap:8px;overflow-x:auto;padding:2px 24px 0;margin:0 -24px;scrollbar-width:none}
+.cont-trilho::-webkit-scrollbar{display:none}
+.cont-chip{flex:none;min-height:38px;font-family:var(--mono);font-size:10.5px;letter-spacing:.12em;text-transform:uppercase;padding:9px 14px;border-radius:999px;border:1px solid rgba(234,231,224,.2);background:transparent;color:var(--ink2);white-space:nowrap;cursor:pointer;transition:background .15s,color .15s,border-color .15s}
+.cont-chip.on{background:var(--terra);border-color:var(--terra);color:#fff}
+
+/* Carrossel de viagens. O card mostra o destino inteiro, em vez do selo de
+   72px ao lado do nome. */
+.filme-viagens{display:flex;gap:12px;overflow-x:auto;padding:18px 24px 10px;margin:0 -24px;scroll-snap-type:x mandatory;scrollbar-width:none}
+.filme-viagens::-webkit-scrollbar{display:none}
+.vg-card{flex:none;width:250px;height:330px;border-radius:20px;overflow:hidden;position:relative;scroll-snap-align:start;border:none;padding:0;background:var(--elev,#16232A);cursor:pointer;text-align:left;transition:transform .15s}
+.vg-card:active{transform:scale(.98)}
+.vg-foto{position:absolute;inset:0;background-size:cover;background-position:center}
+.vg-scrim{position:absolute;inset:0;background:linear-gradient(160deg,rgba(0,0,0,0) 0%,rgba(11,22,32,.55) 58%,var(--dark) 100%)}
+.vg-bandeira{position:absolute;top:16px;left:16px;z-index:2;font-size:26px;line-height:1}
+.vg-bandeira .bandeira-img{width:26px;height:26px}
+.vg-pe{position:absolute;left:18px;right:18px;bottom:18px;z-index:2}
+.vg-nome{font-family:'Fraunces',serif;font-weight:400;font-size:31px;line-height:1.02;letter-spacing:-.01em;color:#fff;margin:0;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical}
+.vg-meta{font-family:var(--mono);font-size:11px;color:var(--ink2);margin:8px 0 0}
+.filme-pag{display:flex;gap:5px;padding:2px 0 0}
+.filme-pag i{display:block;height:3px;width:8px;border-radius:2px;background:rgba(234,231,224,.3);transition:width .2s,background .2s}
+.filme-pag i.on{width:18px;background:var(--ink)}
+
 /* ═══ TELA DE SPOT — direção Atlas ═══
    A aposta da direção é "o lugar antes da palavra": a foto toma a tela como
    palco e a nota pessoal entra como legenda grande, não como card no meio de
@@ -950,12 +988,17 @@ svg.ic path,svg.ic circle,svg.ic line,svg.ic polyline,svg.ic rect{fill:none;stro
       <div class="avatar" id="dashAvatar" onclick="goTo('profile');loadProfile()" role="button" tabindex="0" aria-label="Abrir seu perfil">?</div>
     </div>
     <div class="dash-mapa" id="dashMapa" aria-hidden="true"></div>
-    <div class="dash-paises" id="dashPaises" onclick="openList('countries')" role="button" tabindex="0"><span class="dp-n" id="dashPaisesN">0</span><span class="dp-t">de 195 países</span></div>
     <div class="dash-convite" id="dashConvite" style="display:none">Crie uma viagem para pintar o primeiro país.</div>
+    <div class="placar-linha">
+    <div class="dash-paises" id="dashPaises" onclick="openList('countries')" role="button" tabindex="0"><span class="dp-n" id="dashPaisesN">0</span><span class="dp-t">de 195 países</span></div>
+    <span class="placar-sep">·</span>
     <div class="stats-strip">
       <div class="stat-block" onclick="openList('spots')"><div class="stat-n" id="statSpots">0</div><div class="stat-l">spots</div></div>
+      <span class="placar-sep">·</span>
       <div class="stat-block" onclick="openList('cities')"><div class="stat-n" id="statCities">0</div><div class="stat-l">cidades</div></div>
+      <span class="placar-sep">·</span>
       <div class="stat-block" onclick="openList('trips')"><div class="stat-n" id="statTrips">0</div><div class="stat-l">viagens</div></div>
+    </div>
     </div>
   </div>
   <div class="checkin-banner" id="checkinBanner" style="display:none">
@@ -2117,28 +2160,77 @@ function toggleRegionFolder(region,headerEl){
   folder.classList.toggle('open',nowOpen);
   try{localStorage.setItem(regionOpenKey(region),nowOpen?'1':'0')}catch(e){}
 }
+// ═══ VIAGENS — direção Atlas ═══
+//
+// As pastas por continente que abriam e fechavam viram um trilho horizontal de
+// chips, e as viagens do continente escolhido viram um carrossel de cards
+// grandes. Menos toque pra chegar na viagem, e o card passa a mostrar o
+// destino em vez de um selo de 72px ao lado do nome.
+//
+// O continente escolhido fica em memória, não no localStorage: é seleção da
+// sessão, não preferência.
+let REGIAO_ATIVA=null;
+
+function regioesComViagem(){
+  const groups={};
+  S.trips.filter(t=>!isNonTrip(t)).forEach(t=>{
+    const r=regionFor((t.destinations&&t.destinations[0])||t.name);
+    (groups[r]=groups[r]||[]).push(t);
+  });
+  const ordem=[...REGION_ORDER.filter(r=>groups[r]),...Object.keys(groups).filter(r=>!REGION_ORDER.includes(r))];
+  return{groups,ordem};
+}
+function trocarRegiao(r){
+  REGIAO_ATIVA=r;
+  renderTrips();
+  const f=document.getElementById('filmeViagens');
+  if(f)f.scrollLeft=0;
+}
+function aoRolarFilme(){
+  const f=document.getElementById('filmeViagens');
+  const p=document.getElementById('pagViagens');
+  if(!f||!p)return;
+  // 250 do card + 12 do intervalo
+  const i=Math.round(f.scrollLeft/262);
+  [...p.children].forEach((el,j)=>el.classList.toggle('on',j===i));
+}
+
 function renderTrips(){
   const c=document.getElementById('tripsContainer');
   const visibleTrips=S.trips.filter(t=>!isNonTrip(t));
-  if(!visibleTrips.length){c.innerHTML='<div class="section-head"><span class="section-title">Minhas viagens</span></div><div class="empty-state"><div class="ei">'+icon('suitcase')+'</div><h3>Nenhuma viagem ainda</h3><p>Toca no + para criar sua primeira viagem</p></div>';return}
-  const groups={};
-  visibleTrips.forEach(t=>{
-    const region=regionFor((t.destinations&&t.destinations[0])||t.name);
-    (groups[region]=groups[region]||[]).push(t);
-  });
-  const orderedRegions=[...REGION_ORDER.filter(r=>groups[r]),...Object.keys(groups).filter(r=>!REGION_ORDER.includes(r))];
-  let h='';
-  orderedRegions.forEach(region=>{
-    const trips=groups[region];
-    const open=isRegionOpen(region);
-    h+=`<div class="region-folder${open?' open':''}">`;
-    h+=`<div class="region-header" onclick="toggleRegionFolder('${region}',this)"><span class="region-chevron">${icon('chevron')}</span><span class="region-name">${region}</span><span class="region-count">${trips.length}</span></div>`;
-    h+=`<div class="region-body-wrap"><div class="region-body-inner"><div class="region-body">`;
-    trips.forEach(t=>{h+=tripCardHTML(t)});
-    h+='</div></div></div></div>';
-  });
+  if(!visibleTrips.length){c.innerHTML='<div class="empty-state"><div class="ei">'+icon('suitcase')+'</div><h3>Nenhuma viagem ainda</h3><p>Toca no + para criar sua primeira viagem</p></div>';return}
+
+  const{groups,ordem}=regioesComViagem();
+  // Continente que sumiu (viagem apagada) não pode deixar a tela vazia.
+  if(!REGIAO_ATIVA||!groups[REGIAO_ATIVA])REGIAO_ATIVA=ordem[0];
+  const trips=groups[REGIAO_ATIVA]||[];
+
+  let h='<div class="cont-trilho">';
+  h+=ordem.map(r=>'<button class="cont-chip'+(r===REGIAO_ATIVA?' on':'')
+    +'" onclick="trocarRegiao(\''+esc(r)+'\')">'+esc(r)+' · '+groups[r].length+'</button>').join('');
+  h+='</div>';
+
+  h+='<div class="filme-viagens" id="filmeViagens" onscroll="aoRolarFilme()">';
+  h+=trips.map(t=>cardDeViagem(t)).join('');
+  h+='</div>';
+
+  if(trips.length>1){
+    h+='<div class="filme-pag" id="pagViagens">'
+      +trips.map((_,i)=>'<i class="'+(i?'':'on')+'"></i>').join('')+'</div>';
+  }
   c.innerHTML=h;
   fillTripPhotos();
+}
+
+function cardDeViagem(t){
+  const destino=(t.destinations&&t.destinations[0])||t.name;
+  return '<button class="vg-card" onclick="openTrip(\''+esc(t.id)+'\')">'
+    +'<div class="vg-foto" id="tcbg-'+esc(t.id)+'" style="background-image:'+destGradient(destino)+'"></div>'
+    +'<div class="vg-scrim"></div>'
+    +'<span class="vg-bandeira">'+flagHTML(destino)+'</span>'
+    +'<div class="vg-pe"><h3 class="vg-nome">'+esc(t.name)+'</h3>'
+    +'<p class="vg-meta" id="tcmeta-'+esc(t.id)+'">'+esc(tripMetaText(t))+'</p></div>'
+    +'</button>';
 }
 
 // ═══ TELA DE LISTA (aberta pelos scorecards do dashboard) ═══
