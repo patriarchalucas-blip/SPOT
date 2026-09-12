@@ -34,11 +34,13 @@ export async function onRequestPost(context) {
   if (!query) return json({ error: 'missing_query' }, 400);
   if (!env.UNSPLASH_KEY || !env.SPOT_KV) return json({ url: '', configured: false });
 
-  const cacheKey = 'cityphoto_' + normKey(query);
+  // v2: o registro antigo não guardava o autor da foto, e sem autor não dá
+  // pra creditar. Trocar o prefixo aposenta os antigos sem apagar nada.
+  const cacheKey = 'cityphoto2_' + normKey(query);
   const cached = await env.SPOT_KV.get(cacheKey);
   // Cache liberado sem login, igual à /api/climate: responder daqui não gasta
   // cota nem expõe nada, e é o caminho da maioria das chamadas.
-  if (cached) return json(JSON.parse(cached));
+  if (cached) return responder(context, JSON.parse(cached));
 
   // Daqui pra baixo gasta cota de verdade — só pra quem está logado.
   const quem = await quemEsta(request, env);
@@ -77,11 +79,53 @@ export async function onRequestPost(context) {
   // parecidas não caírem sempre na mesma foto. Sem Math.random no servidor —
   // deriva do próprio nome, então a escolha é estável (e o cache faz sentido).
   const pool = results.slice(0, 6);
-  const url = pool.length ? (pool[hashNum(query) % pool.length].urls || {}).regular || '' : '';
+  const foto = pool.length ? pool[hashNum(query) % pool.length] : null;
+  const url = foto ? (foto.urls || {}).regular || '' : '';
 
-  const resultado = { url: url };
+  // Duas exigências dos termos do Unsplash, as duas obrigatórias:
+  //
+  // 1. Creditar o fotógrafo, com link pro perfil dele e link pro Unsplash,
+  //    os dois com o utm_source do app. Por isso autor/autorUrl saem daqui
+  //    junto com a URL e vão pro mesmo cache — sem isso o app teria que
+  //    reconsultar só pra saber de quem é a foto.
+  //
+  // 2. Disparar o endpoint de download quando a foto é EXIBIDA. O endereço
+  //    disso é guardado no cache (campo `baixar`) e o disparo acontece em
+  //    responder(), em toda resposta — inclusive nas que vêm do cache.
+  const autor = (foto && foto.user) || {};
+  const baixar = foto && foto.links && foto.links.download_location;
+  const resultado = {
+    url: url,
+    autor: autor.name || '',
+    autorUrl: (autor.links && autor.links.html)
+      ? autor.links.html + '?utm_source=spot&utm_medium=referral' : '',
+    // guardado no cache, nunca devolvido ao navegador — ver responder()
+    baixar: baixar || ''
+  };
   await env.SPOT_KV.put(cacheKey, JSON.stringify(resultado), { expirationTtl: url ? TTL_OK : TTL_FALHA });
-  return json(resultado);
+  return responder(context, resultado);
+}
+
+// Os termos do Unsplash mandam disparar o endpoint de download TODA VEZ que a
+// foto é usada — é assim que o fotógrafo recebe o crédito de uso. Como quase
+// toda resposta daqui vem do cache, disparar só na busca original contaria uma
+// vez por cidade, pra sempre. Por isso o endereço fica guardado no cache e o
+// disparo acontece aqui, em toda resposta.
+//
+// Vai em waitUntil: não atrasa a resposta e não a derruba se falhar. E não
+// gasta a cota de 50/hora — o Unsplash não conta esse endpoint no limite.
+//
+// O campo `baixar` NÃO vai pro navegador: ele carrega a chave quando chamado,
+// e a chave não sai do servidor.
+function responder(context, r) {
+  const { env } = context;
+  if (r && r.baixar && env.UNSPLASH_KEY && typeof context.waitUntil === 'function') {
+    context.waitUntil(
+      fetch(r.baixar + '&client_id=' + env.UNSPLASH_KEY).catch(() => {})
+    );
+  }
+  const { baixar, ...semChave } = r || {};
+  return json(semChave);
 }
 
 function hashNum(s) {

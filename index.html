@@ -500,6 +500,12 @@ body{font-family:'DM Sans',sans-serif;background:var(--dark);max-width:430px;mar
 #place{background:var(--surface)}
 .place-hero{height:280px;position:relative;overflow:hidden;flex-shrink:0;background:var(--dark)}
 .place-hero-img{position:absolute;inset:0;background-size:cover;background-position:center}
+/* Credito do autor da foto. O Google exige que ele apareca junto da foto do
+   lugar (Termos da Google Maps Platform), e o Unsplash exige o mesmo pras
+   fotos de cidade. Fica discreto em cima da imagem, canto inferior direito. */
+.foto-credito{position:absolute;right:10px;bottom:8px;z-index:3;font-family:'IBM Plex Mono',monospace;font-size:9.5px;letter-spacing:.04em;color:rgba(255,255,255,.62);text-shadow:0 1px 3px rgba(0,0,0,.6);max-width:60%;text-align:right;line-height:1.35;pointer-events:auto}
+.foto-credito a{color:inherit;text-decoration:none;border-bottom:1px solid rgba(255,255,255,.25)}
+.foto-credito:empty{display:none}
 .hero-overlay{position:absolute;inset:0;background:linear-gradient(to bottom,rgba(0,0,0,0.2),rgba(0,0,0,0.7))}
 .hero-back{position:absolute;top:18px;left:18px;width:34px;height:34px;background:rgba(11,22,32,.5);border:1px solid rgba(255,255,255,.16);border-radius:50%;color:#fff;font-size:15px;cursor:pointer;display:flex;align-items:center;justify-content:center;z-index:2;backdrop-filter:blur(8px)}
 .hero-photo-btn{position:absolute;bottom:18px;right:18px;width:34px;height:34px;background:rgba(11,22,32,.5);border:1px solid rgba(255,255,255,.16);border-radius:50%;color:#fff;font-size:14px;cursor:pointer;display:flex;align-items:center;justify-content:center;z-index:2;backdrop-filter:blur(8px)}
@@ -1079,14 +1085,14 @@ svg.ic path,svg.ic circle,svg.ic line,svg.ic polyline,svg.ic rect{fill:none;stro
 </div>
 
 <div class="screen" id="trip">
-  <div class="trip-hero"><div class="trip-hero-img" id="tripHeroImg"></div><div class="trip-float" id="tripFloat"></div><div class="trip-hero-content"><button class="back-btn" onclick="goTo('dashboard');loadDashboard()" data-ic="back" aria-label="Voltar"></button><button class="trip-del-btn" onclick="deleteTrip()" data-ic="trash" aria-label="Excluir viagem"></button><div><div class="trip-hero-label" id="tripLabel"></div><div class="trip-hero-name" id="tripName"></div><div class="trip-hero-meta" id="tripMeta"></div></div></div></div>
+  <div class="trip-hero"><div class="trip-hero-img" id="tripHeroImg"></div><div class="foto-credito" id="tripFotoCredito"></div><div class="trip-float" id="tripFloat"></div><div class="trip-hero-content"><button class="back-btn" onclick="goTo('dashboard');loadDashboard()" data-ic="back" aria-label="Voltar"></button><button class="trip-del-btn" onclick="deleteTrip()" data-ic="trash" aria-label="Excluir viagem"></button><div><div class="trip-hero-label" id="tripLabel"></div><div class="trip-hero-name" id="tripName"></div><div class="trip-hero-meta" id="tripMeta"></div></div></div></div>
   <div class="trip-body" id="tripBody"></div>
   <button class="fab" onclick="addSpotToCurrentTrip()">+</button>
   <div class="bottom-nav"><div class="nav-item active" onclick="goTo('dashboard');loadDashboard()"><div class="nav-icon" data-ic="map"></div><div class="nav-label" style="color:var(--ink);font-weight:600">Viagens</div></div><div class="nav-item" onclick="goTo('explore');loadExplore()"><div class="nav-icon" data-ic="search"></div><div class="nav-label">Explorar</div></div><div class="nav-item" onclick="goTo('friends');loadFriends()"><div class="nav-icon" data-ic="users"></div><div class="nav-label">Amigos</div></div><div class="nav-item" onclick="goTo('profile');loadProfile()"><div class="nav-icon" data-ic="user"></div><div class="nav-label">Perfil</div></div></div>
 </div>
 
 <div class="screen" id="city">
-  <div class="trip-hero"><div class="trip-hero-img" id="cityHeroImg"></div><div class="trip-float"></div><div class="trip-hero-content"><button class="back-btn" onclick="goTo('trip')" data-ic="back" aria-label="Voltar"></button><div><div class="trip-hero-label" id="cityLabel"></div><div class="trip-hero-name" id="cityName"></div><div class="trip-hero-meta" id="cityMeta"></div></div></div></div>
+  <div class="trip-hero"><div class="trip-hero-img" id="cityHeroImg"></div><div class="foto-credito" id="cityFotoCredito"></div><div class="trip-float"></div><div class="trip-hero-content"><button class="back-btn" onclick="goTo('trip')" data-ic="back" aria-label="Voltar"></button><div><div class="trip-hero-label" id="cityLabel"></div><div class="trip-hero-name" id="cityName"></div><div class="trip-hero-meta" id="cityMeta"></div></div></div></div>
   <div class="cat-tabs-wrap"><div class="cat-tabs"><div class="cat-tab active" onclick="switchCityCat('food',this)"><div class="ct-icon" data-ic="food"></div><div>Comer & Beber</div><div class="ct-count" id="cityCnt-food">0</div></div><div class="cat-tab" onclick="switchCityCat('hotel',this)"><div class="ct-icon" data-ic="hotel"></div><div>Onde Ficar</div><div class="ct-count" id="cityCnt-hotel">0</div></div><div class="cat-tab" onclick="switchCityCat('experience',this)"><div class="ct-icon" data-ic="compass"></div><div>Experiências</div><div class="ct-count" id="cityCnt-experience">0</div></div></div></div>
   <div class="subcat-row" id="citySubcatFilter" style="display:none;padding:14px 20px 0;scroll-padding-left:20px"></div>
   <div class="trip-body" id="cityBody"></div>
@@ -1173,6 +1179,7 @@ svg.ic path,svg.ic circle,svg.ic line,svg.ic polyline,svg.ic rect{fill:none;stro
 <div class="screen" id="friendTrip">
   <div class="trip-hero">
     <div class="trip-hero-img" id="ftHeroImg"></div>
+    <div class="foto-credito" id="ftFotoCredito"></div>
     <div class="trip-hero-content">
       <button class="back-btn" onclick="goTo('friend')" data-ic="back" aria-label="Voltar"></button>
       <div>
@@ -1186,7 +1193,7 @@ svg.ic path,svg.ic circle,svg.ic line,svg.ic polyline,svg.ic rect{fill:none;stro
 </div>
 
 <div class="screen" id="friendCity">
-  <div class="trip-hero"><div class="trip-hero-img" id="fcHeroImg"></div><div class="trip-float"></div><div class="trip-hero-content"><button class="back-btn" onclick="voltarDaCidade()" data-ic="back" aria-label="Voltar"></button><div><div class="trip-hero-label" id="fcLabel"></div><div class="trip-hero-name" id="fcName"></div><div class="trip-hero-meta" id="fcMeta"></div></div></div></div>
+  <div class="trip-hero"><div class="trip-hero-img" id="fcHeroImg"></div><div class="foto-credito" id="fcFotoCredito"></div><div class="trip-float"></div><div class="trip-hero-content"><button class="back-btn" onclick="voltarDaCidade()" data-ic="back" aria-label="Voltar"></button><div><div class="trip-hero-label" id="fcLabel"></div><div class="trip-hero-name" id="fcName"></div><div class="trip-hero-meta" id="fcMeta"></div></div></div></div>
   <div class="cat-tabs-wrap"><div class="cat-tabs"><div class="cat-tab active" onclick="switchFriendCityCat('food',this)"><div class="ct-icon" data-ic="food"></div><div>Comer & Beber</div><div class="ct-count" id="fcCnt-food">0</div></div><div class="cat-tab" onclick="switchFriendCityCat('hotel',this)"><div class="ct-icon" data-ic="hotel"></div><div>Onde Ficar</div><div class="ct-count" id="fcCnt-hotel">0</div></div><div class="cat-tab" onclick="switchFriendCityCat('experience',this)"><div class="ct-icon" data-ic="compass"></div><div>Experiências</div><div class="ct-count" id="fcCnt-experience">0</div></div></div></div>
   <div class="trip-body" id="fcBody"></div>
 </div>
@@ -1209,7 +1216,7 @@ svg.ic path,svg.ic circle,svg.ic line,svg.ic polyline,svg.ic rect{fill:none;stro
 
 <div class="screen" id="friendPlace">
   <div class="place-hero">
-    <div class="place-hero-img" id="fpHeroImg"></div>
+    <div class="place-hero-img" id="fpHeroImg"></div><div class="foto-credito" id="fpFotoCredito"></div>
     <div class="hero-overlay"></div>
     <button class="hero-back" onclick="voltarDaFichaDoAmigo()" data-ic="back" aria-label="Voltar"></button>
     <div class="hero-chip" id="fpChip"></div>
@@ -1240,7 +1247,7 @@ svg.ic path,svg.ic circle,svg.ic line,svg.ic polyline,svg.ic rect{fill:none;stro
 </div>
 
 <div class="screen" id="place">
-  <div class="place-hero"><div class="place-hero-img" id="placeHeroImg"></div><div class="hero-overlay"></div><button class="hero-back" onclick="backFromPlace()" data-ic="back" aria-label="Voltar"></button><button class="hero-photo-btn" onclick="document.getElementById('spotPhotoFileInput').click()" data-ic="edit" aria-label="Trocar foto"></button><input type="file" id="spotPhotoFileInput" accept="image/*" style="display:none" onchange="onSpotPhotoFileChosen(this)"><div class="hero-chip chip-want" id="placeChip" onclick="cycleStatus()">Quero ir</div><div class="hero-bottom"><div class="hero-type" id="placeType"></div><div class="hero-name" id="placeName"></div></div></div>
+  <div class="place-hero"><div class="place-hero-img" id="placeHeroImg"></div><div class="foto-credito" id="placeFotoCredito"></div><div class="hero-overlay"></div><button class="hero-back" onclick="backFromPlace()" data-ic="back" aria-label="Voltar"></button><button class="hero-photo-btn" onclick="document.getElementById('spotPhotoFileInput').click()" data-ic="edit" aria-label="Trocar foto"></button><input type="file" id="spotPhotoFileInput" accept="image/*" style="display:none" onchange="onSpotPhotoFileChosen(this)"><div class="hero-chip chip-want" id="placeChip" onclick="cycleStatus()">Quero ir</div><div class="hero-bottom"><div class="hero-type" id="placeType"></div><div class="hero-name" id="placeName"></div></div></div>
   <div class="d-section"><div class="sec-linha"><div class="sec-label">Minha nota</div><button class="sec-editar" id="btnEditarNota" onclick="editarNota()">Editar</button></div><div class="note-card" id="notaLeitura"><div class="note-glow"></div><div class="note-quote" id="placeNote"></div><div class="note-attr" id="placeNoteAttr"></div></div><div id="notaEdicao" style="display:none"><textarea class="note-input" id="notaTexto" rows="4" placeholder="Por que esse lugar te chamou atenção?"></textarea><div class="nota-acoes"><button class="action-btn" style="margin:0" id="btnSalvarNota" onclick="salvarNota()">Salvar nota</button><button class="secondary-link" style="margin:0" onclick="cancelarNota()">Cancelar</button></div></div><div class="sp-social" id="placeSocial" style="display:none"></div></div>
   <div class="d-section"><div class="sec-label">Informações</div><div class="info-grid" id="placeInfoGrid"></div><div id="placeReserveWrap"></div></div>
   <div class="d-section"><div class="coment-bloco" id="placeComentarios"></div></div>
@@ -2507,7 +2514,8 @@ async function loadTrip(t){
   // usa backgroundImage, nunca o atalho `background` — o atalho reseta
   // background-size/position e a foto renderiza no tamanho natural, cortada no canto
   heroEl.style.backgroundImage=destGradient(dest);
-  fetchCityPhoto(dest).then(url=>{if(url)heroEl.style.backgroundImage=cssUrl(url)});
+  limparCredito('tripFotoCredito');
+  fetchCityPhoto(dest).then(url=>{if(url){heroEl.style.backgroundImage=cssUrl(url);pintarCreditoCidade('tripFotoCredito',url)}});
   // O Dashboard já busca os spots de TODAS as viagens numa única query em
   // lote (ver loadDashboard). Rebuscar aqui era uma ida a mais ao banco,
   // sempre, só pra pegar o que já estava na mão — por isso abrir uma
@@ -2641,7 +2649,8 @@ function openCityScreen(city){
   curCitySubcat='';renderCitySubcatFilter();
   const heroEl=document.getElementById('cityHeroImg');
   heroEl.style.backgroundImage=destGradient(city);
-  fetchCityPhoto(city).then(url=>{if(url&&S.curCity===city)heroEl.style.backgroundImage=cssUrl(url)});
+  limparCredito('cityFotoCredito');
+  fetchCityPhoto(city).then(url=>{if(url&&S.curCity===city){heroEl.style.backgroundImage=cssUrl(url);pintarCreditoCidade('cityFotoCredito',url)}});
   renderCityBody();
   goTo('city');
 }
@@ -2689,13 +2698,15 @@ async function openPlace(id,origin){
   const aindaNesteSpot=()=>S.curPlace&&S.curPlace.id===s.id;
   if(s.photo_url){
     phEl.style.backgroundImage=cssUrl(s.photo_url);
+    pintarCreditoSpot('placeFotoCredito',s);
     // background-image não dispara erro quando a URL falha. O probe carrega a
     // mesma imagem só pra detectar a quebra e acionar o auto-conserto.
     const probe=new Image();
     probe.onerror=()=>{
       if(!aindaNesteSpot())return;
       phEl.style.backgroundImage=destGradient(cid);
-      healSpotPhoto(s.id).then(u=>{if(u&&aindaNesteSpot())phEl.style.backgroundImage=cssUrl(u)});
+      limparCredito('placeFotoCredito');
+      healSpotPhoto(s.id).then(u=>{if(u&&aindaNesteSpot()){phEl.style.backgroundImage=cssUrl(u);pintarCreditoSpot('placeFotoCredito',s)}});
     };
     probe.src=s.photo_url;
   }
@@ -2709,12 +2720,14 @@ async function openPlace(id,origin){
     // que grava o resultado e resolve pro card também). A foto da cidade
     // continua como reserva pra quando o Google não tiver nada.
     phEl.style.backgroundImage=destGradient(cid);
-    healSpotPhoto(s.id).then(u=>{
-      if(u&&aindaNesteSpot()){phEl.style.backgroundImage=cssUrl(u);return}
-      fetchCityPhoto(cid).then(v=>{if(v&&aindaNesteSpot())phEl.style.backgroundImage=cssUrl(v)});
-    }).catch(()=>{
-      fetchCityPhoto(cid).then(v=>{if(v&&aindaNesteSpot())phEl.style.backgroundImage=cssUrl(v)});
+    limparCredito('placeFotoCredito');
+    const deCidade=()=>fetchCityPhoto(cid).then(v=>{
+      if(v&&aindaNesteSpot()){phEl.style.backgroundImage=cssUrl(v);pintarCreditoCidade('placeFotoCredito',v)}
     });
+    healSpotPhoto(s.id).then(u=>{
+      if(u&&aindaNesteSpot()){phEl.style.backgroundImage=cssUrl(u);pintarCreditoSpot('placeFotoCredito',s);return}
+      deCidade();
+    }).catch(deCidade);
   }
   let ig='';
   if(s.address)ig+=`<div class="info-cell wide"><div class="info-cell-icon">${icon('pin')}</div><div class="info-cell-label">Endereço</div><div class="info-cell-value">${esc(s.address)}</div></div>`;
@@ -2864,6 +2877,9 @@ async function salvarNota(){
   const btn=document.getElementById('btnSalvarNota');
   const nova=document.getElementById('notaTexto').value.trim();
   if(nova===(s.my_note||'')){cancelarNota();return}
+  // A nota também é lida pelos amigos, então passa pelo mesmo filtro do
+  // comentário. Barra antes de travar o botão, senão ele fica morto.
+  if(textoBarrado(nova)){avisarConteudoBarrado();return}
   btn.textContent='Salvando...';btn.style.pointerEvents='none';
   const{error}=await dbUpdate('spots',s.id,{my_note:nova});
   btn.textContent='Salvar nota';btn.style.pointerEvents='';
@@ -2884,6 +2900,8 @@ async function saveReview(){
   if(!S.curPlace)return;
   const r=document.querySelectorAll('#placeStars .star-btn.lit').length;
   const rv=document.getElementById('reviewText').value.trim();
+  // Mesmo filtro do comentário: a avaliação escrita aparece pros amigos.
+  if(textoBarrado(rv)){avisarConteudoBarrado();return}
   // getElementById, não querySelector('.action-btn'): o primeiro .action-btn do
   // documento é o "Sair da conta" da tela de Perfil, então salvar uma avaliação
   // reescrevia o botão de logout pra "Salvando..." e depois pra "Salvar
@@ -3161,7 +3179,8 @@ function abrirAmigoNoLugar(i){
   updateFriendCityHeader();
   const hero=document.getElementById('fcHeroImg');
   hero.style.backgroundImage=destGradient(LUGAR_PESQUISADO);
-  fetchCityPhoto(LUGAR_PESQUISADO).then(url=>{if(url&&FRIEND.city===LUGAR_PESQUISADO)hero.style.backgroundImage=cssUrl(url)});
+  limparCredito('fcFotoCredito');
+  fetchCityPhoto(LUGAR_PESQUISADO).then(url=>{if(url&&FRIEND.city===LUGAR_PESQUISADO){hero.style.backgroundImage=cssUrl(url);pintarCreditoCidade('fcFotoCredito',url)}});
   renderFriendCityBody();
   goTo('friendCity');
 }
@@ -3254,6 +3273,7 @@ async function adicionarSpotAbertoDoAmigo(btn){
     name:s.name,meta:s.address||'',icon:catIcon(s.category),
     city:cidade,country:pais,address:s.address||'',
     subcat:s.subcategory||'',phone:s.phone||'',photo_url:s.photo_url||'',
+    photo_author:{nome:s.photo_author||'',url:s.photo_author_url||''},
     rating_google:s.rating_google||'',website_url:s.website_url||'',maps_url:s.maps_url||''
   };
   const cat=s.category||'food';
@@ -3325,7 +3345,7 @@ async function runExplore(){
       const addr=p.formattedAddress||'';
       const c=cityFromComponents(p.addressComponents)||extractCityFromAddr(addr);
       const country=countryFromComponents(p.addressComponents);
-      return{name:p.displayName?.text||'',address:addr,city:c,country,rating:String(p.rating),count:p.userRatingCount,subcat:guessSubcat(p.types),phone:p.nationalPhoneNumber||'',photo_url:placePhotoUrl(p,400),website_url:p.websiteUri||'',maps_url:p.googleMapsUri||''};
+      return{name:p.displayName?.text||'',address:addr,city:c,country,rating:String(p.rating),count:p.userRatingCount,subcat:guessSubcat(p.types),phone:p.nationalPhoneNumber||'',photo_url:placePhotoUrl(p,400),photo_author:autorDaFoto(p),website_url:p.websiteUri||'',maps_url:p.googleMapsUri||''};
     });
     renderExploreResults();
   }catch(e){
@@ -3347,6 +3367,9 @@ function renderExploreResults(){
     // avaliação exibia a etiqueta "0.0 ★", que parece nota péssima e não
     // ausência de nota.
     const nota=Number(p.rating)>0?fmtRating(p.rating):'';
+    // Crédito de quem tirou a foto: exigência dos termos do Google, que
+    // manda exibir a autoria junto com a foto que a API devolveu.
+    const autor=(p.photo_author&&p.photo_author.nome)||'';
     return '<div class="ex-card">'
       +'<div class="ex-img" style="background-image:'+destGradient(p.name||local)+'" onclick="addExploreSpot('+i+')">'
         +(foto?'<img class="ex-foto" src="'+escUrl(foto)+'" alt=""'+(i===0?' fetchpriority="high"':' loading="lazy"')+' decoding="async" onload="this.style.opacity=1" onerror="this.remove()">':'')
@@ -3357,14 +3380,20 @@ function renderExploreResults(){
         +'</div>'
       +'</div>'
       +'<div class="ex-corpo-card">'
-        +'<span class="ex-aval">'+esc(p.count||0)+' avaliações no Google</span>'
+        +'<span class="ex-aval">'+esc(p.count||0)+' avaliações no Google'+(autor&&foto?' · foto de '+esc(autor):'')+'</span>'
         +'<button class="fd-salvar" onclick="addExploreSpot('+i+')">+ minha lista</button>'
       +'</div></div>';
   }).join('');
+  // "Powered by Google" é obrigatório quando dados do Places aparecem fora
+  // de um mapa do Google — é o caso desta lista inteira.
+  if(EXPLORE.items.length){
+    body.innerHTML+='<div class="search-powered" style="justify-content:center;padding:16px 24px 6px">'
+      +'<span>Lugares e fotos via</span><strong>Google</strong></div>';
+  }
 }
 function addExploreSpot(i){
   const t=EXPLORE.items[i];if(!t)return;
-  S.explorePick={name:t.name,meta:t.address,icon:catIcon(EXPLORE.cat),city:t.city,country:t.country,address:t.address,subcat:t.subcat||'',phone:t.phone||'',photo_url:t.photo_url,rating_google:t.rating,website_url:t.website_url,maps_url:t.maps_url};
+  S.explorePick={name:t.name,meta:t.address,icon:catIcon(EXPLORE.cat),city:t.city,country:t.country,address:t.address,subcat:t.subcat||'',phone:t.phone||'',photo_url:t.photo_url,photo_author:t.photo_author,rating_google:t.rating,website_url:t.website_url,maps_url:t.maps_url};
   // Categoria já foi escolhida na aba do Explorar (Comer/Ficar/Experiências)
   // antes de buscar — perguntar de novo seria repetir uma decisão já feita.
   S.explorePickCat=EXPLORE.cat;
@@ -3444,6 +3473,45 @@ function placePhotoUrl(p,largura){
 // em vez de sete pontos de exibicao. Foi exatamente isso que quebrou: eu
 // reverti a parte do Places e levei junto uma funcao que outra feature usava.
 function fotoUrl(u){return u||''}
+// ── Crédito de foto ─────────────────────────────────────────────────────
+// Obrigação contratual, não enfeite: o Google exige que o nome de quem tirou
+// a foto do lugar apareça junto com ela, e o Unsplash exige o mesmo (com
+// link) pras fotos de cidade. Sem isso o app usa as duas APIs fora dos termos.
+function autorDaFoto(p){
+  const a=p&&p.photos&&p.photos[0]&&p.photos[0].authorAttributions;
+  return{nome:(a&&a[0]&&a[0].displayName)||'',url:(a&&a[0]&&a[0].uri)||''};
+}
+// Crédito das fotos de cidade, indexado pela própria URL da foto — que é o
+// que sobrevive no cache e o que o elemento está de fato exibindo.
+let CREDITO_CIDADE={};
+try{CREDITO_CIDADE=JSON.parse(localStorage.getItem('spot_credito_foto')||'{}')||{}}catch(e){CREDITO_CIDADE={}}
+function guardarCreditoCidade(url,c){
+  if(!url||!c||!c.nome)return;
+  CREDITO_CIDADE[url]={nome:c.nome,url:c.url||''};
+  try{localStorage.setItem('spot_credito_foto',JSON.stringify(CREDITO_CIDADE))}catch(e){}
+}
+function limparCredito(elId){const el=document.getElementById(elId);if(el)el.innerHTML=''}
+// safeUrl devolve '' pra endereço que não seja http(s) — e href="" recarrega
+// a própria página. Sem link é melhor que link que não leva a lugar nenhum.
+function linkCredito(url,texto){
+  const u=safeUrl(url);
+  return u?'<a href="'+esc(u)+'" target="_blank" rel="noopener nofollow">'+esc(texto)+'</a>':esc(texto);
+}
+// Foto do Google: o crédito é o autor guardado junto com o spot.
+function pintarCreditoSpot(elId,s){
+  const el=document.getElementById(elId);if(!el)return;
+  const nome=s&&s.photo_author;
+  if(!nome){el.innerHTML='';return}
+  el.innerHTML='Foto: '+linkCredito((s&&s.photo_author_url)||'',nome);
+}
+// Foto de cidade: fotógrafo + Unsplash, com os links que os termos deles pedem.
+function pintarCreditoCidade(elId,url){
+  const el=document.getElementById(elId);if(!el)return;
+  const c=url&&CREDITO_CIDADE[url];
+  if(!c||!c.nome){el.innerHTML='';return}
+  el.innerHTML=linkCredito(c.url||'https://unsplash.com',c.nome)
+    +' / '+linkCredito('https://unsplash.com/?utm_source=spot&utm_medium=referral','Unsplash');
+}
 function placePhotoUrls(p){
   return{full:placePhotoUrl(p,800),thumb:placePhotoUrl(p,200)};
 }
@@ -3493,7 +3561,7 @@ function showNearbySuggestions(){
         const city=cityFromComponents(p.addressComponents)||extractCityFromAddr(addr);
         const country=countryFromComponents(p.addressComponents);
         const fotos=placePhotoUrls(p);
-        return{name:p.displayName?.text||'',icon:catIcon(S.addCat),city,country,address:addr,subcat:guessSubcat(p.types),phone:p.nationalPhoneNumber||'',photo_url:fotos.full,photo_thumb:fotos.thumb,rating_google:p.rating?String(p.rating):'',website_url:p.websiteUri||'',maps_url:p.googleMapsUri||''};
+        return{name:p.displayName?.text||'',icon:catIcon(S.addCat),city,country,address:addr,subcat:guessSubcat(p.types),phone:p.nationalPhoneNumber||'',photo_url:fotos.full,photo_thumb:fotos.thumb,photo_author:autorDaFoto(p),rating_google:p.rating?String(p.rating):'',website_url:p.websiteUri||'',maps_url:p.googleMapsUri||''};
       });
       r.innerHTML='<div class="search-nearby-label">Perto de você</div>'+S_nearbyResults.map((p,i)=>{
         const thumb=p.photo_thumb?'<div class="sr-icon"><img src="'+escUrl(p.photo_thumb)+'" loading="eager" style="width:100%;height:100%;object-fit:cover;border-radius:12px"></div>':'<div class="sr-icon">'+p.icon+'</div>';
@@ -3569,7 +3637,7 @@ function maybeShowCheckin(){
       const city=cityFromComponents(p.addressComponents)||extractCityFromAddr(addr);
       const country=countryFromComponents(p.addressComponents);
       const fotos=placePhotoUrls(p);
-      CHECKIN.place={name,meta:addr,icon:catIcon('food'),city,country,address:addr,subcat:'',phone:p.nationalPhoneNumber||'',photo_url:fotos.full,photo_thumb:fotos.thumb,rating_google:p.rating?String(p.rating):'',website_url:p.websiteUri||'',maps_url:p.googleMapsUri||'',category:'food'};
+      CHECKIN.place={name,meta:addr,icon:catIcon('food'),city,country,address:addr,subcat:'',phone:p.nationalPhoneNumber||'',photo_url:fotos.full,photo_thumb:fotos.thumb,photo_author:autorDaFoto(p),rating_google:p.rating?String(p.rating):'',website_url:p.websiteUri||'',maps_url:p.googleMapsUri||'',category:'food'};
       document.getElementById('checkinName').textContent=name;
       document.getElementById('checkinBanner').style.display='flex';
     }catch(e){console.error('maybeShowCheckin',e)}
@@ -3592,7 +3660,7 @@ function checkinIgnore(){
 function checkinAdd(){
   const p=CHECKIN.place;if(!p)return;
   document.getElementById('checkinBanner').style.display='none';
-  const place={name:p.name,meta:p.meta,icon:p.icon,city:p.city,country:p.country,address:p.address,phone:p.phone||'',photo_url:p.photo_url||'',photo_thumb:p.photo_thumb||'',rating_google:p.rating_google,website_url:p.website_url,maps_url:p.maps_url};
+  const place={name:p.name,meta:p.meta,icon:p.icon,city:p.city,country:p.country,address:p.address,phone:p.phone||'',photo_url:p.photo_url||'',photo_thumb:p.photo_thumb||'',photo_author:p.photo_author,rating_google:p.rating_google,website_url:p.website_url,maps_url:p.maps_url};
   CHECKIN.place=null;
   // Categoria já é sabida (check-in só busca comer/beber) e "Já fui" é o
   // padrão óbvio — você está literalmente lá. Viagem: se só existir uma que
@@ -3631,7 +3699,7 @@ function searchPlaces(v){
         const country=countryFromComponents(p.addressComponents);
         const rating=p.rating?String(p.rating):'';
         const fotos=placePhotoUrls(p);
-        return{name,meta:addr,icon:catIcon(S.addCat),city,country,address:addr,subcat:guessSubcat(p.types),phone:p.nationalPhoneNumber||'',photo_url:fotos.full,photo_thumb:fotos.thumb,rating_google:rating,website_url:p.websiteUri||'',maps_url:p.googleMapsUri||''};
+        return{name,meta:addr,icon:catIcon(S.addCat),city,country,address:addr,subcat:guessSubcat(p.types),phone:p.nationalPhoneNumber||'',photo_url:fotos.full,photo_thumb:fotos.thumb,photo_author:autorDaFoto(p),rating_google:rating,website_url:p.websiteUri||'',maps_url:p.googleMapsUri||''};
       });
       if(myReqId!==searchReqId)return;
       r.innerHTML=S.searchResults.map((p,i)=>{
@@ -4039,6 +4107,8 @@ async function resolverCidadeDoSpot(p,trip){
     return;
   }
   const note=document.getElementById('noteField').value.trim(); // optional now
+  // Mesmo filtro do comentário: a nota vai ser lida pelos amigos.
+  if(textoBarrado(note)){avisarConteudoBarrado();return}
   const btn=document.getElementById('saveSpotBtn'),btn2=document.getElementById('saveAndAddBtn');
   btn.disabled=true;btn2.disabled=true;
   (addAnother?btn2:btn).textContent='Salvando...';
@@ -4050,6 +4120,12 @@ async function resolverCidadeDoSpot(p,trip){
   // Só faz sentido em experiência — nas outras categorias a coluna fica nula
   if(S.addCat==='experience'&&subcatsDe(addSubcat).length)rec.subcategory=subcatsPara(addSubcat);
   if(p.phone)rec.phone=p.phone;
+  // Credito do autor da foto (exigencia do Google). Vai como coluna
+  // opcional: se a migracao 017 ainda nao rodou, o insert retenta sem ele.
+  if(p.photo_author&&p.photo_author.nome){
+    rec.photo_author=p.photo_author.nome;
+    if(p.photo_author.url)rec.photo_author_url=p.photo_author.url;
+  }
   if(addStatus==='been')rec.my_rating=addRating;
   let{data,error}=await dbInsert('spots',rec);
   // A coluna subcategory vem da migração 009. Se ela ainda não foi rodada, o
@@ -4059,9 +4135,9 @@ async function resolverCidadeDoSpot(p,trip){
   // Colunas que vêm de migração: se ela ainda não rodou, o Postgres recusa o
   // insert INTEIRO por causa de uma coluna desconhecida e o spot não seria
   // salvo. Retenta sem os opcionais — perder o campo é melhor que perder o spot.
-  if(error&&(rec.subcategory||rec.phone)){
+  if(error&&(rec.subcategory||rec.phone||rec.photo_author)){
     console.warn('insert sem colunas opcionais (migração 009/010 ainda não rodou?)');
-    delete rec.subcategory;delete rec.phone;
+    delete rec.subcategory;delete rec.phone;delete rec.photo_author;delete rec.photo_author_url;
     ({data,error}=await dbInsert('spots',rec));
   }
   if(!error&&data){
@@ -4923,11 +4999,69 @@ async function abrirComentarios(spotId,alvo,donoDoSpot){
   if(alvo==='placeComentarios')renderSocialDoSpot(spotId,S.curPlace);
 }
 
+// ═══ FILTRO DE CONTEÚDO ═══
+//
+// A diretriz 1.2 da Apple pede QUATRO coisas pra app com conteúdo de usuário:
+// denunciar, bloquear, termos com tolerância zero — e **filtrar conteúdo
+// censurável antes de ser publicado**. As três primeiras estavam prontas;
+// esta faltava. Denúncia age depois do dano; isto age antes.
+//
+// Não é moderação inteligente e não pretende ser: é uma barreira contra o
+// óbvio, que é o que a regra pede e o que o revisor consegue demonstrar em
+// dez segundos. Xingamento isolado não é o alvo — o alvo é ódio, ameaça e
+// conteúdo sexual, que é o que a Apple nomeia.
+//
+// A comparação normaliza acento, repetição de letra e troca de caractere por
+// número, senão "0di0" e "óóódio" passariam batido.
+const TERMOS_BARRADOS=[
+  // odio e ameaca
+  'viado','viadinho','bicha','sapatao','traveco','macaco preto','crioulo',
+  'supremacia branca','morra','te mato','vou te matar','vai morrer',
+  'se mata','mate se','suicida se',
+  // sexual
+  'pornografi*','nude','nudes','pedofil*','estupr*',
+  // assedio
+  'vagabunda','filho da puta','otari*','arrombado','corno',
+  'retardado','mongoloide','aleijado'
+];
+function normalizarParaFiltro(s){
+  return String(s||'')
+    .toLowerCase()
+    .normalize('NFD').replace(/[\u0300-\u036f]/g,'')  // tira acento
+    .replace(/0/g,'o').replace(/@/g,'a').replace(/1|!/g,'i').replace(/3/g,'e')
+    .replace(/4/g,'a').replace(/5|\$/g,'s').replace(/7/g,'t')
+    .replace(/[^a-z]+/g,' ')                          // pontuacao vira espaco
+    .replace(/(.)\1+/g,'$1')                          // viaaado -> viado
+    .trim();
+}
+// Termo terminado em * casa com o que vier depois ("estupr*" pega estupro,
+// estuprar, estuprador). Os outros exigem palavra inteira: sem isso "enviado"
+// seria barrado por conter "viado", e falso positivo num app de viagem e pior
+// que o buraco. O termo passa pelo MESMO colapso de letra repetida que o
+// texto, senao "arrombado" (que vira "arombado") nunca casaria.
+const REGRAS_BARRADAS=TERMOS_BARRADOS.map(function(t){
+  const prefixo=t.charAt(t.length-1)==='*';
+  const corpo=normalizarParaFiltro(prefixo?t.slice(0,-1):t);
+  return new RegExp('(^| )'+corpo+(prefixo?'':'( |$)'));
+});
+function textoBarrado(txt){
+  const n=normalizarParaFiltro(txt);
+  const i=REGRAS_BARRADAS.findIndex(function(r){return r.test(n)});
+  return i<0?'':TERMOS_BARRADOS[i];
+}
+// Um só lugar avisa, pra mensagem ser sempre a mesma.
+function avisarConteudoBarrado(){
+  toast('Não dá pra publicar isso',
+    'O Spot não aceita ódio, ameaça nem conteúdo sexual. Reescreve sem isso.','alert');
+}
+
 async function enviarComentario(spotId,alvo,donoDoSpot){
   const campo=document.getElementById('campo-'+alvo);
   if(!campo)return;
   const texto=campo.value.trim();
   if(!texto)return;
+  // Barra ANTES de gravar: o texto nem chega ao banco.
+  if(textoBarrado(texto)){avisarConteudoBarrado();return}
   campo.value='';
   const{data,error}=await dbInsert('spot_comments',{spot_id:spotId,user_id:S.user.id,body:texto});
   if(error){
@@ -5526,9 +5660,22 @@ async function healSpotPhoto(id){
     if(p.googleMapsUri&&!s.maps_url){patch.maps_url=p.googleMapsUri;s.maps_url=p.googleMapsUri}
     const url=placePhotoUrl(p,800);
     // se a URL veio igual, a falha não era referência expirada — não regrava
-    if(url&&url!==s.photo_url){patch.photo_url=url;s.photo_url=url}
+    if(url&&url!==s.photo_url){
+      patch.photo_url=url;s.photo_url=url;
+      // Foto nova, autor novo: o crédito TEM que acompanhar a foto, senão o
+      // app passa a exibir uma foto com o nome de quem tirou a anterior.
+      const a=autorDaFoto(p);
+      patch.photo_author=a.nome||null;s.photo_author=a.nome||null;
+      patch.photo_author_url=a.url||null;s.photo_author_url=a.url||null;
+    }
     if(!Object.keys(patch).length)return null;
-    await dbUpdate('spots',id,patch);
+    // Coluna de crédito vem da migração 017: se ela ainda não rodou, o
+    // update inteiro é recusado e a foto não seria consertada. Retenta sem.
+    let up=await dbUpdate('spots',id,patch);
+    if(up&&up.error&&('photo_author' in patch)){
+      delete patch.photo_author;delete patch.photo_author_url;
+      if(Object.keys(patch).length)await dbUpdate('spots',id,patch);
+    }
     return patch.photo_url||null;
   }catch(e){console.error('healSpotPhoto',e);return null}
   finally{photoHealing.delete(id)}
@@ -5540,10 +5687,13 @@ function onSpotPhotoFileChosen(input){
   openCropper(file,'spot',async(cropped)=>{
     const url=await uploadToStorage(cropped,'spot');
     if(!url){toast('Erro','Não foi possível enviar a foto.');return}
-    const{error}=await dbUpdate('spots',s.id,{photo_url:url});
+    let{error}=await dbUpdate('spots',s.id,{photo_url:url,photo_author:null,photo_author_url:null});
+    // Migração 017 ainda não rodada: grava só a foto, que é o essencial.
+    if(error)({error}=await dbUpdate('spots',s.id,{photo_url:url}));
     if(error){toast('Erro','Não foi possível salvar a foto.');return}
-    s.photo_url=url;
+    s.photo_url=url;s.photo_author=null;s.photo_author_url=null;
     document.getElementById('placeHeroImg').style.backgroundImage=cssUrl(url);
+    limparCredito('placeFotoCredito');
     toast('Foto atualizada','','check');
   });
 }
@@ -5574,15 +5724,21 @@ function onSpotPhotoError(img,id,cat){
 // da cota já ter voltado. Invalida tudo uma vez só.
 if(localStorage.getItem('spot_cache_version')!=='2'){
   localStorage.removeItem('spot_photo_cache');
+  localStorage.removeItem('spot_photo_cache2');
+  localStorage.removeItem('spot_credito_foto');
   localStorage.removeItem('spot_unsplash_blocked_until');
   localStorage.setItem('spot_cache_version','2');
 }
 // In-memory + persistent cache so we don't re-hit Unsplash (50/hr limit)
 let cityPhotoCache={};
-try{cityPhotoCache=JSON.parse(localStorage.getItem('spot_photo_cache')||'{}')}catch(e){cityPhotoCache={}}
+// v2: o cache antigo guardava só a URL, sem o nome de quem tirou a foto —
+// e sem o nome não dá pra creditar, que é o que os termos do Unsplash
+// exigem. Trocar a chave descarta os registros velhos de uma vez.
+try{cityPhotoCache=JSON.parse(localStorage.getItem('spot_photo_cache2')||'{}')}catch(e){cityPhotoCache={}}
+try{localStorage.removeItem('spot_photo_cache')}catch(e){}
 let unsplashBlockedUntil=parseInt(localStorage.getItem('spot_unsplash_blocked_until')||'0',10)||0;
 function setUnsplashBlock(ms){unsplashBlockedUntil=Date.now()+ms;try{localStorage.setItem('spot_unsplash_blocked_until',String(unsplashBlockedUntil))}catch(e){}}
-function savePhotoCache(){try{localStorage.setItem('spot_photo_cache',JSON.stringify(cityPhotoCache))}catch(e){}}
+function savePhotoCache(){try{localStorage.setItem('spot_photo_cache2',JSON.stringify(cityPhotoCache))}catch(e){}}
 // Nome alternativo pra buscar foto: o COUNTRIES ja traz o nome em ingles no
 // campo `geo` (o mesmo que casa com o TopoJSON do mapa).
 //
@@ -5633,6 +5789,9 @@ async function buscarFotoDe(query){
       return'';
     }
     const url=d.url||'';
+    // Quem tirou a foto vem junto da URL e fica guardado por URL: os termos
+    // do Unsplash exigem o crédito toda vez que a foto aparece.
+    if(url&&d.autor)guardarCreditoCidade(url,{nome:d.autor,url:d.autorUrl||''});
     if(url){cityPhotoCache[query]=url;savePhotoCache()}
     else{cityPhotoCache[query]={url:'',exp:Date.now()+60*60*1000};savePhotoCache()} // sem resultado: não retenta por 1h
     return url;
@@ -6707,7 +6866,8 @@ function openFriendTrip(i){
   const hero=document.getElementById('ftHeroImg');
   const dest=(t.destinations&&t.destinations[0])||t.name;
   hero.style.backgroundImage=destGradient(dest);
-  fetchCityPhoto(dest).then(url=>{if(url&&FRIEND.trip===t)hero.style.backgroundImage=cssUrl(url)});
+  limparCredito('ftFotoCredito');
+  fetchCityPhoto(dest).then(url=>{if(url&&FRIEND.trip===t){hero.style.backgroundImage=cssUrl(url);pintarCreditoCidade('ftFotoCredito',url)}});
   renderFriendTripBody();
   goTo('friendTrip');
 }
@@ -6734,7 +6894,8 @@ function openFriendCity(city){
   updateFriendCityHeader();
   const hero=document.getElementById('fcHeroImg');
   hero.style.backgroundImage=destGradient(city);
-  fetchCityPhoto(city).then(url=>{if(url&&FRIEND.city===city)hero.style.backgroundImage=cssUrl(url)});
+  limparCredito('fcFotoCredito');
+  fetchCityPhoto(city).then(url=>{if(url&&FRIEND.city===city){hero.style.backgroundImage=cssUrl(url);pintarCreditoCidade('fcFotoCredito',url)}});
   renderFriendCityBody();
   goTo('friendCity');
 }
@@ -6776,9 +6937,10 @@ function abrirSpotDoAmigo(i){
 
   const hero=document.getElementById('fpHeroImg');
   hero.style.backgroundImage=destGradient(cityOf(s)||s.name);
+  limparCredito('fpFotoCredito');
   if(s.photo_url){
     const probe=new Image();
-    probe.onload=()=>{if(FRIEND.spot===s)hero.style.backgroundImage=cssUrl(s.photo_url)};
+    probe.onload=()=>{if(FRIEND.spot===s){hero.style.backgroundImage=cssUrl(s.photo_url);pintarCreditoSpot('fpFotoCredito',s)}};
     probe.src=s.photo_url;
   }
 
@@ -7037,7 +7199,16 @@ async function salvarPerfil(){
   const bio=document.getElementById('bioInput').value.trim();
   const patch={bio};
 
+  // Bio e username aparecem pra qualquer um que ache o perfil — passam
+  // pelo mesmo filtro do resto do conteúdo escrito.
+  if(textoBarrado(bio)){avisarConteudoBarrado();return}
+
   if(raw){
+    if(textoBarrado(raw.replace(/_/g,' '))){
+      statusEl.style.color=var_red();
+      statusEl.textContent='Esse username não é permitido';
+      return;
+    }
     if(!/^[a-z0-9_]{3,20}$/.test(raw)){
       statusEl.style.color=var_red();
       statusEl.textContent='Use 3-20 letras, números ou _ (sem espaço/acento)';
