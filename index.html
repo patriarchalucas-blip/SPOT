@@ -1279,6 +1279,12 @@ svg.ic path,svg.ic circle,svg.ic line,svg.ic polyline,svg.ic rect{fill:none;stro
 <button class="sheet-cta" id="btnSalvarPerfil" onclick="salvarPerfil()">Salvar</button>
 <div class="prof-linha prof-sair" style="margin-top:10px;border-top:1px solid var(--border);border-bottom:none" onclick="signOut()"><span class="pl-txt">Sair da conta</span></div>
 <div class="prof-linha" onclick="abrirBloqueados()"><span class="pl-txt">Pessoas bloqueadas</span></div>
+<!-- Termos e privacidade acessiveis DE DENTRO do app: a diretriz 1.2 da Apple
+     pede termos publicados, e o revisor procura por eles aqui. So ter a URL na
+     ficha da loja nao basta. -->
+<a class="prof-linha" href="/termos" target="_blank" rel="noopener" style="text-decoration:none;color:inherit"><span class="pl-txt">Termos de uso</span><span class="pl-seta">›</span></a>
+<a class="prof-linha" href="/privacidade" target="_blank" rel="noopener" style="text-decoration:none;color:inherit"><span class="pl-txt">Política de privacidade</span><span class="pl-seta">›</span></a>
+<a class="prof-linha" href="/suporte" target="_blank" rel="noopener" style="text-decoration:none;color:inherit"><span class="pl-txt">Ajuda e suporte</span><span class="pl-seta">›</span></a>
 <div class="prof-linha prof-sair" style="border-bottom:none;padding-bottom:26px" onclick="abrirExcluirConta()"><span class="pl-txt">Excluir minha conta</span></div></div></div>
 
 <div class="overlay" id="ov-excluir" onclick="closeOut(event,'ov-excluir')"><div class="sheet"><button class="sheet-close" onclick="closeOv('ov-excluir')" data-ic="close" aria-label="Fechar"></button><div class="sheet-handle"></div><div class="sheet-title">Excluir minha conta</div><div class="ex-corpo" style="padding:0 24px 4px"><div class="nt-label" style="margin-bottom:10px">Isso apaga de vez, e não tem como desfazer:</div><ul style="margin:0 0 16px;padding-left:20px;font-size:14px;line-height:1.7;color:var(--ink2)"><li>suas viagens e todos os seus lugares</li><li>suas notas, avaliações e comentários</li><li>suas fotos de perfil e de lugares</li><li>seus amigos e os links de convite que você criou</li></ul><div class="nt-label">Para confirmar, digite <b>EXCLUIR</b></div><input class="nt-input" id="confirmaExcluir" placeholder="digite aqui" autocapitalize="characters" autocomplete="off" oninput="atualizarBotaoExcluir()"></div><button class="sheet-cta" id="btnExcluirConta" style="background:var(--red);box-shadow:none;opacity:.4;pointer-events:none" onclick="excluirConta()">Excluir minha conta</button></div></div>
