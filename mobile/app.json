@@ -13,7 +13,9 @@
       "resizeMode": "contain",
       "backgroundColor": "#0b1620"
     },
-    "assetBundlePatterns": ["**/*"],
+    "assetBundlePatterns": [
+      "**/*"
+    ],
     "ios": {
       "supportsTablet": false,
       "bundleIdentifier": "app.meuspott.spot",
@@ -55,6 +57,13 @@
         {
           "photosPermission": "O Spot acessa suas fotos para você escolher a imagem de um lugar ou do seu perfil.",
           "cameraPermission": "O Spot usa a câmera para você tirar foto de um lugar que salvou."
+        }
+      ],
+      [
+        "expo-notifications",
+        {
+          "color": "#c1552f",
+          "defaultChannel": "default"
         }
       ]
     ],

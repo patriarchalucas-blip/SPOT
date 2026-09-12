@@ -17,8 +17,12 @@
 //   4. Permissão de localização e de câmera pedidas pelo aparelho, com texto
 //      em português explicando pra quê.
 //   5. Área segura, barra de status e splash tratados nativamente.
+//   6. Notificação no celular — pedido de amizade, lugar novo de um amigo,
+//      comentário. É a coisa da lista da 4.2 que o navegador mais claramente
+//      não faz, e a que resolve um problema real: hoje um pedido de amizade
+//      fica parado até a pessoa abrir o app por acaso.
 
-import React, { useCallback, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import {
   ActivityIndicator,
   BackHandler,
@@ -35,6 +39,48 @@ import {
 import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
 import { WebView } from 'react-native-webview';
+import * as Notifications from 'expo-notifications';
+import * as Device from 'expo-device';
+import Constants from 'expo-constants';
+
+// Notificação recebida com o app ABERTO também aparece. Sem isto ela chega
+// silenciosa e a pessoa jura que o app não avisa.
+Notifications.setNotificationHandler({
+  handleNotification: async () => ({
+    shouldShowBanner: true,
+    shouldShowList: true,
+    shouldPlaySound: true,
+    shouldSetBadge: false,
+  }),
+});
+
+// Pede permissão e devolve o endereço de entrega do aparelho.
+//
+// Devolve null em vez de explodir em três casos normais: simulador (não tem
+// como receber notificação), pessoa que recusou a permissão, e projeto ainda
+// sem id do EAS. Nenhum deles pode impedir o app de abrir.
+async function pegarEnderecoDeEntrega() {
+  if (!Device.isDevice) return null;
+  try {
+    const atual = await Notifications.getPermissionsAsync();
+    let permitido = atual.granted;
+    // Só pergunta se ainda dá: quem já recusou não deve ser perguntado de
+    // novo a cada abertura — o iOS nem mostra o alerta, e insistir é ruído.
+    if (!permitido && atual.canAskAgain) {
+      const pedida = await Notifications.requestPermissionsAsync();
+      permitido = pedida.granted;
+    }
+    if (!permitido) return null;
+    const projectId =
+      Constants?.expoConfig?.extra?.eas?.projectId ||
+      Constants?.easConfig?.projectId;
+    if (!projectId) return null;
+    const t = await Notifications.getExpoPushTokenAsync({ projectId });
+    return t?.data || null;
+  } catch (e) {
+    return null;
+  }
+}
 
 // Trocar por https://meuspott.app quando o domínio estiver apontado.
 const SITE = 'https://spotted-38b.pages.dev';
@@ -71,6 +117,37 @@ export default function App() {
   const [carregando, setCarregando] = useState(true);
   const [semRede, setSemRede] = useState(false);
   const [podeVoltar, setPodeVoltar] = useState(false);
+  // Guardado aqui porque o endereço costuma chegar ANTES de o site terminar
+  // de carregar. Sem guardar, ele se perde e a pessoa nunca recebe nada.
+  const enderecoRef = useRef(null);
+
+  // Entrega o endereço pro site, que é quem sabe qual conta está logada.
+  const entregarEndereco = useCallback(() => {
+    const e = enderecoRef.current;
+    if (!e || !webRef.current) return;
+    webRef.current.injectJavaScript(
+      'window.__spotPush=' + JSON.stringify(e) + ';' +
+      'window.dispatchEvent(new Event("spot-push-pronto"));true;'
+    );
+  }, []);
+
+  useEffect(() => {
+    let vivo = true;
+    pegarEnderecoDeEntrega().then((e) => {
+      if (!vivo || !e) return;
+      enderecoRef.current = e;
+      entregarEndereco();
+    });
+    // Tocar na notificação com o app fechado abre o app; recarregar garante
+    // que a pessoa cai no estado atual e não numa tela de horas atrás.
+    const sub = Notifications.addNotificationResponseReceivedListener(() => {
+      webRef.current?.reload();
+    });
+    return () => {
+      vivo = false;
+      sub.remove();
+    };
+  }, [entregarEndereco]);
 
   // Android: o botão físico de voltar navega no histórico do site antes de
   // fechar o app. Sem isto, voltar fecha tudo e perde o que a pessoa fazia.
@@ -158,7 +235,12 @@ export default function App() {
           onShouldStartLoadWithRequest={aoNavegar}
           onMessage={aoReceberMensagem}
           onLoadStart={() => setCarregando(true)}
-          onLoadEnd={() => setCarregando(false)}
+          onLoadEnd={() => {
+            setCarregando(false);
+            // Toda vez que o site termina de carregar, inclusive depois de
+            // recarregar: o endereço vive no app, não na página.
+            entregarEndereco();
+          }}
           onNavigationStateChange={(s) => setPodeVoltar(!!s.canGoBack)}
           onError={() => {
             setCarregando(false);

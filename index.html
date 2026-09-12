@@ -2159,6 +2159,57 @@ async function excluirConta(){
 
 // ═══ DASHBOARD ═══
 let dashboardReqId=0;
+// ═══ NOTIFICAÇÃO ═══
+// Só existe dentro da casca nativa: a casca pede a permissão ao iOS, pega o
+// endereço de entrega do aparelho e entrega aqui, porque quem sabe qual conta
+// está logada é o site, não a casca.
+//
+// No navegador comum nada disto roda — window.__spotPush nunca aparece — e o
+// app funciona igual, só sem aviso.
+let ENDERECO_PUSH=null;
+
+function ligarNotificacoes(){
+  if(window.__spotPush){ENDERECO_PUSH=window.__spotPush;guardarEnderecoPush()}
+  window.addEventListener('spot-push-pronto',()=>{
+    ENDERECO_PUSH=window.__spotPush||null;
+    guardarEnderecoPush();
+  });
+}
+
+// Grava o endereço na conta logada. O aparelho pode ter sido usado por outra
+// pessoa antes: por isso a gravação é por (conta, endereço), e o endereço
+// antigo de outra conta é sobrescrito pelo dono atual do aparelho.
+async function guardarEnderecoPush(){
+  if(!ENDERECO_PUSH||!S.user)return;
+  try{
+    // Cabeçalhos vão no TERCEIRO argumento: sbFetch reescreve opts.headers
+    // pra colar a apikey, então o que for posto dentro de opts é descartado.
+    const r=await sbFetch('/rest/v1/push_tokens?on_conflict=token',{
+      method:'POST',
+      body:JSON.stringify({user_id:S.user.id,token:ENDERECO_PUSH,plataforma:'ios'})
+    },{'Content-Type':'application/json','Prefer':'resolution=merge-duplicates'});
+    if(!r.ok)console.warn('push_tokens',r.status);
+  }catch(e){console.warn('push_tokens',e&&e.message)}
+}
+
+// Dispara um aviso. NUNCA manda o texto — só o tipo e o alvo. O texto é
+// montado no servidor a partir de uma lista fechada, senão notificação vira
+// caixa de texto livre entregue na tela de bloqueio de outra pessoa.
+//
+// Falhar aqui não pode atrapalhar nada: o aviso é um extra em cima de uma
+// ação que já deu certo. Sem await em quem chama, sem toast de erro.
+function avisar(tipo,alvo,extra){
+  if(!alvo||alvo===((S.user&&S.user.id)||''))return;
+  ensureToken().then(tk=>{
+    if(!tk)return;
+    return fetch('/api/notificar',{
+      method:'POST',
+      headers:{'Content-Type':'application/json','Authorization':'Bearer '+tk},
+      body:JSON.stringify({tipo,alvo,extra:extra||''})
+    });
+  }).catch(()=>{});
+}
+
 // ═══ OFFLINE ═══
 // Viagem é justamente quando falta sinal: avião, metrô, roaming ruim. E é a
 // primeira coisa da lista que tira o app da classificação de "site
@@ -2990,6 +3041,24 @@ async function setPlaceSubcat(k){
 // qualquer jeito. Numa rede ruim a pessoa marcava dez lugares como visitados,
 // via os dez acenderem, recarregava, e nenhum tinha ficado.
 const STATUS_ROTULO={want:['chip-want','Quero ir'],been:['chip-been','Fui'],skip:['','Pulando']};
+// Avisa os amigos quando um lugar vira "já fui". É o único evento que sai
+// pra mais de uma pessoa, e é justamente o que dá vida ao feed: hoje o lugar
+// novo de um amigo só aparece pra quem abre o app por acaso.
+//
+// Sem await e sem travar nada: o status já foi gravado quando isto roda.
+function avisarAmigosDoLugar(spot){
+  if(!spot||!S.user)return;
+  dbGet('follows','status=eq.accepted&or=(follower_id.eq.'+S.user.id+',following_id.eq.'+S.user.id+')')
+    .then(vinc=>{
+      if(falhou(vinc))return;
+      const amigos=new Set();
+      vinc.forEach(v=>{
+        const outro=v.follower_id===S.user.id?v.following_id:v.follower_id;
+        if(outro&&outro!==S.user.id&&!estaBloqueado(outro))amigos.add(outro);
+      });
+      amigos.forEach(a=>avisar('lugar',a,spot.name||''));
+    }).catch(()=>{});
+}
 function pintarStatus(s){
   ['want','been','skip'].forEach(k=>document.getElementById('t-'+k).className='toggle-btn');
   document.getElementById('t-'+s).classList.add('sel-'+s);
@@ -3012,7 +3081,11 @@ async function setStatus(s,save=true){
     toast('Não salvou',error.message||'Confere a conexão e tenta de novo.','alert');
     return;
   }
+  const eraOutro=anterior!==s;
   spot.status=s;
+  // Só quando VIRA "já fui", e só se mudou: repintar o mesmo status não é
+  // novidade pra ninguém e avisaria os amigos duas vezes.
+  if(s==='been'&&eraOutro)avisarAmigosDoLugar(spot);
   if(document.getElementById('city').classList.contains('active'))renderCityBody();
 }
 // ═══ EDITAR A NOTA ═══
@@ -4323,6 +4396,10 @@ async function resolverCidadeDoSpot(p,trip){
     // Antes de loadDashboard, que é quem dispara o backfill: assim a busca de
     // Instagram deste spot é a primeira, não a última.
     spotPrioritario=data.id;
+    // Este é o caminho principal do feed: a maioria dos lugares nasce já como
+    // "já fui", sem passar pelo setStatus. Sem isto aqui, o amigo só ficaria
+    // sabendo dos lugares que MUDARAM de status depois.
+    if(addStatus==='been')avisarAmigosDoLugar(data);
     toast('Spot salvo',note?`"${p.name} · ${note}"`:p.name,'check');
     if(S.curTrip?.id===t.id){
       S.curTrip._spots=t._spots;
@@ -5248,6 +5325,12 @@ async function enviarComentario(spotId,alvo,donoDoSpot){
     return;
   }
   (COMENTARIOS[spotId]=COMENTARIOS[spotId]||[]).push(data);
+  // Só quando o lugar é de outra pessoa: ninguém precisa ser avisado de que
+  // comentou no próprio lugar.
+  if(donoDoSpot&&donoDoSpot!==S.user.id){
+    const alvoSpot=(FRIEND.spot&&FRIEND.spot.id===spotId)?FRIEND.spot:null;
+    avisar('comentario',donoDoSpot,alvoSpot?alvoSpot.name:'');
+  }
   if(!COMENT_PERFIS[S.user.id])COMENT_PERFIS[S.user.id]=S.profile||{id:S.user.id,display_name:(S.user.email||'').split('@')[0]};
   renderComentarios(spotId,alvo,donoDoSpot);
 }
@@ -7231,8 +7314,14 @@ function renderFriendTripBody(){
 }
 async function respondRequest(followId,accept){
   if(accept){
+    // Lê a linha ANTES de aceitar: depois de aceita ela continua lá, mas quem
+    // pediu só está aqui dentro — a lista de pedidos vive na função que
+    // desenha a tela e não chega até aqui.
+    const linha=await dbGet('follows','id=eq.'+followId);
+    const quemPediu=(!falhou(linha)&&linha[0])?linha[0].follower_id:null;
     const{error}=await dbUpdate('follows',followId,{status:'accepted'});
     if(error){toast('Erro','Não foi possível aceitar. Tenta de novo.');return}
+    if(quemPediu)avisar('aceite',quemPediu);
     toast('Amigo adicionado','Vocês já podem ver a atividade um do outro.','users');
   }else{
     await dbDelete('follows',followId);
@@ -7438,6 +7527,7 @@ async function pedirAmizade(i){
     mostrarErroAmigo('Não deu pra enviar. Tenta de novo.');
     return;
   }
+  avisar('pedido',alvo.id);
   BUSCA_VINCULOS[alvo.id]='pending';
   if(btn&&btn.parentElement)btn.outerHTML='<span class="busca-estado">pedido enviado</span>';
   toast('Pedido enviado','Assim que aceitar, vocês veem a atividade um do outro.','send');
@@ -7539,6 +7629,7 @@ function onAvatarFileChosen(input){
 // ═══ START ═══
 init();
 ligarOffline();
+ligarNotificacoes();
 startLoginPhotos();
 
 </script>
