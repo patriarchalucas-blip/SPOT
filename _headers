@@ -19,12 +19,24 @@
 # cidade vem do Unsplash e continuavam funcionando, o que fazia o defeito
 # parecer intermitente). Curinga porque o Google alterna lh3..lh6.
 #
-# unsplash.com (sem o api.) está em connect-src porque a própria Unsplash
-# REDIRECIONA pra unsplash.com/developers quando a chave falha, e a CSP vale
-# pro destino do redirect: sem isso o fetch morre em exceção antes do código
-# ler o status 403, e o backoff de 10min da cota nunca era acionado.
+# *.googleusercontent.com e images.unsplash.com precisam estar TAMBÉM em
+# connect-src, não só em img-src, por causa do service worker: quando ele
+# intercepta a foto e faz o fetch por conta própria, isso conta como connect,
+# não como img. Sem os dois hosts aqui, o sw levava "Failed to fetch" em toda
+# foto e o cache de mídia ficava vazio — o app abria sem rede, mas sem
+# nenhuma imagem, que é metade do Spot.
+# Não afrouxa nada de verdade: os dois já eram destinos permitidos em img-src,
+# e URL de imagem sempre pôde carregar dado pra fora do mesmo jeito.
+#
+# HISTÓRICO, pra ninguém reintroduzir: unsplash.com (sem o api.) já esteve em
+# connect-src porque a Unsplash REDIRECIONA pra unsplash.com/developers quando
+# a chave falha, e a CSP vale pro destino do redirect — sem o host, o fetch
+# morria em exceção antes do código ler o 403. Saiu porque a chave saiu do
+# navegador: quem fala com a API da Unsplash hoje é /api/city-photo, no
+# servidor, onde CSP não se aplica. images.unsplash.com (a foto em si)
+# continua, e agora nos dois lugares.
 /*
   Cache-Control: no-store, no-cache, must-revalidate, max-age=0
-  Content-Security-Policy: default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://unpkg.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: blob: https://kzidnilsyrvauzgelsqd.supabase.co https://places.googleapis.com https://*.googleusercontent.com https://images.unsplash.com https://cdn.jsdelivr.net; connect-src 'self' https://kzidnilsyrvauzgelsqd.supabase.co https://places.googleapis.com https://cdn.jsdelivr.net https://unpkg.com; object-src 'none'; base-uri 'none'; form-action 'none'; frame-ancestors 'none'
+  Content-Security-Policy: default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://unpkg.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: blob: https://kzidnilsyrvauzgelsqd.supabase.co https://places.googleapis.com https://*.googleusercontent.com https://images.unsplash.com https://cdn.jsdelivr.net; connect-src 'self' https://kzidnilsyrvauzgelsqd.supabase.co https://places.googleapis.com https://*.googleusercontent.com https://images.unsplash.com https://cdn.jsdelivr.net https://unpkg.com; object-src 'none'; base-uri 'none'; form-action 'none'; frame-ancestors 'none'
   Referrer-Policy: strict-origin-when-cross-origin
   X-Content-Type-Options: nosniff
