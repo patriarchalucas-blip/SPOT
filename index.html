@@ -552,6 +552,30 @@ body{font-family:'DM Sans',sans-serif;background:var(--dark);max-width:430px;mar
 .req-btn{border:none;border-radius:9px;padding:9px 13px;font-family:'DM Sans',sans-serif;font-size:13px;font-weight:600;cursor:pointer;flex-shrink:0;white-space:nowrap}
 .req-accept{background:var(--terra);color:#fff}
 .req-decline{background:rgba(234,231,224,.07);color:var(--ink3)}
+/* ═══ CARD DE VISITA NO FEED ═══
+   O feed era uma lista de linhas de texto. A visita de um amigo agora vem
+   como card com foto, nome do lugar e a NOTA que ele escreveu — é onde a
+   recomendação de fato acontece, e é o que sustenta a conversa com quem tem
+   público. Linha de texto continua existindo pra viagem marcada e comentário,
+   que não têm foto nem nota pra sustentar um card. */
+.fd-card{border-radius:20px;background:var(--elev,#16232A);border:1px solid var(--border);overflow:hidden;margin-bottom:14px}
+.fd-img{height:186px;position:relative;background-color:#16232A;cursor:pointer}
+.fd-img::after{content:"";position:absolute;inset:0;background:linear-gradient(to bottom,rgba(11,22,32,0) 38%,rgba(11,22,32,.88))}
+.fd-quem{position:absolute;top:14px;left:14px;z-index:3;display:flex;align-items:center;gap:8px;background:rgba(11,22,32,.55);-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px);border-radius:999px;padding:5px 12px 5px 5px;max-width:calc(100% - 90px)}
+.fd-av{width:24px;height:24px;border-radius:50%;background:var(--green);display:flex;align-items:center;justify-content:center;font-family:var(--mono);font-size:9px;color:#cfe9e6;flex-shrink:0}
+.fd-quem-t{font-size:12.5px;color:var(--ink);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.fd-quem-t b{font-weight:600}
+.fd-quando{position:absolute;top:19px;right:14px;z-index:3;font-family:var(--mono);font-size:10px;color:var(--ink2)}
+.fd-pe{position:absolute;left:16px;right:16px;bottom:14px;z-index:3}
+.fd-k{display:block;font-family:var(--mono);font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--ink2)}
+.fd-nome{font-family:'Fraunces',serif;font-weight:400;font-size:25px;color:#fff;margin:4px 0 0;line-height:1.08;letter-spacing:-.01em;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical}
+.fd-corpo{padding:14px 16px 15px}
+.fd-nota{display:block;font-family:'Fraunces',serif;font-style:italic;font-size:16.5px;line-height:1.38;color:var(--ink);cursor:pointer;quotes:'\201C' '\201D'}
+.fd-linha{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-top:13px}
+.fd-estrelas{display:flex;gap:3px}
+.fd-salvar{flex:none;min-height:36px;background:var(--terra);color:#fff;font-size:12.5px;font-weight:600;font-family:inherit;border:none;border-radius:999px;padding:9px 15px;cursor:pointer}
+.fd-salvar:active{transform:scale(.97)}
+.fd-salvar.feito{background:rgba(78,148,144,.24);border:1px solid rgba(78,148,144,.55);color:#8FD3CE;font-weight:500;display:inline-flex;align-items:center}
 .feed-item{display:flex;gap:13px;padding:15px 0;border-bottom:1px solid var(--border)}
 .feed-avatar{width:38px;height:38px;border-radius:50%;background:var(--green);display:flex;align-items:center;justify-content:center;font-size:14px;color:var(--dark);font-weight:600;flex-shrink:0;box-shadow:var(--shadow-sm)}
 .feed-text{font-size:14px;color:var(--ink2);line-height:1.45}
@@ -5953,12 +5977,16 @@ async function loadFriends(){
     trips.forEach(t=>{
       const p=pmap[t.user_id];const name=friendName(p);
       const verb=t.status==='done'?'marcou <b>'+esc(t.name)+'</b> como visitado':'está planejando uma viagem para <b>'+esc(t.name)+'</b>';
-      feedItems.push({user_id:t.user_id,created_at:t.created_at,html:'<b>'+esc(name)+'</b> '+verb});
+      feedItems.push({tipo:'linha',user_id:t.user_id,created_at:t.created_at,html:'<b>'+esc(name)+'</b> '+verb});
     });
+    // A visita deixa de ser uma linha de texto e passa a carregar o spot
+    // inteiro: foto, nota, avaliação. O feed era um registro de eventos
+    // ("Marina adicionou X") e vira o lugar onde a recomendação acontece —
+    // que é o que o produto promete e o que sustenta uma parceria com quem
+    // tem público. A consulta já trazia todos esses campos, só eram jogados
+    // fora na montagem.
     spots.forEach(sp=>{
-      const p=pmap[sp.user_id];const name=friendName(p);
-      const loc=sp.city?' em '+esc(sp.city):'';
-      feedItems.push({user_id:sp.user_id,created_at:sp.created_at,html:'<b>'+esc(name)+'</b> adicionou <b>'+esc(sp.name)+'</b>'+loc});
+      feedItems.push({tipo:'visita',user_id:sp.user_id,created_at:sp.created_at,spot:sp});
     });
     // Nome do lugar comentado: dos spots dos amigos que ja vieram acima, ou
     // dos seus. Sem ele o item diria so "comentou em algo".
@@ -5972,7 +6000,7 @@ async function loadFriends(){
       const p=pmap[c.user_id];const name=friendName(p);
       const onde=nomeDoSpot[c.spot_id]?' em <b>'+esc(nomeDoSpot[c.spot_id])+'</b>':'';
       const trecho=String(c.body||'').slice(0,60)+(String(c.body||'').length>60?'…':'');
-      feedItems.push({user_id:c.user_id,created_at:c.created_at,
+      feedItems.push({tipo:'linha',user_id:c.user_id,created_at:c.created_at,
         html:'<b>'+esc(name)+'</b> comentou'+onde+': '+esc(trecho)});
     });
     feedItems.sort((a,b)=>new Date(b.created_at)-new Date(a.created_at));
@@ -5990,6 +6018,100 @@ async function loadFriends(){
   if(friendsTab==='recente')marcarFeedComoVisto();
   renderFriendsTab();
 }
+// ═══ CARD DE VISITA NO FEED ═══
+//
+// O protótipo tinha só o caso feliz. O app real tem spot sem foto, sem nota e
+// sem avaliação, nome comprido, e lugar que você JÁ salvou. Cada um desses é
+// tratado aqui — um card com aspas vazias ou estrela zerada parece defeito.
+
+// "Já está na minha lista" por nome + cidade: o spot do amigo é uma linha
+// diferente da sua, então não dá pra comparar id. Não é exato (dois lugares
+// com o mesmo nome na mesma cidade), mas errar pra menos só mostra um botão
+// a mais, e errar pra mais esconderia uma ação legítima.
+function jaNaMinhaLista(sp){
+  const n=String(sp.name||'').trim().toLowerCase();
+  const c=String(cityOf(sp)||'').trim().toLowerCase();
+  if(!n)return false;
+  return allSpotsFlat().some(m=>
+    String(m.name||'').trim().toLowerCase()===n &&
+    String(cityOf(m)||'').trim().toLowerCase()===c);
+}
+
+function estrelasHTML(n,tam){
+  const q=Math.round(Number(n)||0);
+  if(!q)return'';
+  let h='<div class="fd-estrelas">';
+  for(let i=1;i<=5;i++){
+    h+=i<=q
+      ?'<svg width="'+tam+'" height="'+tam+'" viewBox="0 0 24 24" fill="#BFA474"><path d="M12 3l2.6 5.6 6 .8-4.4 4.2 1.1 6.1L12 16.8 6.7 19.7l1.1-6.1L3.4 9.4l6-.8z"/></svg>'
+      :'<svg width="'+tam+'" height="'+tam+'" viewBox="0 0 24 24" fill="none" stroke="rgba(234,231,224,.3)" stroke-width="1.6" stroke-linejoin="round"><path d="M12 3l2.6 5.6 6 .8-4.4 4.2 1.1 6.1L12 16.8 6.7 19.7l1.1-6.1L3.4 9.4l6-.8z"/></svg>';
+  }
+  return h+'</div>';
+}
+
+function cardDeVisita(it,i,nome){
+  const sp=it.spot;
+  const cidade=cityOf(sp)||sp.city||'';
+  const rotulo=[sp.place_type||catLabel(sp.category),cidade].filter(Boolean).join(' · ');
+  // Sem foto cai no mesmo degradê que o resto do app usa, em vez de buraco.
+  const fundo=sp.photo_url
+    ? 'background-image:'+cssUrl(fotoNaLargura(semChaveDoPlaces(sp.photo_url),760))+';background-size:cover;background-position:center'
+    : 'background-image:'+destGradient(sp.name||cidade);
+  const nota=String(sp.my_note||'').trim();
+  const estrelas=estrelasHTML(sp.my_rating,14);
+  const salvo=jaNaMinhaLista(sp);
+  // Corpo só existe se houver nota OU estrelas OU o botão — senão o card fica
+  // com uma faixa vazia embaixo da foto.
+  const temCorpo=nota||estrelas||!salvo;
+  return '<div class="fd-card">'
+    +'<div class="fd-img" style="'+fundo+'" onclick="abrirVisitaDoFeed('+i+')">'
+      +'<div class="fd-quem"><span class="fd-av">'+esc(initials(nome))+'</span>'
+      +'<span class="fd-quem-t"><b>'+esc(nome)+'</b> foi</span></div>'
+      +'<div class="fd-quando">'+esc(timeAgo(it.created_at))+'</div>'
+      +'<div class="fd-pe">'
+        +(rotulo?'<span class="fd-k">'+esc(rotulo)+'</span>':'')
+        +'<h3 class="fd-nome">'+esc(sp.name)+'</h3>'
+      +'</div>'
+    +'</div>'
+    +(temCorpo?'<div class="fd-corpo">'
+      +(nota?'<q class="fd-nota" onclick="abrirVisitaDoFeed('+i+')">'+esc(nota)+'</q>':'')
+      +'<div class="fd-linha">'+(estrelas||'<span></span>')
+      +(salvo
+        ? '<span class="fd-salvar feito">na sua lista</span>'
+        : '<button class="fd-salvar" onclick="salvarDoFeed('+i+',this)">+ minha lista</button>')
+      +'</div></div>':'')
+    +'</div>';
+}
+
+function itemDoFeed(i){
+  const d=FRIENDS_DATA;
+  return d&&d.feedItems&&d.feedItems[i]?d.feedItems[i]:null;
+}
+function abrirVisitaDoFeed(i){
+  const it=itemDoFeed(i);
+  if(!it||!it.spot)return;
+  const d=FRIENDS_DATA;
+  // Reusa a tela de spot do amigo, que já existe e já trata spot que não é
+  // seu. Ela lê de FRIEND_CITY_SPOTS por índice, então basta pôr este spot
+  // lá e chamar com 0.
+  FRIEND.id=it.user_id;
+  FRIEND.profile=(d&&d.pmap&&d.pmap[it.user_id])||FRIEND.profile;
+  FRIEND_CITY_SPOTS=[it.spot];
+  abrirSpotDoAmigo(0);
+  // A função assume que você veio da cidade do amigo. Vindo do feed, voltar
+  // tem que voltar pro feed.
+  telaAntesDaFicha='friends';
+}
+async function salvarDoFeed(i,btn){
+  const it=itemDoFeed(i);
+  if(!it||!it.spot)return;
+  // adicionarSpotAbertoDoAmigo lê de FRIEND.spot; preencher aqui é o que
+  // permite salvar direto do feed sem abrir a ficha.
+  FRIEND.spot=it.spot;
+  await adicionarSpotAbertoDoAmigo(btn);
+  renderFriendsTab();
+}
+
 function renderFriendsTab(){
   const d=FRIENDS_DATA;if(!d)return;
   const c=document.getElementById('friendsContainer');
@@ -6046,10 +6168,14 @@ function renderFriendsTab(){
     }else if(!feedItems.length){
       h+='<div class="empty-state"><div class="ei">'+icon('globe')+'</div><h3>Nada por aqui ainda</h3><p>Seus amigos ainda não marcaram viagens nem lugares</p></div>';
     }else{
-      h+=feedItems.map(it=>{
+      h+=feedItems.map((it,i)=>{
         const name=friendName(pmap[it.user_id]);
-        // o item inteiro leva ao perfil de quem fez a atividade
-        return `<div class="feed-item" style="cursor:pointer" onclick="openFriend('${esc(it.user_id)}')"><div class="feed-avatar">${esc(initials(name))}</div><div><div class="feed-text">${it.html}</div><div class="feed-time">${esc(timeAgo(it.created_at))}</div></div></div>`;
+        if(it.tipo!=='visita'){
+          // Viagem marcada e comentário continuam sendo uma linha: não têm
+          // foto nem nota pra sustentar um card.
+          return `<div class="feed-item" style="cursor:pointer" onclick="openFriend('${esc(it.user_id)}')"><div class="feed-avatar">${esc(initials(name))}</div><div><div class="feed-text">${it.html}</div><div class="feed-time">${esc(timeAgo(it.created_at))}</div></div></div>`;
+        }
+        return cardDeVisita(it,i,name);
       }).join('');
     }
   }
