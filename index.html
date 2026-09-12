@@ -552,6 +552,61 @@ body{font-family:'DM Sans',sans-serif;background:var(--dark);max-width:430px;mar
 .req-btn{border:none;border-radius:9px;padding:9px 13px;font-family:'DM Sans',sans-serif;font-size:13px;font-weight:600;cursor:pointer;flex-shrink:0;white-space:nowrap}
 .req-accept{background:var(--terra);color:#fff}
 .req-decline{background:rgba(234,231,224,.07);color:var(--ink3)}
+/* ═══ TELA DE SPOT — direção Atlas ═══
+   A aposta da direção é "o lugar antes da palavra": a foto toma a tela como
+   palco e a nota pessoal entra como legenda grande, não como card no meio de
+   uma pilha de seções. A nota é o que diferencia o Spot de uma lista de
+   lugares, e antes ela era só mais um bloco entre outros seis.
+   A estrutura do HTML e todos os ids continuam iguais — só o visual muda —
+   pra não mexer na lógica que já funciona. */
+#place .place-hero{height:min(58dvh,520px);min-height:340px}
+/* O escurecido termina na cor do fundo, então a foto se dissolve na página
+   em vez de cortar numa linha reta. */
+#place .hero-overlay{background:linear-gradient(to bottom,rgba(11,22,32,.45) 0%,rgba(11,22,32,0) 26%,rgba(11,22,32,.35) 48%,rgba(11,22,32,.92) 78%,var(--dark) 100%)}
+#place .hero-bottom{padding:0 26px 22px}
+#place .hero-type{font-family:var(--mono);font-size:10.5px;letter-spacing:.16em;text-transform:uppercase;color:rgba(234,231,224,.75);margin-bottom:9px}
+#place .hero-name{font-size:34px;line-height:1.02;letter-spacing:-.02em}
+#place .hero-chip{font-family:var(--mono);font-size:10px;font-weight:500;letter-spacing:.14em;text-transform:uppercase;padding:7px 13px}
+
+/* A primeira seção encosta na foto: sem traço, sem respiro morto. */
+#place .d-section{padding:18px 26px;border-bottom:none}
+#place .d-section:first-of-type{padding-top:2px}
+/* Rótulo de seção vira etiqueta de ficha, com a linha preenchendo o resto —
+   é o divisor do modelo. */
+#place .sec-label{font-family:var(--mono);font-size:10px;letter-spacing:.16em;text-transform:uppercase;color:var(--ink3);font-weight:500;margin-bottom:10px;display:flex;align-items:center;gap:10px}
+#place .sec-label::after{content:"";flex:1;height:1px;background:rgba(234,231,224,.18)}
+#place .sec-linha .sec-label{margin-bottom:0}
+#place .sec-linha .sec-label::after{content:none}
+#place .d-section:first-of-type .sec-label{color:var(--terra2,#E0714A)}
+
+/* A nota sai da caixa e vira o maior bloco de texto da tela. */
+#place .note-card{background:transparent;border:none;box-shadow:none;padding:0}
+#place .note-glow{display:none}
+#place .note-quote{font-size:23px;line-height:1.32;font-style:normal;text-wrap:pretty}
+#place .note-quote:empty::before{content:"Por que esse lugar te chamou atenção?";font-style:italic;color:var(--ink3)}
+
+/* Status vira controle segmentado, igual ao das abas de Amigos. */
+#place .status-toggle{background:rgba(234,231,224,.06);border-radius:12px}
+#place .toggle-btn{min-height:44px;font-size:13px}
+#place .toggle-btn.sel-been{background:var(--elev,#16232A);font-weight:600;color:#8FD3CE}
+#place .toggle-btn.sel-want{background:var(--elev,#16232A);font-weight:600;color:#DDCBA4}
+#place .toggle-btn.sel-skip{background:var(--elev,#16232A);font-weight:600;color:var(--ink)}
+
+/* Informações vira ficha compacta. Eram três cartões altos com ícone em cima
+   ocupando meia tela, repetindo a cidade que já está no cabeçalho e o endereço
+   que ninguém lê ali. Vira uma linha de dados, na linguagem de ficha do app. */
+#place .info-grid{gap:7px;margin-bottom:14px}
+#place .info-cell{padding:10px 12px;border-radius:10px;background:rgba(234,231,224,.05)}
+#place .info-cell-icon{display:none}
+#place .info-cell-label{font-family:var(--mono);font-size:9.5px;letter-spacing:.12em;text-transform:uppercase;margin-bottom:3px}
+#place .info-cell-value{font-size:13.5px}
+
+/* Ligar · Instagram · Maps lado a lado, em vez de empilhados ocupando
+   três alturas de botão. */
+#place #placeReserveWrap{display:grid;grid-template-columns:repeat(auto-fit,minmax(96px,1fr));gap:8px}
+#place .reserve-btn{margin-top:0;min-height:46px;padding:10px 8px;border:1px solid var(--border);border-width:1px;border-radius:12px;background:rgba(234,231,224,.08);font-size:13px;font-weight:500;gap:6px;flex-direction:column}
+#place .reserve-btn .ic{font-size:15px}
+
 /* ═══ TELA DE AMIGOS — direção Atlas ═══
    Cabeçalho enxuto com o botão de adicionar ao lado do título (antes era um
    FAB flutuante, que não faz sentido aqui: nesta tela não se adiciona spot).
