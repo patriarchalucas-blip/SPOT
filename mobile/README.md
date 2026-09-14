@@ -97,7 +97,7 @@ Isso é permanente. Depois do primeiro envio, a Apple não deixa trocar — muda
 significa publicar um app novo, do zero, sem os usuários. Se você quiser outro,
 fale **antes** do primeiro build.
 
-**Endereço que a casca carrega:** hoje aponta para `spotted-38b.pages.dev`
+**Endereço que a casca carrega:** hoje aponta para `meuspot.app`
 (constante `SITE` no `App.js`). Quando o domínio próprio estiver apontado, troque
 ali. Vale trocar antes de enviar: o endereço fica visível para o revisor.
 

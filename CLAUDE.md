@@ -16,7 +16,7 @@ App pessoal de viagem — "Letterboxd para viagem". Salva lugares (restaurante/h
 - **Backend:** Supabase (auth + Postgres via REST direto — **nunca usar o SDK JS pra writes**, tem bug de schema cache que trava infinito; toda a camada de dados usa `fetch` direto com `apikey`+`Authorization: Bearer <token>`).
 - **Deploy:** Cloudflare Pages, auto-deploy a cada push no branch `main` do GitHub.
 - **Repo:** `github.com/patriarchalucas-blip/SPOT`
-- **Site:** `spotted-38b.pages.dev` (Lucas quer trocar por domínio próprio via Cloudflare Registrar — ainda não decidiu o nome)
+- **Site:** `meuspot.app` (Lucas quer trocar por domínio próprio via Cloudflare Registrar — ainda não decidiu o nome)
 
 ### Credenciais (já em uso, client-side — ver seção "Dívida técnica")
 ```

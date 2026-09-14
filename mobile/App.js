@@ -91,8 +91,13 @@ async function pegarEnderecoDeEntrega() {
   }
 }
 
-// Trocar por https://meuspott.app quando o domínio estiver apontado.
-const SITE = 'https://spotted-38b.pages.dev';
+// O endereço que a casca carrega. Ele fica GRAVADO no arquivo enviado pra
+// Apple: trocar depois exige nova versão e nova revisão. Por isso o domínio
+// próprio veio antes do envio, e não depois.
+//
+// O endereço antigo (spotted-38b.pages.dev) continua no ar e funcionando — a
+// Cloudflare não desliga o .pages.dev — então nada quebra durante a troca.
+const SITE = 'https://meuspot.app';
 
 // Qual componente desenha cada aba. Aba que nao estiver aqui continua vindo
 // do site — e assim que uma tela migra: entra nesta tabela.
