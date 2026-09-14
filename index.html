@@ -638,20 +638,22 @@ body.na-casca .bottom-nav{display:none}
 /* Linhas de configuração viram ficha, com a etiqueta em monoespacada. */
 #profile .prof-linha .pl-txt{font-size:14.5px}
 
-/* ═══ TELA DE VIAGENS — direção Atlas ═══
-   Placar em UMA linha no lugar do número gigante mais três caixas: eram quase
-   500px de métrica antes de aparecer conteúdo, e o primeiro card de viagem
-   começava no fim da tela. Continua tudo clicável, só parou de ocupar meia
-   tela. Foi o único ponto do modelo que o Lucas concordou em enxugar. */
-#dashboard .dash-paises{margin-bottom:0;gap:6px}
+/* ═══ TELA DE VIAGENS — placar ═══
+   Os três números voltaram a ser CAIXAS TOCÁVEIS, a pedido do Lucas: em uma
+   linha corrida eles paravam de parecer clicáveis, e no celular a linha
+   quebrava deixando "3 viagens" sozinho embaixo.
+
+   O que NÃO volta é a altura. A versão antiga empilhava saudação, nome,
+   número gigante e caixas — quase 500px de métrica antes de aparecer a
+   primeira viagem. A saudação e o nome já saíram no redesenho; o número de
+   países fica no mono compacto do Atlas em vez do Fraunces gigante. Sobra o
+   custo das caixas em si, uns 60px, que é o que o Lucas pediu de volta. */
+#dashboard .dash-paises{margin-bottom:14px;gap:6px}
 #dashboard .dp-n{font-family:var(--mono);font-weight:500;font-size:30px;letter-spacing:-.03em}
 #dashboard .dp-t{font-family:var(--mono);font-size:13px;color:var(--ink3)}
-.placar-linha{display:flex;align-items:baseline;gap:8px;flex-wrap:wrap;margin-bottom:18px}
-.placar-sep{color:rgba(234,231,224,.28);font-size:11px}
-#dashboard .stats-strip{display:contents}
-#dashboard .stat-block{flex:none;background:none;border:none;border-radius:0;padding:0;box-shadow:none;display:inline-flex;align-items:baseline;gap:5px;text-align:left}
-#dashboard .stat-n{font-size:13px;font-weight:500;color:var(--ink2)}
-#dashboard .stat-l{font-family:var(--mono);font-size:11px;margin-top:0;letter-spacing:.05em}
+#dashboard .stats-strip{margin-bottom:18px}
+/* Rótulo no mesmo mono do resto do placar; o número já era mono. */
+#dashboard .stat-l{font-family:var(--mono);font-size:10.5px;letter-spacing:.05em;text-transform:lowercase}
 
 /* Continentes: trilho horizontal no lugar das pastas que abriam e fechavam. */
 .cont-trilho{display:flex;gap:8px;overflow-x:auto;padding:2px 24px 0;margin:0 -24px;scrollbar-width:none}
@@ -1092,16 +1094,11 @@ svg.ic path,svg.ic circle,svg.ic line,svg.ic polyline,svg.ic rect{fill:none;stro
     </div>
     <div class="dash-mapa" id="dashMapa" aria-hidden="true"></div>
     <div class="dash-convite" id="dashConvite" style="display:none">Crie uma viagem para pintar o primeiro país.</div>
-    <div class="placar-linha">
     <div class="dash-paises" id="dashPaises" onclick="openList('countries')" role="button" tabindex="0"><span class="dp-n" id="dashPaisesN">0</span><span class="dp-t">de 195 países</span></div>
-    <span class="placar-sep">·</span>
     <div class="stats-strip">
       <div class="stat-block" onclick="openList('spots')"><div class="stat-n" id="statSpots">0</div><div class="stat-l">spots</div></div>
-      <span class="placar-sep">·</span>
       <div class="stat-block" onclick="openList('cities')"><div class="stat-n" id="statCities">0</div><div class="stat-l">cidades</div></div>
-      <span class="placar-sep">·</span>
       <div class="stat-block" onclick="openList('trips')"><div class="stat-n" id="statTrips">0</div><div class="stat-l">viagens</div></div>
-    </div>
     </div>
   </div>
   <div class="checkin-banner" id="checkinBanner" style="display:none">
