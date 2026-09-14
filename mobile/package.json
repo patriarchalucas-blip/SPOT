@@ -7,7 +7,8 @@
     "start": "expo start",
     "ios": "expo start --ios",
     "android": "expo start --android",
-    "consertar-versoes": "expo install --fix"
+    "consertar-versoes": "expo install --fix",
+    "gerar-mundo": "node gerar-mundo.mjs"
   },
   "dependencies": {
     "expo": "~57.0.22",
@@ -23,5 +24,9 @@
     "react-native-safe-area-context": "~5.7.0",
     "react-native-svg": "15.15.4",
     "react-native-webview": "13.16.1"
+  },
+  "devDependencies": {
+    "d3-geo": "^3.1.1",
+    "topojson-client": "^3.1.0"
   }
 }

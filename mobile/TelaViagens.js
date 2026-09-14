@@ -3,11 +3,8 @@
 // Terceira tela que deixa de ser HTML, e a primeira que a pessoa vê ao abrir
 // o app. Mesma divisão das outras: o site tem as regras, aqui é só o desenho.
 //
-// O MAPA-MÚNDI AINDA NÃO. Ele é desenhado no site com uma biblioteca que não
-// existe em React Native, então é a única peça do porte que não é tradução
-// direta — precisa ser redesenhada, não convertida. Até lá o espaço dele fica
-// com o mesmo fundo da tela, sem buraco nem placeholder falso: quem não
-// conhece a versão web não percebe que falta algo.
+// O mapa-múndi aqui é DECORAÇÃO: sem toque, sem zoom, atrás do placar. Quem
+// quiser o mapa de verdade toca no número de países. Mesma divisão do site.
 //
 // Valores copiados do CSS (.vg-card, .cont-chip, .stat-block, .dash-paises).
 
@@ -23,6 +20,7 @@ import {
   View,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import MapaMundi from './MapaMundi';
 
 const INK = '#EAE7E0';
 const INK2 = '#B4BCBF';
@@ -114,8 +112,9 @@ export default function TelaViagens({ dados, ocupado, acao }) {
           </Pressable>
         </View>
 
-        {/* espaço do mapa — ver o comentário no topo do arquivo */}
-        <View style={e.lugarDoMapa} />
+        <View style={e.mapa} pointerEvents="none">
+          <MapaMundi visitados={d.mapa} altura={150} opacidade={0.5} />
+        </View>
 
         {d.convite ? (
           <Text style={e.convite}>Crie uma viagem para pintar o primeiro país.</Text>
@@ -199,9 +198,9 @@ const e = StyleSheet.create({
   },
   avatarTxt: { fontSize: 16, color: ESCURO, fontWeight: '600' },
 
-  // Enquanto o mapa não é portado, o espaço dele é só respiro. Altura menor
-  // que a do mapa do site de propósito: espaço vazio grande parece defeito.
-  lugarDoMapa: { height: 24 },
+  // Sangra pra fora da margem lateral, como o do site: mapa com margem
+  // parece figura, e este é fundo.
+  mapa: { marginHorizontal: -24, marginTop: 4, marginBottom: 10 },
 
   convite: { fontSize: 12.5, color: INK3, maxWidth: 230, lineHeight: 18, marginBottom: 14 },
 

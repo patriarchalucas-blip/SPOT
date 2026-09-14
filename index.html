@@ -2571,6 +2571,10 @@ function darDadosDeViagens(){
     viagens:Number((document.getElementById('statTrips')||{}).textContent)||0,
     inicial:((S.profile&&S.profile.display_name)||(S.user.email||'?')).charAt(0).toUpperCase(),
     convite:(document.getElementById('dashConvite')||{}).style.display!=='none',
+    // Pro mapa nativo: nome que os contornos usam (world-atlas, em inglês),
+    // não o nome em português. País sem correspondência fica de fora em vez
+    // de pintar o país errado.
+    mapa:visitedCountryNames().map(geoFor).filter(Boolean),
     regiao:regiao||'',
     regioes:ordem.map(r=>({nome:r,n:groups[r].length})),
     viagensDaRegiao:daRegiao.map(t=>{
@@ -4671,8 +4675,8 @@ const COUNTRIES=[
   {flag:'🇦🇺',name:'Austrália',region:'Oceania',geo:'Australia'},{flag:'🇦🇿',name:'Azerbaidjão',region:'Ásia',geo:'Azerbaijan'},{flag:'🇧🇸',name:'Bahamas',region:'América do Norte',geo:'Bahamas'},
   {flag:'🇧🇩',name:'Bangladesh',region:'Ásia',geo:'Bangladesh'},{flag:'🇧🇧',name:'Barbados',region:'América do Norte',geo:'Barbados'},{flag:'🇧🇭',name:'Barein',region:'Ásia',geo:'Bahrain'},
   {flag:'🇧🇿',name:'Belize',region:'América do Norte',geo:'Belize'},{flag:'🇧🇯',name:'Benin',region:'África',geo:'Benin'},{flag:'🇧🇲',name:'Bermuda',region:'América do Norte',geo:'Bermuda'},
-  {flag:'🇧🇾',name:'Bielo-Rússia',region:'Europa',geo:'Belarus'},{flag:'🇧🇴',name:'Bolívia',region:'América do Sul',geo:'Bolivia, Plurinational State of'},{flag:'🇧🇶',name:'Bonaire, Saba e Santo Eustáquio',region:'América do Norte',geo:'Bonaire, Sint Eustatius and Saba'},
-  {flag:'🇧🇼',name:'Botsuana',region:'África',geo:'Botswana'},{flag:'🇧🇷',name:'Brasil',region:'América do Sul',geo:'Brazil'},{flag:'🇧🇳',name:'Brunei',region:'Ásia',geo:'Brunei Darussalam'},
+  {flag:'🇧🇾',name:'Bielo-Rússia',region:'Europa',geo:'Belarus'},{flag:'🇧🇴',name:'Bolívia',region:'América do Sul',geo:'Bolivia'},{flag:'🇧🇶',name:'Bonaire, Saba e Santo Eustáquio',region:'América do Norte',geo:'Bonaire, Sint Eustatius and Saba'},
+  {flag:'🇧🇼',name:'Botsuana',region:'África',geo:'Botswana'},{flag:'🇧🇷',name:'Brasil',region:'América do Sul',geo:'Brazil'},{flag:'🇧🇳',name:'Brunei',region:'Ásia',geo:'Brunei'},
   {flag:'🇧🇬',name:'Bulgária',region:'Europa',geo:'Bulgaria'},{flag:'🇧🇫',name:'Burquina',region:'África',geo:'Burkina Faso'},{flag:'🇧🇮',name:'Burundi',region:'África',geo:'Burundi'},
   {flag:'🇧🇹',name:'Butão',region:'Ásia',geo:'Bhutan'},{flag:'🇧🇪',name:'Bélgica',region:'Europa',geo:'Belgium'},{flag:'🇧🇦',name:'Bósnia e Herzegovina',region:'Europa',geo:'Bosnia and Herz.'},
   {flag:'🇨🇻',name:'Cabo Verde',region:'África',geo:'Cabo Verde'},{flag:'🇨🇲',name:'Camarões',region:'África',geo:'Cameroon'},{flag:'🇰🇭',name:'Camboja',region:'Ásia',geo:'Cambodia'},
@@ -4697,23 +4701,23 @@ const COUNTRIES=[
   {flag:'🇳🇱',name:'Holanda',region:'Europa',geo:'Netherlands'},{flag:'🇭🇳',name:'Honduras',region:'América do Norte',geo:'Honduras'},{flag:'🇭🇰',name:'Hong Kong',region:'Ásia',geo:'Hong Kong'},
   {flag:'🇭🇺',name:'Hungria',region:'Europa',geo:'Hungary'},{flag:'🇨🇽',name:'Ilha Christmas',region:'Oceania',geo:'Christmas Island'},{flag:'🇳🇫',name:'Ilha Norfolk',region:'Oceania',geo:'Norfolk Island'},
   {flag:'🇮🇲',name:'Ilha de Man',region:'Europa',geo:'Isle of Man'},{flag:'🇰🇾',name:'Ilhas Cayman',region:'América do Norte',geo:'Cayman Islands'},{flag:'🇨🇨',name:'Ilhas Cocos',region:'Oceania',geo:'Cocos (Keeling) Islands'},
-  {flag:'🇨🇰',name:'Ilhas Cook',region:'Oceania',geo:'Cook Islands'},{flag:'🇫🇴',name:'Ilhas Faroe',region:'Europa',geo:'Faroe Islands'},{flag:'🇫🇰',name:'Ilhas Malvinas',region:'América do Sul',geo:'Falkland Islands (Malvinas)'},
+  {flag:'🇨🇰',name:'Ilhas Cook',region:'Oceania',geo:'Cook Islands'},{flag:'🇫🇴',name:'Ilhas Faroe',region:'Europa',geo:'Faroe Islands'},{flag:'🇫🇰',name:'Ilhas Malvinas',region:'América do Sul',geo:'Falkland Is.'},
   {flag:'🇲🇵',name:'Ilhas Marianas do Norte',region:'Oceania',geo:'Northern Mariana Islands'},{flag:'🇲🇭',name:'Ilhas Marshall',region:'Oceania',geo:'Marshall Islands'},{flag:'🇸🇧',name:'Ilhas Salomão',region:'Oceania',geo:'Solomon Is.'},
   {flag:'🇹🇨',name:'Ilhas Turks e Caicos',region:'América do Norte',geo:'Turks and Caicos Islands'},{flag:'🇻🇬',name:'Ilhas Virgens Britânicas',region:'América do Norte',geo:'Virgin Islands, British'},{flag:'🇻🇮',name:'Ilhas Virgens dos Estados Unidos',region:'América do Norte',geo:'Virgin Islands, U.S.'},
   {flag:'🇦🇽',name:'Ilhas Åland',region:'Europa',geo:'Åland Islands'},{flag:'🇮🇩',name:'Indonésia',region:'Ásia',geo:'Indonesia'},{flag:'🇮🇶',name:'Iraque',region:'Ásia',geo:'Iraq'},
-  {flag:'🇮🇪',name:'Irlanda',region:'Europa',geo:'Ireland'},{flag:'🇮🇷',name:'Irã',region:'Ásia',geo:'Iran, Islamic Republic of'},{flag:'🇮🇸',name:'Islândia',region:'Europa',geo:'Iceland'},
+  {flag:'🇮🇪',name:'Irlanda',region:'Europa',geo:'Ireland'},{flag:'🇮🇷',name:'Irã',region:'Ásia',geo:'Iran'},{flag:'🇮🇸',name:'Islândia',region:'Europa',geo:'Iceland'},
   {flag:'🇮🇱',name:'Israel',region:'Ásia',geo:'Israel'},{flag:'🇮🇹',name:'Itália',region:'Europa',geo:'Italy'},{flag:'🇾🇪',name:'Iêmen',region:'Ásia',geo:'Yemen'},
   {flag:'🇯🇲',name:'Jamaica',region:'América do Norte',geo:'Jamaica'},{flag:'🇯🇵',name:'Japão',region:'Ásia',geo:'Japan'},{flag:'🇯🇪',name:'Jersey',region:'Europa',geo:'Jersey'},
   {flag:'🇯🇴',name:'Jordânia',region:'Ásia',geo:'Jordan'},{flag:'🇰🇮',name:'Kiribati',region:'Oceania',geo:'Kiribati'},{flag:'🇽🇰',name:'Kosovo',region:'Europa',geo:'Kosovo'},
   {flag:'🇰🇼',name:'Kuwait',region:'Ásia',geo:'Kuwait'},{flag:'🇱🇦',name:'Laos',region:'Ásia',geo:'Laos'},{flag:'🇱🇸',name:'Lesoto',region:'África',geo:'Lesotho'},
   {flag:'🇱🇻',name:'Letônia',region:'Europa',geo:'Latvia'},{flag:'🇱🇷',name:'Libéria',region:'África',geo:'Liberia'},{flag:'🇱🇮',name:'Liechtenstein',region:'Europa',geo:'Liechtenstein'},
   {flag:'🇱🇹',name:'Lituânia',region:'Europa',geo:'Lithuania'},{flag:'🇱🇺',name:'Luxemburgo',region:'Europa',geo:'Luxembourg'},{flag:'🇱🇧',name:'Líbano',region:'Ásia',geo:'Lebanon'},
-  {flag:'🇱🇾',name:'Líbia',region:'África',geo:'Libya'},{flag:'🇲🇴',name:'Macau',region:'Ásia',geo:'Macao'},{flag:'🇲🇰',name:'Macedônia do Norte',region:'Europa',geo:'North Macedonia'},
+  {flag:'🇱🇾',name:'Líbia',region:'África',geo:'Libya'},{flag:'🇲🇴',name:'Macau',region:'Ásia',geo:'Macao'},{flag:'🇲🇰',name:'Macedônia do Norte',region:'Europa',geo:'Macedonia'},
   {flag:'🇲🇬',name:'Madagascar',region:'África',geo:'Madagascar'},{flag:'🇾🇹',name:'Maiote',region:'África',geo:'Mayotte'},{flag:'🇲🇼',name:'Malaui',region:'África',geo:'Malawi'},
   {flag:'🇲🇻',name:'Maldivas',region:'Ásia',geo:'Maldives'},{flag:'🇲🇱',name:'Mali',region:'África',geo:'Mali'},{flag:'🇲🇹',name:'Malta',region:'Europa',geo:'Malta'},
   {flag:'🇲🇾',name:'Malásia',region:'Ásia',geo:'Malaysia'},{flag:'🇲🇦',name:'Marrocos',region:'África',geo:'Morocco'},{flag:'🇲🇶',name:'Martinica',region:'América do Norte',geo:'Martinique'},
   {flag:'🇲🇷',name:'Mauritânia',region:'África',geo:'Mauritania'},{flag:'🇲🇺',name:'Maurício',region:'África',geo:'Mauritius'},{flag:'🇫🇲',name:'Micronésia',region:'Oceania',geo:'Micronesia, Federated States of'},
-  {flag:'🇲🇩',name:'Moldávia',region:'Europa',geo:'Moldova, Republic of'},{flag:'🇲🇳',name:'Mongólia',region:'Ásia',geo:'Mongolia'},{flag:'🇲🇪',name:'Montenegro',region:'Europa',geo:'Montenegro'},
+  {flag:'🇲🇩',name:'Moldávia',region:'Europa',geo:'Moldova'},{flag:'🇲🇳',name:'Mongólia',region:'Ásia',geo:'Mongolia'},{flag:'🇲🇪',name:'Montenegro',region:'Europa',geo:'Montenegro'},
   {flag:'🇲🇸',name:'Montserrat',region:'América do Norte',geo:'Montserrat'},{flag:'🇲🇿',name:'Moçambique',region:'África',geo:'Mozambique'},{flag:'🇲🇲',name:'Myanmar',region:'Ásia',geo:'Myanmar'},
   {flag:'🇲🇽',name:'México',region:'América do Norte',geo:'Mexico'},{flag:'🇲🇨',name:'Mônaco',region:'Europa',geo:'Monaco'},{flag:'🇳🇦',name:'Namíbia',region:'África',geo:'Namibia'},
   {flag:'🇳🇷',name:'Nauru',region:'Oceania',geo:'Nauru'},{flag:'🇳🇵',name:'Nepal',region:'Ásia',geo:'Nepal'},{flag:'🇳🇮',name:'Nicarágua',region:'América do Norte',geo:'Nicaragua'},
@@ -4736,13 +4740,13 @@ const COUNTRIES=[
   {flag:'🇧🇱',name:'São Bartolomeu',region:'América do Norte',geo:'Saint Barthélemy'},{flag:'🇰🇳',name:'São Cristóvão e Névis',region:'América do Norte',geo:'Saint Kitts and Nevis'},{flag:'🇸🇲',name:'São Marino',region:'Europa',geo:'San Marino'},
   {flag:'🇲🇫',name:'São Martim',region:'América do Norte',geo:'Saint Martin (French part)'},{flag:'🇵🇲',name:'São Pedro e Miquelon',region:'América do Norte',geo:'Saint Pierre and Miquelon'},{flag:'🇸🇹',name:'São Tomé e Príncipe',region:'África',geo:'São Tomé and Principe'},
   {flag:'🇻🇨',name:'São Vicente e Granadinas',region:'América do Norte',geo:'Saint Vincent and the Grenadines'},{flag:'🇷🇸',name:'Sérvia',region:'Europa',geo:'Serbia'},{flag:'🇸🇾',name:'Síria',region:'Ásia',geo:'Syria'},
-  {flag:'🇹🇯',name:'Tadjiquistão',region:'Ásia',geo:'Tajikistan'},{flag:'🇹🇭',name:'Tailândia',region:'Ásia',geo:'Thailand'},{flag:'🇹🇼',name:'Taiwan',region:'Ásia',geo:'Taiwan, Province of China'},
+  {flag:'🇹🇯',name:'Tadjiquistão',region:'Ásia',geo:'Tajikistan'},{flag:'🇹🇭',name:'Tailândia',region:'Ásia',geo:'Thailand'},{flag:'🇹🇼',name:'Taiwan',region:'Ásia',geo:'Taiwan'},
   {flag:'🇹🇿',name:'Tanzânia',region:'África',geo:'Tanzania'},{flag:'🇹🇱',name:'Timor Leste',region:'Europa',geo:'Timor-Leste'},{flag:'🇹🇬',name:'Togo',region:'África',geo:'Togo'},
   {flag:'🇹🇴',name:'Tonga',region:'Oceania',geo:'Tonga'},{flag:'🇹🇰',name:'Toquelau',region:'Oceania',geo:'Tokelau'},{flag:'🇹🇹',name:'Trinidade e Tobago',region:'América do Norte',geo:'Trinidad and Tobago'},
   {flag:'🇹🇳',name:'Tunísia',region:'África',geo:'Tunisia'},{flag:'🇹🇲',name:'Turcomenistão',region:'Ásia',geo:'Turkmenistan'},{flag:'🇹🇷',name:'Turquia',region:'Ásia',geo:'Türkiye'},
   {flag:'🇹🇻',name:'Tuvalu',region:'Oceania',geo:'Tuvalu'},{flag:'🇺🇦',name:'Ucrânia',region:'Europa',geo:'Ukraine'},{flag:'🇺🇬',name:'Uganda',region:'África',geo:'Uganda'},
   {flag:'🇺🇾',name:'Uruguai',region:'América do Sul',geo:'Uruguay'},{flag:'🇺🇿',name:'Uzbequistão',region:'Ásia',geo:'Uzbekistan'},{flag:'🇻🇺',name:'Vanuatu',region:'Oceania',geo:'Vanuatu'},
-  {flag:'🇻🇦',name:'Vaticano',region:'Europa',geo:'Holy See (Vatican City State)'},{flag:'🇻🇪',name:'Venezuela',region:'América do Sul',geo:'Venezuela, Bolivarian Republic of'},{flag:'🇻🇳',name:'Vietnã',region:'Ásia',geo:'Vietnam'},
+  {flag:'🇻🇦',name:'Vaticano',region:'Europa',geo:'Holy See (Vatican City State)'},{flag:'🇻🇪',name:'Venezuela',region:'América do Sul',geo:'Venezuela'},{flag:'🇻🇳',name:'Vietnã',region:'Ásia',geo:'Vietnam'},
   {flag:'🇼🇫',name:'Wallis e Futuna',region:'Oceania',geo:'Wallis and Futuna'},{flag:'🇿🇼',name:'Zimbábue',region:'África',geo:'Zimbabwe'},{flag:'🇿🇲',name:'Zâmbia',region:'África',geo:'Zambia'},
   {flag:'🇿🇦',name:'África do Sul',region:'África',geo:'South Africa'},{flag:'🇦🇹',name:'Áustria',region:'Europa',geo:'Austria'},{flag:'🇮🇳',name:'Índia',region:'Ásia',geo:'India'}
 ];
@@ -6472,7 +6476,8 @@ function darDadosDePerfil(){
     resumo:spots.length?(spots.length+(spots.length===1?' lugar · ':' lugares · ')
       +cidades.length+(cidades.length===1?' cidade':' cidades')):'',
     estante:estante,
-    paisesTexto:paises
+    paisesTexto:paises,
+    mapa:visitedCountryNames().map(geoFor).filter(Boolean)
   }});
 }
 

@@ -4,8 +4,8 @@
 // tem as regras (a ordenação da estante, a média por cidade, o que conta como
 // visitado), aqui é só o desenho.
 //
-// O MAPA-MÚNDI AINDA NÃO — mesma razão da tela de Viagens. Os países que você
-// visitou continuam aparecendo, em texto, até o mapa ser redesenhado.
+// O mapa aqui é o principal da seção "Onde já estive": maior que o de
+// Viagens e com a lista de países logo abaixo.
 //
 // É a tela que o revisor da App Store visita pra achar exclusão de conta,
 // termos e privacidade. Esses caminhos ficam na ficha de configurações, que
@@ -24,6 +24,7 @@ import {
   View,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import MapaMundi from './MapaMundi';
 import Svg, { Circle, Path } from 'react-native-svg';
 
 const INK = '#EAE7E0';
@@ -192,8 +193,10 @@ export default function TelaPerfil({ dados, ocupado, acao }) {
         <View style={[e.cabecalho, { marginTop: 26 }]}>
           <Text style={e.secao}>Onde já estive</Text>
         </View>
-        {/* Em texto até o mapa ser redesenhado — ver o comentário no topo. */}
-        <Text style={e.paises}>{d.paisesTexto || 'Nenhum país marcado ainda.'}</Text>
+        <View style={e.mapa}>
+          <MapaMundi visitados={d.mapa} altura={190} />
+        </View>
+        <Text style={e.paises}>{d.paisesTexto || 'Crie viagens para pintar o mundo.'}</Text>
 
         <View style={e.acoes}>
           <Linha icone="globe" texto="Marcar país que já visitei" onPress={() => acao('visitado')} />
@@ -253,6 +256,7 @@ const e = StyleSheet.create({
   secaoSub: { fontFamily: MONO, fontSize: 11, color: INK3 },
   aviso: { fontSize: 13.5, color: INK3, lineHeight: 19 },
   paises: { fontSize: 13.5, color: INK2, lineHeight: 21 },
+  mapa: { marginHorizontal: -24, marginBottom: 14 },
 
   cidade: {
     borderWidth: StyleSheet.hairlineWidth,
