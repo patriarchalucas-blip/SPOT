@@ -2545,7 +2545,65 @@ function renderTrips(){
   }
   c.innerHTML=h;
   fillTripPhotos();
+  darDadosDeViagens();
 }
+
+// ═══ DADOS DA TELA DE VIAGENS, PRONTOS PRA DESENHAR ═══
+// Mesma divisão das outras: aqui as regras (agrupamento por continente, o
+// que conta como viagem de verdade, a foto de cada destino), lá o desenho.
+//
+// A BANDEIRA atravessa como EMOJI. No site ela vira imagem SVG porque o
+// Windows não tem glifo de bandeira — problema que no iPhone não existe. O
+// nativo recebe o emoji cru e desenha direto, sem carregar imagem de um CDN
+// pra resolver um problema que ele não tem.
+function darDadosDeViagens(){
+  if(!S.user){falarComACasca({tipo:'viagens',pronto:false});return}
+  const visiveis=S.trips.filter(t=>!isNonTrip(t));
+  const{groups,ordem}=regioesComViagem();
+  const regiao=(REGIAO_ATIVA&&groups[REGIAO_ATIVA])?REGIAO_ATIVA:ordem[0];
+  const daRegiao=groups[regiao]||[];
+
+  falarComACasca({tipo:'viagens',pronto:true,dados:{
+    // O placar: os mesmos números dos cards, já contados.
+    paises:Number((document.getElementById('dashPaisesN')||{}).textContent)||0,
+    spots:Number((document.getElementById('statSpots')||{}).textContent)||0,
+    cidades:Number((document.getElementById('statCities')||{}).textContent)||0,
+    viagens:Number((document.getElementById('statTrips')||{}).textContent)||0,
+    inicial:((S.profile&&S.profile.display_name)||(S.user.email||'?')).charAt(0).toUpperCase(),
+    convite:(document.getElementById('dashConvite')||{}).style.display!=='none',
+    regiao:regiao||'',
+    regioes:ordem.map(r=>({nome:r,n:groups[r].length})),
+    viagensDaRegiao:daRegiao.map(t=>{
+      const destino=(t.destinations&&t.destinations[0])||t.name;
+      const el=document.getElementById('tcbg-'+t.id);
+      // A foto da cidade chega depois, em segundo plano. Se já chegou, vai
+      // junto; se não, o nativo desenha o degradê e recebe a foto no próximo
+      // envio, que fillTripPhotos dispara.
+      const cssFoto=el&&el.style.backgroundImage||'';
+      const m=cssFoto.match(/url\(["']?([^"')]+)/);
+      return{
+        id:t.id,
+        nome:t.name||'',
+        meta:tripMetaText(t),
+        pais:destino||'',
+        bandeira:flagFor(destino),
+        foto:m?safeUrl(m[1]):'',
+        cores:coresDoGradiente(destino)
+      };
+    }),
+    vazio:!visiveis.length
+  }});
+}
+
+window.darDadosDeViagens=darDadosDeViagens;
+window.acaoDeViagens=function(acao,valor){
+  if(acao==='regiao'){trocarRegiao(valor);darDadosDeViagens();return}
+  if(acao==='abrir'){openTrip(valor);return}
+  if(acao==='lista'){openList(valor);return}
+  if(acao==='perfil'){goTo('profile');loadProfile();return}
+  if(acao==='nova'){showOv('ov-trip');return}
+  if(acao==='recarregar'){loadDashboard();return}
+};
 
 function cardDeViagem(t){
   const destino=(t.destinations&&t.destinations[0])||t.name;
@@ -6191,6 +6249,9 @@ async function fillTripPhotos(){
     const url=await fetchCityPhoto(dest);
     if(url&&el){el.style.backgroundImage=cssUrl(url)}
   }));
+  // A foto chega DEPOIS do desenho, direto no elemento. Sem este aviso a
+  // tela nativa ficava pra sempre no degradê: ela não enxerga o DOM.
+  darDadosDeViagens();
 }
 // Gradient fallback per destination (shows instantly, photo loads on top)
 function destGradient(name){
@@ -6354,7 +6415,78 @@ function renderEstante(){
       +'<div class="est-lista">'+linhas+'</div></div>';
   }).join('');
   hydrateIcons(box);
+  darDadosDePerfil();
 }
+// ═══ DADOS DA TELA DE PERFIL, PRONTOS PRA DESENHAR ═══
+// Mesma divisão das outras. A estante (seus lugares agrupados por cidade) é
+// o miolo: a ordenação de dentro de cada cidade — avaliado primeiro, nota
+// manda, "quero ir" por último — é regra, e fica aqui.
+function darDadosDePerfil(){
+  if(!S.user){falarComACasca({tipo:'perfil',pronto:false});return}
+  const p=S.profile||{};
+  const spots=allSpotsFlat();
+  const byCity=agruparPorCidade(spots);
+  const paisDe={};
+  spots.forEach(s=>{const c=cityOf(s)||'Outros';if(!paisDe[c])paisDe[c]=s._country||''});
+  const cidades=Object.keys(byCity).filter(c=>byCity[c].length)
+    .sort((a,b)=>byCity[b].length-byCity[a].length||a.localeCompare(b,'pt-BR'));
+
+  const estante=cidades.map(function(c){
+    const lista=byCity[c].slice().sort(function(x,y){
+      const fx=x.status==='been',fy=y.status==='been';
+      if(fx!==fy)return fx?-1:1;
+      return (Number(y.my_rating)||0)-(Number(x.my_rating)||0)
+        ||String(x.name).localeCompare(String(y.name),'pt-BR');
+    });
+    const notas=lista.filter(s=>s.status==='been'&&Number(s.my_rating)>0).map(s=>Number(s.my_rating));
+    const media=notas.length?(notas.reduce((a,b)=>a+b,0)/notas.length):0;
+    const meta=[lista.length+(lista.length===1?' lugar':' lugares')];
+    if(media)meta.push('média '+media.toFixed(1));
+    return{
+      cidade:c,
+      bandeira:paisDe[c]?flagFor(paisDe[c]):'',
+      meta:meta.join(' · '),
+      aberta:!!ESTANTE_ABERTA[c],
+      lugares:lista.map(s=>({
+        id:s.id,
+        nome:s.name||'',
+        categoria:s.category||'',
+        // "0.0" e verdadeiro: sem o teste, lugar sem nota exibia nota zero.
+        nota:(s.status==='been'&&Number(s.my_rating)>0)?fmtRating(s.my_rating):'',
+        quer:s.status!=='been'
+      }))
+    };
+  });
+
+  // Montada do estado, não raspada do DOM: raspar depende de a tela já ter
+  // sido desenhada, e devolvia os nomes grudados, sem separador.
+  const visitados=visitedCountryNames();
+  const paises=visitados.map(n=>flagFor(n)+' '+n).join('  ·  ');
+  falarComACasca({tipo:'perfil',pronto:true,dados:{
+    nome:p.display_name||(S.user.email||'').split('@')[0],
+    username:p.username||'',
+    bio:p.bio||'',
+    inicial:((p.display_name||S.user.email||'?').charAt(0)||'?').toUpperCase(),
+    avatar:safeUrl(p.avatar_url||'')||'',
+    email:S.user.email||'',
+    resumo:spots.length?(spots.length+(spots.length===1?' lugar · ':' lugares · ')
+      +cidades.length+(cidades.length===1?' cidade':' cidades')):'',
+    estante:estante,
+    paisesTexto:paises
+  }});
+}
+
+window.darDadosDePerfil=darDadosDePerfil;
+window.acaoDePerfil=function(acao,valor){
+  if(acao==='cidade'){alternarCidadeDaEstante(valor);darDadosDePerfil();return}
+  if(acao==='lugar'){openPlace(valor,'profile');return}
+  if(acao==='config'){abrirConfig();return}
+  if(acao==='visitado'){openVisitedCountryPicker();return}
+  if(acao==='moro'){openHomeCountryPicker();return}
+  if(acao==='foto'){const i=document.getElementById('avatarFileInput');if(i)i.click();return}
+  if(acao==='recarregar'){loadProfile();return}
+};
+
 function alternarCidadeDaEstante(c){
   ESTANTE_ABERTA[c]=!ESTANTE_ABERTA[c];
   renderEstante();

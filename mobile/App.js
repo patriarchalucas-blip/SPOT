@@ -44,6 +44,8 @@ import { SafeAreaProvider, SafeAreaView, useSafeAreaInsets } from 'react-native-
 import BarraDeAbas from './BarraDeAbas';
 import TelaAmigos from './TelaAmigos';
 import TelaExplorar from './TelaExplorar';
+import TelaViagens from './TelaViagens';
+import TelaPerfil from './TelaPerfil';
 import { StatusBar } from 'expo-status-bar';
 import { WebView } from 'react-native-webview';
 import * as Notifications from 'expo-notifications';
@@ -92,6 +94,15 @@ async function pegarEnderecoDeEntrega() {
 // Trocar por https://meuspott.app quando o domínio estiver apontado.
 const SITE = 'https://spotted-38b.pages.dev';
 
+// Qual componente desenha cada aba. Aba que nao estiver aqui continua vindo
+// do site — e assim que uma tela migra: entra nesta tabela.
+const TELAS = {
+  dashboard: TelaViagens,
+  explore: TelaExplorar,
+  friends: TelaAmigos,
+  profile: TelaPerfil,
+};
+
 const TINTA = '#0b1620';
 const PAPEL = '#EAE7E0';
 const TERRA = '#c1552f';
@@ -136,10 +147,11 @@ export default function App() {
   const [mostrarAbas, setMostrarAbas] = useState(false);
   // Dados da tela de Amigos, mandados pelo site já prontos pra desenhar.
   // null = ainda não chegou; a tela mostra o indicador de carregando.
-  const [dadosAmigos, setDadosAmigos] = useState(null);
-  const [recarregandoAmigos, setRecarregandoAmigos] = useState(false);
-  const [dadosExplorar, setDadosExplorar] = useState(null);
-  const [buscandoExplorar, setBuscandoExplorar] = useState(false);
+  // Dados de cada tela nativa, mandados pelo site ja prontos pra desenhar.
+  // Um mapa so em vez de um par de estados por tela: tela nova passa a mexer
+  // num lugar, nao em cinco.
+  const [dadosDaTela, setDadosDaTela] = useState({});
+  const [ocupada, setOcupada] = useState('');
 
   // Entrega o endereço pro site, que é quem sabe qual conta está logada.
   const entregarEndereco = useCallback(() => {
@@ -212,14 +224,14 @@ export default function App() {
       // frente. Ela reaparece com os dados que já tinha.
       return;
     }
-    if (dados && dados.tipo === 'amigos') {
-      setRecarregandoAmigos(false);
-      if (dados.pronto) setDadosAmigos(dados.dados);
-      return;
-    }
-    if (dados && dados.tipo === 'explorar') {
-      setBuscandoExplorar(false);
-      setDadosExplorar(dados.dados);
+    // amigos | explorar | viagens | perfil -> a aba correspondente
+    const DE_ONDE = { amigos: 'friends', explorar: 'explore', viagens: 'dashboard', perfil: 'profile' };
+    const qual = DE_ONDE[dados && dados.tipo];
+    if (qual) {
+      setOcupada((o) => (o === qual ? '' : o));
+      if (dados.pronto !== false) {
+        setDadosDaTela((d) => ({ ...d, [qual]: dados.dados }));
+      }
     }
   }, []);
 
@@ -229,9 +241,16 @@ export default function App() {
   // na mensagem de volta.
   const trocarDeAba = useCallback((tela) => {
     setAbaAtiva(tela);
-    if (tela === 'friends') setRecarregandoAmigos(true);
-    if (tela === 'explore') {
-      webRef.current?.injectJavaScript('window.darDadosDeExplorar && window.darDadosDeExplorar();true;');
+    // Pede os dados da aba: ela pode nunca ter sido aberta nesta sessao.
+    const PEDIDO = {
+      explore: 'darDadosDeExplorar',
+      dashboard: 'darDadosDeViagens',
+      profile: 'darDadosDePerfil',
+    };
+    if (PEDIDO[tela]) {
+      webRef.current?.injectJavaScript(
+        'window.' + PEDIDO[tela] + ' && window.' + PEDIDO[tela] + '();true;'
+      );
     }
     webRef.current?.injectJavaScript(
       'window.irParaAba && window.irParaAba(' + JSON.stringify(tela) + ');true;'
@@ -240,18 +259,18 @@ export default function App() {
 
   // Toda ação da tela nativa de Amigos é executada PELO SITE: ele tem as
   // regras e a sessão. Aqui só chega o nome da ação.
-  const acaoDeAmigos = useCallback((acao, valor) => {
-    if (acao === 'recarregar') setRecarregandoAmigos(true);
+  // Toda acao de tela nativa e executada PELO SITE: ele tem as regras e a
+  // sessao. Daqui so atravessa o nome da acao e um valor simples.
+  const FUNCAO_DA_ABA = {
+    friends: 'acaoDeAmigos',
+    explore: 'acaoDeExplorar',
+    dashboard: 'acaoDeViagens',
+    profile: 'acaoDePerfil',
+  };
+  const acaoDaTela = useCallback((aba) => (acao, valor) => {
+    if (acao === 'recarregar' || acao === 'buscar') setOcupada(aba);
     webRef.current?.injectJavaScript(
-      'window.acaoDeAmigos && window.acaoDeAmigos(' +
-        JSON.stringify(acao) + ',' + JSON.stringify(valor === undefined ? null : valor) + ');true;'
-    );
-  }, []);
-
-  const acaoDeExplorar = useCallback((acao, valor) => {
-    if (acao === 'buscar') setBuscandoExplorar(true);
-    webRef.current?.injectJavaScript(
-      'window.acaoDeExplorar && window.acaoDeExplorar(' +
+      'window.' + FUNCAO_DA_ABA[aba] + ' && window.' + FUNCAO_DA_ABA[aba] + '(' +
         JSON.stringify(acao) + ',' + JSON.stringify(valor === undefined ? null : valor) + ');true;'
     );
   }, []);
@@ -337,14 +356,16 @@ export default function App() {
           {/* Amigos é nativa: cobre o WebView enquanto a aba está aberta. O
               site continua carregado por baixo — é ele que executa as ações
               e que desenha as telas de detalhe quando a pessoa entra numa. */}
-          {mostrarAbas && abaAtiva === 'friends' ? (
+          {/* As quatro abas sao nativas: a tela cobre o WebView enquanto a
+              aba esta aberta. O site continua carregado por baixo — e ele que
+              executa as acoes e desenha as telas de detalhe. */}
+          {mostrarAbas && TELAS[abaAtiva] ? (
             <View style={StyleSheet.absoluteFill}>
-              <TelaAmigos dados={dadosAmigos} ocupado={recarregandoAmigos} acao={acaoDeAmigos} />
-            </View>
-          ) : null}
-          {mostrarAbas && abaAtiva === 'explore' ? (
-            <View style={StyleSheet.absoluteFill}>
-              <TelaExplorar dados={dadosExplorar} ocupado={buscandoExplorar} acao={acaoDeExplorar} />
+              {React.createElement(TELAS[abaAtiva], {
+                dados: dadosDaTela[abaAtiva],
+                ocupado: ocupada === abaAtiva,
+                acao: acaoDaTela(abaAtiva),
+              })}
             </View>
           ) : null}
           {mostrarAbas ? (
