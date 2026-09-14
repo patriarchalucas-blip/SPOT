@@ -3375,7 +3375,16 @@ async function buscarAmigosNoLugar(termo,tambemCanonico){
     ||String(friendName(a.perfil)).localeCompare(String(friendName(b.perfil)),'pt-BR'));
   return{estado:'ok',grupos:ordenados,amigos:ids.length};
 }
+// "Nenhum dos seus 1 amigo" não existe em português. Um amigo só merece
+// frase própria; o plural só entra quando há plural de verdade.
+function fraseNadaAqui(quantos,lugar){
+  const onde=lugar?(" em "+lugar):"";
+  if(quantos===1)return "Seu amigo no Spot ainda não salvou nada"+onde+".";
+  return "Nenhum dos seus "+quantos+" amigos salvou nada"+onde+".";
+}
 function renderAmigosNoLugar(r,lugar){
+  EXPLORE_AMIGOS=r||{estado:'vazio',grupos:[],amigos:0};
+  darDadosDeExplorar();
   const box=document.getElementById('exploreAmigos');
   if(!box)return;
   const grupos=(r&&r.grupos)||[];
@@ -3385,7 +3394,7 @@ function renderAmigosNoLugar(r,lugar){
     const est=(r&&r.estado)||'vazio';
     if(est==='carregando'){box.innerHTML=aviso('Procurando entre seus amigos...');return}
     if(est==='sem_amigos'){box.innerHTML=aviso('Você ainda não tem amigos no Spot. Quando tiver, os lugares que eles marcaram como visitados aparecem aqui.');return}
-    if(est==='nada_aqui'){box.innerHTML=aviso('Nenhum dos seus '+r.amigos+(r.amigos===1?' amigo salvou':' amigos salvou')+' nada em '+esc(lugar)+'.');return}
+    if(est==='nada_aqui'){box.innerHTML=aviso(esc(fraseNadaAqui(r.amigos,lugar)));return}
     box.innerHTML='';return;
   }
   const foram=grupos.filter(g=>g.foram>0).length;
@@ -3623,7 +3632,75 @@ async function runExplore(){
 // avaliações" — informação de diretório, não de descoberta. Quem está
 // escolhendo onde ir decide pela foto e pelo nome, não pela posição no
 // ranking.
+// ═══ DADOS DA TELA DE EXPLORAR, PRONTOS PRA DESENHAR ═══
+// Mesma divisão da tela de Amigos: aqui ficam as regras (o que o Google
+// devolveu, quais amigos já foram, o que já está na sua lista), lá fica só o
+// desenho. Ver darDadosDeAmigos pro raciocínio inteiro.
+let EXPLORE_AMIGOS={estado:'vazio',grupos:[],amigos:0};
+
+function darDadosDeExplorar(){
+  const itens=(EXPLORE.items||[]).map((p,i)=>{
+    const local=[p.city,p.country].filter(Boolean).join(' · ');
+    return{
+      i:i,
+      lugar:p.name||'',
+      local:local,
+      // fmtRating(0) devolve "0.0", que é verdadeiro: sem este teste o card
+      // exibia "0.0 ★", que parece nota péssima e não ausência de nota.
+      nota:Number(p.rating)>0?fmtRating(p.rating):'',
+      avaliacoes:Number(p.count)||0,
+      foto:safeUrl(fotoNaLargura(semChaveDoPlaces(p.photo_url),760))||'',
+      cores:coresDoGradiente(p.name||local),
+      // Exigência dos termos do Google: a autoria aparece junto da foto.
+      autor:(p.photo_author&&p.photo_author.nome)||''
+    };
+  });
+
+  // Os três casos vazios dizem coisas diferentes. Devolver a mesma tela em
+  // branco pros três fazia a busca parecer quebrada mesmo tendo funcionado.
+  const r=EXPLORE_AMIGOS||{};
+  const grupos=(r.grupos||[]).map((g,i)=>({
+    i:i,
+    nome:friendName(g.perfil),
+    iniciais:initials(friendName(g.perfil)),
+    foram:g.foram||0,
+    querem:g.querem||0
+  }));
+  let avisoAmigos='';
+  if(!grupos.length){
+    if(r.estado==='carregando')avisoAmigos='Procurando entre seus amigos...';
+    else if(r.estado==='sem_amigos')avisoAmigos='Você ainda não tem amigos no Spot. Quando tiver, os lugares que eles marcaram como visitados aparecem aqui.';
+    else if(r.estado==='nada_aqui')avisoAmigos=fraseNadaAqui(r.amigos,EXPLORE.city||'');
+  }
+
+  falarComACasca({tipo:'explorar',dados:{
+    cidade:EXPLORE.city||'',
+    categoria:EXPLORE.cat||'food',
+    chips:[{id:'food',rotulo:'Comer'},{id:'hotel',rotulo:'Ficar'},{id:'experience',rotulo:'Experiências'}],
+    itens:itens,
+    amigos:grupos,
+    avisoAmigos:avisoAmigos,
+    // "Powered by Google" é obrigatório quando dado do Places aparece fora de
+    // um mapa do Google — é o caso desta lista inteira.
+    creditoGoogle:itens.length>0
+  }});
+}
+
+window.darDadosDeExplorar=darDadosDeExplorar;
+window.acaoDeExplorar=function(acao,valor){
+  if(acao==='categoria'){setExploreCat(valor);darDadosDeExplorar();return}
+  if(acao==='buscar'){
+    const campo=document.getElementById('exploreCitySearch');
+    if(campo)campo.value=String(valor||'');
+    runExplore();
+    return;
+  }
+  if(acao==='salvar'){addExploreSpot(Number(valor));return}
+  if(acao==='amigo'){abrirAmigoNoLugar(Number(valor));return}
+};
+
 function renderExploreResults(){
+  darDadosDeExplorar();
   const body=document.getElementById('exploreBody');
   body.innerHTML=EXPLORE.items.map((p,i)=>{
     const foto=safeUrl(fotoNaLargura(semChaveDoPlaces(p.photo_url),760));

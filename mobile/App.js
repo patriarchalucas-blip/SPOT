@@ -43,6 +43,7 @@ import {
 import { SafeAreaProvider, SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import BarraDeAbas from './BarraDeAbas';
 import TelaAmigos from './TelaAmigos';
+import TelaExplorar from './TelaExplorar';
 import { StatusBar } from 'expo-status-bar';
 import { WebView } from 'react-native-webview';
 import * as Notifications from 'expo-notifications';
@@ -137,6 +138,8 @@ export default function App() {
   // null = ainda não chegou; a tela mostra o indicador de carregando.
   const [dadosAmigos, setDadosAmigos] = useState(null);
   const [recarregandoAmigos, setRecarregandoAmigos] = useState(false);
+  const [dadosExplorar, setDadosExplorar] = useState(null);
+  const [buscandoExplorar, setBuscandoExplorar] = useState(false);
 
   // Entrega o endereço pro site, que é quem sabe qual conta está logada.
   const entregarEndereco = useCallback(() => {
@@ -212,6 +215,11 @@ export default function App() {
     if (dados && dados.tipo === 'amigos') {
       setRecarregandoAmigos(false);
       if (dados.pronto) setDadosAmigos(dados.dados);
+      return;
+    }
+    if (dados && dados.tipo === 'explorar') {
+      setBuscandoExplorar(false);
+      setDadosExplorar(dados.dados);
     }
   }, []);
 
@@ -222,6 +230,9 @@ export default function App() {
   const trocarDeAba = useCallback((tela) => {
     setAbaAtiva(tela);
     if (tela === 'friends') setRecarregandoAmigos(true);
+    if (tela === 'explore') {
+      webRef.current?.injectJavaScript('window.darDadosDeExplorar && window.darDadosDeExplorar();true;');
+    }
     webRef.current?.injectJavaScript(
       'window.irParaAba && window.irParaAba(' + JSON.stringify(tela) + ');true;'
     );
@@ -233,6 +244,14 @@ export default function App() {
     if (acao === 'recarregar') setRecarregandoAmigos(true);
     webRef.current?.injectJavaScript(
       'window.acaoDeAmigos && window.acaoDeAmigos(' +
+        JSON.stringify(acao) + ',' + JSON.stringify(valor === undefined ? null : valor) + ');true;'
+    );
+  }, []);
+
+  const acaoDeExplorar = useCallback((acao, valor) => {
+    if (acao === 'buscar') setBuscandoExplorar(true);
+    webRef.current?.injectJavaScript(
+      'window.acaoDeExplorar && window.acaoDeExplorar(' +
         JSON.stringify(acao) + ',' + JSON.stringify(valor === undefined ? null : valor) + ');true;'
     );
   }, []);
@@ -321,6 +340,11 @@ export default function App() {
           {mostrarAbas && abaAtiva === 'friends' ? (
             <View style={StyleSheet.absoluteFill}>
               <TelaAmigos dados={dadosAmigos} ocupado={recarregandoAmigos} acao={acaoDeAmigos} />
+            </View>
+          ) : null}
+          {mostrarAbas && abaAtiva === 'explore' ? (
+            <View style={StyleSheet.absoluteFill}>
+              <TelaExplorar dados={dadosExplorar} ocupado={buscandoExplorar} acao={acaoDeExplorar} />
             </View>
           ) : null}
           {mostrarAbas ? (
