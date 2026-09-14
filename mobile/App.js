@@ -42,6 +42,7 @@ import {
 } from 'react-native';
 import { SafeAreaProvider, SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import BarraDeAbas from './BarraDeAbas';
+import TelaAmigos from './TelaAmigos';
 import { StatusBar } from 'expo-status-bar';
 import { WebView } from 'react-native-webview';
 import * as Notifications from 'expo-notifications';
@@ -132,6 +133,10 @@ export default function App() {
   // por aqui. A barra reflete o app, nunca o contrário.
   const [abaAtiva, setAbaAtiva] = useState('dashboard');
   const [mostrarAbas, setMostrarAbas] = useState(false);
+  // Dados da tela de Amigos, mandados pelo site já prontos pra desenhar.
+  // null = ainda não chegou; a tela mostra o indicador de carregando.
+  const [dadosAmigos, setDadosAmigos] = useState(null);
+  const [recarregandoAmigos, setRecarregandoAmigos] = useState(false);
 
   // Entrega o endereço pro site, que é quem sabe qual conta está logada.
   const entregarEndereco = useCallback(() => {
@@ -199,6 +204,14 @@ export default function App() {
     if (dados && dados.tipo === 'tela') {
       if (typeof dados.aba === 'string') setAbaAtiva(dados.aba);
       setMostrarAbas(!!dados.comAbas);
+      // Saiu de Amigos pra uma tela de detalhe (perfil de amigo, ficha de
+      // lugar): quem desenha volta a ser o site, então a tela nativa sai da
+      // frente. Ela reaparece com os dados que já tinha.
+      return;
+    }
+    if (dados && dados.tipo === 'amigos') {
+      setRecarregandoAmigos(false);
+      if (dados.pronto) setDadosAmigos(dados.dados);
     }
   }, []);
 
@@ -208,8 +221,19 @@ export default function App() {
   // na mensagem de volta.
   const trocarDeAba = useCallback((tela) => {
     setAbaAtiva(tela);
+    if (tela === 'friends') setRecarregandoAmigos(true);
     webRef.current?.injectJavaScript(
       'window.irParaAba && window.irParaAba(' + JSON.stringify(tela) + ');true;'
+    );
+  }, []);
+
+  // Toda ação da tela nativa de Amigos é executada PELO SITE: ele tem as
+  // regras e a sessão. Aqui só chega o nome da ação.
+  const acaoDeAmigos = useCallback((acao, valor) => {
+    if (acao === 'recarregar') setRecarregandoAmigos(true);
+    webRef.current?.injectJavaScript(
+      'window.acaoDeAmigos && window.acaoDeAmigos(' +
+        JSON.stringify(acao) + ',' + JSON.stringify(valor === undefined ? null : valor) + ');true;'
     );
   }, []);
 
@@ -291,6 +315,14 @@ export default function App() {
               }
             }}
           />
+          {/* Amigos é nativa: cobre o WebView enquanto a aba está aberta. O
+              site continua carregado por baixo — é ele que executa as ações
+              e que desenha as telas de detalhe quando a pessoa entra numa. */}
+          {mostrarAbas && abaAtiva === 'friends' ? (
+            <View style={StyleSheet.absoluteFill}>
+              <TelaAmigos dados={dadosAmigos} ocupado={recarregandoAmigos} acao={acaoDeAmigos} />
+            </View>
+          ) : null}
           {mostrarAbas ? (
             <BarraDeAbas ativa={abaAtiva} aoTocar={trocarDeAba} margemDeBaixo={margem.bottom} />
           ) : null}

@@ -6710,7 +6710,12 @@ async function loadFriends(){
   // nem como pedido recebido. Bloquear já desfaz a amizade, mas a lista pode
   // estar em memória de antes, e um pedido novo pode chegar depois.
   await carregarBloqueios();
-  const friendIds=accepted.map(r=>r.follower_id===uid?r.following_id:r.follower_id).filter(id=>!estaBloqueado(id));
+  // Sem duplicata: a amizade pode ter DUAS linhas aceitas quando as duas
+  // pessoas mandam pedido uma pra outra antes de qualquer uma aceitar. Sem
+  // isto o amigo aparece duas vezes na lista e duas vezes no feed.
+  const friendIds=[...new Set(
+    accepted.map(r=>r.follower_id===uid?r.following_id:r.follower_id)
+  )].filter(id=>!estaBloqueado(id));
   const incomingIds=incoming.map(r=>r.follower_id).filter(id=>!estaBloqueado(id));
   const outgoingIds=outgoing.map(r=>r.following_id).filter(id=>!estaBloqueado(id));
   const pmap={};
@@ -6747,7 +6752,15 @@ async function loadFriends(){
     trips.forEach(t=>{
       const p=pmap[t.user_id];const name=friendName(p);
       const verb=t.status==='done'?'marcou <b>'+esc(t.name)+'</b> como visitado':'está planejando uma viagem para <b>'+esc(t.name)+'</b>';
-      feedItems.push({tipo:'linha',user_id:t.user_id,created_at:t.created_at,html:'<b>'+esc(name)+'</b> '+verb});
+      feedItems.push({tipo:'linha',user_id:t.user_id,created_at:t.created_at,
+        html:'<b>'+esc(name)+'</b> '+verb,
+        // Mesmo texto em pedaços, pra tela nativa desenhar sem receber HTML.
+        // Guardado junto em vez de no lugar do html: a tela web continua
+        // usando o html e nada muda pra quem abre pelo navegador.
+        partes:[{t:name,forte:true},
+                {t:t.status==='done'?' marcou ':' está planejando uma viagem para '},
+                {t:t.name||'',forte:true},
+                {t:t.status==='done'?' como visitado':''}]});
     });
     // A visita deixa de ser uma linha de texto e passa a carregar o spot
     // inteiro: foto, nota, avaliação. O feed era um registro de eventos
@@ -6771,7 +6784,10 @@ async function loadFriends(){
       const onde=nomeDoSpot[c.spot_id]?' em <b>'+esc(nomeDoSpot[c.spot_id])+'</b>':'';
       const trecho=String(c.body||'').slice(0,60)+(String(c.body||'').length>60?'…':'');
       feedItems.push({tipo:'linha',user_id:c.user_id,created_at:c.created_at,
-        html:'<b>'+esc(name)+'</b> comentou'+onde+': '+esc(trecho)});
+        html:'<b>'+esc(name)+'</b> comentou'+onde+': '+esc(trecho),
+        partes:[{t:name,forte:true},{t:' comentou'},
+                ...(nomeDoSpot[c.spot_id]?[{t:' em '},{t:nomeDoSpot[c.spot_id],forte:true}]:[]),
+                {t:': '+trecho}]});
     });
     feedItems.sort((a,b)=>new Date(b.created_at)-new Date(a.created_at));
     feedItems=feedItems.slice(0,25);
@@ -6788,6 +6804,93 @@ async function loadFriends(){
   if(friendsTab==='recente')marcarFeedComoVisto();
   renderFriendsTab();
 }
+// ═══ DADOS DA TELA DE AMIGOS, PRONTOS PRA DESENHAR ═══
+//
+// A tela de Amigos em nativo desenha a partir daqui. O que fica de cada lado:
+//
+//   AQUI  — as REGRAS: quem está bloqueado, o que entra no feed, em que
+//           ordem, o que já está na sua lista, como o nome é escolhido.
+//   LÁ    — só o DESENHO.
+//
+// Por que não duplicar as regras em nativo: elas são sutis (bloqueio vale em
+// toda superfície, comentário chega por duas consultas e não pode duplicar,
+// cidade é canonizada antes de comparar) e já estão certas aqui. Duplicar sem
+// conseguir rodar seria a forma mais rápida de criar duas versões do app que
+// discordam uma da outra.
+//
+// Nada de HTML atravessa: o nativo recebe texto e números. Isso não é
+// detalhe — HTML montado aqui e injetado lá seria uma porta de execução de
+// texto de outra pessoa dentro do app.
+
+// destGradient devolve um linear-gradient de CSS; o nativo precisa das duas
+// cores soltas pra desenhar o mesmo fundo.
+function coresDoGradiente(nome){
+  const g=destGradient(nome)||'';
+  const achadas=g.match(/#[0-9a-f]{3,8}/gi)||[];
+  return achadas.length>=2?[achadas[0],achadas[achadas.length-1]]:['#16232A','#0B1620'];
+}
+
+function pessoaPraTela(id,pmap){
+  const p=pmap&&pmap[id];
+  const nome=friendName(p);
+  return{id:id,nome:nome,iniciais:initials(nome),username:(p&&p.username)||''};
+}
+
+function darDadosDeAmigos(){
+  const d=FRIENDS_DATA;
+  if(!d){falarComACasca({tipo:'amigos',pronto:false});return}
+  const{friendIds,pmap,feedItems}=d;
+  const incoming=(d.incoming||[]).filter(r=>!estaBloqueado(r.follower_id));
+  const outgoing=(d.outgoing||[]).filter(r=>!estaBloqueado(r.following_id));
+
+  // Mesma regra da tela web: "Pedidos" só existe quando há pedido — aba
+  // permanentemente vazia é ruído.
+  const novas=friendsTab==='recente'?0:novidadesNoFeed(feedItems);
+  const abas=[{id:'recente',rotulo:'Recente',n:novas},{id:'amigos',rotulo:'Amigos',n:0}];
+  if(incoming.length||friendsTab==='pedidos')abas.push({id:'pedidos',rotulo:'Pedidos',n:incoming.length});
+
+  const feed=(feedItems||[]).map((it,i)=>{
+    const quem=pessoaPraTela(it.user_id,pmap);
+    const base={i:i,quem:quem,quando:timeAgo(it.created_at)};
+    if(it.tipo!=='visita')return Object.assign(base,{tipo:'linha',partes:it.partes||[{t:quem.nome,forte:true}]});
+    const sp=it.spot;
+    const cidade=cityOf(sp)||sp.city||'';
+    return Object.assign(base,{
+      tipo:'visita',
+      lugar:sp.name||'',
+      rotulo:[sp.place_type||catLabel(sp.category),cidade].filter(Boolean).join(' · '),
+      foto:safeUrl(fotoNaLargura(semChaveDoPlaces(sp.photo_url),760))||'',
+      cores:coresDoGradiente(sp.name||cidade),
+      nota:String(sp.my_note||'').trim(),
+      estrelas:Math.round(Number(sp.my_rating)||0),
+      salvo:jaNaMinhaLista(sp)
+    });
+  });
+
+  falarComACasca({tipo:'amigos',pronto:true,dados:{
+    aba:friendsTab,
+    abas:abas,
+    feed:feed,
+    recebidos:incoming.map(r=>Object.assign({pedido:r.id},pessoaPraTela(r.follower_id,pmap))),
+    enviados:outgoing.map(r=>Object.assign({pedido:r.id},pessoaPraTela(r.following_id,pmap))),
+    amigos:(friendIds||[]).map(fid=>pessoaPraTela(fid,pmap))
+  }});
+}
+
+// Ações que a tela nativa dispara. Cada uma faz exatamente o que o toque na
+// versão web faz, e termina mandando os dados atualizados de volta.
+window.acaoDeAmigos=function(acao,valor){
+  if(acao==='aba'){switchFriendsTab(valor);darDadosDeAmigos();return}
+  if(acao==='recarregar'){loadFriends();return}
+  if(acao==='adicionar'){abrirAddFriend();return}
+  if(acao==='perfil'){openFriend(valor);return}
+  if(acao==='abrirVisita'){abrirVisitaDoFeed(Number(valor));return}
+  if(acao==='salvar'){salvarDoFeed(Number(valor));return}
+  if(acao==='aceitar'){respondRequest(valor,true);return}
+  if(acao==='recusar'){respondRequest(valor,false);return}
+  if(acao==='cancelar'){cancelRequest(valor);return}
+};
+
 // ═══ CARD DE VISITA NO FEED ═══
 //
 // O protótipo tinha só o caso feliz. O app real tem spot sem foto, sem nota e
@@ -6982,6 +7085,10 @@ function renderFriendsTab(){
   }
   h+='<div style="height:40px"></div>';
   c.innerHTML=h;
+  // A tela nativa se atualiza pelo mesmo gancho que redesenha a web: assim
+  // qualquer acao (aceitar pedido, salvar do feed, trocar de aba) chega nos
+  // dois lados sem precisar lembrar de avisar em cada lugar.
+  darDadosDeAmigos();
 }
 // ═══ PERFIL DE AMIGO (só leitura) ═══
 // As políticas da 008 já liberam trips/spots de quem é amigo ACEITO, então
