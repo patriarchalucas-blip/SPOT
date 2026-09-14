@@ -48,7 +48,11 @@
 <script>
   // Trocar a cada vez que o servidor de desenvolvimento sobe.
   var ENDERECO = 'exp://obs4vda-anonymous-8081.exp.direct';
-  document.getElementById('ir').href = ENDERECO;
+  // Safari recusa abrir exp:// de um link comum ('endereço inválido').
+  // O Expo tem um redirecionador oficial em https que entra no Expo Go por
+  // link universal — é o caminho que o iPhone aceita.
+  var PONTE = 'https://expo.dev/--/to-exp/' + encodeURIComponent(ENDERECO);
+  document.getElementById('ir').href = PONTE;
   document.getElementById('end').textContent = ENDERECO;
 </script>
 </body>
