@@ -1,3 +1,6 @@
 _dev-previews/
 .claude/
 .DS_Store
+node_modules/
+.expo/
+*.log
