@@ -16,7 +16,7 @@ App pessoal de viagem — "Letterboxd para viagem". Salva lugares (restaurante/h
 - **Backend:** Supabase (auth + Postgres via REST direto — **nunca usar o SDK JS pra writes**, tem bug de schema cache que trava infinito; toda a camada de dados usa `fetch` direto com `apikey`+`Authorization: Bearer <token>`).
 - **Deploy:** Cloudflare Pages, auto-deploy a cada push no branch `main` do GitHub.
 - **Repo:** `github.com/patriarchalucas-blip/SPOT`
-- **Site:** `meuspot.app` (Lucas quer trocar por domínio próprio via Cloudflare Registrar — ainda não decidiu o nome)
+- **Site:** `meuspot.app` — domínio próprio, comprado no Cloudflare Registrar em 13/09/2026. O endereço antigo (`spotted-38b.pages.dev`) continua no ar em paralelo e não deve ser desligado: é o que estava gravado em versões anteriores.
 
 ### Credenciais (já em uso, client-side — ver seção "Dívida técnica")
 ```
@@ -97,6 +97,36 @@ Motivo da existência: o visual original (fundo creme `#f4ede1` + serifada de al
 - **Domínio próprio** (Cloudflare Registrar) — decidido que ele quer, nome ainda não escolhido.
 - **Placar entre amigos** (gamificação) — Lucas achou "fraco", não vale reintroduzir sem uma abordagem nova.
 - **Importar notas soltas via IA** — colar bagunçado (bloco de notas/WhatsApp) e a IA separa em lugares estruturados. Mesma peça de infra do recap/explorar.
+
+## Email de autenticação (Resend)
+
+O Supabase manda confirmação de cadastro e recuperação de senha por SMTP
+próprio, configurado em Authentication → Emails:
+
+\
+**Por que isto existe:** o remetente embutido do Supabase entrega **2 emails
+por hora no projeto inteiro** e é documentado como não sendo pra produção. Na
+prática, ninguém conseguia criar conta no Spot — o email de confirmação
+simplesmente não chegava, e o sintoma parecia problema do usuário.
+
+**Pegadinha que já mordeu:** o Resend verifica o domínio RAIZ ().
+O subdomínio  que aparece no DNS é só o caminho de retorno
+das mensagens — mandar **de**  devolve
+, que não diz nada sobre
+a causa.
+
+**Os dois tetos, e qual aperta primeiro:**
+
+| onde | limite |
+|---|---|
+| Supabase → Rate Limits → sending emails | 100/hora (configurável) |
+| **Resend plano grátis** | **100 por DIA**, 3.000/mês |
+
+O do Resend é o que aperta. Se estourar, o plano Pro custa US /mês, dá
+50.000 e acaba com o limite diário — dois minutos, sem tocar em código.
+
+**Login com Google não gasta email nenhum.** Só cadastro por email/senha e
+recuperação de senha consomem a cota, e os dois dividem o mesmo bolo.
 
 ## Estado do banco (migrações aplicadas)
 
