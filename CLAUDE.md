@@ -101,32 +101,43 @@ Motivo da existência: o visual original (fundo creme `#f4ede1` + serifada de al
 ## Email de autenticação (Resend)
 
 O Supabase manda confirmação de cadastro e recuperação de senha por SMTP
-próprio, configurado em Authentication → Emails:
+próprio, configurado em **Authentication → Emails** — não em Settings; a tela
+mudou de lugar e procurar por "SMTP Settings" não acha.
 
-\
+```
+Host:     smtp.resend.com    Port: 465
+Username: resend             (a palavra literal, não um email)
+Password: a chave do Resend, começa com re_
+De:       nao-responda@meuspot.app
+```
+
 **Por que isto existe:** o remetente embutido do Supabase entrega **2 emails
 por hora no projeto inteiro** e é documentado como não sendo pra produção. Na
 prática, ninguém conseguia criar conta no Spot — o email de confirmação
 simplesmente não chegava, e o sintoma parecia problema do usuário.
 
-**Pegadinha que já mordeu:** o Resend verifica o domínio RAIZ ().
-O subdomínio  que aparece no DNS é só o caminho de retorno
-das mensagens — mandar **de**  devolve
-, que não diz nada sobre
-a causa.
+**Pegadinha que já mordeu:** o Resend verifica o domínio RAIZ (`meuspot.app`).
+O subdomínio `send.meuspot.app` que aparece no DNS é só o caminho de retorno
+das mensagens. Mandar **de** `@send.meuspot.app` devolve
+`unexpected_failure: Error sending confirmation email` — erro que não diz nada
+sobre a causa e custou uma rodada inteira pra achar.
 
 **Os dois tetos, e qual aperta primeiro:**
 
 | onde | limite |
 |---|---|
-| Supabase → Rate Limits → sending emails | 100/hora (configurável) |
+| Supabase → Rate Limits → sending emails | 100/hora (configurável, de graça) |
 | **Resend plano grátis** | **100 por DIA**, 3.000/mês |
 
-O do Resend é o que aperta. Se estourar, o plano Pro custa US /mês, dá
+O do Resend é o que aperta. Se estourar, o plano Pro custa US$ 20/mês, dá
 50.000 e acaba com o limite diário — dois minutos, sem tocar em código.
 
 **Login com Google não gasta email nenhum.** Só cadastro por email/senha e
 recuperação de senha consomem a cota, e os dois dividem o mesmo bolo.
+
+**Como testar sem pedir nada ao Lucas:** um POST em `/auth/v1/signup` com a
+anon key devolve **200 + `confirmation_sent_at`** quando o SMTP está de pé, e
+**500 `unexpected_failure`** quando não está.
 
 ## Estado do banco (migrações aplicadas)
 
