@@ -177,6 +177,12 @@ function Conteudo() {
   // num lugar, nao em cinco.
   const [dadosDaTela, setDadosDaTela] = useState({});
   const [ocupada, setOcupada] = useState('');
+  // Aviso e faixa de sem-conexao: os dois existem no site, mas a tela nativa
+  // fica NA FRENTE dele. Todo aviso escrito la era invisivel quando a acao
+  // partia de uma aba nativa — inclusive os de erro, que viravam falha
+  // silenciosa: a pessoa toca, nada acontece, e nada explica.
+  const [aviso, setAviso] = useState(null);
+  const [semSinal, setSemSinal] = useState(false);
 
   // Entrega o endereço pro site, que é quem sabe qual conta está logada.
   const entregarEndereco = useCallback(() => {
@@ -246,6 +252,14 @@ function Conteudo() {
     // embutida (politica 'use secure browsers'), e a nossa e exatamente isso.
     // openAuthSessionAsync usa a folha de autenticacao do iOS, que eles
     // aceitam, e volta sozinha quando o endereco spot://auth aparece.
+    if (dados && dados.tipo === 'aviso') {
+      setAviso({ titulo: dados.titulo || '', texto: dados.texto || '', erro: !!dados.erro });
+      return;
+    }
+    if (dados && dados.tipo === 'offline') {
+      setSemSinal(!!dados.semRede);
+      return;
+    }
     if (dados && dados.tipo === 'login-google' && typeof dados.url === 'string') {
       WebBrowser.openAuthSessionAsync(dados.url, VOLTA_DO_LOGIN)
         .then((r) => {
@@ -424,6 +438,16 @@ function Conteudo() {
           {mostrarAbas ? (
             <BarraDeAbas ativa={abaAtiva} aoTocar={trocarDeAba} margemDeBaixo={margem.bottom} />
           ) : null}
+          {/* Por cima de TUDO, inclusive das telas nativas: e o unico jeito
+              de um aviso do site chegar em quem esta numa aba nativa. */}
+          {semSinal ? (
+            <View style={estilo.faixaSemSinal} pointerEvents="none">
+              <Text style={estilo.faixaSemSinalTxt}>
+                Sem conexao — mostrando o que esta salvo no aparelho
+              </Text>
+            </View>
+          ) : null}
+          {aviso ? <Aviso aviso={aviso} aoSumir={() => setAviso(null)} /> : null}
         </View>
         {carregando ? (
           <View style={estilo.carregando} pointerEvents="none">
@@ -435,8 +459,53 @@ function Conteudo() {
   );
 }
 
+// O aviso some sozinho, como o do site: 3,5 segundos. O key no elemento pai
+// faz um aviso novo reiniciar a contagem em vez de herdar a do anterior.
+function Aviso({ aviso, aoSumir }) {
+  useEffect(() => {
+    const t = setTimeout(aoSumir, 3500);
+    return () => clearTimeout(t);
+  }, [aviso, aoSumir]);
+  return (
+    <View style={estilo.aviso} pointerEvents="none">
+      <View style={[estilo.avisoCaixa, aviso.erro && estilo.avisoErro]}>
+        <Text style={estilo.avisoTitulo}>{aviso.titulo}</Text>
+        {aviso.texto ? <Text style={estilo.avisoTexto}>{aviso.texto}</Text> : null}
+      </View>
+    </View>
+  );
+}
+
 const estilo = StyleSheet.create({
   fundo: { flex: 1, backgroundColor: TINTA },
+  faixaSemSinal: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    backgroundColor: '#A8342C',
+    paddingVertical: 7,
+    paddingHorizontal: 16,
+  },
+  faixaSemSinalTxt: { color: '#fff', fontSize: 12, textAlign: 'center' },
+  aviso: { position: 'absolute', left: 0, right: 0, bottom: 96, alignItems: 'center', paddingHorizontal: 20 },
+  avisoCaixa: {
+    maxWidth: 420,
+    backgroundColor: '#16232A',
+    borderWidth: StyleSheet.hairlineWidth,
+    borderColor: 'rgba(234,231,224,0.15)',
+    borderRadius: 14,
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    shadowColor: '#000',
+    shadowOpacity: 0.35,
+    shadowRadius: 14,
+    shadowOffset: { width: 0, height: 6 },
+    elevation: 6,
+  },
+  avisoErro: { borderColor: 'rgba(168,52,44,0.6)' },
+  avisoTitulo: { color: '#EAE7E0', fontSize: 14, fontWeight: '600', textAlign: 'center' },
+  avisoTexto: { color: '#B4BCBF', fontSize: 12.5, marginTop: 3, textAlign: 'center' },
   // Empilha a barra por cima do WebView em vez de dividir a tela: o site
   // continua ocupando a altura inteira e a barra flutua, exatamente como a
   // .bottom-nav do CSS faz hoje.

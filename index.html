@@ -1792,7 +1792,7 @@ function openCropper(file,mode,onConfirm){
     applyCropTransform();
   };
   img.src=url;
-  document.getElementById('cropperOverlay').classList.add('show');
+  document.getElementById('cropperOverlay').classList.add('show');avisarSeTemJanela();
 }
 function applyCropTransform(){
   const img=document.getElementById('cropperImg');
@@ -1818,7 +1818,7 @@ function cropperMove(e){
 }
 function cropperUp(){CROP.dragging=false}
 function closeCropper(){
-  document.getElementById('cropperOverlay').classList.remove('show');
+  document.getElementById('cropperOverlay').classList.remove('show');avisarSeTemJanela();
   const img=document.getElementById('cropperImg');
   if(img.src)URL.revokeObjectURL(img.src);
   img.removeAttribute('src');img.onload=null;
@@ -2324,7 +2324,9 @@ function avisarSeTemJanela(){
   if(!naCasca())return;
   const atual=document.querySelector('.screen.active');
   if(!atual)return;
-  if(document.querySelector('.overlay.show')){
+  // O recorte de foto tem classe propria, nao .overlay: sem ele aqui, tocar
+  // no avatar abria o recorte ESCONDIDO atras da tela nativa.
+  if(document.querySelector('.overlay.show,.cropper-overlay.show')){
     falarComACasca({tipo:'tela',aba:atual.id,comAbas:false});
     return;
   }
@@ -2456,6 +2458,9 @@ function limparDadosLocais(){
 // toast: toast some em 3 segundos e a pessoa que abriu o app no avião precisa
 // continuar sabendo que o que está vendo pode estar velho.
 function pintarAvisoOffline(){
+  // Mesma razão do toast: a faixa fica atrás da tela nativa, então a casca
+  // precisa saber pra desenhar a dela.
+  falarComACasca({tipo:'offline',semRede:!navigator.onLine});
   const jaTem=document.getElementById('avisoOffline');
   if(navigator.onLine){if(jaTem)jaTem.remove();return}
   if(jaTem)return;
@@ -2527,9 +2532,11 @@ async function loadDashboard(){
     if(!navigator.onLine){
       if(!S.trips.length)usarDadosLocais();
       pintarAvisoOffline();
+      darDadosDeViagens();
       return;
     }
     toast('Não carregou','Confere a conexão. O que está na tela pode estar desatualizado.','alert');
+    darDadosDeViagens();
     return;
   }
   S.trips=trips||[];
@@ -2663,7 +2670,10 @@ function aoRolarFilme(){
 function renderTrips(){
   const c=document.getElementById('tripsContainer');
   const visibleTrips=S.trips.filter(t=>!isNonTrip(t));
-  if(!visibleTrips.length){c.innerHTML='<div class="empty-state"><div class="ei">'+icon('suitcase')+'</div><h3>Nenhuma viagem ainda</h3><p>Toca no + para criar sua primeira viagem</p></div>';return}
+  // Conta sem viagem: a saida antecipada daqui era a unica no caminho de quem
+  // acabou de criar conta, e deixava a tela nativa girando pra sempre — a
+  // pessoa nao chegava nem no botao de criar a primeira viagem.
+  if(!visibleTrips.length){c.innerHTML='<div class="empty-state"><div class="ei">'+icon('suitcase')+'</div><h3>Nenhuma viagem ainda</h3><p>Toca no + para criar sua primeira viagem</p></div>';darDadosDeViagens();return}
 
   const{groups,ordem}=regioesComViagem();
   // Continente que sumiu (viagem apagada) não pode deixar a tela vazia.
@@ -6594,6 +6604,10 @@ function renderEstante(){
   if(!spots.length){
     box.innerHTML='<div class="amg-aviso">Os lugares que você salvar aparecem aqui, separados por cidade.</div>';
     if(resumo)resumo.textContent='';
+    // Quem so marcou pais no mapa cai exatamente aqui — e e justamente quem
+    // usa o X pra tirar pais. Sem este aviso o pais continuava na tela
+    // depois de tirado, e o girar de atualizar nao parava mais.
+    darDadosDePerfil();
     return;
   }
   const byCity=agruparPorCidade(spots);
@@ -7036,6 +7050,11 @@ function toast(t,m,ic){
   document.getElementById('toastTitle').textContent=t;
   document.getElementById('toastMsg').textContent=m;
   el.classList.add('show');setTimeout(()=>el.classList.remove('show'),3500);
+  // A tela nativa fica NA FRENTE desta página. Todo aviso escrito aqui era
+  // invisível quando a ação partia de uma das quatro abas nativas — e os que
+  // mais importam são os de erro ("Não consegui tirar agora"), que viravam
+  // falha silenciosa: a pessoa tocava, nada acontecia, e nada explicava.
+  falarComACasca({tipo:'aviso',titulo:String(t||''),texto:String(m||''),erro:/erro|não |nao /i.test(String(t||''))});
 }
 
 // ═══ LOGIN BACKGROUNDS (real city photos via Google Places + gradient fallback) ═══
@@ -8269,6 +8288,9 @@ function onAvatarFileChosen(input){
     S.profile=S.profile||{};S.profile.avatar_url=url;
     const name=document.getElementById('profName').textContent;
     applyAvatar('profAvatar',name,url);applyAvatar('dashAvatar',name,url);
+    // As telas nativas nao leem o DOM: sem estes dois avisos o app continuava
+    // mostrando a foto antiga (ou a inicial) depois de dizer que deu certo.
+    darDadosDePerfil();darDadosDeViagens();
     toast('Foto atualizada','','check');
   });
 }
