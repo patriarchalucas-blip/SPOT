@@ -5472,12 +5472,19 @@ function renderComentarios(spotId,alvo,donoDoSpot){
       +'<div class="coment-txt">'+esc(c.body)+'</div></div></div>';
   }).join('');
 
+  // No SEU próprio spot, escrever comentário seria um segundo lugar pra dizer
+  // o que a sua nota já diz. Ali o campo só faz sentido pra RESPONDER alguém:
+  // aparece quando alguém comentou, e o bloco inteiro some quando ninguém
+  // comentou. No spot dos outros nada muda.
+  const meuSpot=!!meu&&donoDoSpot===meu;
+  if(meuSpot&&!lista.length){box.innerHTML='';return}
+
   const titulo=lista.length
     ?(lista.length===1?'1 comentário':lista.length+' comentários')
     :'Comentários';
   box.innerHTML='<div class="coment-titulo">'+titulo+'</div>'+linhas
     +'<div class="coment-escrever">'
-    +'<textarea class="coment-campo" id="campo-'+esc(alvo)+'" rows="1" maxlength="1000" placeholder="Escreva algo sobre esse lugar..."></textarea>'
+    +'<textarea class="coment-campo" id="campo-'+esc(alvo)+'" rows="1" maxlength="1000" placeholder="'+(meuSpot?'Responda quem comentou...':'Escreva algo sobre esse lugar...')+'"></textarea>'
     +'<button class="coment-enviar" onclick="enviarComentario(\''+esc(spotId)+'\',\''+esc(alvo)+'\',\''+esc(donoDoSpot||'')+'\')">Enviar</button>'
     +'</div>';
   hydrateIcons(box);
