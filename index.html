@@ -497,6 +497,11 @@ body.na-casca .bottom-nav{display:none}
 /* Cards de cidade dentro da viagem — compacto, sem foto, mostra quanto
    tem de cada categoria antes de abrir. */
 .city-card{border:1px solid var(--border);border-radius:var(--r);background:linear-gradient(160deg,rgba(234,231,224,.05),rgba(234,231,224,.015));padding:16px;margin-bottom:10px;cursor:pointer;box-shadow:var(--shadow-sm);transition:transform .15s}
+/* O X da cidade vazia entra na propria linha da contagem, como mais um item
+   da fila. Flutuando por cima do card ele encostava no "0 spots". */
+.city-card-tirar{flex-shrink:0;align-self:center;width:30px;height:30px;margin:-6px -8px -6px 8px;border:none;background:none;color:var(--ink3);display:flex;align-items:center;justify-content:center;cursor:pointer;border-radius:50%}
+.city-card-tirar:active{opacity:.5;background:rgba(168,52,44,.12);color:var(--red)}
+.city-card-tirar svg{width:15px;height:15px}
 .city-card:active{transform:scale(.99)}
 .city-card-top{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:12px}
 .city-card-name{font-family:'Fraunces',serif;font-weight:400;font-size:21px;letter-spacing:-.01em;color:var(--ink)}
@@ -551,6 +556,12 @@ body.na-casca .bottom-nav{display:none}
 .foto-credito a{color:inherit;text-decoration:none;border-bottom:1px solid rgba(255,255,255,.25)}
 .foto-credito:empty{display:none}
 .hero-overlay{position:absolute;inset:0;background:linear-gradient(to bottom,rgba(0,0,0,0.2),rgba(0,0,0,0.7))}
+/* Na ficha de um lugar os quatro cantos da foto ja tem dono: voltar, status,
+   trocar foto e o nome. O credito caia logo abaixo do nome e virava legenda
+   do titulo — num lugar cuja foto e do proprio estabelecimento, lia-se
+   "Trattoria Karampana / Foto: Trattoria Karampana". Sobe pra faixa de cima,
+   entre o botao de voltar e o selo de status, que e onde sobra espaco. */
+.place-hero .foto-credito{top:25px;bottom:auto;left:62px;right:112px;max-width:none;text-align:left}
 .hero-back{position:absolute;top:18px;left:18px;width:34px;height:34px;background:rgba(11,22,32,.5);border:1px solid rgba(255,255,255,.16);border-radius:50%;color:#fff;font-size:15px;cursor:pointer;display:flex;align-items:center;justify-content:center;z-index:2;backdrop-filter:blur(8px)}
 .hero-photo-btn{position:absolute;bottom:18px;right:18px;width:34px;height:34px;background:rgba(11,22,32,.5);border:1px solid rgba(255,255,255,.16);border-radius:50%;color:#fff;font-size:14px;cursor:pointer;display:flex;align-items:center;justify-content:center;z-index:2;backdrop-filter:blur(8px)}
 .hero-chip{position:absolute;top:18px;right:18px;padding:7px 15px;border-radius:var(--r-pill);font-size:12px;font-weight:600;cursor:pointer;z-index:2;backdrop-filter:blur(8px)}
@@ -705,7 +716,9 @@ body.na-casca .bottom-nav{display:none}
 /* O escurecido termina na cor do fundo, então a foto se dissolve na página
    em vez de cortar numa linha reta. */
 #place .hero-overlay{background:linear-gradient(to bottom,rgba(11,22,32,.45) 0%,rgba(11,22,32,0) 26%,rgba(11,22,32,.35) 48%,rgba(11,22,32,.92) 78%,var(--dark) 100%)}
-#place .hero-bottom{padding:0 26px 22px}
+/* Nome comprido passava por baixo do botao de trocar foto, que fica neste
+   mesmo canto de baixo. Reserva a largura dele. */
+#place .hero-bottom{padding:0 68px 22px 26px}
 #place .hero-type{font-family:var(--mono);font-size:10.5px;letter-spacing:.16em;text-transform:uppercase;color:rgba(234,231,224,.75);margin-bottom:9px}
 #place .hero-name{font-size:34px;line-height:1.02;letter-spacing:-.02em}
 #place .hero-chip{font-family:var(--mono);font-size:10px;font-weight:500;letter-spacing:.14em;text-transform:uppercase;padding:7px 13px}
@@ -3030,9 +3043,15 @@ function cityCardsHTML(byCity,country,month,handler,prefixoId){
     const spots=byCity[city];
     const cityIdSafe=prefixoId+String(city).replace(/[^a-zA-Z0-9]/g,'_');
     const counts={food:0,hotel:0,experience:0};spots.forEach(s=>{if(counts[s.category]!==undefined)counts[s.category]++});
+    // Cidade sem nenhum lugar so existe num caso: e a escolhida na criacao da
+    // viagem, e nada foi adicionado nela ainda. Ficava como card vazio pra
+    // sempre, sem como tirar. So na PROPRIA viagem — na do amigo nao se mexe.
+    const tirar=(!spots.length&&handler==='openCityFromTrip')
+      ?`<button class="city-card-tirar" onclick="removerCidadeDaViagem(${ci},event)" aria-label="Tirar ${esc(city)} da viagem">${icon('close')}</button>`
+      :'';
     // onclick recebe o ÍNDICE, nunca o nome da cidade (vem do Places/do
     // usuário e pode ter aspas ou HTML)
-    h+=`<div class="city-card" onclick="${handler}(${ci})"><div class="city-card-top"><div><div class="city-card-name">${esc(city)}</div><div class="city-card-climate" id="${cityIdSafe}"></div></div><div class="city-card-count">${spots.length} ${spots.length===1?'spot':'spots'}</div></div><div class="city-card-breakdown">`;
+    h+=`<div class="city-card" onclick="${handler}(${ci})"><div class="city-card-top"><div><div class="city-card-name">${esc(city)}</div><div class="city-card-climate" id="${cityIdSafe}"></div></div><div class="city-card-count">${spots.length} ${spots.length===1?'spot':'spots'}</div>${tirar}</div><div class="city-card-breakdown">`;
     h+=[['food','pra comer'],['hotel','pra ficar'],['experience','experiências']].filter(([c])=>counts[c]>0).map(([c,label])=>
       `<div class="city-card-item" title="${counts[c]} ${label}" aria-label="${counts[c]} ${label}">${icon(c==='food'?'food':c==='hotel'?'hotel':'compass')} ${counts[c]}</div>`
     ).join('');
@@ -3089,6 +3108,25 @@ function setCitySubcat(k){curCitySubcat=(curCitySubcat===k?'':k);renderCitySubca
 // índice; o nome sai daqui, nunca do HTML.
 let TRIP_CITY_ORDER=[];
 function openCityFromTrip(i){const c=TRIP_CITY_ORDER[i];if(c!=null)openCityScreen(c)}
+// Tirar a cidade vazia e limpar o campo que a criou. Nao existe cidade vazia
+// que nao seja essa: as outras nascem dos proprios lugares e somem sozinhas
+// quando o ultimo lugar sai.
+async function removerCidadeDaViagem(i,ev){
+  if(ev){ev.stopPropagation();ev.preventDefault()}
+  const c=TRIP_CITY_ORDER[i];
+  const t=S.curTrip;
+  if(c==null||!t)return;
+  const temLugar=(t._spots||[]).some(sp=>cityOf(sp)===c);
+  if(temLugar)return;
+  if(!await confirmar('Tirar '+c+' desta viagem?','','Tirar da viagem'))return;
+  const{error}=await dbUpdate('trips',t.id,{initial_city:null});
+  if(error){toast('Erro','Nao consegui tirar agora. Tenta de novo.');return}
+  t.initial_city=null;
+  const naLista=(S.trips||[]).find(x=>x.id===t.id);
+  if(naLista)naLista.initial_city=null;
+  renderTripBody();
+  toast(c+' saiu da viagem','','trash');
+}
 function updateCityHeader(){
   const t=S.curTrip;if(!t||!S.curCity)return;
   const spots=(t._spots||[]).filter(s=>cityOf(s)===S.curCity);
