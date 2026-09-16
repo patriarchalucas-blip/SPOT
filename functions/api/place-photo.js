@@ -65,11 +65,29 @@ export async function onRequestGet(context) {
 
   const kv = env.SPOT_KV;
   const chave = 'placephoto2_' + (await hash(ref));
+
+  // A CACHE DA BORDA vem antes do KV de propósito. Ler e gravar nela não tem
+  // limite diário; o KV do plano grátis para de aceitar GRAVAÇÃO depois de mil
+  // por dia, e parou de verdade — no dia em que trocar o formato da chave
+  // obrigou a refazer todas as entradas de uma vez.
+  //
+  // A chave da borda carrega o tamanho e o formato, porque a mesma foto sai
+  // diferente em cada um. É um endereço inventado, que nunca é servido: serve
+  // só de etiqueta.
+  const borda = caches.default;
+  const etiqueta = new Request(
+    url.origin + '/_foto/' + chave + '/' + largura + (webp ? '/webp' : '/jpeg')
+  );
+  try {
+    const naBorda = await borda.match(etiqueta);
+    if (naBorda) return naBorda;
+  } catch (e) { /* borda fora: segue pro KV */ }
+
   if (kv) {
     try {
       const guardado = await kv.get(chave);
       if (guardado === 'X') return vazio(404);       // falha conhecida, não retenta agora
-      if (guardado) return redirecionar(comTamanho(guardado, largura, webp));
+      if (guardado) return pelaBorda(context, borda, etiqueta, redirecionar(comTamanho(guardado, largura, webp)));
     } catch (e) { /* KV fora: segue e resolve */ }
   }
 
@@ -79,7 +97,12 @@ export async function onRequestGet(context) {
     try {
       const usado = parseInt((await kv.get(contador)) || '0', 10);
       if (usado >= CAP_MENSAL) return vazio(429);
-      await kv.put(contador, String(usado + 1), { expirationTtl: 60 * 60 * 24 * 40 });
+      // Ler custa barato, gravar é o que é escasso: conta de dez em dez,
+      // sorteando. O teto continua valendo, com erro de dez pra mais ou menos
+      // num teto de trinta mil.
+      if (Math.random() < 0.1) {
+        await kv.put(contador, String(usado + 10), { expirationTtl: 60 * 60 * 24 * 40 });
+      }
     } catch (e) {}
   }
 
@@ -104,7 +127,14 @@ export async function onRequestGet(context) {
 
   const base = semTamanho(destino);
   if (kv) { try { await kv.put(chave, base, { expirationTtl: TTL_OK }) } catch (e) {} }
-  return redirecionar(comTamanho(base, largura, webp));
+  return pelaBorda(context, borda, etiqueta, redirecionar(comTamanho(base, largura, webp)));
+}
+
+// Guarda na borda sem fazer ninguém esperar por isso, e devolve a resposta
+// original. Se a borda recusar, a foto sai igual — só sem o atalho.
+function pelaBorda(context, borda, etiqueta, resposta) {
+  try { context.waitUntil(borda.put(etiqueta, resposta.clone())) } catch (e) {}
+  return resposta;
 }
 
 // O sufixo de tamanho vem depois do ÚLTIMO '=' do endereço. Se um dia vier

@@ -88,7 +88,16 @@ export async function podeGastar(env, prefixo, uid, custo, teto) {
   try {
     const usado = parseInt((await env.SPOT_KV.get(k)) || '0', 10);
     if (usado + custo > teto) return false;
-    await env.SPOT_KV.put(k, String(usado + custo), { expirationTtl: 60 * 60 * 24 * 40 });
+    // Gravar é o recurso escasso (mil por dia no plano grátis), e este contador
+    // gravava uma vez por chamada de API. Agora grava uma a cada quatro,
+    // somando quatro de uma vez: a média é a mesma e as gravações caem pra um
+    // quarto. O teto passa a ter folga pros dois lados — ele existe pra
+    // impedir abuso, não pra cobrar pedagio exato, e uma sobra de alguns
+    // acessos não muda nada. Se um dia virar teto apertado de verdade, é
+    // contador durable, não amostragem.
+    if (Math.random() < 0.25) {
+      await env.SPOT_KV.put(k, String(usado + custo * 4), { expirationTtl: 60 * 60 * 24 * 40 });
+    }
     return true;
   } catch (e) { return true } // KV com problema não bloqueia usuário
 }
