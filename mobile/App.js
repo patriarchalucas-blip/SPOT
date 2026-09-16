@@ -49,16 +49,14 @@ import TelaPerfil from './TelaPerfil';
 import { StatusBar } from 'expo-status-bar';
 import { WebView } from 'react-native-webview';
 import * as WebBrowser from 'expo-web-browser';
-import { createURL } from 'expo-linking';
 import * as Notifications from 'expo-notifications';
 import * as Device from 'expo-device';
 import Constants from 'expo-constants';
 
-// Para onde o navegador do sistema devolve o login. No app publicado isto é
-// spot://auth; rodando pelo Expo Go vira um endereço exp:// da máquina de
-// desenvolvimento. Montar em vez de escrever fixo é o que faz o login
-// funcionar nos dois, sem trocar nada na hora de publicar.
-const VOLTA_DO_LOGIN = createURL('auth');
+// Para onde o navegador do sistema devolve o login. Tem que ser IGUALZINHO
+// ao que está liberado no banco, senão a volta cai no site e a pessoa fica
+// olhando pra tela de entrada de novo. O 'spot' vem do app.json.
+const VOLTA_DO_LOGIN = 'spot://auth';
 
 // Notificação recebida com o app ABERTO também aparece. Sem isto ela chega
 // silenciosa e a pessoa jura que o app não avisa.
