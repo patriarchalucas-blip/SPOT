@@ -131,7 +131,7 @@ export default function TelaViagens({ dados, ocupado, acao }) {
           accessibilityLabel="Abrir o mapa-múndi"
         >
           <View pointerEvents="none">
-            <MapaMundi visitados={d.mapa} altura={150} opacidade={0.5} />
+            <MapaMundi visitados={d.mapa} opacidade={0.5} />
           </View>
         </Pressable>
 

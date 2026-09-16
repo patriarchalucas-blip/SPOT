@@ -22,7 +22,7 @@ const TERRA = '#1c2f40';
 const TRACO = '#0B1620';
 const VISITADO = '#4E9490';
 
-function MapaMundiBase({ visitados, altura = 150, opacidade = 1, fundo = 'transparent' }) {
+function MapaMundiBase({ opacidade = 1, fundo = 'transparent', visitados }) {
   // Recebe nomes no padrão do world-atlas (em inglês) — é o mesmo campo que o
   // site usa pra casar país com contorno.
   const marcados = React.useMemo(
@@ -30,19 +30,24 @@ function MapaMundiBase({ visitados, altura = 150, opacidade = 1, fundo = 'transp
     [visitados]
   );
 
-  // A altura manda; a largura acompanha na proporção do mapa. Recortar em
-  // cima e embaixo tira a Antártida e o vazio do Ártico, que é o que o site
-  // também faz — mapa inteiro deixa o miolo pequeno demais.
-  const recorteY = ALTURA * 0.08;
-  const alturaVis = ALTURA - recorteY * 2;
+  // MESMO enquadramento do site: corta SÓ embaixo, a faixa da Antártida, e
+  // deixa o topo inteiro. A versão anterior cortava 8% em cima também (o site
+  // nunca corta o topo) e, pior, usava 'slice', que enche o espaço cortando
+  // as LATERAIS: num iPhone sumiam a Nova Zelândia de um lado e o extremo
+  // oeste do outro. Com 'meet' o mundo inteiro cabe; o que sobra de espaço
+  // fica transparente, e por cima de fundo escuro ninguém vê.
+  const alturaVis = Math.round(ALTURA * 0.845);
 
   return (
-    <View style={{ height: altura, opacity: opacidade, overflow: 'hidden' }}>
+    // A ALTURA sai da largura, na proporção do mapa — igual ao site, que usa
+    // aspect-ratio. Com altura fixa, num aparelho mais largo sobrava tarja
+    // vazia dos dois lados e o mapa deixava de sangrar de ponta a ponta.
+    <View style={{ width: '100%', aspectRatio: LARGURA / alturaVis, opacity: opacidade, overflow: 'hidden' }}>
       <Svg
         width="100%"
         height="100%"
-        viewBox={`0 ${recorteY} ${LARGURA} ${alturaVis}`}
-        preserveAspectRatio="xMidYMid slice"
+        viewBox={`0 0 ${LARGURA} ${alturaVis}`}
+        preserveAspectRatio="xMidYMid meet"
       >
         {fundo !== 'transparent' ? (
           <Rect x={0} y={0} width={LARGURA} height={ALTURA} fill={fundo} />
@@ -64,7 +69,6 @@ function MapaMundiBase({ visitados, altura = 150, opacidade = 1, fundo = 'transp
 // Comparação explícita: sem ela, qualquer redesenho do pai remonta 177
 // caminhos. A lista chega pronta do site e muda pouquíssimo.
 export default React.memo(MapaMundiBase, (a, b) =>
-  a.altura === b.altura &&
   a.opacidade === b.opacidade &&
   a.fundo === b.fundo &&
   (a.visitados || []).join('|') === (b.visitados || []).join('|')

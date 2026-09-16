@@ -225,9 +225,18 @@ export default function TelaPerfil({ dados, ocupado, acao }) {
         <View style={[e.cabecalho, { marginTop: 26 }]}>
           <Text style={e.secao}>Onde já estive</Text>
         </View>
-        <View style={e.mapa}>
-          <MapaMundi visitados={d.mapa} altura={190} />
-        </View>
+        {/* Abre o mapa cheio, igual ao da tela inicial. Sem isto havia dois
+            mapas iguais na tela e só um respondia ao toque. */}
+        <Pressable
+          onPress={() => acao('mapa')}
+          style={({ pressed }) => [e.mapa, pressed && { opacity: 0.6 }]}
+          accessibilityRole="button"
+          accessibilityLabel="Abrir o mapa-múndi"
+        >
+          <View pointerEvents="none">
+            <MapaMundi visitados={d.mapa} />
+          </View>
+        </Pressable>
         {d.paises && d.paises.length ? (
           <View style={e.paisesLista}>
             {d.paises.map((p) => <Pais key={p.nome} p={p} acao={acao} />)}

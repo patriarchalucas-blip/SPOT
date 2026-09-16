@@ -6728,6 +6728,7 @@ window.acaoDePerfil=function(acao,valor){
   if(acao==='pais'){drillTo('country',valor);goTo('list');return}
   if(acao==='tirarPais'){desmarcarPais(valor);return}
   if(acao==='todosOsPaises'){openList('countries');return}
+  if(acao==='mapa'){abrirMapaMundi('profile');return}
   if(acao==='recarregar'){loadProfile();return}
 };
 
