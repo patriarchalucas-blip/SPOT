@@ -48,9 +48,17 @@ import TelaViagens from './TelaViagens';
 import TelaPerfil from './TelaPerfil';
 import { StatusBar } from 'expo-status-bar';
 import { WebView } from 'react-native-webview';
+import * as WebBrowser from 'expo-web-browser';
+import { createURL } from 'expo-linking';
 import * as Notifications from 'expo-notifications';
 import * as Device from 'expo-device';
 import Constants from 'expo-constants';
+
+// Para onde o navegador do sistema devolve o login. No app publicado isto é
+// spot://auth; rodando pelo Expo Go vira um endereço exp:// da máquina de
+// desenvolvimento. Montar em vez de escrever fixo é o que faz o login
+// funcionar nos dois, sem trocar nada na hora de publicar.
+const VOLTA_DO_LOGIN = createURL('auth');
 
 // Notificação recebida com o app ABERTO também aparece. Sem isto ela chega
 // silenciosa e a pessoa jura que o app não avisa.
@@ -126,16 +134,30 @@ function ehDoApp(url) {
 
 // O login do Google acontece no domínio do Supabase e precisa continuar
 // dentro da casca, senão a volta do OAuth não encontra a sessão.
+// So o dominio do banco continua navegando dentro da casca (a volta do
+// OAuth passa por la). accounts.google.com saiu de proposito: dentro da
+// janela embutida o Google recusa o login, e deixar entrar so produz uma
+// tela de erro sem saida. Quem abre o Google e a folha de autenticacao.
 function ehFluxoDeLogin(url) {
   try {
-    const h = new URL(url).host;
-    return h.endsWith('.supabase.co') || h === 'accounts.google.com';
+    return new URL(url).host.endsWith('.supabase.co');
   } catch (e) {
     return false;
   }
 }
 
+// O provedor de area segura fica aqui, sozinho. Quem LE a margem e o
+// Conteudo, que e filho dele — ler no mesmo componente que cria o provedor
+// significa ler antes de ele existir, e o app quebra na primeira tela.
 export default function App() {
+  return (
+    <SafeAreaProvider>
+      <Conteudo />
+    </SafeAreaProvider>
+  );
+}
+
+function Conteudo() {
   const webRef = useRef(null);
   const [carregando, setCarregando] = useState(true);
   const [semRede, setSemRede] = useState(false);
@@ -221,6 +243,28 @@ export default function App() {
     }
     // O site diz em que tela está. Sem isso a barra acenderia a aba errada
     // assim que a pessoa usasse o voltar de dentro da página.
+    // O site montou o endereco de autorizacao e pede o navegador do sistema.
+    // Precisa ser o do sistema: o Google BLOQUEIA login dentro de janela
+    // embutida (politica 'use secure browsers'), e a nossa e exatamente isso.
+    // openAuthSessionAsync usa a folha de autenticacao do iOS, que eles
+    // aceitam, e volta sozinha quando o endereco spot://auth aparece.
+    if (dados && dados.tipo === 'login-google' && typeof dados.url === 'string') {
+      WebBrowser.openAuthSessionAsync(dados.url, VOLTA_DO_LOGIN)
+        .then((r) => {
+          // Cancelou ou fechou a folha: o site mostra o aviso e nada quebra.
+          const volta = r && r.type === 'success' ? r.url : '';
+          webRef.current?.injectJavaScript(
+            'window.voltouDoLoginGoogle && window.voltouDoLoginGoogle(' +
+              JSON.stringify(volta) + ');true;'
+          );
+        })
+        .catch(() => {
+          webRef.current?.injectJavaScript(
+            'window.voltouDoLoginGoogle && window.voltouDoLoginGoogle("");true;'
+          );
+        });
+      return;
+    }
     if (dados && dados.tipo === 'tela') {
       if (typeof dados.aba === 'string') setAbaAtiva(dados.aba);
       setMostrarAbas(!!dados.comAbas);
@@ -291,7 +335,7 @@ export default function App() {
 
   if (semRede) {
     return (
-      <SafeAreaProvider>
+      <>
         <StatusBar style="light" />
         <SafeAreaView style={estilo.fundo}>
           <ScrollView
@@ -307,12 +351,12 @@ export default function App() {
             </Pressable>
           </ScrollView>
         </SafeAreaView>
-      </SafeAreaProvider>
+      </>
     );
   }
 
   return (
-    <SafeAreaProvider>
+    <>
       <StatusBar style="light" />
       <SafeAreaView style={estilo.fundo} edges={['top', 'left', 'right']}>
         <View style={estilo.pilha}>
@@ -331,6 +375,12 @@ export default function App() {
             allowsLinkPreview={false}
             originWhitelist={['https://*', 'http://*']}
             onShouldStartLoadWithRequest={aoNavegar}
+            // O site precisa saber o endereço de volta ANTES de montar o link
+            // do Google, então entra antes do conteúdo carregar.
+            injectedJavaScriptBeforeContentLoaded={
+              'window.enderecoDeVoltaDoLogin=' +
+              JSON.stringify(VOLTA_DO_LOGIN) + ';true;'
+            }
             onMessage={aoReceberMensagem}
             onLoadStart={() => {
               setCarregando(true);
@@ -383,7 +433,7 @@ export default function App() {
           </View>
         ) : null}
       </SafeAreaView>
-    </SafeAreaProvider>
+    </>
   );
 }
 

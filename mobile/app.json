@@ -65,12 +65,8 @@
           "color": "#c1552f",
           "defaultChannel": "default"
         }
-      ]
-    ],
-    "extra": {
-      "eas": {
-        "projectId": "PREENCHER-NO-PRIMEIRO-eas-init"
-      }
-    }
+      ],
+      "expo-web-browser"
+    ]
   }
 }

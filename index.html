@@ -1905,11 +1905,84 @@ async function init(){
 }
 
 // ═══ AUTH ═══
+// ═══ LOGIN COM GOOGLE ═══
+//
+// POR QUE ISTO NÃO É UMA CHAMADA SÓ
+//
+// O Google BLOQUEIA login feito dentro de app embutido desde julho de 2023 —
+// política de segurança deles, não bug nosso: a janela embutida é
+// customizável demais e dá margem a app malicioso capturar a senha. Dentro da
+// casca do Spot, a tela do Google carrega e depois recusa.
+//
+// O caminho que eles aceitam é o navegador do sistema. Então:
+//
+//   1. AQUI o SDK monta o endereço de autorização e NÃO navega.
+//   2. A CASCA abre esse endereço no navegador do sistema e espera a volta.
+//   3. A CASCA devolve pra cá o endereço de retorno.
+//   4. AQUI o SDK guarda a sessão que veio nele.
+//
+// Os passos 1 e 4 têm que ser os dois AQUI: quem precisa ficar logado é esta
+// página, e é aqui que o SDK guarda a sessão. A casca só empresta o
+// navegador e traz a resposta de volta — ela não sabe nada de login.
+//
+// No navegador comum nada disso acontece: segue o fluxo normal de sempre.
 async function signInGoogle(){
   if(!sb)return;
-  const{error}=await sb.auth.signInWithOAuth({provider:'google',options:{redirectTo:window.location.origin}});
-  if(error)showAuthErr(error.message);
+
+  if(!naCasca()){
+    const{error}=await sb.auth.signInWithOAuth({provider:'google',options:{redirectTo:window.location.origin}});
+    if(error)showAuthErr(error.message);
+    return;
+  }
+
+  // skipBrowserRedirect: o SDK monta o endereço e NÃO navega — quem navega é
+  // a casca, no navegador do sistema. O endereço de volta quem diz é ela,
+  // porque muda entre o app publicado e o app de teste pelo Expo Go.
+  const{data,error}=await sb.auth.signInWithOAuth({
+    provider:'google',
+    options:{
+      redirectTo:window.enderecoDeVoltaDoLogin||'spot://auth',
+      skipBrowserRedirect:true
+    }
+  });
+  if(error||!data||!data.url){showAuthErr((error&&error.message)||'Não deu pra abrir o login.');return}
+  falarComACasca({tipo:'login-google',url:data.url});
 }
+
+// Chamado PELA casca quando o navegador do sistema volta com o resultado.
+// Recebe o endereço inteiro de retorno. A sessão pode voltar de dois jeitos,
+// e os dois estão tratados porque qual deles vem depende de um ajuste do SDK
+// que pode mudar sem a gente perceber:
+//   #access_token=...  -> a sessão vem pronta (é o que acontece hoje)
+//   ?code=...          -> vem um código que ainda precisa ser trocado
+window.voltouDoLoginGoogle=async function(urlDeVolta){
+  try{
+    if(!sb)return;
+    if(!urlDeVolta){showAuthErr('Login cancelado.');return}
+    const u=new URL(urlDeVolta);
+    const naTrilha=new URLSearchParams(String(u.hash||'').replace(/^#/,''));
+    // Erro do Google vem na própria URL, e é mais útil que "falhou".
+    const erro=u.searchParams.get('error_description')||u.searchParams.get('error')
+      ||naTrilha.get('error_description')||naTrilha.get('error');
+    if(erro){showAuthErr(erro);return}
+    const entrada=naTrilha.get('access_token');
+    if(entrada){
+      const{error}=await sb.auth.setSession({
+        access_token:entrada,
+        refresh_token:naTrilha.get('refresh_token')||''
+      });
+      if(error){showAuthErr(error.message);return}
+      // A sessão entrou: o onAuthStateChange leva pro dashboard sozinho.
+      return;
+    }
+    const codigo=u.searchParams.get('code');
+    if(!codigo){showAuthErr('Login não completou. Tenta de novo.');return}
+    const{error}=await sb.auth.exchangeCodeForSession(codigo);
+    if(error){showAuthErr(error.message);return}
+  }catch(e){
+    showAuthErr('Login não completou. Tenta de novo.');
+  }
+};
 function toggleAuthMode(){
   authMode=authMode==='signin'?'signup':'signin';
   document.getElementById('authBtn').textContent=authMode==='signup'?'Criar conta':'Entrar';
