@@ -22,6 +22,14 @@
 //     alguém determinado — cabeçalho se falsifica);
 //   - teto mensal global como freio final.
 
+// O endereço do CDN termina num sufixo de tamanho (=s4800-w800) que dá pra
+// reescrever à vontade: o mesmo endereço serve qualquer largura, e com -rw
+// serve WebP (medido: 94 KB contra 136 KB na mesma foto). Por isso o que fica
+// guardado é o endereço SEM sufixo, uma entrada por foto.
+//
+// Antes era uma entrada por foto E por largura, e trocar de tamanho custava
+// uma ida ao Google inteira — medido entre 1,3 e 2,9 SEGUNDOS, enquanto uma
+// foto já conhecida sai em 0,08. Era isso que fazia a lista parecer travada.
 const CAP_MENSAL = 30000;
 const TTL_OK = 60 * 60 * 24 * 7;   // o link do CDN não é eterno; 7 dias é conservador
 const TTL_FALHA = 60 * 10;
@@ -51,13 +59,17 @@ export async function onRequestGet(context) {
 
   if (!env.GOOGLE_PLACES_KEY) return vazio(404);
 
+  // WebP só pra quem disser que aceita. Quem não disser recebe JPEG, que é
+  // exatamente o que recebia antes — ninguém fica sem foto por causa disto.
+  const webp = (request.headers.get('Accept') || '').indexOf('image/webp') >= 0;
+
   const kv = env.SPOT_KV;
-  const chave = 'placephoto_' + largura + '_' + (await hash(ref));
+  const chave = 'placephoto2_' + (await hash(ref));
   if (kv) {
     try {
       const guardado = await kv.get(chave);
       if (guardado === 'X') return vazio(404);       // falha conhecida, não retenta agora
-      if (guardado) return redirecionar(guardado);
+      if (guardado) return redirecionar(comTamanho(guardado, largura, webp));
     } catch (e) { /* KV fora: segue e resolve */ }
   }
 
@@ -74,7 +86,9 @@ export async function onRequestGet(context) {
   let r;
   try {
     r = await fetch(
-      'https://places.googleapis.com/v1/' + ref + '/media?maxWidthPx=' + largura +
+      // Pede grande de propósito: o que interessa desta resposta é o endereço
+      // do CDN, e o tamanho a gente decide depois, sem gastar outra chamada.
+      'https://places.googleapis.com/v1/' + ref + '/media?maxWidthPx=1600' +
       '&key=' + env.GOOGLE_PLACES_KEY,
       { redirect: 'manual' }   // o 302 é o que a gente quer, não a imagem
     );
@@ -88,8 +102,21 @@ export async function onRequestGet(context) {
     return vazio(404);
   }
 
-  if (kv) { try { await kv.put(chave, destino, { expirationTtl: TTL_OK }) } catch (e) {} }
-  return redirecionar(destino);
+  const base = semTamanho(destino);
+  if (kv) { try { await kv.put(chave, base, { expirationTtl: TTL_OK }) } catch (e) {} }
+  return redirecionar(comTamanho(base, largura, webp));
+}
+
+// O sufixo de tamanho vem depois do ÚLTIMO '=' do endereço. Se um dia vier
+// sem sufixo nenhum, guarda o endereço inteiro e o de baixo só acrescenta.
+function semTamanho(u) {
+  const i = u.lastIndexOf('=');
+  const j = u.lastIndexOf('/');
+  return i > j ? u.slice(0, i) : u;
+}
+
+function comTamanho(base, largura, webp) {
+  return base + '=w' + largura + (webp ? '-rw' : '');
 }
 
 function redirecionar(destino) {
@@ -99,7 +126,10 @@ function redirecionar(destino) {
       Location: destino,
       // O navegador guarda o redirecionamento, então rolar a lista de novo
       // nem chega a bater aqui.
-      'Cache-Control': 'public, max-age=21600'
+      'Cache-Control': 'public, max-age=21600',
+      // A resposta muda conforme o Accept (WebP ou JPEG): sem isto um cache
+      // no meio do caminho entregaria WebP pra quem não aceita.
+      Vary: 'Accept'
     }
   });
 }

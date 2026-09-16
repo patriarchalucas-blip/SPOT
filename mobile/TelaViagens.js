@@ -104,17 +104,34 @@ export default function TelaViagens({ dados, ocupado, acao }) {
           <Text style={e.marca}>Spot</Text>
           <Pressable
             onPress={() => acao('perfil')}
-            style={e.avatar}
             accessibilityRole="button"
             accessibilityLabel="Abrir seu perfil"
           >
-            <Text style={e.avatarTxt}>{d.inicial}</Text>
+            {/* Mesma regra da tela de perfil: foto quando existe, inicial
+                quando não. Aqui só a inicial tinha sido portada. */}
+            {d.avatar ? (
+              <Image source={{ uri: d.avatar }} style={e.avatar} />
+            ) : (
+              <View style={e.avatar}>
+                <Text style={e.avatarTxt}>{d.inicial}</Text>
+              </View>
+            )}
           </Pressable>
         </View>
 
-        <View style={e.mapa} pointerEvents="none">
-          <MapaMundi visitados={d.mapa} altura={150} opacidade={0.5} />
-        </View>
+        {/* No site o mapa abre a tela cheia; na primeira versão nativa ele
+            tinha virado só desenho. O desenho em si fica surdo ao toque pra
+            não disputar com o botão. */}
+        <Pressable
+          onPress={() => acao('mapa')}
+          style={({ pressed }) => [e.mapa, pressed && { opacity: 0.6 }]}
+          accessibilityRole="button"
+          accessibilityLabel="Abrir o mapa-múndi"
+        >
+          <View pointerEvents="none">
+            <MapaMundi visitados={d.mapa} altura={150} opacidade={0.5} />
+          </View>
+        </Pressable>
 
         {d.convite ? (
           <Text style={e.convite}>Crie uma viagem para pintar o primeiro país.</Text>

@@ -2269,6 +2269,15 @@ function naCasca(){return !!(window.ReactNativeWebView&&window.ReactNativeWebVie
 // amigo) são telas de detalhe: nelas a barra some, igual ao site hoje.
 const ABAS_DO_APP={dashboard:1,explore:1,friends:1,profile:1};
 
+// A foto fica gravada como caminho relativo (/api/place-photo?...). Dentro
+// do site o navegador completa sozinho; a tela nativa NÃO tem página atual
+// pra completar, então o caminho não leva a lugar nenhum e sobra o fundo
+// colorido. Completar antes de sair daqui é o que faz a foto aparecer.
+function fotoPraCasca(u){
+  const s=String(u||'');
+  return s.charAt(0)==='/'?location.origin+s:s;
+}
+
 function falarComACasca(msg){
   if(!naCasca())return;
   try{window.ReactNativeWebView.postMessage(JSON.stringify(msg))}catch(e){}
@@ -2278,6 +2287,25 @@ function falarComACasca(msg){
 // A barra nativa REFLETE o app; ela nunca decide sozinha onde a pessoa está.
 function avisarTelaAtual(id){
   falarComACasca({tipo:'tela',aba:id,comAbas:!!ABAS_DO_APP[id]});
+}
+
+// Janela que abre POR CIMA (configurações, criar viagem, adicionar amigo,
+// marcar país) não troca de tela, então o aviso de tela nunca saía — e a tela
+// nativa continuava na frente, escondendo a janela. O sintoma era o pior
+// possível: o toque parecia não fazer nada, e a janela aparecia depois, do
+// nada, no próximo toque que POR ACASO trocasse de tela.
+//
+// O estado sai do próprio DOM em vez de uma contagem à parte: fechar uma
+// janela com duas abertas não pode devolver a tela nativa pra frente.
+function avisarSeTemJanela(){
+  if(!naCasca())return;
+  const atual=document.querySelector('.screen.active');
+  if(!atual)return;
+  if(document.querySelector('.overlay.show')){
+    falarComACasca({tipo:'tela',aba:atual.id,comAbas:false});
+    return;
+  }
+  avisarTelaAtual(atual.id);
 }
 
 // Chamado PELA casca quando alguém toca numa aba. Precisa fazer o mesmo que o
@@ -2659,6 +2687,7 @@ function darDadosDeViagens(){
     cidades:Number((document.getElementById('statCities')||{}).textContent)||0,
     viagens:Number((document.getElementById('statTrips')||{}).textContent)||0,
     inicial:((S.profile&&S.profile.display_name)||(S.user.email||'?')).charAt(0).toUpperCase(),
+    avatar:fotoPraCasca(safeUrl((S.profile&&S.profile.avatar_url)||'')),
     convite:(document.getElementById('dashConvite')||{}).style.display!=='none',
     // Pro mapa nativo: nome que os contornos usam (world-atlas, em inglês),
     // não o nome em português. País sem correspondência fica de fora em vez
@@ -2680,7 +2709,7 @@ function darDadosDeViagens(){
         meta:tripMetaText(t),
         pais:destino||'',
         bandeira:flagFor(destino),
-        foto:m?safeUrl(m[1]):'',
+        foto:m?fotoPraCasca(safeUrl(m[1])):'',
         cores:coresDoGradiente(destino)
       };
     }),
@@ -2695,6 +2724,7 @@ window.acaoDeViagens=function(acao,valor){
   if(acao==='lista'){openList(valor);return}
   if(acao==='perfil'){goTo('profile');loadProfile();return}
   if(acao==='nova'){showOv('ov-trip');return}
+  if(acao==='mapa'){abrirMapaMundi('dashboard');return}
   if(acao==='recarregar'){loadDashboard();return}
 };
 
@@ -3097,7 +3127,7 @@ function renderCityBody(){
 function addSpotToCurrentCity(){
   S.addTrip=S.curTrip;S.addCat=curCityCat;
   resetSearchSheet();
-  document.getElementById('ov-search').classList.add('show');
+  document.getElementById('ov-search').classList.add('show');avisarSeTemJanela();
 }
 
 // ═══ PLACE DETAIL ═══
@@ -3800,7 +3830,7 @@ function darDadosDeExplorar(){
       // exibia "0.0 ★", que parece nota péssima e não ausência de nota.
       nota:Number(p.rating)>0?fmtRating(p.rating):'',
       avaliacoes:Number(p.count)||0,
-      foto:safeUrl(fotoNaLargura(semChaveDoPlaces(p.photo_url),760))||'',
+      foto:fotoPraCasca(safeUrl(fotoNaLargura(semChaveDoPlaces(p.photo_url),760))),
       cores:coresDoGradiente(p.name||local),
       // Exigência dos termos do Google: a autoria aparece junto da foto.
       autor:(p.photo_author&&p.photo_author.nome)||''
@@ -4496,7 +4526,7 @@ function showCountryMismatch(placeCountry,tripCountry){
     btn.onclick=()=>moveToCorrectCountry(null,true);
   }
   closeOv('ov-search');
-  setTimeout(()=>document.getElementById('ov-mismatch').classList.add('show'),220);
+  setTimeout(()=>{document.getElementById('ov-mismatch').classList.add('show');avisarSeTemJanela()},220);
 }
 async function moveToCorrectCountry(existingTrip,createNew){
   const p=S.pendingPlace;if(!p)return;
@@ -4513,7 +4543,7 @@ async function moveToCorrectCountry(existingTrip,createNew){
   document.getElementById('selName').textContent=p.name;document.getElementById('selMeta').textContent=p.meta;
   document.getElementById('selIcon').innerHTML=p.icon;resetNoteSheet();
   closeOv('ov-mismatch');
-  setTimeout(()=>document.getElementById('ov-note').classList.add('show'),220);
+  setTimeout(()=>{document.getElementById('ov-note').classList.add('show');avisarSeTemJanela()},220);
 }
 function keepInThisTripAnyway(){
   // user insists — keep place in current trip
@@ -4522,7 +4552,7 @@ function keepInThisTripAnyway(){
   document.getElementById('selName').textContent=p.name;document.getElementById('selMeta').textContent=p.meta;
   document.getElementById('selIcon').innerHTML=p.icon;resetNoteSheet();
   closeOv('ov-mismatch');
-  setTimeout(()=>document.getElementById('ov-note').classList.add('show'),220);
+  setTimeout(()=>{document.getElementById('ov-note').classList.add('show');avisarSeTemJanela()},220);
 }
 let addStatus='want',addRating=0;
 function setSpotStatus(s){
@@ -4673,7 +4703,7 @@ async function resolverCidadeDoSpot(p,trip){
       closeOv('ov-note');
       setTimeout(()=>{
         resetSearchSheet();
-        document.getElementById('ov-search').classList.add('show');
+        document.getElementById('ov-search').classList.add('show');avisarSeTemJanela();
       },220);
     }else{
       closeOv('ov-note');
@@ -6817,10 +6847,10 @@ function goTo(id){
   window.scrollTo(0,0);
   avisarTelaAtual(id);
 }
-function showOv(id){populateTripOpts();if(id==='ov-newtrip')prepNewTrip();if(id==='ov-quickvisit')prepQuickVisit();document.getElementById(id).classList.add('show')}
-function closeOv(id){document.getElementById(id).classList.remove('show')}
+function showOv(id){populateTripOpts();if(id==='ov-newtrip')prepNewTrip();if(id==='ov-quickvisit')prepQuickVisit();document.getElementById(id).classList.add('show');avisarSeTemJanela()}
+function closeOv(id){document.getElementById(id).classList.remove('show');avisarSeTemJanela()}
 function closeOut(e,id){if(e.target===document.getElementById(id))closeOv(id)}
-function nextOv(a,b){closeOv(a);if(b==='ov-newtrip')prepNewTrip();if(b==='ov-trip'){populateTripOpts();S.explorePick=null;S.explorePickCat=null;S.explorePickStatus=null}if(b==='ov-search')resetSearchSheet();setTimeout(()=>document.getElementById(b).classList.add('show'),220)}
+function nextOv(a,b){closeOv(a);if(b==='ov-newtrip')prepNewTrip();if(b==='ov-trip'){populateTripOpts();S.explorePick=null;S.explorePickCat=null;S.explorePickStatus=null}if(b==='ov-search')resetSearchSheet();setTimeout(()=>{document.getElementById(b).classList.add('show');avisarSeTemJanela()},220)}
 function prepNewTrip(){
   selectedNewTripCity=null;
   const cs=document.getElementById('countrySearch');if(cs)cs.value='';
@@ -7159,7 +7189,7 @@ function darDadosDeAmigos(){
       tipo:'visita',
       lugar:sp.name||'',
       rotulo:[sp.place_type||catLabel(sp.category),cidade].filter(Boolean).join(' · '),
-      foto:safeUrl(fotoNaLargura(semChaveDoPlaces(sp.photo_url),760))||'',
+      foto:fotoPraCasca(safeUrl(fotoNaLargura(semChaveDoPlaces(sp.photo_url),760))),
       cores:coresDoGradiente(sp.name||cidade),
       nota:String(sp.my_note||'').trim(),
       estrelas:Math.round(Number(sp.my_rating)||0),
