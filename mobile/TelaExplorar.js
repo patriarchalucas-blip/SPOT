@@ -13,6 +13,7 @@
 
 import React from 'react';
 import {
+  ActivityIndicator,
   Image,
   Keyboard,
   Pressable,
@@ -64,6 +65,13 @@ function CardDeLugar({ item, aoSalvar }) {
             onError={() => setFalhou(true)}
           />
         ) : null}
+        {/* O mesmo escurecimento que o site poe sobre a foto. Sem ele o nome
+            branco de 25px em cima de foto clara fica ilegivel. Tres faixas
+            no lugar do degrade do CSS, porque nao temos biblioteca de
+            gradiente e a diferenca nao se ve. */}
+        <View style={e.veu1} pointerEvents="none" />
+        <View style={e.veu2} pointerEvents="none" />
+        <View style={e.veu3} pointerEvents="none" />
         {item.nota ? (
           <View style={e.selo}>
             <Text style={e.seloTxt}>{item.nota} </Text>
@@ -149,10 +157,16 @@ export default function TelaExplorar({ dados, ocupado, acao }) {
         ) : null}
         {d.amigos && d.amigos.length ? (
           <View style={e.blocoAmigos}>
+            {/* "2 amigos ja foram · 1 quer ir · Split". Sem esta linha a lista
+                nao dizia nem de que cidade estava falando. */}
+            {d.resumoAmigos ? <Text style={e.amgTitulo}>{d.resumoAmigos}</Text> : null}
             {d.amigos.map((g) => {
               const partes = [];
               if (g.foram) partes.push(g.foram + (g.foram === 1 ? ' lugar' : ' lugares'));
-              if (g.querem) partes.push(g.querem + (g.querem === 1 ? ' quer ir' : ' querem ir'));
+              // 'na lista' e nao 'querem ir': o selo do lado ja diz 'quer ir',
+              // e junto dava "2 querem ir · quer ir". E a web decidiu evitar
+              // 'dele/dela' — o app nao sabe o genero de ninguem.
+              if (g.querem) partes.push(g.querem + ' na lista');
               return (
                 <Pressable
                   key={g.i}
@@ -192,14 +206,36 @@ export default function TelaExplorar({ dados, ocupado, acao }) {
           })}
         </View>
 
+        {/* Cada fim de busca diz uma coisa diferente. Antes existia UM estado
+            vazio: quem buscasse e nao achasse nada via a tela de "ainda nao
+            busquei", como se o toque nao tivesse feito nada. */}
         {!d.itens.length ? (
-          <View style={e.vazio}>
-            <IconeBusca cor={INK3} />
-            <Text style={e.vazioTitulo}>Descubra o que está bombando</Text>
-            <Text style={e.vazioTexto}>
-              Digite uma cidade pra ver os lugares mais bem avaliados.
-            </Text>
-          </View>
+          d.estado === 'buscando' ? (
+            <View style={e.vazio}>
+              <ActivityIndicator color={INK3} />
+              <Text style={e.vazioTexto}>Buscando tendências...</Text>
+            </View>
+          ) : d.estado === 'semResultado' ? (
+            <View style={e.vazio}>
+              <IconeBusca cor={INK3} />
+              <Text style={e.vazioTitulo}>Nada encontrado</Text>
+              <Text style={e.vazioTexto}>Tenta um nome de cidade diferente.</Text>
+            </View>
+          ) : d.estado === 'erro' ? (
+            <View style={e.vazio}>
+              <IconeBusca cor={INK3} />
+              <Text style={e.vazioTitulo}>Erro ao buscar</Text>
+              <Text style={e.vazioTexto}>Tenta de novo em alguns segundos.</Text>
+            </View>
+          ) : (
+            <View style={e.vazio}>
+              <IconeBusca cor={INK3} />
+              <Text style={e.vazioTitulo}>Descubra o que está bombando</Text>
+              <Text style={e.vazioTexto}>
+                Digite uma cidade pra ver os lugares mais bem avaliados.
+              </Text>
+            </View>
+          )
         ) : (
           <>
             {d.itens.map((it) => (
@@ -240,6 +276,7 @@ const e = StyleSheet.create({
 
   corpo: { flex: 1, paddingHorizontal: 24 },
 
+  amgTitulo: { fontFamily: MONO, fontSize: 11, letterSpacing: 0.5, color: INK3, marginBottom: 10 },
   blocoAmigos: {
     backgroundColor: ELEV,
     borderWidth: StyleSheet.hairlineWidth,
@@ -285,6 +322,11 @@ const e = StyleSheet.create({
     marginBottom: 14,
   },
   cardImg: { height: 186, overflow: 'hidden' },
+  // O degrade do site vai de rgba(11,22,32,.4) no topo a .9 no pe. Tres
+  // faixas empilhadas chegam perto o bastante sem biblioteca de gradiente.
+  veu1: { position: 'absolute', left: 0, right: 0, top: 0, height: '45%', backgroundColor: 'rgba(11,22,32,0.40)' },
+  veu2: { position: 'absolute', left: 0, right: 0, top: '45%', height: '30%', backgroundColor: 'rgba(11,22,32,0.62)' },
+  veu3: { position: 'absolute', left: 0, right: 0, bottom: 0, height: '25%', backgroundColor: 'rgba(11,22,32,0.86)' },
   metadeDeBaixo: { position: 'absolute', left: 0, right: 0, bottom: 0, height: '60%', opacity: 0.9 },
   selo: {
     position: 'absolute',

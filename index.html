@@ -3508,6 +3508,13 @@ function pickCat(c){
 // avaliações, via Google Places — sem custo de IA, sem infra nova. A ideia
 // de blog/IA (Claude+web search) fica pra quando essa infra existir e o
 // usuário quiser o "motivo" por trás da recomendação, não só o ranking.
+// Em que pe esta a busca. No site isso sempre existiu, mas so como texto
+// escrito direto no HTML — e a tela nativa nao le HTML. Sem isto, busca sem
+// resultado voltava pra tela de "ainda nao busquei nada" (como se o toque
+// nao tivesse feito nada) e busca com ERRO deixava na tela os lugares da
+// cidade ANTERIOR com o nome da cidade nova em cima. O app mentia.
+// inicial | buscando | semResultado | erro | ok
+let EXPLORE_ESTADO='inicial';
 const EXPLORE={city:'',cat:'food',items:[]};
 function loadExplore(){renderExploreFilters()}
 function renderExploreFilters(){
@@ -3628,6 +3635,7 @@ function renderAmigosNoLugar(r,lugar){
     if(est==='carregando'){box.innerHTML=aviso('Procurando entre seus amigos...');return}
     if(est==='sem_amigos'){box.innerHTML=aviso('Você ainda não tem amigos no Spot. Quando tiver, os lugares que eles marcaram como visitados aparecem aqui.');return}
     if(est==='nada_aqui'){box.innerHTML=aviso(esc(fraseNadaAqui(r.amigos,lugar)));return}
+    if(est==='erro'){box.innerHTML=aviso('Não consegui consultar seus amigos agora.');return}
     box.innerHTML='';return;
   }
   const foram=grupos.filter(g=>g.foram>0).length;
@@ -3813,6 +3821,10 @@ async function runExplore(){
   const city=document.getElementById('exploreCitySearch').value.trim();
   if(!city){toast('Digite uma cidade','','alert');return}
   EXPLORE.city=city;
+  // A lista antiga sai ANTES da nova chegar: manter os lugares da cidade
+  // passada embaixo do nome da nova e a pior forma de errar.
+  EXPLORE.items=[];
+  EXPLORE_ESTADO='buscando';
   const body=document.getElementById('exploreBody');
   body.innerHTML='<div class="search-loading">Buscando tendências...</div>';
   // Os amigos aparecem por conta própria, sem esperar o Google: são consultas
@@ -3832,8 +3844,9 @@ async function runExplore(){
     });
   }).catch(function(e){
     console.error('amigos no lugar',e);
-    const box=document.getElementById('exploreAmigos');
-    if(box)box.innerHTML=aviso('Não consegui consultar seus amigos agora.');
+    // renderAmigosNoLugar avisa as DUAS telas. Escrever so no HTML deixava a
+    // tela nativa presa em "Procurando entre seus amigos..." pra sempre.
+    renderAmigosNoLugar({estado:'erro',grupos:[],amigos:0},city);
   });
   const termo={food:'restaurantes',hotel:'hotéis',experience:'pontos turísticos'}[EXPLORE.cat];
   try{
@@ -3844,7 +3857,7 @@ async function runExplore(){
     });
     const data=await resp.json();
     let places=(data.places||[]).filter(p=>p.rating&&p.userRatingCount&&!isIrrelevantPlace(p));
-    if(!places.length){body.innerHTML='<div class="empty-state"><div class="ei" data-ic="pin"></div><h3>Nada encontrado</h3><p>Tenta um nome de cidade diferente.</p></div>';hydrateIcons(body);EXPLORE.items=[];return}
+    if(!places.length){body.innerHTML='<div class="empty-state"><div class="ei" data-ic="pin"></div><h3>Nada encontrado</h3><p>Tenta um nome de cidade diferente.</p></div>';hydrateIcons(body);EXPLORE.items=[];EXPLORE_ESTADO='semResultado';darDadosDeExplorar();return}
     // "bem recomendado" = nota alta E volume de avaliações — sem isso, 1
     // lugar com 1 avaliação 5★ apareceria acima de outro com 900 avaliações 4.7★
     places.sort((a,b)=>(b.rating*Math.log10(b.userRatingCount+1))-(a.rating*Math.log10(a.userRatingCount+1)));
@@ -3854,10 +3867,14 @@ async function runExplore(){
       const country=countryFromComponents(p.addressComponents);
       return{name:p.displayName?.text||'',address:addr,city:c,country,rating:String(p.rating),count:p.userRatingCount,subcat:guessSubcat(p.types),phone:p.nationalPhoneNumber||'',photo_url:placePhotoUrl(p,400),photo_author:autorDaFoto(p),website_url:p.websiteUri||'',maps_url:p.googleMapsUri||''};
     });
+    EXPLORE_ESTADO='ok';
     renderExploreResults();
   }catch(e){
     console.error('runExplore',e);
+    EXPLORE.items=[];
+    EXPLORE_ESTADO='erro';
     body.innerHTML='<div class="empty-state"><div class="ei" data-ic="alert"></div><h3>Erro ao buscar</h3><p>Tenta de novo em alguns segundos.</p></div>';hydrateIcons(body);
+    darDadosDeExplorar();
   }
 }
 // Resultado do Explorar vira card com foto, na mesma linguagem do feed.
@@ -3904,15 +3921,31 @@ function darDadosDeExplorar(){
     if(r.estado==='carregando')avisoAmigos='Procurando entre seus amigos...';
     else if(r.estado==='sem_amigos')avisoAmigos='Você ainda não tem amigos no Spot. Quando tiver, os lugares que eles marcaram como visitados aparecem aqui.';
     else if(r.estado==='nada_aqui')avisoAmigos=fraseNadaAqui(r.amigos,EXPLORE.city||'');
+    else if(r.estado==='erro')avisoAmigos='Não consegui consultar seus amigos agora.';
+  }
+
+  // A mesma linha de resumo que encabeca o bloco na web ("2 amigos ja foram
+  // · 1 quer ir · Split"). Sem ela a lista de amigos na tela nativa nao dizia
+  // nem de que cidade estava falando.
+  let resumoAmigos='';
+  if(grupos.length){
+    const foram=grupos.filter(g=>g.foram>0).length;
+    const soQuerem=grupos.filter(g=>g.foram===0).length;
+    const partes=[];
+    if(foram)partes.push(foram+(foram===1?' amigo já foi':' amigos já foram'));
+    if(soQuerem)partes.push(soQuerem+(soQuerem===1?' quer ir':' querem ir'));
+    resumoAmigos=partes.join(' · ')+' · '+(EXPLORE.city||'');
   }
 
   falarComACasca({tipo:'explorar',dados:{
     cidade:EXPLORE.city||'',
     categoria:EXPLORE.cat||'food',
     chips:[{id:'food',rotulo:'Comer'},{id:'hotel',rotulo:'Ficar'},{id:'experience',rotulo:'Experiências'}],
+    estado:EXPLORE_ESTADO,
     itens:itens,
     amigos:grupos,
     avisoAmigos:avisoAmigos,
+    resumoAmigos:resumoAmigos,
     // "Powered by Google" é obrigatório quando dado do Places aparece fora de
     // um mapa do Google — é o caso desta lista inteira.
     creditoGoogle:itens.length>0
