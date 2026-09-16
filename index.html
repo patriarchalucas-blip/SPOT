@@ -1006,6 +1006,14 @@ body.na-casca .bottom-nav{display:none}
 .note-label{font-size:13px;font-weight:600;color:var(--ink2);padding:18px 24px 8px}
 #addStars{padding:0 24px}
 .sheet-cta{display:block;width:calc(100% - 48px);margin:20px 24px 32px;background:var(--terra);color:#fff;border:none;border-radius:var(--r-sm);padding:16px;font-family:'DM Sans',sans-serif;font-size:15px;font-weight:600;cursor:pointer;box-shadow:var(--shadow-terra)}
+/* Uma escolha por botao, empilhadas. O confirm do navegador so tem duas; o
+   menu de acoes de um perfil tem mais, e cabe a mesma folha.
+   Escolha que nao destroi nada nao precisa gritar: so o botao de perigo e
+   cheio. Dois botoes chapados um em cima do outro pesam a tela e escondem
+   justamente qual e o irreversivel. */
+#perguntaAcoes .sheet-cta{margin:10px 24px 0;background:rgba(234,231,224,.06);color:var(--ink);box-shadow:none;border:1px solid var(--border)}
+#perguntaAcoes .sheet-cta[data-tom="perigo"]{background:var(--red);color:#fff;border-color:transparent}
+#perguntaAcoes .secondary-link{margin:4px 0 24px}
 .nt-label{font-size:12.5px;font-weight:600;color:var(--ink3);padding:0 24px 8px}
 .nt-wrap{padding:0 24px 16px}
 .nt-input{width:100%;background:rgba(234,231,224,.05);border:1px solid var(--border);border-radius:var(--r-sm);padding:14px 16px;font-size:15px;font-family:'DM Sans',sans-serif;color:var(--ink);outline:none;box-shadow:var(--shadow-inset)}
@@ -1363,6 +1371,8 @@ svg.ic path,svg.ic circle,svg.ic line,svg.ic polyline,svg.ic rect{fill:none;stro
 <div class="overlay" id="ov-novasenha"><div class="sheet"><div class="sheet-handle"></div><div class="sheet-title">Escolha uma senha nova</div><div class="den-sobre">Você chegou pelo link de recuperação. Defina a nova senha para entrar.</div><div class="nt-label" style="padding:0 24px">Nova senha</div><input class="nt-input" id="novaSenha" type="password" autocomplete="new-password" placeholder="8+ caracteres, com letras e números"><div class="auth-error show" id="erroNovaSenha" style="padding:0 24px;min-height:18px;background:none;border:none"></div><button class="sheet-cta" id="btnNovaSenha" onclick="salvarNovaSenha()">Salvar e entrar</button></div></div>
 
 <div class="overlay" id="ov-denuncia" onclick="closeOut(event,'ov-denuncia')"><div class="sheet"><button class="sheet-close" onclick="closeOv('ov-denuncia')" data-ic="close" aria-label="Fechar"></button><div class="sheet-handle"></div><div class="sheet-title">Denunciar</div><div class="den-sobre" id="denunciaSobre"></div><div class="nt-label" style="padding:0 24px">O que houve?</div><div class="den-motivos" id="denunciaMotivos"></div><div class="nt-label" style="padding:0 24px">Quer contar mais? (opcional)</div><textarea class="nt-input" id="denunciaDetalhe" rows="3" maxlength="1000" placeholder="Descreva o problema"></textarea><button class="sheet-cta" id="btnEnviarDenuncia" onclick="enviarDenuncia()">Enviar denúncia</button><div class="conv-dica">Analisamos toda denúncia em até 24 horas. Se quiser parar de ver essa pessoa agora, você também pode bloquear.</div></div></div>
+
+<div class="overlay" id="ov-pergunta" onclick="if(event.target===this)responderPergunta(-1)"><div class="sheet"><div class="sheet-handle"></div><div class="sheet-title" id="perguntaTitulo"></div><div class="den-sobre" id="perguntaTexto"></div><div id="perguntaAcoes"></div></div></div>
 
 <div class="overlay" id="ov-bloqueados" onclick="closeOut(event,'ov-bloqueados')"><div class="sheet"><button class="sheet-close" onclick="closeOv('ov-bloqueados')" data-ic="close" aria-label="Fechar"></button><div class="sheet-handle"></div><div class="sheet-title">Pessoas bloqueadas</div><div class="lista-bloqueados" id="listaBloqueados"></div><div class="conv-dica">Quem você bloqueia não vê que foi bloqueado, e deixa de aparecer pra você.</div></div></div>
 
@@ -2120,7 +2130,7 @@ function mostrarErroAmigo(m){
 }
 function hideAuthErr(){document.getElementById('authError').classList.remove('show')}
 async function signOut(){
-  if(!confirm('Sair do Spot?'))return;
+  if(!await confirmar('Sair do Spot?','','Sair'))return;
   // Antes do signOut, enquanto S.user ainda existe pra montar a chave: o
   // cache local guarda viagens e notas, e num aparelho emprestado isso não
   // pode sobrar pra quem entrar depois.
@@ -2903,7 +2913,9 @@ async function applyTripDates(start,end){
 }
 async function deleteTrip(){
   if(!S.curTrip)return;
-  if(!confirm(`Excluir a viagem "${S.curTrip.name}"? Todos os spots dela serão apagados. Isso não pode ser desfeito.`))return;
+  if(!await confirmar('Excluir esta viagem?',
+    '"'+S.curTrip.name+'" e todos os lugares dela somem. Não tem como desfazer.',
+    'Excluir viagem'))return;
   const id=S.curTrip.id;
   // ORDEM, e por que ela é essa: não existe `on delete cascade` em
   // spots.trip_id (as migrações 013 e 014 registram isso por escrito), então
@@ -2934,7 +2946,9 @@ async function deleteTrip(){
 }
 async function deleteSpot(){
   if(!S.curPlace)return;
-  if(!confirm(`Excluir "${S.curPlace.name}"?`))return;
+  if(!await confirmar('Excluir este lugar?',
+    '"'+S.curPlace.name+'" sai da sua lista, com a sua nota e a sua avaliação. Não tem como desfazer.',
+    'Excluir lugar'))return;
   const id=S.curPlace.id,tripId=S.curPlace.trip_id;
   const{error}=await dbDelete('spots',id);
   if(!error){
@@ -5628,7 +5642,7 @@ async function enviarComentario(spotId,alvo,donoDoSpot){
 }
 
 async function apagarComentario(id,spotId,alvo,donoDoSpot){
-  if(!confirm('Apagar esse comentário?'))return;
+  if(!await confirmar('Apagar este comentário?','','Apagar'))return;
   const{error}=await dbDelete('spot_comments',id);
   if(error){toast('Não consegui apagar','','alert');return}
   COMENTARIOS[spotId]=(COMENTARIOS[spotId]||[]).filter(c=>c.id!==id);
@@ -5661,7 +5675,9 @@ function estaBloqueado(userId){return !!userId&&BLOQUEADOS.has(userId)}
 async function bloquearUsuario(userId,nome){
   if(!userId||userId===S.user.id)return;
   const quem=nome||'essa pessoa';
-  if(!confirm('Bloquear '+quem+'?\n\nVocês deixam de ser amigos, e você não vê mais o conteúdo dessa pessoa. Ela não é avisada.'))return;
+  if(!await confirmar('Bloquear '+quem+'?',
+    'Vocês deixam de ser amigos e você não vê mais o conteúdo dessa pessoa. Ela não é avisada.',
+    'Bloquear'))return;
   const{error}=await dbInsert('bloqueios',{bloqueador_id:S.user.id,bloqueado_id:userId});
   // Chave duplicada significa que já estava bloqueado — não é falha.
   const jaEstava=error&&String(error.code||'')==='23505';
@@ -5747,11 +5763,14 @@ async function enviarDenuncia(){
 
 // Menu do perfil do amigo. Usa confirm/prompt do sistema em vez de mais uma
 // ficha: são duas ações, e o nome do amigo nunca entra em HTML por aqui.
-function abrirAcoesDoAmigo(){
+async function abrirAcoesDoAmigo(){
   const id=FRIEND&&FRIEND.id;
   if(!id)return;
   const nome=document.getElementById('friendName').textContent||'essa pessoa';
-  const escolha=prompt('O que você quer fazer com '+nome+'?\n\n1 — Denunciar o perfil\n2 — Bloquear\n\nDigite 1 ou 2 e confirme.');
+  const escolha=await perguntar('O que fazer com '+nome+'?','',[
+    {rotulo:'Denunciar o perfil',valor:'1'},
+    {rotulo:'Bloquear',valor:'2',tom:'perigo'}
+  ]);
   if(escolha==='1'){
     COMENT_PERFIS[id]=COMENT_PERFIS[id]||{display_name:nome};
     abrirDenuncia('perfil',id,id);
@@ -6474,7 +6493,7 @@ function paisSoMarcado(c){
 async function desmarcarPais(c,ev){
   if(ev){ev.stopPropagation();ev.preventDefault()}
   if(!paisSoMarcado(c))return;
-  if(!confirm('Tirar '+c+' do seu mapa?'))return;
+  if(!await confirmar('Tirar '+c+' do seu mapa?','','Tirar do mapa'))return;
   const alvos=(S.trips||[]).filter(t=>((t.destinations&&t.destinations[0])||t.name)===c&&isQuickVisit(t));
   for(const t of alvos){
     const{error}=await dbDelete('trips',t.id);
@@ -6591,7 +6610,12 @@ function darDadosDePerfil(){
   // Montada do estado, não raspada do DOM: raspar depende de a tela já ter
   // sido desenhada, e devolvia os nomes grudados, sem separador.
   const visitados=visitedCountryNames();
-  const paises=visitados.map(n=>flagFor(n)+' '+n).join('  ·  ');
+  // A tela nativa mostrava os países num parágrafo corrido de bandeira e nome
+  // separados por ponto — vinte e tantos nomes numa parede de texto, sem a
+  // contagem de lugares, sem o selo de onde a pessoa mora e sem como tirar
+  // um país. A web sempre teve tudo isso em linhas. As REGRAS ficam aqui, do
+  // mesmo jeito que na web; a tela nativa só desenha o que chegar.
+  const paises=listaDePaisesPraTela(visitados);
   falarComACasca({tipo:'perfil',pronto:true,dados:{
     nome:p.display_name||(S.user.email||'').split('@')[0],
     username:p.username||'',
@@ -6602,7 +6626,8 @@ function darDadosDePerfil(){
     resumo:spots.length?(spots.length+(spots.length===1?' lugar · ':' lugares · ')
       +cidades.length+(cidades.length===1?' cidade':' cidades')):'',
     estante:estante,
-    paisesTexto:paises,
+    paises:paises.linhas,
+    paisesTotal:paises.total,
     mapa:visitedCountryNames().map(geoFor).filter(Boolean)
   }});
 }
@@ -6615,6 +6640,9 @@ window.acaoDePerfil=function(acao,valor){
   if(acao==='visitado'){openVisitedCountryPicker();return}
   if(acao==='moro'){openHomeCountryPicker();return}
   if(acao==='foto'){const i=document.getElementById('avatarFileInput');if(i)i.click();return}
+  if(acao==='pais'){drillTo('country',valor);goTo('list');return}
+  if(acao==='tirarPais'){desmarcarPais(valor);return}
+  if(acao==='todosOsPaises'){openList('countries');return}
   if(acao==='recarregar'){loadProfile();return}
 };
 
@@ -6662,6 +6690,32 @@ function renderListaDePaises(visited,alvo){
   box.innerHTML=h;
   hydrateIcons(box);
 }
+// A MESMA lista que renderListaDePaises desenha na web, em dados. Duas telas,
+// uma regra: ordem por quantidade de lugares, teto de PAISES_NO_PERFIL, selo
+// de casa, e botão de tirar só onde tirar faz sentido.
+function listaDePaisesPraTela(visitados){
+  const casa=homeCountryName();
+  const porPais={};
+  (S.trips||[]).forEach(function(t){
+    const p=(t.destinations&&t.destinations[0])||t.name;
+    if(p)porPais[p]=(porPais[p]||0)+((t._spots||[]).length);
+  });
+  const ordenado=(visitados||[]).slice().sort(function(a,b){
+    return (porPais[b]||0)-(porPais[a]||0)||a.localeCompare(b,'pt-BR');
+  });
+  const linhas=ordenado.slice(0,PAISES_NO_PERFIL).map(function(c){
+    const n=porPais[c]||0;
+    return{
+      nome:c,
+      bandeira:flagFor(c),
+      casa:c===casa,
+      contagem:n?(n+(n===1?' spot':' spots')):'—',
+      podeTirar:paisSoMarcado(c)
+    };
+  });
+  return{linhas:linhas,total:ordenado.length};
+}
+
 // ── World map via d3-geo (Natural Earth projection, proper shapes) ──
 let worldGeoData=null;
 // Só d3-geo (35 KB) + d3-array (16 KB), no lugar do d3 inteiro (273 KB). O app
@@ -6854,6 +6908,47 @@ function goTo(id){
   window.scrollTo(0,0);
   avisarTelaAtual(id);
 }
+// ═══ PERGUNTA ═══
+//
+// O confirm() e o prompt() do navegador abrem uma caixa do SISTEMA: outra
+// tipografia, outros botões, e dentro do app a cara de página web presa ali.
+// O prompt era o pior de todos — pedia "digite 1 ou 2 e confirme".
+//
+// Aqui é a mesma folha do resto do app, com um botão por escolha. Devolve o
+// valor da escolha, ou null se a pessoa desistiu — então quem chama continua
+// escrito como estava, só que com await.
+let respostaDaPergunta=null;
+function perguntar(titulo,texto,acoes){
+  return new Promise(function(resolve){
+    // Pergunta em cima de pergunta não existe: a de antes fica sem resposta
+    // pra sempre e quem esperava por ela trava. A anterior desiste primeiro.
+    if(respostaDaPergunta)respostaDaPergunta(-1);
+    document.getElementById('perguntaTitulo').textContent=titulo||'';
+    const p=document.getElementById('perguntaTexto');
+    p.textContent=texto||'';
+    p.style.display=texto?'':'none';
+    // O rótulo NUNCA vai dentro do onclick: pode conter nome escolhido por
+    // outra pessoa, e aí um apóstrofo fecharia a string. O botão manda só a
+    // posição; o valor sai daqui.
+    document.getElementById('perguntaAcoes').innerHTML=acoes.map(function(a,i){
+      const perigo=a.tom==='perigo'?' data-tom="perigo"':'';
+      return'<button class="sheet-cta"'+perigo+' onclick="responderPergunta('+i+')">'+esc(a.rotulo)+'</button>';
+    }).join('')+'<button class="secondary-link" onclick="responderPergunta(-1)">'+esc(acoes.cancelar||'Cancelar')+'</button>';
+    respostaDaPergunta=function(i){
+      respostaDaPergunta=null;
+      closeOv('ov-pergunta');
+      resolve(i<0?null:acoes[i].valor);
+    };
+    showOv('ov-pergunta');
+  });
+}
+window.responderPergunta=function(i){if(respostaDaPergunta)respostaDaPergunta(i)};
+
+// Caso mais comum: confirmar uma ação que não dá pra desfazer.
+async function confirmar(titulo,texto,rotulo){
+  return await perguntar(titulo,texto,[{rotulo:rotulo||'Confirmar',valor:true,tom:'perigo'}])===true;
+}
+
 function showOv(id){populateTripOpts();if(id==='ov-newtrip')prepNewTrip();if(id==='ov-quickvisit')prepQuickVisit();document.getElementById(id).classList.add('show');avisarSeTemJanela()}
 function closeOv(id){document.getElementById(id).classList.remove('show');avisarSeTemJanela()}
 function closeOut(e,id){if(e.target===document.getElementById(id))closeOv(id)}
@@ -7867,7 +7962,9 @@ async function compartilharConvite(){
     await navigator.clipboard.writeText(url);
     toast('Link copiado','Cole no WhatsApp pra convidar.','check');
   }catch(e){
-    prompt('Copie o link do convite:',url);
+    // Sem área de transferência também: mostra o link na folha, pra copiar na
+    // mão. É o último recurso, e antes era um prompt do navegador.
+    await perguntar('Seu link de convite',url,[{rotulo:'Entendi',valor:'ok'}]);
   }
 }
 

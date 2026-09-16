@@ -47,6 +47,7 @@ const DESENHOS = {
           'M12 3a14 14 0 0 1 0 18 14 14 0 0 1 0-18Z'],
   pin: ['M12 21s6.5-5.8 6.5-10.4A6.5 6.5 0 0 0 5.5 10.6C5.5 15.2 12 21 12 21Z', 'M12 13a2.4 2.4 0 1 0 0-4.8 2.4 2.4 0 0 0 0 4.8Z'],
   edit: ['M4 20h4L19 9a2.1 2.1 0 0 0-3-3L5 17v3Z'],
+  close: ['M6.5 6.5l11 11', 'M17.5 6.5l-11 11'],
 };
 
 function Icone({ nome, cor = INK3, tamanho = 18 }) {
@@ -80,6 +81,37 @@ function CategoriaIcone({ cat }) {
         </>
       )}
     </Svg>
+  );
+}
+
+// Uma linha por país: bandeira, nome, e à direita quantos lugares tem lá — ou
+// o selo de onde a pessoa mora. O X só aparece em país que é só marcação de
+// mapa: tirar um país que tem viagem de verdade apagaria a viagem junto.
+function Pais({ p, acao }) {
+  return (
+    <Pressable
+      onPress={() => acao('pais', p.nome)}
+      style={({ pressed }) => [e.pais, pressed && { opacity: 0.6 }]}
+    >
+      <Text style={e.paisBandeira}>{p.bandeira}</Text>
+      <Text style={e.paisNome} numberOfLines={1}>{p.nome}</Text>
+      {p.casa ? (
+        <Text style={e.paisCasa}>mora aqui</Text>
+      ) : (
+        <Text style={e.paisConta}>{p.contagem}</Text>
+      )}
+      {p.podeTirar ? (
+        <Pressable
+          onPress={() => acao('tirarPais', p.nome)}
+          hitSlop={8}
+          style={({ pressed }) => [e.paisX, pressed && { opacity: 0.5 }]}
+          accessibilityRole="button"
+          accessibilityLabel={'Tirar ' + p.nome + ' do mapa'}
+        >
+          <Icone nome="close" cor={INK3} tamanho={15} />
+        </Pressable>
+      ) : null}
+    </Pressable>
   );
 }
 
@@ -196,7 +228,21 @@ export default function TelaPerfil({ dados, ocupado, acao }) {
         <View style={e.mapa}>
           <MapaMundi visitados={d.mapa} altura={190} />
         </View>
-        <Text style={e.paises}>{d.paisesTexto || 'Crie viagens para pintar o mundo.'}</Text>
+        {d.paises && d.paises.length ? (
+          <View style={e.paisesLista}>
+            {d.paises.map((p) => <Pais key={p.nome} p={p} acao={acao} />)}
+            {d.paisesTotal > d.paises.length ? (
+              <Pressable
+                onPress={() => acao('todosOsPaises')}
+                style={({ pressed }) => [e.paisTodos, pressed && { opacity: 0.6 }]}
+              >
+                <Text style={e.paisTodosTxt}>{'Ver todos os ' + d.paisesTotal + ' ›'}</Text>
+              </Pressable>
+            ) : null}
+          </View>
+        ) : (
+          <Text style={e.paises}>Crie viagens para pintar o mundo.</Text>
+        )}
 
         <View style={e.acoes}>
           <Linha icone="globe" texto="Marcar país que já visitei" onPress={() => acao('visitado')} />
@@ -256,6 +302,32 @@ const e = StyleSheet.create({
   secaoSub: { fontFamily: MONO, fontSize: 11, color: INK3 },
   aviso: { fontSize: 13.5, color: INK3, lineHeight: 19 },
   paises: { fontSize: 13.5, color: INK2, lineHeight: 21 },
+  paisesLista: { marginTop: 2 },
+  pais: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 11,
+    paddingVertical: 11,
+    borderBottomWidth: StyleSheet.hairlineWidth,
+    borderBottomColor: BORDA,
+  },
+  paisBandeira: { fontSize: 17 },
+  paisNome: { flex: 1, fontSize: 14.5, color: INK },
+  paisConta: { fontFamily: MONO, fontSize: 11, color: INK3 },
+  paisCasa: {
+    fontFamily: MONO,
+    fontSize: 9.5,
+    letterSpacing: 0.4,
+    color: TERRA,
+    backgroundColor: 'rgba(193,85,47,0.14)',
+    borderRadius: 999,
+    paddingHorizontal: 7,
+    paddingVertical: 2,
+    overflow: 'hidden',
+  },
+  paisX: { width: 26, height: 26, alignItems: 'center', justifyContent: 'center', marginRight: -6 },
+  paisTodos: { paddingTop: 12, paddingBottom: 2 },
+  paisTodosTxt: { fontSize: 12.5, color: INK3 },
   mapa: { marginHorizontal: -24, marginBottom: 14 },
 
   cidade: {
