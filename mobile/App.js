@@ -49,6 +49,15 @@ import TelaPerfil from './TelaPerfil';
 import { StatusBar } from 'expo-status-bar';
 import { WebView } from 'react-native-webview';
 import * as WebBrowser from 'expo-web-browser';
+import { useFonts } from 'expo-font';
+// Importar pela RAIZ do pacote arrasta a familia inteira pro aplicativo:
+// 38 arquivos de fonte, quando os usados sao cinco. O caminho com o peso
+// dentro traz so o arquivo pedido.
+import { Fraunces_400Regular } from '@expo-google-fonts/fraunces/400Regular';
+import { IBMPlexMono_400Regular } from '@expo-google-fonts/ibm-plex-mono/400Regular';
+import { IBMPlexMono_500Medium } from '@expo-google-fonts/ibm-plex-mono/500Medium';
+import { IBMPlexMono_600SemiBold } from '@expo-google-fonts/ibm-plex-mono/600SemiBold';
+import { Cinzel_500Medium } from '@expo-google-fonts/cinzel/500Medium';
 import * as Notifications from 'expo-notifications';
 import * as Device from 'expo-device';
 import Constants from 'expo-constants';
@@ -147,6 +156,27 @@ function ehFluxoDeLogin(url) {
 // O provedor de area segura fica aqui, sozinho. Quem LE a margem e o
 // Conteudo, que e filho dele — ler no mesmo componente que cria o provedor
 // significa ler antes de ele existir, e o app quebra na primeira tela.
+// As tres fontes da marca. Elas estavam ESCRITAS nas quatro telas nativas
+// desde o comeco, mas nenhum arquivo de fonte existia no projeto: o iPhone
+// caia calado na fonte do sistema, e a separacao "texto x dado" que o design
+// do Spot inteiro usa simplesmente nao existia dentro do app.
+//
+// Os nomes sao os mesmos que as telas ja pediam, entao nenhuma tela precisou
+// mudar. As duas variantes de peso da monoespacada ganham nome proprio: o
+// iOS nao escolhe o arquivo mais pesado sozinho, ele engorda o desenho na
+// marra e o resultado fica borrado.
+//
+// O texto corrido continua na fonte do sistema (a DM Sans do site nao entrou
+// aqui): num app de iPhone, a fonte do sistema e a escolha certa pra corpo de
+// texto, e as tres de cima e que carregam a marca.
+const FONTES = {
+  Fraunces: Fraunces_400Regular,
+  'IBM Plex Mono': IBMPlexMono_400Regular,
+  'IBM Plex Mono Medium': IBMPlexMono_500Medium,
+  'IBM Plex Mono SemiBold': IBMPlexMono_600SemiBold,
+  Cinzel: Cinzel_500Medium,
+};
+
 export default function App() {
   return (
     <SafeAreaProvider>
@@ -156,6 +186,9 @@ export default function App() {
 }
 
 function Conteudo() {
+  // Sem travar a tela: o WebView demora mais que as fontes, e o pior caso e
+  // um piscar de fonte do sistema em vez de uma tela preta esperando.
+  useFonts(FONTES);
   const webRef = useRef(null);
   const [carregando, setCarregando] = useState(true);
   const [semRede, setSemRede] = useState(false);

@@ -32,6 +32,8 @@ const TERRA = '#c1552f';
 const VERDE = '#4E9490';
 const FRAUNCES = 'Fraunces';
 const MONO = 'IBM Plex Mono';
+const MONO_MEDIO = 'IBM Plex Mono Medium';
+const MONO_FORTE = 'IBM Plex Mono SemiBold';
 
 function Caixa({ n, rotulo, onPress }) {
   return (
@@ -222,7 +224,8 @@ const e = StyleSheet.create({
   convite: { fontSize: 12.5, color: INK3, maxWidth: 230, lineHeight: 18, marginBottom: 14 },
 
   paises: { flexDirection: 'row', alignItems: 'baseline', gap: 6, marginBottom: 14 },
-  paisesN: { fontFamily: MONO, fontWeight: '500', fontSize: 30, color: INK, letterSpacing: -1 },
+  // Peso de monoespacada com nome proprio: ver o comentario de FONTES no App.
+  paisesN: { fontFamily: MONO_MEDIO, fontSize: 30, color: INK, letterSpacing: -1 },
   paisesT: { fontFamily: MONO, fontSize: 13, color: INK3 },
 
   caixas: { flexDirection: 'row', gap: 8, marginBottom: 18 },
@@ -236,7 +239,7 @@ const e = StyleSheet.create({
     paddingHorizontal: 8,
     alignItems: 'center',
   },
-  caixaN: { fontFamily: MONO, fontWeight: '600', fontSize: 21, color: INK },
+  caixaN: { fontFamily: MONO_FORTE, fontSize: 21, color: INK },
   caixaL: { fontFamily: MONO, fontSize: 10.5, color: INK3, marginTop: 4, letterSpacing: 0.5 },
 
   trilho: { gap: 8, paddingHorizontal: 24, paddingTop: 2 },
