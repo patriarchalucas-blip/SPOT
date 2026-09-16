@@ -1,4 +1,5 @@
 import{quemEsta,podeGastar}from './_auth.js';
+import{lerKV,gravarKV,contarUso}from './_kv.js';
 // Cloudflare Pages Function — temperatura média histórica por cidade+mês,
 // via Visual Crossing (mesmo padrão da find-instagram.js: chave só no
 // servidor, nunca no navegador).
@@ -33,7 +34,7 @@ export async function onRequestPost(context){
   if(!env.VISUALCROSSING_KEY||!env.SPOT_KV)return json({avg_temp:null,configured:false});
 
   const cacheKey='climate_'+normKey(city+'|'+country+'|'+month);
-  const cached=await env.SPOT_KV.get(cacheKey);
+  const cached=await lerKV(env,cacheKey);
   // Cache é liberado pra qualquer um DE PROPÓSITO: responder daqui não gasta
   // cota nem expõe nada, e é o caminho da esmagadora maioria das chamadas.
   // Consequência boa: quem estiver com o app aberto durante um deploy (JS
@@ -48,7 +49,7 @@ export async function onRequestPost(context){
   }
 
   const monthKey='climate_records_'+new Date().toISOString().slice(0,7);
-  const usedRecords=parseInt((await env.SPOT_KV.get(monthKey))||'0',10);
+  const usedRecords=parseInt((await lerKV(env,monthKey))||'0',10);
   if(usedRecords>=MONTHLY_RECORD_CAP){
     // Teto atingido — não consulta, sem custo nenhum. App cai pro
     // fallback (sem mostrar temperatura), tenta de novo mês que vem.
@@ -74,7 +75,7 @@ export async function onRequestPost(context){
       recordsGastos+=days.length;
     }catch(e){/* essa fonte falhou, segue com as outras */}
   }
-  await env.SPOT_KV.put(monthKey,String(usedRecords+recordsGastos),{expirationTtl:60*60*24*40});
+  await contarUso(env,monthKey,usedRecords,recordsGastos,60*60*24*40);
 
   const deuCerto=allTemps.length>0;
   const result=deuCerto
@@ -85,7 +86,7 @@ export async function onRequestPost(context){
   // única falha de rede condenava aquela cidade a nunca mais mostrar
   // temperatura, mesmo muito depois da API ter voltado ao normal.
   const ttl=deuCerto?60*60*24*180:60*60*6;
-  await env.SPOT_KV.put(cacheKey,JSON.stringify(result),{expirationTtl:ttl});
+  await gravarKV(env,cacheKey,JSON.stringify(result),ttl);
   return json(result);
 }
 

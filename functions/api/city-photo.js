@@ -1,4 +1,5 @@
 import{quemEsta,podeGastar}from './_auth.js';
+import{lerKV,gravarKV,contarUso}from './_kv.js';
 
 // Cloudflare Pages Function — foto de uma cidade, via Unsplash.
 //
@@ -54,7 +55,7 @@ export async function onRequestPost(context) {
   // v2: o registro antigo não guardava o autor da foto, e sem autor não dá
   // pra creditar. Trocar o prefixo aposenta os antigos sem apagar nada.
   const cacheKey = 'cityphoto2_' + normKey(query);
-  const cached = await env.SPOT_KV.get(cacheKey);
+  const cached = await lerKV(env, cacheKey);
   // Cache liberado sem login, igual à /api/climate: responder daqui não gasta
   // cota nem expõe nada, e é o caminho da maioria das chamadas.
   if (cached) return responder(context, JSON.parse(cached));
@@ -72,7 +73,7 @@ export async function onRequestPost(context) {
 
   const mes = new Date().toISOString().slice(0, 7);
   const contador = 'unsplash_count_' + mes;
-  const usado = parseInt((await env.SPOT_KV.get(contador)) || '0', 10);
+  const usado = parseInt((await lerKV(env, contador)) || '0', 10);
   if (usado >= MONTHLY_CAP) return json({ url: '', capped: true });
 
   let r;
@@ -83,12 +84,12 @@ export async function onRequestPost(context) {
     return json({ url: '' }); // sem cachear: rede falhou, não é resposta do Unsplash
   }
   // conta a tentativa: é a chamada que consome a cota, não a resposta
-  await env.SPOT_KV.put(contador, String(usado + 1), { expirationTtl: 60 * 60 * 24 * 40 });
+  await contarUso(env, contador, usado, 1, 60 * 60 * 24 * 40);
 
   // 403/429 = cota da hora esgotada. Guarda por 10 min só pra não martelar.
   if (r.status === 403 || r.status === 429) {
     const espera = { url: '', quotaExceeded: true };
-    await env.SPOT_KV.put(cacheKey, JSON.stringify(espera), { expirationTtl: 600 });
+    await gravarKV(env, cacheKey, JSON.stringify(espera), 600);
     return json(espera);
   }
   if (!r.ok) return json({ url: '' });
@@ -123,7 +124,7 @@ export async function onRequestPost(context) {
     // guardado no cache, nunca devolvido ao navegador — ver responder()
     baixar: baixar || ''
   };
-  await env.SPOT_KV.put(cacheKey, JSON.stringify(resultado), { expirationTtl: url ? TTL_OK : TTL_FALHA });
+  await gravarKV(env, cacheKey, JSON.stringify(resultado), url ? TTL_OK : TTL_FALHA);
   return responder(context, resultado);
 }
 

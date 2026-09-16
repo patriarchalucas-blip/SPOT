@@ -1,4 +1,5 @@
 import{quemEsta,podeGastar}from './_auth.js';
+import{lerKV}from './_kv.js';
 // Cloudflare Pages Function — roda no servidor da Cloudflare, nunca no
 // navegador do usuário. Existe só pra isso: esconder a chave da Brave (que
 // não pode ir pro client, senão qualquer um que abrir o app pode usá-la) e
@@ -62,7 +63,7 @@ export async function onRequestPost(context) {
 
   const monthKey = new Date().toISOString().slice(0, 7); // "2026-08"
   const counterKey = 'brave_count_' + monthKey;
-  const current = parseInt((await env.SPOT_KV.get(counterKey)) || '0', 10);
+  const current = parseInt((await lerKV(env, counterKey)) || '0', 10);
 
   if (current >= MONTHLY_CAP) {
     return json({ instagram_url: null, capped: true });
