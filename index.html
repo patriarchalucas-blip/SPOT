@@ -2713,7 +2713,13 @@ function darDadosDeViagens(){
   const regiao=(REGIAO_ATIVA&&groups[REGIAO_ATIVA])?REGIAO_ATIVA:ordem[0];
   const daRegiao=groups[regiao]||[];
 
+  // A faixa de check-in existia so no HTML, entao a tela nativa nunca soube
+  // dela: quem usa o app pelas abas nativas simplesmente nunca era
+  // perguntado se queria salvar o lugar onde esta.
+  const checkin=CHECKIN.place?{nome:CHECKIN.place.name}:null;
+
   falarComACasca({tipo:'viagens',pronto:true,dados:{
+    checkin:checkin,
     // O placar: os mesmos números dos cards, já contados.
     paises:Number((document.getElementById('dashPaisesN')||{}).textContent)||0,
     spots:Number((document.getElementById('statSpots')||{}).textContent)||0,
@@ -2756,7 +2762,14 @@ window.acaoDeViagens=function(acao,valor){
   if(acao==='abrir'){openTrip(valor);return}
   if(acao==='lista'){openList(valor);return}
   if(acao==='perfil'){goTo('profile');loadProfile();return}
-  if(acao==='nova'){showOv('ov-trip');return}
+  // ov-trip e o SELETOR ("Em qual viagem?"). Quem toca em "Criar viagem" na
+  // tela sem nenhuma viagem quer o criador, que e o ov-newtrip.
+  if(acao==='nova'){showOv('ov-newtrip');return}
+  // O mesmo que o botao + do site faz: escolher categoria e cair no fluxo
+  // normal de adicionar lugar, que cria a viagem sozinho se precisar.
+  if(acao==='novoLugar'){comecarSpotSemViagem();return}
+  if(acao==='checkinAdd'){checkinAdd();return}
+  if(acao==='checkinIgnorar'){checkinIgnore();return}
   if(acao==='mapa'){abrirMapaMundi('dashboard');return}
   if(acao==='recarregar'){loadDashboard();return}
 };
@@ -4275,6 +4288,7 @@ function maybeShowCheckin(){
       CHECKIN.place={name,meta:addr,icon:catIcon('food'),city,country,address:addr,subcat:'',phone:p.nationalPhoneNumber||'',photo_url:fotos.full,photo_thumb:fotos.thumb,photo_author:autorDaFoto(p),rating_google:p.rating?String(p.rating):'',website_url:p.websiteUri||'',maps_url:p.googleMapsUri||'',category:'food'};
       document.getElementById('checkinName').textContent=name;
       document.getElementById('checkinBanner').style.display='flex';
+      darDadosDeViagens();
     }catch(e){console.error('maybeShowCheckin',e)}
   // maximumAge:0 força uma leitura fresca do GPS — com cache de minutos, se
   // você tivesse passado por um lugar e andado embora, o app continuava
@@ -4284,6 +4298,7 @@ function maybeShowCheckin(){
 }
 function checkinIgnore(){
   document.getElementById('checkinBanner').style.display='none';
+  darDadosDeViagens();
   if(CHECKIN.place)localStorage.setItem('spot_checkin_dismissed_'+normName(CHECKIN.place.name),String(Date.now()+4*60*60*1000));
   CHECKIN.place=null;
   // Tenta de novo na hora — se o lugar errado (o vizinho) acabou de ser
@@ -4295,6 +4310,7 @@ function checkinIgnore(){
 function checkinAdd(){
   const p=CHECKIN.place;if(!p)return;
   document.getElementById('checkinBanner').style.display='none';
+  darDadosDeViagens();
   const place={name:p.name,meta:p.meta,icon:p.icon,city:p.city,country:p.country,address:p.address,phone:p.phone||'',photo_url:p.photo_url||'',photo_thumb:p.photo_thumb||'',photo_author:p.photo_author,rating_google:p.rating_google,website_url:p.website_url,maps_url:p.maps_url};
   CHECKIN.place=null;
   // Categoria já é sabida (check-in só busca comer/beber) e "Já fui" é o

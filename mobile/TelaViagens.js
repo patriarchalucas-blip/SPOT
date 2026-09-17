@@ -20,6 +20,7 @@ import {
   View,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import Svg, { Path } from 'react-native-svg';
 import MapaMundi from './MapaMundi';
 
 const INK = '#EAE7E0';
@@ -46,6 +47,47 @@ function Caixa({ n, rotulo, onPress }) {
       <Text style={e.caixaN}>{n}</Text>
       <Text style={e.caixaL}>{rotulo}</Text>
     </Pressable>
+  );
+}
+
+// "Voce esta no X?" — a faixa que aparece quando o aparelho reconhece um
+// lugar por perto. Ela existia so na versao web: quem usa o app pelas abas
+// nativas nunca era perguntado.
+function FaixaDeCheckin({ nome, acao }) {
+  return (
+    <View style={e.checkin}>
+      <View style={e.checkinIcone}>
+        <Svg width={16} height={16} viewBox="0 0 24 24">
+          <Path
+            d="M12 21s6.5-5.8 6.5-10.4A6.5 6.5 0 0 0 5.5 10.6C5.5 15.2 12 21 12 21Z"
+            stroke="#fff" strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round" fill="none"
+          />
+          <Path
+            d="M12 13a2.4 2.4 0 1 0 0-4.8 2.4 2.4 0 0 0 0 4.8Z"
+            stroke="#fff" strokeWidth={1.8} fill="none"
+          />
+        </Svg>
+      </View>
+      <View style={{ flex: 1, minWidth: 0 }}>
+        <Text style={e.checkinQ}>
+          Voce esta em <Text style={e.checkinNome}>{nome}</Text>?
+        </Text>
+        <View style={e.checkinAcoes}>
+          <Pressable
+            onPress={() => acao('checkinAdd')}
+            style={({ pressed }) => [e.checkinBtn, e.checkinAdd, pressed && { opacity: 0.85 }]}
+          >
+            <Text style={e.checkinAddTxt}>Adicionar spot</Text>
+          </Pressable>
+          <Pressable
+            onPress={() => acao('checkinIgnorar')}
+            style={({ pressed }) => [e.checkinBtn, pressed && { opacity: 0.6 }]}
+          >
+            <Text style={e.checkinIgnorarTxt}>Ignorar</Text>
+          </Pressable>
+        </View>
+      </View>
+    </View>
   );
 }
 
@@ -92,6 +134,16 @@ export default function TelaViagens({ dados, ocupado, acao }) {
   }
 
   const d = dados;
+  // A tela era so a lista; o botao + precisa FLUTUAR por cima dela, entao
+  // entra uma camada em volta.
+  return (
+    <View style={{ flex: 1 }}>
+      {corpo()}
+      <BotaoMais acao={acao} margemDeBaixo={margem.bottom} />
+    </View>
+  );
+
+  function corpo() {
 
   return (
     <ScrollView
@@ -151,6 +203,8 @@ export default function TelaViagens({ dados, ocupado, acao }) {
         </View>
       </View>
 
+      {d.checkin ? <FaixaDeCheckin nome={d.checkin.nome} acao={acao} /> : null}
+
       {d.vazio ? (
         <View style={e.vazio}>
           <Text style={e.vazioTitulo}>Nenhuma viagem ainda</Text>
@@ -198,9 +252,70 @@ export default function TelaViagens({ dados, ocupado, acao }) {
       )}
     </ScrollView>
   );
+  }
+}
+
+// Nao existia no nativo, e o texto da tela vazia mandava tocar nele. Faz o
+// mesmo que o + do site: escolher categoria e cair no fluxo de adicionar
+// lugar, que cria a viagem sozinho quando precisa.
+function BotaoMais({ acao, margemDeBaixo }) {
+  return (
+    <Pressable
+      onPress={() => acao('novoLugar')}
+      style={({ pressed }) => [e.mais, { bottom: 96 + margemDeBaixo }, pressed && { opacity: 0.85 }]}
+      accessibilityRole="button"
+      accessibilityLabel="Adicionar um lugar"
+    >
+      <Text style={e.maisTxt}>+</Text>
+    </Pressable>
+  );
 }
 
 const e = StyleSheet.create({
+  // Valores copiados do .checkin-* do site. O degrade de fundo vira uma cor
+  // so, no meio do caminho entre as duas pontas dele.
+  checkin: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    gap: 13,
+    marginHorizontal: 24,
+    marginTop: 16,
+    padding: 16,
+    backgroundColor: 'rgba(193,85,47,0.10)',
+    borderWidth: StyleSheet.hairlineWidth,
+    borderColor: 'rgba(193,85,47,0.35)',
+    borderRadius: 16,
+  },
+  checkinIcone: {
+    width: 32, height: 32, borderRadius: 16, backgroundColor: TERRA,
+    alignItems: 'center', justifyContent: 'center',
+  },
+  checkinQ: { fontFamily: FRAUNCES, fontSize: 16, color: INK, lineHeight: 21, marginBottom: 10 },
+  checkinNome: { color: TERRA },
+  checkinAcoes: { flexDirection: 'row', gap: 8 },
+  checkinBtn: { borderRadius: 9, paddingVertical: 8, paddingHorizontal: 14 },
+  checkinAdd: { backgroundColor: TERRA },
+  checkinAddTxt: { color: '#fff', fontSize: 12.5, fontWeight: '600' },
+  checkinIgnorarTxt: { color: INK3, fontSize: 12.5, fontWeight: '600' },
+
+  // 96px acima da barra de abas, como o do site, mais a area segura.
+  mais: {
+    position: 'absolute',
+    right: 24,
+    width: 56,
+    height: 56,
+    borderRadius: 28,
+    backgroundColor: TERRA,
+    alignItems: 'center',
+    justifyContent: 'center',
+    shadowColor: TERRA,
+    shadowOpacity: 0.45,
+    shadowRadius: 16,
+    shadowOffset: { width: 0, height: 6 },
+    elevation: 8,
+  },
+  maisTxt: { color: '#fff', fontSize: 26, fontWeight: '300', lineHeight: 30 },
+
   fundo: { flex: 1, backgroundColor: ESCURO },
   centro: { alignItems: 'center', justifyContent: 'center' },
 
