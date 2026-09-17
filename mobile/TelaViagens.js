@@ -70,7 +70,7 @@ function FaixaDeCheckin({ nome, acao }) {
       </View>
       <View style={{ flex: 1, minWidth: 0 }}>
         <Text style={e.checkinQ}>
-          Voce esta em <Text style={e.checkinNome}>{nome}</Text>?
+          Você está em <Text style={e.checkinNome}>{nome}</Text>?
         </Text>
         <View style={e.checkinAcoes}>
           <Pressable
@@ -112,7 +112,9 @@ function CardDeViagem({ t, aoAbrir }) {
         />
       ) : null}
       {/* o véu escuro que faz o nome ficar legível sobre qualquer foto */}
-      <View style={e.veu} />
+      <View style={e.veu1} pointerEvents="none" />
+      <View style={e.veu2} pointerEvents="none" />
+      <View style={e.veu3} pointerEvents="none" />
       <Text style={e.bandeira}>{t.bandeira}</Text>
       <View style={e.vgPe}>
         <Text style={e.vgNome} numberOfLines={2}>{t.nome}</Text>
@@ -321,7 +323,7 @@ const e = StyleSheet.create({
 
   topo: { paddingHorizontal: 24 },
   linhaTopo: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 6 },
-  marca: { fontFamily: 'Cinzel', fontSize: 21, color: INK, letterSpacing: 3 },
+  marca: { fontFamily: 'Cinzel', fontSize: 19, color: INK, letterSpacing: 2.7 },
   avatar: {
     width: 40,
     height: 40,
@@ -367,7 +369,7 @@ const e = StyleSheet.create({
     borderColor: 'rgba(234,231,224,0.2)',
   },
   chipOn: { backgroundColor: TERRA, borderColor: TERRA },
-  chipTxt: { fontFamily: MONO, fontSize: 10.5, letterSpacing: 1.2, color: INK3, textTransform: 'uppercase' },
+  chipTxt: { fontFamily: MONO, fontSize: 10.5, letterSpacing: 1.2, color: INK2, textTransform: 'uppercase' },
   chipTxtOn: { color: '#fff' },
 
   filme: { gap: 12, paddingHorizontal: 24, paddingTop: 18, paddingBottom: 10 },
@@ -379,14 +381,18 @@ const e = StyleSheet.create({
     backgroundColor: ELEV,
   },
   metadeDeBaixo: { position: 'absolute', left: 0, right: 0, bottom: 0, height: '60%', opacity: 0.9 },
-  veu: { ...StyleSheet.absoluteFillObject, backgroundColor: 'rgba(11,22,32,0.35)' },
+  // O site usa degrade: topo limpo, pe quase opaco. Chapado, o topo ficava
+  // sujo e o pe claro demais pro nome branco em foto clara.
+  veu1: { position: 'absolute', left: 0, right: 0, top: 0, height: '45%', backgroundColor: 'rgba(11,22,32,0.10)' },
+  veu2: { position: 'absolute', left: 0, right: 0, top: '45%', height: '30%', backgroundColor: 'rgba(11,22,32,0.50)' },
+  veu3: { position: 'absolute', left: 0, right: 0, bottom: 0, height: '25%', backgroundColor: 'rgba(11,22,32,0.86)' },
   bandeira: { position: 'absolute', top: 16, left: 16, zIndex: 2, fontSize: 26 },
   vgPe: { position: 'absolute', left: 18, right: 18, bottom: 18, zIndex: 2 },
   vgNome: { fontFamily: FRAUNCES, fontWeight: '400', fontSize: 31, color: '#fff', lineHeight: 33 },
   vgMeta: { fontFamily: MONO, fontSize: 11, color: INK2, marginTop: 8 },
 
   vazio: { alignItems: 'center', paddingHorizontal: 40, paddingVertical: 56, gap: 10 },
-  vazioTitulo: { fontFamily: FRAUNCES, fontSize: 20, color: INK },
+  vazioTitulo: { fontFamily: FRAUNCES, fontSize: 22, color: INK2 },
   vazioTexto: { fontSize: 14, color: INK3, textAlign: 'center', lineHeight: 20 },
   botaoNova: { marginTop: 14, backgroundColor: TERRA, borderRadius: 999, paddingVertical: 13, paddingHorizontal: 24 },
   botaoNovaTxt: { color: '#fff', fontSize: 15, fontWeight: '600' },

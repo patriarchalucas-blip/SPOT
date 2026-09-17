@@ -476,7 +476,7 @@ function Conteudo() {
           {semSinal ? (
             <View style={estilo.faixaSemSinal} pointerEvents="none">
               <Text style={estilo.faixaSemSinalTxt}>
-                Sem conexao — mostrando o que esta salvo no aparelho
+                Sem conexão — mostrando o que está salvo no aparelho
               </Text>
             </View>
           ) : null}

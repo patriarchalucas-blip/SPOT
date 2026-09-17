@@ -109,7 +109,9 @@ export default function TelaExplorar({ dados, ocupado, acao }) {
 
   const buscar = () => {
     Keyboard.dismiss();
-    if (texto.trim()) acao('buscar', texto.trim());
+    // Manda mesmo vazio: quem avisa "Digite uma cidade" e o site, e desde
+    // que os avisos atravessam a ponte esse aviso aparece aqui tambem.
+    acao('buscar', texto.trim());
   };
 
   const d = dados || { chips: [], itens: [], amigos: [], categoria: 'food' };
@@ -117,7 +119,8 @@ export default function TelaExplorar({ dados, ocupado, acao }) {
   return (
     <View style={e.fundo}>
       <View style={[e.topo, { paddingTop: 26 + margem.top }]}>
-        <Text style={e.olho}>Explorar</Text>
+        {/* O site tem esta palavra no HTML mas a esconde por CSS. Aqui ela
+            aparecia, e o app ficava com uma linha a mais que o site. */}
         <Text style={e.titulo}>Tendências por lugar</Text>
         <View style={e.busca}>
           <View style={e.campo}>
@@ -232,7 +235,8 @@ export default function TelaExplorar({ dados, ocupado, acao }) {
               <IconeBusca cor={INK3} />
               <Text style={e.vazioTitulo}>Descubra o que está bombando</Text>
               <Text style={e.vazioTexto}>
-                Digite uma cidade pra ver os lugares mais bem avaliados.
+                Digite uma cidade pra ver os lugares mais bem avaliados — o
+                começo de "patrocinado" chega depois.
               </Text>
             </View>
           )
@@ -274,29 +278,25 @@ const e = StyleSheet.create({
   ir: { height: 48, paddingHorizontal: 16, borderRadius: 12, backgroundColor: TERRA, justifyContent: 'center' },
   irTxt: { color: '#fff', fontSize: 14, fontWeight: '600' },
 
-  corpo: { flex: 1, paddingHorizontal: 24 },
+  corpo: { flex: 1, paddingHorizontal: 20 },
 
   amgTitulo: { fontFamily: MONO, fontSize: 11, letterSpacing: 0.5, color: INK3, marginBottom: 10 },
-  blocoAmigos: {
-    backgroundColor: ELEV,
-    borderWidth: StyleSheet.hairlineWidth,
-    borderColor: BORDA,
-    borderRadius: 16,
-    paddingHorizontal: 14,
-    paddingVertical: 4,
-    marginBottom: 14,
-  },
+  // No site este bloco nao e cartao: e lista corrida, e o que separa uma
+  // pessoa da outra e um traco fino.
+  blocoAmigos: { paddingTop: 4, paddingBottom: 6, marginBottom: 8 },
   avisoAmigos: { fontSize: 13.5, color: INK3, lineHeight: 19, paddingVertical: 10 },
   amgLinha: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 11,
     paddingVertical: 11,
+    borderBottomWidth: StyleSheet.hairlineWidth,
+    borderBottomColor: BORDA,
   },
-  amgAv: { width: 34, height: 34, borderRadius: 17, backgroundColor: VERDE, alignItems: 'center', justifyContent: 'center' },
-  amgAvTxt: { color: ESCURO, fontWeight: '600', fontSize: 12 },
-  amgNome: { fontSize: 14.5, fontWeight: '500', color: INK },
-  amgOnde: { fontSize: 12, color: INK3, marginTop: 2 },
+  amgAv: { width: 44, height: 44, borderRadius: 22, backgroundColor: VERDE, alignItems: 'center', justifyContent: 'center' },
+  amgAvTxt: { fontFamily: MONO, color: '#fff', fontSize: 14 },
+  amgNome: { fontSize: 14.5, fontWeight: '600', color: INK },
+  amgOnde: { fontFamily: MONO, fontSize: 11, color: INK3, marginTop: 2 },
   jaFoi: { color: VERDE, fontWeight: '600' },
   querIr: { color: AMBAR, fontWeight: '600' },
   seta: { color: INK3, fontSize: 18 },
@@ -304,13 +304,16 @@ const e = StyleSheet.create({
   chips: { flexDirection: 'row', gap: 8, marginBottom: 16, flexWrap: 'wrap' },
   chip: {
     paddingHorizontal: 14,
-    paddingVertical: 9,
+    paddingVertical: 8,
     borderRadius: 999,
     borderWidth: StyleSheet.hairlineWidth,
     borderColor: BORDA,
   },
   chipOn: { backgroundColor: TERRA, borderColor: TERRA },
-  chipTxt: { fontFamily: MONO, fontSize: 11.5, color: INK3, letterSpacing: 0.5, textTransform: 'uppercase' },
+  // No site estes chips NAO sao monoespacados nem maiusculos: e DM Sans em
+  // caixa normal, 12.5px, cor ink2. O que existe de mono e versalete no app
+  // e a linguagem de DADO (numeros, datas, rotulos) — um filtro nao e dado.
+  chipTxt: { fontSize: 12.5, color: INK2 },
   chipTxtOn: { color: '#fff' },
 
   card: {
@@ -321,7 +324,7 @@ const e = StyleSheet.create({
     overflow: 'hidden',
     marginBottom: 14,
   },
-  cardImg: { height: 186, overflow: 'hidden' },
+  cardImg: { height: 170, overflow: 'hidden' },
   // O degrade do site vai de rgba(11,22,32,.4) no topo a .9 no pe. Tres
   // faixas empilhadas chegam perto o bastante sem biblioteca de gradiente.
   veu1: { position: 'absolute', left: 0, right: 0, top: 0, height: '45%', backgroundColor: 'rgba(11,22,32,0.40)' },

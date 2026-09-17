@@ -198,7 +198,7 @@ export default function TelaPerfil({ dados, ocupado, acao }) {
             </View>
           )}
           <View style={e.selo}>
-            <Icone nome="edit" cor={ESCURO} tamanho={12} />
+            <Icone nome="edit" cor="#fff" tamanho={11} />
           </View>
         </Pressable>
         <View style={{ flex: 1, minWidth: 0 }}>
@@ -295,7 +295,9 @@ const e = StyleSheet.create({
     width: 22,
     height: 22,
     borderRadius: 11,
-    backgroundColor: INK,
+    // Terracota com icone branco, como o site. Estava invertido: bolinha
+    // creme com icone escuro.
+    backgroundColor: TERRA,
     alignItems: 'center',
     justifyContent: 'center',
     borderWidth: 2,
@@ -316,7 +318,9 @@ const e = StyleSheet.create({
 
   corpo: { paddingHorizontal: 24, paddingTop: 20 },
   cabecalho: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 },
-  secao: { fontSize: 13, fontWeight: '600', color: INK2 },
+  // No Perfil o site troca o titulo de secao por mono versalete — e o que
+  // separa esta tela das outras.
+  secao: { fontFamily: MONO, fontSize: 10, letterSpacing: 1.6, color: INK3, textTransform: 'uppercase' },
   secaoSub: { fontFamily: MONO, fontSize: 11, color: INK3 },
   aviso: { fontSize: 13.5, color: INK3, lineHeight: 19 },
   paises: { fontSize: 13.5, color: INK2, lineHeight: 21 },
@@ -372,8 +376,9 @@ const e = StyleSheet.create({
     borderTopColor: BORDA,
   },
   lugarNome: { flex: 1, fontSize: 14, color: INK2 },
-  lugarNota: { fontFamily: MONO, fontSize: 12, color: AMBAR },
-  lugarQuer: { fontFamily: MONO, fontSize: 10, color: INK3, textTransform: 'uppercase', letterSpacing: 0.5 },
+  // Verde e a cor de "positivo" do sistema, e e o que o site usa pra nota.
+  lugarNota: { fontFamily: MONO, fontSize: 12, fontWeight: '600', color: VERDE },
+  lugarQuer: { fontFamily: MONO, fontSize: 10, color: AMBAR, letterSpacing: 0.6 },
 
   acoes: { marginTop: 22 },
   linha: {

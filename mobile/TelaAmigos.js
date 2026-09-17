@@ -42,6 +42,7 @@ const INK = '#EAE7E0';
 const INK2 = '#B4BCBF';
 const INK3 = '#879499';
 const ESCURO = '#0B1620';
+const SUPERFICIE = '#101C24';
 const ELEV = '#16232A';
 const BORDA = 'rgba(234,231,224,0.15)';
 const TERRA = '#c1552f';
@@ -339,7 +340,9 @@ export default function TelaAmigos({ dados, ocupado, acao }) {
 }
 
 const e = StyleSheet.create({
-  fundo: { flex: 1, backgroundColor: ESCURO },
+  // No site esta tela usa a cor de PAINEL (#101C24), nao a de fundo geral.
+  // Com o escuro, o contraste entre card e fundo ficava menor que o da web.
+  fundo: { flex: 1, backgroundColor: SUPERFICIE },
   centro: { alignItems: 'center', justifyContent: 'center' },
 
   // .am-topo / .am-titulo / .am-add
@@ -390,7 +393,7 @@ const e = StyleSheet.create({
 
   avatar: { backgroundColor: VERDE, alignItems: 'center', justifyContent: 'center' },
   avatarTxt: { color: ESCURO, fontWeight: '600' },
-  forte: { fontWeight: '700', color: INK },
+  forte: { fontWeight: '600', color: INK },
 
   // .feed-item
   feedItem: {
@@ -446,7 +449,20 @@ const e = StyleSheet.create({
   estrelas: { flexDirection: 'row', gap: 3 },
   salvar: { minHeight: 36, backgroundColor: TERRA, borderRadius: 999, paddingHorizontal: 15, justifyContent: 'center' },
   salvarTxt: { color: '#fff', fontSize: 12.5, fontWeight: '600' },
-  jaSalvo: { fontFamily: MONO, fontSize: 11, color: INK3 },
+  // Pastilha verde, como no site: era texto cinza solto e sumia ao lado do
+  // botao laranja de salvar.
+  jaSalvo: {
+    fontSize: 12.5,
+    fontWeight: '500',
+    color: '#8FD3CE',
+    backgroundColor: 'rgba(78,148,144,0.24)',
+    borderWidth: StyleSheet.hairlineWidth,
+    borderColor: 'rgba(78,148,144,0.55)',
+    borderRadius: 999,
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    overflow: 'hidden',
+  },
 
   // .friend-row
   linhaAmigo: {
