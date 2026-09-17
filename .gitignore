@@ -4,3 +4,6 @@ _dev-previews/
 node_modules/
 .expo/
 *.log
+
+# Atalho local do build: carrega o token da Expo, nao vai pro repositorio
+mobile/build.ps1
