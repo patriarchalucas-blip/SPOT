@@ -126,10 +126,13 @@ function Vazio({ titulo, texto }) {
 // razão do site: endereço de foto do Google expira, e quando a imagem falha o
 // que aparece é o degradê, não um retângulo chapado.
 
-function CardDeVisita({ item, aoAbrir, aoSalvar }) {
+function CardDeVisita({ item, aoAbrir, aoSalvar, salvando }) {
   const [falhou, setFalhou] = React.useState(false);
   const [c1, c2] = item.cores || [ELEV, ESCURO];
   const temCorpo = item.nota || item.estrelas || !item.salvo;
+  // Sem estrelas, a linha ficava com um filho so e o botao encostava na
+  // esquerda. A web resolve com um vao vazio; aqui e o mesmo.
+  const semEstrelas = !item.estrelas;
 
   return (
     <View style={e.card}>
@@ -146,6 +149,11 @@ function CardDeVisita({ item, aoAbrir, aoSalvar }) {
             onError={() => setFalhou(true)}
           />
         ) : null}
+        {/* O mesmo escurecimento da web, que nasceu de um caso real de foto
+            clara: sem ele o nome do lugar e o do amigo somem. */}
+        <View style={e.veu1} pointerEvents="none" />
+        <View style={e.veu2} pointerEvents="none" />
+        <View style={e.veu3} pointerEvents="none" />
 
         <View style={e.quem}>
           <View style={e.quemAv}>
@@ -172,16 +180,18 @@ function CardDeVisita({ item, aoAbrir, aoSalvar }) {
             </Pressable>
           ) : null}
           <View style={e.cardLinha}>
-            <Estrelas n={item.estrelas} />
+            {semEstrelas ? <View /> : <Estrelas n={item.estrelas} />}
             {item.salvo ? (
               <Text style={e.jaSalvo}>na sua lista</Text>
             ) : (
               <Pressable
-                onPress={aoSalvar}
-                style={({ pressed }) => [e.salvar, pressed && { opacity: 0.85 }]}
+                onPress={salvando ? undefined : aoSalvar}
+                style={({ pressed }) => [e.salvar, (pressed || salvando) && { opacity: 0.6 }]}
                 accessibilityRole="button"
               >
-                <Text style={e.salvarTxt}>+ minha lista</Text>
+                {/* Salvar pode ir ate o Google pra descobrir o pais. Sem este
+                    aviso o toque parece morto e a pessoa toca de novo. */}
+                <Text style={e.salvarTxt}>{salvando ? 'Adicionando...' : '+ minha lista'}</Text>
               </Pressable>
             )}
           </View>
@@ -291,7 +301,7 @@ export default function TelaAmigos({ dados, ocupado, acao }) {
             ))
           )
         ) : !amigos.length ? (
-          <Vazio titulo="Sem amigos ainda" texto="Adiciona alguém pra ver a atividade aqui" />
+          <Vazio titulo="Sem amigos ainda" texto="Adiciona alguém pelo username pra ver a atividade aqui" />
         ) : !feed.length ? (
           <Vazio titulo="Nada por aqui ainda" texto="Seus amigos ainda não marcaram viagens nem lugares" />
         ) : (
@@ -302,6 +312,7 @@ export default function TelaAmigos({ dados, ocupado, acao }) {
                 item={it}
                 aoAbrir={() => acao('abrirVisita', it.i)}
                 aoSalvar={() => acao('salvar', it.i)}
+                salvando={d.salvando === it.i}
               />
             ) : (
               <Pressable
@@ -402,6 +413,10 @@ const e = StyleSheet.create({
     overflow: 'hidden',
     marginBottom: 14,
   },
+  // Degrade da web em tres faixas: rgba(11,22,32,.45) no topo -> .88 no pe.
+  veu1: { position: 'absolute', left: 0, right: 0, top: 0, height: '40%', backgroundColor: 'rgba(11,22,32,0.45)' },
+  veu2: { position: 'absolute', left: 0, right: 0, top: '40%', height: '32%', backgroundColor: 'rgba(11,22,32,0.66)' },
+  veu3: { position: 'absolute', left: 0, right: 0, bottom: 0, height: '28%', backgroundColor: 'rgba(11,22,32,0.86)' },
   cardImg: { height: 186, overflow: 'hidden' },
   metadeDeBaixo: { position: 'absolute', left: 0, right: 0, bottom: 0, height: '60%', opacity: 0.9 },
   quem: {

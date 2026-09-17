@@ -2272,6 +2272,20 @@ async function excluirConta(){
 }
 
 // ═══ DASHBOARD ═══
+// Os quatro numeros do topo, numa fonte so. Antes a tela nativa lia o TEXTO
+// que ja estava na tela, e por isso recebia sempre a rodada anterior.
+// O NOME que aparece no app. A conta estava escrita duas vezes (Dashboard e
+// Perfil) e uma TERCEIRA, diferente, ia pras telas nativas: la o nome saia
+// do display_name do banco, que pra quem entrou com Google e o pedaco do
+// email. Resultado: "Lucas" na web e "lucas.patriarcha" no app.
+function nomeDeExibicao(){
+  if(!S.user)return '';
+  const meta=S.user.user_metadata||{};
+  let nome=meta.full_name||meta.name||String(S.user.email||'').split('@')[0].split('.')[0];
+  nome=String(nome).split(' ')[0];
+  return nome.charAt(0).toUpperCase()+nome.slice(1).toLowerCase();
+}
+let PLACAR={viagens:0,spots:0,cidades:0,paises:0};
 let dashboardReqId=0;
 // ═══ BARRA DE ABAS NATIVA ═══
 // Dentro da casca, quem desenha a navegação de baixo é o app nativo, não esta
@@ -2496,10 +2510,7 @@ async function loadDashboard(){
   // primeiro checkpoint depois de cada await.
   const meuReq=++dashboardReqId;
   const atropelado=()=>meuReq!==dashboardReqId;
-  const meta=S.user.user_metadata||{};
-  let name=meta.full_name||meta.name||S.user.email.split('@')[0].split('.')[0];
-  name=name.split(' ')[0];name=name.charAt(0).toUpperCase()+name.slice(1).toLowerCase();
-
+  const name=nomeDeExibicao();
   document.getElementById('dashAvatar').textContent=name.charAt(0).toUpperCase();
   refreshAvatars(name);
 
@@ -2547,6 +2558,20 @@ async function loadDashboard(){
   S.trips.forEach(t=>{t._spotsLoaded=true});
   const visivelAntes=S.trips.filter(t=>!isNonTrip(t)).map(t=>t.id).join(',');
   rebuildCityCanon(); // funde "Split" e "Split-Dalmatia County" antes de contar
+  // Conta AQUI: depois da fusao de nomes (senao "Split" conta duas vezes) e
+  // ANTES de desenhar, porque renderTrips avisa a tela nativa e ela precisa
+  // dos numeros desta rodada, nao da passada.
+  for(const t of S.trips){
+    ts+=t._spots.length;
+    t._spots.forEach(sp=>{const c=cityOf(sp);if(c)cities.add(c)});
+    (t.destinations||[]).forEach(d=>ctrs.add(d));
+  }
+  PLACAR={
+    viagens:S.trips.filter(t=>!isNonTrip(t)).length,
+    spots:ts,
+    cidades:cities.size,
+    paises:ctrs.size
+  };
   renderTrips();populateTripOpts();
   guardarDadosLocais(); // pra próxima abertura sem sinal
   carregarBloqueios(); // quem você bloqueou some do feed, dos amigos e dos comentários
@@ -2555,11 +2580,6 @@ async function loadDashboard(){
   buscarFotosQueFaltam();  // idem — spot que nunca teve foto nunca se consertava
   corrigirPaisesDesconhecidos(); // idem — viagem que caiu em "Outros"
   maybeShowCheckin(); // idem — só aparece se achar algo, nunca trava a tela
-  for(const t of S.trips){
-    ts+=t._spots.length;
-    t._spots.forEach(s=>{const c=cityOf(s);if(c)cities.add(c)});
-    (t.destinations||[]).forEach(d=>ctrs.add(d));
-  }
   // Migração: viagens antigas criadas por "marcar país visitado" antes de existir
   // o marcador __quickvisit__ (só pode ter vindo de lá: status done + sem datas)
   const legacy=S.trips.filter(t=>t.status==='done'&&t.dates==='');
@@ -2567,15 +2587,15 @@ async function loadDashboard(){
     dbUpdate('trips',t.id,{dates:'__quickvisit__'});
     t.dates='__quickvisit__';
   }
-  document.getElementById('statTrips').textContent=S.trips.filter(t=>!isNonTrip(t)).length;
-  document.getElementById('statSpots').textContent=ts;
-  document.getElementById('statCities').textContent=cities.size;
+  document.getElementById('statTrips').textContent=PLACAR.viagens;
+  document.getElementById('statSpots').textContent=PLACAR.spots;
+  document.getElementById('statCities').textContent=PLACAR.cidades;
   // O contador de países virou a frase do topo, e leva pra mesma lista de antes.
   // 195 é o número de países soberanos — o mesmo denominador que o Perfil já
   // usa pra calcular a porcentagem (o "X/243" de lá conta territórios também).
-  document.getElementById('dashPaisesN').textContent=ctrs.size;
+  document.getElementById('dashPaisesN').textContent=PLACAR.paises;
   const convite=document.getElementById('dashConvite');
-  if(convite)convite.style.display=ctrs.size?'none':'block';
+  if(convite)convite.style.display=PLACAR.paises?'none':'block';
   // A geometria já vinha carregando desde o começo desta função, em paralelo
   // com as consultas — aqui ela normalmente já chegou.
   geoPronta.then(()=>renderMiniMapa());
@@ -2721,13 +2741,13 @@ function darDadosDeViagens(){
   falarComACasca({tipo:'viagens',pronto:true,dados:{
     checkin:checkin,
     // O placar: os mesmos números dos cards, já contados.
-    paises:Number((document.getElementById('dashPaisesN')||{}).textContent)||0,
-    spots:Number((document.getElementById('statSpots')||{}).textContent)||0,
-    cidades:Number((document.getElementById('statCities')||{}).textContent)||0,
-    viagens:Number((document.getElementById('statTrips')||{}).textContent)||0,
-    inicial:((S.profile&&S.profile.display_name)||(S.user.email||'?')).charAt(0).toUpperCase(),
+    paises:PLACAR.paises,
+    spots:PLACAR.spots,
+    cidades:PLACAR.cidades,
+    viagens:PLACAR.viagens,
+    inicial:(nomeDeExibicao().charAt(0)||'?').toUpperCase(),
     avatar:fotoPraCasca(safeUrl((S.profile&&S.profile.avatar_url)||'')),
-    convite:(document.getElementById('dashConvite')||{}).style.display!=='none',
+    convite:!PLACAR.paises,
     // Pro mapa nativo: nome que os contornos usam (world-atlas, em inglês),
     // não o nome em português. País sem correspondência fica de fora em vez
     // de pintar o país errado.
@@ -6548,9 +6568,7 @@ function abrirConfig(){
 }
 async function loadProfile(){
   if(!S.user)return;
-  const meta=S.user.user_metadata||{};
-  let name=meta.full_name||meta.name||S.user.email.split('@')[0].split('.')[0];
-  name=name.split(' ')[0];name=name.charAt(0).toUpperCase()+name.slice(1).toLowerCase();
+  const name=nomeDeExibicao();
   document.getElementById('profName').textContent=name;
   document.getElementById('profAvatar').textContent=name.charAt(0).toUpperCase();
   document.getElementById('profEmail').textContent=S.user.email;
@@ -6718,10 +6736,10 @@ function darDadosDePerfil(){
   // mesmo jeito que na web; a tela nativa só desenha o que chegar.
   const paises=listaDePaisesPraTela(visitados);
   falarComACasca({tipo:'perfil',pronto:true,dados:{
-    nome:p.display_name||(S.user.email||'').split('@')[0],
+    nome:nomeDeExibicao(),
     username:p.username||'',
     bio:p.bio||'',
-    inicial:((p.display_name||S.user.email||'?').charAt(0)||'?').toUpperCase(),
+    inicial:(nomeDeExibicao().charAt(0)||'?').toUpperCase(),
     avatar:safeUrl(p.avatar_url||'')||'',
     email:S.user.email||'',
     resumo:spots.length?(spots.length+(spots.length===1?' lugar · ':' lugares · ')
@@ -7375,6 +7393,7 @@ function pessoaPraTela(id,pmap){
   return{id:id,nome:nome,iniciais:initials(nome),username:(p&&p.username)||''};
 }
 
+let SALVANDO_NO_FEED=-1;
 function darDadosDeAmigos(){
   const d=FRIENDS_DATA;
   if(!d){falarComACasca({tipo:'amigos',pronto:false});return}
@@ -7408,6 +7427,7 @@ function darDadosDeAmigos(){
 
   falarComACasca({tipo:'amigos',pronto:true,dados:{
     aba:friendsTab,
+    salvando:SALVANDO_NO_FEED,
     abas:abas,
     feed:feed,
     recebidos:incoming.map(r=>Object.assign({pedido:r.id},pessoaPraTela(r.follower_id,pmap))),
@@ -7424,7 +7444,19 @@ window.acaoDeAmigos=function(acao,valor){
   if(acao==='adicionar'){abrirAddFriend();return}
   if(acao==='perfil'){openFriend(valor);return}
   if(acao==='abrirVisita'){abrirVisitaDoFeed(Number(valor));return}
-  if(acao==='salvar'){salvarDoFeed(Number(valor));return}
+  // O botao da web vira "Adicionando..." enquanto roda, porque a busca do
+  // pais pode ir ate o Google. Na tela nativa nao havia botao pra trocar, e
+  // o toque parecia morto. O indice do card que esta salvando atravessa a
+  // ponte, e a tela desenha o proprio botao ocupado.
+  if(acao==='salvar'){
+    SALVANDO_NO_FEED=Number(valor);
+    darDadosDeAmigos();
+    salvarDoFeed(Number(valor)).then(function(){
+      SALVANDO_NO_FEED=-1;
+      darDadosDeAmigos();
+    });
+    return;
+  }
   if(acao==='aceitar'){respondRequest(valor,true);return}
   if(acao==='recusar'){respondRequest(valor,false);return}
   if(acao==='cancelar'){cancelRequest(valor);return}

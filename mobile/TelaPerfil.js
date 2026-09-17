@@ -70,14 +70,23 @@ function CategoriaIcone({ cat }) {
           <Circle cx="7.5" cy="13" r="1.8" {...c} />
         </>
       ) : cat === 'experience' ? (
+        // Bussola, como na web. Era um pin de localizacao, que la e o icone
+        // de "nao sei a categoria" — dois significados no mesmo desenho.
         <>
-          <Path d="M12 21s6.5-5.8 6.5-10.4A6.5 6.5 0 0 0 5.5 10.6C5.5 15.2 12 21 12 21Z" {...c} />
-          <Circle cx="12" cy="10.6" r="2.4" {...c} />
+          <Circle cx="12" cy="12" r="9" {...c} />
+          <Path d="M15.5 8.5l-2.2 5.2-5.2 2.2 2.2-5.2 5.2-2.2Z" {...c} />
         </>
-      ) : (
+      ) : cat === 'food' ? (
         <>
           <Path d="M7 3v8a2.5 2.5 0 0 0 5 0V3" {...c} />
           <Path d="M9.5 11v10M17 3c-1.5 1.5-2 3-2 5s.5 2.5 2 2.5V21" {...c} />
+        </>
+      ) : (
+        // Sem categoria vira PIN, nao garfo. Cair no garfo rotulava como
+        // restaurante um lugar que nunca foi classificado.
+        <>
+          <Path d="M12 21s6.5-5.8 6.5-10.4A6.5 6.5 0 0 0 5.5 10.6C5.5 15.2 12 21 12 21Z" {...c} />
+          <Circle cx="12" cy="10.6" r="2.4" {...c} />
         </>
       )}
     </Svg>
