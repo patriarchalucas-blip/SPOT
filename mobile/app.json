@@ -39,10 +39,11 @@
         "backgroundColor": "#0b1620"
       },
       "permissions": [
-        "ACCESS_FINE_LOCATION",
-        "ACCESS_COARSE_LOCATION",
-        "CAMERA",
-        "READ_EXTERNAL_STORAGE"
+        "android.permission.ACCESS_FINE_LOCATION",
+        "android.permission.ACCESS_COARSE_LOCATION",
+        "android.permission.CAMERA",
+        "android.permission.READ_EXTERNAL_STORAGE",
+        "android.permission.RECORD_AUDIO"
       ]
     },
     "plugins": [
@@ -68,6 +69,12 @@
       ],
       "expo-web-browser",
       "expo-font"
-    ]
+    ],
+    "extra": {
+      "eas": {
+        "projectId": "2929d3ae-246f-418c-a5df-25e9b6aac1c9"
+      }
+    },
+    "owner": "lucaspatriarcha"
   }
 }
