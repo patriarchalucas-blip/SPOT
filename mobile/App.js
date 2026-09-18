@@ -116,6 +116,18 @@ const SITE = 'https://meuspot.app';
 
 // Qual componente desenha cada aba. Aba que nao estiver aqui continua vindo
 // do site — e assim que uma tela migra: entra nesta tabela.
+// Toda acao de tela nativa e executada PELO SITE: ele tem as regras e a
+// sessao. Daqui so atravessa o nome da acao e um valor simples.
+//
+// Fica FORA do componente, ao lado do TELAS: dentro, a tabela nascia de novo
+// a cada desenho e arrastava junto tudo que dependia dela.
+const FUNCAO_DA_ABA = {
+  friends: 'acaoDeAmigos',
+  explore: 'acaoDeExplorar',
+  dashboard: 'acaoDeViagens',
+  profile: 'acaoDePerfil',
+};
+
 const TELAS = {
   dashboard: TelaViagens,
   explore: TelaExplorar,
@@ -351,16 +363,6 @@ function Conteudo() {
     );
   }, []);
 
-  // Toda ação da tela nativa de Amigos é executada PELO SITE: ele tem as
-  // regras e a sessão. Aqui só chega o nome da ação.
-  // Toda acao de tela nativa e executada PELO SITE: ele tem as regras e a
-  // sessao. Daqui so atravessa o nome da acao e um valor simples.
-  const FUNCAO_DA_ABA = {
-    friends: 'acaoDeAmigos',
-    explore: 'acaoDeExplorar',
-    dashboard: 'acaoDeViagens',
-    profile: 'acaoDePerfil',
-  };
   const acaoDaTela = useCallback((aba) => (acao, valor) => {
     if (acao === 'recarregar' || acao === 'buscar') setOcupada(aba);
     webRef.current?.injectJavaScript(
@@ -368,6 +370,14 @@ function Conteudo() {
         JSON.stringify(acao) + ',' + JSON.stringify(valor === undefined ? null : valor) + ');true;'
     );
   }, []);
+
+  // Uma funcao por aba, memorizada. Chamar acaoDaTela(aba) no meio do desenho
+  // criava funcao nova a cada volta e fazia a tela nativa redesenhar sem
+  // motivo — e a checagem reclama com razao.
+  const acaoDaAbaAtiva = useCallback(
+    (acao, valor) => acaoDaTela(abaAtiva)(acao, valor),
+    [acaoDaTela, abaAtiva]
+  );
 
   // Decide o que navega dentro e o que sai pro sistema.
   const aoNavegar = useCallback((req) => {
@@ -461,10 +471,17 @@ function Conteudo() {
               executa as acoes e desenha as telas de detalhe. */}
           {mostrarAbas && TELAS[abaAtiva] ? (
             <View style={StyleSheet.absoluteFill}>
+              {/* A checagem acusa "acesso a ref durante o desenho" por causa
+                  da funcao de acao, que por dentro usa a referencia do
+                  WebView. E falso positivo: a referencia so e LIDA quando a
+                  pessoa toca em alguma coisa, nunca enquanto a tela e
+                  montada. O verificador nao consegue provar isso e assume o
+                  pior. Desligado so nesta linha, e so esta regra. */}
+              {/* eslint-disable-next-line react-hooks/refs */}
               {React.createElement(TELAS[abaAtiva], {
                 dados: dadosDaTela[abaAtiva],
                 ocupado: ocupada === abaAtiva,
-                acao: acaoDaTela(abaAtiva),
+                acao: acaoDaAbaAtiva,
               })}
             </View>
           ) : null}

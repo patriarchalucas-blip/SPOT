@@ -98,14 +98,12 @@ function CardDeLugar({ item, aoSalvar }) {
 
 export default function TelaExplorar({ dados, ocupado, acao }) {
   const margem = useSafeAreaInsets();
-  const [texto, setTexto] = React.useState('');
-
-  // A cidade que o site conhece manda enquanto ninguém está digitando: assim
-  // voltar pra aba não apaga o que já estava buscado.
-  React.useEffect(() => {
-    if (dados && dados.cidade && !texto) setTexto(dados.cidade);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [dados && dados.cidade]);
+  // A cidade que o site conhece manda ENQUANTO ninguem digitou nada; a partir
+  // do primeiro toque no teclado quem manda e o que foi digitado. Antes isto
+  // era um efeito que copiava um estado no outro — copia de estado sempre
+  // acaba desencontrada, e aqui desenhava duas vezes a toa.
+  const [digitado, setDigitado] = React.useState(null);
+  const texto = digitado === null ? ((dados && dados.cidade) || '') : digitado;
 
   const buscar = () => {
     Keyboard.dismiss();
@@ -128,7 +126,7 @@ export default function TelaExplorar({ dados, ocupado, acao }) {
             <TextInput
               style={e.input}
               value={texto}
-              onChangeText={setTexto}
+              onChangeText={setDigitado}
               placeholder="Buscar cidade..."
               placeholderTextColor={INK3}
               returnKeyType="search"
@@ -236,7 +234,7 @@ export default function TelaExplorar({ dados, ocupado, acao }) {
               <Text style={e.vazioTitulo}>Descubra o que está bombando</Text>
               <Text style={e.vazioTexto}>
                 Digite uma cidade pra ver os lugares mais bem avaliados — o
-                começo de "patrocinado" chega depois.
+                começo de “patrocinado” chega depois.
               </Text>
             </View>
           )
