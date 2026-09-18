@@ -27,6 +27,21 @@ Apple tem que sair hoje.**
 - **Nunca digite a senha da Apple por ele.** Esse login é dele: você para,
   explica onde digitar, ele digita.
 
+## LIMITES (o Lucas NAO consegue copiar e colar nesta maquina — nao peca textos longos a ele)
+
+1. **Nao mude o bundle identifier** (`app.meuspot.spot`). Ele e permanente
+   depois do primeiro envio.
+2. **Nao revogue, apague nem regenere** certificado ou perfil que ja exista na
+   conta. Se o `eas` oferecer *revoke* ou *remove*, a resposta e NAO — pergunte
+   ao Lucas antes. Criar o que falta, pode.
+3. **Nao reescreva nem refatore codigo.** Esta pasta e uma copia descartavel,
+   baixada como ZIP, sem ligacao com o repositorio: nada daqui volta pro
+   projeto. Se encontrar um problema no codigo, diga qual e em vez de corrigir.
+4. **Nao tente contornar** o bloqueio corporativo do outro notebook.
+5. Diante de qualquer pergunta cuja resposta voce nao tenha certeza —
+   principalmente vindas da Apple — **pare e mostre o texto exato** ao Lucas.
+   A maioria dos estragos vem de um "sim" dado rapido demais.
+
 ## O que já está pronto (não refaça)
 
 - Projeto já ligado ao EAS — o `projectId` está no `app.json`.
