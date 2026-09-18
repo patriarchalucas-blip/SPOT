@@ -313,7 +313,7 @@ export default function TelaAmigos({ dados, ocupado, acao }) {
                 item={it}
                 aoAbrir={() => acao('abrirVisita', it.i)}
                 aoSalvar={() => acao('salvar', it.i)}
-                salvando={d.salvando === it.i}
+                salvando={dados.salvando === it.i}
               />
             ) : (
               <Pressable
