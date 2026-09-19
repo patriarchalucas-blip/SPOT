@@ -885,6 +885,8 @@ body.na-casca .bottom-nav{display:none}
 /* Uma linha de dado logo abaixo do nome, no lugar do email solto no rodape.
    O email ja esta em Configuracoes; aqui ele so ocupava a ultima linha sem
    ninguem nunca precisar dele. */
+/* Nota que ainda nao existe: o texto vira convite, nao aspas vazias. */
+.note-quote.nota-vazia{color:var(--ink3);opacity:.8}
 .prof-resumo{font-family:var(--mono);font-size:11.5px;letter-spacing:.04em;color:var(--ink3);padding-bottom:18px}
 .prof-resumo:empty{display:none}
 .prof-email{font-family:var(--mono);font-size:11px;color:var(--ink3);text-align:center;margin-top:22px}
@@ -1208,7 +1210,7 @@ svg.ic path,svg.ic circle,svg.ic line,svg.ic polyline,svg.ic rect{fill:none;stro
   <div id="exploreAmigos"></div>
   <div class="list-filters" id="exploreFilters"></div>
   <div class="list-body" id="exploreBody">
-    <div class="empty-state"><div class="ei" data-ic="search"></div><h3>Descubra o que está bombando</h3><p>Digite uma cidade pra ver os lugares mais bem avaliados — o começo de "patrocinado" chega depois.</p></div>
+    <div class="empty-state"><div class="ei" data-ic="search"></div><h3>Descubra o que está bombando</h3><p>Digite uma cidade pra ver o que está bem avaliado por lá — e o que seus amigos já marcaram.</p></div>
   </div>
   <div class="bottom-nav"><div class="nav-item" onclick="goTo('dashboard');loadDashboard()"><div class="nav-icon" data-ic="map"></div><div class="nav-label">Viagens</div></div><div class="nav-item active" onclick="goTo('explore');loadExplore()"><div class="nav-icon" data-ic="search"></div><div class="nav-label" style="color:var(--ink);font-weight:600">Explorar</div></div><div class="nav-item" onclick="goTo('friends');loadFriends()"><div class="nav-icon" data-ic="users"></div><div class="nav-label">Amigos</div></div><div class="nav-item" onclick="goTo('profile');loadProfile()"><div class="nav-icon" data-ic="user"></div><div class="nav-label">Perfil</div></div></div>
 </div>
@@ -1496,7 +1498,9 @@ function semChaveDoPlaces(u){
   const s=String(u||'');
   const m=s.match(RE_FOTO_PLACES);
   if(!m)return u;
-  const w=(m[2].match(/maxWidthPx=(d+)/)||[])[1]||'400';
+  // Era (d+) — casava a LETRA d, nunca um numero. Toda foto gravada no
+  // formato antigo saia em 400px, inclusive na capa de tela cheia.
+  const w=(m[2].match(/maxWidthPx=(\d+)/)||[])[1]||'400';
   return'/api/place-photo?ref='+encodeURIComponent(m[1])+'&w='+w;
 }
 // Largura sob medida pro tamanho de EXIBICAO. A foto era gravada pedindo
@@ -2127,9 +2131,18 @@ async function handleAuth(){
   }else if(pw.length<6){showAuthErr('Senha mín. 6 caracteres');return}
   const btn=document.getElementById('authBtn');btn.disabled=true;btn.textContent='...';
   hideAuthErr();
+  // O SDK REJEITA (nao devolve {error}) quando o fetch falha: aviao, sinal
+  // ruim, servidor mudo. Sem este try o botao ficava desabilitado com "..."
+  // e nao havia como tentar de novo sem fechar o app — na PRIMEIRA tela.
+  const destravar=()=>{btn.disabled=false;btn.textContent=authMode==='signup'?'Criar conta':'Entrar'};
   let r;
-  if(authMode==='signup')r=await sb.auth.signUp({email,password:pw});
-  else r=await sb.auth.signInWithPassword({email,password:pw});
+  try{
+    if(authMode==='signup')r=await sb.auth.signUp({email,password:pw});
+    else r=await sb.auth.signInWithPassword({email,password:pw});
+  }catch(e){
+    showAuthErr('Não consegui falar com o servidor. Confere a conexão e tenta de novo.');
+    destravar();return;
+  }
   if(r.error){showAuthErr(r.error.message);btn.disabled=false;btn.textContent=authMode==='signup'?'Criar conta':'Entrar';return}
   if(authMode==='signup'&&!r.data.session){
     // Cadastro num email que JÁ TEM conta não devolve erro: o Supabase esconde
@@ -2956,6 +2969,9 @@ function renderList(){
 function openSpotFromList(i){const s=LS.items[i];if(!s)return;const t=S.trips.find(x=>x.id===s._tripId);if(!t)return;S.curTrip=t;openPlace(s.id,'list')}
 function backFromPlace(){
   if(S.placeOrigin==='list'){goTo('list');renderList();return}
+  // Aberto pela estante: voltar tem que devolver pro Perfil, nao jogar
+  // numa viagem que a pessoa nem sabia que estava aberta.
+  if(S.placeOrigin==='profile'){goTo('profile');loadProfile();return}
   // Aberto de dentro da tela da cidade, o voltar tem que devolver PRA cidade.
   // Antes caía sempre na tela da viagem, um nível acima de onde a pessoa estava.
   if(S.placeOrigin==='city'&&S.curCity){goTo('city');updateCityHeader();renderCityBody();return}
@@ -3045,7 +3061,10 @@ async function loadTrip(t){
   // background-size/position e a foto renderiza no tamanho natural, cortada no canto
   heroEl.style.backgroundImage=destGradient(dest);
   limparCredito('tripFotoCredito');
-  fetchCityPhoto(dest).then(url=>{if(url){heroEl.style.backgroundImage=cssUrl(url);pintarCreditoCidade('tripFotoCredito',url)}});
+  // Abrir a viagem A, voltar e abrir a B rapido fazia a foto — e o CREDITO,
+  // que e obrigacao dos termos do Unsplash — de A aparecer na capa de B.
+  // Todas as telas irmas ja checavam isso.
+  fetchCityPhoto(dest,dest).then(url=>{if(url&&S.curTrip===t){heroEl.style.backgroundImage=cssUrl(url);pintarCreditoCidade('tripFotoCredito',url)}});
   // O Dashboard já busca os spots de TODAS as viagens numa única query em
   // lote (ver loadDashboard). Rebuscar aqui era uma ida a mais ao banco,
   // sempre, só pra pegar o que já estava na mão — por isso abrir uma
@@ -3281,11 +3300,31 @@ function addSpotToCurrentCity(){
 
 // ═══ PLACE DETAIL ═══
 async function openPlace(id,origin){
-  const s=S.curTrip._spots.find(x=>x.id===id);if(!s)return;S.curPlace=s;
+  // Procurava o lugar SO dentro da viagem aberta. Vindo da estante do
+  // Perfil nao ha viagem aberta: numa sessao nova S.curTrip e null e o
+  // toque estourava calado; com alguma viagem aberta por acaso, o lugar
+  // simplesmente nao era achado. A estante e a lista mais completa dos
+  // lugares da pessoa, entao era o toque mais natural do Perfil morrendo
+  // em silencio. Agora procura em TODOS e abre a viagem dona junto.
+  let s=S.curTrip&&(S.curTrip._spots||[]).find(x=>x.id===id);
+  if(!s){
+    for(const t of (S.trips||[])){
+      const achado=(t._spots||[]).find(x=>x.id===id);
+      if(achado){s=achado;S.curTrip=t;break}
+    }
+  }
+  if(!s)return;
+  S.curPlace=s;
   S.placeOrigin=origin||'trip'; // pra saber pra onde o "voltar" deve levar
   document.getElementById('placeName').textContent=s.name;
   document.getElementById('placeType').textContent=`${subcatLabel(s.subcategory)||catLabel(s.category)} · ${cityOf(s)}`;
-  document.getElementById('placeNote').textContent=`"${s.my_note}"`;
+  // Sem nota, isto imprimia um par de aspas vazias — que parece defeito na
+  // tela onde a nota pessoal e justamente o que diferencia o Spot de uma
+  // lista do Google. Sem nota, o espaco vira convite pra escrever uma.
+  const nota=String(s.my_note||'').trim();
+  const elNota=document.getElementById('placeNote');
+  elNota.textContent=nota?('"'+nota+'"'):'Por que esse lugar te chamou atenção?';
+  elNota.classList.toggle('nota-vazia',!nota);
   document.getElementById('placeNoteAttr').style.display='none';
   const phEl=document.getElementById('placeHeroImg');
   const cid=cityOf(s)||s.name;
@@ -3926,7 +3965,9 @@ async function adicionarSpotAbertoDoAmigo(btn){
 
 async function runExplore(){
   const city=document.getElementById('exploreCitySearch').value.trim();
-  if(!city){toast('Digite uma cidade','','alert');return}
+  // Avisa E desliga o girar da tela nativa: sem o segundo, o indicador
+  // ficava rodando ate a pessoa trocar de aba e voltar.
+  if(!city){toast('Digite uma cidade','','alert');darDadosDeExplorar();return}
   EXPLORE.city=city;
   // A lista antiga sai ANTES da nova chegar: manter os lugares da cidade
   // passada embaixo do nome da nova e a pior forma de errar.
@@ -4696,7 +4737,7 @@ async function pickPlace(p){
     S.addTrip=viagem;
     // Viagem recem-decidida a partir do proprio lugar: nao ha pais pra
     // conferir contra, os dois vem da mesma fonte.
-    S.selPlace=p;document.getElementById('selName').textContent=p.name;document.getElementById('selMeta').textContent=p.meta;
+    S.selPlace=p;document.getElementById('selName').textContent=p.name;document.getElementById('selMeta').textContent=p.meta||p.address||'';
     document.getElementById('selIcon').innerHTML=p.icon;resetNoteSheet();nextOv('ov-search','ov-note');
     return;
   }
@@ -4711,7 +4752,7 @@ async function pickPlace(p){
     showCountryMismatch(p.country,tripCountry);
     return;
   }
-  S.selPlace=p;document.getElementById('selName').textContent=p.name;document.getElementById('selMeta').textContent=p.meta;
+  S.selPlace=p;document.getElementById('selName').textContent=p.name;document.getElementById('selMeta').textContent=p.meta||p.address||'';
   document.getElementById('selIcon').innerHTML=p.icon;resetNoteSheet();nextOv('ov-search','ov-note');
 }
 // ── Country mismatch handling ──
@@ -4742,7 +4783,7 @@ async function moveToCorrectCountry(existingTrip,createNew){
   }
   // Set the add target to the correct trip and proceed to note
   S.addTrip=trip;S.selPlace=p;S.pendingPlace=null;
-  document.getElementById('selName').textContent=p.name;document.getElementById('selMeta').textContent=p.meta;
+  document.getElementById('selName').textContent=p.name;document.getElementById('selMeta').textContent=p.meta||p.address||'';
   document.getElementById('selIcon').innerHTML=p.icon;resetNoteSheet();
   closeOv('ov-mismatch');
   setTimeout(()=>{document.getElementById('ov-note').classList.add('show');avisarSeTemJanela()},220);
@@ -4751,7 +4792,7 @@ function keepInThisTripAnyway(){
   // user insists — keep place in current trip
   const p=S.pendingPlace;if(!p)return;
   S.selPlace=p;S.pendingPlace=null;
-  document.getElementById('selName').textContent=p.name;document.getElementById('selMeta').textContent=p.meta;
+  document.getElementById('selName').textContent=p.name;document.getElementById('selMeta').textContent=p.meta||p.address||'';
   document.getElementById('selIcon').innerHTML=p.icon;resetNoteSheet();
   closeOv('ov-mismatch');
   setTimeout(()=>{document.getElementById('ov-note').classList.add('show');avisarSeTemJanela()},220);
@@ -5736,6 +5777,11 @@ async function abrirComentarios(spotId,alvo,donoDoSpot){
   if(box)box.innerHTML='<div class="coment-titulo">Comentários</div><div class="amg-aviso">Carregando...</div>';
   try{
     await carregarComentarios(spotId);
+    // Com rede lenta da pra abrir o lugar A, voltar e abrir o B antes da
+    // resposta de A chegar. Sem esta checagem, a ficha de B mostrava os
+    // comentarios de A — e o botao Enviar gravava no spot A. As telas
+    // irmas (cidade, perfil de amigo) todas tem guarda; esta nao tinha.
+    if(alvo==='placeComentarios'&&S.curPlace&&S.curPlace.id!==spotId)return;
     renderComentarios(spotId,alvo,donoDoSpot);
   }catch(e){
     // A tabela vem da migracao 012. Enquanto ela nao rodar, a secao some em
@@ -7366,11 +7412,29 @@ async function loadFriends(){
   const c=document.getElementById('friendsContainer');
   c.innerHTML='<div class="empty-state"><div class="ei">'+icon('users')+'</div><p>Carregando...</p></div>';
 
+  // Consulta que FALHOU nao e lista vazia — o mesmo raciocinio que o
+  // loadDashboard ja fazia e esta tela nao. Um 500, o projeto pausado ou uma
+  // troca de Wi-Fi anunciavam "voce nao tem amigos" e sumiam com o pedido
+  // de amizade recebido.
   const[accepted,incoming,outgoing]=await Promise.all([
     dbGet('follows',`status=eq.accepted&or=(follower_id.eq.${uid},following_id.eq.${uid})`),
     dbGet('follows',`status=eq.pending&following_id=eq.${uid}`),
     dbGet('follows',`status=eq.pending&follower_id=eq.${uid}`)
   ]);
+
+  // Sai ANTES de reescrever qualquer coisa. Se apagasse FRIENDS_DATA aqui,
+  // a tela nativa receberia o vazio junto e o estrago seria nos dois lados.
+  if(falhou(accepted)||falhou(incoming)||falhou(outgoing)){
+    if(FRIENDS_DATA){
+      renderFriendsTab();      // o que ja estava na tela continua valendo
+      darDadosDeAmigos();      // e a tela nativa para de girar
+    }else{
+      c.innerHTML='<div class="empty-state"><div class="ei">'+icon('users')+'</div><h3>Não carregou</h3><p>Confere a conexão e puxa pra baixo pra tentar de novo.</p></div>';
+      falarComACasca({tipo:'amigos',pronto:false});
+    }
+    if(navigator.onLine)toast('Não carregou','Confere a conexão. O que está na tela pode estar desatualizado.','alert');
+    return;
+  }
 
   // Bloqueado não aparece em lugar nenhum da tela de amigos — nem como amigo,
   // nem como pedido recebido. Bloquear já desfaz a amizade, mas a lista pode
@@ -8254,7 +8318,14 @@ async function resgatarConvitePendente(){
   const status=Array.isArray(r)?r[0]:r;
   // 'sem_sessao' é o único caso em que vale tentar de novo depois; nos outros
   // o convite já cumpriu (ou nunca ia cumprir) o papel dele.
-  if(status!=='sem_sessao'){
+  //
+  // FALHA DE REDE NAO E RESPOSTA. dbRpc devolve lista vazia quando nao
+  // conseguiu falar com o banco, e status vem undefined — que nao e
+  // 'sem_sessao' e fazia o codigo ser apagado PRA SEMPRE. Quem criou conta
+  // no 4G ruim nunca virava amigo de quem convidou, e o link ja tinha sido
+  // consumido da barra de endereco: nao havia segunda chance.
+  const houveResposta=status!==undefined&&status!==null&&status!=='';
+  if(houveResposta&&status!=='sem_sessao'){
     try{localStorage.removeItem(CONVITE_GUARDADO)}catch(e){}
   }
   if(status==='ok')toast('Vocês são amigos','Já dá pra ver as viagens um do outro.','users');
