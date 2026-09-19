@@ -57,7 +57,7 @@ function FaixaDeCheckin({ nome, acao }) {
   return (
     <View style={e.checkin}>
       <View style={e.checkinIcone}>
-        <Svg width={16} height={16} viewBox="0 0 24 24">
+        <Svg width={13} height={13} viewBox="0 0 24 24">
           <Path
             d="M12 21s6.5-5.8 6.5-10.4A6.5 6.5 0 0 0 5.5 10.6C5.5 15.2 12 21 12 21Z"
             stroke="#fff" strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round" fill="none"
@@ -68,25 +68,26 @@ function FaixaDeCheckin({ nome, acao }) {
           />
         </Svg>
       </View>
-      <View style={{ flex: 1, minWidth: 0 }}>
-        <Text style={e.checkinQ}>
-          Você está em <Text style={e.checkinNome}>{nome}</Text>?
-        </Text>
-        <View style={e.checkinAcoes}>
-          <Pressable
-            onPress={() => acao('checkinAdd')}
-            style={({ pressed }) => [e.checkinBtn, e.checkinAdd, pressed && { opacity: 0.85 }]}
-          >
-            <Text style={e.checkinAddTxt}>Adicionar spot</Text>
-          </Pressable>
-          <Pressable
-            onPress={() => acao('checkinIgnorar')}
-            style={({ pressed }) => [e.checkinBtn, pressed && { opacity: 0.6 }]}
-          >
-            <Text style={e.checkinIgnorarTxt}>Ignorar</Text>
-          </Pressable>
-        </View>
-      </View>
+      <Text style={e.checkinQ} numberOfLines={2}>
+        Você está em <Text style={e.checkinNome}>{nome}</Text>?
+      </Text>
+      <Pressable
+        onPress={() => acao('checkinAdd')}
+        style={({ pressed }) => [e.checkinAdd, pressed && { opacity: 0.85 }]}
+      >
+        <Text style={e.checkinAddTxt}>Adicionar</Text>
+      </Pressable>
+      <Pressable
+        onPress={() => acao('checkinIgnorar')}
+        hitSlop={6}
+        style={({ pressed }) => [e.checkinX, pressed && { opacity: 0.5 }]}
+        accessibilityRole="button"
+        accessibilityLabel="Ignorar"
+      >
+        <Svg width={14} height={14} viewBox="0 0 24 24">
+          <Path d="M6.5 6.5l11 11M17.5 6.5l-11 11" stroke={INK3} strokeWidth={1.8} strokeLinecap="round" fill="none" />
+        </Svg>
+      </Pressable>
     </View>
   );
 }
@@ -276,29 +277,31 @@ function BotaoMais({ acao, margemDeBaixo }) {
 const e = StyleSheet.create({
   // Valores copiados do .checkin-* do site. O degrade de fundo vira uma cor
   // so, no meio do caminho entre as duas pontas dele.
+  // Uma linha, nao um bloco: antes ocupava a altura de um card de viagem pra
+  // perguntar uma coisa so, e empurrava a tela inteira pra baixo.
   checkin: {
     flexDirection: 'row',
-    alignItems: 'flex-start',
-    gap: 13,
+    alignItems: 'center',
+    gap: 11,
     marginHorizontal: 24,
-    marginTop: 16,
-    padding: 16,
+    marginTop: 14,
+    paddingVertical: 10,
+    paddingLeft: 12,
+    paddingRight: 10,
     backgroundColor: 'rgba(193,85,47,0.10)',
     borderWidth: StyleSheet.hairlineWidth,
-    borderColor: 'rgba(193,85,47,0.35)',
-    borderRadius: 16,
+    borderColor: 'rgba(193,85,47,0.30)',
+    borderRadius: 14,
   },
   checkinIcone: {
-    width: 32, height: 32, borderRadius: 16, backgroundColor: TERRA,
+    width: 26, height: 26, borderRadius: 13, backgroundColor: TERRA,
     alignItems: 'center', justifyContent: 'center',
   },
-  checkinQ: { fontFamily: FRAUNCES, fontSize: 16, color: INK, lineHeight: 21, marginBottom: 10 },
-  checkinNome: { color: TERRA },
-  checkinAcoes: { flexDirection: 'row', gap: 8 },
-  checkinBtn: { borderRadius: 9, paddingVertical: 8, paddingHorizontal: 14 },
-  checkinAdd: { backgroundColor: TERRA },
+  checkinQ: { flex: 1, minWidth: 0, fontSize: 13.5, color: INK, lineHeight: 18 },
+  checkinNome: { color: TERRA, fontWeight: '600' },
+  checkinAdd: { borderRadius: 9, paddingVertical: 8, paddingHorizontal: 13, backgroundColor: TERRA },
   checkinAddTxt: { color: '#fff', fontSize: 12.5, fontWeight: '600' },
-  checkinIgnorarTxt: { color: INK3, fontSize: 12.5, fontWeight: '600' },
+  checkinX: { width: 30, height: 30, alignItems: 'center', justifyContent: 'center' },
 
   // 96px acima da barra de abas, como o do site, mais a area segura.
   mais: {

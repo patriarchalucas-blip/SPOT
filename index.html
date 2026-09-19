@@ -201,17 +201,20 @@ body{font-family:'DM Sans',sans-serif;background:var(--dark);max-width:430px;mar
 .stat-l{font-size:11.5px;color:var(--ink3);margin-top:4px}
 .dash-body{padding:8px 24px calc(104px + env(safe-area-inset-bottom, 0px))}
 .section-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;margin-top:24px}
-.checkin-banner{display:flex;gap:13px;align-items:flex-start;margin:16px 24px 0;padding:16px;background:linear-gradient(160deg,rgba(193,85,47,.16),rgba(193,85,47,.05));border:1px solid rgba(193,85,47,.35);border-radius:var(--r);box-shadow:var(--shadow-sm);animation:checkinIn .25s ease}
+/* Uma LINHA, nao um bloco. Antes era um cartao alto com a pergunta em cima e
+   dois botoes embaixo: ocupava a altura de um card de viagem pra perguntar
+   uma coisa so, e empurrava o resto da tela pra baixo. Agora cabe numa linha
+   e o "ignorar" virou um X, que e o gesto que a pessoa realmente faz. */
+.checkin-banner{display:flex;gap:11px;align-items:center;margin:14px 24px 0;padding:10px 10px 10px 12px;background:rgba(193,85,47,.10);border:1px solid rgba(193,85,47,.3);border-radius:14px;animation:checkinIn .25s ease}
 @keyframes checkinIn{from{opacity:0;transform:translateY(-6px)}to{opacity:1;transform:translateY(0)}}
-.checkin-icon{width:32px;height:32px;flex-shrink:0;border-radius:50%;background:var(--terra);color:#fff;display:flex;align-items:center;justify-content:center}
-.checkin-icon svg{width:16px;height:16px}
-.checkin-body{flex:1;min-width:0}
-.checkin-q{font-family:'Fraunces',serif;font-size:16px;color:var(--ink);line-height:1.3;margin-bottom:10px}
-.checkin-q span{color:var(--terra)}
-.checkin-actions{display:flex;gap:8px}
-.checkin-btn{border:none;border-radius:9px;padding:8px 14px;font-family:'DM Sans',sans-serif;font-size:12.5px;font-weight:600;cursor:pointer}
-.checkin-add{background:var(--terra);color:#fff}
-.checkin-ignore{background:none;color:var(--ink3)}
+.checkin-icon{width:26px;height:26px;flex-shrink:0;border-radius:50%;background:var(--terra);color:#fff;display:flex;align-items:center;justify-content:center}
+.checkin-icon svg{width:13px;height:13px}
+.checkin-q{flex:1;min-width:0;font-size:13.5px;color:var(--ink);line-height:1.35}
+.checkin-q span{color:var(--terra);font-weight:600}
+.checkin-add{flex-shrink:0;border:none;border-radius:9px;padding:8px 13px;background:var(--terra);color:#fff;font-family:'DM Sans',sans-serif;font-size:12.5px;font-weight:600;cursor:pointer}
+.checkin-x{flex-shrink:0;width:30px;height:30px;border:none;background:none;color:var(--ink3);display:flex;align-items:center;justify-content:center;cursor:pointer;border-radius:50%}
+.checkin-x svg{width:14px;height:14px}
+.checkin-x:active{opacity:.5}
 .section-title{font-size:13px;font-weight:600;color:var(--ink2)}
 
 /* Pastas por continente — recolhíveis de verdade, não só um título */
@@ -583,6 +586,15 @@ body.na-casca .bottom-nav{display:none}
 .note-glow{display:none}
 .note-quote{font-family:'Fraunces',serif;font-weight:400;font-size:18px;font-style:italic;color:var(--ink);line-height:1.5;position:relative;z-index:1}
 .note-attr{font-size:12px;color:var(--ink3);margin-top:11px;position:relative;z-index:1}
+/* Uma linha discreta no lugar de quatro caixas. O endereco e a unica coisa
+   daquele bloco que nao se repetia em outro lugar da tela. */
+.info-linha{margin-top:-4px}
+.info-linha-item{display:flex;align-items:center;gap:10px;padding:12px 0;border-top:1px solid var(--border);border-bottom:1px solid var(--border);color:var(--ink2);text-decoration:none}
+.ili-ic{flex-shrink:0;color:var(--ink3);display:flex}
+.ili-ic svg{width:15px;height:15px}
+.ili-txt{flex:1;min-width:0;font-size:13.5px;line-height:1.4}
+.ili-seta{flex-shrink:0;color:var(--ink3);font-size:17px}
+.info-linha-item:active{opacity:.6}
 .info-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
 .info-cell{background:var(--white);border:1px solid var(--border);border-radius:var(--r-sm);padding:14px}
 .info-cell.wide{grid-column:1/-1}
@@ -1140,13 +1152,9 @@ svg.ic path,svg.ic circle,svg.ic line,svg.ic polyline,svg.ic rect{fill:none;stro
   </div>
   <div class="checkin-banner" id="checkinBanner" style="display:none">
     <div class="checkin-icon" data-ic="pin"></div>
-    <div class="checkin-body">
-      <div class="checkin-q">Você está em <span id="checkinName"></span>?</div>
-      <div class="checkin-actions">
-        <button class="checkin-btn checkin-add" onclick="checkinAdd()">Adicionar spot</button>
-        <button class="checkin-btn checkin-ignore" onclick="checkinIgnore()">Ignorar</button>
-      </div>
-    </div>
+    <div class="checkin-q">Você está em <span id="checkinName"></span>?</div>
+    <button class="checkin-add" onclick="checkinAdd()">Adicionar</button>
+    <button class="checkin-x" onclick="checkinIgnore()" data-ic="close" aria-label="Ignorar"></button>
   </div>
   <div class="dash-body" id="tripsContainer"><div class="section-head"><span class="section-title">Minhas viagens</span></div><div class="empty-state"><div class="ei" data-ic="suitcase"></div><h3>Nenhuma viagem ainda</h3><p>Toca no + para criar sua primeira viagem</p></div></div>
   <button class="fab" onclick="comecarSpotSemViagem()">+</button>
@@ -1178,6 +1186,7 @@ svg.ic path,svg.ic circle,svg.ic line,svg.ic polyline,svg.ic rect{fill:none;stro
   <div class="trip-hero"><div class="trip-hero-img" id="cityHeroImg"></div><div class="foto-credito" id="cityFotoCredito"></div><div class="trip-float"></div><div class="trip-hero-content"><button class="back-btn" onclick="goTo('trip')" data-ic="back" aria-label="Voltar"></button><div><div class="trip-hero-label" id="cityLabel"></div><div class="trip-hero-name" id="cityName"></div><div class="trip-hero-meta" id="cityMeta"></div></div></div></div>
   <div class="cat-tabs-wrap"><div class="cat-tabs"><div class="cat-tab active" onclick="switchCityCat('food',this)"><div class="ct-icon" data-ic="food"></div><div>Comer & Beber</div><div class="ct-count" id="cityCnt-food">0</div></div><div class="cat-tab" onclick="switchCityCat('hotel',this)"><div class="ct-icon" data-ic="hotel"></div><div>Onde Ficar</div><div class="ct-count" id="cityCnt-hotel">0</div></div><div class="cat-tab" onclick="switchCityCat('experience',this)"><div class="ct-icon" data-ic="compass"></div><div>Experiências</div><div class="ct-count" id="cityCnt-experience">0</div></div></div></div>
   <div class="subcat-row" id="citySubcatFilter" style="display:none;padding:14px 20px 0;scroll-padding-left:20px"></div>
+  <div class="subcat-row" id="cityStatusFilter" style="display:none;padding:12px 20px 0;scroll-padding-left:20px"></div>
   <div class="trip-body" id="cityBody"></div>
   <button class="fab" onclick="addSpotToCurrentCity()">+</button>
   <div class="bottom-nav"><div class="nav-item active" onclick="goTo('dashboard');loadDashboard()"><div class="nav-icon" data-ic="map"></div><div class="nav-label" style="color:var(--ink);font-weight:600">Viagens</div></div><div class="nav-item" onclick="goTo('explore');loadExplore()"><div class="nav-icon" data-ic="search"></div><div class="nav-label">Explorar</div></div><div class="nav-item" onclick="goTo('friends');loadFriends()"><div class="nav-icon" data-ic="users"></div><div class="nav-label">Amigos</div></div><div class="nav-item" onclick="goTo('profile');loadProfile()"><div class="nav-icon" data-ic="user"></div><div class="nav-label">Perfil</div></div></div>
@@ -1332,10 +1341,10 @@ svg.ic path,svg.ic circle,svg.ic line,svg.ic polyline,svg.ic rect{fill:none;stro
 <div class="screen" id="place">
   <div class="place-hero"><div class="place-hero-img" id="placeHeroImg"></div><div class="foto-credito" id="placeFotoCredito"></div><div class="hero-overlay"></div><button class="hero-back" onclick="backFromPlace()" data-ic="back" aria-label="Voltar"></button><button class="hero-photo-btn" onclick="document.getElementById('spotPhotoFileInput').click()" data-ic="edit" aria-label="Trocar foto"></button><input type="file" id="spotPhotoFileInput" accept="image/*" style="display:none" onchange="onSpotPhotoFileChosen(this)"><div class="hero-chip chip-want" id="placeChip" onclick="cycleStatus()">Quero ir</div><div class="hero-bottom"><div class="hero-type" id="placeType"></div><div class="hero-name" id="placeName"></div></div></div>
   <div class="d-section"><div class="sec-linha"><div class="sec-label">Minha nota</div><button class="sec-editar" id="btnEditarNota" onclick="editarNota()">Editar</button></div><div class="note-card" id="notaLeitura"><div class="note-glow"></div><div class="note-quote" id="placeNote"></div><div class="note-attr" id="placeNoteAttr"></div></div><div id="notaEdicao" style="display:none"><textarea class="note-input" id="notaTexto" rows="4" placeholder="Por que esse lugar te chamou atenção?"></textarea><div class="nota-acoes"><button class="action-btn" style="margin:0" id="btnSalvarNota" onclick="salvarNota()">Salvar nota</button><button class="secondary-link" style="margin:0" onclick="cancelarNota()">Cancelar</button></div></div><div class="sp-social" id="placeSocial" style="display:none"></div></div>
-  <div class="d-section"><div class="sec-label">Informações</div><div class="info-grid" id="placeInfoGrid"></div><div id="placeReserveWrap"></div></div>
+  <div class="d-section"><div class="info-linha" id="placeInfoGrid"></div><div id="placeReserveWrap"></div></div>
   <div class="d-section"><div class="coment-bloco" id="placeComentarios"></div></div>
   <div class="d-section" id="placeSubcatSection" style="display:none"><div class="sec-label">Tipo de experiência</div><div class="subcat-row" id="placeSubcatChips"></div></div>
-  <div class="d-section"><div class="sec-label">Status</div><div class="status-toggle"><button class="toggle-btn sel-want" id="t-want" onclick="setStatus('want')">Quero ir</button><button class="toggle-btn" id="t-been" onclick="setStatus('been')">Fui</button><button class="toggle-btn" id="t-skip" onclick="setStatus('skip')">Pular</button></div></div>
+  <div class="d-section"><div class="status-toggle"><button class="toggle-btn sel-want" id="t-want" onclick="setStatus('want')">Quero ir</button><button class="toggle-btn" id="t-been" onclick="setStatus('been')">Fui</button><button class="toggle-btn" id="t-skip" onclick="setStatus('skip')">Pular</button></div></div>
   <div class="d-section"><div class="sec-label">Minha avaliação</div><div class="stars-row" id="placeStars"><button class="star-btn" onclick="rateStar(1)" data-ic="star"></button><button class="star-btn" onclick="rateStar(2)" data-ic="star"></button><button class="star-btn" onclick="rateStar(3)" data-ic="star"></button><button class="star-btn" onclick="rateStar(4)" data-ic="star"></button><button class="star-btn" onclick="rateStar(5)" data-ic="star"></button></div><textarea class="review-area" id="reviewText" rows="3" placeholder="O que você achou?"></textarea><button class="action-btn" id="saveReviewBtn" onclick="saveReview()">Salvar avaliação</button><button class="delete-link" onclick="deleteSpot()">Excluir este spot</button></div>
 </div>
 
@@ -1472,26 +1481,18 @@ function esc(v){return String(v==null?'':v).replace(/[&<>"'`]/g,function(c){retu
 // O que muda: a URL da foto para de carregar a chave, e o destino resolvido
 // fica guardado no cache do Cloudflare. A segunda pessoa que vir a mesma foto
 // não custa chamada de API.
-const FOTO_PELO_PROXY=true;
 const RE_FOTO_PLACES=/^https:\/\/places\.googleapis\.com\/v1\/(places\/[^/]+\/photos\/[^/]+)\/media\?(.*)$/i;
 const RE_FOTO_PROXY=/^\/api\/place-photo\?ref=([^&]+)&w=(\d+)$/i;
-// Normaliza a URL de foto pro caminho que está LIGADO, seja o que estiver
-// gravado no banco. Existem linhas nos dois formatos: as antigas com a URL
-// direta, e as gravadas em 08–09/09 com a de proxy. Converter na exibição faz
-// as duas funcionarem sem migrar nada — em qualquer posição do interruptor.
+// Normaliza a URL de foto: seja o que estiver gravado no banco, o que sai
+// daqui aponta pro servidor. Existem linhas nos dois formatos — as antigas
+// com a URL direta do Google (que carregava a chave) e as novas. Converter
+// na exibicao faz as duas funcionarem sem migrar nada no banco.
 function semChaveDoPlaces(u){
   const s=String(u||'');
-  if(FOTO_PELO_PROXY){
-    const m=s.match(RE_FOTO_PLACES);
-    if(!m)return u;
-    const w=(m[2].match(/maxWidthPx=(\d+)/)||[])[1]||'400';
-    return'/api/place-photo?ref='+encodeURIComponent(m[1])+'&w='+w;
-  }
-  const m=s.match(RE_FOTO_PROXY);
+  const m=s.match(RE_FOTO_PLACES);
   if(!m)return u;
-  let ref='';try{ref=decodeURIComponent(m[1])}catch(e){return u}
-  if(!/^places\/[A-Za-z0-9_-]+\/photos\/[A-Za-z0-9_-]+$/.test(ref))return u;
-  return'https://places.googleapis.com/v1/'+ref+'/media?maxWidthPx='+m[2]+'&key='+GAPI;
+  const w=(m[2].match(/maxWidthPx=(d+)/)||[])[1]||'400';
+  return'/api/place-photo?ref='+encodeURIComponent(m[1])+'&w='+w;
 }
 // Largura sob medida pro tamanho de EXIBICAO. A foto era gravada pedindo
 // 400–800px de largura e usada num thumb de ~90px: o app baixava de 4 a 8
@@ -1589,14 +1590,23 @@ document.addEventListener('focusin',function(e){
     // Com pinch-zoom a altura visivel encolhe por causa do zoom, nao do
     // teclado: nesse caso volta pra tela inteira em vez de mentir.
     const zoom=vv.scale>1.01;
-    const h=zoom?window.innerHeight:Math.round(vv.height);
+    const medida=zoom?window.innerHeight:Math.round(vv.height);
     const t=zoom?0:Math.round(vv.offsetTop);
+    const sobra=Math.max(0,window.innerHeight-(medida+t));
+    // SOBRA PEQUENA NAO E TECLADO. Dentro do app a medida as vezes volta uns
+    // pixels menor que a tela, e como o overlay ocupa exatamente esta altura,
+    // sobrava uma faixa mostrando a tela de TRAS embaixo da ficha — dava pra
+    // ver os cards de viagem por baixo do "Salvar e adicionar outro".
+    // Teclado de celular nunca ocupa menos que 150px; abaixo disso a medida
+    // esta e desencontrada, e o certo e usar a tela inteira.
+    const ehTeclado=sobra>=150;
+    const h=ehTeclado?medida:Math.max(medida,window.innerHeight-t);
     if(h===ah&&t===at)return;
     ah=h;at=t;
     raiz.style.setProperty('--vv-h',h+'px');
     raiz.style.setProperty('--vv-t',t+'px');
     // --kb continua exportado: e o numero que a mensagem de diagnostico usa.
-    raiz.style.setProperty('--kb',Math.max(0,window.innerHeight-(h+t))+'px');
+    raiz.style.setProperty('--kb',(ehTeclado?sobra:0)+'px');
   }
   vv.addEventListener('resize',medir);
   vv.addEventListener('scroll',medir);
@@ -3147,6 +3157,8 @@ function renderCitySubcatFilter(){
     +(semClas?`<button class="subcat-chip${curCitySubcat==='__sem__'?' on':''}" onclick="setCitySubcat('__sem__')">Sem tipo ${daCidade.filter(s=>!subcatsDe(s.subcategory).length).length}</button>`:'');
 }
 function setCitySubcat(k){curCitySubcat=(curCitySubcat===k?'':k);renderCitySubcatFilter();renderCityBody()}
+// Trocar de categoria muda a lista inteira, entao o filtro de situacao e
+// recontado (pode nem fazer sentido na categoria nova).
 // Cidades da viagem na ordem em que os cards foram desenhados. O card manda o
 // índice; o nome sai daqui, nunca do HTML.
 let TRIP_CITY_ORDER=[];
@@ -3186,23 +3198,60 @@ function openCityScreen(city){
   document.getElementById('cityLabel').innerHTML=flagsHTML(t.destinations);
   document.getElementById('cityName').textContent=city;
   updateCityHeader();
-  curCitySubcat='';renderCitySubcatFilter();
+  curCitySubcat='';curCityStatus=0;renderCitySubcatFilter();renderCityStatusFilter();
   const heroEl=document.getElementById('cityHeroImg');
   heroEl.style.backgroundImage=destGradient(city);
   limparCredito('cityFotoCredito');
-  fetchCityPhoto(city).then(url=>{if(url&&S.curCity===city){heroEl.style.backgroundImage=cssUrl(url);pintarCreditoCidade('cityFotoCredito',url)}});
+  fetchCityPhoto(city,paisDaViagem(S.curTrip)).then(url=>{if(url&&S.curCity===city){heroEl.style.backgroundImage=cssUrl(url);pintarCreditoCidade('cityFotoCredito',url)}});
   renderCityBody();
   goTo('city');
 }
 function switchCityCat(cat,el){
-  curCityCat=cat;curCitySubcat='';
+  curCityCat=cat;curCitySubcat='';curCityStatus=0;
   document.querySelectorAll('#city .cat-tab').forEach(t=>t.classList.remove('active'));if(el)el.classList.add('active');
-  renderCitySubcatFilter();renderCityBody();
+  renderCitySubcatFilter();renderCityStatusFilter();renderCityBody();
+}
+// FILTRO POR SITUACAO. "Quero ir" e a pergunta que a pessoa faz quando esta
+// escolhendo onde ir hoje; "Ja fui" e a que ela faz quando quer lembrar. A
+// lista misturava as duas e obrigava a ler item por item.
+//
+// So aparece quando ha os dois tipos na lista: com tudo do mesmo jeito, o
+// filtro seria tres botoes que nao mudam nada.
+// 0 = todos, 1 = quero ir, 2 = ja fui. Numero em vez de texto porque o
+// rotulo vai dentro de um onclick, e ali aspas so dao trabalho.
+const SITUACOES = ['', 'want', 'been'];
+let curCityStatus = 0;
+function setCityStatus(i){
+  curCityStatus = (curCityStatus === i ? 0 : i);
+  renderCityStatusFilter();
+  renderCityBody();
+}
+function spotsDaCidade(){
+  const t = S.curTrip;
+  if(!t || !S.curCity) return [];
+  return (t._spots||[]).filter(sp => cityOf(sp) === S.curCity && sp.category === curCityCat);
+}
+function renderCityStatusFilter(){
+  const box = document.getElementById('cityStatusFilter');
+  if(!box) return;
+  const lista = spotsDaCidade();
+  const quero = lista.filter(sp => sp.status !== 'been').length;
+  const fui = lista.filter(sp => sp.status === 'been').length;
+  // So aparece quando ha os dois tipos: com tudo do mesmo jeito, o filtro
+  // seria tres botoes que nao mudam nada.
+  if(!quero || !fui){ box.style.display='none'; box.innerHTML=''; curCityStatus=0; return }
+  box.style.display = 'flex';
+  const chip = (i, rotulo, n) =>
+    '<button class="subcat-chip' + (curCityStatus === i ? ' on' : '') +
+    '" onclick="setCityStatus(' + i + ')">' + rotulo + ' ' + n + '</button>';
+  box.innerHTML = chip(0, 'Todos', lista.length) + chip(1, 'Quero ir', quero) + chip(2, 'Já fui', fui);
 }
 function renderCityBody(){
   const b=document.getElementById('cityBody');
   const t=S.curTrip;if(!t||!S.curCity)return;
-  let spots=(t._spots||[]).filter(s=>cityOf(s)===S.curCity&&s.category===curCityCat);
+  let spots=spotsDaCidade();
+  if(SITUACOES[curCityStatus]==='want')spots=spots.filter(sp=>sp.status!=='been');
+  else if(SITUACOES[curCityStatus]==='been')spots=spots.filter(sp=>sp.status==='been');
   if(curCityCat==='experience'&&curCitySubcat){
     spots=curCitySubcat==='__sem__'?spots.filter(s=>!subcatsDe(s.subcategory).length):spots.filter(s=>temSubcat(s.subcategory,curCitySubcat));
   }
@@ -3262,7 +3311,7 @@ async function openPlace(id,origin){
     // continua como reserva pra quando o Google não tiver nada.
     phEl.style.backgroundImage=destGradient(cid);
     limparCredito('placeFotoCredito');
-    const deCidade=()=>fetchCityPhoto(cid).then(v=>{
+    const deCidade=()=>fetchCityPhoto(cid,paisDaViagem(S.curTrip)).then(v=>{
       if(v&&aindaNesteSpot()){phEl.style.backgroundImage=cssUrl(v);pintarCreditoCidade('placeFotoCredito',v)}
     });
     healSpotPhoto(s.id).then(u=>{
@@ -3270,11 +3319,21 @@ async function openPlace(id,origin){
       deCidade();
     }).catch(deCidade);
   }
-  let ig='';
-  if(s.address)ig+=`<div class="info-cell wide"><div class="info-cell-icon">${icon('pin')}</div><div class="info-cell-label">Endereço</div><div class="info-cell-value">${esc(s.address)}</div></div>`;
-  if(cityOf(s))ig+=`<div class="info-cell"><div class="info-cell-icon">${icon('city')}</div><div class="info-cell-label">Cidade</div><div class="info-cell-value">${esc(cityOf(s))}</div></div>`;
-  if(s.rating_google)ig+=`<div class="info-cell"><div class="info-cell-icon">${icon('star')}</div><div class="info-cell-label">Google</div><div class="info-cell-value">${fmtRating(s.rating_google)}</div></div>`;
-  if(!ig)ig=`<div class="info-cell wide"><div class="info-cell-icon">${icon('pin')}</div><div class="info-cell-label">Local</div><div class="info-cell-value">${esc(cityOf(s)||'—')}</div></div>`;
+  // A ficha tinha um cartao pra ENDERECO, um pra CIDADE, um pra nota do
+  // GOOGLE e um botao grande pro mapa — quatro caixas empilhadas embaixo da
+  // nota. Cidade ja aparece na capa ("COMER & BEBER · KOTOR") e a nota do
+  // Google ja aparece na linha social logo acima: eram repeticao ocupando
+  // meia tela. Sobrou UMA linha, que e o endereco e abre o mapa ao tocar.
+  const ende=s.address||cityOf(s)||'';
+  const alvoMapa=s.maps_url
+    ?escUrl(s.maps_url)
+    :'https://www.google.com/maps/search/?api=1&query='+encodeURIComponent((s.name||'')+' '+ende);
+  const ig=ende
+    ?'<a class="info-linha-item" href="'+alvoMapa+'" target="_blank" rel="noopener">'
+      +'<span class="ili-ic">'+icon('pin')+'</span>'
+      +'<span class="ili-txt">'+esc(ende)+'</span>'
+      +'<span class="ili-seta">›</span></a>'
+    :'';
   document.getElementById('placeInfoGrid').innerHTML=ig;
   renderPlaceLinks(s);
   abrirComentarios(s.id,'placeComentarios',s.user_id||(S.user&&S.user.id));
@@ -3311,9 +3370,9 @@ function renderPlaceLinks(s){
     if(s.website_url){
       const isInstagram=/instagram\.com/i.test(s.website_url);
       rh+=`<a class="reserve-btn" href="${escUrl(s.website_url)}" target="_blank" rel="noopener">${icon(isInstagram?'instagram':'menu')} ${isInstagram?'Abrir Instagram':'Ver cardápio'}</a>`;
-    }else if(s.maps_url){
-      rh+=`<a class="reserve-btn" href="${escUrl(s.maps_url)}" target="_blank" rel="noopener">${icon('mapPin')} Ver no Google Maps</a>`;
     }
+    // "Ver no Google Maps" saiu daqui: a linha do endereco, logo acima, ja
+    // abre o mapa. Eram dois botoes pro mesmo destino.
     // Sem Instagram: um botão pra procurar AGORA, neste spot.
     //
     // A busca automática roda em segundo plano e em fila; quando ela não acha
@@ -3803,7 +3862,7 @@ async function paisPeloGoogle(s){
   try{
     const r=await googlePlaces('searchText',{
       method:'POST',
-      headers:{'Content-Type':'application/json','X-Goog-Api-Key':GAPI,'X-Goog-FieldMask':'places.addressComponents'},
+      headers:{'Content-Type':'application/json','X-Goog-FieldMask':'places.addressComponents'},
       body:JSON.stringify({textQuery:consulta,languageCode:'pt-BR',maxResultCount:1})
     });
     const p=((await r.json()).places||[])[0];
@@ -3895,7 +3954,7 @@ async function runExplore(){
   try{
     const resp=await googlePlaces('searchText',{
       method:'POST',
-      headers:{'Content-Type':'application/json','X-Goog-Api-Key':GAPI,'X-Goog-FieldMask':'places.displayName,places.formattedAddress,places.addressComponents,places.photos,places.rating,places.userRatingCount,places.websiteUri,places.googleMapsUri,places.types,places.nationalPhoneNumber'},
+      headers:{'Content-Type':'application/json','X-Goog-FieldMask':'places.displayName,places.formattedAddress,places.addressComponents,places.photos,places.rating,places.userRatingCount,places.websiteUri,places.googleMapsUri,places.types,places.nationalPhoneNumber'},
       body:JSON.stringify({textQuery:`${termo} em ${city}`,languageCode:'pt-BR',maxResultCount:20})
     });
     const data=await resp.json();
@@ -4051,7 +4110,6 @@ function addExploreSpot(i){
   S.explorePickStatus='want'; // Explorar é descoberta, ainda não foi lá
   abrirEscolhaDeViagem();
 }
-const GAPI='AIzaSyDYUDC3BkvUYSjlBVX2C6BZ8pMmycxfYUQ';
 // Posto de gasolina, loja de conveniência, mercado — o Google costuma
 // marcar como 'restaurant' secundário quando tem lanchonete dentro, e
 // aparecem em qualquer busca por tipo/categoria. Não é o tipo de lugar que
@@ -4074,10 +4132,10 @@ const GAPI='AIzaSyDYUDC3BkvUYSjlBVX2C6BZ8pMmycxfYUQ';
 // junto uma função que outra feature usava; quanto menos código muda, menor a
 // chance de repetir isso.
 //
-// FALLBACK: se o proxy não estiver utilizável, cai na chamada direta. Isso é
-// transitório e existe pra que religar o cliente NÃO possa quebrar a busca do
-// app — que é a função central dele. Some junto com o GAPI no passo seguinte,
-// depois de confirmado que a GOOGLE_PLACES_KEY está no Cloudflare.
+// O plano B que chamava o Google direto foi REMOVIDO em 18/09/2026, junto
+// com a chave que vivia no navegador. O servidor tem chave propria e esta
+// conferido; manter o plano B custava deixar a chave a vista no codigo-fonte
+// da pagina, e ela nao tinha restricao nenhuma.
 async function googlePlaces(op,opts){
   const h=opts&&opts.headers||{};
   const mask=h['X-Goog-FieldMask']||h['x-goog-fieldmask']||'';
@@ -4104,16 +4162,24 @@ async function googlePlaces(op,opts){
     else if(r.status===400)motivo='payload_recusado';  // bug meu: quero ver no console
     else return{ok:false,status:r.status,json:async()=>({places:[]})};
   }catch(e){motivo='rede'}
-  console.warn('places: caiu na chamada direta ('+motivo+')');
-  return fetch('https://places.googleapis.com/v1/places:'+op,opts);
+  // AQUI existia um plano B que chamava o Google DIRETO, com a chave vinda do
+  // navegador. Ele nasceu de quando o servidor ainda nao tinha chave propria
+  // — hoje tem, e esta conferido. O preco de manter o plano B era a chave
+  // morar no index.html, ou seja, a vista de qualquer um que abrisse o
+  // codigo-fonte da pagina. Testado do terminal, sem site nenhum: ela
+  // respondia. Places e API paga, entao era conta aberta no nome do dono.
+  //
+  // Sem plano B, busca com o servidor fora falha — e e isso mesmo. Busca que
+  // falha a pessoa tenta de novo; chave vazada nao tem volta.
+  console.warn('places: servidor nao respondeu ('+motivo+')');
+  return{ok:false,status:0,json:async()=>({places:[]})};
 }
 function placePhotoUrl(p,largura){
   const ref=(p&&p.photos&&p.photos[0]&&p.photos[0].name)||'';
   if(!ref)return'';
-  // Ver FOTO_PELO_PROXY. Com o proxy ligado, a URL não carrega chave: o
-  // servidor resolve o 302 do Google e reencaminha pro CDN.
-  if(FOTO_PELO_PROXY)return'/api/place-photo?ref='+encodeURIComponent(ref)+'&w='+largura;
-  return'https://places.googleapis.com/v1/'+ref+'/media?maxWidthPx='+largura+'&key='+GAPI;
+  // Sempre pelo servidor: ele resolve o endereco do CDN do Google e
+  // reencaminha. O que chega no navegador nao tem chave nenhuma.
+  return'/api/place-photo?ref='+encodeURIComponent(ref)+'&w='+largura;
 }
 // Ponte pro endereco de foto. HOJE ela nao faz nada: a foto vem do Places
 // com a chave na propria URL, que e o estado pro qual o app voltou quando a
@@ -4216,7 +4282,7 @@ function showNearbySuggestions(){
     try{
       const resp=await googlePlaces('searchNearby',{
         method:'POST',
-        headers:{'Content-Type':'application/json','X-Goog-Api-Key':GAPI,'X-Goog-FieldMask':'places.displayName,places.formattedAddress,places.addressComponents,places.photos,places.rating,places.userRatingCount,places.websiteUri,places.googleMapsUri,places.types,places.nationalPhoneNumber'},
+        headers:{'Content-Type':'application/json','X-Goog-FieldMask':'places.displayName,places.formattedAddress,places.addressComponents,places.photos,places.rating,places.userRatingCount,places.websiteUri,places.googleMapsUri,places.types,places.nationalPhoneNumber'},
         body:JSON.stringify({includedTypes:[tipo],maxResultCount:8,languageCode:'pt-BR',locationRestriction:{circle:{center:{latitude,longitude},radius:600}}})
       });
       const data=await resp.json();
@@ -4257,7 +4323,7 @@ function maybeShowCheckin(){
     try{
       const resp=await googlePlaces('searchNearby',{
         method:'POST',
-        headers:{'Content-Type':'application/json','X-Goog-Api-Key':GAPI,'X-Goog-FieldMask':'places.displayName,places.formattedAddress,places.addressComponents,places.rating,places.userRatingCount,places.types,places.websiteUri,places.googleMapsUri,places.location,places.photos'},
+        headers:{'Content-Type':'application/json','X-Goog-FieldMask':'places.displayName,places.formattedAddress,places.addressComponents,places.rating,places.userRatingCount,places.types,places.websiteUri,places.googleMapsUri,places.location,places.photos'},
         // rankPreference:DISTANCE fazia o pin literalmente mais próximo ganhar
         // mesmo sendo irrelevante — sem isso, o padrão é por relevância.
         // 'bakery'/'cafe'/'bar' ampliam pra restaurante, padaria, café e bar.
@@ -4356,7 +4422,7 @@ function searchPlaces(v){
     try{
       const resp=await googlePlaces('searchText',{
         method:'POST',
-        headers:{'Content-Type':'application/json','X-Goog-Api-Key':GAPI,'X-Goog-FieldMask':'places.id,places.displayName,places.formattedAddress,places.addressComponents,places.location,places.photos,places.rating,places.websiteUri,places.googleMapsUri,places.types,places.nationalPhoneNumber'},
+        headers:{'Content-Type':'application/json','X-Goog-FieldMask':'places.id,places.displayName,places.formattedAddress,places.addressComponents,places.location,places.photos,places.rating,places.websiteUri,places.googleMapsUri,places.types,places.nationalPhoneNumber'},
         body:JSON.stringify({textQuery:v,languageCode:'pt-BR',maxResultCount:6})
       });
       if(myReqId!==searchReqId)return; // busca mais nova já foi disparada, ignora essa resposta atrasada
@@ -4530,7 +4596,7 @@ async function canonizarCidade(nome,pais){
     if(estrito){corpo.includedType='locality';corpo.strictTypeFiltering=true}
     const r=await googlePlaces('searchText',{
       method:'POST',
-      headers:{'Content-Type':'application/json','X-Goog-Api-Key':GAPI,'X-Goog-FieldMask':'places.displayName,places.types'},
+      headers:{'Content-Type':'application/json','X-Goog-FieldMask':'places.displayName,places.types'},
       body:JSON.stringify(corpo)
     });
     return ((await r.json()).places||[])[0]||null;
@@ -5017,7 +5083,7 @@ function filterNewTripCity(v){
     try{
       const resp=await googlePlaces('searchText',{
         method:'POST',
-        headers:{'Content-Type':'application/json','X-Goog-Api-Key':GAPI,'X-Goog-FieldMask':'places.displayName,places.formattedAddress,places.addressComponents,places.types'},
+        headers:{'Content-Type':'application/json','X-Goog-FieldMask':'places.displayName,places.formattedAddress,places.addressComponents,places.types'},
         body:JSON.stringify({textQuery:v,languageCode:'pt-BR',maxResultCount:6})
       });
       if(myReqId!==newTripReqId)return;
@@ -5492,7 +5558,7 @@ async function corrigirCidadesAntigas(opcoes){
       // devolveu quando o spot foi criado.
       const resp=await googlePlaces('searchText',{
         method:'POST',
-        headers:{'Content-Type':'application/json','X-Goog-Api-Key':GAPI,
+        headers:{'Content-Type':'application/json',
           'X-Goog-FieldMask':'places.displayName,places.addressComponents'},
         body:JSON.stringify({textQuery:s.name+' '+s.address,languageCode:'pt-BR',maxResultCount:3})
       });
@@ -6101,7 +6167,7 @@ async function buscarInstagramAgora(id,btn){
     try{
       const resp=await googlePlaces('searchText',{
         method:'POST',
-        headers:{'Content-Type':'application/json','X-Goog-Api-Key':GAPI,'X-Goog-FieldMask':'places.displayName,places.websiteUri'},
+        headers:{'Content-Type':'application/json','X-Goog-FieldMask':'places.displayName,places.websiteUri'},
         body:JSON.stringify({textQuery:s.name+(cityOf(s)?' '+cityOf(s):''),languageCode:'pt-BR',maxResultCount:5})
       });
       const d=await resp.json();
@@ -6157,7 +6223,7 @@ async function autoBackfillPlaceLinks(){
       if(precisaInstagram||s.maps_url===null||precisaFone){
         const resp=await googlePlaces('searchText',{
           method:'POST',
-          headers:{'Content-Type':'application/json','X-Goog-Api-Key':GAPI,'X-Goog-FieldMask':'places.displayName,places.websiteUri,places.googleMapsUri,places.nationalPhoneNumber'},
+          headers:{'Content-Type':'application/json','X-Goog-FieldMask':'places.displayName,places.websiteUri,places.googleMapsUri,places.nationalPhoneNumber'},
           body:JSON.stringify({textQuery:s.name+(cityOf(s)?' '+cityOf(s):''),languageCode:'pt-BR',maxResultCount:5})
         });
         const d=await resp.json();
@@ -6253,7 +6319,7 @@ async function corrigirPaisesDesconhecidos(){
     try{
       const resp=await googlePlaces('searchText',{
         method:'POST',
-        headers:{'Content-Type':'application/json','X-Goog-Api-Key':GAPI,'X-Goog-FieldMask':'places.addressComponents'},
+        headers:{'Content-Type':'application/json','X-Goog-FieldMask':'places.addressComponents'},
         body:JSON.stringify({textQuery:pista,languageCode:'pt-BR',maxResultCount:1})
       });
       const d=await resp.json();
@@ -6320,7 +6386,7 @@ async function healSpotPhoto(id,soCredito){
     const buscar=async(comCidade)=>{
       const resp=await googlePlaces('searchText',{
         method:'POST',
-        headers:{'Content-Type':'application/json','X-Goog-Api-Key':GAPI,'X-Goog-FieldMask':'places.displayName,places.photos,places.addressComponents,places.websiteUri,places.googleMapsUri'},
+        headers:{'Content-Type':'application/json','X-Goog-FieldMask':'places.displayName,places.photos,places.addressComponents,places.websiteUri,places.googleMapsUri'},
         body:JSON.stringify({textQuery:s.name+(comCidade&&cityOf(s)?' '+cityOf(s):''),languageCode:'pt-BR',maxResultCount:5})
       });
       const d=await resp.json();
@@ -6458,12 +6524,29 @@ function nomeEmIngles(q){
   const c=COUNTRIES.find(x=>x.name===q);
   return (c&&c.geo&&c.geo!==q)?c.geo:'';
 }
-async function fetchCityPhoto(entrada){
+// Cidade pequena simplesmente NAO existe no acervo pelo nome exato: Braganca
+// Paulista, Sorocaba e afins voltavam vazias e o card ficava so com o
+// degrade. Somar o pais ao termo acha foto da regiao — nao e a cidade, e
+// isso e uma troca consciente: um retangulo vazio diz menos que uma foto do
+// lugar certo do mundo. O resultado fica guardado sob o nome da cidade, pra
+// a segunda vez ser instantanea.
+// O pais de uma viagem, pra servir de reserva na busca de foto.
+function paisDaViagem(t){
+  if(!t)return'';
+  return (t.destinations&&t.destinations[0])||t.name||'';
+}
+async function fetchCityPhoto(entrada,pais){
   if(!entrada)return'';
-  const url=await buscarFotoDe(entrada);
+  let url=await buscarFotoDe(entrada);
   if(url)return url;
   const ingles=nomeEmIngles(entrada);
-  return ingles?buscarFotoDe(ingles):'';
+  if(ingles){url=await buscarFotoDe(ingles);if(url)return url}
+  const reserva=String(pais||'').trim();
+  if(reserva&&reserva!==String(entrada)){
+    url=await buscarFotoDe(entrada+' '+reserva);
+    if(url){cityPhotoCache[entrada]=url;savePhotoCache();return url}
+  }
+  return'';
 }
 async function buscarFotoDe(query){
   if(!query)return'';
@@ -7887,7 +7970,7 @@ function openFriendCity(city){
   const hero=document.getElementById('fcHeroImg');
   hero.style.backgroundImage=destGradient(city);
   limparCredito('fcFotoCredito');
-  fetchCityPhoto(city).then(url=>{if(url&&FRIEND.city===city){hero.style.backgroundImage=cssUrl(url);pintarCreditoCidade('fcFotoCredito',url)}});
+  fetchCityPhoto(city,paisDaViagem(FRIEND.trip)).then(url=>{if(url&&FRIEND.city===city){hero.style.backgroundImage=cssUrl(url);pintarCreditoCidade('fcFotoCredito',url)}});
   renderFriendCityBody();
   goTo('friendCity');
 }
