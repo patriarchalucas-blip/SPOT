@@ -75,6 +75,13 @@
         "projectId": "2929d3ae-246f-418c-a5df-25e9b6aac1c9"
       }
     },
-    "owner": "lucaspatriarcha"
+    "owner": "lucaspatriarcha",
+    "updates": {
+      "url": "https://u.expo.dev/2929d3ae-246f-418c-a5df-25e9b6aac1c9",
+      "fallbackToCacheTimeout": 0
+    },
+    "runtimeVersion": {
+      "policy": "appVersion"
+    }
   }
 }
