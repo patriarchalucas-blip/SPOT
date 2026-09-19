@@ -217,25 +217,25 @@ export default function TelaPerfil({ dados, ocupado, acao }) {
 
       {d.bio ? <Text style={e.bio}>{d.bio}</Text> : null}
 
+      {/* A ORDEM MUDOU, e e o miolo do conserto. Antes: identidade, lista de
+          lugares, mapa, paises, duas acoes e o email solto no fim — seis
+          blocos do mesmo peso, um atras do outro, sem dizer qual era o
+          assunto da tela.
+
+          Agora a tela responde uma pergunta por vez, na ordem em que ela e
+          feita: QUEM E VOCE (nome, bio, o resumo em numeros) -> ONDE VOCE JA
+          FOI (mapa e paises, que e a identidade de quem viaja) -> O QUE VOCE
+          GUARDOU (os lugares, que e arquivo e por isso vem depois) -> o que
+          da pra FAZER aqui.
+
+          O email saiu: ele ja esta em Configuracoes, e no perfil so ocupava
+          a ultima linha sem ninguem nunca precisar dele. */}
       <View style={e.corpo}>
+        {d.resumoNumeros ? <Text style={e.resumoNumeros}>{d.resumoNumeros}</Text> : null}
+
         <View style={e.cabecalho}>
-          <Text style={e.secao}>Meus lugares</Text>
-          {d.resumo ? <Text style={e.secaoSub}>{d.resumo}</Text> : null}
-        </View>
-
-        {!d.estante.length ? (
-          <Text style={e.aviso}>
-            Os lugares que você salvar aparecem aqui, separados por cidade.
-          </Text>
-        ) : (
-          d.estante.map((c) => <Cidade key={c.cidade} c={c} acao={acao} />)
-        )}
-
-        <View style={[e.cabecalho, { marginTop: 26 }]}>
           <Text style={e.secao}>Onde já estive</Text>
         </View>
-        {/* Abre o mapa cheio, igual ao da tela inicial. Sem isto havia dois
-            mapas iguais na tela e só um respondia ao toque. */}
         <Pressable
           onPress={() => acao('mapa')}
           style={({ pressed }) => [e.mapa, pressed && { opacity: 0.6 }]}
@@ -262,12 +262,22 @@ export default function TelaPerfil({ dados, ocupado, acao }) {
           <Text style={e.paises}>Crie viagens para pintar o mundo.</Text>
         )}
 
+        <View style={[e.cabecalho, { marginTop: 26 }]}>
+          <Text style={e.secao}>Meus lugares</Text>
+          {d.resumo ? <Text style={e.secaoSub}>{d.resumo}</Text> : null}
+        </View>
+        {!d.estante.length ? (
+          <Text style={e.aviso}>
+            Os lugares que você salvar aparecem aqui, separados por cidade.
+          </Text>
+        ) : (
+          d.estante.map((c) => <Cidade key={c.cidade} c={c} acao={acao} />)
+        )}
+
         <View style={e.acoes}>
           <Linha icone="globe" texto="Marcar país que já visitei" onPress={() => acao('visitado')} />
           <Linha icone="pin" texto="Marcar país onde moro" onPress={() => acao('moro')} />
         </View>
-
-        {d.email ? <Text style={e.email}>{d.email}</Text> : null}
       </View>
     </ScrollView>
   );
@@ -317,6 +327,10 @@ const e = StyleSheet.create({
   bio: { paddingHorizontal: 24, paddingTop: 12, fontSize: 14.5, color: INK2, lineHeight: 20 },
 
   corpo: { paddingHorizontal: 24, paddingTop: 20 },
+  // Uma linha de dado logo abaixo do nome, no lugar de tres caixas: o
+  // Dashboard ja tem os numeros grandes, aqui eles sao legenda de quem e a
+  // pessoa, nao o assunto.
+  resumoNumeros: { fontFamily: MONO, fontSize: 11.5, letterSpacing: 0.4, color: INK3, marginBottom: 20 },
   cabecalho: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 },
   // No Perfil o site troca o titulo de secao por mono versalete — e o que
   // separa esta tela das outras.

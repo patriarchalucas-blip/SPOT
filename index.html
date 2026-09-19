@@ -882,6 +882,11 @@ body.na-casca .bottom-nav{display:none}
 .pl-txt{flex:1;font-size:14.5px;color:var(--ink)}
 .pl-seta{color:var(--ink3);font-size:17px;flex-shrink:0}
 .prof-sair .pl-txt{color:var(--red)}
+/* Uma linha de dado logo abaixo do nome, no lugar do email solto no rodape.
+   O email ja esta em Configuracoes; aqui ele so ocupava a ultima linha sem
+   ninguem nunca precisar dele. */
+.prof-resumo{font-family:var(--mono);font-size:11.5px;letter-spacing:.04em;color:var(--ink3);padding-bottom:18px}
+.prof-resumo:empty{display:none}
 .prof-email{font-family:var(--mono);font-size:11px;color:var(--ink3);text-align:center;margin-top:22px}
 /* ═══ PERFIL DE AMIGO (só leitura) ═══ */
 .friend-top{display:flex;align-items:center;gap:14px;padding:40px 22px 14px;background:#0b1620;position:relative;z-index:5}
@@ -1221,15 +1226,15 @@ svg.ic path,svg.ic circle,svg.ic line,svg.ic polyline,svg.ic rect{fill:none;stro
   <div class="profile-bio" id="profBio" style="display:none"></div>
 
   <div class="profile-body">
-    <div class="section-head"><span class="section-title">Meus lugares</span><span class="section-sub" id="estanteResumo"></span></div>
-    <div id="estante"></div>
-    <div class="section-head" style="margin-top:26px"><span class="section-title">Onde já estive</span></div>
+    <div class="prof-resumo" id="profResumo"></div>
+    <div class="section-head"><span class="section-title">Onde já estive</span></div>
     <div class="country-chips" id="countryChips"></div>
+    <div class="section-head" style="margin-top:26px"><span class="section-title">Meus lugares</span><span class="section-sub" id="estanteResumo"></span></div>
+    <div id="estante"></div>
     <div class="prof-acoes">
       <div class="prof-linha" onclick="openVisitedCountryPicker()"><span class="pl-ic" data-ic="globe"></span><span class="pl-txt">Marcar país que já visitei</span><span class="pl-seta">›</span></div>
       <div class="prof-linha" onclick="openHomeCountryPicker()"><span class="pl-ic" data-ic="pin"></span><span class="pl-txt">Marcar país onde moro</span><span class="pl-seta">›</span></div>
     </div>
-    <div class="prof-email" id="profEmail"></div>
     <div style="height:40px"></div>
   </div>
   <div class="bottom-nav"><div class="nav-item" onclick="goTo('dashboard');loadDashboard()"><div class="nav-icon" data-ic="map"></div><div class="nav-label">Viagens</div></div><div class="nav-item" onclick="goTo('explore');loadExplore()"><div class="nav-icon" data-ic="search"></div><div class="nav-label">Explorar</div></div><div class="nav-item" onclick="goTo('friends');loadFriends()"><div class="nav-icon" data-ic="users"></div><div class="nav-label">Amigos</div></div><div class="nav-item active" onclick="goTo('profile');loadProfile()"><div class="nav-icon" data-ic="user"></div><div class="nav-label" style="color:var(--ink);font-weight:600">Perfil</div></div></div>
@@ -6654,7 +6659,6 @@ async function loadProfile(){
   const name=nomeDeExibicao();
   document.getElementById('profName').textContent=name;
   document.getElementById('profAvatar').textContent=name.charAt(0).toUpperCase();
-  document.getElementById('profEmail').textContent=S.user.email;
   const p=await fetchOwnProfile(true);
   document.getElementById('profUser').textContent=p.username?'@'+p.username:'';
   const bio=document.getElementById('profBio');
@@ -6772,6 +6776,19 @@ function renderEstante(){
 // Mesma divisão das outras. A estante (seus lugares agrupados por cidade) é
 // o miolo: a ordenação de dentro de cada cidade — avaliado primeiro, nota
 // manda, "quero ir" por último — é regra, e fica aqui.
+// A linha de numeros do topo do perfil. Vive aqui porque e a MESMA conta que
+// a tela nativa recebe: escrever nos dois lugares a partir de uma funcao so
+// e o que impede a web e o app de divergirem com o tempo.
+function pintarResumoDoPerfil(paises,lugares,cidades){
+  const texto=[
+    paises?(paises+(paises===1?' país':' países')):'',
+    lugares?(lugares+(lugares===1?' lugar':' lugares')):'',
+    cidades?(cidades+(cidades===1?' cidade':' cidades')):''
+  ].filter(Boolean).join('  ·  ');
+  const el=document.getElementById('profResumo');
+  if(el)el.textContent=texto;
+  return texto;
+}
 function darDadosDePerfil(){
   if(!S.user){falarComACasca({tipo:'perfil',pronto:false});return}
   const p=S.profile||{};
@@ -6825,6 +6842,15 @@ function darDadosDePerfil(){
     inicial:(nomeDeExibicao().charAt(0)||'?').toUpperCase(),
     avatar:safeUrl(p.avatar_url||'')||'',
     email:S.user.email||'',
+    // Uma linha de dado logo abaixo do nome. O Dashboard ja tem os numeros
+    // grandes; aqui eles sao legenda de quem e a pessoa, nao o assunto da
+    // tela — e ocupam uma linha no lugar de tres caixas.
+    resumoNumeros:pintarResumoDoPerfil(visitados.length,spots.length,cidades.length),
+    _resumoAntigo:[
+      visitados.length?(visitados.length+(visitados.length===1?' país':' países')):'',
+      spots.length?(spots.length+(spots.length===1?' lugar':' lugares')):'',
+      cidades.length?(cidades.length+(cidades.length===1?' cidade':' cidades')):''
+    ].filter(Boolean).join('  ·  '),
     resumo:spots.length?(spots.length+(spots.length===1?' lugar · ':' lugares · ')
       +cidades.length+(cidades.length===1?' cidade':' cidades')):'',
     estante:estante,
