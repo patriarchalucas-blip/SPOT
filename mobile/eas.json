@@ -26,11 +26,7 @@
   },
   "submit": {
     "production": {
-      "ios": {
-        "appleId": "PREENCHER-SEU-EMAIL-APPLE",
-        "ascAppId": "PREENCHER-APOS-CRIAR-O-APP-NO-APP-STORE-CONNECT",
-        "appleTeamId": "PREENCHER-APOS-A-CONTA-DE-DESENVOLVEDOR-SAIR"
-      }
+      "ios": {}
     }
   }
 }
