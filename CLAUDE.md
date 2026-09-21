@@ -12,7 +12,7 @@ App pessoal de viagem — "Letterboxd para viagem". Salva lugares (restaurante/h
 
 ## Arquitetura atual
 
-- **Frontend:** `index.html` — single file, HTML+CSS+JS inline, sem framework, sem build step. ~1750 linhas.
+- **Frontend:** `index.html` — single file, HTML+CSS+JS inline, sem framework, sem build step. ~8800 linhas (o "~1750" deste documento ficou 5 vezes desatualizado; ver Dívida técnica 3).
 - **Backend:** Supabase (auth + Postgres via REST direto — **nunca usar o SDK JS pra writes**, tem bug de schema cache que trava infinito; toda a camada de dados usa `fetch` direto com `apikey`+`Authorization: Bearer <token>`).
 - **Deploy:** Cloudflare Pages, auto-deploy a cada push no branch `main` do GitHub.
 - **Repo:** `github.com/patriarchalucas-blip/SPOT`
@@ -96,25 +96,48 @@ pra que o CSS que ainda não foi reescrito já saia no visual certo — foi o qu
   lixeira num canto de foto.
 
 ### Logo
-Wordmark "SPOT" em Cinzel maiúsculo `letter-spacing` 6, com uma **esfera armilar**
-(círculo + anel elíptico inclinado -22° passando por fora) no lugar do "O".
-- Geometria travada por medição, não a olho: centro em x=159.3 — que **não** é o meio
-  do avanço do "O", porque o `letter-spacing` entra no avanço. Mexeu na fonte ou no
-  espaçamento, remede.
-- **Cor por fundo:** `#0B3D2E` (verde) sobre fundo claro — carregamento e cabeçalho da
-  tela inicial; `#F5F5F3` sobre a foto do login. O terracota `#c1552f` saiu do app.
-- **Ícone do app:** azulejo `--green` cheio com a esfera em `--on-green`, mesma
-  geometria do favicon. Em `icon-180/192/512.png` e `mobile/assets/icon.png` (1024).
-  Gerados por `ferramentas/gerar-icone.html` + `ferramentas/png-sem-alfa.cjs` —
-  **sem canal alfa**, que a Apple recusa no ícone de 1024.
-- Histórico de rejeição (não reabrir sem pedido): pin de localização → anel tracejado
-  + ponto → círculo com elipse sozinha ("parece um olho") → círculo com elipse +
-  equador ("bola de basquete" — simetria + laranja). O que resolveu foi quebrar a
-  simetria com o anel inclinado.
-- **Em aberto:** Lucas escolheu uma marca nova (estrada em "S" com sol nascendo,
-  opção "01" de uma folha que ele gerou em 20/09). Falta ele mandar o arquivo — 1024
-  PNG sem cantos arredondados, e o SVG se houver. Até lá vale a esfera armilar.
 
+São **duas peças, com papéis separados** — e isso é deliberado, decidido em
+21/09/2026 depois de as duas conviverem por algumas horas e ficar claro que
+competiam.
+
+**1. O wordmark: "SPOT"**, em Cinzel maiúsculo (`letter-spacing` 6), e mais nada.
+Aparece na tela de carregamento, no cabeçalho da tela inicial e no login.
+- **Cor por fundo:** `#0B3D2E` sobre fundo claro · `#F5F5F3` sobre a foto do login.
+- `viewBox="3 77 273 76"`, com a linha de base em `y=150` e `font-size` 100.
+  **Medido, não a olho:** com a Cinzel de fato carregada, a tinta de "SPOT" vai de
+  x=5 a x=274.5 e sobe 72 acima da linha de base (o S passa da altura de maiúscula
+  — overshoot de letra redonda) e desce 2 abaixo. O `viewBox` antigo começava em
+  y=81 e cortaria 3px do topo do S. **Mexeu na fonte ou no espaçamento, remede** —
+  dá pra medir no navegador com `measureText` depois de `document.fonts.load`.
+
+**2. O símbolo: uma estrada em "S" com o sol nascendo**, claro sobre azulejo verde.
+É o ícone do app, e só isso — não entra em tela nenhuma junto do wordmark.
+- Desenho do Lucas (opção "01" de uma folha que ele gerou), entregue em 1024 sem
+  cantos arredondados, que é como a Apple pede: ela aplica a máscara dela, e arte
+  já arredondada sai com borda dupla.
+- **Repintado**, porque as cores dele eram de outra família: verde `#345C44` e creme
+  `#F4ECE4` (quente) viraram `#0B3D2E` e `#F5F5F3`. Importa porque o ícone fica ao
+  lado de coisas pintadas no verde exato — botão, nav ativa — e verde quase-igual
+  aparece como desleixo.
+- Em `icon-180/192/512.png`, `mobile/assets/icon.png` (1024) e
+  `mobile/app-store/icon-1024.png`. O favicon é PNG, não SVG: o desenho veio como
+  imagem, não como vetor.
+- **Pra repintar de novo:** `ferramentas/repintar-marca.html` (o original dele está
+  em `ferramentas/marca-original-do-lucas.webp`). Ele mede as duas cores dominantes
+  do arquivo e reconstrói cada pixel como a mesma mistura entre as duas cores de
+  destino — trocar por igualdade exata deixaria halo da cor velha em cada curva,
+  porque o contorno tem centenas de tons intermediários. A zona morta nas pontas é
+  o que faz o chapado bater exatamente no `#0B3D2E`.
+- Todo PNG de ícone sai **sem canal alfa** (`ferramentas/png-sem-alfa.cjs`): a Apple
+  recusa o ícone de 1024 com transparência, e não há sharp nem PIL nesta máquina.
+
+**A esfera armilar saiu.** Ela era o "O" de SPOT e foi a marca do app por um tempo;
+está no histórico porque custou muitas rodadas. Histórico de rejeição, pra não
+reabrir sem pedido: pin de localização → anel tracejado + ponto → círculo com elipse
+sozinha ("parece um olho") → círculo com elipse + equador ("bola de basquete" —
+simetria + laranja) → esfera com o anel inclinado -22° (o que resolveu, quebrando a
+simetria) → aposentada quando a estrada em S virou o símbolo.
 ### Vocabulário
 A unidade chama **spot**, não "lugar". Vale no placar, na lista, nos botões e nos
 avisos. As exceções são a tagline ("seus lugares · sua voz") e o texto de divulgação
@@ -122,9 +145,20 @@ do site, onde "lugares" é a palavra que explica o que é um spot pra quem nunca
 
 ### Telas já na direção nova
 Início, nav, Viagem, Cidade, Lista, Perfil, Ficha do lugar, Amigos, Explorar, Login,
-folhas, mapa-múndi, perfil/viagem/cidade de amigo, comentários. **As quatro abas
-nativas** (`mobile/Tela*.js`) continuam no visual escuro antigo — elas são código
-separado e não estavam no escopo da direção.
+folhas, mapa-múndi, perfil/viagem/cidade de amigo, comentários.
+
+As **quatro abas nativas** (`mobile/Tela*.js`, `BarraDeAbas.js`) saíram do escuro em
+21/09: as cinco listas de cor que cada arquivo declarava viraram um `mobile/cores.js`
+só. Os NOMES lá são os de antes (`INK`, `ESCURO`, `ELEV`, `TERRA`...) pra não
+reescrever nenhum lugar de uso — então alguns mentem, e `ESCURO` hoje é a cor mais
+CLARA da tela. Está anotado linha por linha no módulo.
+
+**O que ainda falta nelas:** a fonte. Fraunces e IBM Plex Mono sairiam junto, mas
+trocar pela Inter Tight pede `@expo-google-fonts/inter-tight` e um build; ficaram na
+fonte do sistema. E **nada disso foi visto rodando** — não há como abrir o app nativo
+nesta máquina. A verificação foi eslint limpo mais uma checagem de que todo nome
+importado existe no módulo, que é o erro que apareceria como tela branca no celular.
+Sobrou também o botão flutuante "+" na aba Viagens, que saiu da web mas está lá.
 ## Features construídas (funcionando em produção)
 
 - Auth (Google OAuth + email/senha), CRUD de viagens/spots, foto do lugar via Google
@@ -153,8 +187,14 @@ separado e não estavam no escopo da direção.
    Hoje só cidade **inédita** gasta cota: pra estourar, 50 cidades nunca vistas por
    ninguém na mesma hora. Há ainda teto mensal (1200) e por usuário (80).
    **O que sobra:** a chave é de app "Demo" no Unsplash, e os termos deles pedem
-   aprovação de produção (grátis, sobe pra 5.000/hora) antes de publicar. Vale pedir
-   antes da App Store.
+   aprovação de produção antes de publicar. **A documentação deles diz 1.000/hora**;
+   o número 5.000 aparece na central de ajuda e em artigos de terceiros, e pode ser
+   antigo. De todo jeito é de graça nos dois níveis. Pede-se em
+   `unsplash.com/oauth/applications`, ou por `partnerships@unsplash.com`; eles revisam
+   à mão em ~5 dias úteis e pedem capturas — as mesmas que a App Store precisa.
+   As três exigências técnicas (hotlink da URL da API, disparo do endpoint de
+   download, crédito com link e `utm_source`) já estão atendidas em
+   `functions/api/city-photo.js`.
 3. **Single HTML file gigante** — ótimo pra iterar rápido em chat, ruim pra qualquer dev revisar/testar depois. Candidato natural a virar múltiplos arquivos agora que o projeto migrou pro Claude Code.
 4. **Deploy manual, sem staging/CI** — cada mudança vai direto pra produção.
 
