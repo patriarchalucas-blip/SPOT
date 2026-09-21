@@ -22,7 +22,7 @@
 <!-- A barra do sistema acompanha a pagina: com o azul-escuro antigo, o topo
      do iPhone ficava navy em cima de uma tela cor de areia. -->
 <meta name="theme-color" content="#F5F5F3">
-<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'><rect width='64' height='64' rx='14' fill='%230b1620'/><circle cx='32' cy='32' r='19' fill='none' stroke='%23c1552f' stroke-width='5'/><ellipse cx='32' cy='32' rx='22.8' ry='7' fill='none' stroke='%23c1552f' stroke-width='3.2' transform='rotate(-22 32 32)'/></svg>">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'><rect width='64' height='64' rx='14' fill='%230B3D2E'/><circle cx='32' cy='32' r='19' fill='none' stroke='%23F5F5F3' stroke-width='5'/><ellipse cx='32' cy='32' rx='22.8' ry='7' fill='none' stroke='%23F5F5F3' stroke-width='3.2' transform='rotate(-22 32 32)'/></svg>">
 <link rel="manifest" href="/manifest.json">
 <!-- iOS ignora SVG aqui e cai no fallback de desenhar a letra do nome ("S").
      Precisa ser PNG de verdade pra tela de início mostrar o logo. -->
@@ -228,7 +228,8 @@ body{font-family:'Inter Tight',sans-serif;background:var(--base);color:var(--ink
 .vg-pe{position:absolute;left:14px;right:14px;bottom:12px;text-align:left}
 .vg-nome{font-size:16px;font-weight:700;letter-spacing:-.02em;color:#fff;margin:0}
 .vg-grande .vg-nome{font-size:22px;letter-spacing:-.03em}
-.vg-meta{font-size:13px;color:rgba(255,255,255,.85);margin:2px 0 0}
+.vg-meta{font-size:12px;color:rgba(255,255,255,.75);margin:3px 0 0}
+.vg-grande .vg-meta{font-size:13px}
 
 /* A ação sai do botão flutuante e vira palavra escrita, no fim da lista. */
 .btn-primario{background:var(--green);color:var(--on-green);border:none;
@@ -728,9 +729,16 @@ body.na-casca .bottom-nav{display:none}
   font-family:'Inter Tight',sans-serif;font-size:14px;font-weight:600;color:var(--ink2);cursor:pointer;text-align:center}
 .toggle-btn.sel-want,.toggle-btn.sel-been,.toggle-btn.sel-skip{background:var(--base);color:var(--ink)}
 .stars-row{display:flex;gap:4px}
-.star-btn{cursor:pointer;color:var(--ink3);background:none;border:none;padding:4px 2px;display:flex}
+/* A estrela e um alvo de toque de 44px com o desenho de 18 no meio: o
+   padding e o alvo, nao espaco decorativo. */
+.star-btn{position:relative;width:22px;height:26px;cursor:pointer;background:none;border:none;padding:0;
+  display:block;color:var(--ink3)}
+.st-base,.st-fill{position:absolute;inset:0;display:flex;align-items:center;justify-content:center}
+/* A verde fica por cima e o corte decide quanto dela aparece. */
+.st-fill{color:var(--green);clip-path:inset(0 100% 0 0)}
+.star-btn.meia .st-fill{clip-path:inset(0 50% 0 0)}
+.star-btn.lit .st-fill{clip-path:inset(0 0 0 0)}
 .star-btn svg{width:18px;height:18px}
-.star-btn.lit{color:var(--green)}
 .review-area{width:100%;background:var(--surface);border:none;border-radius:var(--r-card);padding:16px;
   font-size:15px;font-family:'Inter Tight',sans-serif;color:var(--ink);resize:none;outline:none;line-height:1.5}
 .review-area::placeholder{color:var(--ink3)}
@@ -1235,7 +1243,7 @@ svg.ic path,svg.ic circle,svg.ic line,svg.ic polyline,svg.ic rect{fill:none;stro
 <body>
 
 <div class="screen active" id="loading">
-  <div style="text-align:center"><svg class="brand-wordmark" viewBox="0 81 269 74" height="46" role="img" aria-label="Spot"><text x="0" y="150" font-family="Cinzel" font-weight="500" font-size="100" letter-spacing="6" fill="#111111">SP</text><circle cx="159.3" cy="118" r="30" fill="none" stroke="#111111" stroke-width="8"/><ellipse cx="159.3" cy="118" rx="36" ry="11" fill="none" stroke="#111111" stroke-width="5" transform="rotate(-22 159.3 118)"/><text x="201.4" y="150" font-family="Cinzel" font-weight="500" font-size="100" letter-spacing="6" fill="#111111">T</text></svg><div class="spinner" style="margin-top:20px"></div></div>
+  <div style="text-align:center"><svg class="brand-wordmark" viewBox="0 81 269 74" height="46" role="img" aria-label="Spot"><text x="0" y="150" font-family="Cinzel" font-weight="500" font-size="100" letter-spacing="6" fill="#0B3D2E">SP</text><circle cx="159.3" cy="118" r="30" fill="none" stroke="#0B3D2E" stroke-width="8"/><ellipse cx="159.3" cy="118" rx="36" ry="11" fill="none" stroke="#0B3D2E" stroke-width="5" transform="rotate(-22 159.3 118)"/><text x="201.4" y="150" font-family="Cinzel" font-weight="500" font-size="100" letter-spacing="6" fill="#0B3D2E">T</text></svg><div class="spinner" style="margin-top:20px"></div></div>
 </div>
 
 <div class="screen" id="login">
@@ -1290,7 +1298,7 @@ svg.ic path,svg.ic circle,svg.ic line,svg.ic polyline,svg.ic rect{fill:none;stro
     <div class="dash-mapa" id="dashMapa" aria-hidden="true"></div>
     <div class="dash-mapa-fade"></div>
     <div class="dash-topo-linha">
-      <svg class="dash-wordmark" viewBox="0 81 269 74" role="img" aria-label="Spot"><text x="0" y="150" font-family="Cinzel" font-weight="500" font-size="100" letter-spacing="6" fill="#111111">SP</text><circle cx="159.3" cy="118" r="30" fill="none" stroke="#111111" stroke-width="8"/><ellipse cx="159.3" cy="118" rx="36" ry="11" fill="none" stroke="#111111" stroke-width="5" transform="rotate(-22 159.3 118)"/><text x="201.4" y="150" font-family="Cinzel" font-weight="500" font-size="100" letter-spacing="6" fill="#111111">T</text></svg>
+      <svg class="dash-wordmark" viewBox="0 81 269 74" role="img" aria-label="Spot"><text x="0" y="150" font-family="Cinzel" font-weight="500" font-size="100" letter-spacing="6" fill="#0B3D2E">SP</text><circle cx="159.3" cy="118" r="30" fill="none" stroke="#0B3D2E" stroke-width="8"/><ellipse cx="159.3" cy="118" rx="36" ry="11" fill="none" stroke="#0B3D2E" stroke-width="5" transform="rotate(-22 159.3 118)"/><text x="201.4" y="150" font-family="Cinzel" font-weight="500" font-size="100" letter-spacing="6" fill="#0B3D2E">T</text></svg>
       <div class="avatar" id="dashAvatar" onclick="goTo('profile');loadProfile()" role="button" tabindex="0" aria-label="Abrir seu perfil">?</div>
     </div>
   </div>
@@ -1498,7 +1506,7 @@ svg.ic path,svg.ic circle,svg.ic line,svg.ic polyline,svg.ic rect{fill:none;stro
 
 <div class="screen" id="place">
   <div class="place-hero"><div class="place-hero-img" id="placeHeroImg"></div><div class="hero-overlay"></div><button class="hero-back" onclick="backFromPlace()" data-ic="back" aria-label="Voltar"></button><button class="hero-photo-btn" onclick="document.getElementById('spotPhotoFileInput').click()" data-ic="edit" aria-label="Trocar foto"></button><input type="file" id="spotPhotoFileInput" accept="image/*" style="display:none" onchange="onSpotPhotoFileChosen(this)"><div class="hero-chip chip-want" id="placeChip" onclick="cycleStatus()">Quero ir</div><div class="hero-bottom"><div class="hero-type" id="placeType"></div><div class="hero-name" id="placeName"></div></div></div>
-  <div class="d-section"><div class="note-card" id="notaLeitura"><div class="note-glow"></div><div class="note-quote" id="placeNote"></div><div class="note-attr" id="placeNoteAttr"></div></div><div id="notaEdicao" style="display:none"><textarea class="note-input" id="notaTexto" rows="4" placeholder="Por que esse lugar te chamou atenção?"></textarea><div class="nota-acoes"><button class="action-btn" style="margin:0" id="btnSalvarNota" onclick="salvarNota()">Salvar nota</button><button class="secondary-link" style="margin:0" onclick="cancelarNota()">Cancelar</button></div></div><div class="nota-linha"><div class="stars-row" id="placeStars"><button class="star-btn" onclick="rateStar(1)" data-ic="star"></button><button class="star-btn" onclick="rateStar(2)" data-ic="star"></button><button class="star-btn" onclick="rateStar(3)" data-ic="star"></button><button class="star-btn" onclick="rateStar(4)" data-ic="star"></button><button class="star-btn" onclick="rateStar(5)" data-ic="star"></button></div><span class="nota-rot">sua nota</span><button class="sec-editar" id="btnEditarNota" onclick="editarNota()">Editar</button></div><div class="sp-social" id="placeSocial" style="display:none"></div></div>
+  <div class="d-section"><div class="note-card" id="notaLeitura"><div class="note-glow"></div><div class="note-quote" id="placeNote"></div><div class="note-attr" id="placeNoteAttr"></div></div><div id="notaEdicao" style="display:none"><textarea class="note-input" id="notaTexto" rows="4" placeholder="Por que esse lugar te chamou atenção?"></textarea><div class="nota-acoes"><button class="action-btn" style="margin:0" id="btnSalvarNota" onclick="salvarNota()">Salvar nota</button><button class="secondary-link" style="margin:0" onclick="cancelarNota()">Cancelar</button></div></div><div class="nota-linha"><div class="stars-row" id="placeStars"><button class="star-btn" onclick="rateStar(1,event)" aria-label="Dar nota 1"><span class="st-base" data-ic="star"></span><span class="st-fill" data-ic="star"></span></button><button class="star-btn" onclick="rateStar(2,event)" aria-label="Dar nota 2"><span class="st-base" data-ic="star"></span><span class="st-fill" data-ic="star"></span></button><button class="star-btn" onclick="rateStar(3,event)" aria-label="Dar nota 3"><span class="st-base" data-ic="star"></span><span class="st-fill" data-ic="star"></span></button><button class="star-btn" onclick="rateStar(4,event)" aria-label="Dar nota 4"><span class="st-base" data-ic="star"></span><span class="st-fill" data-ic="star"></span></button><button class="star-btn" onclick="rateStar(5,event)" aria-label="Dar nota 5"><span class="st-base" data-ic="star"></span><span class="st-fill" data-ic="star"></span></button></div><span class="nota-rot">sua nota</span><button class="sec-editar" id="btnEditarNota" onclick="editarNota()">Editar</button></div><div class="sp-social" id="placeSocial" style="display:none"></div></div>
   <div class="d-section"><div id="placeReserveWrap"></div><div class="info-linha" id="placeInfoGrid"></div><div class="foto-credito" id="placeFotoCredito"></div></div>
   <div class="d-section"><div class="coment-bloco" id="placeComentarios"></div></div>
   <div class="d-section" id="placeSubcatSection" style="display:none"><div class="sec-label sec-pequeno">Tipo de experiência</div><div class="subcat-row" id="placeSubcatChips"></div></div>
@@ -1516,7 +1524,7 @@ svg.ic path,svg.ic circle,svg.ic line,svg.ic polyline,svg.ic rect{fill:none;stro
 <div class="overlay" id="ov-note" onclick="closeOut(event,'ov-note')"><div class="sheet"><button class="sheet-close" onclick="closeOv('ov-note')" data-ic="close" aria-label="Fechar"></button><div class="sheet-handle"></div><div class="sheet-title">Adicionar spot</div><div class="note-place-row"><div class="note-place-icon" id="selIcon" data-ic="food"></div><div><div class="note-place-name" id="selName"></div><div class="note-place-meta" id="selMeta"></div></div></div>
 <div class="status-choice"><button class="status-opt active" id="stWant" onclick="setSpotStatus('want')"><div class="so-emoji" data-ic="bookmark"></div><div class="so-label">Quero ir</div></button><button class="status-opt" id="stBeen" onclick="setSpotStatus('been')"><div class="so-emoji" data-ic="check"></div><div class="so-label">Já fui</div></button></div>
 <div id="subcatRow" style="display:none"><div class="note-label">Que tipo de experiência?</div><div class="subcat-row" id="subcatChips"></div></div>
-<div id="ratingRow" style="display:none"><div class="note-label">Sua avaliação</div><div class="stars-row" id="addStars"><button class="star-btn" onclick="setAddRating(1)" data-ic="star"></button><button class="star-btn" onclick="setAddRating(2)" data-ic="star"></button><button class="star-btn" onclick="setAddRating(3)" data-ic="star"></button><button class="star-btn" onclick="setAddRating(4)" data-ic="star"></button><button class="star-btn" onclick="setAddRating(5)" data-ic="star"></button></div></div>
+<div id="ratingRow" style="display:none"><div class="note-label">Sua avaliação</div><div class="stars-row" id="addStars"><button class="star-btn" onclick="setAddRating(1,event)" aria-label="Dar nota 1"><span class="st-base" data-ic="star"></span><span class="st-fill" data-ic="star"></span></button><button class="star-btn" onclick="setAddRating(2,event)" aria-label="Dar nota 2"><span class="st-base" data-ic="star"></span><span class="st-fill" data-ic="star"></span></button><button class="star-btn" onclick="setAddRating(3,event)" aria-label="Dar nota 3"><span class="st-base" data-ic="star"></span><span class="st-fill" data-ic="star"></span></button><button class="star-btn" onclick="setAddRating(4,event)" aria-label="Dar nota 4"><span class="st-base" data-ic="star"></span><span class="st-fill" data-ic="star"></span></button><button class="star-btn" onclick="setAddRating(5,event)" aria-label="Dar nota 5"><span class="st-base" data-ic="star"></span><span class="st-fill" data-ic="star"></span></button></div></div>
 <div class="note-label">Sua nota <span style="color:var(--ink3);font-weight:400">(opcional)</span></div><div class="note-wrap"><textarea class="note-input" id="noteField" rows="2" placeholder="Por que esse lugar te chamou atenção?"></textarea></div>
 <button class="sheet-cta" id="saveSpotBtn" onclick="saveSpot(false)">Salvar spot</button><button class="secondary-link" id="saveAndAddBtn" onclick="saveSpot(true)">Salvar e adicionar outro</button></div></div>
 
@@ -2805,10 +2813,10 @@ function regionFor(name){const c=COUNTRIES.find(x=>x.name===name);return c?c.reg
 const REGION_ORDER=['Europa','América do Sul','América do Norte','Ásia','África','Oceania','Antártida','Outros'];
 // Linha de metadados do card. Separada porque os cards são desenhados assim que
 // as viagens chegam; os spots chegam logo depois e só esse texto é atualizado.
-function tripMetaText(t){
+function tripMetaText(t,curto){
   const sp=t._spots||[];
   const cities=tripCityCount(t);
-  const cityTxt=cities>0?(cities+(cities===1?' cidade · ':' cidades · ')):'';
+  const cityTxt=(cities>0&&!curto)?(cities+(cities===1?' cidade · ':' cidades · ')):'';
   // Data saiu do card de proposito (pedido do Lucas, 09/09/2026) — inclusive
   // das viagens antigas que ainda tem `dates` gravado. O campo continua no
   // banco; so nao e mais mostrado. O card e sobre o lugar, nao sobre quando.
@@ -2818,7 +2826,8 @@ function tripMetaText(t){
 function refreshTripMetas(){
   S.trips.forEach(t=>{
     const el=document.getElementById('tcmeta-'+t.id);
-    if(el)el.textContent=tripMetaText(t);
+    const cartao=el&&el.closest('.vg-card');
+    if(el)el.textContent=tripMetaText(t,!(cartao&&cartao.classList.contains('vg-grande')));
   });
 }
 function tripCardHTML(t){
@@ -2987,7 +2996,7 @@ function cardDeViagem(t,grande){
     +'<div class="vg-foto" id="tcbg-'+esc(t.id)+'" style="background-image:'+destGradient(destino)+'"></div>'
     +'<div class="vg-scrim"></div>'
     +'<div class="vg-pe"><h3 class="vg-nome">'+esc(t.name)+'</h3>'
-    +'<p class="vg-meta" id="tcmeta-'+esc(t.id)+'">'+esc(tripMetaText(t))+'</p></div>'
+    +'<p class="vg-meta" id="tcmeta-'+esc(t.id)+'">'+esc(tripMetaText(t,!grande))+'</p></div>'
     +'</button>';
 }
 
@@ -3544,7 +3553,8 @@ async function openPlace(id,origin){
   abrirComentarios(s.id,'placeComentarios',s.user_id||(S.user&&S.user.id));
   renderPlaceSubcat();
   setStatus(s.status||'want',false);
-  document.querySelectorAll('#placeStars .star-btn').forEach((b,i)=>b.classList.toggle('lit',i<(s.my_rating||0)));
+  notaDaFicha=Number(s.my_rating)||0;
+  pintarEstrelas('#placeStars',notaDaFicha);
   document.getElementById('reviewText').value=s.my_review||'';
   goTo('place');
 }
@@ -3703,10 +3713,35 @@ async function salvarNota(){
 function cycleStatus(){document.getElementById('placeChip').classList.contains('chip-want')?setStatus('been'):setStatus('want')}
 // Escopado em #placeStars: o seletor global também acendia/apagava as estrelas
 // da ficha de "adicionar spot", que é outro grupo de .star-btn no mesmo DOM.
-function rateStar(n){document.querySelectorAll('#placeStars .star-btn').forEach((s,i)=>s.classList.toggle('lit',i<n))}
+// Metade esquerda da estrela = x,5. Metade direita = x. Tocar de novo na
+// mesma metade zera — e como se desfaz uma nota dada por engano, que antes
+// nao tinha caminho nenhum.
+function notaDoToque(base,ev){
+  let v=base;
+  if(ev&&ev.currentTarget&&typeof ev.clientX==='number'&&ev.clientX>0){
+    const r=ev.currentTarget.getBoundingClientRect();
+    if(r.width&&(ev.clientX-r.left)<r.width/2)v=base-0.5;
+  }
+  return v;
+}
+// Acende a fileira: cheia ate o inteiro, meia na fracao.
+function pintarEstrelas(seletor,n){
+  const nota=Number(n)||0;
+  document.querySelectorAll(seletor+' .star-btn').forEach((b,i)=>{
+    const valor=i+1;
+    b.classList.toggle('lit',nota>=valor);
+    b.classList.toggle('meia',nota>=valor-0.5&&nota<valor);
+  });
+}
+let notaDaFicha=0;
+function rateStar(base,ev){
+  const v=notaDoToque(base,ev);
+  notaDaFicha=(notaDaFicha===v?0:v);
+  pintarEstrelas('#placeStars',notaDaFicha);
+}
 async function saveReview(){
   if(!S.curPlace)return;
-  const r=document.querySelectorAll('#placeStars .star-btn.lit').length;
+  const r=notaDaFicha;
   const rv=document.getElementById('reviewText').value.trim();
   // Mesmo filtro do comentário: a avaliação escrita aparece pros amigos.
   if(textoBarrado(rv)){avisarConteudoBarrado();return}
@@ -4970,9 +5005,10 @@ function setSpotStatus(s){
   document.getElementById('ratingRow').style.display=(s==='been')?'block':'none';
   atualizarBotaoSalvar();
 }
-function setAddRating(n){
-  addRating=n;
-  document.querySelectorAll('#addStars .star-btn').forEach((b,i)=>b.style.color=i<n?'#f5a623':'rgba(0,0,0,0.1)');
+function setAddRating(base,ev){
+  const v=notaDoToque(base,ev);
+  addRating=(addRating===v?0:v);
+  pintarEstrelas('#addStars',addRating);
   atualizarBotaoSalvar();
 }
 // O botao diz POR QUE nao dá pra salvar, em vez de so ficar apagado. Botao
@@ -5007,6 +5043,9 @@ function pickAddSubcat(k){
 }
 function resetNoteSheet(){
   addStatus='want';addRating=0;
+  // A fileira tem que apagar junto: sem isto a nota do spot anterior fica
+  // acesa na folha do proximo.
+  pintarEstrelas('#addStars',0);
   setTimeout(atualizarBotaoSalvar,0);
   addSubcat=subcatsPara((S.addCat==='experience'&&S.selPlace&&S.selPlace.subcat)||'');
   document.getElementById('subcatRow').style.display=S.addCat==='experience'?'block':'none';
@@ -5618,7 +5657,13 @@ function flagsHTML(lista){return (lista||[]).map(d=>flagHTML(d)).join(' ')}
 // ═══ NOTAS ═══
 // Sempre uma casa decimal. Antes "5" e "4.5" apareciam lado a lado e pareciam
 // dois formatos diferentes de nota.
-function fmtRating(v){const n=parseFloat(v);return isNaN(n)?'':n.toFixed(1)}
+// Nota inteira sai sem casa decimal ("5", nao "5,0"); meia sai com virgula,
+// que e o separador decimal em portugues.
+function fmtRating(v){
+  const n=parseFloat(v);
+  if(isNaN(n))return'';
+  return (n%1===0?String(n):n.toFixed(1).replace('.',','));
+}
 
 // ═══ CIDADES: normalização e fusão de duplicatas ═══
 // O Google devolve granularidade diferente dependendo do lugar: às vezes "Split",
@@ -7830,14 +7875,22 @@ function jaNaMinhaLista(sp){
     String(cityOf(m)||'').trim().toLowerCase()===c);
 }
 
+// A METADE APARECE AQUI TAMBEM. Antes isto arredondava (Math.round), entao
+// a nota 4,5 de um amigo virava 5 no feed — o app mostraria uma nota que
+// ninguem deu.
 function estrelasHTML(n,tam){
-  const q=Math.round(Number(n)||0);
+  const q=Number(n)||0;
   if(!q)return'';
   let h='<div class="fd-estrelas">';
   for(let i=1;i<=5;i++){
-    h+=i<=q
-      ?'<svg width="'+tam+'" height="'+tam+'" viewBox="0 0 24 24" fill="currentColor"><path d="M12 3l2.6 5.6 6 .8-4.4 4.2 1.1 6.1L12 16.8 6.7 19.7l1.1-6.1L3.4 9.4l6-.8z"/></svg>'
-      :'<svg width="'+tam+'" height="'+tam+'" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round" opacity=".35"><path d="M12 3l2.6 5.6 6 .8-4.4 4.2 1.1 6.1L12 16.8 6.7 19.7l1.1-6.1L3.4 9.4l6-.8z"/></svg>';
+    const D='M12 3l2.6 5.6 6 .8-4.4 4.2 1.1 6.1L12 16.8 6.7 19.7l1.1-6.1L3.4 9.4l6-.8z';
+    const cheia=i<=q, meia=!cheia&&(i-0.5)<=q;
+    h+='<svg width="'+tam+'" height="'+tam+'" viewBox="0 0 24 24" style="display:block">'
+      +'<path d="'+D+'" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round" opacity=".35"/>'
+      +((cheia||meia)
+        ?'<path d="'+D+'" fill="currentColor"'+(meia?' clip-path="inset(0 50% 0 0)"':'')+'/>'
+        :'')
+      +'</svg>';
   }
   return h+'</div>';
 }
