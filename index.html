@@ -188,9 +188,14 @@ body{font-family:'Inter Tight',sans-serif;background:var(--base);color:var(--ink
    os dois ficavam em cima de pais pintado. */
 .dash-mapa{width:100%;aspect-ratio:800/355;margin-top:44px}
 .dash-mapa svg{width:100%;height:100%;display:block}
-/* O mapa não termina numa linha: ele se dissolve na página. */
-.dash-mapa-fade{position:absolute;inset:0;pointer-events:none;
-  background:linear-gradient(to bottom,transparent 60%,var(--base))}
+/* O ESMAECIDO SAI. Ele nasceu quando o bloco era 440px e o mapa morava no
+   meio dele: dissolvia a borda de baixo, que era so oceano. Agora o bloco
+   acaba exatamente onde o mapa acaba, entao o mesmo degrade comia o terco
+   final do desenho — o sul da America do Sul, da Africa e a Australia
+   sumiam no fundo, e o mapa parecia cortado.
+   Sem ele o painel termina numa linha reta, que e de propósito: o mar e a
+   pagina sao dois tons vizinhos, a borda e discreta. */
+.dash-mapa-fade{display:none}
 .dash-topo-linha{position:absolute;top:18px;left:20px;right:20px;display:flex;
   align-items:center;justify-content:space-between;z-index:2}
 
@@ -838,7 +843,7 @@ body.na-casca .bottom-nav{display:none}
 .am-add{width:36px;height:36px;flex:none;border-radius:50%;border:none;background:var(--surface);
   color:var(--ink);display:flex;align-items:center;justify-content:center;cursor:pointer}
 .am-add:active{opacity:.7}
-/* Recente · Amigos · Pedidos sao NAVEGACAO, nao escolha de estado: viram
+/* Recente · Todos · Pedidos sao NAVEGACAO, nao escolha de estado: viram
    abas de texto. O segmentado fica so pro que e escolha (quero ir / fui). */
 .am-abas{display:flex;gap:18px;padding:16px 20px 0;margin:0;flex:none;overflow-x:auto;scrollbar-width:none}
 .am-abas::-webkit-scrollbar{display:none}
@@ -1300,7 +1305,7 @@ svg.ic path,svg.ic circle,svg.ic line,svg.ic polyline,svg.ic rect{fill:none;stro
       </button>
       <button class="sc-item" onclick="openList('spots')">
         <span class="sc-n" id="statSpots">0</span>
-        <span class="sc-r">lugares <i class="sc-seta">›</i></span>
+        <span class="sc-r">spots <i class="sc-seta">›</i></span>
       </button>
     </div>
   <div class="dash-convite" id="dashConvite" style="display:none">Crie uma viagem para pintar o primeiro país.</div>
@@ -1329,7 +1334,7 @@ svg.ic path,svg.ic circle,svg.ic line,svg.ic polyline,svg.ic rect{fill:none;stro
 <div class="screen" id="trip">
   <div class="trip-hero"><div class="trip-hero-img" id="tripHeroImg"></div><div class="foto-credito" id="tripFotoCredito"></div><div class="trip-float" id="tripFloat"></div><div class="trip-hero-content"><button class="back-btn" onclick="goTo('dashboard');loadDashboard()" data-ic="back" aria-label="Voltar"></button><div><div class="trip-hero-label" id="tripLabel"></div><div class="trip-hero-name" id="tripName"></div><div class="trip-hero-meta" id="tripMeta"></div></div></div></div>
   <div class="trip-body" id="tripBody"></div>
-  <button class="btn-primario btn-largo btn-solto" onclick="addSpotToCurrentTrip()">Adicionar lugar</button>
+  <button class="btn-primario btn-largo btn-solto" onclick="addSpotToCurrentTrip()">Adicionar spot</button>
   <button class="btn-texto" onclick="deleteTrip()">Excluir viagem</button>
   <div class="bottom-nav"><div class="nav-item active" onclick="goTo('dashboard');loadDashboard()"><div class="nav-icon" data-ic="map"></div><div class="nav-label" style="color:var(--ink);font-weight:600">Viagens</div></div><div class="nav-item" onclick="goTo('explore');loadExplore()"><div class="nav-icon" data-ic="search"></div><div class="nav-label">Explorar</div></div><div class="nav-item" onclick="goTo('friends');loadFriends()"><div class="nav-icon" data-ic="users"></div><div class="nav-label">Amigos</div></div><div class="nav-item" onclick="goTo('profile');loadProfile()"><div class="nav-icon" data-ic="user"></div><div class="nav-label">Perfil</div></div></div>
 </div>
@@ -1340,7 +1345,7 @@ svg.ic path,svg.ic circle,svg.ic line,svg.ic polyline,svg.ic rect{fill:none;stro
   <div class="subcat-row" id="citySubcatFilter" style="display:none;padding:14px 20px 0;scroll-padding-left:20px"></div>
   <div class="subcat-row" id="cityStatusFilter" style="display:none;padding:12px 20px 0;scroll-padding-left:20px"></div>
   <div class="trip-body" id="cityBody"></div>
-  <button class="btn-primario btn-largo btn-solto" onclick="addSpotToCurrentCity()">Adicionar lugar</button>
+  <button class="btn-primario btn-largo btn-solto" onclick="addSpotToCurrentCity()">Adicionar spot</button>
   <div class="bottom-nav"><div class="nav-item active" onclick="goTo('dashboard');loadDashboard()"><div class="nav-icon" data-ic="map"></div><div class="nav-label" style="color:var(--ink);font-weight:600">Viagens</div></div><div class="nav-item" onclick="goTo('explore');loadExplore()"><div class="nav-icon" data-ic="search"></div><div class="nav-label">Explorar</div></div><div class="nav-item" onclick="goTo('friends');loadFriends()"><div class="nav-icon" data-ic="users"></div><div class="nav-label">Amigos</div></div><div class="nav-item" onclick="goTo('profile');loadProfile()"><div class="nav-icon" data-ic="user"></div><div class="nav-label">Perfil</div></div></div>
 </div>
 
@@ -1377,7 +1382,7 @@ svg.ic path,svg.ic circle,svg.ic line,svg.ic polyline,svg.ic rect{fill:none;stro
 
   <div class="profile-body">
     <div class="prof-numeros" id="profResumo"></div>
-    <div class="section-head"><span class="section-title">Meus lugares</span><span class="section-sub" id="estanteResumo"></span></div>
+    <div class="section-head"><span class="section-title">Meus spots</span><span class="section-sub" id="estanteResumo"></span></div>
     <div id="estante"></div>
     <div class="prof-acoes">
       <div class="prof-linha" onclick="openVisitedCountryPicker()"><span class="pl-ic" data-ic="globe"></span><span class="pl-txt">Marcar país que já visitei</span><span class="pl-seta">›</span></div>
@@ -1498,7 +1503,7 @@ svg.ic path,svg.ic circle,svg.ic line,svg.ic polyline,svg.ic rect{fill:none;stro
   <div class="d-section"><div class="coment-bloco" id="placeComentarios"></div></div>
   <div class="d-section" id="placeSubcatSection" style="display:none"><div class="sec-label sec-pequeno">Tipo de experiência</div><div class="subcat-row" id="placeSubcatChips"></div></div>
   <div class="d-section"><div class="status-toggle"><button class="toggle-btn sel-want" id="t-want" onclick="setStatus('want')">Quero ir</button><button class="toggle-btn" id="t-been" onclick="setStatus('been')">Fui</button><button class="toggle-btn" id="t-skip" onclick="setStatus('skip')">Pular</button></div></div>
-  <div class="d-section"><div class="sec-label">Sua avaliação</div><textarea class="review-area" id="reviewText" rows="3" placeholder="O que você achou?"></textarea><button class="action-btn" id="saveReviewBtn" onclick="saveReview()">Salvar avaliação</button><button class="delete-link" onclick="deleteSpot()">Excluir lugar</button></div>
+  <div class="d-section"><div class="sec-label">Sua avaliação</div><textarea class="review-area" id="reviewText" rows="3" placeholder="O que você achou?"></textarea><button class="action-btn" id="saveReviewBtn" onclick="saveReview()">Salvar avaliação</button><button class="delete-link" onclick="deleteSpot()">Excluir spot</button></div>
 </div>
 
 <!-- OVERLAYS -->
@@ -2892,7 +2897,7 @@ function renderTrips(){
   h+='<div class="mosaico">';
   h+=trips.map((t,i)=>cardDeViagem(t,i===0)).join('');
   h+='</div>';
-  h+='<button class="btn-primario btn-largo" onclick="comecarSpotSemViagem()">Adicionar lugar</button>';
+  h+='<button class="btn-primario btn-largo" onclick="comecarSpotSemViagem()">Adicionar spot</button>';
   c.innerHTML=h;
   fillTripPhotos();
   darDadosDeViagens();
@@ -3045,7 +3050,7 @@ function renderList(){
     LS.items=list;
 
     const escopo=LS.city||LS.country;
-    title.textContent=list.length+(list.length===1?' lugar':' lugares');
+    title.textContent=list.length+(list.length===1?' spot':' spots');
     const cidades=new Set(list.map(sp=>cityOf(sp)).filter(Boolean)).size;
     kicker.textContent=escopo?('em '+escopo):(cidades?('em '+cidades+(cidades===1?' cidade':' cidades')):'');
 
@@ -3057,7 +3062,7 @@ function renderList(){
     if(LS.city)f+=chip(LS.city+' ✕',true,"clearListFilter('city')");
     if(LS.country)f+=chip(LS.country+' ✕',true,"clearListFilter('country')");
 
-    if(!list.length)h='<div class="empty-state"><div class="ei">'+icon('pin')+'</div><h3>Nenhum spot aqui</h3><p>Ajusta os filtros ou salva lugares nas suas viagens.</p></div>';
+    if(!list.length)h='<div class="empty-state"><div class="ei">'+icon('pin')+'</div><h3>Nenhum spot aqui</h3><p>Ajusta os filtros ou salva spots nas suas viagens.</p></div>';
     list.forEach((s,i)=>{
       const nota=s.my_rating?('★ '+fmtRating(s.my_rating)):(s.rating_google?('☆ '+fmtRating(s.rating_google)):'');
       // <img> em vez de background-image: só assim dá pra detectar foto quebrada
@@ -3157,7 +3162,7 @@ async function applyTripDates(start,end){
 async function deleteTrip(){
   if(!S.curTrip)return;
   if(!await confirmar('Excluir esta viagem?',
-    '"'+S.curTrip.name+'" e todos os lugares dela somem. Não tem como desfazer.',
+    '"'+S.curTrip.name+'" e todos os spots dela somem. Não tem como desfazer.',
     'Excluir viagem'))return;
   const id=S.curTrip.id;
   // ORDEM, e por que ela é essa: não existe `on delete cascade` em
@@ -3191,7 +3196,7 @@ async function deleteSpot(){
   if(!S.curPlace)return;
   if(!await confirmar('Excluir este lugar?',
     '"'+S.curPlace.name+'" sai da sua lista, com a sua nota e a sua avaliação. Não tem como desfazer.',
-    'Excluir lugar'))return;
+    'Excluir spot'))return;
   const id=S.curPlace.id,tripId=S.curPlace.trip_id;
   const{error}=await dbDelete('spots',id);
   if(!error){
@@ -3938,7 +3943,7 @@ function renderAmigosNoLugar(r,lugar){
   if(!grupos.length){
     const est=(r&&r.estado)||'vazio';
     if(est==='carregando'){box.innerHTML=aviso('Procurando entre seus amigos...');return}
-    if(est==='sem_amigos'){box.innerHTML=aviso('Você ainda não tem amigos no Spot. Quando tiver, os lugares que eles marcaram como visitados aparecem aqui.');return}
+    if(est==='sem_amigos'){box.innerHTML=aviso('Você ainda não tem amigos no Spot. Quando tiver, os spots que eles marcaram como visitados aparecem aqui.');return}
     if(est==='nada_aqui'){box.innerHTML=aviso(esc(fraseNadaAqui(r.amigos,lugar)));return}
     if(est==='erro'){box.innerHTML=aviso('Não consegui consultar seus amigos agora.');return}
     box.innerHTML='';return;
@@ -3951,7 +3956,7 @@ function renderAmigosNoLugar(r,lugar){
   const linhas=grupos.map((g,i)=>{
     const nome=friendName(g.perfil);
     const partes=[];
-    if(g.foram)partes.push(g.foram+(g.foram===1?' lugar':' lugares'));
+    if(g.foram)partes.push(g.foram+(g.foram===1?' spot':' spots'));
     // Sem 'dele'/'dela': o app nao sabe o genero de ninguem e nao tem por que
     // adivinhar. 'na lista' resolve e nao erra com ninguem.
     if(g.querem)partes.push(g.querem+' na lista');
@@ -4226,7 +4231,7 @@ function darDadosDeExplorar(){
   let avisoAmigos='';
   if(!grupos.length){
     if(r.estado==='carregando')avisoAmigos='Procurando entre seus amigos...';
-    else if(r.estado==='sem_amigos')avisoAmigos='Você ainda não tem amigos no Spot. Quando tiver, os lugares que eles marcaram como visitados aparecem aqui.';
+    else if(r.estado==='sem_amigos')avisoAmigos='Você ainda não tem amigos no Spot. Quando tiver, os spots que eles marcaram como visitados aparecem aqui.';
     else if(r.estado==='nada_aqui')avisoAmigos=fraseNadaAqui(r.amigos,EXPLORE.city||'');
     else if(r.estado==='erro')avisoAmigos='Não consegui consultar seus amigos agora.';
   }
@@ -6934,7 +6939,7 @@ function renderEstante(){
   const resumo=document.getElementById('estanteResumo');
   if(!spots.length){
     box.innerHTML='<div class="empty-state"><div class="ei">'+icon('pin')+'</div>'
-      +'<h3>Nada salvo ainda</h3><p>Os lugares que você salvar aparecem aqui, por cidade.</p></div>';
+      +'<h3>Nada salvo ainda</h3><p>Os spots que você salvar aparecem aqui, por cidade.</p></div>';
     if(resumo)resumo.textContent='';
     // Quem so marcou pais no mapa cai exatamente aqui — e e justamente quem
     // usa o X pra tirar pais. Sem este aviso o pais continuava na tela
@@ -6947,7 +6952,7 @@ function renderEstante(){
   spots.forEach(s=>{const c=cityOf(s)||'Outros';if(!paisDe[c])paisDe[c]=s._country||''});
   const cidades=Object.keys(byCity).filter(c=>byCity[c].length)
     .sort((a,b)=>byCity[b].length-byCity[a].length||a.localeCompare(b,'pt-BR'));
-  if(resumo)resumo.textContent=spots.length+(spots.length===1?' lugar · ':' lugares · ')
+  if(resumo)resumo.textContent=spots.length+(spots.length===1?' spot · ':' spots · ')
     +cidades.length+(cidades.length===1?' cidade':' cidades');
 
   // As cidades do mosaico ficam em ESTANTE_CIDADES: o clique referencia pelo
@@ -6966,7 +6971,7 @@ function renderEstante(){
     return'<button class="est-tile'+(i===0?' grande':'')+'" onclick="abrirCidadeDaEstante('+i+')">'
       +foto+'<div class="est-scrim"></div><div class="est-pe">'
       +'<div class="est-cnome">'+esc(c)+'</div>'
-      +'<div class="est-meta">'+n+(n===1?' lugar':' lugares')+'</div></div></button>';
+      +'<div class="est-meta">'+n+(n===1?' spot':' spots')+'</div></div></button>';
   }).join('')+'</div>'
     +(cidades.length>ESTANTE_NO_PERFIL
       ?'<button class="est-vertodas" onclick="openList(\'cities\')">Ver todas as '+cidades.length+' cidades</button>'
@@ -6984,7 +6989,7 @@ function renderEstante(){
 function pintarResumoDoPerfil(paises,lugares,cidades){
   const texto=[
     paises?(paises+(paises===1?' país':' países')):'',
-    lugares?(lugares+(lugares===1?' lugar':' lugares')):'',
+    lugares?(lugares+(lugares===1?' spot':' spots')):'',
     cidades?(cidades+(cidades===1?' cidade':' cidades')):''
   ].filter(Boolean).join('  ·  ');
   const el=document.getElementById('profResumo');
@@ -6995,7 +7000,7 @@ function pintarResumoDoPerfil(paises,lugares,cidades){
       :'';
     el.innerHTML=bloco(paises,paises===1?'país':'países','countries')
       +bloco(cidades,cidades===1?'cidade':'cidades','cities')
-      +bloco(lugares,lugares===1?'lugar':'lugares','spots');
+      +bloco(lugares,lugares===1?'spot':'spots','spots');
   }
   return texto;
 }
@@ -7018,7 +7023,7 @@ function darDadosDePerfil(){
     });
     const notas=lista.filter(s=>s.status==='been'&&Number(s.my_rating)>0).map(s=>Number(s.my_rating));
     const media=notas.length?(notas.reduce((a,b)=>a+b,0)/notas.length):0;
-    const meta=[lista.length+(lista.length===1?' lugar':' lugares')];
+    const meta=[lista.length+(lista.length===1?' spot':' spots')];
     if(media)meta.push('média '+media.toFixed(1));
     return{
       cidade:c,
@@ -7058,7 +7063,7 @@ function darDadosDePerfil(){
     resumoNumeros:pintarResumoDoPerfil(visitados.length,spots.length,cidades.length),
     _resumoAntigo:[
       visitados.length?(visitados.length+(visitados.length===1?' país':' países')):'',
-      spots.length?(spots.length+(spots.length===1?' lugar':' lugares')):'',
+      spots.length?(spots.length+(spots.length===1?' spot':' spots')):'',
       cidades.length?(cidades.length+(cidades.length===1?' cidade':' cidades')):''
     ].filter(Boolean).join('  ·  '),
     resumo:spots.length?(spots.length+(spots.length===1?' lugar · ':' lugares · ')
@@ -7748,7 +7753,7 @@ function darDadosDeAmigos(){
   // Mesma regra da tela web: "Pedidos" só existe quando há pedido — aba
   // permanentemente vazia é ruído.
   const novas=friendsTab==='recente'?0:novidadesNoFeed(feedItems);
-  const abas=[{id:'recente',rotulo:'Recente',n:novas},{id:'amigos',rotulo:'Amigos',n:0}];
+  const abas=[{id:'recente',rotulo:'Recente',n:novas},{id:'amigos',rotulo:'Todos',n:0}];
   if(incoming.length||friendsTab==='pedidos')abas.push({id:'pedidos',rotulo:'Pedidos',n:incoming.length});
 
   const feed=(feedItems||[]).map((it,i)=>{
@@ -7935,7 +7940,7 @@ function renderFriendsTab(){
   // pessoa está olhando agora.
   const novas=friendsTab==='recente'?0:novidadesNoFeed(feedItems);
   const pendentes=incoming.length;
-  const abas=[['recente','Recente',novas],['amigos','Amigos',0]];
+  const abas=[['recente','Recente',novas],['amigos','Todos',0]];
   if(pendentes||friendsTab==='pedidos')abas.push(['pedidos','Pedidos',pendentes]);
   document.getElementById('amAbas').innerHTML=abas.map(([id,rot,n])=>
     '<button class="'+(friendsTab===id?'on':'')+'" onclick="switchFriendsTab(\''+id+'\')">'+rot
