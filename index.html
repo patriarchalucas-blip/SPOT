@@ -649,16 +649,15 @@ body.na-casca .bottom-nav{display:none}
 /* Credito do autor da foto. O Google exige que ele apareca junto da foto do
    lugar (Termos da Google Maps Platform), e o Unsplash exige o mesmo pras
    fotos de cidade. Fica discreto em cima da imagem, canto inferior direito. */
-.foto-credito{position:absolute;right:10px;bottom:8px;z-index:3;font-family:'Inter Tight',sans-serif;font-size:9.5px;color:rgba(255,255,255,.62);text-shadow:0 1px 3px rgba(0,0,0,.6);max-width:60%;text-align:right;line-height:1.35;pointer-events:auto}
-.foto-credito a{color:inherit;text-decoration:none;border-bottom:1px solid rgba(255,255,255,.25)}
+.foto-credito{position:absolute;right:20px;bottom:8px;z-index:3;font-family:'Inter Tight',sans-serif;
+  font-size:10px;color:rgba(255,255,255,.45);max-width:60%;text-align:right;line-height:1.3;pointer-events:auto}
+.foto-credito a{color:inherit;text-decoration:none}
 .foto-credito:empty{display:none}
 .hero-overlay{position:absolute;inset:0;background:linear-gradient(to top,rgba(0,0,0,.55),transparent 55%)}
-/* Na ficha de um lugar os quatro cantos da foto ja tem dono: voltar, status,
-   trocar foto e o nome. O credito caia logo abaixo do nome e virava legenda
-   do titulo — num lugar cuja foto e do proprio estabelecimento, lia-se
-   "Trattoria Karampana / Foto: Trattoria Karampana". Sobe pra faixa de cima,
-   entre o botao de voltar e o selo de status, que e onde sobra espaco. */
-.place-hero .foto-credito{top:25px;bottom:auto;left:62px;right:112px;max-width:none;text-align:left}
+/* Na ficha ele sai da foto e vira uma linha de dado como as outras. */
+#place .foto-credito{position:static;font-size:10px;color:var(--ink3);max-width:none;text-align:left;
+  padding:10px 0 0;opacity:.75}
+#place .foto-credito a{text-decoration:underline;text-underline-offset:2px}
 .hero-back{position:absolute;top:18px;left:20px;width:36px;height:36px;background:rgba(245,245,243,.92);
   border:none;border-radius:50%;color:var(--ink);cursor:pointer;display:flex;align-items:center;
   justify-content:center;z-index:2}
@@ -1494,9 +1493,9 @@ svg.ic path,svg.ic circle,svg.ic line,svg.ic polyline,svg.ic rect{fill:none;stro
 </div>
 
 <div class="screen" id="place">
-  <div class="place-hero"><div class="place-hero-img" id="placeHeroImg"></div><div class="foto-credito" id="placeFotoCredito"></div><div class="hero-overlay"></div><button class="hero-back" onclick="backFromPlace()" data-ic="back" aria-label="Voltar"></button><button class="hero-photo-btn" onclick="document.getElementById('spotPhotoFileInput').click()" data-ic="edit" aria-label="Trocar foto"></button><input type="file" id="spotPhotoFileInput" accept="image/*" style="display:none" onchange="onSpotPhotoFileChosen(this)"><div class="hero-chip chip-want" id="placeChip" onclick="cycleStatus()">Quero ir</div><div class="hero-bottom"><div class="hero-type" id="placeType"></div><div class="hero-name" id="placeName"></div></div></div>
+  <div class="place-hero"><div class="place-hero-img" id="placeHeroImg"></div><div class="hero-overlay"></div><button class="hero-back" onclick="backFromPlace()" data-ic="back" aria-label="Voltar"></button><button class="hero-photo-btn" onclick="document.getElementById('spotPhotoFileInput').click()" data-ic="edit" aria-label="Trocar foto"></button><input type="file" id="spotPhotoFileInput" accept="image/*" style="display:none" onchange="onSpotPhotoFileChosen(this)"><div class="hero-chip chip-want" id="placeChip" onclick="cycleStatus()">Quero ir</div><div class="hero-bottom"><div class="hero-type" id="placeType"></div><div class="hero-name" id="placeName"></div></div></div>
   <div class="d-section"><div class="note-card" id="notaLeitura"><div class="note-glow"></div><div class="note-quote" id="placeNote"></div><div class="note-attr" id="placeNoteAttr"></div></div><div id="notaEdicao" style="display:none"><textarea class="note-input" id="notaTexto" rows="4" placeholder="Por que esse lugar te chamou atenção?"></textarea><div class="nota-acoes"><button class="action-btn" style="margin:0" id="btnSalvarNota" onclick="salvarNota()">Salvar nota</button><button class="secondary-link" style="margin:0" onclick="cancelarNota()">Cancelar</button></div></div><div class="nota-linha"><div class="stars-row" id="placeStars"><button class="star-btn" onclick="rateStar(1)" data-ic="star"></button><button class="star-btn" onclick="rateStar(2)" data-ic="star"></button><button class="star-btn" onclick="rateStar(3)" data-ic="star"></button><button class="star-btn" onclick="rateStar(4)" data-ic="star"></button><button class="star-btn" onclick="rateStar(5)" data-ic="star"></button></div><span class="nota-rot">sua nota</span><button class="sec-editar" id="btnEditarNota" onclick="editarNota()">Editar</button></div><div class="sp-social" id="placeSocial" style="display:none"></div></div>
-  <div class="d-section"><div id="placeReserveWrap"></div><div class="info-linha" id="placeInfoGrid"></div></div>
+  <div class="d-section"><div id="placeReserveWrap"></div><div class="info-linha" id="placeInfoGrid"></div><div class="foto-credito" id="placeFotoCredito"></div></div>
   <div class="d-section"><div class="coment-bloco" id="placeComentarios"></div></div>
   <div class="d-section" id="placeSubcatSection" style="display:none"><div class="sec-label sec-pequeno">Tipo de experiência</div><div class="subcat-row" id="placeSubcatChips"></div></div>
   <div class="d-section"><div class="status-toggle"><button class="toggle-btn sel-want" id="t-want" onclick="setStatus('want')">Quero ir</button><button class="toggle-btn" id="t-been" onclick="setStatus('been')">Fui</button><button class="toggle-btn" id="t-skip" onclick="setStatus('skip')">Pular</button></div></div>
@@ -4443,15 +4442,15 @@ function pintarCreditoSpot(elId,s){
   const el=document.getElementById(elId);if(!el)return;
   const nome=s&&s.photo_author;
   if(!nome){el.innerHTML='';return}
-  el.innerHTML='Foto: '+linkCredito((s&&s.photo_author_url)||'',nome);
+  el.innerHTML='Foto de '+linkCredito((s&&s.photo_author_url)||'',nome);
 }
 // Foto de cidade: fotógrafo + Unsplash, com os links que os termos deles pedem.
 function pintarCreditoCidade(elId,url){
   const el=document.getElementById(elId);if(!el)return;
   const c=url&&CREDITO_CIDADE[url];
   if(!c||!c.nome){el.innerHTML='';return}
-  el.innerHTML=linkCredito(c.url||'https://unsplash.com',c.nome)
-    +' / '+linkCredito('https://unsplash.com/?utm_source=spot&utm_medium=referral','Unsplash');
+  el.innerHTML='Foto de '+linkCredito(c.url||'https://unsplash.com',c.nome)
+    +' no '+linkCredito('https://unsplash.com/?utm_source=spot&utm_medium=referral','Unsplash');
 }
 function placePhotoUrls(p){
   return{full:placePhotoUrl(p,800),thumb:placePhotoUrl(p,200)};
