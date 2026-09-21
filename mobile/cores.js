@@ -39,13 +39,23 @@ export const BORDA = 'transparent';   // nenhuma borda de 1px, em lugar nenhum
 export const ATIVO_FUNDO = 'transparent'; // a aba ativa é cor, não pastilha
 
 // ── tipografia ────────────────────────────────────────────────────────────
-// `undefined` = fonte do sistema (San Francisco no iOS). Fraunces e IBM Plex
-// Mono saíram do site inteiro; aqui elas sairiam junto, mas trocar pela Inter
-// Tight exige uma dependência nova (`@expo-google-fonts/inter-tight`) e um
-// build — e o registro do npm não respondia na noite em que isto foi escrito.
-// A do sistema é da mesma família de formas que a Inter Tight e não custa
-// pacote nenhum; quando houver build, é só apontar estes três pra ela.
-export const FRAUNCES = undefined;
-export const MONO = undefined;
-export const MONO_MEDIO = undefined;
-export const MONO_FORTE = undefined;
+// Uma família só, igual ao site: Inter Tight. Os NOMES aqui continuam os de
+// antes (FRAUNCES, MONO...) pra não reescrever os ~40 lugares de uso; o que
+// mudou é para onde apontam. FRAUNCES era a serifada de display, então vira o
+// peso mais forte; MONO era o peso de dado, então vira o normal.
+//
+// Cada peso é uma FAMÍLIA registrada em App.js, não um fontWeight: no React
+// Native, fontWeight não combina com fontFamily de fonte carregada — no iOS
+// ele é simplesmente ignorado.
+export const DISPLAY = 'Inter Tight Bold';
+export const CORPO = 'Inter Tight';
+// MEDIO e FORTE existiam pros dois numeros grandes (contador de paises e
+// placar). No site numero e peso 700, entao os dois apontam pro Bold e os
+// arquivos de 500 e 600 saem do pacote: eram 618KB sem uso proprio.
+export const MEDIO = DISPLAY;
+export const FORTE = DISPLAY;
+
+export const FRAUNCES = DISPLAY;
+export const MONO = CORPO;
+export const MONO_MEDIO = MEDIO;
+export const MONO_FORTE = FORTE;

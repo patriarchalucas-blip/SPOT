@@ -53,10 +53,16 @@ import { useFonts } from 'expo-font';
 // Importar pela RAIZ do pacote arrasta a familia inteira pro aplicativo:
 // 38 arquivos de fonte, quando os usados sao cinco. O caminho com o peso
 // dentro traz so o arquivo pedido.
-import { Fraunces_400Regular } from '@expo-google-fonts/fraunces/400Regular';
-import { IBMPlexMono_400Regular } from '@expo-google-fonts/ibm-plex-mono/400Regular';
-import { IBMPlexMono_500Medium } from '@expo-google-fonts/ibm-plex-mono/500Medium';
-import { IBMPlexMono_600SemiBold } from '@expo-google-fonts/ibm-plex-mono/600SemiBold';
+// UMA FAMILIA SO, igual ao site: Inter Tight. Fraunces e IBM Plex Mono sairam
+// do app inteiro — eram 4 arquivos de fonte (479KB no pacote) que nenhuma tela
+// referencia mais. A Cinzel fica: e o wordmark.
+//
+// Cada PESO e registrado como uma FAMILIA propria. No React Native, fontWeight
+// nao combina com fontFamily de fonte carregada: no iOS ele e ignorado, e a
+// familia registrada e que manda. Por isso 'Inter Tight SemiBold' e um nome,
+// nao um peso.
+import { InterTight_400Regular } from '@expo-google-fonts/inter-tight/400Regular';
+import { InterTight_700Bold } from '@expo-google-fonts/inter-tight/700Bold';
 import { Cinzel_500Medium } from '@expo-google-fonts/cinzel/500Medium';
 import * as Notifications from 'expo-notifications';
 import * as Device from 'expo-device';
@@ -187,10 +193,8 @@ function ehFluxoDeLogin(url) {
 // aqui): num app de iPhone, a fonte do sistema e a escolha certa pra corpo de
 // texto, e as tres de cima e que carregam a marca.
 const FONTES = {
-  Fraunces: Fraunces_400Regular,
-  'IBM Plex Mono': IBMPlexMono_400Regular,
-  'IBM Plex Mono Medium': IBMPlexMono_500Medium,
-  'IBM Plex Mono SemiBold': IBMPlexMono_600SemiBold,
+  'Inter Tight': InterTight_400Regular,
+  'Inter Tight Bold': InterTight_700Bold,
   Cinzel: Cinzel_500Medium,
 };
 
