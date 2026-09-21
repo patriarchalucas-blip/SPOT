@@ -1009,7 +1009,12 @@ body.na-casca .bottom-nav{display:none}
 .world-map-wrap{position:absolute;inset:0;line-height:0;touch-action:none}
 .world-map-wrap svg{width:100%;height:100%;display:block;cursor:grab}
 .world-map-wrap svg:active{cursor:grabbing}
-.wm-country{fill:transparent;stroke:none;transition:fill .4s}
+/* O PAIS NAO VISITADO PRECISA APARECER. Com ele transparente, o mapa da tela
+   inicial nao era um mapa: era um retangulo de textura pontilhada com tres
+   manchinhas verdes flutuando nele, sem contorno de continente nenhum pra
+   dizer onde elas ficavam. A trama de pontos e o MAR; a terra e solida por
+   cima dela, e o verde marca so onde a pessoa esteve. */
+.wm-country{fill:var(--map-dot);stroke:none;transition:fill .4s}
 .wm-country.visited{fill:var(--green)}
 .map-zoom-hint{position:absolute;bottom:10px;left:0;right:0;text-align:center;color:rgba(255,255,255,0.5);font-size:11px;pointer-events:none;z-index:2}
 .mapa-topo{display:flex;align-items:center;gap:12px;padding:40px 20px 14px;background:var(--dark);position:relative;z-index:3}
