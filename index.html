@@ -182,10 +182,10 @@ body{font-family:'Inter Tight',sans-serif;background:var(--base);color:var(--ink
    numa coluna de 390px tem 173px de altura — a proporcao dele e 800x355.
    Reservar 440px deixava 260px de trama vazia em volta de tres paises.
    Agora a area e o mapa mais o espaco do scorecard, e mais nada. */
-.dash-mapa-area{position:relative;background:var(--map-bg);
-  background-image:radial-gradient(var(--map-dot) 1.4px,transparent 1.7px);
-  background-size:8px 8px;overflow:hidden;
-  padding:0 0 104px}
+.dash-mapa-area{position:relative;background:var(--map-bg);overflow:hidden}
+/* A faixa da marca fica ACIMA do mapa, nao em cima dele: o logotipo caia
+   sobre o Canada e o avatar sobre o Japao, e num perfil com muitos paises
+   os dois ficavam em cima de pais pintado. */
 .dash-mapa{width:100%;aspect-ratio:800/355;margin-top:44px}
 .dash-mapa svg{width:100%;height:100%;display:block}
 /* O mapa não termina numa linha: ele se dissolve na página. */
@@ -194,8 +194,7 @@ body{font-family:'Inter Tight',sans-serif;background:var(--base);color:var(--ink
 .dash-topo-linha{position:absolute;top:18px;left:20px;right:20px;display:flex;
   align-items:center;justify-content:space-between;z-index:2}
 
-.scorecard{position:absolute;left:20px;bottom:26px;z-index:2;display:flex;
-  align-items:flex-end;gap:28px}
+.scorecard{display:flex;align-items:flex-end;gap:28px;padding:20px 20px 0}
 .sc-item{background:none;border:none;padding:0;cursor:pointer;text-align:left;
   display:flex;flex-direction:column;gap:2px;min-height:44px;justify-content:flex-end}
 .sc-item:active{opacity:.6}
@@ -282,9 +281,8 @@ body{font-family:'Inter Tight',sans-serif;background:var(--base);color:var(--ink
 .dash-top>.dash-mapa{position:relative;margin:2px -24px 6px;width:calc(100% + 48px);aspect-ratio:800/355;opacity:0;transition:opacity .5s ease;cursor:pointer}
 /* o conteúdo fica na frente do mapa, e o mapa segue clicável na área livre */
 
-/* O wordmark do topo vira texto: a esfera armilar em Cinzel fica so no
-   login, onde ela tem espaco pra ser lida como marca. */
-.dash-wordmark{font-size:20px;font-weight:700;letter-spacing:-.03em;color:var(--ink)}
+/* O wordmark e desenho, nao palavra em negrito. */
+.dash-wordmark{display:block;height:20px;width:auto}
 /* A frase inteira é o contador de países e abre a lista deles. */
 .dash-convite{font-size:12.5px;color:var(--ink3);margin:-16px 0 20px;max-width:230px;line-height:1.45}
 .dash-top>*{position:relative;z-index:1}
@@ -938,6 +936,7 @@ body.na-casca .bottom-nav{display:none}
 #profile{background:var(--base);overflow-y:auto}
 /* Identidade: quem você é, em tamanho de gente. */
 .prof-topo-linha{display:flex;align-items:center;justify-content:space-between;padding:18px 20px 0}
+.prof-marca{font-size:20px;font-weight:700;letter-spacing:-.03em;color:var(--ink)}
 /* Avatar em cima, nome embaixo: o nome ganha a largura da tela inteira e
    pode sair em 34px. Ao lado de um avatar ele nunca passaria de 20. */
 .profile-ident{padding:20px 20px 0;background:var(--base);position:relative;z-index:5}
@@ -1013,7 +1012,7 @@ body.na-casca .bottom-nav{display:none}
    manchinhas verdes flutuando nele, sem contorno de continente nenhum pra
    dizer onde elas ficavam. A trama de pontos e o MAR; a terra e solida por
    cima dela, e o verde marca so onde a pessoa esteve. */
-.wm-country{fill:var(--map-dot);stroke:none;transition:fill .4s}
+.wm-country{fill:#CBD3CD;stroke:none;transition:fill .4s}
 .wm-country.visited{fill:var(--green)}
 .map-zoom-hint{position:absolute;bottom:10px;left:0;right:0;text-align:center;color:rgba(255,255,255,0.5);font-size:11px;pointer-events:none;z-index:2}
 .mapa-topo{display:flex;align-items:center;gap:12px;padding:40px 20px 14px;background:var(--dark);position:relative;z-index:3}
@@ -1286,9 +1285,10 @@ svg.ic path,svg.ic circle,svg.ic line,svg.ic polyline,svg.ic rect{fill:none;stro
     <div class="dash-mapa" id="dashMapa" aria-hidden="true"></div>
     <div class="dash-mapa-fade"></div>
     <div class="dash-topo-linha">
-      <div class="dash-wordmark">Spot</div>
+      <svg class="dash-wordmark" viewBox="0 81 269 74" role="img" aria-label="Spot"><text x="0" y="150" font-family="Cinzel" font-weight="500" font-size="100" letter-spacing="6" fill="#111111">SP</text><circle cx="159.3" cy="118" r="30" fill="none" stroke="#111111" stroke-width="8"/><ellipse cx="159.3" cy="118" rx="36" ry="11" fill="none" stroke="#111111" stroke-width="5" transform="rotate(-22 159.3 118)"/><text x="201.4" y="150" font-family="Cinzel" font-weight="500" font-size="100" letter-spacing="6" fill="#111111">T</text></svg>
       <div class="avatar" id="dashAvatar" onclick="goTo('profile');loadProfile()" role="button" tabindex="0" aria-label="Abrir seu perfil">?</div>
     </div>
+  </div>
     <div class="scorecard">
       <button class="sc-item sc-hero" onclick="openList('countries')">
         <span class="sc-n" id="dashPaisesN">0</span>
@@ -1303,7 +1303,6 @@ svg.ic path,svg.ic circle,svg.ic line,svg.ic polyline,svg.ic rect{fill:none;stro
         <span class="sc-r">lugares <i class="sc-seta">›</i></span>
       </button>
     </div>
-  </div>
   <div class="dash-convite" id="dashConvite" style="display:none">Crie uma viagem para pintar o primeiro país.</div>
   <div class="checkin-banner" id="checkinBanner" style="display:none">
     <div class="checkin-icon" data-ic="pin"></div>
@@ -1363,7 +1362,7 @@ svg.ic path,svg.ic circle,svg.ic line,svg.ic polyline,svg.ic rect{fill:none;stro
 
 <div class="screen" id="profile">
   <div class="prof-topo-linha">
-    <div class="dash-marca">Perfil</div>
+    <div class="prof-marca">Perfil</div>
     <button class="prof-config-btn" onclick="abrirConfig()" data-ic="gear" aria-label="Configurações"></button>
   </div>
   <div class="profile-ident">
