@@ -1,0 +1,175 @@
+# Etiquetas de privacidade — respostas do questionário
+
+App Store Connect → **App Privacy**. Escrito em 20/09/2026, lendo o código, não
+de memória. Cada linha tem o arquivo onde dá para conferir.
+
+Esse questionário é declaração formal: errar para menos é motivo de rejeição, e
+depois de publicado ele aparece na ficha do app como "Privacidade do app". Por
+isso aqui está declarado o que de fato sai do aparelho, inclusive o que não é
+guardado em lugar nenhum.
+
+---
+
+## Primeira pergunta: "você coleta dados deste app?"
+
+**Sim.**
+
+---
+
+## O que declarar
+
+Para cada item: o tipo, para que serve, se está ligado à identidade da pessoa e
+se é usado para rastreamento. **Nada no Spot é usado para rastreamento** — não
+existe IDFA, nem SDK de publicidade, nem analytics de terceiro. Conferido:
+zero ocorrências de gtag, Google Analytics, Meta, Mixpanel, Amplitude, PostHog
+e Sentry no `index.html`.
+
+### 1. Informações de contato → Endereço de e-mail
+
+| | |
+|---|---|
+| Finalidade | Funcionalidade do app |
+| Ligado à identidade | **Sim** |
+| Usado para rastreamento | Não |
+
+É a credencial de login. Fica em `auth.users` e em `profiles.email`.
+Quem entra com Google também entrega o e-mail.
+
+### 2. Informações de contato → Nome
+
+| | |
+|---|---|
+| Finalidade | Funcionalidade do app |
+| Ligado à identidade | **Sim** |
+| Usado para rastreamento | Não |
+
+`profiles.display_name` e `profiles.username`. O nome aparece para os amigos
+aceitos — é o que identifica quem recomendou um lugar.
+
+### 3. Conteúdo do usuário → Fotos ou vídeos
+
+| | |
+|---|---|
+| Finalidade | Funcionalidade do app |
+| Ligado à identidade | **Sim** |
+| Usado para rastreamento | Não |
+
+Foto de perfil e foto de lugar, enviadas pela câmera ou pela galeria e
+guardadas no Storage do Supabase (`uploadToStorage`, pasta por usuário).
+
+### 4. Conteúdo do usuário → Outro conteúdo do usuário
+
+| | |
+|---|---|
+| Finalidade | Funcionalidade do app |
+| Ligado à identidade | **Sim** |
+| Usado para rastreamento | Não |
+
+A nota pessoal de cada lugar (`spots.my_note`), a avaliação escrita
+(`spots.my_review`), os comentários (`spot_comments.body`) e o nome das
+viagens. É o coração do produto.
+
+### 5. Identificadores → ID do usuário
+
+| | |
+|---|---|
+| Finalidade | Funcionalidade do app |
+| Ligado à identidade | **Sim** |
+| Usado para rastreamento | Não |
+
+O `id` do Supabase, que amarra tudo, e o endereço de push guardado em
+`push_tokens` (tabela criada pela migração 019) para entregar aviso de pedido
+de amizade, aceite e comentário.
+
+### 6. Localização → Localização precisa
+
+| | |
+|---|---|
+| Finalidade | Funcionalidade do app |
+| Ligado à identidade | **Não** |
+| Usado para rastreamento | Não |
+
+**Isto precisa ser declarado mesmo sem ser guardado.** A coordenada sai do
+aparelho: vai para a API do Google Places, por dentro da função
+`functions/api/places.js`, para achar o lugar em que a pessoa está ("Você está
+em X?") e os lugares a até 600 m.
+
+O que acontece com ela depois:
+
+- **não** é gravada no banco — a tabela `spots` não tem coluna de coordenada;
+  o que fica salvo é nome, endereço e cidade do lugar escolhido;
+- **não** entra no cache do Cloudflare. O comentário na linha 26 de
+  `functions/api/places.js` diz isso explicitamente, e o código confere: busca
+  por proximidade não é cacheada, só busca por texto.
+
+Por isso "não ligado à identidade": em nenhum lugar existe o par (pessoa,
+coordenada) guardado. Se preferir ser conservador, declarar como **ligado** não
+causa problema nenhum além de aparecer assim na ficha.
+
+### 7. Histórico de busca — decisão sua
+
+| | |
+|---|---|
+| Finalidade | Funcionalidade do app |
+| Ligado à identidade | **Não** |
+| Usado para rastreamento | Não |
+
+O texto que a pessoa digita ("restaurantes em Lisboa") vai para o Google
+Places, e o **resultado** fica num cache do Cloudflare KV com o texto da busca
+como chave — compartilhado entre todo mundo, sem nada que ligue a busca a quem
+buscou.
+
+Tem gente que não declara isso, argumentando que é a própria função pedida pelo
+usuário. **Eu declararia.** Custa uma linha na ficha e tira um motivo de
+questionamento. Se você discordar, é defensável não declarar.
+
+---
+
+## O que NÃO declarar (conferido, não existe)
+
+| tipo | por quê |
+|---|---|
+| Dados de uso / Análise | Não há analytics nenhum no app |
+| Dados de diagnóstico | Não há Sentry, Crashlytics nem equivalente |
+| Contatos | O app nunca lê a agenda do telefone. Amizade é por username ou por link de convite — decisão de projeto |
+| Saúde e condicionamento | Não existe |
+| Informações financeiras | Não existe. Não há compra, assinatura nem pagamento |
+| Histórico de navegação | Não existe |
+| Informações confidenciais | Não existe |
+| ID do dispositivo / IDFA | Não usamos. **Consequência: não precisa do aviso de rastreamento (ATT)** |
+
+---
+
+## Terceiros que recebem dado
+
+A Apple pergunta sobre dado coletado "por você ou pelos seus parceiros". Quem
+entra em contato com dado de usuário:
+
+| quem | o que recebe | para quê |
+|---|---|---|
+| Supabase | tudo: e-mail, perfil, viagens, lugares, notas, comentários, fotos | é o banco e a autenticação |
+| Cloudflare | tráfego do site e das funções; o token de sessão passa por ali | hospedagem e as funções de API |
+| Google Places | nome do lugar buscado e, no check-in, a coordenada | busca de lugar, foto, telefone, nota |
+| Unsplash | o nome da cidade | foto de capa de cidade |
+| Resend | e-mail de quem se cadastra | confirmação de cadastro e recuperação de senha |
+| Expo | endereço de push do aparelho | entrega da notificação |
+| Brave Search | nome e cidade do restaurante | achar o Instagram do lugar |
+
+Nenhum deles recebe dado para publicidade ou rastreamento.
+
+---
+
+## Checagem rápida antes de enviar
+
+O que eu conferi em 20/09/2026, e como conferir de novo:
+
+```bash
+# nenhum rastreador no app
+grep -ci "gtag\|google-analytics\|googletagmanager\|mixpanel\|amplitude\|posthog\|sentry\|fbq" index.html   # esperado: 0
+
+# coordenada não é gravada em spots
+grep -n "latitude" index.html   # esperado: só dentro de maybeShowCheckin e showNearbySuggestions
+
+# as páginas obrigatórias estão no ar
+curl -s -o /dev/null -w "%{http_code}\n" -L https://meuspot.app/privacidade
+```

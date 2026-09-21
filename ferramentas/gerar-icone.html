@@ -1,0 +1,40 @@
+<!doctype html>
+<meta charset="utf-8">
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500&display=swap" rel="stylesheet">
+<title>gerar icone</title>
+<body style="background:#F5F5F3;font-family:system-ui;padding:20px">
+<div id="prev"></div>
+<script>
+// O icone do app: azulejo verde cheio com a esfera armilar em claro. Sem
+// cantos arredondados de propósito — o iOS aplica a mascara dele, e arte ja
+// arredondada sai com borda dupla.
+const VERDE='#0B3D2E', CLARO='#F5F5F3';
+function svgIcone(){
+  return '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">'
+    + '<rect width="64" height="64" fill="'+VERDE+'"/>'
+    + '<circle cx="32" cy="32" r="19" fill="none" stroke="'+CLARO+'" stroke-width="5"/>'
+    + '<ellipse cx="32" cy="32" rx="22.8" ry="7" fill="none" stroke="'+CLARO+'" stroke-width="3.2"'
+    + ' transform="rotate(-22 32 32)"/></svg>';
+}
+window.pngDoIcone = function(tam){
+  return new Promise((ok,erro)=>{
+    const img=new Image();
+    img.onload=()=>{
+      const c=document.createElement('canvas');
+      c.width=tam;c.height=tam;
+      const x=c.getContext('2d');
+      x.imageSmoothingEnabled=true;
+      x.drawImage(img,0,0,tam,tam);
+      ok(c.toDataURL('image/png'));
+    };
+    img.onerror=()=>erro(new Error('svg nao carregou'));
+    img.src='data:image/svg+xml;charset=utf-8,'+encodeURIComponent(svgIcone());
+  });
+};
+document.getElementById('prev').innerHTML =
+  '<div style="display:flex;gap:16px;align-items:flex-end">'
+  + [180,120,60,40].map(t=>'<div style="text-align:center"><div style="width:'+t+'px;height:'+t+'px;'
+      + 'border-radius:'+Math.round(t*0.22)+'px;overflow:hidden">'+svgIcone()+'</div>'
+      + '<div style="font-size:11px;color:#9A9A96;margin-top:6px">'+t+'</div></div>').join('')
+  + '</div>';
+</script>
