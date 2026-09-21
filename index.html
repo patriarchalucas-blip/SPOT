@@ -216,6 +216,13 @@ body{font-family:'Inter Tight',sans-serif;background:var(--base);color:var(--ink
   border-radius:var(--r-btn);font-size:14px;font-weight:600;cursor:pointer;padding:0 18px;height:44px}
 .btn-primario:active{opacity:.85}
 .btn-largo{display:block;width:100%;height:48px;border-radius:var(--r-card);margin-top:20px}
+/* Quando o botao nao vem depois de uma lista (tela da viagem, da cidade),
+   ele precisa da margem lateral e da folga da barra de baixo. */
+.btn-solto{width:calc(100% - 40px);margin:16px 20px 0}
+/* A folga da barra de baixo fica no ultimo elemento da tela, nao no botao:
+   na viagem ainda vem "Excluir viagem" depois dele. */
+.btn-solto:last-child{margin-bottom:110px}
+.btn-texto:last-child{margin-bottom:96px}
 
 /* Mapa sangrando pela direita, atrás do conteúdo. Entra só depois de carregado
    (a geometria vem de CDN e é pesada), por isso o fade — sem ele o mapa
@@ -417,7 +424,7 @@ body{font-family:'Inter Tight',sans-serif;background:var(--base);color:var(--ink
 .lname{font-size:14.5px;font-weight:600;color:var(--ink);line-height:1.3;overflow-wrap:break-word}
 .lmeta{font-size:12px;color:var(--ink3);margin-top:3px;overflow-wrap:break-word}
 .lright{flex-shrink:0;display:flex;flex-direction:column;align-items:flex-end;gap:5px}
-.lrating{font-family:var(--mono);font-size:12.5px;color:var(--amber);font-weight:600;white-space:nowrap}
+.lrating{font-size:13px;font-weight:600;color:var(--ink);white-space:nowrap}
 .lcount{font-family:var(--mono);font-size:12.5px;color:var(--ink2);background:rgba(234,231,224,.07);border-radius:var(--r-pill);padding:3px 10px;white-space:nowrap}
 /* Denúncia e bloqueio — exigência 1.2 da Apple. Alvos de toque com 44px de
    altura mínima, que é o mínimo que a Apple também espera. */
@@ -450,10 +457,12 @@ body{font-family:'Inter Tight',sans-serif;background:var(--base);color:var(--ink
 .tc-name{font-family:'Inter Tight',sans-serif;font-weight:400;font-size:23px;color:var(--ink);line-height:1.15;letter-spacing:-.01em;margin:7px 0 0;overflow-wrap:break-word}
 .tc-meta{font-family:var(--mono);font-size:11px;color:var(--ink3);margin-top:7px;line-height:1.5}
 .prog-circle{width:32px;height:32px;flex-shrink:0}
-.empty-state{text-align:center;padding:44px 24px;color:var(--ink3)}
-.empty-state .ei{width:64px;height:64px;font-size:26px;margin:0 auto 16px;color:var(--ink3);background:var(--surface);border:1px solid var(--border);border-radius:50%;box-shadow:var(--shadow-inset)}
-.empty-state h3{font-family:'Inter Tight',sans-serif;font-weight:400;font-size:22px;color:var(--ink2);margin-bottom:8px}
-.empty-state p{font-size:14px;line-height:1.55}
+.empty-state{text-align:center;padding:48px 20px;color:var(--ink2)}
+/* O icone perde a medalha (circulo cinza com borda e sombra por dentro). */
+.empty-state .ei{width:32px;height:32px;margin:0 auto 16px;color:var(--ink3)}
+.empty-state .ei svg{width:32px;height:32px}
+.empty-state h3{font-size:20px;font-weight:700;letter-spacing:-.03em;color:var(--ink);margin-bottom:8px}
+.empty-state p{font-size:15px;line-height:1.5;color:var(--ink2)}
 
 /* FAB */
 @media(max-width:430px){.fab{right:24px}}
@@ -512,77 +521,92 @@ body.na-casca .bottom-nav{display:none}
 
 /* TRIP VIEW */
 #trip{background:var(--surface)}
-.trip-hero{height:240px;position:relative;overflow:hidden;flex-shrink:0;background:var(--dark)}
+.trip-hero{height:340px;position:relative;overflow:hidden;flex-shrink:0;background:var(--photo-empty)}
 .trip-hero-img{position:absolute;inset:0;background-size:cover;background-position:center}
-.trip-float{position:absolute;bottom:-18px;left:24px;font-family:'Inter Tight',sans-serif;font-size:80px;font-style:italic;color:rgba(255,255,255,0.06);white-space:nowrap;pointer-events:none;line-height:1}
-.trip-hero-content{position:absolute;inset:0;padding:52px 24px 28px;display:flex;flex-direction:column;justify-content:flex-end;background:linear-gradient(to bottom,rgba(0,0,0,0.1),rgba(0,0,0,0.65))}
-.back-btn{position:absolute;top:18px;left:18px;width:34px;height:34px;background:rgba(11,22,32,.5);border:1px solid rgba(255,255,255,.16);border-radius:50%;color:#fff;font-size:15px;cursor:pointer;display:flex;align-items:center;justify-content:center;backdrop-filter:blur(8px)}
-.trip-del-btn{position:absolute;top:18px;right:18px;width:34px;height:34px;background:rgba(11,22,32,.5);border:1px solid rgba(255,255,255,.16);border-radius:50%;color:#fff;font-size:14px;cursor:pointer;display:flex;align-items:center;justify-content:center;backdrop-filter:blur(8px)}
-.trip-del-btn:active{background:rgba(192,57,43,0.6)}
-.trip-hero-label{font-size:12px;color:rgba(255,255,255,0.7);margin-bottom:6px}
-.trip-hero-name{font-family:'Inter Tight',sans-serif;font-weight:400;font-size:30px;color:#fff;line-height:1.1;letter-spacing:-.015em}
-.trip-hero-meta{font-family:var(--mono);font-size:11.5px;color:rgba(255,255,255,0.6);margin-top:7px}
+.trip-float{display:none}
+.trip-hero-content{position:absolute;inset:0;padding:0 20px 20px;display:flex;flex-direction:column;
+  justify-content:flex-end;background:linear-gradient(to top,rgba(0,0,0,.55),transparent 55%)}
+.back-btn{position:absolute;top:18px;left:20px;width:36px;height:36px;background:rgba(245,245,243,.92);
+  border:none;border-radius:50%;color:var(--ink);cursor:pointer;display:flex;align-items:center;
+  justify-content:center;z-index:2}
+.back-btn:active{opacity:.7}
+.back-btn svg{width:20px;height:20px}
+.btn-texto{display:block;width:100%;background:none;border:none;padding:14px 0;cursor:pointer;
+  font-size:14px;font-weight:500;color:var(--ink3);text-align:center}
+.btn-texto:active{opacity:.6}
+.trip-hero-label{font-size:13px;font-weight:500;color:rgba(255,255,255,.85);margin-bottom:4px}
+.trip-hero-name{font-size:34px;font-weight:700;letter-spacing:-.04em;color:#fff;line-height:1.05}
+.trip-hero-meta{font-size:13px;color:rgba(255,255,255,.7);margin-top:6px}
 /* Abas de categoria — agora vivem na tela PRÓPRIA de cada cidade, não
    mais fixas no topo da viagem inteira (a viagem mostra cards de cidade,
    ver .city-card abaixo; tocar num card abre a tela da cidade) */
-.cat-tabs-wrap{background:var(--surface);border-bottom:1px solid var(--border);position:sticky;top:0;z-index:10}
-.cat-tabs{display:flex}
-.cat-tab{flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;padding:12px 6px;font-size:12px;font-weight:500;color:var(--ink3);cursor:pointer;border-bottom:2px solid transparent;text-align:center}
-.cat-tab.active{color:var(--ink);border-bottom-color:var(--terra)}
-.cat-tab .ct-icon{font-size:18px}
-.cat-tab .ct-count{font-family:var(--mono);font-size:10.5px;color:var(--ink3);background:rgba(234,231,224,.07);border-radius:var(--r-pill);padding:1px 7px;margin-top:1px}
-.cat-tab.active .ct-count{color:var(--ink)}
-.trip-body{padding:6px 24px 120px}
+.cat-tabs-wrap{background:var(--base);position:sticky;top:0;z-index:10}
+.cat-tabs{display:flex;gap:18px;padding:14px 20px 0;overflow-x:auto;scrollbar-width:none}
+.cat-tabs::-webkit-scrollbar{display:none}
+.cat-tab{flex:none;display:flex;align-items:center;gap:6px;padding:0 0 8px;font-size:15px;
+  font-weight:600;color:var(--ink3);cursor:pointer;white-space:nowrap;
+  box-shadow:inset 0 -2px 0 transparent}
+.cat-tab.active{color:var(--ink);box-shadow:inset 0 -2px 0 var(--ink)}
+/* O icone sai: o nome ja diz, e tres emblemas em fila competiam com ele. */
+.cat-tab .ct-icon{display:none}
+.cat-tab .ct-count{font-size:13px;font-weight:400;color:var(--ink3)}
+.trip-body{padding:8px 20px 4px}
 /* Cards de cidade dentro da viagem — compacto, sem foto, mostra quanto
    tem de cada categoria antes de abrir. */
-.city-card{border:1px solid var(--border);border-radius:var(--r);background:linear-gradient(160deg,var(--surface),rgba(234,231,224,.015));padding:16px;margin-bottom:10px;cursor:pointer;box-shadow:var(--shadow-sm);transition:transform .15s}
-/* O X da cidade vazia entra na propria linha da contagem, como mais um item
-   da fila. Flutuando por cima do card ele encostava no "0 spots". */
-.city-card-tirar{flex-shrink:0;align-self:center;width:30px;height:30px;margin:-6px -8px -6px 8px;border:none;background:none;color:var(--ink3);display:flex;align-items:center;justify-content:center;cursor:pointer;border-radius:50%}
-.city-card-tirar:active{opacity:.5;background:rgba(168,52,44,.12);color:var(--red)}
-.city-card-tirar svg{width:15px;height:15px}
-.city-card:active{transform:scale(.99)}
-.city-card-top{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:12px}
-.city-card-name{font-family:'Inter Tight',sans-serif;font-weight:400;font-size:21px;letter-spacing:-.01em;color:var(--ink)}
-.city-card-count{font-family:var(--mono);font-size:11px;color:var(--ink3)}
-.city-card-climate{font-family:var(--mono);font-size:10.5px;color:var(--amber);margin-top:3px;min-height:13px}
-/* Chips de subcategoria (ficha de adicionar e filtro da tela da cidade) */
-/* Uma linha rolável, não wrap: em 375px os 5 chips quebravam em TRÊS linhas
-   (141px de altura) e empurravam a lista pra baixo. Rolagem horizontal aqui
-   é local ao container — o body continua sem rolar de lado. */
-.subcat-row{display:flex;flex-wrap:nowrap;gap:7px;margin-bottom:4px;overflow-x:auto;scrollbar-width:none;-webkit-overflow-scrolling:touch}
-.subcat-row::-webkit-scrollbar{display:none}
-.subcat-chip{flex:none;white-space:nowrap;display:flex;align-items:center;gap:5px;padding:8px 12px;border:1px solid var(--border);border-radius:999px;font-size:12px;font-family:'Inter Tight',sans-serif;color:var(--ink2);cursor:pointer;background:transparent;transition:border-color .15s,color .15s}
-.subcat-chip.on{border-color:var(--ink);color:var(--ink);font-weight:500}
-.subcat-chip .ic{font-size:14px}
-.subcat-tag{font-size:11px;font-family:'Inter Tight',sans-serif;color:var(--ink3);}
-.city-card-breakdown{display:flex;gap:14px;flex-wrap:wrap}
-/* Só ícone + número: a palavra ("Comer 10") repetia o que o ícone já diz e
-   lia como comando. O rótulo continua no title/aria-label. */
-.city-card-item{display:flex;align-items:center;gap:5px;font-size:12.5px;color:var(--ink2);font-family:'Inter Tight',sans-serif}
-.city-card-item .ic{font-size:14px}
+/* A cidade vira LINHA. Sem caixa: o que separa uma da outra e o espaco.
+   O nome manda, e tudo o que era terceira e quarta linha (clima, quanto
+   tem de cada categoria) desce pra uma linha so de metadado. */
+.city-card{display:flex;align-items:center;gap:12px;padding:13px 0;cursor:pointer}
+.city-card:active{opacity:.6}
+.city-card-top{flex:1;min-width:0}
+.city-card-name{font-size:16px;font-weight:600;letter-spacing:-.02em;color:var(--ink);line-height:1.25}
+.city-card-meta{display:flex;align-items:center;flex-wrap:wrap;gap:0 6px;margin-top:2px;
+  font-size:13px;color:var(--ink2)}
+.city-card-meta > *:not(:last-child)::after{content:"·";margin-left:6px;color:var(--ink3)}
+.city-card-meta:empty{display:none}
+.city-card-climate:empty{display:none}
+.city-card-item{display:flex;align-items:center;gap:4px}
+.city-card-item .ic svg{width:14px;height:14px}
+.city-card-count{font-size:13px;color:var(--ink3);flex-shrink:0}
+.city-card-tirar{flex-shrink:0;width:36px;height:36px;border:none;background:none;color:var(--ink3);
+  display:flex;align-items:center;justify-content:center;cursor:pointer}
+.city-card-tirar:active{opacity:.5}
+.city-card-tirar svg{width:16px;height:16px}
 .city-section{margin-bottom:26px}
 .city-header{display:flex;align-items:center;gap:10px;margin-bottom:12px;padding-top:16px}
 .city-name-text{font-family:'Inter Tight',sans-serif;font-weight:400;font-size:21px;color:var(--ink);letter-spacing:-.01em}
-.city-count{margin-left:auto;font-size:12.5px;color:var(--ink3)}
+.city-count{margin-left:auto;font-size:13px;color:var(--ink3)}
+
+/* Filtros de tipo e de situacao: aba de texto, nao pilula. */
+.subcat-row{display:flex;gap:18px;overflow-x:auto;scrollbar-width:none;-webkit-overflow-scrolling:touch}
+.subcat-row::-webkit-scrollbar{display:none}
+.subcat-chip{flex:none;display:flex;align-items:center;gap:6px;background:none;border:none;
+  padding:6px 0;cursor:pointer;font-size:14px;font-weight:500;color:var(--ink3);white-space:nowrap}
+.subcat-chip.on{color:var(--ink);font-weight:600;box-shadow:inset 0 -2px 0 var(--ink)}
+.subcat-chip .ic svg{width:15px;height:15px}
 /* nome do lugar NUNCA corta com "..." — quebra e a linha cresce */
-.place-row{display:flex;align-items:stretch;background:var(--white);margin-bottom:10px;cursor:pointer;overflow:hidden;border:1px solid var(--border);border-radius:var(--r);transition:transform .15s,box-shadow .15s;box-shadow:var(--shadow-sm)}
-.place-row:active{transform:scale(.99)}
-.place-bar{width:4px;align-self:stretch;flex-shrink:0}
-.bar-food{background:var(--terra)}
-.bar-hotel{background:var(--green)}
-.bar-experience{background:var(--amber)}
-.place-row-main{flex:1;padding:13px 8px 13px 13px;display:flex;align-items:center;gap:12px;min-width:0}
-.place-thumb{width:48px;height:48px;border-radius:var(--r-sm);background:var(--dark);flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:20px;overflow:hidden;border:1px solid var(--border);color:var(--ink3)}
+.place-row{display:flex;align-items:center;gap:12px;padding:10px 0;cursor:pointer}
+.place-row:active{opacity:.6}
+/* A tarja de categoria sai: a aba de cima ja separa por categoria. */
+.place-bar{display:none}
+.place-row-main{flex:1;display:flex;align-items:center;gap:12px;min-width:0}
+.place-thumb{width:64px;height:64px;border-radius:var(--r-card);background:var(--photo-empty);
+  flex-shrink:0;display:flex;align-items:center;justify-content:center;overflow:hidden;color:rgba(255,255,255,.75)}
+.place-thumb svg{width:22px;height:22px}
 .place-row-info{flex:1;min-width:0}
-.place-row-name{font-size:15px;font-weight:600;color:var(--ink);margin-bottom:3px;line-height:1.3;overflow-wrap:break-word}
-.place-row-note{font-family:'Inter Tight',sans-serif;font-size:13.5px;color:var(--ink3);font-style:italic;line-height:1.4;overflow-wrap:break-word}
-.place-row-right{display:flex;flex-direction:column;align-items:flex-end;gap:7px;flex-shrink:0;padding:13px 13px 13px 0}
-.place-type-tag{font-size:11px;color:var(--ink3);background:rgba(234,231,224,.07);border-radius:var(--r-pill);padding:2px 9px;white-space:nowrap}
-.status-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
-.dot-want{background:var(--amber)}.dot-been{background:var(--green)}
-.place-status{display:flex;align-items:center;gap:5px}
-.place-status-label{font-size:10.5px;color:var(--ink3);font-weight:500;white-space:nowrap}
+.place-row-name{font-size:16px;font-weight:600;letter-spacing:-.02em;color:var(--ink);line-height:1.25;overflow-wrap:break-word}
+/* A nota pessoal e prosa, e prosa nao cabe numa linha de lista: corta em
+   duas linhas pra que todas as linhas tenham a mesma altura e a lista volte
+   a ser varredura. A nota inteira esta na ficha, a um toque. */
+.place-row-note{font-size:13px;color:var(--ink2);line-height:1.4;margin-top:2px;overflow-wrap:break-word;
+  display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.place-row-note:empty{display:none}
+.place-row-right{display:flex;flex-direction:column;align-items:flex-end;gap:3px;flex-shrink:0}
+.place-type-tag{font-size:13px;color:var(--ink3);white-space:nowrap}
+/* A situacao vira palavra: a bolinha colorida dizia a mesma coisa duas vezes. */
+.status-dot{display:none}
+.place-status{display:flex;align-items:center}
+.place-status-label{font-size:13px;color:var(--ink3);white-space:nowrap}
 
 /* PLACE DETAIL */
 #place{background:var(--surface)}
@@ -1214,19 +1238,20 @@ svg.ic path,svg.ic circle,svg.ic line,svg.ic polyline,svg.ic rect{fill:none;stro
 </div>
 
 <div class="screen" id="trip">
-  <div class="trip-hero"><div class="trip-hero-img" id="tripHeroImg"></div><div class="foto-credito" id="tripFotoCredito"></div><div class="trip-float" id="tripFloat"></div><div class="trip-hero-content"><button class="back-btn" onclick="goTo('dashboard');loadDashboard()" data-ic="back" aria-label="Voltar"></button><button class="trip-del-btn" onclick="deleteTrip()" data-ic="trash" aria-label="Excluir viagem"></button><div><div class="trip-hero-label" id="tripLabel"></div><div class="trip-hero-name" id="tripName"></div><div class="trip-hero-meta" id="tripMeta"></div></div></div></div>
+  <div class="trip-hero"><div class="trip-hero-img" id="tripHeroImg"></div><div class="foto-credito" id="tripFotoCredito"></div><div class="trip-float" id="tripFloat"></div><div class="trip-hero-content"><button class="back-btn" onclick="goTo('dashboard');loadDashboard()" data-ic="back" aria-label="Voltar"></button><div><div class="trip-hero-label" id="tripLabel"></div><div class="trip-hero-name" id="tripName"></div><div class="trip-hero-meta" id="tripMeta"></div></div></div></div>
   <div class="trip-body" id="tripBody"></div>
-  <button class="fab" onclick="addSpotToCurrentTrip()">+</button>
+  <button class="btn-primario btn-largo btn-solto" onclick="addSpotToCurrentTrip()">Adicionar lugar</button>
+  <button class="btn-texto" onclick="deleteTrip()">Excluir viagem</button>
   <div class="bottom-nav"><div class="nav-item active" onclick="goTo('dashboard');loadDashboard()"><div class="nav-icon" data-ic="map"></div><div class="nav-label" style="color:var(--ink);font-weight:600">Viagens</div></div><div class="nav-item" onclick="goTo('explore');loadExplore()"><div class="nav-icon" data-ic="search"></div><div class="nav-label">Explorar</div></div><div class="nav-item" onclick="goTo('friends');loadFriends()"><div class="nav-icon" data-ic="users"></div><div class="nav-label">Amigos</div></div><div class="nav-item" onclick="goTo('profile');loadProfile()"><div class="nav-icon" data-ic="user"></div><div class="nav-label">Perfil</div></div></div>
 </div>
 
 <div class="screen" id="city">
   <div class="trip-hero"><div class="trip-hero-img" id="cityHeroImg"></div><div class="foto-credito" id="cityFotoCredito"></div><div class="trip-float"></div><div class="trip-hero-content"><button class="back-btn" onclick="goTo('trip')" data-ic="back" aria-label="Voltar"></button><div><div class="trip-hero-label" id="cityLabel"></div><div class="trip-hero-name" id="cityName"></div><div class="trip-hero-meta" id="cityMeta"></div></div></div></div>
-  <div class="cat-tabs-wrap"><div class="cat-tabs"><div class="cat-tab active" onclick="switchCityCat('food',this)"><div class="ct-icon" data-ic="food"></div><div>Comer & Beber</div><div class="ct-count" id="cityCnt-food">0</div></div><div class="cat-tab" onclick="switchCityCat('hotel',this)"><div class="ct-icon" data-ic="hotel"></div><div>Onde Ficar</div><div class="ct-count" id="cityCnt-hotel">0</div></div><div class="cat-tab" onclick="switchCityCat('experience',this)"><div class="ct-icon" data-ic="compass"></div><div>Experiências</div><div class="ct-count" id="cityCnt-experience">0</div></div></div></div>
+  <div class="cat-tabs-wrap"><div class="cat-tabs"><div class="cat-tab active" onclick="switchCityCat('food',this)"><div class="ct-icon" data-ic="food"></div><div>Comer</div><div class="ct-count" id="cityCnt-food">0</div></div><div class="cat-tab" onclick="switchCityCat('hotel',this)"><div class="ct-icon" data-ic="hotel"></div><div>Ficar</div><div class="ct-count" id="cityCnt-hotel">0</div></div><div class="cat-tab" onclick="switchCityCat('experience',this)"><div class="ct-icon" data-ic="compass"></div><div>Experiências</div><div class="ct-count" id="cityCnt-experience">0</div></div></div></div>
   <div class="subcat-row" id="citySubcatFilter" style="display:none;padding:14px 20px 0;scroll-padding-left:20px"></div>
   <div class="subcat-row" id="cityStatusFilter" style="display:none;padding:12px 20px 0;scroll-padding-left:20px"></div>
   <div class="trip-body" id="cityBody"></div>
-  <button class="fab" onclick="addSpotToCurrentCity()">+</button>
+  <button class="btn-primario btn-largo btn-solto" onclick="addSpotToCurrentCity()">Adicionar lugar</button>
   <div class="bottom-nav"><div class="nav-item active" onclick="goTo('dashboard');loadDashboard()"><div class="nav-icon" data-ic="map"></div><div class="nav-label" style="color:var(--ink);font-weight:600">Viagens</div></div><div class="nav-item" onclick="goTo('explore');loadExplore()"><div class="nav-icon" data-ic="search"></div><div class="nav-label">Explorar</div></div><div class="nav-item" onclick="goTo('friends');loadFriends()"><div class="nav-icon" data-ic="users"></div><div class="nav-label">Amigos</div></div><div class="nav-item" onclick="goTo('profile');loadProfile()"><div class="nav-icon" data-ic="user"></div><div class="nav-label">Perfil</div></div></div>
 </div>
 
@@ -1324,7 +1349,7 @@ svg.ic path,svg.ic circle,svg.ic line,svg.ic polyline,svg.ic rect{fill:none;stro
 
 <div class="screen" id="friendCity">
   <div class="trip-hero"><div class="trip-hero-img" id="fcHeroImg"></div><div class="foto-credito" id="fcFotoCredito"></div><div class="trip-float"></div><div class="trip-hero-content"><button class="back-btn" onclick="voltarDaCidade()" data-ic="back" aria-label="Voltar"></button><div><div class="trip-hero-label" id="fcLabel"></div><div class="trip-hero-name" id="fcName"></div><div class="trip-hero-meta" id="fcMeta"></div></div></div></div>
-  <div class="cat-tabs-wrap"><div class="cat-tabs"><div class="cat-tab active" onclick="switchFriendCityCat('food',this)"><div class="ct-icon" data-ic="food"></div><div>Comer & Beber</div><div class="ct-count" id="fcCnt-food">0</div></div><div class="cat-tab" onclick="switchFriendCityCat('hotel',this)"><div class="ct-icon" data-ic="hotel"></div><div>Onde Ficar</div><div class="ct-count" id="fcCnt-hotel">0</div></div><div class="cat-tab" onclick="switchFriendCityCat('experience',this)"><div class="ct-icon" data-ic="compass"></div><div>Experiências</div><div class="ct-count" id="fcCnt-experience">0</div></div></div></div>
+  <div class="cat-tabs-wrap"><div class="cat-tabs"><div class="cat-tab active" onclick="switchFriendCityCat('food',this)"><div class="ct-icon" data-ic="food"></div><div>Comer</div><div class="ct-count" id="fcCnt-food">0</div></div><div class="cat-tab" onclick="switchFriendCityCat('hotel',this)"><div class="ct-icon" data-ic="hotel"></div><div>Ficar</div><div class="ct-count" id="fcCnt-hotel">0</div></div><div class="cat-tab" onclick="switchFriendCityCat('experience',this)"><div class="ct-icon" data-ic="compass"></div><div>Experiências</div><div class="ct-count" id="fcCnt-experience">0</div></div></div></div>
   <div class="trip-body" id="fcBody"></div>
 </div>
 
@@ -3166,11 +3191,11 @@ function cityCardsHTML(byCity,country,month,handler,prefixoId){
       :'';
     // onclick recebe o ÍNDICE, nunca o nome da cidade (vem do Places/do
     // usuário e pode ter aspas ou HTML)
-    h+=`<div class="city-card" onclick="${handler}(${ci})"><div class="city-card-top"><div><div class="city-card-name">${esc(city)}</div><div class="city-card-climate" id="${cityIdSafe}"></div></div><div class="city-card-count">${spots.length} ${spots.length===1?'spot':'spots'}</div>${tirar}</div><div class="city-card-breakdown">`;
+    h+=`<div class="city-card" onclick="${handler}(${ci})"><div class="city-card-top"><div class="city-card-name">${esc(city)}</div><div class="city-card-meta"><span class="city-card-climate" id="${cityIdSafe}"></span>`;
     h+=[['food','pra comer'],['hotel','pra ficar'],['experience','experiências']].filter(([c])=>counts[c]>0).map(([c,label])=>
-      `<div class="city-card-item" title="${counts[c]} ${label}" aria-label="${counts[c]} ${label}">${icon(c==='food'?'food':c==='hotel'?'hotel':'compass')} ${counts[c]}</div>`
+      `<span class="city-card-item" title="${counts[c]} ${label}" aria-label="${counts[c]} ${label}">${icon(c==='food'?'food':c==='hotel'?'hotel':'compass')} ${counts[c]}</span>`
     ).join('');
-    h+=`</div></div>`;
+    h+=`</div></div><div class="city-card-count">${spots.length} ${spots.length===1?'spot':'spots'}</div>${tirar}</div>`;
   });
   return{html:h,ordem:ordem};
 }
