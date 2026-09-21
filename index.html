@@ -39,16 +39,44 @@
      inicio nao ha barra de endereco pra recarregar. Servido daqui, ele chega
      junto com o HTML: se o HTML chegou, ele chega. -->
 <script src="/vendor/supabase.js"></script>
-<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;600&family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,500;0,9..144,600;1,9..144,400&family=DM+Sans:wght@300;400;500;600&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500&family=Inter+Tight:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 /* ═══ TOKENS — base escura ═══
    --surface = base da página · --white = elevado (cards/sheet/nav) · --dark = recesso (inputs/wells)
    Raio: uma escala só (--r cards/superfícies · --r-sm controles · --r-pill chips), nunca valores soltos */
-:root{--ink:#EAE7E0;--ink2:#B4BCBF;--ink3:#879499;--surface:#101C24;--white:#16232A;--dark:#0B1620;--border:rgba(234,231,224,0.15);--green:#4E9490;--amber:#BFA470;--red:#CF5247;--terra:#c1552f;--accent:#E0714A;--mono:'IBM Plex Mono',monospace;--r:16px;--r-sm:12px;--r-pill:100px;
---shadow-sm:0 3px 10px rgba(0,0,0,.28);--shadow-md:0 8px 24px rgba(0,0,0,.38);--shadow-lg:0 16px 40px rgba(0,0,0,.5);--shadow-terra:0 6px 18px rgba(193,85,47,.35);--shadow-inset:inset 0 1px 4px rgba(0,0,0,.25)}
-html{background:var(--dark)}
-body{font-family:'DM Sans',sans-serif;background:var(--dark);max-width:430px;margin:0 auto;min-height:100vh}
+:root{
+/* Direcao F. Uma cor de acento so, nenhuma borda, nenhuma sombra. */
+--base:#F5F5F3;      /* fundo da pagina e da nav */
+--surface:#E9E9E6;   /* blocos secundarios: acoes, campos, segmentado */
+--map-bg:#E4E8E4;    /* fundo do mapa */
+--map-dot:#C8CFC9;   /* trama de pontos do mapa */
+--ink:#111111;
+--ink2:#6B6B67;
+--ink3:#9A9A96;
+--green:#0B3D2E;     /* UNICO acento: paises visitados, botao, nav ativa */
+--on-green:#F5F5F3;
+--photo-empty:#6E7F73;
+--r-photo:18px; --r-card:14px; --r-btn:10px; --r-sheet:28px;
+
+/* PONTES. Os nomes de antes apontam pro sistema novo, entao todo o CSS
+   que ja existe segue funcionando e ja sai no visual certo. Elas somem
+   quando cada tela for reescrita — ate la, sao o que evita 300 edicoes. */
+--terra:var(--green);      /* a acao era laranja; agora e verde escuro */
+--accent:var(--green);
+--amber:var(--ink3);       /* o brief tira a cor propria de aviso... */
+--red:var(--ink3);         /* ...e a de erro/destrutivo tambem */
+--white:var(--surface);
+--dark:var(--base);
+--border:transparent;      /* mata as 68 bordas de 1px de uma vez */
+--mono:'Inter Tight',sans-serif;  /* a mono sai do app inteiro */
+--shadow-sm:none; --shadow-md:none; --shadow-lg:none;
+--shadow-terra:none; --shadow-inset:none;
+
+--r:var(--r-card); --r-sm:var(--r-btn); --r-pill:100px;
+}
+html{background:var(--base)}
+body{font-family:'Inter Tight',sans-serif;background:var(--base);color:var(--ink);max-width:430px;margin:0 auto;min-height:100vh}
 
 /* SCREENS */
 .screen{display:none;flex-direction:column;min-height:100vh}
@@ -63,7 +91,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--dark);max-width:430px;mar
 
 /* LOADING */
 #loading{background:var(--dark);align-items:center;justify-content:center}
-.splash-wm{font-family:'Fraunces',serif;font-size:48px;color:#fff;letter-spacing:-2px}
+.splash-wm{font-family:'Inter Tight',sans-serif;font-size:48px;color:#fff;letter-spacing:-2px}
 .splash-wm em{font-style:italic;color:rgba(255,255,255,0.4)}
 .spinner{display:inline-block;width:20px;height:20px;border:2px solid rgba(255,255,255,0.2);border-top-color:rgba(255,255,255,0.6);border-radius:50%;animation:spin .6s linear infinite;margin-top:20px}
 @keyframes spin{to{transform:rotate(360deg)}}
@@ -78,7 +106,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--dark);max-width:430px;mar
 .login-scrim{position:absolute;inset:0;z-index:1;background:linear-gradient(to bottom,rgba(0,0,0,0.3) 0%,rgba(0,0,0,0.1) 35%,rgba(0,0,0,0.55) 70%,rgba(0,0,0,0.92) 100%)}
 .login-inner{position:relative;z-index:2;height:100vh;padding:48px 28px 40px;display:flex;flex-direction:column;justify-content:space-between}
 .login-top{display:flex;justify-content:center;min-height:20px}
-.login-place-tag{font-size:12px;color:rgba(255,255,255,0.92);letter-spacing:.04em;background:rgba(0,0,0,0.34);backdrop-filter:blur(12px);padding:9px 16px;border-radius:var(--r-pill);border:1px solid rgba(255,255,255,0.2);transition:opacity .5s;display:flex;align-items:center;gap:8px}
+.login-place-tag{font-size:12px;color:rgba(255,255,255,0.92);background:rgba(0,0,0,0.34);backdrop-filter:blur(12px);padding:9px 16px;border-radius:var(--r-pill);border:1px solid rgba(255,255,255,0.2);transition:opacity .5s;display:flex;align-items:center;gap:8px}
 .lpt-dot{width:6px;height:6px;border-radius:50%;background:#fff;box-shadow:0 0 0 0 rgba(255,255,255,0.6);animation:dotpulse 2s infinite}
 @keyframes dotpulse{0%{box-shadow:0 0 0 0 rgba(255,255,255,0.5)}70%{box-shadow:0 0 0 8px rgba(255,255,255,0)}100%{box-shadow:0 0 0 0 rgba(255,255,255,0)}}
 .login-bottom{display:flex;flex-direction:column}
@@ -88,9 +116,9 @@ body{font-family:'DM Sans',sans-serif;background:var(--dark);max-width:430px;mar
 .brand-lockup{display:flex;align-items:center;gap:14px;margin-bottom:10px}
 .brand-wordmark{filter:drop-shadow(0 2px 20px rgba(0,0,0,0.4))}
 .wordmark em{font-style:italic;color:rgba(255,255,255,0.55)}
-.tagline{font-size:13px;color:rgba(255,255,255,0.6);letter-spacing:.1em;text-transform:uppercase;margin-bottom:28px}
+.tagline{font-size:13px;color:rgba(255,255,255,0.6);margin-bottom:28px}
 .form-stack{display:flex;flex-direction:column;gap:12px}
-.field{background:rgba(255,255,255,0.1);border:1px solid rgba(255,255,255,0.2);border-radius:var(--r-sm);padding:17px 18px;font-size:15px;font-family:'DM Sans',sans-serif;color:#fff;outline:none;width:100%;backdrop-filter:blur(10px);margin-bottom:2px;box-shadow:var(--shadow-inset)}
+.field{background:rgba(255,255,255,0.1);border:1px solid rgba(255,255,255,0.2);border-radius:var(--r-sm);padding:17px 18px;font-size:15px;font-family:'Inter Tight',sans-serif;color:#fff;outline:none;width:100%;backdrop-filter:blur(10px);margin-bottom:2px;box-shadow:var(--shadow-inset)}
 /* Campo preenchido pelo navegador vinha azul-claro com texto preto — cor do
    Chrome, não nossa, e numa tela azul-petróleo ela entra como corpo estranho.
    O fundo do autofill não aceita background; a sombra interna gigante é o
@@ -102,17 +130,17 @@ body{font-family:'DM Sans',sans-serif;background:var(--dark);max-width:430px;mar
 .field:-webkit-autofill:focus,
 .field:-webkit-autofill:active{
   -webkit-text-fill-color:#fff;
-  -webkit-box-shadow:0 0 0 1000px #1b2c39 inset;
-  box-shadow:0 0 0 1000px #1b2c39 inset;
+  -webkit-box-shadow:0 0 0 1000px var(--surface) inset;
+  box-shadow:0 0 0 1000px var(--surface) inset;
   caret-color:#fff;
   transition:background-color 9999s ease-in-out 0s;
 }
 .field::placeholder{color:rgba(255,255,255,0.5)}.field:focus{border-color:rgba(255,255,255,0.4)}
-.btn-primary{background:#EAE7E0;color:var(--dark);border:none;border-radius:var(--r-sm);padding:18px;font-family:'DM Sans',sans-serif;font-size:15px;font-weight:600;cursor:pointer;width:100%;margin-top:4px}
+.btn-primary{background:var(--ink);color:var(--dark);border:none;border-radius:var(--r-sm);padding:18px;font-family:'Inter Tight',sans-serif;font-size:15px;font-weight:600;cursor:pointer;width:100%;margin-top:4px}
 .btn-primary:active{opacity:.85}.btn-primary:disabled{opacity:.5}
-.btn-google{background:rgba(255,255,255,0.12);border:1px solid rgba(255,255,255,0.26);border-radius:var(--r-sm);padding:17px;color:#fff;font-family:'DM Sans',sans-serif;font-size:15px;font-weight:600;cursor:pointer;width:100%;display:flex;align-items:center;justify-content:center;gap:10px;backdrop-filter:blur(10px);margin-bottom:12px}
+.btn-google{background:rgba(255,255,255,0.12);border:1px solid rgba(255,255,255,0.26);border-radius:var(--r-sm);padding:17px;color:#fff;font-family:'Inter Tight',sans-serif;font-size:15px;font-weight:600;cursor:pointer;width:100%;display:flex;align-items:center;justify-content:center;gap:10px;backdrop-filter:blur(10px);margin-bottom:12px}
 .btn-google:active{background:rgba(255,255,255,0.24)}
-.btn-email-ghost{background:transparent;border:none;color:rgba(255,255,255,0.75);font-size:14px;font-weight:500;font-family:'DM Sans',sans-serif;cursor:pointer;width:100%;padding:8px;text-decoration:underline;text-underline-offset:3px}
+.btn-email-ghost{background:transparent;border:none;color:rgba(255,255,255,0.75);font-size:14px;font-weight:500;font-family:'Inter Tight',sans-serif;cursor:pointer;width:100%;padding:8px;text-decoration:underline;text-underline-offset:3px}
 .login-toggle{text-align:center;font-size:13px;color:rgba(255,255,255,0.6);cursor:pointer;margin-top:8px}
 /* Aceite dos termos na própria tela de entrada. A diretriz 1.2 da Apple não
    pede só que os termos existam: pede que quem publica conteúdo TENHA
@@ -174,29 +202,31 @@ body{font-family:'DM Sans',sans-serif;background:var(--dark);max-width:430px;mar
 /* o conteúdo fica na frente do mapa, e o mapa segue clicável na área livre */
 
 .dash-mapa svg{width:100%;height:100%;display:block}
-.dash-wordmark{font-family:'Cinzel',serif;font-size:19px;letter-spacing:.14em;color:var(--ink)}
+/* O wordmark do topo vira texto: a esfera armilar em Cinzel fica so no
+   login, onde ela tem espaco pra ser lida como marca. */
+.dash-wordmark{font-size:20px;font-weight:700;letter-spacing:-.03em;color:var(--ink)}
 /* A frase inteira é o contador de países e abre a lista deles. */
 .dash-paises{display:inline-flex;align-items:baseline;gap:7px;margin-bottom:22px;cursor:pointer;-webkit-tap-highlight-color:transparent}
 .dash-paises:active{opacity:.65}
-.dp-n{font-family:'Fraunces',serif;font-size:29px;color:var(--ink);line-height:1}
-.dp-t{font-family:'Fraunces',serif;font-size:16px;color:var(--ink2)}
+.dp-n{font-family:'Inter Tight',sans-serif;font-size:29px;color:var(--ink);line-height:1}
+.dp-t{font-family:'Inter Tight',sans-serif;font-size:16px;color:var(--ink2)}
 .dash-convite{font-size:12.5px;color:var(--ink3);margin:-16px 0 20px;max-width:230px;line-height:1.45}
 .dash-top::before{content:"";position:absolute;inset:0;pointer-events:none;background:radial-gradient(420px 220px at 12% -20%,rgba(193,85,47,.16),transparent 60%),radial-gradient(360px 200px at 105% 5%,rgba(47,93,98,.22),transparent 55%)}
 .dash-top>*{position:relative;z-index:1}
 .dash-top-row{display:flex;align-items:center;justify-content:space-between;margin-bottom:6px}
 .dash-hello{font-size:14px;color:var(--ink3);margin-bottom:5px}
 .dash-email{font-size:12.5px;color:var(--ink3);margin-top:9px;cursor:pointer}
-.dash-name{font-family:'Fraunces',serif;font-weight:400;font-size:34px;color:var(--ink);letter-spacing:-.015em;line-height:1.05}
-.avatar{width:40px;height:40px;border-radius:50%;background:var(--green);display:flex;align-items:center;justify-content:center;font-size:16px;color:var(--dark);font-weight:600;cursor:pointer;flex-shrink:0;box-shadow:var(--shadow-sm),0 0 0 2px rgba(234,231,224,.08)}
+.dash-name{font-family:'Inter Tight',sans-serif;font-weight:400;font-size:34px;color:var(--ink);letter-spacing:-.015em;line-height:1.05}
+.avatar{width:40px;height:40px;border-radius:50%;background:var(--green);display:flex;align-items:center;justify-content:center;font-size:16px;color:var(--dark);font-weight:600;cursor:pointer;flex-shrink:0;box-shadow:var(--shadow-sm),0 0 0 2px var(--surface)}
 .stats-strip{display:flex;gap:8px}
-.stat-block{flex:1;background:linear-gradient(160deg,rgba(234,231,224,.08),rgba(234,231,224,.02));border:1px solid var(--border);border-radius:var(--r-sm);padding:13px 8px;text-align:center;box-shadow:var(--shadow-sm);cursor:pointer;transition:transform .15s,border-color .15s}
+.stat-block{flex:1;background:linear-gradient(160deg,var(--surface),rgba(234,231,224,.02));border:1px solid var(--border);border-radius:var(--r-sm);padding:13px 8px;text-align:center;box-shadow:var(--shadow-sm);cursor:pointer;transition:transform .15s,border-color .15s}
 .stat-block:active{transform:scale(.96)}
 /* No Dashboard o scorecard fica POR CIMA do mapa, e com fundo translúcido o
    mapa aparecia através dele — dava pra ver a Patagônia dentro do card
    "cidades". Aqui o fundo é opaco, na mesma cor que a versão translúcida
    aparentava ter sobre o fundo escuro (nada muda visualmente fora isso).
    O perfil do amigo usa .stat-block sem mapa atrás, então continua igual. */
-.dash-top .stat-block{background:linear-gradient(160deg,#1D272F,#131E27)}
+.dash-top .stat-block{background:linear-gradient(160deg,var(--surface),var(--surface))}
 .stat-n{font-family:var(--mono);font-weight:600;font-size:21px;color:var(--ink);line-height:1.1}
 .stat-l{font-size:11.5px;color:var(--ink3);margin-top:4px}
 .dash-body{padding:8px 24px calc(104px + env(safe-area-inset-bottom, 0px))}
@@ -211,7 +241,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--dark);max-width:430px;mar
 .checkin-icon svg{width:13px;height:13px}
 .checkin-q{flex:1;min-width:0;font-size:13.5px;color:var(--ink);line-height:1.35}
 .checkin-q span{color:var(--terra);font-weight:600}
-.checkin-add{flex-shrink:0;border:none;border-radius:9px;padding:8px 13px;background:var(--terra);color:#fff;font-family:'DM Sans',sans-serif;font-size:12.5px;font-weight:600;cursor:pointer}
+.checkin-add{flex-shrink:0;border:none;border-radius:9px;padding:8px 13px;background:var(--terra);color:#fff;font-family:'Inter Tight',sans-serif;font-size:12.5px;font-weight:600;cursor:pointer}
 .checkin-x{flex-shrink:0;width:30px;height:30px;border:none;background:none;color:var(--ink3);display:flex;align-items:center;justify-content:center;cursor:pointer;border-radius:50%}
 .checkin-x svg{width:14px;height:14px}
 .checkin-x:active{opacity:.5}
@@ -239,11 +269,11 @@ body{font-family:'DM Sans',sans-serif;background:var(--dark);max-width:430px;mar
 .list-top>*{position:relative;z-index:1}
 .list-back{width:38px;height:38px;flex-shrink:0;background:rgba(234,231,224,.07);border:1px solid var(--border);border-radius:50%;color:var(--ink);font-size:15px;cursor:pointer;display:flex;align-items:center;justify-content:center;margin-top:4px}
 .list-kicker{font-size:12.5px;color:var(--ink3);margin-bottom:5px}
-.list-title{font-family:'Fraunces',serif;font-weight:400;font-size:30px;color:var(--ink);line-height:1.06;letter-spacing:-.015em}
+.list-title{font-family:'Inter Tight',sans-serif;font-weight:400;font-size:30px;color:var(--ink);line-height:1.06;letter-spacing:-.015em}
 /* "Quem já foi" abre o Explorar. A ordem é a tese do app: o que gente que
    você conhece achou vem ANTES do que o Google acha. */
 .amg-bloco{padding:18px 24px 6px}
-.amg-titulo{font-family:var(--mono);font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--ink3);margin-bottom:12px}
+.amg-titulo{font-family:var(--mono);font-size:11px;color:var(--ink3);margin-bottom:12px}
 .amg-linha{display:flex;gap:12px;align-items:center;padding:11px 0;border-bottom:1px solid var(--border)}
 .amg-foto{width:52px;height:52px;border-radius:12px;flex-shrink:0;background:var(--surface2);overflow:hidden;display:flex;align-items:center;justify-content:center;color:var(--ink3)}
 .amg-foto img{width:100%;height:100%;object-fit:cover}
@@ -257,25 +287,25 @@ body{font-family:'DM Sans',sans-serif;background:var(--dark);max-width:430px;mar
 .amg-chip{display:inline-flex;align-items:center;gap:6px;min-height:38px;padding:0 13px;border:1px solid var(--border);border-radius:999px;font-size:12.5px;color:var(--ink2);cursor:pointer;background:none}
 .amg-chip:active{opacity:.6}
 .amg-chip b{font-family:var(--mono);font-size:11px;color:var(--green);font-weight:600}
-.amg-varios{font-family:var(--mono);font-size:10.5px;color:var(--green);letter-spacing:.06em}
+.amg-varios{font-family:var(--mono);font-size:10.5px;color:var(--green);}
 .amg-aviso{font-size:13px;color:var(--ink3);line-height:1.5;padding:2px 0 10px}
 /* Traço interrompido: o lugar ainda não aconteceu. É a mesma linguagem que o
    app já usa pro status "quero ir", só que aqui num chip. */
 .amg-chip-quer{border-style:dashed;color:var(--ink3)}
 /* 40px porque e alvo de toque, e nao encosta nos chips de nome: sao dois
    destinos diferentes na mesma linha e errar o alvo abre a tela errada. */
-.amg-avatar{width:44px;height:44px;border-radius:50%;flex-shrink:0;background:var(--green);color:#fff;display:flex;align-items:center;justify-content:center;font-family:var(--mono);font-size:14px;letter-spacing:.04em}
+.amg-avatar{width:44px;height:44px;border-radius:50%;flex-shrink:0;background:var(--green);color:#fff;display:flex;align-items:center;justify-content:center;font-family:var(--mono);font-size:14px;}
 .amg-seta{color:var(--ink3);font-size:19px;flex-shrink:0}
-.amg-quer-selo{font-family:var(--mono);font-size:10.5px;color:var(--amber);letter-spacing:.06em}
+.amg-quer-selo{font-family:var(--mono);font-size:10.5px;color:var(--amber);}
 /* "aqui" na viagem que bate com o lugar. E dica, nao escolha automatica. */
-.trip-sug{font-family:var(--mono);font-size:9.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--green);border:1px solid var(--green);border-radius:4px;padding:1px 5px;margin-left:7px;vertical-align:middle}
+.trip-sug{font-family:var(--mono);font-size:9.5px;color:var(--green);border:1px solid var(--green);border-radius:4px;padding:1px 5px;margin-left:7px;vertical-align:middle}
 /* 34px de alvo, encostado na borda direita: a linha inteira ja e clicavel
    (abre o pais), entao o botao precisa ser facil de acertar E dificil de
    acertar sem querer. */
 .cr-tirar{flex-shrink:0;width:34px;height:34px;margin-left:6px;margin-right:-6px;border:none;background:none;color:var(--ink3);display:flex;align-items:center;justify-content:center;cursor:pointer;border-radius:50%}
 .cr-tirar:active{opacity:.5;background:rgba(168,52,44,.12);color:var(--red)}
 .cr-tirar svg{width:15px;height:15px}
-.section-sub{font-family:var(--mono);font-size:10.5px;color:var(--ink3);letter-spacing:.06em;margin-left:auto}
+.section-sub{font-family:var(--mono);font-size:10.5px;color:var(--ink3);margin-left:auto}
 .est-cidade{border-bottom:1px solid var(--border)}
 .est-topo{display:flex;align-items:center;gap:10px;padding:14px 2px;cursor:pointer;min-height:48px}
 .est-topo:active{opacity:.6}
@@ -291,11 +321,11 @@ body{font-family:'DM Sans',sans-serif;background:var(--dark);max-width:430px;mar
 .est-ic svg{width:16px;height:16px}
 .est-nome{flex:1;font-size:13.5px;color:var(--ink2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .est-nota{font-family:var(--mono);font-size:12px;color:var(--green);font-weight:600;flex-shrink:0}
-.est-quer{font-family:var(--mono);font-size:10px;color:var(--amber);letter-spacing:.06em;flex-shrink:0}
+.est-quer{font-family:var(--mono);font-size:10px;color:var(--amber);flex-shrink:0}
 /* Chips de reserva: pequenos, lado a lado, so o nome. A seta diz que sai do
    app sem precisar de texto explicando. 44px de altura porque e alvo de toque. */
 .coment-bloco{margin-top:8px}
-.coment-titulo{font-family:var(--mono);font-size:10.5px;letter-spacing:.14em;text-transform:uppercase;color:var(--ink3);margin-bottom:12px}
+.coment-titulo{font-family:var(--mono);font-size:10.5px;color:var(--ink3);margin-bottom:12px}
 .coment-item{display:flex;gap:10px;padding:10px 0;border-top:1px solid var(--border)}
 .coment-av{width:30px;height:30px;border-radius:50%;flex-shrink:0;background:var(--green);color:#fff;
   display:flex;align-items:center;justify-content:center;font-family:var(--mono);font-size:11px}
@@ -326,10 +356,10 @@ body{font-family:'DM Sans',sans-serif;background:var(--dark);max-width:430px;mar
    programa de afiliados deles. */
 .amg-linha{cursor:pointer}
 .amg-linha:active{opacity:.6}
-.amg-chip i{font-family:var(--mono);font-style:normal;font-size:10.5px;letter-spacing:.04em;color:var(--amber)}
+.amg-chip i{font-family:var(--mono);font-style:normal;font-size:10.5px;color:var(--amber)}
 .list-filters{display:flex;gap:8px;padding:14px 20px;overflow-x:auto;scrollbar-width:none;background:var(--surface);border-bottom:1px solid var(--border);position:sticky;top:0;z-index:10}
 .list-filters::-webkit-scrollbar{display:none}
-.filter-chip{flex-shrink:0;background:rgba(234,231,224,.06);border:1px solid var(--border);border-radius:var(--r-pill);padding:8px 14px;font-size:12.5px;color:var(--ink2);cursor:pointer;white-space:nowrap;transition:background .15s,border-color .15s,color .15s}
+.filter-chip{flex-shrink:0;background:var(--surface);border:1px solid var(--border);border-radius:var(--r-pill);padding:8px 14px;font-size:12.5px;color:var(--ink2);cursor:pointer;white-space:nowrap;transition:background .15s,border-color .15s,color .15s}
 .filter-chip.on{background:var(--terra);border-color:var(--terra);color:#fff;font-weight:600}
 .list-body{padding:14px 20px 110px}
 .lrow{display:flex;align-items:center;gap:13px;background:var(--white);border:1px solid var(--border);border-radius:var(--r);padding:12px 14px;margin-bottom:10px;box-shadow:var(--shadow-sm);cursor:pointer;transition:transform .15s}
@@ -370,16 +400,16 @@ body{font-family:'DM Sans',sans-serif;background:var(--dark);max-width:430px;mar
 .tc-stub{flex:1;min-width:0;padding:0;display:flex;flex-direction:column;border-left:none;order:1}
 .tc-stub-top{display:flex;align-items:center;gap:8px}
 .tc-flag{font-size:15px;line-height:1}
-.tc-name{font-family:'Fraunces',serif;font-weight:400;font-size:23px;color:var(--ink);line-height:1.15;letter-spacing:-.01em;margin:7px 0 0;overflow-wrap:break-word}
+.tc-name{font-family:'Inter Tight',sans-serif;font-weight:400;font-size:23px;color:var(--ink);line-height:1.15;letter-spacing:-.01em;margin:7px 0 0;overflow-wrap:break-word}
 .tc-meta{font-family:var(--mono);font-size:11px;color:var(--ink3);margin-top:7px;line-height:1.5}
 .prog-circle{width:32px;height:32px;flex-shrink:0}
 .empty-state{text-align:center;padding:44px 24px;color:var(--ink3)}
-.empty-state .ei{width:64px;height:64px;font-size:26px;margin:0 auto 16px;color:var(--ink3);background:rgba(234,231,224,.05);border:1px solid var(--border);border-radius:50%;box-shadow:var(--shadow-inset)}
-.empty-state h3{font-family:'Fraunces',serif;font-weight:400;font-size:22px;color:var(--ink2);margin-bottom:8px}
+.empty-state .ei{width:64px;height:64px;font-size:26px;margin:0 auto 16px;color:var(--ink3);background:var(--surface);border:1px solid var(--border);border-radius:50%;box-shadow:var(--shadow-inset)}
+.empty-state h3{font-family:'Inter Tight',sans-serif;font-weight:400;font-size:22px;color:var(--ink2);margin-bottom:8px}
 .empty-state p{font-size:14px;line-height:1.55}
 
 /* FAB */
-.fab{position:fixed;bottom:calc(96px + env(safe-area-inset-bottom, 0px));right:calc(50% - 215px + 24px);width:56px;height:56px;background:var(--terra);border-radius:50%;display:flex;align-items:center;justify-content:center;cursor:pointer;z-index:50;font-size:26px;font-weight:300;color:#fff;border:none;font-family:'DM Sans',sans-serif;line-height:1;box-shadow:var(--shadow-terra)}
+.fab{position:fixed;bottom:calc(96px + env(safe-area-inset-bottom, 0px));right:calc(50% - 215px + 24px);width:56px;height:56px;background:var(--terra);border-radius:50%;display:flex;align-items:center;justify-content:center;cursor:pointer;z-index:50;font-size:26px;font-weight:300;color:#fff;border:none;font-family:'Inter Tight',sans-serif;line-height:1;box-shadow:var(--shadow-terra)}
 .fab:active{opacity:.8}
 @media(max-width:430px){.fab{right:24px}}
 
@@ -431,7 +461,7 @@ body.na-casca .bottom-nav{display:none}
   .feed-item,.req-card{transition:background .15s}
   .feed-item:hover{background:rgba(234,231,224,.035)}
   a.reserve-btn{transition:background .15s,border-color .15s}
-  a.reserve-btn:hover{background:rgba(234,231,224,.05);border-color:var(--ink)}
+  a.reserve-btn:hover{background:var(--surface);border-color:var(--ink)}
   .new-trip-btn{transition:border-color .15s,background .15s}
   .new-trip-btn:hover{border-color:var(--ink3);background:rgba(234,231,224,.04)}
   .btn-google:hover,.btn-primary:hover{opacity:.9}
@@ -478,13 +508,13 @@ body.na-casca .bottom-nav{display:none}
 #trip{background:var(--surface)}
 .trip-hero{height:240px;position:relative;overflow:hidden;flex-shrink:0;background:var(--dark)}
 .trip-hero-img{position:absolute;inset:0;background-size:cover;background-position:center}
-.trip-float{position:absolute;bottom:-18px;left:24px;font-family:'Fraunces',serif;font-size:80px;font-style:italic;color:rgba(255,255,255,0.06);white-space:nowrap;pointer-events:none;line-height:1}
+.trip-float{position:absolute;bottom:-18px;left:24px;font-family:'Inter Tight',sans-serif;font-size:80px;font-style:italic;color:rgba(255,255,255,0.06);white-space:nowrap;pointer-events:none;line-height:1}
 .trip-hero-content{position:absolute;inset:0;padding:52px 24px 28px;display:flex;flex-direction:column;justify-content:flex-end;background:linear-gradient(to bottom,rgba(0,0,0,0.1),rgba(0,0,0,0.65))}
 .back-btn{position:absolute;top:18px;left:18px;width:34px;height:34px;background:rgba(11,22,32,.5);border:1px solid rgba(255,255,255,.16);border-radius:50%;color:#fff;font-size:15px;cursor:pointer;display:flex;align-items:center;justify-content:center;backdrop-filter:blur(8px)}
 .trip-del-btn{position:absolute;top:18px;right:18px;width:34px;height:34px;background:rgba(11,22,32,.5);border:1px solid rgba(255,255,255,.16);border-radius:50%;color:#fff;font-size:14px;cursor:pointer;display:flex;align-items:center;justify-content:center;backdrop-filter:blur(8px)}
 .trip-del-btn:active{background:rgba(192,57,43,0.6)}
 .trip-hero-label{font-size:12px;color:rgba(255,255,255,0.7);margin-bottom:6px}
-.trip-hero-name{font-family:'Fraunces',serif;font-weight:400;font-size:30px;color:#fff;line-height:1.1;letter-spacing:-.015em}
+.trip-hero-name{font-family:'Inter Tight',sans-serif;font-weight:400;font-size:30px;color:#fff;line-height:1.1;letter-spacing:-.015em}
 .trip-hero-meta{font-family:var(--mono);font-size:11.5px;color:rgba(255,255,255,0.6);margin-top:7px}
 /* Abas de categoria — agora vivem na tela PRÓPRIA de cada cidade, não
    mais fixas no topo da viagem inteira (a viagem mostra cards de cidade,
@@ -499,7 +529,7 @@ body.na-casca .bottom-nav{display:none}
 .trip-body{padding:6px 24px 120px}
 /* Cards de cidade dentro da viagem — compacto, sem foto, mostra quanto
    tem de cada categoria antes de abrir. */
-.city-card{border:1px solid var(--border);border-radius:var(--r);background:linear-gradient(160deg,rgba(234,231,224,.05),rgba(234,231,224,.015));padding:16px;margin-bottom:10px;cursor:pointer;box-shadow:var(--shadow-sm);transition:transform .15s}
+.city-card{border:1px solid var(--border);border-radius:var(--r);background:linear-gradient(160deg,var(--surface),rgba(234,231,224,.015));padding:16px;margin-bottom:10px;cursor:pointer;box-shadow:var(--shadow-sm);transition:transform .15s}
 /* O X da cidade vazia entra na propria linha da contagem, como mais um item
    da fila. Flutuando por cima do card ele encostava no "0 spots". */
 .city-card-tirar{flex-shrink:0;align-self:center;width:30px;height:30px;margin:-6px -8px -6px 8px;border:none;background:none;color:var(--ink3);display:flex;align-items:center;justify-content:center;cursor:pointer;border-radius:50%}
@@ -507,7 +537,7 @@ body.na-casca .bottom-nav{display:none}
 .city-card-tirar svg{width:15px;height:15px}
 .city-card:active{transform:scale(.99)}
 .city-card-top{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:12px}
-.city-card-name{font-family:'Fraunces',serif;font-weight:400;font-size:21px;letter-spacing:-.01em;color:var(--ink)}
+.city-card-name{font-family:'Inter Tight',sans-serif;font-weight:400;font-size:21px;letter-spacing:-.01em;color:var(--ink)}
 .city-card-count{font-family:var(--mono);font-size:11px;color:var(--ink3)}
 .city-card-climate{font-family:var(--mono);font-size:10.5px;color:var(--amber);margin-top:3px;min-height:13px}
 /* Chips de subcategoria (ficha de adicionar e filtro da tela da cidade) */
@@ -516,18 +546,18 @@ body.na-casca .bottom-nav{display:none}
    é local ao container — o body continua sem rolar de lado. */
 .subcat-row{display:flex;flex-wrap:nowrap;gap:7px;margin-bottom:4px;overflow-x:auto;scrollbar-width:none;-webkit-overflow-scrolling:touch}
 .subcat-row::-webkit-scrollbar{display:none}
-.subcat-chip{flex:none;white-space:nowrap;display:flex;align-items:center;gap:5px;padding:8px 12px;border:1px solid var(--border);border-radius:999px;font-size:12px;font-family:'IBM Plex Mono',monospace;color:var(--ink2);cursor:pointer;background:transparent;transition:border-color .15s,color .15s}
+.subcat-chip{flex:none;white-space:nowrap;display:flex;align-items:center;gap:5px;padding:8px 12px;border:1px solid var(--border);border-radius:999px;font-size:12px;font-family:'Inter Tight',sans-serif;color:var(--ink2);cursor:pointer;background:transparent;transition:border-color .15s,color .15s}
 .subcat-chip.on{border-color:var(--ink);color:var(--ink);font-weight:500}
 .subcat-chip .ic{font-size:14px}
-.subcat-tag{font-size:11px;font-family:'IBM Plex Mono',monospace;color:var(--ink3);text-transform:uppercase;letter-spacing:.06em}
+.subcat-tag{font-size:11px;font-family:'Inter Tight',sans-serif;color:var(--ink3);}
 .city-card-breakdown{display:flex;gap:14px;flex-wrap:wrap}
 /* Só ícone + número: a palavra ("Comer 10") repetia o que o ícone já diz e
    lia como comando. O rótulo continua no title/aria-label. */
-.city-card-item{display:flex;align-items:center;gap:5px;font-size:12.5px;color:var(--ink2);font-family:'IBM Plex Mono',monospace}
+.city-card-item{display:flex;align-items:center;gap:5px;font-size:12.5px;color:var(--ink2);font-family:'Inter Tight',sans-serif}
 .city-card-item .ic{font-size:14px}
 .city-section{margin-bottom:26px}
 .city-header{display:flex;align-items:center;gap:10px;margin-bottom:12px;padding-top:16px}
-.city-name-text{font-family:'Fraunces',serif;font-weight:400;font-size:21px;color:var(--ink);letter-spacing:-.01em}
+.city-name-text{font-family:'Inter Tight',sans-serif;font-weight:400;font-size:21px;color:var(--ink);letter-spacing:-.01em}
 .city-count{margin-left:auto;font-size:12.5px;color:var(--ink3)}
 /* nome do lugar NUNCA corta com "..." — quebra e a linha cresce */
 .place-row{display:flex;align-items:stretch;background:var(--white);margin-bottom:10px;cursor:pointer;overflow:hidden;border:1px solid var(--border);border-radius:var(--r);transition:transform .15s,box-shadow .15s;box-shadow:var(--shadow-sm)}
@@ -540,7 +570,7 @@ body.na-casca .bottom-nav{display:none}
 .place-thumb{width:48px;height:48px;border-radius:var(--r-sm);background:var(--dark);flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:20px;overflow:hidden;border:1px solid var(--border);color:var(--ink3)}
 .place-row-info{flex:1;min-width:0}
 .place-row-name{font-size:15px;font-weight:600;color:var(--ink);margin-bottom:3px;line-height:1.3;overflow-wrap:break-word}
-.place-row-note{font-family:'Fraunces',serif;font-size:13.5px;color:var(--ink3);font-style:italic;line-height:1.4;overflow-wrap:break-word}
+.place-row-note{font-family:'Inter Tight',sans-serif;font-size:13.5px;color:var(--ink3);font-style:italic;line-height:1.4;overflow-wrap:break-word}
 .place-row-right{display:flex;flex-direction:column;align-items:flex-end;gap:7px;flex-shrink:0;padding:13px 13px 13px 0}
 .place-type-tag{font-size:11px;color:var(--ink3);background:rgba(234,231,224,.07);border-radius:var(--r-pill);padding:2px 9px;white-space:nowrap}
 .status-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
@@ -555,7 +585,7 @@ body.na-casca .bottom-nav{display:none}
 /* Credito do autor da foto. O Google exige que ele apareca junto da foto do
    lugar (Termos da Google Maps Platform), e o Unsplash exige o mesmo pras
    fotos de cidade. Fica discreto em cima da imagem, canto inferior direito. */
-.foto-credito{position:absolute;right:10px;bottom:8px;z-index:3;font-family:'IBM Plex Mono',monospace;font-size:9.5px;letter-spacing:.04em;color:rgba(255,255,255,.62);text-shadow:0 1px 3px rgba(0,0,0,.6);max-width:60%;text-align:right;line-height:1.35;pointer-events:auto}
+.foto-credito{position:absolute;right:10px;bottom:8px;z-index:3;font-family:'Inter Tight',sans-serif;font-size:9.5px;color:rgba(255,255,255,.62);text-shadow:0 1px 3px rgba(0,0,0,.6);max-width:60%;text-align:right;line-height:1.35;pointer-events:auto}
 .foto-credito a{color:inherit;text-decoration:none;border-bottom:1px solid rgba(255,255,255,.25)}
 .foto-credito:empty{display:none}
 .hero-overlay{position:absolute;inset:0;background:linear-gradient(to bottom,rgba(0,0,0,0.2),rgba(0,0,0,0.7))}
@@ -572,19 +602,19 @@ body.na-casca .bottom-nav{display:none}
 .chip-been{background:rgba(78,148,144,0.24);border:1px solid rgba(78,148,144,0.55);color:#8FD3CE}
 .hero-bottom{position:absolute;bottom:0;left:0;right:0;padding:22px;z-index:2}
 .hero-type{font-size:12px;color:rgba(255,255,255,0.7);margin-bottom:6px}
-.hero-name{font-family:'Fraunces',serif;font-weight:400;font-size:30px;color:#fff;line-height:1.1;letter-spacing:-.015em}
+.hero-name{font-family:'Inter Tight',sans-serif;font-weight:400;font-size:30px;color:#fff;line-height:1.1;letter-spacing:-.015em}
 .d-section{padding:20px 24px;border-bottom:1px solid var(--border)}
 .sec-label{font-size:13px;font-weight:600;color:var(--ink2);margin-bottom:12px}
 /* Linha do titulo com acao a direita — a nota precisava de um "Editar"
    visivel: o lapis do topo troca a FOTO, e quem quer corrigir a nota nao
    adivinha isso. */
 .sec-linha{display:flex;align-items:baseline;justify-content:space-between;gap:12px}
-.sec-editar{background:none;border:none;padding:0 0 12px;font-family:var(--mono);font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--terra);cursor:pointer}
+.sec-editar{background:none;border:none;padding:0 0 12px;font-family:var(--mono);font-size:11px;color:var(--terra);cursor:pointer}
 .nota-acoes{display:flex;align-items:center;gap:14px;margin-top:12px}
 .nota-acoes .action-btn{flex:1}
 .note-card{background:var(--white);border:1px solid var(--border);border-radius:var(--r);padding:18px;position:relative;overflow:hidden;box-shadow:var(--shadow-sm)}
 .note-glow{display:none}
-.note-quote{font-family:'Fraunces',serif;font-weight:400;font-size:18px;font-style:italic;color:var(--ink);line-height:1.5;position:relative;z-index:1}
+.note-quote{font-family:'Inter Tight',sans-serif;font-weight:400;font-size:18px;font-style:italic;color:var(--ink);line-height:1.5;position:relative;z-index:1}
 .note-attr{font-size:12px;color:var(--ink3);margin-top:11px;position:relative;z-index:1}
 /* Uma linha discreta no lugar de quatro caixas. O endereco e a unica coisa
    daquele bloco que nao se repetia em outro lugar da tela. */
@@ -601,20 +631,20 @@ body.na-casca .bottom-nav{display:none}
 .info-cell-icon{font-size:16px;margin-bottom:8px}
 .info-cell-label{font-size:11.5px;color:var(--ink3);margin-bottom:5px}
 .info-cell-value{font-size:14px;font-weight:500;color:var(--ink)}
-.info-cell-sub{font-family:var(--mono);font-size:8px;color:var(--ink3);margin-top:3px;letter-spacing:.06em}
-.status-toggle{display:flex;background:rgba(234,231,224,.05);border-radius:var(--r-sm);padding:4px;gap:4px}
-.toggle-btn{flex:1;padding:11px 8px;border:none;border-radius:9px;background:transparent;font-family:'DM Sans',sans-serif;font-size:13px;font-weight:500;color:var(--ink3);cursor:pointer;text-align:center}
+.info-cell-sub{font-family:var(--mono);font-size:8px;color:var(--ink3);margin-top:3px;}
+.status-toggle{display:flex;background:var(--surface);border-radius:var(--r-sm);padding:4px;gap:4px}
+.toggle-btn{flex:1;padding:11px 8px;border:none;border-radius:9px;background:transparent;font-family:'Inter Tight',sans-serif;font-size:13px;font-weight:500;color:var(--ink3);cursor:pointer;text-align:center}
 .toggle-btn.sel-want{background:var(--white);color:var(--amber);font-weight:600}
 .toggle-btn.sel-been{background:var(--white);color:var(--green);font-weight:600}
 .toggle-btn.sel-skip{background:var(--white);color:var(--red);font-weight:600}
 .stars-row{display:flex;gap:7px;margin-bottom:18px}
 .star-btn{font-size:24px;cursor:pointer;color:rgba(234,231,224,0.18);background:none;border:none;padding:0}
 .star-btn.lit{color:var(--amber)}
-.review-area{width:100%;background:rgba(234,231,224,.05);border:1px solid var(--border);border-radius:var(--r-sm);padding:16px;font-size:14px;font-family:'DM Sans',sans-serif;color:var(--ink);resize:none;outline:none;line-height:1.6;box-shadow:var(--shadow-inset)}
+.review-area{width:100%;background:var(--surface);border:1px solid var(--border);border-radius:var(--r-sm);padding:16px;font-size:14px;font-family:'Inter Tight',sans-serif;color:var(--ink);resize:none;outline:none;line-height:1.6;box-shadow:var(--shadow-inset)}
 .review-area::placeholder{color:var(--ink3)}
-.action-btn{display:block;width:100%;background:var(--terra);color:#fff;border:none;border-radius:var(--r-sm);padding:16px;font-family:'DM Sans',sans-serif;font-size:15px;font-weight:600;cursor:pointer;margin-top:14px;margin-bottom:16px;box-shadow:var(--shadow-terra)}
-.reserve-btn{display:block;text-align:center;width:100%;box-sizing:border-box;background:transparent;color:var(--ink);border:1.5px solid var(--ink3);border-radius:var(--r-sm);padding:14px;font-family:'DM Sans',sans-serif;font-size:14px;font-weight:600;text-decoration:none;margin-top:12px}
-.reserve-btn:active{background:rgba(234,231,224,.06)}
+.action-btn{display:block;width:100%;background:var(--terra);color:#fff;border:none;border-radius:var(--r-sm);padding:16px;font-family:'Inter Tight',sans-serif;font-size:15px;font-weight:600;cursor:pointer;margin-top:14px;margin-bottom:16px;box-shadow:var(--shadow-terra)}
+.reserve-btn{display:block;text-align:center;width:100%;box-sizing:border-box;background:transparent;color:var(--ink);border:1.5px solid var(--ink3);border-radius:var(--r-sm);padding:14px;font-family:'Inter Tight',sans-serif;font-size:14px;font-weight:600;text-decoration:none;margin-top:12px}
+.reserve-btn:active{background:var(--surface)}
 .req-card{display:flex;align-items:center;gap:9px;background:var(--white);border:1px solid var(--border);border-radius:var(--r);padding:13px 14px;margin-bottom:10px;box-shadow:var(--shadow-sm)}
 .req-card>div[style*="flex:1"]{min-width:0}
 .req-name{font-size:14.5px;font-weight:600;color:var(--ink);flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
@@ -622,7 +652,7 @@ body.na-casca .bottom-nav{display:none}
 /* flex-shrink:0 + nowrap: sem isso, avatar + nome + dois botões numa linha de
    375px espremiam os botões até o "Recusar" deformar. O nome é que cede
    espaço (tem ellipsis), não os botões. */
-.req-btn{border:none;border-radius:9px;padding:9px 13px;font-family:'DM Sans',sans-serif;font-size:13px;font-weight:600;cursor:pointer;flex-shrink:0;white-space:nowrap}
+.req-btn{border:none;border-radius:9px;padding:9px 13px;font-family:'Inter Tight',sans-serif;font-size:13px;font-weight:600;cursor:pointer;flex-shrink:0;white-space:nowrap}
 .req-accept{background:var(--terra);color:#fff}
 /* Faixa de "sem conexão". Fixa, não toast: quem abriu o app no avião
    precisa continuar sabendo que o que está na tela pode estar velho. Fica
@@ -630,7 +660,7 @@ body.na-casca .bottom-nav{display:none}
 .aviso-offline{position:fixed;left:12px;right:12px;bottom:calc(74px + env(safe-area-inset-bottom,0px));z-index:60;
   display:flex;align-items:center;gap:9px;padding:11px 14px;border-radius:11px;
   background:rgba(22,35,42,.94);border:1px solid rgba(255,255,255,.13);
-  backdrop-filter:blur(10px);color:#EAE7E0;font-size:12.5px;line-height:1.35;
+  backdrop-filter:blur(10px);color:var(--ink);font-size:12.5px;line-height:1.35;
   box-shadow:0 6px 24px rgba(0,0,0,.3);pointer-events:none}
 .ao-ponto{width:7px;height:7px;border-radius:50%;background:var(--amber);flex-shrink:0}
 @media(min-width:900px){.aviso-offline{left:auto;right:20px;bottom:20px;max-width:340px}}
@@ -638,8 +668,8 @@ body.na-casca .bottom-nav{display:none}
    igual à de pedido recebido — é a mesma coisa vista de outro ângulo. */
 .busca-res{margin-top:12px;max-height:46vh;overflow-y:auto;-webkit-overflow-scrolling:touch}
 .busca-dica{font-size:13.5px;color:var(--ink3);padding:12px 2px;line-height:1.5}
-.busca-user{font-family:'IBM Plex Mono',monospace;font-size:11.5px;color:var(--ink3);margin-top:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.busca-estado{font-family:'IBM Plex Mono',monospace;font-size:10.5px;letter-spacing:.05em;color:var(--ink3);flex-shrink:0;white-space:nowrap}
+.busca-user{font-family:'Inter Tight',sans-serif;font-size:11.5px;color:var(--ink3);margin-top:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.busca-estado{font-family:'Inter Tight',sans-serif;font-size:10.5px;color:var(--ink3);flex-shrink:0;white-space:nowrap}
 .req-decline{background:rgba(234,231,224,.07);color:var(--ink3)}
 /* ═══ EXPLORAR E PERFIL — mesma linguagem ═══
    Estas duas não foram desenhadas no modelo. O documento de entrega diz que
@@ -654,26 +684,26 @@ body.na-casca .bottom-nav{display:none}
 
 /* Resultado do Explorar: card com foto, igual ao feed. Quem escolhe onde ir
    decide pela foto e pelo nome, não pela posição num ranking. */
-.ex-card{border-radius:20px;background:var(--elev,#16232A);border:1px solid var(--border);overflow:hidden;margin-bottom:14px}
-.ex-img{height:170px;position:relative;background-color:#16232A;background-size:cover;background-position:center;cursor:pointer;overflow:hidden}
+.ex-card{border-radius:20px;background:var(--elev,var(--surface));border:1px solid var(--border);overflow:hidden;margin-bottom:14px}
+.ex-img{height:170px;position:relative;background-color:var(--surface);background-size:cover;background-position:center;cursor:pointer;overflow:hidden}
 .ex-img::after{content:"";position:absolute;inset:0;z-index:2;background:linear-gradient(to bottom,rgba(11,22,32,.4) 0%,rgba(11,22,32,0) 24%,rgba(11,22,32,0) 40%,rgba(11,22,32,.9) 100%)}
 .ex-foto{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;z-index:1;opacity:0;transition:opacity .4s ease}
 @media(prefers-reduced-motion:reduce){.ex-foto{transition:none}}
 .ex-nota{position:absolute;top:13px;right:13px;z-index:3;font-family:var(--mono);font-size:11px;color:var(--ink);background:rgba(11,22,32,.55);-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px);border-radius:999px;padding:5px 11px}
 .ex-estrela{color:#BFA474}
 .ex-pe{position:absolute;left:16px;right:16px;bottom:13px;z-index:3}
-.ex-k{display:block;font-family:var(--mono);font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--ink2)}
-.ex-nome{font-family:'Fraunces',serif;font-weight:400;font-size:24px;color:#fff;margin:4px 0 0;line-height:1.08;letter-spacing:-.01em;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical}
+.ex-k{display:block;font-family:var(--mono);font-size:10px;color:var(--ink2)}
+.ex-nome{font-family:'Inter Tight',sans-serif;font-weight:400;font-size:24px;color:#fff;margin:4px 0 0;line-height:1.08;letter-spacing:-.01em;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical}
 .ex-corpo-card{padding:12px 16px 14px;display:flex;align-items:center;justify-content:space-between;gap:12px}
 .ex-aval{font-family:var(--mono);font-size:11px;color:var(--ink3)}
 
 /* Perfil: placar em uma linha, igual ao de Viagens, no lugar das caixas. */
-#profile .profile-user{letter-spacing:.06em}
+#profile .profile-user{}
 #profile .stats-strip{display:flex;flex-wrap:wrap;align-items:baseline;gap:8px;background:none;border:none;padding:0}
 #profile .stat-block{flex:none;background:none;border:none;border-radius:0;padding:0;box-shadow:none;display:inline-flex;align-items:baseline;gap:5px}
 #profile .stat-n{font-family:var(--mono);font-size:14px;font-weight:500;color:var(--ink)}
-#profile .stat-l{font-family:var(--mono);font-size:11px;color:var(--ink3);margin-top:0;letter-spacing:.05em}
-#profile .section-title{font-family:var(--mono);font-size:10px;letter-spacing:.16em;text-transform:uppercase;color:var(--ink3);font-weight:500}
+#profile .stat-l{font-family:var(--mono);font-size:11px;color:var(--ink3);margin-top:0;}
+#profile .section-title{font-family:var(--mono);font-size:10px;color:var(--ink3);font-weight:500}
 /* Linhas de configuração viram ficha, com a etiqueta em monoespacada. */
 #profile .prof-linha .pl-txt{font-size:14.5px}
 
@@ -692,26 +722,26 @@ body.na-casca .bottom-nav{display:none}
 #dashboard .dp-t{font-family:var(--mono);font-size:13px;color:var(--ink3)}
 #dashboard .stats-strip{margin-bottom:18px}
 /* Rótulo no mesmo mono do resto do placar; o número já era mono. */
-#dashboard .stat-l{font-family:var(--mono);font-size:10.5px;letter-spacing:.05em;text-transform:lowercase}
+#dashboard .stat-l{font-family:var(--mono);font-size:10.5px;text-transform:lowercase}
 
 /* Continentes: trilho horizontal no lugar das pastas que abriam e fechavam. */
 .cont-trilho{display:flex;gap:8px;overflow-x:auto;padding:2px 24px 0;margin:0 -24px;scrollbar-width:none}
 .cont-trilho::-webkit-scrollbar{display:none}
-.cont-chip{flex:none;min-height:38px;font-family:var(--mono);font-size:10.5px;letter-spacing:.12em;text-transform:uppercase;padding:9px 14px;border-radius:999px;border:1px solid rgba(234,231,224,.2);background:transparent;color:var(--ink2);white-space:nowrap;cursor:pointer;transition:background .15s,color .15s,border-color .15s}
+.cont-chip{flex:none;min-height:38px;font-family:var(--mono);font-size:10.5px;padding:9px 14px;border-radius:999px;border:1px solid transparent;background:transparent;color:var(--ink2);white-space:nowrap;cursor:pointer;transition:background .15s,color .15s,border-color .15s}
 .cont-chip.on{background:var(--terra);border-color:var(--terra);color:#fff}
 
 /* Carrossel de viagens. O card mostra o destino inteiro, em vez do selo de
    72px ao lado do nome. */
 .filme-viagens{display:flex;gap:12px;overflow-x:auto;padding:18px 24px 10px;margin:0 -24px;scroll-snap-type:x mandatory;scrollbar-width:none}
 .filme-viagens::-webkit-scrollbar{display:none}
-.vg-card{flex:none;width:250px;height:330px;border-radius:20px;overflow:hidden;position:relative;scroll-snap-align:start;border:none;padding:0;background:var(--elev,#16232A);cursor:pointer;text-align:left;transition:transform .15s}
+.vg-card{flex:none;width:250px;height:330px;border-radius:20px;overflow:hidden;position:relative;scroll-snap-align:start;border:none;padding:0;background:var(--elev,var(--surface));cursor:pointer;text-align:left;transition:transform .15s}
 .vg-card:active{transform:scale(.98)}
 .vg-foto{position:absolute;inset:0;background-size:cover;background-position:center}
 .vg-scrim{position:absolute;inset:0;background:linear-gradient(160deg,rgba(0,0,0,0) 0%,rgba(11,22,32,.55) 58%,var(--dark) 100%)}
 .vg-bandeira{position:absolute;top:16px;left:16px;z-index:2;font-size:26px;line-height:1}
 .vg-bandeira .bandeira-img{width:26px;height:26px}
 .vg-pe{position:absolute;left:18px;right:18px;bottom:18px;z-index:2}
-.vg-nome{font-family:'Fraunces',serif;font-weight:400;font-size:31px;line-height:1.02;letter-spacing:-.01em;color:#fff;margin:0;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical}
+.vg-nome{font-family:'Inter Tight',sans-serif;font-weight:400;font-size:31px;line-height:1.02;letter-spacing:-.01em;color:#fff;margin:0;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical}
 .vg-meta{font-family:var(--mono);font-size:11px;color:var(--ink2);margin:8px 0 0}
 .filme-pag{display:flex;gap:5px;padding:2px 0 0}
 .filme-pag i{display:block;height:3px;width:8px;border-radius:2px;background:rgba(234,231,224,.3);transition:width .2s,background .2s}
@@ -731,20 +761,20 @@ body.na-casca .bottom-nav{display:none}
 /* Nome comprido passava por baixo do botao de trocar foto, que fica neste
    mesmo canto de baixo. Reserva a largura dele. */
 #place .hero-bottom{padding:0 68px 22px 26px}
-#place .hero-type{font-family:var(--mono);font-size:10.5px;letter-spacing:.16em;text-transform:uppercase;color:rgba(234,231,224,.75);margin-bottom:9px}
+#place .hero-type{font-family:var(--mono);font-size:10.5px;color:rgba(234,231,224,.75);margin-bottom:9px}
 #place .hero-name{font-size:34px;line-height:1.02;letter-spacing:-.02em}
-#place .hero-chip{font-family:var(--mono);font-size:10px;font-weight:500;letter-spacing:.14em;text-transform:uppercase;padding:7px 13px}
+#place .hero-chip{font-family:var(--mono);font-size:10px;font-weight:500;padding:7px 13px}
 
 /* A primeira seção encosta na foto: sem traço, sem respiro morto. */
 #place .d-section{padding:18px 26px;border-bottom:none}
 #place .d-section:first-of-type{padding-top:2px}
 /* Rótulo de seção vira etiqueta de ficha, com a linha preenchendo o resto —
    é o divisor do modelo. */
-#place .sec-label{font-family:var(--mono);font-size:10px;letter-spacing:.16em;text-transform:uppercase;color:var(--ink3);font-weight:500;margin-bottom:10px;display:flex;align-items:center;gap:10px}
+#place .sec-label{font-family:var(--mono);font-size:10px;color:var(--ink3);font-weight:500;margin-bottom:10px;display:flex;align-items:center;gap:10px}
 #place .sec-label::after{content:"";flex:1;height:1px;background:rgba(234,231,224,.18)}
 #place .sec-linha .sec-label{margin-bottom:0}
 #place .sec-linha .sec-label::after{content:none}
-#place .d-section:first-of-type .sec-label{color:var(--terra2,#E0714A)}
+#place .d-section:first-of-type .sec-label{color:var(--terra2,var(--green))}
 
 /* A nota sai da caixa e vira o maior bloco de texto da tela. */
 #place .note-card{background:transparent;border:none;box-shadow:none;padding:0}
@@ -753,11 +783,11 @@ body.na-casca .bottom-nav{display:none}
 #place .note-quote:empty::before{content:"Por que esse lugar te chamou atenção?";font-style:italic;color:var(--ink3)}
 
 /* Status vira controle segmentado, igual ao das abas de Amigos. */
-#place .status-toggle{background:rgba(234,231,224,.06);border-radius:12px}
+#place .status-toggle{background:var(--surface);border-radius:12px}
 #place .toggle-btn{min-height:44px;font-size:13px}
-#place .toggle-btn.sel-been{background:var(--elev,#16232A);font-weight:600;color:#8FD3CE}
-#place .toggle-btn.sel-want{background:var(--elev,#16232A);font-weight:600;color:#DDCBA4}
-#place .toggle-btn.sel-skip{background:var(--elev,#16232A);font-weight:600;color:var(--ink)}
+#place .toggle-btn.sel-been{background:var(--elev,var(--surface));font-weight:600;color:#8FD3CE}
+#place .toggle-btn.sel-want{background:var(--elev,var(--surface));font-weight:600;color:#DDCBA4}
+#place .toggle-btn.sel-skip{background:var(--elev,var(--surface));font-weight:600;color:var(--ink)}
 
 /* Linha social: rodapé da nota. Avatares de quem comentou, nomes, e a nota do
    Google — as três coisas que antes moravam longe uma da outra. */
@@ -773,15 +803,15 @@ body.na-casca .bottom-nav{display:none}
    ocupando meia tela, repetindo a cidade que já está no cabeçalho e o endereço
    que ninguém lê ali. Vira uma linha de dados, na linguagem de ficha do app. */
 #place .info-grid{gap:7px;margin-bottom:14px}
-#place .info-cell{padding:10px 12px;border-radius:10px;background:rgba(234,231,224,.05)}
+#place .info-cell{padding:10px 12px;border-radius:10px;background:var(--surface)}
 #place .info-cell-icon{display:none}
-#place .info-cell-label{font-family:var(--mono);font-size:9.5px;letter-spacing:.12em;text-transform:uppercase;margin-bottom:3px}
+#place .info-cell-label{font-family:var(--mono);font-size:9.5px;margin-bottom:3px}
 #place .info-cell-value{font-size:13.5px}
 
 /* Ligar · Instagram · Maps lado a lado, em vez de empilhados ocupando
    três alturas de botão. */
 #place #placeReserveWrap{display:grid;grid-template-columns:repeat(auto-fit,minmax(96px,1fr));gap:8px}
-#place .reserve-btn{margin-top:0;min-height:46px;padding:10px 8px;border:1px solid var(--border);border-width:1px;border-radius:12px;background:rgba(234,231,224,.08);font-size:13px;font-weight:500;gap:6px;flex-direction:column}
+#place .reserve-btn{margin-top:0;min-height:46px;padding:10px 8px;border:1px solid var(--border);border-width:1px;border-radius:12px;background:var(--surface);font-size:13px;font-weight:500;gap:6px;flex-direction:column}
 #place .reserve-btn .ic{font-size:15px}
 
 /* ═══ TELA DE AMIGOS — direção Atlas ═══
@@ -790,12 +820,12 @@ body.na-casca .bottom-nav{display:none}
    Abas viram controle segmentado com TRÊS opções, e "Pedidos" deixa de ser
    uma faixa solta acima da lista pra virar aba própria. */
 .am-topo{display:flex;align-items:center;justify-content:space-between;gap:14px;padding:calc(26px + env(safe-area-inset-top,0px)) 24px 0;flex:none}
-.am-titulo{font-family:'Fraunces',serif;font-weight:400;font-size:30px;margin:0;letter-spacing:-.01em;color:var(--ink)}
-.am-add{width:40px;height:40px;flex:none;border-radius:50%;border:1px solid rgba(234,231,224,.2);background:transparent;color:var(--ink);display:flex;align-items:center;justify-content:center;cursor:pointer}
+.am-titulo{font-family:'Inter Tight',sans-serif;font-weight:400;font-size:30px;margin:0;letter-spacing:-.01em;color:var(--ink)}
+.am-add{width:40px;height:40px;flex:none;border-radius:50%;border:1px solid transparent;background:transparent;color:var(--ink);display:flex;align-items:center;justify-content:center;cursor:pointer}
 .am-add:active{transform:scale(.94)}
-.am-abas{display:flex;gap:4px;background:rgba(234,231,224,.06);border-radius:12px;padding:4px;margin:18px 24px 0;flex:none}
+.am-abas{display:flex;gap:4px;background:var(--surface);border-radius:12px;padding:4px;margin:18px 24px 0;flex:none}
 .am-abas button{flex:1;min-height:40px;padding:10px 0;border:none;border-radius:9px;background:transparent;font-family:inherit;font-size:13px;font-weight:500;color:var(--ink3);cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px;transition:background .15s,color .15s}
-.am-abas button.on{background:var(--elev,#16232A);font-weight:600;color:var(--ink)}
+.am-abas button.on{background:var(--elev,var(--surface));font-weight:600;color:var(--ink)}
 .am-badge{font-family:var(--mono);font-size:10px;background:var(--terra);color:#fff;border-radius:999px;padding:1px 6px;line-height:1.5}
 .am-abas button.on .am-badge{background:var(--terra)}
 
@@ -805,8 +835,8 @@ body.na-casca .bottom-nav{display:none}
    recomendação de fato acontece, e é o que sustenta a conversa com quem tem
    público. Linha de texto continua existindo pra viagem marcada e comentário,
    que não têm foto nem nota pra sustentar um card. */
-.fd-card{border-radius:20px;background:var(--elev,#16232A);border:1px solid var(--border);overflow:hidden;margin-bottom:14px}
-.fd-img{height:186px;position:relative;background-color:#16232A;background-size:cover;background-position:center;cursor:pointer;overflow:hidden}
+.fd-card{border-radius:20px;background:var(--elev,var(--surface));border:1px solid var(--border);overflow:hidden;margin-bottom:14px}
+.fd-img{height:186px;position:relative;background-color:var(--surface);background-size:cover;background-position:center;cursor:pointer;overflow:hidden}
 /* A foto entra POR CIMA do degradê da categoria. Se ela falhar — referência
    do Google expira — o onerror remove o <img> e o degradê que já estava
    atrás aparece, em vez de um retângulo chapado. */
@@ -827,10 +857,10 @@ body.na-casca .bottom-nav{display:none}
 .fd-quem-t b{font-weight:600}
 .fd-quando{position:absolute;top:19px;right:14px;z-index:3;font-family:var(--mono);font-size:10px;color:var(--ink2)}
 .fd-pe{position:absolute;left:16px;right:16px;bottom:14px;z-index:3}
-.fd-k{display:block;font-family:var(--mono);font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--ink2)}
-.fd-nome{font-family:'Fraunces',serif;font-weight:400;font-size:25px;color:#fff;margin:4px 0 0;line-height:1.08;letter-spacing:-.01em;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical}
+.fd-k{display:block;font-family:var(--mono);font-size:10px;color:var(--ink2)}
+.fd-nome{font-family:'Inter Tight',sans-serif;font-weight:400;font-size:25px;color:#fff;margin:4px 0 0;line-height:1.08;letter-spacing:-.01em;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical}
 .fd-corpo{padding:14px 16px 15px}
-.fd-nota{display:block;font-family:'Fraunces',serif;font-style:italic;font-size:16.5px;line-height:1.38;color:var(--ink);cursor:pointer;quotes:'\201C' '\201D'}
+.fd-nota{display:block;font-family:'Inter Tight',sans-serif;font-style:italic;font-size:16.5px;line-height:1.38;color:var(--ink);cursor:pointer;quotes:'\201C' '\201D'}
 .fd-linha{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-top:13px}
 .fd-estrelas{display:flex;gap:3px}
 .fd-salvar{flex:none;min-height:36px;background:var(--terra);color:#fff;font-size:12.5px;font-weight:600;font-family:inherit;border:none;border-radius:999px;padding:9px 15px;cursor:pointer}
@@ -843,8 +873,8 @@ body.na-casca .bottom-nav{display:none}
 .feed-time{font-size:12px;color:var(--ink3);margin-top:4px}
 .badge-count{background:var(--terra);color:#fff;font-size:10.5px;font-weight:700;border-radius:var(--r-pill);padding:2px 7px;margin-left:6px}
 .friend-search-card{display:flex;align-items:center;gap:12px;background:var(--white);border:1px solid var(--border);border-radius:var(--r);padding:13px 14px;margin-top:10px;box-shadow:var(--shadow-sm)}
-.delete-link{display:block;width:100%;background:none;border:none;color:var(--red);font-size:13px;font-family:'DM Sans',sans-serif;cursor:pointer;padding:8px;margin-bottom:40px;text-decoration:underline;text-underline-offset:3px}
-.secondary-link{display:block;width:100%;background:none;border:none;color:var(--ink3);font-size:13px;font-family:'DM Sans',sans-serif;cursor:pointer;padding:12px 8px 8px;text-decoration:underline;text-underline-offset:3px}
+.delete-link{display:block;width:100%;background:none;border:none;color:var(--red);font-size:13px;font-family:'Inter Tight',sans-serif;cursor:pointer;padding:8px;margin-bottom:40px;text-decoration:underline;text-underline-offset:3px}
+.secondary-link{display:block;width:100%;background:none;border:none;color:var(--ink3);font-size:13px;font-family:'Inter Tight',sans-serif;cursor:pointer;padding:12px 8px 8px;text-decoration:underline;text-underline-offset:3px}
 /* 24px na horizontal como todo conteudo de ficha. Sem isso o texto do aviso
    de pais trocado encostava na borda — o titulo alinhado e a frase colada na
    lateral, que foi o desalinhamento que o Lucas viu no print. */
@@ -862,17 +892,17 @@ body.na-casca .bottom-nav{display:none}
    trazem os proprios 24 (nt-label) somavam 48. */
 .ex-corpo .nt-label{padding-left:0;padding-right:0}
 /* ── Profile / World Map (Been-style) ── */
-#profile{background:#0b1620;overflow-y:auto}
+#profile{background:var(--base);overflow-y:auto}
 /* Identidade: quem você é, em tamanho de gente. */
-.profile-ident{display:flex;align-items:center;gap:15px;padding:40px 22px 14px;background:#0b1620;position:relative;z-index:5}
+.profile-ident{display:flex;align-items:center;gap:15px;padding:40px 22px 14px;background:var(--base);position:relative;z-index:5}
 /* Engrenagem: o que é ajuste de conta sai da lista de conteúdo e vem pra cá,
    onde todo app põe. Antes "editar bio" e "sair da conta" dividiam a mesma
    lista com "marcar país visitado", que é conteúdo, não configuração. */
-.prof-config-btn{margin-left:auto;width:38px;height:38px;flex-shrink:0;background:rgba(234,231,224,.06);border:1px solid var(--border);border-radius:50%;color:var(--ink2);font-size:19px;display:flex;align-items:center;justify-content:center;cursor:pointer}
+.prof-config-btn{margin-left:auto;width:38px;height:38px;flex-shrink:0;background:var(--surface);border:1px solid var(--border);border-radius:50%;color:var(--ink2);font-size:19px;display:flex;align-items:center;justify-content:center;cursor:pointer}
 .prof-config-btn:active{opacity:.6}
 .profile-ident-txt{min-width:0}
 .profile-user{font-family:var(--mono);font-size:12px;color:var(--ink3);margin-top:3px}
-.profile-bio{padding:0 22px 18px;background:#0b1620;font-size:13.5px;color:var(--ink2);line-height:1.55;position:relative;z-index:5}
+.profile-bio{padding:0 22px 18px;background:var(--base);font-size:13.5px;color:var(--ink2);line-height:1.55;position:relative;z-index:5}
 /* Ações em linha, no lugar de três estilos de botão diferentes. */
 .prof-acoes{margin-top:26px;border-top:1px solid var(--border)}
 .prof-linha{display:flex;align-items:center;gap:12px;padding:15px 2px;border-bottom:1px solid var(--border);cursor:pointer}
@@ -887,38 +917,38 @@ body.na-casca .bottom-nav{display:none}
    ninguem nunca precisar dele. */
 /* Nota que ainda nao existe: o texto vira convite, nao aspas vazias. */
 .note-quote.nota-vazia{color:var(--ink3);opacity:.8}
-.prof-resumo{font-family:var(--mono);font-size:11.5px;letter-spacing:.04em;color:var(--ink3);padding-bottom:18px}
+.prof-resumo{font-family:var(--mono);font-size:11.5px;color:var(--ink3);padding-bottom:18px}
 .prof-resumo:empty{display:none}
 .prof-email{font-family:var(--mono);font-size:11px;color:var(--ink3);text-align:center;margin-top:22px}
 /* ═══ PERFIL DE AMIGO (só leitura) ═══ */
-.friend-top{display:flex;align-items:center;gap:14px;padding:40px 22px 14px;background:#0b1620;position:relative;z-index:5}
+.friend-top{display:flex;align-items:center;gap:14px;padding:40px 22px 14px;background:var(--base);position:relative;z-index:5}
 .friend-top .back-btn{position:static;flex-shrink:0}
 .friend-id{min-width:0}
-.friend-name{font-family:'Fraunces',serif;font-size:20px;font-weight:600;color:var(--ink);line-height:1.15;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.friend-user{font-family:'IBM Plex Mono',monospace;font-size:12px;color:var(--ink3);margin-top:2px}
-.friend-bio{padding:0 22px 16px;background:#0b1620;font-size:13.5px;color:var(--ink2);line-height:1.5}
+.friend-name{font-family:'Inter Tight',sans-serif;font-size:20px;font-weight:600;color:var(--ink);line-height:1.15;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.friend-user{font-family:'Inter Tight',sans-serif;font-size:12px;color:var(--ink3);margin-top:2px}
+.friend-bio{padding:0 22px 16px;background:var(--base);font-size:13.5px;color:var(--ink2);line-height:1.5}
 /* Linha de amigo na aba Amigos */
 .friend-row{display:flex;align-items:center;gap:12px;padding:12px 0;border-bottom:1px solid var(--border);cursor:pointer}
 .friend-row:last-child{border-bottom:none}
 .friend-row-name{flex:1;font-size:14.5px;font-weight:500;color:var(--ink);min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.friend-row-user{font-family:'IBM Plex Mono',monospace;font-size:11.5px;color:var(--ink3)}
+.friend-row-user{font-family:'Inter Tight',sans-serif;font-size:11.5px;color:var(--ink3)}
 .friend-row-arrow{color:var(--ink3);font-size:17px;flex-shrink:0}
 
-.profile-avatar{width:64px;height:64px;border-radius:50%;background:var(--green);color:var(--dark);display:flex;align-items:center;justify-content:center;font-size:22px;font-weight:600;flex-shrink:0;box-shadow:var(--shadow-md),0 0 0 3px rgba(234,231,224,.06)}
+.profile-avatar{width:64px;height:64px;border-radius:50%;background:var(--green);color:var(--dark);display:flex;align-items:center;justify-content:center;font-size:22px;font-weight:600;flex-shrink:0;box-shadow:var(--shadow-md),0 0 0 3px var(--surface)}
 .profile-avatar-wrap{position:relative;cursor:pointer;flex-shrink:0}
-.avatar-edit-badge{position:absolute;bottom:-2px;right:-2px;width:22px;height:22px;border-radius:50%;background:var(--terra);color:#fff;display:flex;align-items:center;justify-content:center;font-size:11px;border:2px solid #0b1620}
+.avatar-edit-badge{position:absolute;bottom:-2px;right:-2px;width:22px;height:22px;border-radius:50%;background:var(--terra);color:#fff;display:flex;align-items:center;justify-content:center;font-size:11px;border:2px solid var(--base)}
 .avatar-edit-badge svg{width:11px;height:11px}
-.profile-name{font-family:'Fraunces',serif;font-weight:400;font-size:26px;color:var(--ink);line-height:1.1;letter-spacing:-.01em}
-.profile-map-block{position:relative;width:100%;aspect-ratio:800/420;background:#0b1620;overflow:hidden}
+.profile-name{font-family:'Inter Tight',sans-serif;font-weight:400;font-size:26px;color:var(--ink);line-height:1.1;letter-spacing:-.01em}
+.profile-map-block{position:relative;width:100%;aspect-ratio:800/420;background:var(--base);overflow:hidden}
 .world-map-wrap{position:absolute;inset:0;line-height:0;touch-action:none}
 .world-map-wrap svg{width:100%;height:100%;display:block;cursor:grab}
 .world-map-wrap svg:active{cursor:grabbing}
-.wm-country{fill:#1c2f40;stroke:#0b1620;stroke-width:0.4;transition:fill .4s}
-.wm-country.visited{fill:#4E9490}
-.map-zoom-hint{position:absolute;bottom:10px;left:0;right:0;text-align:center;color:rgba(255,255,255,0.5);font-size:11px;letter-spacing:.04em;pointer-events:none;z-index:2}
+.wm-country{fill:transparent;stroke:none;transition:fill .4s}
+.wm-country.visited{fill:var(--green)}
+.map-zoom-hint{position:absolute;bottom:10px;left:0;right:0;text-align:center;color:rgba(255,255,255,0.5);font-size:11px;pointer-events:none;z-index:2}
 .mapa-topo{display:flex;align-items:center;gap:12px;padding:40px 20px 14px;background:var(--dark);position:relative;z-index:3}
 .mapa-topo .back-btn{position:static;flex-shrink:0}
-.mapa-titulo{font-family:'Fraunces',serif;font-size:19px;color:var(--ink)}
+.mapa-titulo{font-family:'Inter Tight',sans-serif;font-size:19px;color:var(--ink)}
 .profile-body{padding:24px 22px;background:var(--surface);border-radius:var(--r) var(--r) 0 0}
 /* Lista em linhas, não chips. Chip de largura variável quebrando linha deixa
    a borda direita serrilhada, e o selo "mora aqui" inchava um chip no meio da
@@ -930,7 +960,7 @@ body.na-casca .bottom-nav{display:none}
 .cr-flag{font-size:17px;flex-shrink:0;line-height:1}
 .cr-name{flex:1;font-size:14.5px;color:var(--ink);min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .cr-count{font-family:var(--mono);font-size:11px;color:var(--ink3);flex-shrink:0}
-.cr-home{font-family:var(--mono);font-size:9.5px;letter-spacing:.04em;color:var(--terra);background:rgba(193,85,47,.14);border-radius:var(--r-pill);padding:2px 7px;flex-shrink:0}
+.cr-home{font-family:var(--mono);font-size:9.5px;color:var(--terra);background:rgba(193,85,47,.14);border-radius:var(--r-pill);padding:2px 7px;flex-shrink:0}
 .country-vertodos{display:block;padding:12px 0 2px;font-size:12.5px;color:var(--ink3);cursor:pointer}
 /* separador "ou" entre enviar pedido e convidar por link */
 .conv-ou{display:flex;align-items:center;gap:10px;margin:16px 0 12px;color:var(--ink3);font-size:11px;font-family:var(--mono)}
@@ -967,7 +997,7 @@ body.na-casca .bottom-nav{display:none}
 .sheet-fixa .lista-rolante{flex:1;min-height:0;overflow-y:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none}
 .sheet-fixa .lista-rolante::-webkit-scrollbar{display:none}
 .sheet-fixa .sheet-cta{flex:none;margin-bottom:24px}
-.lista-grupo{position:sticky;top:0;background:var(--white);font-family:'IBM Plex Mono',monospace;font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--ink3);padding:12px 24px 6px;z-index:1}
+.lista-grupo{position:sticky;top:0;background:var(--white);font-family:'Inter Tight',sans-serif;font-size:11px;color:var(--ink3);padding:12px 24px 6px;z-index:1}
 .dest-result.on{background:rgba(193,85,47,.08)}
 /* Vazio o circulo tem que ficar VAZIO: com o check sempre desenhado (so
    pintado da cor do fundo) ele reaparecia em qualquer tema que nao fosse
@@ -976,17 +1006,17 @@ body.na-casca .bottom-nav{display:none}
 .dest-check svg{width:14px;height:14px}
 .dest-result.on .dest-check{background:var(--terra);border-color:var(--terra);color:#fff}
 .dest-result.ja{opacity:.45;pointer-events:none}
-.dest-ja-tag{margin-left:auto;font-family:'IBM Plex Mono',monospace;font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--ink3)}
+.dest-ja-tag{margin-left:auto;font-family:'Inter Tight',sans-serif;font-size:10px;color:var(--ink3)}
 .sheet::-webkit-scrollbar{display:none}
 @keyframes slideUp{from{transform:translateY(100%)}to{transform:translateY(0)}}
 .sheet-handle{width:36px;height:4px;border-radius:2px;background:var(--border);margin:12px auto 20px}
-.sheet-title{font-family:'Fraunces',serif;font-weight:400;font-size:22px;color:var(--ink);padding:0 24px 20px;line-height:1.15}
+.sheet-title{font-family:'Inter Tight',sans-serif;font-weight:400;font-size:22px;color:var(--ink);padding:0 24px 20px;line-height:1.15}
 .sheet-close{position:absolute;top:16px;right:20px;width:32px;height:32px;background:rgba(234,231,224,.07);border:none;border-radius:50%;cursor:pointer;font-size:14px;display:flex;align-items:center;justify-content:center;color:var(--ink3)}
 .step-dots{display:flex;gap:6px;padding:0 24px 20px}
 .step-dot{width:8px;height:8px;border-radius:50%;background:var(--border)}
 .step-dot.active{background:var(--terra)}.step-dot.done{background:var(--ink3)}
 .trip-option{display:flex;align-items:center;gap:14px;padding:14px 24px;cursor:pointer}
-.trip-option:active{background:rgba(234,231,224,.05)}
+.trip-option:active{background:var(--surface)}
 .trip-option-img{width:48px;height:48px;flex-shrink:0;border-radius:var(--r-sm);background-size:cover;background-position:center;background-color:var(--dark);display:flex;align-items:center;justify-content:center;font-size:20px}
 .trip-option-name{font-size:15.5px;font-weight:600;color:var(--ink)}
 .trip-option-meta{font-size:12.5px;color:var(--ink3);margin-top:3px}
@@ -995,7 +1025,7 @@ body.na-casca .bottom-nav{display:none}
 .new-trip-icon{width:40px;height:40px;border-radius:var(--r-sm);background:rgba(234,231,224,.07);display:flex;align-items:center;justify-content:center;font-size:19px;color:var(--ink3)}
 .new-trip-text{font-size:15px;font-weight:500;color:var(--ink2)}
 .cat-options{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;padding:0 24px 24px}
-.cat-option{padding:16px 8px;background:rgba(234,231,224,.05);border-radius:var(--r-sm);text-align:center;cursor:pointer;border:2px solid transparent}
+.cat-option{padding:16px 8px;background:var(--surface);border-radius:var(--r-sm);text-align:center;cursor:pointer;border:2px solid transparent}
 .cat-option.sel{border-color:var(--terra);background:var(--terra)}
 .cat-option .co-icon{font-size:22px;margin-bottom:7px;color:var(--ink3)}
 .cat-option .co-name{font-size:12px;font-weight:500;color:var(--ink2)}
@@ -1007,48 +1037,48 @@ body.na-casca .bottom-nav{display:none}
    diferente (o do Explorar usa 0) a lupa ia pra cima do texto. */
 .search-field{position:relative}
 .search-field .si{position:absolute;left:14px;top:14px;font-size:15px;pointer-events:none}
-.search-input{width:100%;background:rgba(234,231,224,.05);border:1px solid var(--border);border-radius:var(--r-sm);padding:14px 16px 14px 42px;font-size:15px;font-family:'DM Sans',sans-serif;color:var(--ink);outline:none;box-shadow:var(--shadow-inset)}
+.search-input{width:100%;background:var(--surface);border:1px solid var(--border);border-radius:var(--r-sm);padding:14px 16px 14px 42px;font-size:15px;font-family:'Inter Tight',sans-serif;color:var(--ink);outline:none;box-shadow:var(--shadow-inset)}
 .search-input:focus{border-color:var(--ink3)}
 .search-powered{display:flex;align-items:center;gap:5px;padding:2px 24px 10px}
 .search-powered span{font-size:11.5px;color:var(--ink3)}
 .search-powered strong{font-size:11.5px;color:var(--ink2);font-weight:600}
 .search-result{display:flex;align-items:center;gap:12px;padding:12px 24px;cursor:pointer}
-.search-result:active{background:rgba(234,231,224,.05)}
+.search-result:active{background:var(--surface)}
 .sr-icon{width:44px;height:44px;border-radius:var(--r-sm);background:var(--dark);display:flex;align-items:center;justify-content:center;font-size:19px;border:1px solid var(--border);flex-shrink:0;color:var(--ink3)}
 .sr-name{font-size:14.5px;font-weight:500;color:var(--ink)}
 .sr-meta{font-size:12px;color:var(--ink3);margin-top:3px}
 .search-loading{text-align:center;padding:32px;color:var(--ink3);font-size:14px}
-.search-nearby-label{font-family:var(--mono);font-size:10.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--terra);padding:14px 24px 6px}
+.search-nearby-label{font-family:var(--mono);font-size:10.5px;color:var(--terra);padding:14px 24px 6px}
 .note-place-row{display:flex;align-items:center;gap:12px;padding:0 24px 20px}
 .note-place-icon{width:52px;height:52px;border-radius:var(--r-sm);background:var(--dark);border:1px solid var(--border);flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:22px;color:var(--ink3)}
 .note-place-name{font-size:16px;font-weight:600;color:var(--ink)}
 .note-place-meta{font-size:12.5px;color:var(--ink3);margin-top:3px}
 .note-wrap{padding:0 24px}
-.note-input{width:100%;background:rgba(234,231,224,.05);border:1px solid var(--border);border-radius:var(--r-sm);padding:16px;font-size:15px;font-family:'DM Sans',sans-serif;color:var(--ink);resize:none;outline:none;line-height:1.5;box-shadow:var(--shadow-inset)}
+.note-input{width:100%;background:var(--surface);border:1px solid var(--border);border-radius:var(--r-sm);padding:16px;font-size:15px;font-family:'Inter Tight',sans-serif;color:var(--ink);resize:none;outline:none;line-height:1.5;box-shadow:var(--shadow-inset)}
 .note-input:focus{border-color:var(--terra)}
 .note-input::placeholder{color:var(--ink3);font-style:italic}
 .note-input.error{border-color:var(--red)}
 .note-hint{font-size:12px;color:var(--ink3);padding:8px 24px 0}
 .status-choice{display:flex;gap:10px;padding:4px 24px 0}
-.status-opt{flex:1;background:rgba(234,231,224,.05);border:2px solid transparent;border-radius:var(--r-sm);padding:14px;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:7px;font-family:'DM Sans',sans-serif;transition:all .15s}
+.status-opt{flex:1;background:var(--surface);border:2px solid transparent;border-radius:var(--r-sm);padding:14px;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:7px;font-family:'Inter Tight',sans-serif;transition:all .15s}
 .status-opt.active{border-color:var(--green);background:rgba(78,148,144,0.12)}
 .so-emoji{font-size:21px;color:var(--ink3)}
 .so-label{font-size:13px;font-weight:600;color:var(--ink2)}
 .status-opt.active .so-label{color:var(--green)}
 .note-label{font-size:13px;font-weight:600;color:var(--ink2);padding:18px 24px 8px}
 #addStars{padding:0 24px}
-.sheet-cta{display:block;width:calc(100% - 48px);margin:20px 24px 32px;background:var(--terra);color:#fff;border:none;border-radius:var(--r-sm);padding:16px;font-family:'DM Sans',sans-serif;font-size:15px;font-weight:600;cursor:pointer;box-shadow:var(--shadow-terra)}
+.sheet-cta{display:block;width:calc(100% - 48px);margin:20px 24px 32px;background:var(--terra);color:#fff;border:none;border-radius:var(--r-sm);padding:16px;font-family:'Inter Tight',sans-serif;font-size:15px;font-weight:600;cursor:pointer;box-shadow:var(--shadow-terra)}
 /* Uma escolha por botao, empilhadas. O confirm do navegador so tem duas; o
    menu de acoes de um perfil tem mais, e cabe a mesma folha.
    Escolha que nao destroi nada nao precisa gritar: so o botao de perigo e
    cheio. Dois botoes chapados um em cima do outro pesam a tela e escondem
    justamente qual e o irreversivel. */
-#perguntaAcoes .sheet-cta{margin:10px 24px 0;background:rgba(234,231,224,.06);color:var(--ink);box-shadow:none;border:1px solid var(--border)}
+#perguntaAcoes .sheet-cta{margin:10px 24px 0;background:var(--surface);color:var(--ink);box-shadow:none;border:1px solid var(--border)}
 #perguntaAcoes .sheet-cta[data-tom="perigo"]{background:var(--red);color:#fff;border-color:transparent}
 #perguntaAcoes .secondary-link{margin:4px 0 24px}
 .nt-label{font-size:12.5px;font-weight:600;color:var(--ink3);padding:0 24px 8px}
 .nt-wrap{padding:0 24px 16px}
-.nt-input{width:100%;background:rgba(234,231,224,.05);border:1px solid var(--border);border-radius:var(--r-sm);padding:14px 16px;font-size:15px;font-family:'DM Sans',sans-serif;color:var(--ink);outline:none;box-shadow:var(--shadow-inset)}
+.nt-input{width:100%;background:var(--surface);border:1px solid var(--border);border-radius:var(--r-sm);padding:14px 16px;font-size:15px;font-family:'Inter Tight',sans-serif;color:var(--ink);outline:none;box-shadow:var(--shadow-inset)}
 .nt-input:focus{border-color:var(--ink3)}
 .nt-input::placeholder{color:var(--ink3)}
 .dates-row{display:flex;gap:10px;padding:0 24px 16px}
@@ -1056,7 +1086,7 @@ body.na-casca .bottom-nav{display:none}
 .dest-search-wrap{padding:0 24px 8px;position:relative}
 .dest-search-wrap .dsi{position:absolute;left:38px;top:14px;font-size:15px;pointer-events:none}
 .dest-result{display:flex;align-items:center;gap:12px;padding:11px 24px;cursor:pointer}
-.dest-result:active{background:rgba(234,231,224,.05)}
+.dest-result:active{background:var(--surface)}
 .dest-flag{font-size:24px}
 .dest-name{font-size:15px;font-weight:500;color:var(--ink)}
 .dest-region{font-size:12px;color:var(--ink3);margin-top:2px}
@@ -1069,13 +1099,13 @@ body.na-casca .bottom-nav{display:none}
 .toast-icon{width:22px;height:22px;flex-shrink:0;color:var(--terra);margin-top:1px}
 .toast-body{flex:1;min-width:0}
 .toast-title{font-size:13.5px;font-weight:600;margin-bottom:3px;color:var(--ink)}
-.toast-msg{font-family:'Fraunces',serif;font-size:14px;color:var(--ink3);font-style:italic;line-height:1.4}
+.toast-msg{font-family:'Inter Tight',sans-serif;font-size:14px;color:var(--ink3);font-style:italic;line-height:1.4}
 
 /* ═══ RECORTE DE FOTO (avatar quadrado, spot 3:2) — arrasta antes de subir,
    pra nunca cortar o rosto sem o usuário poder escolher onde ═══ */
 .cropper-overlay{position:fixed;inset:0;background:rgba(11,22,32,.96);z-index:500;display:none;flex-direction:column;align-items:center;justify-content:center;gap:22px}
 .cropper-overlay.show{display:flex}
-.cropper-hint{color:var(--ink3);font-family:'IBM Plex Mono',monospace;font-size:11px;letter-spacing:.06em;text-transform:uppercase}
+.cropper-hint{color:var(--ink3);font-family:'Inter Tight',sans-serif;font-size:11px;}
 .cropper-stage{position:relative;overflow:hidden;background:#000;touch-action:none;cursor:grab;box-shadow:0 12px 40px rgba(0,0,0,.5)}
 .cropper-stage:active{cursor:grabbing}
 .cropper-stage img{position:absolute;top:0;left:0;user-select:none;-webkit-user-drag:none;pointer-events:none;max-width:none}
