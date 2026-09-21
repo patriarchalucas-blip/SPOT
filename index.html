@@ -156,7 +156,62 @@ body{font-family:'Inter Tight',sans-serif;background:var(--base);color:var(--ink
 
 /* DASHBOARD */
 #dashboard,#friends{background:var(--surface)}
-.dash-top{background:var(--dark);padding:40px 24px 22px;position:relative;overflow:hidden}
+
+/* ══ INÍCIO — a composição nova ══════════════════════════════════════
+   O mapa era um enfeite de 150px no topo; agora é a metade de cima da
+   tela e o assunto dela. Os números pousam sobre ele alinhados pela base,
+   em vez de virarem três retângulos iguais — o "painel de indicadores" é
+   o que mais entrega interface gerada. E o primeiro número é o dobro dos
+   outros: a assimetria que a tela inteira não tinha. */
+.dash-mapa-area{position:relative;height:440px;background:var(--map-bg);
+  background-image:radial-gradient(var(--map-dot) 1.4px,transparent 1.7px);
+  background-size:8px 8px;overflow:hidden}
+.dash-mapa{position:absolute;inset:0 0 70px;display:flex;align-items:center;justify-content:center}
+.dash-mapa svg{width:100%;height:100%}
+/* O mapa não termina numa linha: ele se dissolve na página. */
+.dash-mapa-fade{position:absolute;inset:0;pointer-events:none;
+  background:linear-gradient(to bottom,transparent 60%,var(--base))}
+.dash-topo-linha{position:absolute;top:18px;left:20px;right:20px;display:flex;
+  align-items:center;justify-content:space-between;z-index:2}
+
+.scorecard{position:absolute;left:20px;bottom:24px;z-index:2;display:flex;
+  align-items:flex-end;gap:28px}
+.sc-item{background:none;border:none;padding:0;cursor:pointer;text-align:left;
+  display:flex;flex-direction:column;gap:2px;min-height:44px;justify-content:flex-end}
+.sc-item:active{opacity:.6}
+.sc-n{font-size:28px;font-weight:700;letter-spacing:-.04em;color:var(--ink);line-height:1}
+.sc-hero .sc-n{font-size:44px}
+.sc-r{font-size:14px;color:var(--ink2);display:flex;align-items:center;gap:3px}
+.sc-seta{font-style:normal;font-size:12px;color:var(--ink3)}
+
+/* Continentes: aba de texto, não pílula colorida. */
+.cont-abas{display:flex;gap:18px;overflow-x:auto;padding:0 20px;margin:0 -20px;scrollbar-width:none}
+.cont-abas::-webkit-scrollbar{display:none}
+.cont-aba{flex:none;background:none;border:none;padding:6px 0;cursor:pointer;
+  font-size:15px;font-weight:600;color:var(--ink3);white-space:nowrap}
+.cont-aba.on{color:var(--ink);box-shadow:inset 0 -2px 0 var(--ink)}
+
+/* Mosaico: todas as viagens visíveis, a primeira com o dobro de altura.
+   O carrossel escondia o resto atrás de um gesto e precisava de pontinhos
+   pra avisar que havia mais. */
+.mosaico{display:grid;grid-template-columns:2fr 1fr;grid-auto-rows:118px;gap:8px;margin-top:14px}
+.vg-card{position:relative;overflow:hidden;border-radius:var(--r-photo);
+  background:var(--photo-empty);border:none;padding:0;cursor:pointer;display:block}
+.vg-card:active{opacity:.9}
+.vg-grande{grid-row:span 2}
+.vg-foto{position:absolute;inset:0;background-size:cover;background-position:center}
+.vg-scrim{position:absolute;inset:0;background:linear-gradient(to top,rgba(0,0,0,.55),transparent 55%)}
+.vg-pe{position:absolute;left:14px;right:14px;bottom:12px;text-align:left}
+.vg-nome{font-size:16px;font-weight:700;letter-spacing:-.02em;color:#fff;margin:0}
+.vg-grande .vg-nome{font-size:22px;letter-spacing:-.03em}
+.vg-meta{font-size:13px;color:rgba(255,255,255,.85);margin:2px 0 0}
+
+/* A ação sai do botão flutuante e vira palavra escrita, no fim da lista. */
+.btn-primario{background:var(--green);color:var(--on-green);border:none;
+  border-radius:var(--r-btn);font-size:14px;font-weight:600;cursor:pointer;padding:0 18px;height:44px}
+.btn-primario:active{opacity:.85}
+.btn-largo{display:block;width:100%;height:48px;border-radius:var(--r-card);margin-top:20px}
+
 /* Mapa sangrando pela direita, atrás do conteúdo. Entra só depois de carregado
    (a geometria vem de CDN e é pesada), por isso o fade — sem ele o mapa
    apareceria seco no meio de uma tela já desenhada. */
@@ -198,37 +253,24 @@ body{font-family:'Inter Tight',sans-serif;background:var(--base);color:var(--ink
    cobre o mapa. A margem negativa faz ele sangrar até as bordas apesar do
    padding lateral do painel. */
 .dash-top>.dash-mapa{position:relative;margin:2px -24px 6px;width:calc(100% + 48px);aspect-ratio:800/355;opacity:0;transition:opacity .5s ease;cursor:pointer}
-.dash-mapa.pronto{opacity:.55}
 /* o conteúdo fica na frente do mapa, e o mapa segue clicável na área livre */
 
-.dash-mapa svg{width:100%;height:100%;display:block}
 /* O wordmark do topo vira texto: a esfera armilar em Cinzel fica so no
    login, onde ela tem espaco pra ser lida como marca. */
 .dash-wordmark{font-size:20px;font-weight:700;letter-spacing:-.03em;color:var(--ink)}
 /* A frase inteira é o contador de países e abre a lista deles. */
-.dash-paises{display:inline-flex;align-items:baseline;gap:7px;margin-bottom:22px;cursor:pointer;-webkit-tap-highlight-color:transparent}
-.dash-paises:active{opacity:.65}
-.dp-n{font-family:'Inter Tight',sans-serif;font-size:29px;color:var(--ink);line-height:1}
-.dp-t{font-family:'Inter Tight',sans-serif;font-size:16px;color:var(--ink2)}
 .dash-convite{font-size:12.5px;color:var(--ink3);margin:-16px 0 20px;max-width:230px;line-height:1.45}
-.dash-top::before{content:"";position:absolute;inset:0;pointer-events:none;background:radial-gradient(420px 220px at 12% -20%,rgba(193,85,47,.16),transparent 60%),radial-gradient(360px 200px at 105% 5%,rgba(47,93,98,.22),transparent 55%)}
 .dash-top>*{position:relative;z-index:1}
-.dash-top-row{display:flex;align-items:center;justify-content:space-between;margin-bottom:6px}
 .dash-hello{font-size:14px;color:var(--ink3);margin-bottom:5px}
 .dash-email{font-size:12.5px;color:var(--ink3);margin-top:9px;cursor:pointer}
 .dash-name{font-family:'Inter Tight',sans-serif;font-weight:400;font-size:34px;color:var(--ink);letter-spacing:-.015em;line-height:1.05}
 .avatar{width:40px;height:40px;border-radius:50%;background:var(--green);display:flex;align-items:center;justify-content:center;font-size:16px;color:var(--dark);font-weight:600;cursor:pointer;flex-shrink:0;box-shadow:var(--shadow-sm),0 0 0 2px var(--surface)}
-.stats-strip{display:flex;gap:8px}
-.stat-block{flex:1;background:linear-gradient(160deg,var(--surface),rgba(234,231,224,.02));border:1px solid var(--border);border-radius:var(--r-sm);padding:13px 8px;text-align:center;box-shadow:var(--shadow-sm);cursor:pointer;transition:transform .15s,border-color .15s}
-.stat-block:active{transform:scale(.96)}
 /* No Dashboard o scorecard fica POR CIMA do mapa, e com fundo translúcido o
    mapa aparecia através dele — dava pra ver a Patagônia dentro do card
    "cidades". Aqui o fundo é opaco, na mesma cor que a versão translúcida
    aparentava ter sobre o fundo escuro (nada muda visualmente fora isso).
    O perfil do amigo usa .stat-block sem mapa atrás, então continua igual. */
 .dash-top .stat-block{background:linear-gradient(160deg,var(--surface),var(--surface))}
-.stat-n{font-family:var(--mono);font-weight:600;font-size:21px;color:var(--ink);line-height:1.1}
-.stat-l{font-size:11.5px;color:var(--ink3);margin-top:4px}
 .dash-body{padding:8px 24px calc(104px + env(safe-area-inset-bottom, 0px))}
 .section-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;margin-top:24px}
 /* Uma LINHA, nao um bloco. Antes era um cartao alto com a pergunta em cima e
@@ -409,8 +451,6 @@ body{font-family:'Inter Tight',sans-serif;background:var(--base);color:var(--ink
 .empty-state p{font-size:14px;line-height:1.55}
 
 /* FAB */
-.fab{position:fixed;bottom:calc(96px + env(safe-area-inset-bottom, 0px));right:calc(50% - 215px + 24px);width:56px;height:56px;background:var(--terra);border-radius:50%;display:flex;align-items:center;justify-content:center;cursor:pointer;z-index:50;font-size:26px;font-weight:300;color:#fff;border:none;font-family:'Inter Tight',sans-serif;line-height:1;box-shadow:var(--shadow-terra)}
-.fab:active{opacity:.8}
 @media(max-width:430px){.fab{right:24px}}
 
 /* BOTTOM NAV */
@@ -420,18 +460,20 @@ body{font-family:'Inter Tight',sans-serif;background:var(--base);color:var(--ink
    O padding-bottom de 18px existia pra escapar da home bar do iPhone; agora
    quem faz isso é o env(safe-area-inset-bottom), que o arquivo não usava em
    lugar nenhum — em iPhone sem home bar a barra desce os 18px de sobra. */
+/* A cápsula flutuante sai. Ela é o formato de barra de app gerado: pastilha
+   escura descolada do rodapé, com sombra e borda. A barra passa a ser o
+   próprio rodapé da página — mesma cor da base, sem borda, sem sombra, e
+   encostada embaixo. O que separa ela do conteúdo é o desfoque. */
 .bottom-nav{
   position:fixed;
-  bottom:calc(13px + env(safe-area-inset-bottom, 0px));
-  left:50%;transform:translateX(-50%);
-  width:min(430px, calc(100% - 26px));
-  background:rgba(11,22,32,.82);
-  -webkit-backdrop-filter:blur(16px) saturate(160%);
-  backdrop-filter:blur(16px) saturate(160%);
-  border:1px solid rgba(234,231,224,.09);
-  border-radius:24px;
-  display:flex;padding:6px;gap:2px;z-index:40;
-  box-shadow:0 12px 32px rgba(0,0,0,.42), 0 2px 8px rgba(0,0,0,.28);
+  bottom:0;left:50%;transform:translateX(-50%);
+  width:min(430px, 100%);
+  height:calc(78px + env(safe-area-inset-bottom, 0px));
+  padding-bottom:env(safe-area-inset-bottom, 0px);
+  background:rgba(245,245,243,.92);
+  -webkit-backdrop-filter:blur(20px);
+  backdrop-filter:blur(20px);
+  display:flex;align-items:center;z-index:40;
 }
 /* Sem blur no navegador que não suporta: aí o fundo vira opaco, senão a
    barra ficaria semitransparente por cima do conteúdo, ilegível. */
@@ -452,57 +494,16 @@ body.na-casca .bottom-nav{display:none}
   .trip-card:hover .tc-name{color:var(--accent)}
   .place-row{transition:background .15s}
   .place-row:hover{background:rgba(234,231,224,.035)}
-  .nav-item{transition:background .15s}
-  .nav-item:hover{background:rgba(234,231,224,.04)}
-  .action-btn,.sheet-cta{transition:background .15s}
-  .action-btn:hover,.sheet-cta:hover{background:var(--accent)}
-  .req-btn{transition:opacity .15s}
-  .req-btn:hover{opacity:.85}
-  .feed-item,.req-card{transition:background .15s}
-  .feed-item:hover{background:rgba(234,231,224,.035)}
-  a.reserve-btn{transition:background .15s,border-color .15s}
-  a.reserve-btn:hover{background:var(--surface);border-color:var(--ink)}
-  .new-trip-btn{transition:border-color .15s,background .15s}
-  .new-trip-btn:hover{border-color:var(--ink3);background:rgba(234,231,224,.04)}
-  .btn-google:hover,.btn-primary:hover{opacity:.9}
-  .btn-email-ghost:hover{opacity:.75}
 }
 
-/* ═══ DESKTOP (site, não coluna de celular flutuando) ═══ */
-/* === UM LAYOUT SO, EM TODA TELA ===
-
-   Aqui existia um @media(min-width:900px) que trocava a pilula inferior por
-   uma coluna de navegacao a esquerda e esparramava o conteudo por 900px.
-   Foi removido de proposito.
-
-   O motivo nao e estetico, e de custo: TODO defeito de layout encontrado em
-   11/09/2026 era exclusivo do desktop: capsula do item ativo esticada a
-   220px, telas por baixo da barra lateral com o titulo cortado, botao +
-   sobre o card de estatistica. Nenhum deles aparecia no celular, que e onde
-   o app e usado de verdade e e para onde ele vai na App Store. Dois layouts
-   custavam bug num e entregavam valor no outro.
-
-   Nao foi preciso escrever layout novo: o CSS base ja era feito pra isso.
-   body tem max-width:430px com margin:0 auto, .bottom-nav e centralizada com
-   left:50% + translateX(-50%), .sheet tem o mesmo teto de 430px e o .fab usa
-   right:calc(50% - 215px + 24px), que e exatamente o canto direito de uma
-   coluna de 430px centralizada. E html{background:var(--dark)} ja pintava a
-   area em volta. A media query era a unica coisa que desfazia tudo isso.
-
-   Efeito colateral bem-vindo: a correcao do .fab no desktop deixou de ser
-   necessaria, porque o desktop deixou de ter posicionamento proprio.
-
-   Custo aceito: no notebook sobra area vazia dos lados. Foi decisao do Lucas
-   em 11/09/2026 ("padronize"), sabendo disso. */
-
-.nav-item{flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;cursor:pointer;padding:9px 0 7px;border-radius:18px;transition:background .15s,transform .12s}
-.nav-item:active{transform:scale(.94)}
-/* Cápsula do ativo: mesma cor de acento de antes, só arredondada junto com a
-   pílula — quadrada dentro de uma barra redonda era o que destoava. */
-.nav-item.active{background:rgba(193,85,47,.16)}
-.nav-icon{font-size:21px;height:24px;display:flex;align-items:center}
-.nav-label{font-size:10.5px;font-weight:500;color:var(--ink3)}
-.nav-item.active .nav-label{color:var(--ink);font-weight:600}
+/* Itens da nav: sem pastilha de selecao. O ativo e so cor. */
+.nav-item{flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;
+  background:none;border:none;padding:0;cursor:pointer;color:var(--ink3)}
+.nav-item:active{opacity:.6}
+.nav-item.active{color:var(--green)}
+.nav-icon{font-size:22px;height:24px;display:flex;align-items:center}
+.nav-label{font-size:11px;font-weight:500;color:var(--ink3)}
+.nav-item.active .nav-label{color:var(--green);font-weight:600}
 
 /* TRIP VIEW */
 #trip{background:var(--surface)}
@@ -725,27 +726,10 @@ body.na-casca .bottom-nav{display:none}
 #dashboard .stat-l{font-family:var(--mono);font-size:10.5px;text-transform:lowercase}
 
 /* Continentes: trilho horizontal no lugar das pastas que abriam e fechavam. */
-.cont-trilho{display:flex;gap:8px;overflow-x:auto;padding:2px 24px 0;margin:0 -24px;scrollbar-width:none}
-.cont-trilho::-webkit-scrollbar{display:none}
-.cont-chip{flex:none;min-height:38px;font-family:var(--mono);font-size:10.5px;padding:9px 14px;border-radius:999px;border:1px solid transparent;background:transparent;color:var(--ink2);white-space:nowrap;cursor:pointer;transition:background .15s,color .15s,border-color .15s}
-.cont-chip.on{background:var(--terra);border-color:var(--terra);color:#fff}
 
 /* Carrossel de viagens. O card mostra o destino inteiro, em vez do selo de
    72px ao lado do nome. */
-.filme-viagens{display:flex;gap:12px;overflow-x:auto;padding:18px 24px 10px;margin:0 -24px;scroll-snap-type:x mandatory;scrollbar-width:none}
-.filme-viagens::-webkit-scrollbar{display:none}
-.vg-card{flex:none;width:250px;height:330px;border-radius:20px;overflow:hidden;position:relative;scroll-snap-align:start;border:none;padding:0;background:var(--elev,var(--surface));cursor:pointer;text-align:left;transition:transform .15s}
-.vg-card:active{transform:scale(.98)}
-.vg-foto{position:absolute;inset:0;background-size:cover;background-position:center}
-.vg-scrim{position:absolute;inset:0;background:linear-gradient(160deg,rgba(0,0,0,0) 0%,rgba(11,22,32,.55) 58%,var(--dark) 100%)}
-.vg-bandeira{position:absolute;top:16px;left:16px;z-index:2;font-size:26px;line-height:1}
 .vg-bandeira .bandeira-img{width:26px;height:26px}
-.vg-pe{position:absolute;left:18px;right:18px;bottom:18px;z-index:2}
-.vg-nome{font-family:'Inter Tight',sans-serif;font-weight:400;font-size:31px;line-height:1.02;letter-spacing:-.01em;color:#fff;margin:0;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical}
-.vg-meta{font-family:var(--mono);font-size:11px;color:var(--ink2);margin:8px 0 0}
-.filme-pag{display:flex;gap:5px;padding:2px 0 0}
-.filme-pag i{display:block;height:3px;width:8px;border-radius:2px;background:rgba(234,231,224,.3);transition:width .2s,background .2s}
-.filme-pag i.on{width:18px;background:var(--ink)}
 
 /* ═══ TELA DE SPOT — direção Atlas ═══
    A aposta da direção é "o lugar antes da palavra": a foto toma a tela como
@@ -1116,7 +1100,7 @@ svg.ic{width:1em;height:1em;display:inline-block;vertical-align:middle;flex:none
 svg.ic path,svg.ic circle,svg.ic line,svg.ic polyline,svg.ic rect{fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
 .nav-icon,.ct-icon,.co-icon,.so-emoji,.ei,.si,.dsi{display:flex;align-items:center;justify-content:center}
 .nav-icon{color:var(--ink3)}
-.nav-item.active .nav-icon{color:var(--ink)}
+.nav-item.active .nav-icon{color:var(--green)}
 .si,.dsi,.info-cell-icon{color:var(--ink3)}
 .status-opt.active .so-emoji{color:var(--green)}
 .star-btn svg.ic path{fill:currentColor;stroke:none}
@@ -1173,20 +1157,33 @@ svg.ic path,svg.ic circle,svg.ic line,svg.ic polyline,svg.ic rect{fill:none;stro
 </div>
 
 <div class="screen" id="dashboard">
-  <div class="dash-top">
-    <div class="dash-top-row">
+  <!-- O mapa deixa de ser enfeite no canto e vira a metade de cima da tela.
+       Os numeros pousam SOBRE ele, alinhados pela base, em vez de virarem
+       tres retangulos iguais — que era o "painel de indicadores" que se ve
+       em qualquer tela gerada. Cada numero e um botao. -->
+  <div class="dash-mapa-area">
+    <div class="dash-mapa" id="dashMapa" aria-hidden="true"></div>
+    <div class="dash-mapa-fade"></div>
+    <div class="dash-topo-linha">
       <div class="dash-wordmark">Spot</div>
       <div class="avatar" id="dashAvatar" onclick="goTo('profile');loadProfile()" role="button" tabindex="0" aria-label="Abrir seu perfil">?</div>
     </div>
-    <div class="dash-mapa" id="dashMapa" aria-hidden="true"></div>
-    <div class="dash-convite" id="dashConvite" style="display:none">Crie uma viagem para pintar o primeiro país.</div>
-    <div class="dash-paises" id="dashPaises" onclick="openList('countries')" role="button" tabindex="0"><span class="dp-n" id="dashPaisesN">0</span><span class="dp-t">de 195 países</span></div>
-    <div class="stats-strip">
-      <div class="stat-block" onclick="openList('spots')"><div class="stat-n" id="statSpots">0</div><div class="stat-l">spots</div></div>
-      <div class="stat-block" onclick="openList('cities')"><div class="stat-n" id="statCities">0</div><div class="stat-l">cidades</div></div>
-      <div class="stat-block" onclick="openList('trips')"><div class="stat-n" id="statTrips">0</div><div class="stat-l">viagens</div></div>
+    <div class="scorecard">
+      <button class="sc-item sc-hero" onclick="openList('countries')">
+        <span class="sc-n" id="dashPaisesN">0</span>
+        <span class="sc-r">países <i class="sc-seta">›</i></span>
+      </button>
+      <button class="sc-item" onclick="openList('cities')">
+        <span class="sc-n" id="statCities">0</span>
+        <span class="sc-r">cidades <i class="sc-seta">›</i></span>
+      </button>
+      <button class="sc-item" onclick="openList('spots')">
+        <span class="sc-n" id="statSpots">0</span>
+        <span class="sc-r">lugares <i class="sc-seta">›</i></span>
+      </button>
     </div>
   </div>
+  <div class="dash-convite" id="dashConvite" style="display:none">Crie uma viagem para pintar o primeiro país.</div>
   <div class="checkin-banner" id="checkinBanner" style="display:none">
     <div class="checkin-icon" data-ic="pin"></div>
     <div class="checkin-q">Você está em <span id="checkinName"></span>?</div>
@@ -1194,7 +1191,6 @@ svg.ic path,svg.ic circle,svg.ic line,svg.ic polyline,svg.ic rect{fill:none;stro
     <button class="checkin-x" onclick="checkinIgnore()" data-ic="close" aria-label="Ignorar"></button>
   </div>
   <div class="dash-body" id="tripsContainer"><div class="section-head"><span class="section-title">Minhas viagens</span></div><div class="empty-state"><div class="ei" data-ic="suitcase"></div><h3>Nenhuma viagem ainda</h3><p>Toca no + para criar sua primeira viagem</p></div></div>
-  <button class="fab" onclick="comecarSpotSemViagem()">+</button>
   <div class="bottom-nav"><div class="nav-item active" onclick="goTo('dashboard');loadDashboard()"><div class="nav-icon" data-ic="map"></div><div class="nav-label" style="color:var(--ink);font-weight:600">Viagens</div></div><div class="nav-item" onclick="goTo('explore');loadExplore()"><div class="nav-icon" data-ic="search"></div><div class="nav-label">Explorar</div></div><div class="nav-item" onclick="goTo('friends');loadFriends()"><div class="nav-icon" data-ic="users"></div><div class="nav-label">Amigos</div></div><div class="nav-item" onclick="goTo('profile');loadProfile()"><div class="nav-icon" data-ic="user"></div><div class="nav-label">Perfil</div></div></div>
 </div>
 
@@ -2645,13 +2641,17 @@ async function loadDashboard(){
     dbUpdate('trips',t.id,{dates:'__quickvisit__'});
     t.dates='__quickvisit__';
   }
-  document.getElementById('statTrips').textContent=PLACAR.viagens;
-  document.getElementById('statSpots').textContent=PLACAR.spots;
-  document.getElementById('statCities').textContent=PLACAR.cidades;
+  // statTrips saiu do scorecard: quantas viagens existem ja se le no
+  // mosaico logo abaixo. Escrever em elemento que pode nao existir mais e o
+  // tipo de coisa que derruba a tela inteira por um numero.
+  const pinta=(id,v)=>{const el=document.getElementById(id);if(el)el.textContent=v};
+  pinta('statTrips',PLACAR.viagens);
+  pinta('statSpots',PLACAR.spots);
+  pinta('statCities',PLACAR.cidades);
   // O contador de países virou a frase do topo, e leva pra mesma lista de antes.
   // 195 é o número de países soberanos — o mesmo denominador que o Perfil já
   // usa pra calcular a porcentagem (o "X/243" de lá conta territórios também).
-  document.getElementById('dashPaisesN').textContent=PLACAR.paises;
+  pinta('dashPaisesN',PLACAR.paises);
   const convite=document.getElementById('dashConvite');
   if(convite)convite.style.display=PLACAR.paises?'none':'block';
   // A geometria já vinha carregando desde o começo desta função, em paralelo
@@ -2758,19 +2758,21 @@ function renderTrips(){
   if(!REGIAO_ATIVA||!groups[REGIAO_ATIVA])REGIAO_ATIVA=ordem[0];
   const trips=groups[REGIAO_ATIVA]||[];
 
-  let h='<div class="cont-trilho">';
-  h+=ordem.map(r=>'<button class="cont-chip'+(r===REGIAO_ATIVA?' on':'')
+  // Continentes viram ABAS DE TEXTO. A pilula colorida e o mesmo cacoete do
+  // painel de indicadores: enfeite carregando informacao que o texto ja da.
+  let h='<nav class="cont-abas">';
+  h+=ordem.map(r=>'<button class="cont-aba'+(r===REGIAO_ATIVA?' on':'')
     +'" onclick="trocarRegiao(\''+esc(r)+'\')">'+esc(r)+' · '+groups[r].length+'</button>').join('');
-  h+='</div>';
+  h+='</nav>';
 
-  h+='<div class="filme-viagens" id="filmeViagens" onscroll="aoRolarFilme()">';
-  h+=trips.map(t=>cardDeViagem(t)).join('');
+  // De carrossel pra MOSAICO. O carrossel escondia as viagens fora da tela
+  // atras de um gesto, e obrigava a barra de pontinhos pra avisar que havia
+  // mais. No mosaico todas aparecem, e a primeira ocupa o dobro — que e a
+  // assimetria que faltava na tela inteira.
+  h+='<div class="mosaico">';
+  h+=trips.map((t,i)=>cardDeViagem(t,i===0)).join('');
   h+='</div>';
-
-  if(trips.length>1){
-    h+='<div class="filme-pag" id="pagViagens">'
-      +trips.map((_,i)=>'<i class="'+(i?'':'on')+'"></i>').join('')+'</div>';
-  }
+  h+='<button class="btn-primario btn-largo" onclick="comecarSpotSemViagem()">Adicionar lugar</button>';
   c.innerHTML=h;
   fillTripPhotos();
   darDadosDeViagens();
@@ -2852,12 +2854,13 @@ window.acaoDeViagens=function(acao,valor){
   if(acao==='recarregar'){loadDashboard();return}
 };
 
-function cardDeViagem(t){
+// A bandeira sai do card: ela aparece na tela da viagem, onde ha espaco pra
+// ela significar alguma coisa. No card ela competia com a foto.
+function cardDeViagem(t,grande){
   const destino=(t.destinations&&t.destinations[0])||t.name;
-  return '<button class="vg-card" onclick="openTrip(\''+esc(t.id)+'\')">'
+  return '<button class="vg-card'+(grande?' vg-grande':'')+'" onclick="openTrip(\''+esc(t.id)+'\')">'
     +'<div class="vg-foto" id="tcbg-'+esc(t.id)+'" style="background-image:'+destGradient(destino)+'"></div>'
     +'<div class="vg-scrim"></div>'
-    +'<span class="vg-bandeira">'+flagHTML(destino)+'</span>'
     +'<div class="vg-pe"><h3 class="vg-nome">'+esc(t.name)+'</h3>'
     +'<p class="vg-meta" id="tcmeta-'+esc(t.id)+'">'+esc(tripMetaText(t))+'</p></div>'
     +'</button>';
