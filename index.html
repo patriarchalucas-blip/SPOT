@@ -333,7 +333,7 @@ body{font-family:'Inter Tight',sans-serif;background:var(--base);color:var(--ink
 .region-chevron{width:15px;height:15px;color:var(--ink3);transition:transform .2s ease;flex-shrink:0}
 .region-folder.open .region-chevron{transform:rotate(90deg)}
 .region-name{font-size:14px;font-weight:600;color:var(--ink2);flex:1}
-.region-count{font-family:var(--mono);font-size:11px;color:var(--ink3);background:rgba(234,231,224,.07);border-radius:var(--r-pill);padding:2px 10px;flex-shrink:0}
+.region-count{font-size:13px;color:var(--ink3);flex-shrink:0}
 /* colapso por display — transição de grid-template-rows tem suporte irregular
    (inclusive no Safari do iPhone), então aqui vale confiabilidade, não animação */
 .region-body-wrap{display:none}
@@ -378,16 +378,16 @@ body{font-family:'Inter Tight',sans-serif;background:var(--base);color:var(--ink
 .amg-chip-quer{border-style:dashed;color:var(--ink3)}
 /* 40px porque e alvo de toque, e nao encosta nos chips de nome: sao dois
    destinos diferentes na mesma linha e errar o alvo abre a tela errada. */
-.amg-avatar{width:44px;height:44px;border-radius:50%;flex-shrink:0;background:var(--green);color:#fff;display:flex;align-items:center;justify-content:center;font-family:var(--mono);font-size:14px;}
+.amg-avatar{width:44px;height:44px;border-radius:50%;flex-shrink:0;background:var(--green);color:var(--on-green);display:flex;align-items:center;justify-content:center;font-family:var(--mono);font-size:14px;}
 .amg-seta{color:var(--ink3);font-size:19px;flex-shrink:0}
 .amg-quer-selo{font-size:13px;color:var(--ink3)}
 /* "aqui" na viagem que bate com o lugar. E dica, nao escolha automatica. */
-.trip-sug{font-family:var(--mono);font-size:9.5px;color:var(--green);border:1px solid var(--green);border-radius:4px;padding:1px 5px;margin-left:7px;vertical-align:middle}
+.trip-sug{font-size:12px;font-weight:600;color:var(--green);margin-left:7px;vertical-align:1px}
 /* 34px de alvo, encostado na borda direita: a linha inteira ja e clicavel
    (abre o pais), entao o botao precisa ser facil de acertar E dificil de
    acertar sem querer. */
 .cr-tirar{flex-shrink:0;width:34px;height:34px;margin-left:6px;margin-right:-6px;border:none;background:none;color:var(--ink3);display:flex;align-items:center;justify-content:center;cursor:pointer;border-radius:50%}
-.cr-tirar:active{opacity:.5;background:rgba(168,52,44,.12);color:var(--red)}
+.cr-tirar:active{opacity:.5}
 .cr-tirar svg{width:15px;height:15px}
 .section-sub{font-size:14px;color:var(--ink2)}
 .est-mosaico{display:grid;grid-template-columns:1fr 1fr;gap:8px}
@@ -408,22 +408,22 @@ body{font-family:'Inter Tight',sans-serif;background:var(--base);color:var(--ink
 /* Chips de reserva: pequenos, lado a lado, so o nome. A seta diz que sai do
    app sem precisar de texto explicando. 44px de altura porque e alvo de toque. */
 .coment-bloco{margin-top:8px}
-.coment-titulo{font-family:var(--mono);font-size:10.5px;color:var(--ink3);margin-bottom:12px}
-.coment-item{display:flex;gap:10px;padding:10px 0;border-top:1px solid var(--border)}
+.coment-titulo{font-size:20px;font-weight:700;letter-spacing:-.03em;color:var(--ink);margin-bottom:14px}
+.coment-item{display:flex;gap:12px;padding:0 0 18px;border-top:none}
 .coment-av{width:30px;height:30px;border-radius:50%;flex-shrink:0;background:var(--green);color:#fff;
   display:flex;align-items:center;justify-content:center;font-family:var(--mono);font-size:11px}
 .coment-corpo{flex:1;min-width:0}
 .coment-topo{display:flex;align-items:center;gap:8px}
-.coment-nome{font-size:13px;font-weight:600;color:var(--ink)}
-.coment-quando{font-family:var(--mono);font-size:10px;color:var(--ink3)}
+.coment-nome{font-size:15px;font-weight:600;color:var(--ink)}
+.coment-quando{font-size:12px;color:var(--ink3)}
 /* O X fica no fim da linha e so aparece pra quem pode apagar. */
 .coment-x{margin-left:auto;width:30px;height:30px;border:none;background:none;color:var(--ink3);
   display:flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0}
-.coment-x:active{opacity:.5;color:var(--red)}
+.coment-x:active{opacity:.5}
 .coment-x svg{width:13px;height:13px}
-.coment-txt{font-size:13.5px;color:var(--ink2);line-height:1.5;margin-top:3px;white-space:pre-wrap;word-break:break-word}
-.coment-escrever{display:flex;gap:8px;align-items:flex-end;margin-top:14px}
-.coment-campo{flex:1;min-height:44px;max-height:120px;padding:12px 14px;border:1px solid var(--border);
+.coment-txt{font-size:15px;color:var(--ink);line-height:1.45;margin-top:3px;white-space:pre-wrap;word-break:break-word}
+.coment-escrever{display:flex;gap:8px;align-items:flex-end;margin-top:4px}
+.coment-campo{flex:1;min-height:44px;max-height:120px;padding:12px 14px;border:none;
   border-radius:var(--r-sm);background:var(--white);font-family:inherit;font-size:13.5px;color:var(--ink);resize:none}
 .coment-enviar{min-height:44px;padding:0 18px;border:none;border-radius:var(--r-sm);background:var(--green);
   color:#fff;font-family:inherit;font-size:13.5px;font-weight:600;cursor:pointer;flex-shrink:0}
@@ -466,17 +466,20 @@ body{font-family:'Inter Tight',sans-serif;background:var(--base);color:var(--ink
 .lcount{font-size:13px;color:var(--ink2);white-space:nowrap;flex-shrink:0}
 /* Denúncia e bloqueio — exigência 1.2 da Apple. Alvos de toque com 44px de
    altura mínima, que é o mínimo que a Apple também espera. */
-.den-sobre{padding:0 24px 12px;font-size:13.5px;color:var(--ink3);font-family:var(--mono)}
+.den-sobre{padding:0 20px 12px;font-size:14px;color:var(--ink2)}
 .den-motivos{display:flex;flex-direction:column;gap:7px;padding:0 24px 14px}
-.den-motivo{text-align:left;min-height:44px;padding:11px 14px;border:1px solid var(--border);border-radius:var(--r-sm);background:transparent;color:var(--ink2);font-size:14px;font-family:inherit;cursor:pointer;transition:border-color .15s,color .15s}
+.den-motivo{text-align:left;min-height:44px;padding:11px 14px;border:none;border-radius:var(--r-btn);background:transparent;color:var(--ink2);font-size:14px;font-family:inherit;cursor:pointer;transition:border-color .15s,color .15s}
 .den-motivo.on{border-color:var(--ink);color:var(--ink);font-weight:500}
 .lista-bloqueados{padding:0 24px 8px;display:flex;flex-direction:column;gap:10px;max-height:46vh;overflow-y:auto}
 .blq-linha{display:flex;align-items:center;gap:11px;min-height:44px}
 .blq-nome{flex:1;min-width:0;font-size:14.5px;color:var(--ink);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.blq-desfazer{flex:none;min-height:36px;padding:7px 13px;border:1px solid var(--border);border-radius:999px;background:transparent;color:var(--ink2);font-size:12.5px;font-family:var(--mono);cursor:pointer}
+.blq-desfazer{flex:none;min-height:36px;padding:7px 13px;border:none;border-radius:var(--r-btn);background:transparent;color:var(--ink2);font-size:12.5px;font-family:var(--mono);cursor:pointer}
 /* Botão de denunciar dentro do comentário: discreto, mas alcançável. */
-.coment-den{flex:none;background:none;border:none;color:var(--ink3);font-size:11px;font-family:var(--mono);cursor:pointer;padding:4px 6px;margin-left:2px}
-.friend-mais{margin-left:auto;flex:none;width:44px;height:44px;display:flex;align-items:center;justify-content:center;background:rgba(11,22,32,.5);border:1px solid rgba(255,255,255,.16);border-radius:50%;color:#fff;cursor:pointer}
+.coment-den{flex:none;background:none;border:none;color:var(--ink3);font-size:12px;cursor:pointer;padding:4px 6px;margin-left:2px}
+.friend-mais{flex:none;width:36px;height:36px;display:flex;align-items:center;justify-content:center;
+  background:var(--surface);border:none;border-radius:50%;color:var(--ink);cursor:pointer}
+.friend-mais:active{opacity:.7}
+.friend-mais svg{width:18px;height:18px}
 .lflag{font-size:22px;flex-shrink:0;line-height:1}
 /* Bandeira desenhada como imagem onde o sistema não tem o glifo (Windows).
    Dimensionada em `em` pra herdar o tamanho de quem a contém, então cada
@@ -488,12 +491,14 @@ body{font-family:'Inter Tight',sans-serif;background:var(--base);color:var(--ink
 /* nome NUNCA corta com "..." — quebra em quantas linhas precisar e o card cresce */
 .trip-card{display:flex;gap:14px;margin-bottom:14px;cursor:pointer;position:relative;border:1px solid var(--border);border-radius:var(--r);background:var(--white);padding:14px;align-items:flex-start;transition:transform .15s,border-color .15s,box-shadow .15s;box-shadow:var(--shadow-sm)}
 .trip-card:active{transform:scale(.99)}
-.tc-photo{width:72px;height:72px;flex-shrink:0;border-radius:var(--r-sm);background-size:cover;background-position:center;background-color:var(--dark);order:2}
+.tc-photo{width:64px;height:64px;flex-shrink:0;border-radius:var(--r-card);background-size:cover;
+  background-position:center;background-color:var(--photo-empty);order:2}
 .tc-stub{flex:1;min-width:0;padding:0;display:flex;flex-direction:column;border-left:none;order:1}
 .tc-stub-top{display:flex;align-items:center;gap:8px}
 .tc-flag{font-size:15px;line-height:1}
-.tc-name{font-family:'Inter Tight',sans-serif;font-weight:400;font-size:23px;color:var(--ink);line-height:1.15;letter-spacing:-.01em;margin:7px 0 0;overflow-wrap:break-word}
-.tc-meta{font-family:var(--mono);font-size:11px;color:var(--ink3);margin-top:7px;line-height:1.5}
+.tc-name{font-size:16px;font-weight:600;color:var(--ink);line-height:1.25;letter-spacing:-.02em;
+  margin:2px 0 0;overflow-wrap:break-word}
+.tc-meta{font-size:13px;color:var(--ink2);margin-top:2px;line-height:1.4}
 .prog-circle{width:32px;height:32px;flex-shrink:0}
 .empty-state{text-align:center;padding:48px 20px;color:var(--ink2)}
 /* O icone perde a medalha (circulo cinza com borda e sombra por dentro). */
@@ -715,12 +720,12 @@ body.na-casca .bottom-nav{display:none}
 .ili-seta{flex-shrink:0;color:var(--ink3);font-size:17px}
 .info-linha-item:active{opacity:.6}
 .info-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
-.info-cell{background:var(--white);border:1px solid var(--border);border-radius:var(--r-sm);padding:14px}
+.info-cell{background:var(--surface);border:none;border-radius:var(--r-card);padding:14px}
 .info-cell.wide{grid-column:1/-1}
 .info-cell-icon{font-size:16px;margin-bottom:8px}
-.info-cell-label{font-size:11.5px;color:var(--ink3);margin-bottom:5px}
-.info-cell-value{font-size:14px;font-weight:500;color:var(--ink)}
-.info-cell-sub{font-family:var(--mono);font-size:8px;color:var(--ink3);margin-top:3px;}
+.info-cell-label{font-size:13px;color:var(--ink2);margin-bottom:4px}
+.info-cell-value{font-size:15px;font-weight:600;color:var(--ink)}
+.info-cell-sub{font-size:12px;color:var(--ink3);margin-top:3px}
 /* Segmentado: o trilho e a superficie secundaria, e a opcao escolhida e a
    COR DA PAGINA por cima dela. Cada estado tinha uma cor propria (ambar,
    verde, vermelho) — tres acentos pra escolher entre tres palavras. */
@@ -769,7 +774,7 @@ body.na-casca .bottom-nav{display:none}
   background:rgba(22,35,42,.94);border:1px solid rgba(255,255,255,.13);
   backdrop-filter:blur(10px);color:var(--ink);font-size:12.5px;line-height:1.35;
   box-shadow:0 6px 24px rgba(0,0,0,.3);pointer-events:none}
-.ao-ponto{width:7px;height:7px;border-radius:50%;background:var(--amber);flex-shrink:0}
+.ao-ponto{width:7px;height:7px;border-radius:50%;background:var(--green);flex-shrink:0}
 @media(min-width:900px){.aviso-offline{left:auto;right:20px;bottom:20px;max-width:340px}}
 /* Resultados da busca de pessoa. Reaproveita .req-card pra linha ficar
    igual à de pedido recebido — é a mesma coisa vista de outro ângulo. */
@@ -976,7 +981,8 @@ body.na-casca .bottom-nav{display:none}
 .pl-ic svg{width:18px;height:18px}
 .pl-txt{flex:1;font-size:15px;color:var(--ink)}
 .pl-seta{color:var(--ink3);font-size:17px;flex-shrink:0}
-.prof-sair .pl-txt{color:var(--red)}
+/* Sair da conta perde a cor propria: destrutivo e cinza, nao vermelho. */
+.prof-sair .pl-txt{color:var(--ink3)}
 /* Uma linha de dado logo abaixo do nome, no lugar do email solto no rodape.
    O email ja esta em Configuracoes; aqui ele so ocupava a ultima linha sem
    ninguem nunca precisar dele. */
@@ -990,14 +996,19 @@ body.na-casca .bottom-nav{display:none}
 .pn-item:active{opacity:.6}
 .pn-n{font-size:28px;font-weight:700;letter-spacing:-.04em;color:var(--ink);line-height:1}
 .pn-r{font-size:13px;color:var(--ink2)}
-.prof-email{font-family:var(--mono);font-size:11px;color:var(--ink3);text-align:center;margin-top:22px}
+.prof-email{font-size:13px;color:var(--ink3);text-align:center;margin-top:22px}
 /* ═══ PERFIL DE AMIGO (só leitura) ═══ */
-.friend-top{display:flex;align-items:center;gap:14px;padding:40px 22px 14px;background:var(--base);position:relative;z-index:5}
+.friend-top{display:flex;align-items:center;gap:12px;padding:18px 20px 12px;background:var(--base);
+  position:relative;z-index:5}
 .friend-top .back-btn{position:static;flex-shrink:0}
-.friend-id{min-width:0}
-.friend-name{font-family:'Inter Tight',sans-serif;font-size:20px;font-weight:600;color:var(--ink);line-height:1.15;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.friend-user{font-family:'Inter Tight',sans-serif;font-size:12px;color:var(--ink3);margin-top:2px}
-.friend-bio{padding:0 22px 16px;background:var(--base);font-size:13.5px;color:var(--ink2);line-height:1.5}
+/* O avatar do amigo nao vira bloco de 88 como o do dono da conta: aqui ele
+   divide a linha com voltar e com o menu, e a tela e de leitura. */
+.friend-top .profile-avatar{width:44px;height:44px;border-radius:12px;font-size:16px;flex-shrink:0}
+.friend-id{min-width:0;flex:1}
+.friend-name{font-size:20px;font-weight:700;letter-spacing:-.03em;color:var(--ink);line-height:1.15;
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.friend-user{font-size:13px;color:var(--ink2);margin-top:2px}
+.friend-bio{padding:0 20px 16px;background:var(--base);font-size:15px;color:var(--ink2);line-height:1.45}
 /* Linha de amigo na aba Amigos */
 .friend-row{display:flex;align-items:center;gap:12px;padding:10px 0;cursor:pointer}
 .friend-row:active{opacity:.6}
@@ -1016,7 +1027,7 @@ body.na-casca .bottom-nav{display:none}
   border:3px solid var(--base)}
 .avatar-edit-badge svg{width:13px;height:13px}
 .profile-name{font-size:34px;font-weight:700;letter-spacing:-.04em;color:var(--ink);line-height:1.05}
-.profile-map-block{position:relative;width:100%;aspect-ratio:800/420;background:var(--base);overflow:hidden}
+.profile-map-block{position:relative;width:100%;aspect-ratio:800/420;background:var(--map-bg);overflow:hidden}
 .world-map-wrap{position:absolute;inset:0;line-height:0;touch-action:none}
 .world-map-wrap svg{width:100%;height:100%;display:block;cursor:grab}
 .world-map-wrap svg:active{cursor:grabbing}
@@ -1027,25 +1038,29 @@ body.na-casca .bottom-nav{display:none}
    cima dela, e o verde marca so onde a pessoa esteve. */
 .wm-country{fill:#CBD3CD;stroke:none;transition:fill .4s}
 .wm-country.visited{fill:var(--green)}
-.map-zoom-hint{position:absolute;bottom:10px;left:0;right:0;text-align:center;color:rgba(255,255,255,0.5);font-size:11px;pointer-events:none;z-index:2}
-.mapa-topo{display:flex;align-items:center;gap:12px;padding:40px 20px 14px;background:var(--dark);position:relative;z-index:3}
+.map-zoom-hint{position:absolute;bottom:10px;left:0;right:0;text-align:center;color:var(--ink3);
+  font-size:12px;pointer-events:none;z-index:2}
+.mapa-topo{display:flex;align-items:center;gap:12px;padding:18px 20px 14px;background:var(--base);
+  position:relative;z-index:3}
 .mapa-topo .back-btn{position:static;flex-shrink:0}
-.mapa-titulo{font-family:'Inter Tight',sans-serif;font-size:19px;color:var(--ink)}
+.mapa-titulo{font-size:20px;font-weight:700;letter-spacing:-.03em;color:var(--ink)}
 .profile-body{padding:0 20px 24px;background:var(--base)}
 /* Lista em linhas, não chips. Chip de largura variável quebrando linha deixa
    a borda direita serrilhada, e o selo "mora aqui" inchava um chip no meio da
    fila. Linha é o mesmo padrão que a tela de lista e a de amigos já usam, a
    borda fica reta com 3 ou 30 países, e sobra lugar pra contagem de spots —
    que diz algo, ao contrário do chip que só repetia o nome. */
-.country-row{display:flex;align-items:center;gap:11px;padding:11px 0;border-bottom:1px solid var(--border);cursor:pointer}
-.country-row:last-of-type{border-bottom:none}
-.cr-flag{font-size:17px;flex-shrink:0;line-height:1}
-.cr-name{flex:1;font-size:14.5px;color:var(--ink);min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.cr-count{font-family:var(--mono);font-size:11px;color:var(--ink3);flex-shrink:0}
-.cr-home{font-family:var(--mono);font-size:9.5px;color:var(--terra);background:rgba(193,85,47,.14);border-radius:var(--r-pill);padding:2px 7px;flex-shrink:0}
-.country-vertodos{display:block;padding:12px 0 2px;font-size:12.5px;color:var(--ink3);cursor:pointer}
+.country-row{display:flex;align-items:center;gap:12px;padding:12px 0;cursor:pointer}
+.country-row:active{opacity:.6}
+.cr-flag{font-size:20px;flex-shrink:0;line-height:1}
+.cr-name{flex:1;font-size:16px;font-weight:600;letter-spacing:-.02em;color:var(--ink);min-width:0;
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.cr-count{font-size:13px;color:var(--ink2);flex-shrink:0}
+/* "mora aqui" perde a pilula colorida e vira o proprio verde do sistema. */
+.cr-home{font-size:13px;font-weight:600;color:var(--green);flex-shrink:0}
+.country-vertodos{display:block;padding:14px 0 2px;font-size:14px;font-weight:600;color:var(--green);cursor:pointer}
 /* separador "ou" entre enviar pedido e convidar por link */
-.conv-ou{display:flex;align-items:center;gap:10px;margin:16px 0 12px;color:var(--ink3);font-size:11px;font-family:var(--mono)}
+.conv-ou{display:flex;align-items:center;gap:10px;margin:16px 0 12px;color:var(--ink3);font-size:13px}
 .conv-ou::before,.conv-ou::after{content:'';flex:1;height:1px;background:var(--border)}
 .conv-dica{font-size:11.5px;color:var(--ink3);text-align:center;margin-top:10px;line-height:1.5}
 /* faixa de quem convidou, na tela de login */
@@ -1054,7 +1069,7 @@ body.na-casca .bottom-nav{display:none}
 .convite-quem{font-size:14px;color:inherit;line-height:1.4}
 .convite-quem b{font-weight:600}
 .country-chips{display:block;margin-top:4px}
-.country-chip{background:var(--white);border:1px solid var(--border);border-radius:var(--r-pill);padding:8px 14px;font-size:13px;color:var(--ink2);display:flex;align-items:center;gap:6px}
+.country-chip{background:var(--surface);border:none;border-radius:var(--r-btn);padding:8px 14px;font-size:14px;color:var(--ink);display:flex;align-items:center;gap:6px}
 .country-chips-empty{color:var(--ink3);font-size:14px;padding:8px 0}
 
 /* OVERLAYS */
@@ -1081,8 +1096,9 @@ body.na-casca .bottom-nav{display:none}
 .sheet-fixa .lista-rolante{flex:1;min-height:0;overflow-y:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none}
 .sheet-fixa .lista-rolante::-webkit-scrollbar{display:none}
 .sheet-fixa .sheet-cta{flex:none;margin-bottom:24px}
-.lista-grupo{position:sticky;top:0;background:var(--white);font-family:'Inter Tight',sans-serif;font-size:11px;color:var(--ink3);padding:12px 24px 6px;z-index:1}
-.dest-result.on{background:rgba(193,85,47,.08)}
+.lista-grupo{position:sticky;top:0;background:var(--base);font-size:13px;font-weight:600;
+  color:var(--ink2);padding:14px 20px 6px;z-index:1}
+.dest-result.on{background:var(--surface)}
 /* Vazio o circulo tem que ficar VAZIO: com o check sempre desenhado (so
    pintado da cor do fundo) ele reaparecia em qualquer tema que nao fosse
    exatamente aquela cor, e ai todo pais parecia selecionado. */
@@ -1146,7 +1162,9 @@ body.na-casca .bottom-nav{display:none}
 .search-powered strong{font-size:12px;color:var(--ink2);font-weight:600}
 .search-result{display:flex;align-items:center;gap:12px;padding:12px 24px;cursor:pointer}
 .search-result:active{background:var(--surface)}
-.sr-icon{width:44px;height:44px;border-radius:var(--r-sm);background:var(--dark);display:flex;align-items:center;justify-content:center;font-size:19px;border:1px solid var(--border);flex-shrink:0;color:var(--ink3)}
+.sr-icon{width:48px;height:48px;border-radius:var(--r-card);background:var(--surface);display:flex;
+  align-items:center;justify-content:center;border:none;flex-shrink:0;color:var(--ink2)}
+.sr-icon svg{width:18px;height:18px}
 .sr-name{font-size:14.5px;font-weight:500;color:var(--ink)}
 .sr-meta{font-size:12px;color:var(--ink3);margin-top:3px}
 .search-loading{text-align:center;padding:32px;color:var(--ink3);font-size:14px}
