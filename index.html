@@ -716,15 +716,17 @@ body.na-casca .bottom-nav{display:none}
   color:var(--ink);border:none;border-radius:var(--r-card);padding:14px;font-family:'Inter Tight',sans-serif;
   font-size:14px;font-weight:600;text-decoration:none;margin-top:12px}
 .reserve-btn:active{opacity:.7}
-.req-card{display:flex;align-items:center;gap:9px;background:var(--white);border:1px solid var(--border);border-radius:var(--r);padding:13px 14px;margin-bottom:10px;box-shadow:var(--shadow-sm)}
+.req-card{display:flex;align-items:center;gap:10px;padding:10px 0}
 .req-card>div[style*="flex:1"]{min-width:0}
-.req-name{font-size:14.5px;font-weight:600;color:var(--ink);flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.req-email{font-size:12px;color:var(--ink3);margin-top:3px}
+.req-name{font-size:15px;font-weight:600;color:var(--ink);flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.req-email{font-size:13px;color:var(--ink2);margin-top:2px}
 /* flex-shrink:0 + nowrap: sem isso, avatar + nome + dois botões numa linha de
    375px espremiam os botões até o "Recusar" deformar. O nome é que cede
    espaço (tem ellipsis), não os botões. */
-.req-btn{border:none;border-radius:9px;padding:9px 13px;font-family:'Inter Tight',sans-serif;font-size:13px;font-weight:600;cursor:pointer;flex-shrink:0;white-space:nowrap}
-.req-accept{background:var(--terra);color:#fff}
+.req-btn{border:none;border-radius:var(--r-btn);min-height:40px;padding:0 14px;font-family:'Inter Tight',sans-serif;
+  font-size:14px;font-weight:600;cursor:pointer;flex-shrink:0;white-space:nowrap}
+.req-btn:active{opacity:.8}
+.req-accept{background:var(--green);color:var(--on-green)}
 /* Faixa de "sem conexão". Fixa, não toast: quem abriu o app no avião
    precisa continuar sabendo que o que está na tela pode estar velho. Fica
    acima da barra de navegação de baixo pra não cobrir os botões. */
@@ -741,7 +743,7 @@ body.na-casca .bottom-nav{display:none}
 .busca-dica{font-size:13.5px;color:var(--ink3);padding:12px 2px;line-height:1.5}
 .busca-user{font-family:'Inter Tight',sans-serif;font-size:11.5px;color:var(--ink3);margin-top:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .busca-estado{font-family:'Inter Tight',sans-serif;font-size:10.5px;color:var(--ink3);flex-shrink:0;white-space:nowrap}
-.req-decline{background:rgba(234,231,224,.07);color:var(--ink3)}
+.req-decline{background:var(--surface);color:var(--ink)}
 /* ═══ EXPLORAR E PERFIL — mesma linguagem ═══
    Estas duas não foram desenhadas no modelo. O documento de entrega diz que
    devem seguir a mesma linguagem, então recebem só o que define a direção:
@@ -804,15 +806,22 @@ body.na-casca .bottom-nav{display:none}
    FAB flutuante, que não faz sentido aqui: nesta tela não se adiciona spot).
    Abas viram controle segmentado com TRÊS opções, e "Pedidos" deixa de ser
    uma faixa solta acima da lista pra virar aba própria. */
-.am-topo{display:flex;align-items:center;justify-content:space-between;gap:14px;padding:calc(26px + env(safe-area-inset-top,0px)) 24px 0;flex:none}
-.am-titulo{font-family:'Inter Tight',sans-serif;font-weight:400;font-size:30px;margin:0;letter-spacing:-.01em;color:var(--ink)}
-.am-add{width:40px;height:40px;flex:none;border-radius:50%;border:1px solid transparent;background:transparent;color:var(--ink);display:flex;align-items:center;justify-content:center;cursor:pointer}
-.am-add:active{transform:scale(.94)}
-.am-abas{display:flex;gap:4px;background:var(--surface);border-radius:12px;padding:4px;margin:18px 24px 0;flex:none}
-.am-abas button{flex:1;min-height:40px;padding:10px 0;border:none;border-radius:9px;background:transparent;font-family:inherit;font-size:13px;font-weight:500;color:var(--ink3);cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px;transition:background .15s,color .15s}
-.am-abas button.on{background:var(--elev,var(--surface));font-weight:600;color:var(--ink)}
-.am-badge{font-family:var(--mono);font-size:10px;background:var(--terra);color:#fff;border-radius:999px;padding:1px 6px;line-height:1.5}
-.am-abas button.on .am-badge{background:var(--terra)}
+.am-topo{display:flex;align-items:center;justify-content:space-between;gap:14px;
+  padding:calc(18px + env(safe-area-inset-top,0px)) 20px 0;flex:none}
+.am-titulo{font-size:34px;font-weight:700;margin:0;letter-spacing:-.04em;color:var(--ink);line-height:1.05}
+.am-add{width:36px;height:36px;flex:none;border-radius:50%;border:none;background:var(--surface);
+  color:var(--ink);display:flex;align-items:center;justify-content:center;cursor:pointer}
+.am-add:active{opacity:.7}
+/* Recente · Amigos · Pedidos sao NAVEGACAO, nao escolha de estado: viram
+   abas de texto. O segmentado fica so pro que e escolha (quero ir / fui). */
+.am-abas{display:flex;gap:18px;padding:16px 20px 0;margin:0;flex:none;overflow-x:auto;scrollbar-width:none}
+.am-abas::-webkit-scrollbar{display:none}
+.am-abas button{flex:none;background:none;border:none;padding:6px 0 10px;font-family:inherit;font-size:15px;
+  font-weight:600;color:var(--ink3);cursor:pointer;display:flex;align-items:center;gap:6px;white-space:nowrap;
+  box-shadow:inset 0 -2px 0 transparent}
+.am-abas button.on{color:var(--ink);box-shadow:inset 0 -2px 0 var(--ink)}
+.am-badge{font-size:11px;font-weight:600;background:var(--green);color:var(--on-green);border-radius:10px;
+  padding:1px 7px;line-height:1.5}
 
 /* ═══ CARD DE VISITA NO FEED ═══
    O feed era uma lista de linhas de texto. A visita de um amigo agora vem
@@ -820,8 +829,13 @@ body.na-casca .bottom-nav{display:none}
    recomendação de fato acontece, e é o que sustenta a conversa com quem tem
    público. Linha de texto continua existindo pra viagem marcada e comentário,
    que não têm foto nem nota pra sustentar um card. */
-.fd-card{border-radius:20px;background:var(--elev,var(--surface));border:1px solid var(--border);overflow:hidden;margin-bottom:14px}
-.fd-img{height:186px;position:relative;background-color:var(--surface);background-size:cover;background-position:center;cursor:pointer;overflow:hidden}
+/* O card deixa de ser uma caixa: o cabecalho ("Bruno foi a...") sai de cima
+   da foto e vira linha de texto normal acima dela, a foto vira uma foto de
+   verdade com cantos arredondados, e a nota fica solta embaixo. Uma pilula
+   de vidro escuro com o nome do autor por cima da imagem era o enfeite. */
+.fd-card{margin-bottom:28px}
+.fd-img{height:220px;position:relative;background-color:var(--photo-empty);background-size:cover;
+  background-position:center;cursor:pointer;overflow:hidden;border-radius:var(--r-photo);margin-top:10px}
 /* A foto entra POR CIMA do degradê da categoria. Se ela falhar — referência
    do Google expira — o onerror remove o <img> e o degradê que já estava
    atrás aparece, em vez de um retângulo chapado. */
@@ -835,29 +849,40 @@ body.na-casca .bottom-nav{display:none}
    fica atrás da imagem e o nome do lugar some no claro da foto.
    O escurecido do TOPO é mais fraco e existe só pro horário, que ficava
    ilegível sobre foto clara (visto numa foto de letreiro em Tóquio). */
-.fd-img::after{content:"";position:absolute;inset:0;z-index:2;background:linear-gradient(to bottom,rgba(11,22,32,.45) 0%,rgba(11,22,32,0) 22%,rgba(11,22,32,0) 38%,rgba(11,22,32,.88) 100%)}
-.fd-quem{position:absolute;top:14px;left:14px;z-index:3;display:flex;align-items:center;gap:8px;background:rgba(11,22,32,.55);-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px);border-radius:999px;padding:5px 12px 5px 5px;max-width:calc(100% - 90px)}
-.fd-av{width:24px;height:24px;border-radius:50%;background:var(--green);display:flex;align-items:center;justify-content:center;font-family:var(--mono);font-size:9px;color:#cfe9e6;flex-shrink:0}
-.fd-quem-t{font-size:12.5px;color:var(--ink);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.fd-quem-t b{font-weight:600}
-.fd-quando{position:absolute;top:19px;right:14px;z-index:3;font-family:var(--mono);font-size:10px;color:var(--ink2)}
-.fd-pe{position:absolute;left:16px;right:16px;bottom:14px;z-index:3}
-.fd-k{display:block;font-family:var(--mono);font-size:10px;color:var(--ink2)}
-.fd-nome{font-family:'Inter Tight',sans-serif;font-weight:400;font-size:25px;color:#fff;margin:4px 0 0;line-height:1.08;letter-spacing:-.01em;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical}
-.fd-corpo{padding:14px 16px 15px}
-.fd-nota{display:block;font-family:'Inter Tight',sans-serif;font-style:italic;font-size:16.5px;line-height:1.38;color:var(--ink);cursor:pointer;quotes:'\201C' '\201D'}
-.fd-linha{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-top:13px}
-.fd-estrelas{display:flex;gap:3px}
-.fd-salvar{flex:none;min-height:36px;background:var(--terra);color:#fff;font-size:12.5px;font-weight:600;font-family:inherit;border:none;border-radius:999px;padding:9px 15px;cursor:pointer}
-.fd-salvar:active{transform:scale(.97)}
-.fd-salvar.feito{background:rgba(78,148,144,.24);border:1px solid rgba(78,148,144,.55);color:#8FD3CE;font-weight:500;display:inline-flex;align-items:center}
-.feed-item{display:flex;gap:13px;padding:15px 0;border-bottom:1px solid var(--border)}
-.feed-avatar{width:38px;height:38px;border-radius:50%;background:var(--green);display:flex;align-items:center;justify-content:center;font-size:14px;color:var(--dark);font-weight:600;flex-shrink:0;box-shadow:var(--shadow-sm)}
-.feed-text{font-size:14px;color:var(--ink2);line-height:1.45}
+.fd-img::after{content:"";position:absolute;inset:0;z-index:2;
+  background:linear-gradient(to top,rgba(0,0,0,.55),transparent 55%)}
+/* Cabecalho do card: avatar, "Fulano foi a X" e o tempo, fora da foto. */
+.fd-quem{display:flex;align-items:center;gap:10px}
+.fd-av{width:36px;height:36px;border-radius:50%;background:var(--green);display:flex;align-items:center;
+  justify-content:center;font-size:12px;font-weight:600;color:var(--on-green);flex-shrink:0}
+.fd-quem-t{flex:1;min-width:0;font-size:15px;color:var(--ink2);line-height:1.35}
+.fd-quem-t b{font-weight:600;color:var(--ink)}
+.fd-quando{flex:none;font-size:12px;color:var(--ink3)}
+.fd-pe{position:absolute;left:14px;right:14px;bottom:12px;z-index:3}
+.fd-k{display:block;font-size:13px;font-weight:500;color:rgba(255,255,255,.85)}
+.fd-nome{font-size:22px;font-weight:700;letter-spacing:-.03em;color:#fff;margin:2px 0 0;line-height:1.1;
+  overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical}
+.fd-corpo{padding:12px 0 0}
+/* A nota do amigo sai do italico entre aspas e vira texto normal — e o que
+   ele escreveu, nao uma citacao de terceiro. */
+.fd-nota{display:block;font-size:17px;font-weight:500;letter-spacing:-.01em;line-height:1.35;
+  color:var(--ink);cursor:pointer;quotes:none}
+.fd-nota::before,.fd-nota::after{content:none}
+.fd-linha{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-top:12px}
+.fd-estrelas{display:flex;gap:3px;color:var(--green)}
+.fd-salvar{flex:none;min-height:36px;background:var(--green);color:var(--on-green);font-size:14px;
+  font-weight:600;font-family:inherit;border:none;border-radius:var(--r-btn);padding:0 14px;cursor:pointer}
+.fd-salvar:active{opacity:.85}
+.fd-salvar.feito{background:none;color:var(--ink2);font-weight:500;padding:0;display:inline-flex;align-items:center}
+.feed-item{display:flex;gap:12px;padding:0 0 20px}
+.feed-avatar{width:36px;height:36px;border-radius:50%;background:var(--green);display:flex;align-items:center;
+  justify-content:center;font-size:12px;color:var(--on-green);font-weight:600;flex-shrink:0}
+.feed-text{font-size:15px;color:var(--ink2);line-height:1.35}
 .feed-text b{font-weight:600;color:var(--ink)}
 .feed-time{font-size:12px;color:var(--ink3);margin-top:4px}
-.badge-count{background:var(--terra);color:#fff;font-size:10.5px;font-weight:700;border-radius:var(--r-pill);padding:2px 7px;margin-left:6px}
-.friend-search-card{display:flex;align-items:center;gap:12px;background:var(--white);border:1px solid var(--border);border-radius:var(--r);padding:13px 14px;margin-top:10px;box-shadow:var(--shadow-sm)}
+.badge-count{background:var(--green);color:var(--on-green);font-size:11px;font-weight:600;border-radius:10px;padding:1px 7px;margin-left:6px}
+.friend-search-card{display:flex;align-items:center;gap:12px;background:var(--surface);border:none;
+  border-radius:var(--r-card);padding:14px;margin-top:10px}
 /* Excluir perde o vermelho e o sublinhado: acao destrutiva nao precisa
    gritar, precisa estar longe do polegar e escrita por extenso. */
 .delete-link{display:block;width:100%;background:none;border:none;color:var(--ink3);font-size:14px;
@@ -934,10 +959,10 @@ body.na-casca .bottom-nav{display:none}
 .friend-user{font-family:'Inter Tight',sans-serif;font-size:12px;color:var(--ink3);margin-top:2px}
 .friend-bio{padding:0 22px 16px;background:var(--base);font-size:13.5px;color:var(--ink2);line-height:1.5}
 /* Linha de amigo na aba Amigos */
-.friend-row{display:flex;align-items:center;gap:12px;padding:12px 0;border-bottom:1px solid var(--border);cursor:pointer}
-.friend-row:last-child{border-bottom:none}
-.friend-row-name{flex:1;font-size:14.5px;font-weight:500;color:var(--ink);min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.friend-row-user{font-family:'Inter Tight',sans-serif;font-size:11.5px;color:var(--ink3)}
+.friend-row{display:flex;align-items:center;gap:12px;padding:10px 0;cursor:pointer}
+.friend-row:active{opacity:.6}
+.friend-row-name{flex:1;font-size:15px;font-weight:600;color:var(--ink);min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.friend-row-user{font-size:13px;color:var(--ink2)}
 .friend-row-arrow{color:var(--ink3);font-size:17px;flex-shrink:0}
 
 /* Quadrado arredondado, nao circulo: o circulo com o lapis laranja pendurado
@@ -6724,10 +6749,12 @@ async function fillTripPhotos(){
   darDadosDeViagens();
 }
 // Gradient fallback per destination (shows instantly, photo loads on top)
-function destGradient(name){
-  const grads=['linear-gradient(150deg,#0f2027,#2c5364)','linear-gradient(150deg,#3a1c71,#d76d77)','linear-gradient(150deg,#1b4f72,#2980b9)','linear-gradient(150deg,#34373b,#85929e)','linear-gradient(150deg,#7e3517,#e8b04b)','linear-gradient(150deg,#16222a,#3a6073)'];
-  let h=0;const s=name||'x';for(let i=0;i<s.length;i++)h=s.charCodeAt(i)+((h<<5)-h);
-  return grads[Math.abs(h)%grads.length];
+// Fundo de quando NAO ha foto. Eram seis degrades coloridos sorteados pelo
+// nome — roxo, laranja, azul — e eles apareciam em qualquer tela onde a foto
+// ainda nao chegou, que e justamente quando o app precisa parecer calmo.
+// Agora e uma cor so, a do sistema, e a foto entra por cima quando chega.
+function destGradient(){
+  return 'linear-gradient(var(--photo-empty),var(--photo-empty))';
 }
 
 // ═══ NAVIGATION ═══
@@ -7740,8 +7767,8 @@ function estrelasHTML(n,tam){
   let h='<div class="fd-estrelas">';
   for(let i=1;i<=5;i++){
     h+=i<=q
-      ?'<svg width="'+tam+'" height="'+tam+'" viewBox="0 0 24 24" fill="#BFA474"><path d="M12 3l2.6 5.6 6 .8-4.4 4.2 1.1 6.1L12 16.8 6.7 19.7l1.1-6.1L3.4 9.4l6-.8z"/></svg>'
-      :'<svg width="'+tam+'" height="'+tam+'" viewBox="0 0 24 24" fill="none" stroke="rgba(234,231,224,.3)" stroke-width="1.6" stroke-linejoin="round"><path d="M12 3l2.6 5.6 6 .8-4.4 4.2 1.1 6.1L12 16.8 6.7 19.7l1.1-6.1L3.4 9.4l6-.8z"/></svg>';
+      ?'<svg width="'+tam+'" height="'+tam+'" viewBox="0 0 24 24" fill="currentColor"><path d="M12 3l2.6 5.6 6 .8-4.4 4.2 1.1 6.1L12 16.8 6.7 19.7l1.1-6.1L3.4 9.4l6-.8z"/></svg>'
+      :'<svg width="'+tam+'" height="'+tam+'" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round" opacity=".35"><path d="M12 3l2.6 5.6 6 .8-4.4 4.2 1.1 6.1L12 16.8 6.7 19.7l1.1-6.1L3.4 9.4l6-.8z"/></svg>';
   }
   return h+'</div>';
 }
@@ -7778,11 +7805,11 @@ function cardDeVisita(it,i,nome){
   // com uma faixa vazia embaixo da foto.
   const temCorpo=nota||estrelas||!salvo;
   return '<div class="fd-card">'
+    +'<div class="fd-quem"><span class="fd-av">'+esc(initials(nome))+'</span>'
+      +'<span class="fd-quem-t"><b>'+esc(nome)+'</b> foi a <b>'+esc(sp.name)+'</b></span>'
+      +'<span class="fd-quando">'+esc(timeAgo(it.created_at))+'</span></div>'
     +'<div class="fd-img" style="'+fundo+'" onclick="abrirVisitaDoFeed('+i+')">'
       +camadaFoto
-      +'<div class="fd-quem"><span class="fd-av">'+esc(initials(nome))+'</span>'
-      +'<span class="fd-quem-t"><b>'+esc(nome)+'</b> foi</span></div>'
-      +'<div class="fd-quando">'+esc(timeAgo(it.created_at))+'</div>'
       +'<div class="fd-pe">'
         +(rotulo?'<span class="fd-k">'+esc(rotulo)+'</span>':'')
         +'<h3 class="fd-nome">'+esc(sp.name)+'</h3>'
