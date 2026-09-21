@@ -1,0 +1,106 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>repintar a marca</title>
+<body style="background:#F5F5F3;font-family:system-ui;padding:18px;margin:0">
+<div id="saida" style="font-size:13px;color:#6B6B67;white-space:pre-line"></div>
+<div id="lado" style="display:flex;gap:18px;align-items:flex-start;margin-top:14px"></div>
+<script>
+// Repinta a marca que o Lucas mandou com as cores exatas da paleta.
+//
+// O arquivo dele é WebP de 2 cores com as bordas suavizadas. Trocar cor por
+// igualdade exata deixaria um halo da cor antiga em volta de cada curva — o
+// contorno tem centenas de tons intermediários. Então cada pixel é medido pela
+// distância entre as DUAS cores de origem e reconstruído como a mesma mistura
+// entre as duas cores de destino. Borda suave entra, borda suave sai.
+const VERDE_NOVO = [0x0B, 0x3D, 0x2E];
+const CLARO_NOVO = [0xF5, 0xF5, 0xF3];
+
+function log(t) { document.getElementById('saida').textContent += t + '\n'; }
+
+async function pixels(url, lado) {
+  const img = new Image();
+  await new Promise((ok, err) => { img.onload = ok; img.onerror = () => err(new Error('nao carregou ' + url)); img.src = url; });
+  const c = document.createElement('canvas');
+  c.width = lado; c.height = lado;
+  const x = c.getContext('2d');
+  x.imageSmoothingEnabled = true;
+  x.imageSmoothingQuality = 'high';
+  x.drawImage(img, 0, 0, lado, lado);
+  return { dados: x.getImageData(0, 0, lado, lado), canvas: c, natural: [img.naturalWidth, img.naturalHeight] };
+}
+
+// Descobre as duas cores base do arquivo. Pega a MAIS FREQUENTE de cada lado
+// (escuro e claro), nao a mais extrema: a primeira versao ancorou no verde
+// mais escuro da lista, que era uma sombra de 12%, e ai os 66% de verde real
+// caiam no meio do caminho entre as duas cores novas — o fundo saiu mais
+// claro que o #0B3D2E da paleta.
+function doisTons(d) {
+  const conta = new Map();
+  for (let i = 0; i < d.data.length; i += 4) {
+    const k = (d.data[i] >> 3) + ',' + (d.data[i + 1] >> 3) + ',' + (d.data[i + 2] >> 3);
+    conta.set(k, (conta.get(k) || 0) + 1);
+  }
+  const todas = [...conta.entries()]
+    .map(([k, n]) => ({ cor: k.split(',').map(v => (+v << 3) + 4), n }))
+    .sort((a, b) => b.n - a.n);
+  const soma = c => c.cor[0] + c.cor[1] + c.cor[2];
+  const escura = todas.find(c => soma(c) < 384);
+  const clara = todas.find(c => soma(c) >= 384);
+  return { escura, clara, top: todas.slice(0, 6) };
+}
+function remapear(d, escura, clara) {
+  const dist = (p, i, c) => {
+    const dr = p[i] - c[0], dg = p[i + 1] - c[1], db = p[i + 2] - c[2];
+    return Math.sqrt(dr * dr + dg * dg + db * db);
+  };
+  const p = d.data;
+  for (let i = 0; i < p.length; i += 4) {
+    const de = dist(p, i, escura), dc = dist(p, i, clara);
+    // t=0 é totalmente a cor escura, t=1 totalmente a clara
+    let t = (de + dc) === 0 ? 0 : de / (de + dc);
+    // ZONA MORTA nas pontas. A ancora e o centro de um balde quantizado, nao a
+    // media exata dos pixels: sem isto o fundo chapado caia em #0F4032 em vez do
+    // #0B3D2E da paleta — perto, mas diferente do verde que o botao e a nav do
+    // app pintam, que e onde esse tipo de desleixo aparece.
+    if (t < 0.08) t = 0;
+    else if (t > 0.92) t = 1;
+    else t = (t - 0.08) / 0.84;
+    for (let k = 0; k < 3; k++) {
+      p[i + k] = Math.round(VERDE_NOVO[k] * (1 - t) + CLARO_NOVO[k] * t);
+    }
+    p[i + 3] = 255;
+  }
+  return d;
+}
+
+window.repintar = async function () {
+  const base = await pixels('marca-nova.webp', 1024);
+  const { escura, clara, top } = doisTons(base.dados);
+  const hex = c => '#' + c.map(v => v.toString(16).padStart(2, '0')).join('').toUpperCase();
+  log('arquivo dele: ' + base.natural.join('x'));
+  log('tons dominantes: ' + top.map(t => hex(t.cor) + ' (' + Math.round(100 * t.n / (1024 * 1024)) + '%)').join('  '));
+  log('verde dele  ' + hex(escura.cor) + '  ->  ' + hex(VERDE_NOVO));
+  log('claro dele  ' + hex(clara.cor) + '  ->  ' + hex(CLARO_NOVO));
+
+  const feitos = [];
+  for (const lado of [1024, 512, 192, 180]) {
+    const p = await pixels('marca-nova.webp', lado);
+    const d = remapear(p.dados, escura.cor, clara.cor);
+    p.canvas.getContext('2d').putImageData(d, 0, 0);
+    const r = await fetch('/gravar?nome=marca-' + lado + '.png&w=' + lado + '&h=' + lado,
+      { method: 'POST', body: d.data.buffer });
+    feitos.push(lado + '=' + (await r.text()));
+    if (lado === 1024 || lado === 180) {
+      const v = document.createElement('div');
+      v.innerHTML = '<div style="font-size:11px;color:#9A9A96;margin-bottom:5px">' + lado + '</div>';
+      p.canvas.style.width = (lado === 1024 ? 200 : 60) + 'px';
+      p.canvas.style.height = p.canvas.style.width;
+      p.canvas.style.borderRadius = (lado === 1024 ? 44 : 13) + 'px';
+      v.appendChild(p.canvas);
+      document.getElementById('lado').appendChild(v);
+    }
+  }
+  log('gravados: ' + feitos.join('  '));
+  return feitos.join(' ');
+};
+</script>
