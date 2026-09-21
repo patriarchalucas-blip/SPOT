@@ -69,19 +69,36 @@ eas submit --platform ios --profile production
 
 ## O que ainda falta no app, antes de enviar
 
-Estes não são da casca, são do `index.html`, e a Apple reprova sem eles:
+Estes não são da casca, são do `index.html`, e a Apple reprova sem eles.
+**Conferido em 20/09/2026** — três dos cinco já foram feitos desde que esta
+lista foi escrita:
 
-- [ ] **Denunciar conteúdo e bloquear usuário.** Exigência para qualquer app com
-      conteúdo escrito por outra pessoa, e o Spot tem comentário em spot de amigo.
-      Hoje não existe. É a reprovação mais provável.
-- [ ] **Política de privacidade** numa URL pública. O app coleta e-mail,
-      localização e foto.
+- [x] **Denunciar conteúdo e bloquear usuário.** Pronto: migração 016, ficha
+      `ov-denuncia` (denúncia de comentário e de perfil) e `ov-bloqueados`.
+      Bloquear já desfaz a amizade e some com a pessoa do feed, da lista de
+      amigos e dos comentários.
+- [x] **Política de privacidade** numa URL pública. Pronto e no ar:
+      `meuspot.app/privacidade`, `/termos` e `/suporte` respondem 200, e os três
+      estão alcançáveis de dentro do app (Perfil → Configurações), que é o que
+      a diretriz 1.2 pede.
+- [x] **Recuperação de senha.** Pronto: SMTP próprio pelo Resend, mais a ficha
+      `ov-novasenha` no retorno do link.
 - [ ] **Conta de demonstração** com usuário e senha que funcionem, entregue no
       formulário de envio. O revisor não cria conta: se ele não entra, é
       reprovação imediata. Precisa estar povoada, senão ele entra, vê app vazio e
-      reprova por outro motivo.
-- [ ] **Recuperação de senha.** Quem esquece a senha hoje não tem caminho de volta.
-- [ ] **Capturas de tela** nos tamanhos que a Apple pede.
+      reprova por outro motivo. Ver `app-store/conta-de-demonstracao.md`.
+- [ ] **Capturas de tela** — **voltaram a faltar.** As oito em
+      `app-store/capturas/` são de 20/09/2026, do visual ESCURO, e o redesenho
+      entrou no dia seguinte. Nenhuma representa o app de hoje.
+      A receita completa para refazer está em `app-store/capturas/LEIA-ME.md`;
+      o servidor de bastidor é `ferramentas/srv-capturas.cjs`. O tamanho é
+      1290×2796 (430×932 a 3×). **Depende da rede alcançar `meuspot.app`** —
+      toda foto do app passa por `/api/`, e sem ela os cards saem cinza.
+      Trocar captura depois exige submeter uma versão nova para revisão;
+      conferir isso no App Store Connect antes de contar com "troco depois".
+
+Os textos da ficha da loja e as respostas do questionário de privacidade estão
+prontos em `app-store/`.
 
 Já prontos: excluir a própria conta dentro do app, e uso real de localização,
 câmera e compartilhamento — que é o que diferencia um app de verdade de um site
@@ -91,7 +108,11 @@ embrulhado aos olhos do revisor.
 
 ## Decisões que ficaram travadas e não mudam depois
 
-**Identificador do app:** `app.meuspott.spot`
+**Identificador do app:** `app.meuspot.spot`
+
+> Este arquivo já trouxe `app.meuspott.spot`, com dois **t** — errado. Quem
+> manda é o `app.json`, e lá está `app.meuspot.spot`. Como o identificador é
+> permanente depois do primeiro envio, confira sempre no `app.json`, nunca aqui.
 
 Isso é permanente. Depois do primeiro envio, a Apple não deixa trocar — mudar
 significa publicar um app novo, do zero, sem os usuários. Se você quiser outro,
