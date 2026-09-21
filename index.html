@@ -284,7 +284,7 @@ body{font-family:'Inter Tight',sans-serif;background:var(--base);color:var(--ink
    O perfil do amigo usa .stat-block sem mapa atrás, então continua igual. */
 .dash-top .stat-block{background:linear-gradient(160deg,var(--surface),var(--surface))}
 .dash-body{padding:8px 24px calc(104px + env(safe-area-inset-bottom, 0px))}
-.section-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;margin-top:24px}
+.section-head{display:flex;align-items:baseline;gap:8px;margin-bottom:14px;margin-top:32px}
 /* Uma LINHA, nao um bloco. Antes era um cartao alto com a pergunta em cima e
    dois botoes embaixo: ocupava a altura de um card de viagem pra perguntar
    uma coisa so, e empurrava o resto da tela pra baixo. Agora cabe numa linha
@@ -299,7 +299,7 @@ body{font-family:'Inter Tight',sans-serif;background:var(--base);color:var(--ink
 .checkin-x{flex-shrink:0;width:30px;height:30px;border:none;background:none;color:var(--ink3);display:flex;align-items:center;justify-content:center;cursor:pointer;border-radius:50%}
 .checkin-x svg{width:14px;height:14px}
 .checkin-x:active{opacity:.5}
-.section-title{font-size:13px;font-weight:600;color:var(--ink2)}
+.section-title{font-size:20px;font-weight:700;letter-spacing:-.03em;color:var(--ink)}
 
 /* Pastas por continente — recolhíveis de verdade, não só um título */
 .region-folder{margin-bottom:2px}
@@ -317,13 +317,15 @@ body{font-family:'Inter Tight',sans-serif;background:var(--base);color:var(--ink
 .region-body{padding-top:12px}
 
 /* ═══ TELA DE LISTA (spots / cidades / países / viagens) ═══ */
-#list{background:var(--surface)}
-.list-top{background:var(--dark);padding:46px 20px 20px;display:flex;align-items:flex-start;gap:14px;position:relative;overflow:hidden}
-.list-top::before{content:"";position:absolute;inset:0;pointer-events:none;background:radial-gradient(380px 200px at 10% -20%,rgba(193,85,47,.16),transparent 60%)}
-.list-top>*{position:relative;z-index:1}
-.list-back{width:38px;height:38px;flex-shrink:0;background:rgba(234,231,224,.07);border:1px solid var(--border);border-radius:50%;color:var(--ink);font-size:15px;cursor:pointer;display:flex;align-items:center;justify-content:center;margin-top:4px}
-.list-kicker{font-size:12.5px;color:var(--ink3);margin-bottom:5px}
-.list-title{font-family:'Inter Tight',sans-serif;font-weight:400;font-size:30px;color:var(--ink);line-height:1.06;letter-spacing:-.015em}
+#list{background:var(--base)}
+/* O titulo e o numero: "28 lugares" em 34, e embaixo onde eles estao. */
+.list-top{padding:16px 20px 8px}
+.list-back{width:36px;height:36px;background:var(--surface);border:none;border-radius:50%;
+  color:var(--ink);cursor:pointer;display:flex;align-items:center;justify-content:center;margin-bottom:16px}
+.list-back:active{opacity:.7}
+.list-back svg{width:20px;height:20px}
+.list-title{font-size:34px;font-weight:700;letter-spacing:-.04em;color:var(--ink);line-height:1.05}
+.list-kicker{font-size:15px;color:var(--ink2);margin-top:4px}
 /* "Quem já foi" abre o Explorar. A ordem é a tese do app: o que gente que
    você conhece achou vem ANTES do que o Google acha. */
 .amg-bloco{padding:18px 24px 6px}
@@ -359,23 +361,22 @@ body{font-family:'Inter Tight',sans-serif;background:var(--base);color:var(--ink
 .cr-tirar{flex-shrink:0;width:34px;height:34px;margin-left:6px;margin-right:-6px;border:none;background:none;color:var(--ink3);display:flex;align-items:center;justify-content:center;cursor:pointer;border-radius:50%}
 .cr-tirar:active{opacity:.5;background:rgba(168,52,44,.12);color:var(--red)}
 .cr-tirar svg{width:15px;height:15px}
-.section-sub{font-family:var(--mono);font-size:10.5px;color:var(--ink3);margin-left:auto}
-.est-cidade{border-bottom:1px solid var(--border)}
-.est-topo{display:flex;align-items:center;gap:10px;padding:14px 2px;cursor:pointer;min-height:48px}
-.est-topo:active{opacity:.6}
-.est-bandeira{font-size:17px;flex-shrink:0}
-.est-cnome{font-size:14.5px;color:var(--ink);font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.est-meta{font-family:var(--mono);font-size:10.5px;color:var(--ink3);margin-left:auto;flex-shrink:0}
-.est-seta{color:var(--ink3);font-size:17px;flex-shrink:0;transition:transform .2s ease}
-.est-cidade.aberta .est-seta{transform:rotate(90deg)}
-.est-lista{padding:0 0 8px}
-.est-spot{display:flex;align-items:center;gap:10px;padding:10px 2px 10px 14px;cursor:pointer;min-height:44px;border-top:1px solid var(--border)}
-.est-spot:active{opacity:.6}
-.est-ic{color:var(--ink3);display:flex;flex-shrink:0}
-.est-ic svg{width:16px;height:16px}
-.est-nome{flex:1;font-size:13.5px;color:var(--ink2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.est-nota{font-family:var(--mono);font-size:12px;color:var(--green);font-weight:600;flex-shrink:0}
-.est-quer{font-family:var(--mono);font-size:10px;color:var(--amber);flex-shrink:0}
+.section-sub{font-size:14px;color:var(--ink2)}
+.est-mosaico{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.est-tile{position:relative;overflow:hidden;border-radius:var(--r-photo);background:var(--photo-empty);
+  border:none;padding:0;cursor:pointer;display:block;height:150px}
+.est-tile:active{opacity:.9}
+.est-tile.grande{grid-column:1/3;height:180px}
+.est-foto{position:absolute;inset:0;background-size:cover;background-position:center}
+.est-scrim{position:absolute;inset:0;background:linear-gradient(to top,rgba(0,0,0,.55),transparent 55%)}
+.est-pe{position:absolute;left:14px;right:14px;bottom:12px;text-align:left}
+.est-cnome{font-size:16px;font-weight:700;letter-spacing:-.02em;color:#fff;line-height:1.15}
+.est-tile.grande .est-cnome{font-size:22px;letter-spacing:-.03em}
+.est-meta{font-size:12px;color:rgba(255,255,255,.85);margin-top:2px}
+/* "Ver todas as N cidades": acao secundaria em texto, no verde do sistema. */
+.est-vertodas{display:block;width:100%;background:none;border:none;text-align:left;padding:14px 0 0;
+  font-size:14px;font-weight:600;color:var(--green);cursor:pointer}
+.est-vertodas:active{opacity:.6}
 /* Chips de reserva: pequenos, lado a lado, so o nome. A seta diz que sai do
    app sem precisar de texto explicando. 44px de altura porque e alvo de toque. */
 .coment-bloco{margin-top:8px}
@@ -411,21 +412,30 @@ body{font-family:'Inter Tight',sans-serif;background:var(--base);color:var(--ink
 .amg-linha{cursor:pointer}
 .amg-linha:active{opacity:.6}
 .amg-chip i{font-family:var(--mono);font-style:normal;font-size:10.5px;color:var(--amber)}
-.list-filters{display:flex;gap:8px;padding:14px 20px;overflow-x:auto;scrollbar-width:none;background:var(--surface);border-bottom:1px solid var(--border);position:sticky;top:0;z-index:10}
+.list-filters{display:flex;gap:18px;padding:16px 20px 0;overflow-x:auto;scrollbar-width:none;
+  background:var(--base);position:sticky;top:0;z-index:10}
 .list-filters::-webkit-scrollbar{display:none}
-.filter-chip{flex-shrink:0;background:var(--surface);border:1px solid var(--border);border-radius:var(--r-pill);padding:8px 14px;font-size:12.5px;color:var(--ink2);cursor:pointer;white-space:nowrap;transition:background .15s,border-color .15s,color .15s}
-.filter-chip.on{background:var(--terra);border-color:var(--terra);color:#fff;font-weight:600}
-.list-body{padding:14px 20px 110px}
-.lrow{display:flex;align-items:center;gap:13px;background:var(--white);border:1px solid var(--border);border-radius:var(--r);padding:12px 14px;margin-bottom:10px;box-shadow:var(--shadow-sm);cursor:pointer;transition:transform .15s}
-.lrow:active{transform:scale(.99)}
-.lrank{font-family:var(--mono);font-size:12px;color:var(--ink3);width:22px;flex-shrink:0;text-align:right}
-.lthumb{width:46px;height:46px;flex-shrink:0;border-radius:var(--r-sm);background-color:var(--dark);background-size:cover;background-position:center;border:1px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:19px;color:var(--ink3)}
+/* Filtro vira aba de texto: a pilula preenchida de laranja era o acento
+   mais forte da tela pra dizer so como a lista esta ordenada. */
+.filter-chip{flex-shrink:0;background:none;border:none;padding:6px 0 10px;font-size:15px;
+  font-weight:600;color:var(--ink3);cursor:pointer;white-space:nowrap;box-shadow:inset 0 -2px 0 transparent}
+.filter-chip.on{color:var(--ink);box-shadow:inset 0 -2px 0 var(--ink)}
+.list-body{padding:16px 20px 110px}
+.lrow{display:flex;align-items:center;gap:12px;padding:10px 0;cursor:pointer}
+.lrow:active{opacity:.6}
+/* O numero de ranking sai: a lista ja esta em ordem, e a coluna de numeros
+   fazia cada linha comecar recuada sem dizer nada que a ordem nao dissesse. */
+.lrank{display:none}
+.lthumb{width:64px;height:64px;flex-shrink:0;border-radius:var(--r-card);background-color:var(--photo-empty);
+  background-size:cover;background-position:center;display:flex;align-items:center;justify-content:center;
+  color:rgba(255,255,255,.75);overflow:hidden}
+.lthumb svg{width:22px;height:22px}
 .lmain{flex:1;min-width:0}
-.lname{font-size:14.5px;font-weight:600;color:var(--ink);line-height:1.3;overflow-wrap:break-word}
-.lmeta{font-size:12px;color:var(--ink3);margin-top:3px;overflow-wrap:break-word}
-.lright{flex-shrink:0;display:flex;flex-direction:column;align-items:flex-end;gap:5px}
+.lname{font-size:16px;font-weight:600;letter-spacing:-.02em;color:var(--ink);line-height:1.25;overflow-wrap:break-word}
+.lmeta{font-size:13px;color:var(--ink2);margin-top:2px;overflow-wrap:break-word}
+.lright{flex-shrink:0;display:flex;flex-direction:column;align-items:flex-end;gap:3px}
 .lrating{font-size:13px;font-weight:600;color:var(--ink);white-space:nowrap}
-.lcount{font-family:var(--mono);font-size:12.5px;color:var(--ink2);background:rgba(234,231,224,.07);border-radius:var(--r-pill);padding:3px 10px;white-space:nowrap}
+.lcount{font-size:13px;color:var(--ink2);white-space:nowrap;flex-shrink:0}
 /* Denúncia e bloqueio — exigência 1.2 da Apple. Alvos de toque com 44px de
    altura mínima, que é o mínimo que a Apple também espera. */
 .den-sobre{padding:0 24px 12px;font-size:13.5px;color:var(--ink3);font-family:var(--mono)}
@@ -439,7 +449,7 @@ body{font-family:'Inter Tight',sans-serif;background:var(--base);color:var(--ink
 /* Botão de denunciar dentro do comentário: discreto, mas alcançável. */
 .coment-den{flex:none;background:none;border:none;color:var(--ink3);font-size:11px;font-family:var(--mono);cursor:pointer;padding:4px 6px;margin-left:2px}
 .friend-mais{margin-left:auto;flex:none;width:44px;height:44px;display:flex;align-items:center;justify-content:center;background:rgba(11,22,32,.5);border:1px solid rgba(255,255,255,.16);border-radius:50%;color:#fff;cursor:pointer}
-.lflag{font-size:22px;flex-shrink:0}
+.lflag{font-size:22px;flex-shrink:0;line-height:1}
 /* Bandeira desenhada como imagem onde o sistema não tem o glifo (Windows).
    Dimensionada em `em` pra herdar o tamanho de quem a contém, então cada
    lugar que já definia font-size pra bandeira continua mandando. O
@@ -727,38 +737,7 @@ body.na-casca .bottom-nav{display:none}
 .ex-corpo-card{padding:12px 16px 14px;display:flex;align-items:center;justify-content:space-between;gap:12px}
 .ex-aval{font-family:var(--mono);font-size:11px;color:var(--ink3)}
 
-/* Perfil: placar em uma linha, igual ao de Viagens, no lugar das caixas. */
-#profile .profile-user{}
-#profile .stats-strip{display:flex;flex-wrap:wrap;align-items:baseline;gap:8px;background:none;border:none;padding:0}
-#profile .stat-block{flex:none;background:none;border:none;border-radius:0;padding:0;box-shadow:none;display:inline-flex;align-items:baseline;gap:5px}
-#profile .stat-n{font-family:var(--mono);font-size:14px;font-weight:500;color:var(--ink)}
-#profile .stat-l{font-family:var(--mono);font-size:11px;color:var(--ink3);margin-top:0;}
-#profile .section-title{font-family:var(--mono);font-size:10px;color:var(--ink3);font-weight:500}
-/* Linhas de configuração viram ficha, com a etiqueta em monoespacada. */
-#profile .prof-linha .pl-txt{font-size:14.5px}
 
-/* ═══ TELA DE VIAGENS — placar ═══
-   Os três números voltaram a ser CAIXAS TOCÁVEIS, a pedido do Lucas: em uma
-   linha corrida eles paravam de parecer clicáveis, e no celular a linha
-   quebrava deixando "3 viagens" sozinho embaixo.
-
-   O que NÃO volta é a altura. A versão antiga empilhava saudação, nome,
-   número gigante e caixas — quase 500px de métrica antes de aparecer a
-   primeira viagem. A saudação e o nome já saíram no redesenho; o número de
-   países fica no mono compacto do Atlas em vez do Fraunces gigante. Sobra o
-   custo das caixas em si, uns 60px, que é o que o Lucas pediu de volta. */
-#dashboard .dash-paises{margin-bottom:14px;gap:6px}
-#dashboard .dp-n{font-family:var(--mono);font-weight:500;font-size:30px;letter-spacing:-.03em}
-#dashboard .dp-t{font-family:var(--mono);font-size:13px;color:var(--ink3)}
-#dashboard .stats-strip{margin-bottom:18px}
-/* Rótulo no mesmo mono do resto do placar; o número já era mono. */
-#dashboard .stat-l{font-family:var(--mono);font-size:10.5px;text-transform:lowercase}
-
-/* Continentes: trilho horizontal no lugar das pastas que abriam e fechavam. */
-
-/* Carrossel de viagens. O card mostra o destino inteiro, em vez do selo de
-   72px ao lado do nome. */
-.vg-bandeira .bandeira-img{width:26px;height:26px}
 
 /* ═══ TELA DE SPOT — direção Atlas ═══
    A aposta da direção é "o lugar antes da palavra": a foto toma a tela como
@@ -907,22 +886,32 @@ body.na-casca .bottom-nav{display:none}
 /* ── Profile / World Map (Been-style) ── */
 #profile{background:var(--base);overflow-y:auto}
 /* Identidade: quem você é, em tamanho de gente. */
-.profile-ident{display:flex;align-items:center;gap:15px;padding:40px 22px 14px;background:var(--base);position:relative;z-index:5}
+.prof-topo-linha{display:flex;align-items:center;justify-content:space-between;padding:18px 20px 0}
+/* Avatar em cima, nome embaixo: o nome ganha a largura da tela inteira e
+   pode sair em 34px. Ao lado de um avatar ele nunca passaria de 20. */
+.profile-ident{padding:20px 20px 0;background:var(--base);position:relative;z-index:5}
 /* Engrenagem: o que é ajuste de conta sai da lista de conteúdo e vem pra cá,
    onde todo app põe. Antes "editar bio" e "sair da conta" dividiam a mesma
    lista com "marcar país visitado", que é conteúdo, não configuração. */
-.prof-config-btn{margin-left:auto;width:38px;height:38px;flex-shrink:0;background:var(--surface);border:1px solid var(--border);border-radius:50%;color:var(--ink2);font-size:19px;display:flex;align-items:center;justify-content:center;cursor:pointer}
+.prof-config-btn{width:36px;height:36px;flex-shrink:0;background:var(--surface);border:none;border-radius:50%;
+  color:var(--ink);display:flex;align-items:center;justify-content:center;cursor:pointer}
+.prof-config-btn svg{width:20px;height:20px}
 .prof-config-btn:active{opacity:.6}
-.profile-ident-txt{min-width:0}
-.profile-user{font-family:var(--mono);font-size:12px;color:var(--ink3);margin-top:3px}
-.profile-bio{padding:0 22px 18px;background:var(--base);font-size:13.5px;color:var(--ink2);line-height:1.55;position:relative;z-index:5}
+/* @usuario e bio na MESMA linha: eram dois blocos de texto cinza empilhados
+   embaixo do nome, e a bio raramente passa de meia linha. */
+.profile-sub{display:block;margin-top:4px;
+  font-size:14px;color:var(--ink2);line-height:1.4}
+.profile-user{color:var(--ink2)}
+.profile-user:not(:last-child)::after{content:" · ";color:var(--ink3);white-space:pre}
+.profile-bio{color:var(--ink2)}
 /* Ações em linha, no lugar de três estilos de botão diferentes. */
-.prof-acoes{margin-top:26px;border-top:1px solid var(--border)}
-.prof-linha{display:flex;align-items:center;gap:12px;padding:15px 2px;border-bottom:1px solid var(--border);cursor:pointer}
+.prof-acoes{margin-top:32px}
+.prof-linha{display:flex;align-items:center;gap:12px;padding:15px 2px;cursor:pointer}
 .sheet .prof-linha{padding:15px 24px}
 .prof-linha:active{opacity:.6}
-.pl-ic{color:var(--ink3);font-size:17px;display:flex;flex-shrink:0}
-.pl-txt{flex:1;font-size:14.5px;color:var(--ink)}
+.pl-ic{color:var(--ink3);display:flex;flex-shrink:0}
+.pl-ic svg{width:18px;height:18px}
+.pl-txt{flex:1;font-size:15px;color:var(--ink)}
 .pl-seta{color:var(--ink3);font-size:17px;flex-shrink:0}
 .prof-sair .pl-txt{color:var(--red)}
 /* Uma linha de dado logo abaixo do nome, no lugar do email solto no rodape.
@@ -930,8 +919,14 @@ body.na-casca .bottom-nav{display:none}
    ninguem nunca precisar dele. */
 /* Nota que ainda nao existe: o texto vira convite, nao aspas vazias. */
 .note-quote.nota-vazia{color:var(--ink3);opacity:.8}
-.prof-resumo{font-family:var(--mono);font-size:11.5px;color:var(--ink3);padding-bottom:18px}
-.prof-resumo:empty{display:none}
+/* Os tres numeros do perfil. Mesma linguagem do placar da tela inicial, e
+   cada um abre a mesma tela de Lista que o placar abre. */
+.prof-numeros{display:flex;align-items:flex-end;gap:28px;padding:24px 0 0}
+.pn-item{background:none;border:none;padding:0;cursor:pointer;text-align:left;
+  display:flex;flex-direction:column;gap:2px;min-height:44px;justify-content:flex-end}
+.pn-item:active{opacity:.6}
+.pn-n{font-size:28px;font-weight:700;letter-spacing:-.04em;color:var(--ink);line-height:1}
+.pn-r{font-size:13px;color:var(--ink2)}
 .prof-email{font-family:var(--mono);font-size:11px;color:var(--ink3);text-align:center;margin-top:22px}
 /* ═══ PERFIL DE AMIGO (só leitura) ═══ */
 .friend-top{display:flex;align-items:center;gap:14px;padding:40px 22px 14px;background:var(--base);position:relative;z-index:5}
@@ -947,11 +942,17 @@ body.na-casca .bottom-nav{display:none}
 .friend-row-user{font-family:'Inter Tight',sans-serif;font-size:11.5px;color:var(--ink3)}
 .friend-row-arrow{color:var(--ink3);font-size:17px;flex-shrink:0}
 
-.profile-avatar{width:64px;height:64px;border-radius:50%;background:var(--green);color:var(--dark);display:flex;align-items:center;justify-content:center;font-size:22px;font-weight:600;flex-shrink:0;box-shadow:var(--shadow-md),0 0 0 3px var(--surface)}
-.profile-avatar-wrap{position:relative;cursor:pointer;flex-shrink:0}
-.avatar-edit-badge{position:absolute;bottom:-2px;right:-2px;width:22px;height:22px;border-radius:50%;background:var(--terra);color:#fff;display:flex;align-items:center;justify-content:center;font-size:11px;border:2px solid var(--base)}
-.avatar-edit-badge svg{width:11px;height:11px}
-.profile-name{font-family:'Inter Tight',sans-serif;font-weight:400;font-size:26px;color:var(--ink);line-height:1.1;letter-spacing:-.01em}
+/* Quadrado arredondado, nao circulo: o circulo com o lapis laranja pendurado
+   no canto e o avatar de rede social generico. */
+.profile-avatar{width:88px;height:88px;border-radius:22px;background:var(--green);color:var(--on-green);
+  display:flex;align-items:center;justify-content:center;font-size:30px;font-weight:600;overflow:hidden}
+.profile-avatar img{width:100%;height:100%;object-fit:cover}
+.profile-avatar-wrap{position:relative;cursor:pointer;width:88px;margin-bottom:14px}
+.avatar-edit-badge{position:absolute;bottom:-4px;right:-4px;width:28px;height:28px;border-radius:50%;
+  background:var(--surface);color:var(--ink);display:flex;align-items:center;justify-content:center;
+  border:3px solid var(--base)}
+.avatar-edit-badge svg{width:13px;height:13px}
+.profile-name{font-size:34px;font-weight:700;letter-spacing:-.04em;color:var(--ink);line-height:1.05}
 .profile-map-block{position:relative;width:100%;aspect-ratio:800/420;background:var(--base);overflow:hidden}
 .world-map-wrap{position:absolute;inset:0;line-height:0;touch-action:none}
 .world-map-wrap svg{width:100%;height:100%;display:block;cursor:grab}
@@ -962,7 +963,7 @@ body.na-casca .bottom-nav{display:none}
 .mapa-topo{display:flex;align-items:center;gap:12px;padding:40px 20px 14px;background:var(--dark);position:relative;z-index:3}
 .mapa-topo .back-btn{position:static;flex-shrink:0}
 .mapa-titulo{font-family:'Inter Tight',sans-serif;font-size:19px;color:var(--ink)}
-.profile-body{padding:24px 22px;background:var(--surface);border-radius:var(--r) var(--r) 0 0}
+.profile-body{padding:0 20px 24px;background:var(--base)}
 /* Lista em linhas, não chips. Chip de largura variável quebrando linha deixa
    a borda direita serrilhada, e o selo "mora aqui" inchava um chip no meio da
    fila. Linha é o mesmo padrão que a tela de lista e a de amigos já usam, a
@@ -1043,15 +1044,18 @@ body.na-casca .bottom-nav{display:none}
 .cat-option .co-icon{font-size:22px;margin-bottom:7px;color:var(--ink3)}
 .cat-option .co-name{font-size:12px;font-weight:500;color:var(--ink2)}
 .cat-option.sel .co-name,.cat-option.sel .co-icon{color:#fff}
-.search-wrap{padding:0 24px 12px;position:relative}
+.search-wrap{padding:0 20px 12px;position:relative}
 /* A lupa mora dentro do .search-field, que envolve só o input. Antes ela era
    posicionada relativa ao .search-wrap com left:38px — número que só fechava
    com o padding de 24px daquele container. Em qualquer campo com padding
    diferente (o do Explorar usa 0) a lupa ia pra cima do texto. */
 .search-field{position:relative}
 .search-field .si{position:absolute;left:14px;top:14px;font-size:15px;pointer-events:none}
-.search-input{width:100%;background:var(--surface);border:1px solid var(--border);border-radius:var(--r-sm);padding:14px 16px 14px 42px;font-size:15px;font-family:'Inter Tight',sans-serif;color:var(--ink);outline:none;box-shadow:var(--shadow-inset)}
-.search-input:focus{border-color:var(--ink3)}
+.search-input{width:100%;background:var(--surface);border:none;border-radius:var(--r-card);
+  padding:15px 16px 15px 44px;font-size:15px;font-family:'Inter Tight',sans-serif;color:var(--ink);outline:none}
+.search-input::placeholder{color:var(--ink3)}
+.search-field .si{color:var(--ink3)}
+.search-field .si svg{width:18px;height:18px}
 .search-powered{display:flex;align-items:center;gap:5px;padding:2px 24px 10px}
 .search-powered span{font-size:11.5px;color:var(--ink3)}
 .search-powered strong{font-size:11.5px;color:var(--ink2);font-weight:600}
@@ -1226,10 +1230,8 @@ svg.ic path,svg.ic circle,svg.ic line,svg.ic polyline,svg.ic rect{fill:none;stro
 <div class="screen" id="list">
   <div class="list-top">
     <button class="list-back" onclick="closeList()" data-ic="back" aria-label="Voltar"></button>
-    <div class="list-head-text">
-      <div class="list-kicker" id="listKicker"></div>
-      <div class="list-title" id="listTitle">—</div>
-    </div>
+    <div class="list-title" id="listTitle">—</div>
+    <div class="list-kicker" id="listKicker"></div>
   </div>
   <div class="search-wrap" id="listCitySearchWrap" style="display:none;padding:14px 20px 0"><div class="search-field"><span class="si" data-ic="search"></span><input class="search-input" id="listCitySearch" placeholder="Buscar cidade..." oninput="setListCityQuery(this.value)"></div></div>
   <div class="list-filters" id="listFilters"></div>
@@ -1272,22 +1274,23 @@ svg.ic path,svg.ic circle,svg.ic line,svg.ic polyline,svg.ic rect{fill:none;stro
 </div>
 
 <div class="screen" id="profile">
+  <div class="prof-topo-linha">
+    <div class="dash-marca">Perfil</div>
+    <button class="prof-config-btn" onclick="abrirConfig()" data-ic="gear" aria-label="Configurações"></button>
+  </div>
   <div class="profile-ident">
     <div class="profile-avatar-wrap" onclick="document.getElementById('avatarFileInput').click()">
       <div class="profile-avatar" id="profAvatar">?</div>
       <div class="avatar-edit-badge" data-ic="edit"></div>
     </div>
     <input type="file" id="avatarFileInput" accept="image/*" style="display:none" onchange="onAvatarFileChosen(this)">
-    <div class="profile-ident-txt"><div class="profile-name" id="profName">—</div><div class="profile-user" id="profUser"></div></div>
-    <button class="prof-config-btn" onclick="abrirConfig()" data-ic="gear" aria-label="Configurações"></button>
+    <div class="profile-name" id="profName">—</div>
+    <div class="profile-sub"><span class="profile-user" id="profUser"></span><span class="profile-bio" id="profBio" style="display:none"></span></div>
   </div>
-  <div class="profile-bio" id="profBio" style="display:none"></div>
 
   <div class="profile-body">
-    <div class="prof-resumo" id="profResumo"></div>
-    <div class="section-head"><span class="section-title">Onde já estive</span></div>
-    <div class="country-chips" id="countryChips"></div>
-    <div class="section-head" style="margin-top:26px"><span class="section-title">Meus lugares</span><span class="section-sub" id="estanteResumo"></span></div>
+    <div class="prof-numeros" id="profResumo"></div>
+    <div class="section-head"><span class="section-title">Meus lugares</span><span class="section-sub" id="estanteResumo"></span></div>
     <div id="estante"></div>
     <div class="prof-acoes">
       <div class="prof-linha" onclick="openVisitedCountryPicker()"><span class="pl-ic" data-ic="globe"></span><span class="pl-txt">Marcar país que já visitei</span><span class="pl-seta">›</span></div>
@@ -2955,16 +2958,17 @@ function renderList(){
     LS.items=list;
 
     const escopo=LS.city||LS.country;
-    title.textContent=escopo||LIST_TITLES.spots;
-    kicker.textContent=list.length+(list.length===1?' spot':' spots')+(escopo?' · filtrado':'');
+    title.textContent=list.length+(list.length===1?' lugar':' lugares');
+    const cidades=new Set(list.map(sp=>cityOf(sp)).filter(Boolean)).size;
+    kicker.textContent=escopo?('em '+escopo):(cidades?('em '+cidades+(cidades===1?' cidade':' cidades')):'');
 
     f+=chip('Melhores',LS.sort==='rating',"setListSort('rating')");
     f+=chip('A–Z',LS.sort==='name',"setListSort('name')");
     f+=chip('Comer',LS.cat==='food',"setListFilter('cat','food')");
     f+=chip('Ficar',LS.cat==='hotel',"setListFilter('cat','hotel')");
     f+=chip('Experiências',LS.cat==='experience',"setListFilter('cat','experience')");
-    if(LS.city)f+=chip('✕ '+LS.city,true,"clearListFilter('city')");
-    if(LS.country)f+=chip('✕ '+LS.country,true,"clearListFilter('country')");
+    if(LS.city)f+=chip(LS.city+' ✕',true,"clearListFilter('city')");
+    if(LS.country)f+=chip(LS.country+' ✕',true,"clearListFilter('country')");
 
     if(!list.length)h='<div class="empty-state"><div class="ei">'+icon('pin')+'</div><h3>Nenhum spot aqui</h3><p>Ajusta os filtros ou salva lugares nas suas viagens.</p></div>';
     list.forEach((s,i)=>{
@@ -2982,8 +2986,9 @@ function renderList(){
     spots.forEach(s=>{const c=cityOf(s);if(!c)return;(map[c]=map[c]||{city:c,country:s._country,n:0}).n++});
     const list=Object.values(map).sort((a,b)=>b.n-a.n);
     LS.items=list;
-    title.textContent=LIST_TITLES.cities;
-    kicker.textContent=list.length+(list.length===1?' cidade':' cidades');
+    title.textContent=list.length+(list.length===1?' cidade':' cidades');
+    const nPais=new Set(list.map(c=>c.country).filter(Boolean)).size;
+    kicker.textContent=nPais?('em '+nPais+(nPais===1?' país':' países')):'';
     if(!list.length)h='<div class="empty-state"><div class="ei">'+icon('city')+'</div><h3>Nenhuma cidade ainda</h3><p>As cidades aparecem conforme você salva spots.</p></div>';
     list.forEach((c,i)=>{
       h+=`<div class="lrow" onclick="drillFromList(${i},'city')"><span class="lflag">${flagHTML(c.country)}</span><div class="lmain"><div class="lname">${esc(c.city)}</div><div class="lmeta">${esc(c.country)}</div></div><span class="lcount">${c.n} ${c.n===1?'spot':'spots'}</span></div>`;
@@ -3000,8 +3005,8 @@ function renderList(){
     });
     const list=Object.values(map).sort((a,b)=>b.spots-a.spots||a.country.localeCompare(b.country,'pt-BR'));
     LS.items=list;
-    title.textContent=LIST_TITLES.countries;
-    kicker.textContent=list.length+(list.length===1?' país':' países');
+    title.textContent=list.length+(list.length===1?' país':' países');
+    kicker.textContent='de 195';
     list.forEach((c,i)=>{
       const meta=[c.viagens?c.viagens+(c.viagens===1?' viagem':' viagens'):'',c.spots?c.spots+(c.spots===1?' spot':' spots'):''].filter(Boolean).join(' · ')||'sem spots ainda';
       h+=`<div class="lrow" onclick="drillFromList(${i},'country')"><span class="lflag">${flagHTML(c.country)}</span><div class="lmain"><div class="lname">${esc(c.country)}</div><div class="lmeta">${esc(meta)}</div></div><span class="lcount">${regionFor(c.country)}</span></div>`;
@@ -3011,8 +3016,9 @@ function renderList(){
   else if(LS.mode==='trips'){
     const list=S.trips.filter(t=>!isNonTrip(t));
     LS.items=list;
-    title.textContent=LIST_TITLES.trips;
-    kicker.textContent=list.length+(list.length===1?' viagem':' viagens');
+    title.textContent=list.length+(list.length===1?' viagem':' viagens');
+    const nP=new Set(list.map(t=>(t.destinations&&t.destinations[0])||t.name).filter(Boolean)).size;
+    kicker.textContent=nP?('em '+nP+(nP===1?' país':' países')):'';
     if(!list.length)h='<div class="empty-state"><div class="ei">'+icon('suitcase')+'</div><h3>Nenhuma viagem ainda</h3><p>Toca no + no dashboard para criar.</p></div>';
     list.forEach((t,i)=>{
       const sp=(t._spots||[]).length;
@@ -6771,7 +6777,7 @@ async function loadProfile(){
   const p=await fetchOwnProfile(true);
   document.getElementById('profUser').textContent=p.username?'@'+p.username:'';
   const bio=document.getElementById('profBio');
-  if(p.bio){bio.textContent=p.bio;bio.style.display='block'}else{bio.style.display='none'}
+  if(p.bio){bio.textContent=p.bio;bio.style.display='inline'}else{bio.style.display='none'}
   document.getElementById('usernameInput').value=p.username||'';
   document.getElementById('bioInput').value=p.bio||'';
   applyAvatar('dashAvatar',name,p.avatar_url);
@@ -6783,7 +6789,6 @@ async function loadProfile(){
   // mostra os mesmos números, e mostrava com denominador diferente ("X/243"
   // contra "de 195"), o que só gerava dúvida sobre qual estava certo.
   renderEstante();
-  renderListaDePaises(visitedCountryNames());
 }
 // Lista de países visitados. Mostra os primeiros e joga o resto pra tela de
 // lista que já existe (a mesma que abre pelo contador do Dashboard) — sem
@@ -6826,13 +6831,18 @@ async function desmarcarPais(c,ev){
 // A ordem é por quantidade de lugares. Cidade onde a pessoa mais registrou é
 // onde ela mais viveu o app, e é o que ela quer ver primeiro.
 let ESTANTE_ABERTA = {};
+// Quantas cidades o mosaico mostra antes do "ver todas". Cinco: uma grande
+// em cima e duas fileiras de duas.
+const ESTANTE_NO_PERFIL = 5;
+let ESTANTE_CIDADES = [];
 function renderEstante(){
   const box=document.getElementById('estante');
   if(!box)return;
   const spots=allSpotsFlat();
   const resumo=document.getElementById('estanteResumo');
   if(!spots.length){
-    box.innerHTML='<div class="amg-aviso">Os lugares que você salvar aparecem aqui, separados por cidade.</div>';
+    box.innerHTML='<div class="empty-state"><div class="ei">'+icon('pin')+'</div>'
+      +'<h3>Nada salvo ainda</h3><p>Os lugares que você salvar aparecem aqui, por cidade.</p></div>';
     if(resumo)resumo.textContent='';
     // Quem so marcou pais no mapa cai exatamente aqui — e e justamente quem
     // usa o X pra tirar pais. Sem este aviso o pais continuava na tela
@@ -6848,36 +6858,27 @@ function renderEstante(){
   if(resumo)resumo.textContent=spots.length+(spots.length===1?' lugar · ':' lugares · ')
     +cidades.length+(cidades.length===1?' cidade':' cidades');
 
-  box.innerHTML=cidades.map(function(c){
-    const lista=byCity[c].slice().sort(function(x,y){
-      // Avaliado primeiro, e entre os avaliados a nota manda. Quem ainda não
-      // foi fica embaixo: é intenção, não memória.
-      const fx=x.status==='been',fy=y.status==='been';
-      if(fx!==fy)return fx?-1:1;
-      return (Number(y.my_rating)||0)-(Number(x.my_rating)||0)
-        ||String(x.name).localeCompare(String(y.name),'pt-BR');
-    });
-    const notas=lista.filter(s=>s.status==='been'&&Number(s.my_rating)>0).map(s=>Number(s.my_rating));
-    const media=notas.length?(notas.reduce((a,b)=>a+b,0)/notas.length):0;
-    const aberta=!!ESTANTE_ABERTA[c];
-    const meta=[lista.length+(lista.length===1?' lugar':' lugares')];
-    if(media)meta.push('média '+media.toFixed(1));
-    const linhas=aberta?lista.map(function(s){
-      const nota=s.status==='been'&&Number(s.my_rating)>0
-        ?'<span class="est-nota">'+fmtRating(s.my_rating)+'</span>'
-        :(s.status==='been'?'':'<span class="est-quer">quero ir</span>');
-      return'<div class="est-spot" onclick="openPlace(\''+esc(s.id)+'\',\'profile\')">'
-        +'<span class="est-ic">'+catIcon(s.category)+'</span>'
-        +'<span class="est-nome">'+esc(s.name)+'</span>'+nota+'</div>';
-    }).join(''):'';
-    return'<div class="est-cidade'+(aberta?' aberta':'')+'">'
-      +'<div class="est-topo" onclick="alternarCidadeDaEstante(\''+esc(String(c).replace(/[\\\\\']/g,''))+'\')">'
-      +'<span class="est-bandeira">'+(paisDe[c]?flagHTML(paisDe[c]):'')+'</span>'
-      +'<span class="est-cnome">'+esc(c)+'</span>'
-      +'<span class="est-meta">'+esc(meta.join(' · '))+'</span>'
-      +'<span class="est-seta">›</span></div>'
-      +'<div class="est-lista">'+linhas+'</div></div>';
-  }).join('');
+  // As cidades do mosaico ficam em ESTANTE_CIDADES: o clique referencia pelo
+  // INDICE, nunca pelo nome — nome de cidade tem acento e apóstrofo, e
+  // interpolar isso dentro de um onclick quebra a tela inteira.
+  ESTANTE_CIDADES=cidades;
+  const mostrar=cidades.slice(0,ESTANTE_NO_PERFIL);
+  box.innerHTML='<div class="est-mosaico">'+mostrar.map(function(c,i){
+    const lista=byCity[c];
+    // A foto do mosaico e a de um lugar que a pessoa mesma salvou naquela
+    // cidade — ja esta carregada. Buscar foto de cidade aqui gastaria uma
+    // chamada de Unsplash por cidade, e a cota e de 50 por hora pro app todo.
+    const comFoto=lista.find(sp=>sp.photo_url);
+    const foto=comFoto?'<div class="est-foto" style="background-image:'+cssUrl(fotoNaLargura(comFoto.photo_url,600))+'"></div>':'';
+    const n=lista.length;
+    return'<button class="est-tile'+(i===0?' grande':'')+'" onclick="abrirCidadeDaEstante('+i+')">'
+      +foto+'<div class="est-scrim"></div><div class="est-pe">'
+      +'<div class="est-cnome">'+esc(c)+'</div>'
+      +'<div class="est-meta">'+n+(n===1?' lugar':' lugares')+'</div></div></button>';
+  }).join('')+'</div>'
+    +(cidades.length>ESTANTE_NO_PERFIL
+      ?'<button class="est-vertodas" onclick="openList(\'cities\')">Ver todas as '+cidades.length+' cidades</button>'
+      :'');
   hydrateIcons(box);
   darDadosDePerfil();
 }
@@ -6895,7 +6896,15 @@ function pintarResumoDoPerfil(paises,lugares,cidades){
     cidades?(cidades+(cidades===1?' cidade':' cidades')):''
   ].filter(Boolean).join('  ·  ');
   const el=document.getElementById('profResumo');
-  if(el)el.textContent=texto;
+  if(el){
+    const bloco=(n,rotulo,modo)=>n
+      ?'<button class="pn-item" onclick="openList(\''+modo+'\')">'
+        +'<span class="pn-n">'+n+'</span><span class="pn-r">'+rotulo+'</span></button>'
+      :'';
+    el.innerHTML=bloco(paises,paises===1?'país':'países','countries')
+      +bloco(cidades,cidades===1?'cidade':'cidades','cities')
+      +bloco(lugares,lugares===1?'lugar':'lugares','spots');
+  }
   return texto;
 }
 function darDadosDePerfil(){
@@ -6987,6 +6996,13 @@ window.acaoDePerfil=function(acao,valor){
 function alternarCidadeDaEstante(c){
   ESTANTE_ABERTA[c]=!ESTANTE_ABERTA[c];
   renderEstante();
+}
+// Mosaico do Perfil: a cidade abre a Lista filtrada por ela.
+function abrirCidadeDaEstante(i){
+  const c=ESTANTE_CIDADES[i];
+  if(!c)return;
+  openList('spots');
+  drillTo('city',c);
 }
 function renderListaDePaises(visited,alvo){
   const box=document.getElementById(alvo||'countryChips');
