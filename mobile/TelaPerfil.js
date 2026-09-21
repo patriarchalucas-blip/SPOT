@@ -26,18 +26,8 @@ import {
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import MapaMundi from './MapaMundi';
 import Svg, { Circle, Path } from 'react-native-svg';
+import { INK, INK2, INK3, ESCURO, ELEV, BORDA, TERRA, VERDE, AMBAR, FRAUNCES, MONO } from './cores';
 
-const INK = '#EAE7E0';
-const INK2 = '#B4BCBF';
-const INK3 = '#879499';
-const ESCURO = '#0B1620';
-const ELEV = '#16232A';
-const BORDA = 'rgba(234,231,224,0.15)';
-const TERRA = '#c1552f';
-const VERDE = '#4E9490';
-const AMBAR = '#BFA474';
-const FRAUNCES = 'Fraunces';
-const MONO = 'IBM Plex Mono';
 
 // Mesmos desenhos do sistema de ícones do site.
 const DESENHOS = {
@@ -334,7 +324,7 @@ const e = StyleSheet.create({
   cabecalho: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 },
   // No Perfil o site troca o titulo de secao por mono versalete — e o que
   // separa esta tela das outras.
-  secao: { fontFamily: MONO, fontSize: 10, letterSpacing: 1.6, color: INK3, textTransform: 'uppercase' },
+  secao: { fontFamily: MONO, fontSize: 10, letterSpacing: 1.6, color: INK3, },
   secaoSub: { fontFamily: MONO, fontSize: 11, color: INK3 },
   aviso: { fontSize: 13.5, color: INK3, lineHeight: 19 },
   paises: { fontSize: 13.5, color: INK2, lineHeight: 21 },

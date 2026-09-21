@@ -61,6 +61,7 @@ import { Cinzel_500Medium } from '@expo-google-fonts/cinzel/500Medium';
 import * as Notifications from 'expo-notifications';
 import * as Device from 'expo-device';
 import Constants from 'expo-constants';
+import { BASE, INK, INK2, GREEN } from './cores';
 
 // Para onde o navegador do sistema devolve o login. Tem que ser IGUALZINHO
 // ao que está liberado no banco, senão a volta cai no site e a pessoa fica
@@ -135,9 +136,13 @@ const TELAS = {
   profile: TelaPerfil,
 };
 
-const TINTA = '#0b1620';
-const PAPEL = '#EAE7E0';
-const TERRA = '#c1552f';
+// A casca (fundo atras da WebView, aviso de offline, girador) acompanha o
+// resto do app. TINTA era o azul-escuro que sumiu do projeto; hoje o fundo e
+// claro, entao o nome ficou mentindo — trocar e edicao mecanica pra quando
+// alguem estiver com o app rodando na frente.
+const TINTA = BASE;
+const PAPEL = INK;
+const TERRA = GREEN;
 
 // Host do próprio app: tudo que for daqui navega dentro da casca. O resto sai
 // pro sistema.
@@ -576,7 +581,7 @@ const estilo = StyleSheet.create({
     textAlign: 'center',
   },
   texto: {
-    color: '#94A4AD',
+    color: INK2,
     fontSize: 15,
     lineHeight: 22,
     textAlign: 'center',

@@ -36,21 +36,10 @@ import {
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Svg, { Circle, Path } from 'react-native-svg';
+import { INK, INK2, INK3, ESCURO, SUPERFICIE, ELEV, BORDA, TERRA, VERDE, AMBAR, FRAUNCES, MONO } from './cores';
 
 // :root do index.html — não inventar aqui.
-const INK = '#EAE7E0';
-const INK2 = '#B4BCBF';
-const INK3 = '#879499';
-const ESCURO = '#0B1620';
-const SUPERFICIE = '#101C24';
-const ELEV = '#16232A';
-const BORDA = 'rgba(234,231,224,0.15)';
-const TERRA = '#c1552f';
-const VERDE = '#4E9490';
-const AMBAR = '#BFA474';
 
-const FRAUNCES = 'Fraunces';
-const MONO = 'IBM Plex Mono';
 
 // ── peças pequenas ────────────────────────────────────────────────────────
 
@@ -441,7 +430,7 @@ const e = StyleSheet.create({
   quemTxt: { fontSize: 12.5, color: INK, flexShrink: 1 },
   quando: { position: 'absolute', top: 19, right: 14, zIndex: 3, fontFamily: MONO, fontSize: 10, color: INK2 },
   cardPe: { position: 'absolute', left: 16, right: 16, bottom: 14, zIndex: 3 },
-  cardK: { fontFamily: MONO, fontSize: 10, letterSpacing: 1, color: INK2, textTransform: 'uppercase' },
+  cardK: { fontFamily: MONO, fontSize: 10, letterSpacing: 1, color: INK2, },
   cardNome: { fontFamily: FRAUNCES, fontWeight: '400', fontSize: 25, color: '#fff', marginTop: 4, lineHeight: 27 },
   cardCorpo: { paddingHorizontal: 16, paddingTop: 14, paddingBottom: 15 },
   cardNota: { fontFamily: FRAUNCES, fontStyle: 'italic', fontSize: 16.5, lineHeight: 23, color: INK },

@@ -22,19 +22,8 @@ import {
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Svg, { Path } from 'react-native-svg';
 import MapaMundi from './MapaMundi';
+import { INK, INK2, INK3, ESCURO, ELEV, BORDA, TERRA, VERDE, FRAUNCES, MONO, MONO_MEDIO, MONO_FORTE } from './cores';
 
-const INK = '#EAE7E0';
-const INK2 = '#B4BCBF';
-const INK3 = '#879499';
-const ESCURO = '#0B1620';
-const ELEV = '#16232A';
-const BORDA = 'rgba(234,231,224,0.15)';
-const TERRA = '#c1552f';
-const VERDE = '#4E9490';
-const FRAUNCES = 'Fraunces';
-const MONO = 'IBM Plex Mono';
-const MONO_MEDIO = 'IBM Plex Mono Medium';
-const MONO_FORTE = 'IBM Plex Mono SemiBold';
 
 function Caixa({ n, rotulo, onPress }) {
   return (
@@ -372,7 +361,7 @@ const e = StyleSheet.create({
     borderColor: 'rgba(234,231,224,0.2)',
   },
   chipOn: { backgroundColor: TERRA, borderColor: TERRA },
-  chipTxt: { fontFamily: MONO, fontSize: 10.5, letterSpacing: 1.2, color: INK2, textTransform: 'uppercase' },
+  chipTxt: { fontFamily: MONO, fontSize: 10.5, letterSpacing: 1.2, color: INK2, },
   chipTxtOn: { color: '#fff' },
 
   filme: { gap: 12, paddingHorizontal: 24, paddingTop: 18, paddingBottom: 10 },

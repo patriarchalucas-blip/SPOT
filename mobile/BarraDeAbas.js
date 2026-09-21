@@ -24,13 +24,9 @@ import React from 'react';
 import { Platform, Pressable, StyleSheet, Text, View } from 'react-native';
 import { BlurView } from 'expo-blur';
 import Svg, { Circle, Path } from 'react-native-svg';
+import { INK, INK3, ESCURO, ATIVO_FUNDO, BORDA } from './cores';
 
 // Valores lidos do :root do index.html — não inventar aqui.
-const INK = '#EAE7E0';
-const INK3 = '#879499';
-const ESCURO = '#0B1620';
-const ATIVO_FUNDO = 'rgba(193,85,47,0.16)';
-const BORDA = 'rgba(234,231,224,0.09)';
 
 // Mesmos caminhos do ICONS no index.html. Traço 1.8, ponta e junta
 // arredondadas, sem preenchimento — igual ao svg.ic do site.

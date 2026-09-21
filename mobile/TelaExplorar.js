@@ -26,18 +26,8 @@ import {
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Svg, { Circle, Path } from 'react-native-svg';
+import { INK, INK2, INK3, ESCURO, ELEV, BORDA, TERRA, VERDE, AMBAR, FRAUNCES, MONO } from './cores';
 
-const INK = '#EAE7E0';
-const INK2 = '#B4BCBF';
-const INK3 = '#879499';
-const ESCURO = '#0B1620';
-const ELEV = '#16232A';
-const BORDA = 'rgba(234,231,224,0.15)';
-const TERRA = '#c1552f';
-const VERDE = '#4E9490';
-const AMBAR = '#BFA474';
-const FRAUNCES = 'Fraunces';
-const MONO = 'IBM Plex Mono';
 
 function IconeBusca({ cor = INK3 }) {
   const c = { stroke: cor, strokeWidth: 1.8, strokeLinecap: 'round', strokeLinejoin: 'round', fill: 'none' };
@@ -344,7 +334,7 @@ const e = StyleSheet.create({
   seloTxt: { fontFamily: MONO, fontSize: 11.5, color: INK },
   seloEstrela: { fontSize: 11, color: AMBAR },
   cardPe: { position: 'absolute', left: 16, right: 16, bottom: 14, zIndex: 3 },
-  cardK: { fontFamily: MONO, fontSize: 10, letterSpacing: 1, color: INK2, textTransform: 'uppercase' },
+  cardK: { fontFamily: MONO, fontSize: 10, letterSpacing: 1, color: INK2, },
   cardNome: { fontFamily: FRAUNCES, fontWeight: '400', fontSize: 25, color: '#fff', marginTop: 4, lineHeight: 27 },
   cardCorpo: {
     paddingHorizontal: 16,
