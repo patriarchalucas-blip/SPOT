@@ -620,7 +620,7 @@ body.na-casca .bottom-nav{display:none}
 
 /* PLACE DETAIL */
 #place{background:var(--surface)}
-.place-hero{height:280px;position:relative;overflow:hidden;flex-shrink:0;background:var(--dark)}
+.place-hero{height:280px;position:relative;overflow:hidden;flex-shrink:0;background:var(--photo-empty)}
 .place-hero-img{position:absolute;inset:0;background-size:cover;background-position:center}
 /* Credito do autor da foto. O Google exige que ele apareca junto da foto do
    lugar (Termos da Google Maps Platform), e o Unsplash exige o mesmo pras
@@ -628,41 +628,63 @@ body.na-casca .bottom-nav{display:none}
 .foto-credito{position:absolute;right:10px;bottom:8px;z-index:3;font-family:'Inter Tight',sans-serif;font-size:9.5px;color:rgba(255,255,255,.62);text-shadow:0 1px 3px rgba(0,0,0,.6);max-width:60%;text-align:right;line-height:1.35;pointer-events:auto}
 .foto-credito a{color:inherit;text-decoration:none;border-bottom:1px solid rgba(255,255,255,.25)}
 .foto-credito:empty{display:none}
-.hero-overlay{position:absolute;inset:0;background:linear-gradient(to bottom,rgba(0,0,0,0.2),rgba(0,0,0,0.7))}
+.hero-overlay{position:absolute;inset:0;background:linear-gradient(to top,rgba(0,0,0,.55),transparent 55%)}
 /* Na ficha de um lugar os quatro cantos da foto ja tem dono: voltar, status,
    trocar foto e o nome. O credito caia logo abaixo do nome e virava legenda
    do titulo — num lugar cuja foto e do proprio estabelecimento, lia-se
    "Trattoria Karampana / Foto: Trattoria Karampana". Sobe pra faixa de cima,
    entre o botao de voltar e o selo de status, que e onde sobra espaco. */
 .place-hero .foto-credito{top:25px;bottom:auto;left:62px;right:112px;max-width:none;text-align:left}
-.hero-back{position:absolute;top:18px;left:18px;width:34px;height:34px;background:rgba(11,22,32,.5);border:1px solid rgba(255,255,255,.16);border-radius:50%;color:#fff;font-size:15px;cursor:pointer;display:flex;align-items:center;justify-content:center;z-index:2;backdrop-filter:blur(8px)}
-.hero-photo-btn{position:absolute;bottom:18px;right:18px;width:34px;height:34px;background:rgba(11,22,32,.5);border:1px solid rgba(255,255,255,.16);border-radius:50%;color:#fff;font-size:14px;cursor:pointer;display:flex;align-items:center;justify-content:center;z-index:2;backdrop-filter:blur(8px)}
-.hero-chip{position:absolute;top:18px;right:18px;padding:7px 15px;border-radius:var(--r-pill);font-size:12px;font-weight:600;cursor:pointer;z-index:2;backdrop-filter:blur(8px)}
-.chip-want{background:rgba(191,164,112,0.24);border:1px solid rgba(191,164,112,0.55);color:#DDCBA4}
-.chip-been{background:rgba(78,148,144,0.24);border:1px solid rgba(78,148,144,0.55);color:#8FD3CE}
-.hero-bottom{position:absolute;bottom:0;left:0;right:0;padding:22px;z-index:2}
-.hero-type{font-size:12px;color:rgba(255,255,255,0.7);margin-bottom:6px}
-.hero-name{font-family:'Inter Tight',sans-serif;font-weight:400;font-size:30px;color:#fff;line-height:1.1;letter-spacing:-.015em}
-.d-section{padding:20px 24px;border-bottom:1px solid var(--border)}
-.sec-label{font-size:13px;font-weight:600;color:var(--ink2);margin-bottom:12px}
+.hero-back{position:absolute;top:18px;left:20px;width:36px;height:36px;background:rgba(245,245,243,.92);
+  border:none;border-radius:50%;color:var(--ink);cursor:pointer;display:flex;align-items:center;
+  justify-content:center;z-index:2}
+.hero-back:active{opacity:.7}
+.hero-back svg{width:20px;height:20px}
+.hero-photo-btn{position:absolute;bottom:18px;right:20px;width:36px;height:36px;background:rgba(245,245,243,.92);
+  border:none;border-radius:50%;color:var(--ink);cursor:pointer;display:flex;align-items:center;
+  justify-content:center;z-index:2}
+.hero-photo-btn:active{opacity:.7}
+.hero-photo-btn svg{width:16px;height:16px}
+/* O selo de situacao vira o UNICO acento colorido da capa: verde cheio,
+   nao uma pilula translucida de cor propria pra cada estado. */
+.hero-chip{position:absolute;top:18px;right:20px;min-height:36px;padding:0 14px;border-radius:18px;
+  font-size:14px;font-weight:600;cursor:pointer;z-index:2;display:flex;align-items:center;gap:6px;
+  background:var(--green);color:var(--on-green);border:none}
+.hero-chip:active{opacity:.85}
+.chip-want,.chip-been{background:var(--green);color:var(--on-green)}
+.hero-bottom{position:absolute;bottom:0;left:0;right:0;padding:0 20px 20px;z-index:2}
+.hero-type{font-size:13px;font-weight:500;color:rgba(255,255,255,.85);margin-bottom:4px}
+.hero-name{font-size:34px;font-weight:700;letter-spacing:-.04em;color:#fff;line-height:1.05}
+.d-section{padding:24px 20px 0}
+.sec-label{font-size:20px;font-weight:700;letter-spacing:-.03em;color:var(--ink);margin-bottom:14px}
+.sec-pequeno{font-size:15px;font-weight:600;letter-spacing:0;color:var(--ink2);margin-bottom:10px}
 /* Linha do titulo com acao a direita — a nota precisava de um "Editar"
    visivel: o lapis do topo troca a FOTO, e quem quer corrigir a nota nao
    adivinha isso. */
 .sec-linha{display:flex;align-items:baseline;justify-content:space-between;gap:12px}
-.sec-editar{background:none;border:none;padding:0 0 12px;font-family:var(--mono);font-size:11px;color:var(--terra);cursor:pointer}
+.sec-editar{background:none;border:none;padding:0;font-size:14px;font-weight:600;color:var(--green);cursor:pointer}
+.sec-editar:active{opacity:.6}
 .nota-acoes{display:flex;align-items:center;gap:14px;margin-top:12px}
 .nota-acoes .action-btn{flex:1}
-.note-card{background:var(--white);border:1px solid var(--border);border-radius:var(--r);padding:18px;position:relative;overflow:hidden;box-shadow:var(--shadow-sm)}
+/* A nota, as estrelas e o "Editar" numa linha so, logo abaixo do texto.
+   Antes a nota tinha um rotulo em cima ("MINHA NOTA") e as estrelas viviam
+   tres secoes abaixo, em "Minha avaliacao" — a pessoa dava a nota longe de
+   onde lia o que tinha escrito. */
+.nota-linha{display:flex;align-items:center;gap:10px;margin-top:14px}
+.nota-rot{font-size:13px;color:var(--ink2);flex:1}
+.note-card{background:none;border:none;padding:0;position:relative}
 .note-glow{display:none}
-.note-quote{font-family:'Inter Tight',sans-serif;font-weight:400;font-size:18px;font-style:italic;color:var(--ink);line-height:1.5;position:relative;z-index:1}
-.note-attr{font-size:12px;color:var(--ink3);margin-top:11px;position:relative;z-index:1}
+/* A nota e o assunto da ficha: e o que o Spot tem que uma lista de lugares
+   nao tem. Sai do card com borda e vira o texto grande da tela. */
+.note-quote{font-size:24px;font-weight:500;letter-spacing:-.02em;color:var(--ink);line-height:1.25;text-wrap:pretty}
+.note-attr{font-size:13px;color:var(--ink3);margin-top:10px}
 /* Uma linha discreta no lugar de quatro caixas. O endereco e a unica coisa
    daquele bloco que nao se repetia em outro lugar da tela. */
-.info-linha{margin-top:-4px}
-.info-linha-item{display:flex;align-items:center;gap:10px;padding:12px 0;border-top:1px solid var(--border);border-bottom:1px solid var(--border);color:var(--ink2);text-decoration:none}
+.info-linha{margin-top:12px}
+.info-linha-item{display:flex;align-items:center;gap:10px;padding:8px 0;color:var(--ink2);text-decoration:none}
 .ili-ic{flex-shrink:0;color:var(--ink3);display:flex}
-.ili-ic svg{width:15px;height:15px}
-.ili-txt{flex:1;min-width:0;font-size:13.5px;line-height:1.4}
+.ili-ic svg{width:16px;height:16px}
+.ili-txt{flex:1;min-width:0;font-size:14px;line-height:1.4}
 .ili-seta{flex-shrink:0;color:var(--ink3);font-size:17px}
 .info-linha-item:active{opacity:.6}
 .info-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
@@ -672,19 +694,28 @@ body.na-casca .bottom-nav{display:none}
 .info-cell-label{font-size:11.5px;color:var(--ink3);margin-bottom:5px}
 .info-cell-value{font-size:14px;font-weight:500;color:var(--ink)}
 .info-cell-sub{font-family:var(--mono);font-size:8px;color:var(--ink3);margin-top:3px;}
-.status-toggle{display:flex;background:var(--surface);border-radius:var(--r-sm);padding:4px;gap:4px}
-.toggle-btn{flex:1;padding:11px 8px;border:none;border-radius:9px;background:transparent;font-family:'Inter Tight',sans-serif;font-size:13px;font-weight:500;color:var(--ink3);cursor:pointer;text-align:center}
-.toggle-btn.sel-want{background:var(--white);color:var(--amber);font-weight:600}
-.toggle-btn.sel-been{background:var(--white);color:var(--green);font-weight:600}
-.toggle-btn.sel-skip{background:var(--white);color:var(--red);font-weight:600}
-.stars-row{display:flex;gap:7px;margin-bottom:18px}
-.star-btn{font-size:24px;cursor:pointer;color:rgba(234,231,224,0.18);background:none;border:none;padding:0}
-.star-btn.lit{color:var(--amber)}
-.review-area{width:100%;background:var(--surface);border:1px solid var(--border);border-radius:var(--r-sm);padding:16px;font-size:14px;font-family:'Inter Tight',sans-serif;color:var(--ink);resize:none;outline:none;line-height:1.6;box-shadow:var(--shadow-inset)}
+/* Segmentado: o trilho e a superficie secundaria, e a opcao escolhida e a
+   COR DA PAGINA por cima dela. Cada estado tinha uma cor propria (ambar,
+   verde, vermelho) — tres acentos pra escolher entre tres palavras. */
+.status-toggle{display:flex;background:var(--surface);border-radius:var(--r-card);padding:4px;gap:4px}
+.toggle-btn{flex:1;min-height:44px;border:none;border-radius:var(--r-btn);background:transparent;
+  font-family:'Inter Tight',sans-serif;font-size:14px;font-weight:600;color:var(--ink2);cursor:pointer;text-align:center}
+.toggle-btn.sel-want,.toggle-btn.sel-been,.toggle-btn.sel-skip{background:var(--base);color:var(--ink)}
+.stars-row{display:flex;gap:4px}
+.star-btn{cursor:pointer;color:var(--ink3);background:none;border:none;padding:4px 2px;display:flex}
+.star-btn svg{width:18px;height:18px}
+.star-btn.lit{color:var(--green)}
+.review-area{width:100%;background:var(--surface);border:none;border-radius:var(--r-card);padding:16px;
+  font-size:15px;font-family:'Inter Tight',sans-serif;color:var(--ink);resize:none;outline:none;line-height:1.5}
 .review-area::placeholder{color:var(--ink3)}
-.action-btn{display:block;width:100%;background:var(--terra);color:#fff;border:none;border-radius:var(--r-sm);padding:16px;font-family:'Inter Tight',sans-serif;font-size:15px;font-weight:600;cursor:pointer;margin-top:14px;margin-bottom:16px;box-shadow:var(--shadow-terra)}
-.reserve-btn{display:block;text-align:center;width:100%;box-sizing:border-box;background:transparent;color:var(--ink);border:1.5px solid var(--ink3);border-radius:var(--r-sm);padding:14px;font-family:'Inter Tight',sans-serif;font-size:14px;font-weight:600;text-decoration:none;margin-top:12px}
-.reserve-btn:active{background:var(--surface)}
+.action-btn{display:block;width:100%;min-height:48px;background:var(--green);color:var(--on-green);border:none;
+  border-radius:var(--r-card);padding:0 18px;font-family:'Inter Tight',sans-serif;font-size:14px;font-weight:600;
+  cursor:pointer;margin-top:14px;margin-bottom:0}
+.action-btn:active{opacity:.85}
+.reserve-btn{display:block;text-align:center;width:100%;box-sizing:border-box;background:var(--surface);
+  color:var(--ink);border:none;border-radius:var(--r-card);padding:14px;font-family:'Inter Tight',sans-serif;
+  font-size:14px;font-weight:600;text-decoration:none;margin-top:12px}
+.reserve-btn:active{opacity:.7}
 .req-card{display:flex;align-items:center;gap:9px;background:var(--white);border:1px solid var(--border);border-radius:var(--r);padding:13px 14px;margin-bottom:10px;box-shadow:var(--shadow-sm)}
 .req-card>div[style*="flex:1"]{min-width:0}
 .req-name{font-size:14.5px;font-weight:600;color:var(--ink);flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
@@ -739,72 +770,34 @@ body.na-casca .bottom-nav{display:none}
 
 
 
-/* ═══ TELA DE SPOT — direção Atlas ═══
-   A aposta da direção é "o lugar antes da palavra": a foto toma a tela como
-   palco e a nota pessoal entra como legenda grande, não como card no meio de
-   uma pilha de seções. A nota é o que diferencia o Spot de uma lista de
-   lugares, e antes ela era só mais um bloco entre outros seis.
-   A estrutura do HTML e todos os ids continuam iguais — só o visual muda —
-   pra não mexer na lógica que já funciona. */
-#place .place-hero{height:min(58dvh,520px);min-height:340px}
-/* O escurecido termina na cor do fundo, então a foto se dissolve na página
-   em vez de cortar numa linha reta. */
-#place .hero-overlay{background:linear-gradient(to bottom,rgba(11,22,32,.45) 0%,rgba(11,22,32,0) 26%,rgba(11,22,32,.35) 48%,rgba(11,22,32,.92) 78%,var(--dark) 100%)}
+/* ═══ TELA DO LUGAR ═══ */
+#place .place-hero{height:min(52dvh,440px);min-height:340px}
 /* Nome comprido passava por baixo do botao de trocar foto, que fica neste
    mesmo canto de baixo. Reserva a largura dele. */
-#place .hero-bottom{padding:0 68px 22px 26px}
-#place .hero-type{font-family:var(--mono);font-size:10.5px;color:rgba(234,231,224,.75);margin-bottom:9px}
-#place .hero-name{font-size:34px;line-height:1.02;letter-spacing:-.02em}
-#place .hero-chip{font-family:var(--mono);font-size:10px;font-weight:500;padding:7px 13px}
+#place .hero-bottom{padding:0 68px 20px 20px}
 
-/* A primeira seção encosta na foto: sem traço, sem respiro morto. */
-#place .d-section{padding:18px 26px;border-bottom:none}
-#place .d-section:first-of-type{padding-top:2px}
-/* Rótulo de seção vira etiqueta de ficha, com a linha preenchendo o resto —
-   é o divisor do modelo. */
-#place .sec-label{font-family:var(--mono);font-size:10px;color:var(--ink3);font-weight:500;margin-bottom:10px;display:flex;align-items:center;gap:10px}
-#place .sec-label::after{content:"";flex:1;height:1px;background:rgba(234,231,224,.18)}
-#place .sec-linha .sec-label{margin-bottom:0}
-#place .sec-linha .sec-label::after{content:none}
-#place .d-section:first-of-type .sec-label{color:var(--terra2,var(--green))}
-
-/* A nota sai da caixa e vira o maior bloco de texto da tela. */
-#place .note-card{background:transparent;border:none;box-shadow:none;padding:0}
-#place .note-glow{display:none}
-#place .note-quote{font-size:23px;line-height:1.32;font-style:normal;text-wrap:pretty}
-#place .note-quote:empty::before{content:"Por que esse lugar te chamou atenção?";font-style:italic;color:var(--ink3)}
-
-/* Status vira controle segmentado, igual ao das abas de Amigos. */
-#place .status-toggle{background:var(--surface);border-radius:12px}
-#place .toggle-btn{min-height:44px;font-size:13px}
-#place .toggle-btn.sel-been{background:var(--elev,var(--surface));font-weight:600;color:#8FD3CE}
-#place .toggle-btn.sel-want{background:var(--elev,var(--surface));font-weight:600;color:#DDCBA4}
-#place .toggle-btn.sel-skip{background:var(--elev,var(--surface));font-weight:600;color:var(--ink)}
+/* A primeira seção encosta na foto. */
+#place .d-section:first-of-type{padding-top:24px}
 
 /* Linha social: rodapé da nota. Avatares de quem comentou, nomes, e a nota do
    Google — as três coisas que antes moravam longe uma da outra. */
 .sp-social{display:flex;align-items:center;gap:10px;margin-top:16px;cursor:pointer;min-height:44px}
 .sp-pilha{display:flex;flex:none}
-.sp-av{width:24px;height:24px;border-radius:50%;background:var(--green);border:2px solid var(--dark);margin-left:-8px;display:flex;align-items:center;justify-content:center;font-family:var(--mono);font-size:9px;font-weight:400;color:#cfe9e6;position:relative}
+.sp-av{width:24px;height:24px;border-radius:50%;background:var(--green);border:2px solid var(--base);
+  margin-left:-8px;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:600;
+  color:var(--on-green);position:relative}
 .sp-pilha .sp-av:first-child{margin-left:0}
 .sp-txt{flex:1;min-width:0;font-size:13px;color:var(--ink2);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .sp-txt i{font-style:normal;font-weight:600;color:var(--ink)}
-.sp-google{flex:none;font-family:var(--mono);font-size:11px;color:var(--ink2);white-space:nowrap}
+.sp-google{flex:none;font-size:13px;color:var(--ink2);white-space:nowrap}
 
-/* Informações vira ficha compacta. Eram três cartões altos com ícone em cima
-   ocupando meia tela, repetindo a cidade que já está no cabeçalho e o endereço
-   que ninguém lê ali. Vira uma linha de dados, na linguagem de ficha do app. */
-#place .info-grid{gap:7px;margin-bottom:14px}
-#place .info-cell{padding:10px 12px;border-radius:10px;background:var(--surface)}
-#place .info-cell-icon{display:none}
-#place .info-cell-label{font-family:var(--mono);font-size:9.5px;margin-bottom:3px}
-#place .info-cell-value{font-size:13.5px}
 
-/* Ligar · Instagram · Maps lado a lado, em vez de empilhados ocupando
-   três alturas de botão. */
-#place #placeReserveWrap{display:grid;grid-template-columns:repeat(auto-fit,minmax(96px,1fr));gap:8px}
-#place .reserve-btn{margin-top:0;min-height:46px;padding:10px 8px;border:1px solid var(--border);border-width:1px;border-radius:12px;background:var(--surface);font-size:13px;font-weight:500;gap:6px;flex-direction:column}
-#place .reserve-btn .ic{font-size:15px}
+/* Ligar · Cardapio · Instagram lado a lado. */
+#place #placeReserveWrap{display:grid;grid-template-columns:repeat(auto-fit,minmax(100px,1fr));gap:8px}
+#place #placeReserveWrap:empty{display:none}
+#place .reserve-btn{margin-top:0;min-height:48px;padding:0 12px;border:none;border-radius:var(--r-card);
+  background:var(--surface);color:var(--ink);font-size:14px;font-weight:600;gap:6px;flex-direction:row}
+#place .reserve-btn svg{width:16px;height:16px}
 
 /* ═══ TELA DE AMIGOS — direção Atlas ═══
    Cabeçalho enxuto com o botão de adicionar ao lado do título (antes era um
@@ -865,8 +858,13 @@ body.na-casca .bottom-nav{display:none}
 .feed-time{font-size:12px;color:var(--ink3);margin-top:4px}
 .badge-count{background:var(--terra);color:#fff;font-size:10.5px;font-weight:700;border-radius:var(--r-pill);padding:2px 7px;margin-left:6px}
 .friend-search-card{display:flex;align-items:center;gap:12px;background:var(--white);border:1px solid var(--border);border-radius:var(--r);padding:13px 14px;margin-top:10px;box-shadow:var(--shadow-sm)}
-.delete-link{display:block;width:100%;background:none;border:none;color:var(--red);font-size:13px;font-family:'Inter Tight',sans-serif;cursor:pointer;padding:8px;margin-bottom:40px;text-decoration:underline;text-underline-offset:3px}
-.secondary-link{display:block;width:100%;background:none;border:none;color:var(--ink3);font-size:13px;font-family:'Inter Tight',sans-serif;cursor:pointer;padding:12px 8px 8px;text-decoration:underline;text-underline-offset:3px}
+/* Excluir perde o vermelho e o sublinhado: acao destrutiva nao precisa
+   gritar, precisa estar longe do polegar e escrita por extenso. */
+.delete-link{display:block;width:100%;background:none;border:none;color:var(--ink3);font-size:14px;
+  font-family:'Inter Tight',sans-serif;cursor:pointer;padding:16px 8px;margin:8px 0 110px}
+.delete-link:active{opacity:.6}
+.secondary-link{display:block;width:100%;background:none;border:none;color:var(--ink2);font-size:14px;
+  font-weight:500;font-family:'Inter Tight',sans-serif;cursor:pointer;padding:14px 8px}
 /* 24px na horizontal como todo conteudo de ficha. Sem isso o texto do aviso
    de pais trocado encostava na borda — o titulo alinhado e a frase colada na
    lateral, que foi o desalinhamento que o Lucas viu no print. */
@@ -918,7 +916,7 @@ body.na-casca .bottom-nav{display:none}
    O email ja esta em Configuracoes; aqui ele so ocupava a ultima linha sem
    ninguem nunca precisar dele. */
 /* Nota que ainda nao existe: o texto vira convite, nao aspas vazias. */
-.note-quote.nota-vazia{color:var(--ink3);opacity:.8}
+.note-quote.nota-vazia{color:var(--ink3)}
 /* Os tres numeros do perfil. Mesma linguagem do placar da tela inicial, e
    cada um abre a mesma tela de Lista que o placar abre. */
 .prof-numeros{display:flex;align-items:flex-end;gap:28px;padding:24px 0 0}
@@ -1071,10 +1069,10 @@ body.na-casca .bottom-nav{display:none}
 .note-place-name{font-size:16px;font-weight:600;color:var(--ink)}
 .note-place-meta{font-size:12.5px;color:var(--ink3);margin-top:3px}
 .note-wrap{padding:0 24px}
-.note-input{width:100%;background:var(--surface);border:1px solid var(--border);border-radius:var(--r-sm);padding:16px;font-size:15px;font-family:'Inter Tight',sans-serif;color:var(--ink);resize:none;outline:none;line-height:1.5;box-shadow:var(--shadow-inset)}
-.note-input:focus{border-color:var(--terra)}
-.note-input::placeholder{color:var(--ink3);font-style:italic}
-.note-input.error{border-color:var(--red)}
+.note-input{width:100%;background:var(--surface);border:none;border-radius:var(--r-card);padding:16px;
+  font-size:15px;font-family:'Inter Tight',sans-serif;color:var(--ink);resize:none;outline:none;line-height:1.5}
+.note-input::placeholder{color:var(--ink3)}
+.note-input.error{box-shadow:inset 0 0 0 2px var(--ink3)}
 .note-hint{font-size:12px;color:var(--ink3);padding:8px 24px 0}
 .status-choice{display:flex;gap:10px;padding:4px 24px 0}
 .status-opt{flex:1;background:var(--surface);border:2px solid transparent;border-radius:var(--r-sm);padding:14px;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:7px;font-family:'Inter Tight',sans-serif;transition:all .15s}
@@ -1406,12 +1404,12 @@ svg.ic path,svg.ic circle,svg.ic line,svg.ic polyline,svg.ic rect{fill:none;stro
 
 <div class="screen" id="place">
   <div class="place-hero"><div class="place-hero-img" id="placeHeroImg"></div><div class="foto-credito" id="placeFotoCredito"></div><div class="hero-overlay"></div><button class="hero-back" onclick="backFromPlace()" data-ic="back" aria-label="Voltar"></button><button class="hero-photo-btn" onclick="document.getElementById('spotPhotoFileInput').click()" data-ic="edit" aria-label="Trocar foto"></button><input type="file" id="spotPhotoFileInput" accept="image/*" style="display:none" onchange="onSpotPhotoFileChosen(this)"><div class="hero-chip chip-want" id="placeChip" onclick="cycleStatus()">Quero ir</div><div class="hero-bottom"><div class="hero-type" id="placeType"></div><div class="hero-name" id="placeName"></div></div></div>
-  <div class="d-section"><div class="sec-linha"><div class="sec-label">Minha nota</div><button class="sec-editar" id="btnEditarNota" onclick="editarNota()">Editar</button></div><div class="note-card" id="notaLeitura"><div class="note-glow"></div><div class="note-quote" id="placeNote"></div><div class="note-attr" id="placeNoteAttr"></div></div><div id="notaEdicao" style="display:none"><textarea class="note-input" id="notaTexto" rows="4" placeholder="Por que esse lugar te chamou atenção?"></textarea><div class="nota-acoes"><button class="action-btn" style="margin:0" id="btnSalvarNota" onclick="salvarNota()">Salvar nota</button><button class="secondary-link" style="margin:0" onclick="cancelarNota()">Cancelar</button></div></div><div class="sp-social" id="placeSocial" style="display:none"></div></div>
-  <div class="d-section"><div class="info-linha" id="placeInfoGrid"></div><div id="placeReserveWrap"></div></div>
+  <div class="d-section"><div class="note-card" id="notaLeitura"><div class="note-glow"></div><div class="note-quote" id="placeNote"></div><div class="note-attr" id="placeNoteAttr"></div></div><div id="notaEdicao" style="display:none"><textarea class="note-input" id="notaTexto" rows="4" placeholder="Por que esse lugar te chamou atenção?"></textarea><div class="nota-acoes"><button class="action-btn" style="margin:0" id="btnSalvarNota" onclick="salvarNota()">Salvar nota</button><button class="secondary-link" style="margin:0" onclick="cancelarNota()">Cancelar</button></div></div><div class="nota-linha"><div class="stars-row" id="placeStars"><button class="star-btn" onclick="rateStar(1)" data-ic="star"></button><button class="star-btn" onclick="rateStar(2)" data-ic="star"></button><button class="star-btn" onclick="rateStar(3)" data-ic="star"></button><button class="star-btn" onclick="rateStar(4)" data-ic="star"></button><button class="star-btn" onclick="rateStar(5)" data-ic="star"></button></div><span class="nota-rot">sua nota</span><button class="sec-editar" id="btnEditarNota" onclick="editarNota()">Editar</button></div><div class="sp-social" id="placeSocial" style="display:none"></div></div>
+  <div class="d-section"><div id="placeReserveWrap"></div><div class="info-linha" id="placeInfoGrid"></div></div>
   <div class="d-section"><div class="coment-bloco" id="placeComentarios"></div></div>
-  <div class="d-section" id="placeSubcatSection" style="display:none"><div class="sec-label">Tipo de experiência</div><div class="subcat-row" id="placeSubcatChips"></div></div>
+  <div class="d-section" id="placeSubcatSection" style="display:none"><div class="sec-label sec-pequeno">Tipo de experiência</div><div class="subcat-row" id="placeSubcatChips"></div></div>
   <div class="d-section"><div class="status-toggle"><button class="toggle-btn sel-want" id="t-want" onclick="setStatus('want')">Quero ir</button><button class="toggle-btn" id="t-been" onclick="setStatus('been')">Fui</button><button class="toggle-btn" id="t-skip" onclick="setStatus('skip')">Pular</button></div></div>
-  <div class="d-section"><div class="sec-label">Minha avaliação</div><div class="stars-row" id="placeStars"><button class="star-btn" onclick="rateStar(1)" data-ic="star"></button><button class="star-btn" onclick="rateStar(2)" data-ic="star"></button><button class="star-btn" onclick="rateStar(3)" data-ic="star"></button><button class="star-btn" onclick="rateStar(4)" data-ic="star"></button><button class="star-btn" onclick="rateStar(5)" data-ic="star"></button></div><textarea class="review-area" id="reviewText" rows="3" placeholder="O que você achou?"></textarea><button class="action-btn" id="saveReviewBtn" onclick="saveReview()">Salvar avaliação</button><button class="delete-link" onclick="deleteSpot()">Excluir este spot</button></div>
+  <div class="d-section"><div class="sec-label">Sua avaliação</div><textarea class="review-area" id="reviewText" rows="3" placeholder="O que você achou?"></textarea><button class="action-btn" id="saveReviewBtn" onclick="saveReview()">Salvar avaliação</button><button class="delete-link" onclick="deleteSpot()">Excluir lugar</button></div>
 </div>
 
 <!-- OVERLAYS -->
@@ -3387,12 +3385,12 @@ async function openPlace(id,origin){
   S.placeOrigin=origin||'trip'; // pra saber pra onde o "voltar" deve levar
   document.getElementById('placeName').textContent=s.name;
   document.getElementById('placeType').textContent=`${subcatLabel(s.subcategory)||catLabel(s.category)} · ${cityOf(s)}`;
-  // Sem nota, isto imprimia um par de aspas vazias — que parece defeito na
-  // tela onde a nota pessoal e justamente o que diferencia o Spot de uma
-  // lista do Google. Sem nota, o espaco vira convite pra escrever uma.
+  // Sem nota, o espaco vira convite pra escrever uma.
+  // As aspas sairam: a nota agora e o texto grande da tela, e texto grande
+  // entre aspas se le como citacao de outra pessoa — e ela e da propria.
   const nota=String(s.my_note||'').trim();
   const elNota=document.getElementById('placeNote');
-  elNota.textContent=nota?('"'+nota+'"'):'Por que esse lugar te chamou atenção?';
+  elNota.textContent=nota||'Por que esse lugar te chamou atenção?';
   elNota.classList.toggle('nota-vazia',!nota);
   document.getElementById('placeNoteAttr').style.display='none';
   const phEl=document.getElementById('placeHeroImg');
@@ -3600,7 +3598,10 @@ async function salvarNota(){
   s.my_note=nova;
   // A nota aparece na lista da cidade e no card do spot: as duas telas tem que
   // refletir na hora, senao a antiga fica ali ate recarregar.
-  document.getElementById('placeNote').textContent=nova?`"${nova}"`:'';
+  // Apagar a nota tem que devolver o convite, nao deixar um espaco branco.
+  const elN=document.getElementById('placeNote');
+  elN.textContent=nova||'Por que esse lugar te chamou atenção?';
+  elN.classList.toggle('nota-vazia',!nova);
   cancelarNota();
   if(document.getElementById('city').classList.contains('active'))renderCityBody();
   toast('Nota salva','','check');
