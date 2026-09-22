@@ -5293,13 +5293,17 @@ function fmtD(d){const[y,m,day]=d.split('-');const ms=['Jan','Fev','Mar','Abr','
 // O efeito colateral: quem marcar muito território pode passar de 195. Por isso
 // a porcentagem é limitada a 100 em percentualDoMundo().
 const PAISES_NO_MUNDO=195;
-// Arredonda pra inteiro, menos abaixo de 10%, onde uma casa decimal é a
-// diferença entre "1%" e "1,5%" — e no começo é justamente quando cada país
-// novo mexe no número.
+// SEMPRE INTEIRO, sem casa decimal (pedido do Lucas, 22/09/2026). Eu tinha
+// posto uma casa abaixo de 10% achando que "0,5%" dizia mais que "1%" — mas
+// abrir espaco pra virgula faz o numero balancar de largura conforme a pessoa
+// viaja, e num anel de 76px isso aparece.
+//
+// Com 1 pais o arredondamento ja da 1% (0,51 arredonda pra cima), entao
+// ninguem que ja viajou ve "0%".
 function percentualDoMundo(n){
   const p=Math.min(100,(Number(n)||0)/PAISES_NO_MUNDO*100);
   if(!p)return '';
-  return (p<10?p.toFixed(1).replace('.',','):String(Math.round(p)))+'%';
+  return Math.round(p)+'%';
 }
 const COUNTRIES=[
   {flag:'🇦🇫',name:'Afeganistão',region:'Ásia',geo:'Afghanistan'},{flag:'🇦🇱',name:'Albânia',region:'Europa',geo:'Albania'},{flag:'🇩🇪',name:'Alemanha',region:'Europa',geo:'Germany'},
