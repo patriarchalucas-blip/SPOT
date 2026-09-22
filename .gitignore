@@ -7,3 +7,8 @@ node_modules/
 
 # Atalho local do build: carrega o token da Expo, nao vai pro repositorio
 mobile/build.ps1
+
+# Chave da App Store Connect. O repositorio e PUBLICO: um .p8 commitado aqui
+# e uma credencial publicada, e quem a tiver envia app em nome da conta.
+# Ela vive no gerenciador de senhas do Lucas e nos servidores da Expo.
+*.p8
