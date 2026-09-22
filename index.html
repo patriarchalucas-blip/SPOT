@@ -223,7 +223,12 @@ body{font-family:'Inter Tight',sans-serif;background:var(--base);color:var(--ink
   background:var(--surface);border-radius:var(--r-card);padding:16px 18px;
   box-shadow:var(--shadow-card)}
 
-.anel-bloco{flex:none;display:flex;flex-direction:column;align-items:center;gap:6px}
+/* O anel abre o mapa-mundi: e la que a mesma informacao esta inteira, com a
+   lista de paises. Os tres contadores do lado ja abrem listas — o anel ser o
+   unico elemento morto do card seria o estranho. */
+.anel-bloco{flex:none;display:flex;flex-direction:column;align-items:center;gap:6px;
+  background:none;border:none;padding:0;cursor:pointer}
+.anel-bloco:active{opacity:.6}
 .anel{width:76px;height:76px;position:relative}
 /* girado -90° pra fatia começar no topo, e não às 3 horas */
 .anel svg{width:100%;height:100%;display:block;transform:rotate(-90deg)}
@@ -1365,10 +1370,10 @@ svg.ic path,svg.ic circle,svg.ic line,svg.ic polyline,svg.ic rect{fill:none;stro
     </div>
   </div>
     <div class="placar-card">
-      <div class="anel-bloco">
+      <button class="anel-bloco" onclick="abrirMapaMundi('dashboard')" aria-label="Ver o mapa-múndi">
         <div class="anel" id="dashAnel"></div>
         <div class="anel-rot" id="dashAnelRot">de 195 países</div>
-      </div>
+      </button>
       <div class="placar-col">
         <button class="pc-item" onclick="openList('countries')">
           <span class="pc-n" id="dashPaisesN">0</span><span class="pc-r">países</span>
