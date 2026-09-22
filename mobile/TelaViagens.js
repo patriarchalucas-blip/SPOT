@@ -22,7 +22,7 @@ import {
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Svg, { Path } from 'react-native-svg';
 import MapaMundi from './MapaMundi';
-import { INK, INK2, INK3, ESCURO, ELEV, BORDA, TERRA, VERDE, FRAUNCES, MONO, MONO_MEDIO, MONO_FORTE } from './cores';
+import { INK, INK2, INK3, ESCURO, ELEV, BORDA, TERRA, VERDE, ON_GREEN, FRAUNCES, MONO, MONO_MEDIO, MONO_FORTE } from './cores';
 
 
 function Caixa({ n, rotulo, onPress }) {
@@ -126,14 +126,7 @@ export default function TelaViagens({ dados, ocupado, acao }) {
   }
 
   const d = dados;
-  // A tela era so a lista; o botao + precisa FLUTUAR por cima dela, entao
-  // entra uma camada em volta.
-  return (
-    <View style={{ flex: 1 }}>
-      {corpo()}
-      <BotaoMais acao={acao} margemDeBaixo={margem.bottom} />
-    </View>
-  );
+  return corpo();
 
   function corpo() {
 
@@ -200,7 +193,7 @@ export default function TelaViagens({ dados, ocupado, acao }) {
       {d.vazio ? (
         <View style={e.vazio}>
           <Text style={e.vazioTitulo}>Nenhuma viagem ainda</Text>
-          <Text style={e.vazioTexto}>Toca no + para criar sua primeira viagem</Text>
+          <Text style={e.vazioTexto}>Salve o primeiro spot e a viagem nasce sozinha</Text>
           <Pressable onPress={() => acao('nova')} style={e.botaoNova}>
             <Text style={e.botaoNovaTxt}>Criar viagem</Text>
           </Pressable>
@@ -240,6 +233,8 @@ export default function TelaViagens({ dados, ocupado, acao }) {
               <CardDeViagem key={t.id} t={t} aoAbrir={() => acao('abrir', t.id)} />
             ))}
           </ScrollView>
+
+          <BotaoAdicionar acao={acao} />
         </>
       )}
     </ScrollView>
@@ -247,18 +242,21 @@ export default function TelaViagens({ dados, ocupado, acao }) {
   }
 }
 
-// Nao existia no nativo, e o texto da tela vazia mandava tocar nele. Faz o
-// mesmo que o + do site: escolher categoria e cair no fluxo de adicionar
-// lugar, que cria a viagem sozinho quando precisa.
-function BotaoMais({ acao, margemDeBaixo }) {
+// Era um "+" redondo flutuando sobre a lista — o unico jeito de adicionar
+// nesta aba. No site esse botao virou uma barra de largura cheia no fim da
+// lista, e aqui ele tinha ficado pra tras. A acao e a MESMA (`novoLugar`):
+// escolher categoria e cair no fluxo que cria a viagem sozinho.
+//
+// Valores de .btn-primario + .btn-largo + .btn-solto do site.
+function BotaoAdicionar({ acao }) {
   return (
     <Pressable
       onPress={() => acao('novoLugar')}
-      style={({ pressed }) => [e.mais, { bottom: 96 + margemDeBaixo }, pressed && { opacity: 0.85 }]}
+      style={({ pressed }) => [e.adicionar, pressed && { opacity: 0.85 }]}
       accessibilityRole="button"
-      accessibilityLabel="Adicionar um lugar"
+      accessibilityLabel="Adicionar um spot"
     >
-      <Text style={e.maisTxt}>+</Text>
+      <Text style={e.adicionarTxt}>Adicionar spot</Text>
     </Pressable>
   );
 }
@@ -292,23 +290,16 @@ const e = StyleSheet.create({
   checkinAddTxt: { color: '#fff', fontSize: 12.5, fontWeight: '600' },
   checkinX: { width: 30, height: 30, alignItems: 'center', justifyContent: 'center' },
 
-  // 96px acima da barra de abas, como o do site, mais a area segura.
-  mais: {
-    position: 'absolute',
-    right: 24,
-    width: 56,
-    height: 56,
-    borderRadius: 28,
+  adicionar: {
+    height: 48,
+    marginHorizontal: 20,
+    marginTop: 20,
+    borderRadius: 14,
     backgroundColor: TERRA,
     alignItems: 'center',
     justifyContent: 'center',
-    shadowColor: TERRA,
-    shadowOpacity: 0.45,
-    shadowRadius: 16,
-    shadowOffset: { width: 0, height: 6 },
-    elevation: 8,
   },
-  maisTxt: { color: '#fff', fontSize: 26, fontWeight: '300', lineHeight: 30 },
+  adicionarTxt: { color: ON_GREEN, fontSize: 14, fontWeight: '600' },
 
   fundo: { flex: 1, backgroundColor: ESCURO },
   centro: { alignItems: 'center', justifyContent: 'center' },
