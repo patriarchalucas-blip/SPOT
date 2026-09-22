@@ -57,11 +57,23 @@ e hoje mudou: todas as telas da web, o ícone do app, o splash, a paleta e a
 fonte das quatro abas nativas — e **nada disso foi visto rodando**, porque não
 há como abrir o app nativo na máquina dele.
 
-**Esta pasta pode estar velha.** Ela veio de um ZIP. Antes de compilar,
-confira se `mobile/cores.js` existe: se não existir, baixe o repositório de
-novo (é público) —
-`https://github.com/patriarchalucas-blip/SPOT/archive/refs/heads/main.zip` —
-e trabalhe na pasta `mobile` de dentro dele.
+**ESTA PASTA ESTÁ VELHA.** Ela veio de um ZIP baixado antes do redesenho
+inteiro. Confira com um teste de um segundo: se **`mobile/cores.js` não
+existe**, o código aqui é anterior a tudo que mudou.
+
+Baixe de novo — o repositório é público, não pede senha. **Rode você mesmo**,
+em vez de pedir pro Lucas mexer com ZIP (ele já travou nisso uma vez):
+
+```
+git clone https://github.com/patriarchalucas-blip/SPOT.git spot-novo
+```
+
+E trabalhe em `spot-novo/mobile`. Se não houver `git` nesta máquina, aí sim o
+ZIP: `https://github.com/patriarchalucas-blip/SPOT/archive/refs/heads/main.zip`
+— e **descompacte você**, não peça a ele.
+
+Isto só vale pro build. A chave `.p8` e o registro do app não dependem do
+código: pode fazer os dois com a pasta velha.
 
 ```
 npm install
