@@ -77,6 +77,10 @@
 --mono:'Inter Tight',sans-serif;  /* a mono sai do app inteiro */
 --shadow-sm:none; --shadow-md:none; --shadow-lg:none;
 --shadow-terra:none; --shadow-inset:none;
+/* A UNICA sombra do app, e ela existe por um motivo medido: o card do
+   placar precisa ter borda visivel, e --surface sobre --base da 12 pontos
+   de luminosidade de diferenca, que o olho nao acha. Ver .placar-card. */
+--shadow-card:0 1px 2px rgba(17,17,17,.05), 0 10px 26px rgba(17,17,17,.07);
 
 --r:var(--r-card); --r-sm:var(--r-btn); --r-pill:100px;
 }
@@ -202,7 +206,41 @@ body{font-family:'Inter Tight',sans-serif;background:var(--base);color:var(--ink
 .dash-topo-linha{position:absolute;top:18px;left:20px;right:20px;display:flex;
   align-items:center;justify-content:space-between;z-index:2}
 
-.scorecard{display:flex;align-items:flex-end;gap:28px;padding:20px 20px 0}
+/* ═══ O PLACAR VIRA CARD ═══════════════════════════════════════════════
+   Antes eram três números soltos na página e, embaixo deles, uma linha
+   órfã com a porcentagem — órfã porque não pertencia a nenhum dos três.
+   Agora o anel e os contadores são uma coisa só.
+
+   A SOMBRA É EXCEÇÃO, e é a única do app. A direção F não tem sombra
+   nenhuma, e a razão de abrir aqui é que sem ela o card não existe: o
+   --surface está a 12 pontos de luminosidade do --base, e o olho não acha
+   a borda do bloco. Testadas três saídas com o Lucas (superfície+sombra,
+   branco+sombra, fio sem sombra) — ele escolheu esta. Fio E sombra juntos
+   era a quarta, e é o que dá cara de card de 2014.
+
+   Se algum dia isto virar padrão em outro lugar, use o mesmo token. */
+.placar-card{display:flex;align-items:center;gap:20px;margin:14px 20px 0;
+  background:var(--surface);border-radius:var(--r-card);padding:16px 18px;
+  box-shadow:var(--shadow-card)}
+
+.anel-bloco{flex:none;display:flex;flex-direction:column;align-items:center;gap:6px}
+.anel{width:76px;height:76px;position:relative}
+/* girado -90° pra fatia começar no topo, e não às 3 horas */
+.anel svg{width:100%;height:100%;display:block;transform:rotate(-90deg)}
+.anel-txt{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;
+  font-size:19px;font-weight:700;letter-spacing:-.03em;color:var(--ink)}
+/* O rótulo diz PAÍSES, não "do mundo": o anel fica ao lado de três números
+   diferentes, e sem isto nada amarra a porcentagem a um deles. */
+.anel-rot{font-size:10px;color:var(--ink2);white-space:nowrap}
+
+.placar-col{flex:1;min-width:0}
+.pc-item{display:flex;align-items:baseline;gap:8px;width:100%;background:none;border:none;
+  padding:3px 0;cursor:pointer;text-align:left}
+.pc-item:active{opacity:.6}
+.pc-n{font-size:23px;font-weight:700;letter-spacing:-.04em;color:var(--ink);line-height:1.15;
+  min-width:36px}
+.pc-r{flex:1;font-size:14px;color:var(--ink2)}
+.pc-seta{font-style:normal;font-size:14px;color:var(--ink3)}
 .sc-item{background:none;border:none;padding:0;cursor:pointer;text-align:left;
   display:flex;flex-direction:column;gap:2px;min-height:44px;justify-content:flex-end}
 .sc-item:active{opacity:.6}
@@ -210,10 +248,7 @@ body{font-family:'Inter Tight',sans-serif;background:var(--base);color:var(--ink
 .sc-hero .sc-n{font-size:44px}
 .sc-r{font-size:14px;color:var(--ink2);display:flex;align-items:center;gap:3px}
 .sc-seta{font-style:normal;font-size:12px;color:var(--ink3)}
-/* "12% do mundo" mora debaixo do placar, não dentro dele: a fileira alinha
-   pela base, e uma terceira linha em um só dos itens desalinharia os três. */
-.dash-mundo{padding:6px 20px 0;font-size:13px;color:var(--ink3)}
-.dash-mundo:empty{display:none}
+
 
 /* Continentes: aba de texto, não pílula colorida. */
 .cont-abas{display:flex;gap:18px;overflow-x:auto;padding:0 20px;margin:0 -20px;scrollbar-width:none}
@@ -1329,21 +1364,26 @@ svg.ic path,svg.ic circle,svg.ic line,svg.ic polyline,svg.ic rect{fill:none;stro
       <div class="avatar" id="dashAvatar" onclick="goTo('profile');loadProfile()" role="button" tabindex="0" aria-label="Abrir seu perfil">?</div>
     </div>
   </div>
-    <div class="scorecard">
-      <button class="sc-item sc-hero" onclick="openList('countries')">
-        <span class="sc-n" id="dashPaisesN">0</span>
-        <span class="sc-r">países <i class="sc-seta">›</i></span>
-      </button>
-      <button class="sc-item" onclick="openList('cities')">
-        <span class="sc-n" id="statCities">0</span>
-        <span class="sc-r">cidades <i class="sc-seta">›</i></span>
-      </button>
-      <button class="sc-item" onclick="openList('spots')">
-        <span class="sc-n" id="statSpots">0</span>
-        <span class="sc-r">spots <i class="sc-seta">›</i></span>
-      </button>
+    <div class="placar-card">
+      <div class="anel-bloco">
+        <div class="anel" id="dashAnel"></div>
+        <div class="anel-rot" id="dashAnelRot">de 195 países</div>
+      </div>
+      <div class="placar-col">
+        <button class="pc-item" onclick="openList('countries')">
+          <span class="pc-n" id="dashPaisesN">0</span><span class="pc-r">países</span>
+          <i class="pc-seta">›</i>
+        </button>
+        <button class="pc-item" onclick="openList('cities')">
+          <span class="pc-n" id="statCities">0</span><span class="pc-r">cidades</span>
+          <i class="pc-seta">›</i>
+        </button>
+        <button class="pc-item" onclick="openList('spots')">
+          <span class="pc-n" id="statSpots">0</span><span class="pc-r">spots</span>
+          <i class="pc-seta">›</i>
+        </button>
+      </div>
     </div>
-    <div class="dash-mundo" id="dashMundo"></div>
   <div class="dash-convite" id="dashConvite" style="display:none">Crie uma viagem para pintar o primeiro país.</div>
   <div class="checkin-banner" id="checkinBanner" style="display:none">
     <div class="checkin-icon" data-ic="pin"></div>
@@ -2816,11 +2856,7 @@ async function loadDashboard(){
   // "12% do mundo" sai do mesmo numero do placar, e e pintado aqui junto —
   // pendurar no resumo do Perfil deixava a linha vazia ate alguem abrir o
   // Perfil, que e uma tela que a pessoa pode nunca visitar.
-  const mundo=document.getElementById('dashMundo');
-  if(mundo){
-    const pc=percentualDoMundo(PLACAR.paises);
-    mundo.textContent=pc?(pc+' do mundo'):'';
-  }
+  pintarAnelDoMundo(PLACAR.paises);
   const convite=document.getElementById('dashConvite');
   if(convite)convite.style.display=PLACAR.paises?'none':'block';
   // A geometria já vinha carregando desde o começo desta função, em paralelo
@@ -5293,6 +5329,24 @@ function fmtD(d){const[y,m,day]=d.split('-');const ms=['Jan','Fev','Mar','Abr','
 // O efeito colateral: quem marcar muito território pode passar de 195. Por isso
 // a porcentagem é limitada a 100 em percentualDoMundo().
 const PAISES_NO_MUNDO=195;
+// Desenha o anel: um arco sobre um trilho, sem gradiente e sem sombra. O
+// trilho e a cor da PAGINA, nao um cinza inventado — entao o vazio do anel
+// e literalmente o fundo aparecendo por baixo do card.
+function pintarAnelDoMundo(paises){
+  const anel=document.getElementById('dashAnel');
+  const rot=document.getElementById('dashAnelRot');
+  if(rot)rot.textContent='de '+PAISES_NO_MUNDO+' países';
+  if(!anel)return;
+  const fatia=Math.min(1,(Number(paises)||0)/PAISES_NO_MUNDO);
+  const r=33, volta=2*Math.PI*r;
+  anel.innerHTML=
+    '<svg viewBox="0 0 76 76" aria-hidden="true">'
+    +'<circle cx="38" cy="38" r="'+r+'" fill="none" stroke="var(--base)" stroke-width="7"/>'
+    +'<circle cx="38" cy="38" r="'+r+'" fill="none" stroke="var(--green)" stroke-width="7"'
+    +' stroke-linecap="round" stroke-dasharray="'+(volta*fatia)+' '+volta+'"/>'
+    +'</svg>'
+    +'<div class="anel-txt">'+(percentualDoMundo(paises)||'0%')+'</div>';
+}
 // SEMPRE INTEIRO, sem casa decimal (pedido do Lucas, 22/09/2026). Eu tinha
 // posto uma casa abaixo de 10% achando que "0,5%" dizia mais que "1%" — mas
 // abrir espaco pra virgula faz o numero balancar de largura conforme a pessoa
