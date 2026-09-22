@@ -3,11 +3,15 @@
 **As oito estão no visual de hoje**, refeitas em 22/09/2026 com a conta de
 demonstração, todas **1290×2796** e em PNG **sem canal alfa**.
 
-O que elas ainda não resolvem é o CONTEÚDO: a conta de demonstração tem 3
-países, 1 cidade em cada e 12 spots. Em duas telas isso aparece como espaço
-vazio — o mapa-múndi com três países acesos, e a tela de viagem, onde um país
-com uma cidade só deixa metade da tela em branco. Encher a conta de
-demonstração é o que melhora essas duas, não mexer no app.
+A conta de demonstração foi enchida no mesmo dia, e é o que faz as capturas
+pararem de parecer app vazio: **17 países (9% do mundo), 15 cidades, 36 spots**,
+em 7 viagens espalhadas por 5 continentes, mais 10 países só marcados no mapa.
+Antes eram 3 países, 1 cidade em cada e 12 spots — o mapa-múndi e a tela de
+viagem saíam com metade da tela em branco.
+
+Os spots entraram pelo mesmo caminho que o app usa: busca de verdade no Places,
+mesmo fieldmask, mesma montagem do registro. Todos têm foto, nota pessoal
+escrita e nota em estrela onde o status é "já fui".
 
 ---
 
@@ -111,3 +115,17 @@ window.capturarSe = async function (nome, telaEsperada) {
 
 No `05`, escolha um spot **com nota e com nota pessoal escrita** — o primeiro
 da lista pode ser um sem nota, e aí o print mostra cinco estrelas vazias.
+
+## Ao popular a conta, confira a cidade no BANCO
+
+Duas armadilhas mordidas ao encher a conta, as duas silenciosas:
+
+1. **O Google devolve divisão administrativa como cidade em alguns lugares.**
+   Buenos Aires virou "Comuna 14" e "Comuna 1"; Veneza virou "Città
+   Metropolitana di Venezia". Isso parte a viagem em cidades que não existem
+   pra quem fala. A correção da cidade é `PATCH` em `spots`.
+2. **`dbUpdate` devolveu sem erro e o banco continuou com o valor velho.**
+   Só um `select` depois denunciou. Ao corrigir dado em massa, **confira no
+   banco**, não no que a função devolveu — e só então recapture, senão duas
+   telas saem com contagens de cidade diferentes (foi o que aconteceu: Início
+   dizendo 15 e Perfil dizendo 16).
