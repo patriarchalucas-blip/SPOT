@@ -210,6 +210,10 @@ body{font-family:'Inter Tight',sans-serif;background:var(--base);color:var(--ink
 .sc-hero .sc-n{font-size:44px}
 .sc-r{font-size:14px;color:var(--ink2);display:flex;align-items:center;gap:3px}
 .sc-seta{font-style:normal;font-size:12px;color:var(--ink3)}
+/* "12% do mundo" mora debaixo do placar, não dentro dele: a fileira alinha
+   pela base, e uma terceira linha em um só dos itens desalinharia os três. */
+.dash-mundo{padding:6px 20px 0;font-size:13px;color:var(--ink3)}
+.dash-mundo:empty{display:none}
 
 /* Continentes: aba de texto, não pílula colorida. */
 .cont-abas{display:flex;gap:18px;overflow-x:auto;padding:0 20px;margin:0 -20px;scrollbar-width:none}
@@ -1339,6 +1343,7 @@ svg.ic path,svg.ic circle,svg.ic line,svg.ic polyline,svg.ic rect{fill:none;stro
         <span class="sc-r">spots <i class="sc-seta">›</i></span>
       </button>
     </div>
+    <div class="dash-mundo" id="dashMundo"></div>
   <div class="dash-convite" id="dashConvite" style="display:none">Crie uma viagem para pintar o primeiro país.</div>
   <div class="checkin-banner" id="checkinBanner" style="display:none">
     <div class="checkin-icon" data-ic="pin"></div>
@@ -2808,6 +2813,14 @@ async function loadDashboard(){
   // 195 é o número de países soberanos — o mesmo denominador que o Perfil já
   // usa pra calcular a porcentagem (o "X/243" de lá conta territórios também).
   pinta('dashPaisesN',PLACAR.paises);
+  // "12% do mundo" sai do mesmo numero do placar, e e pintado aqui junto —
+  // pendurar no resumo do Perfil deixava a linha vazia ate alguem abrir o
+  // Perfil, que e uma tela que a pessoa pode nunca visitar.
+  const mundo=document.getElementById('dashMundo');
+  if(mundo){
+    const pc=percentualDoMundo(PLACAR.paises);
+    mundo.textContent=pc?(pc+' do mundo'):'';
+  }
   const convite=document.getElementById('dashConvite');
   if(convite)convite.style.display=PLACAR.paises?'none':'block';
   // A geometria já vinha carregando desde o começo desta função, em paralelo
@@ -2926,8 +2939,22 @@ function renderTrips(){
   // atras de um gesto, e obrigava a barra de pontinhos pra avisar que havia
   // mais. No mosaico todas aparecem, e a primeira ocupa o dobro — que e a
   // assimetria que faltava na tela inteira.
+  // O card grande vai pra viagem com MAIS SPOTS, não pra primeira da lista.
+  // A lista vem em created_at.desc, então antes o destaque era da viagem
+  // criada por último — que pode ter zero spots e nenhuma foto.
+  // `trips` é fatia de S.trips: copiar antes de ordenar, senão a ordem do
+  // estado global muda junto e o resto do app herda isso sem pedir.
+  // A grade e 2fr 1fr e o destaque ocupa duas linhas — entao o card grande
+  // tem que ser o PRIMEIRO do DOM. Marcar um do meio como grande dava o
+  // contrario do esperado: ele saia estreito e alto na coluna da direita, e
+  // quem herdava a coluna larga era o primeiro da lista.
+  //
+  // Empate de spots desempata pela mais recente, que era o criterio antigo
+  // (a lista vem do banco em created_at.desc, entao basta ser estavel).
+  const nSpots=t=>(t._spots||[]).length;
+  const ordenadas=trips.slice().sort((a,b)=>nSpots(b)-nSpots(a));
   h+='<div class="mosaico">';
-  h+=trips.map((t,i)=>cardDeViagem(t,i===0)).join('');
+  h+=ordenadas.map((t,i)=>cardDeViagem(t,i===0)).join('');
   h+='</div>';
   h+='<button class="btn-primario btn-largo" onclick="comecarSpotSemViagem()">Adicionar spot</button>';
   c.innerHTML=h;
@@ -6876,8 +6903,18 @@ async function buscarFotoDe(query){
     if(!resp.ok)return'';
     const d=await resp.json();
     if(d.quotaExceeded||d.capped){
-      setUnsplashBlock(10*60*1000);
-      if(!window.__unsplashWarned){window.__unsplashWarned=true;toast('Fotos pausadas','Cota de fotos esgotada, volta em breve. Gradiente por enquanto.','alert')}
+      // O limite da HORA (do Unsplash) passa sozinho em minutos; o teto do MÊS
+      // não passa, e insistir a cada 10 minutos até o dia 1º é só barulho.
+      // A mensagem também muda: dizer 'volta em breve' pro que não volta em
+      // breve é o tipo de aviso que faz a pessoa achar que o app quebrou.
+      const doMes=d.capped&&(d.scope==='mes'||d.scope==='user');
+      setUnsplashBlock(doMes?6*60*60*1000:10*60*1000);
+      if(!window.__unsplashWarned){
+        window.__unsplashWarned=true;
+        toast('Fotos pausadas',
+          doMes?'Limite de fotos novas do mês. As que já apareceram continuam.'
+               :'Muita foto nova de uma vez. Volta em alguns minutos.','alert');
+      }
       return'';
     }
     const url=d.url||'';

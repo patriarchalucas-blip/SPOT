@@ -34,8 +34,20 @@ const CIDADES_DA_ENTRADA = new Set([
   'Prague Czech Republic', 'Kotor Montenegro bay', 'Petra Jordan'
 ].map(normKey));
 
-const MONTHLY_CAP = 1200;
-const USER_CAP = 80;
+// OS DOIS TETOS AQUI SÃO MEUS, NÃO DO UNSPLASH. O Unsplash limita por HORA
+// (50 no plano demo); estes existem pra que um laço no cliente não queime a
+// cota do mês inteiro de madrugada sem ninguém ver.
+//
+// Estavam em 1200 no mês e 80 por pessoa, e o de 80 era baixo demais pra
+// quem usa o app de verdade: o Lucas viu "cota esgotada" no telefone dele
+// em 22/09/2026. Não dá pra provar qual dos três estourou — a resposta não
+// dizia qual —, mas o de 80 é o único que um usuário sozinho alcança em uso
+// normal, e ele é anti-abuso de estranho, não pedágio pro dono.
+//
+// Cuidado ao subir mais: cada busca nova grava no KV, e o plano grátis dá
+// mil gravações por DIA. 5000/mês dá ~167/dia, com folga.
+const MONTHLY_CAP = 5000;
+const USER_CAP = 500;
 
 // Foto de cidade não muda: 6 meses. Falha guarda por 1 hora, nunca 6 meses —
 // erro cacheado por muito tempo condena a cidade a nunca mais ter foto (foi
@@ -74,7 +86,7 @@ export async function onRequestPost(context) {
   const mes = new Date().toISOString().slice(0, 7);
   const contador = 'unsplash_count_' + mes;
   const usado = parseInt((await lerKV(env, contador)) || '0', 10);
-  if (usado >= MONTHLY_CAP) return json({ url: '', capped: true });
+  if (usado >= MONTHLY_CAP) return json({ url: '', capped: true, scope: 'mes' });
 
   let r;
   try {
