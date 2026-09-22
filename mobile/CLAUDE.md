@@ -1,106 +1,130 @@
-# LEIA ISTO PRIMEIRO — o que o Lucas veio fazer aqui
+# LEIA ISTO PRIMEIRO — a máquina emprestada tem UMA HORA
 
-Se esta sessão foi aberta nesta pasta, é quase certo que o objetivo é **gerar
-o build iOS do Spot**. Comece por aqui antes de perguntar o que ele quer.
+Escrito em 22/09/2026. Se esta sessão foi aberta nesta pasta, o Lucas está
+**de novo no computador emprestado**, e desta vez com prazo de uma hora.
 
-## A situação
+## Por que esta máquina existe
 
-O Lucas está **num computador emprestado**. O notebook dele é da empresa e tem
-um filtro que derruba qualquer conexão com domínios da Apple — confirmado por
-diagnóstico: a conexão TCP abre, mas é cortada assim que o nome do site é
-`*.apple.com`. Não é DNS, não é proxy, não é firewall do Windows, e acontece
-em qualquer rede (WiFi do escritório e 4G do celular). Não tente contornar
-isso: é controle de segurança de máquina corporativa.
+O notebook dele é da empresa e tem um filtro que derruba qualquer conexão com
+domínios da Apple — diagnosticado: a conexão TCP abre e é cortada assim que o
+nome do site é `*.apple.com`. Não é DNS, não é proxy, não é firewall do
+Windows, e acontece em qualquer rede. **Não tente contornar**: é controle de
+segurança de máquina corporativa.
 
-Por isso este computador é um recurso com prazo. **Tudo que exige falar com a
-Apple tem que sair hoje.**
+## A MISSÃO DESTA HORA, em ordem de valor
 
-## Como ele trabalha (importante)
+O objetivo não é entregar o app hoje. É **acabar com a necessidade desta
+máquina**. Depois destes passos, tudo que falta pode ser feito do notebook
+dele, porque quem fala com a Apple passa a ser o servidor da Expo, não o
+computador.
 
-- Ele é **leigo em terminal**. "Abre um terminal na pasta" não é instrução
-  suficiente — já travou nisso. Prefira rodar os comandos você mesmo.
-- Guie **um passo por vez**. Diga o que vai acontecer ANTES, espere ele
-  confirmar, só então siga.
-- Português brasileiro, direto, sem jargão. Ele odeia explicação longa.
-- Quando não souber, diga que não sabe. Ele aceita "não sei"; não aceita ser
-  mandado pra parede três vezes.
-- **Nunca digite a senha da Apple por ele.** Esse login é dele: você para,
-  explica onde digitar, ele digita.
+### 1. A chave da App Store Connect (.p8) — É ESTE O ITEM
 
-## LIMITES (o Lucas NAO consegue copiar e colar nesta maquina — nao peca textos longos a ele)
+Sem ela, enviar o app pra Apple, hoje ou daqui a um mês, trava no bloqueio.
+Com ela guardada na Expo, o `eas submit` roda **de qualquer máquina**, porque
+a conversa com a Apple acontece nos servidores deles.
 
-1. **Nao mude o bundle identifier** (`app.meuspot.spot`). Ele e permanente
-   depois do primeiro envio.
-2. **Nao revogue, apague nem regenere** certificado ou perfil que ja exista na
-   conta. Se o `eas` oferecer *revoke* ou *remove*, a resposta e NAO — pergunte
-   ao Lucas antes. Criar o que falta, pode.
-3. **Nao reescreva nem refatore codigo.** Esta pasta e uma copia descartavel,
-   baixada como ZIP, sem ligacao com o repositorio: nada daqui volta pro
-   projeto. Se encontrar um problema no codigo, diga qual e em vez de corrigir.
-4. **Nao tente contornar** o bloqueio corporativo do outro notebook.
-5. Diante de qualquer pergunta cuja resposta voce nao tenha certeza —
-   principalmente vindas da Apple — **pare e mostre o texto exato** ao Lucas.
-   A maioria dos estragos vem de um "sim" dado rapido demais.
+No site do App Store Connect: **Users and Access → Integrations → App Store
+Connect API**, criar chave com papel **Admin**, baixar o `.p8`.
 
-## O que já está pronto (não refaça)
+- **O download acontece UMA VEZ.** Perdeu, tem que gerar outra.
+- Guardar três coisas: o arquivo, o **Key ID** e o **Issuer ID**.
+- Salvar num lugar que ele leve embora — não na Área de Trabalho desta
+  máquina, que não é dele.
+- **Nunca commitar o `.p8`.** O repositório é público.
 
-- Projeto já ligado ao EAS — o `projectId` está no `app.json`.
-- Conta Expo: **lucaspatriarcha** (a conta pessoal, não a de time).
-- Bundle identifier: **app.meuspot.spot**. Ele é permanente depois do primeiro
-  envio — não mude.
-- O `eas.json` já tem o perfil **development** configurado.
-- `expo-dev-client` já está no `package.json`.
+Depois de baixar, registre na Expo para não depender do arquivo de novo:
 
-Se o `eas-cli` pedir login da Expo e ele não lembrar a senha: existe um token
-de acesso, mas ele **não está neste repositório de propósito** (o repositório
-é público). Peça pro Lucas buscar na conversa do computador dele.
+```
+npx eas-cli credentials
+```
 
-## As TRÊS tarefas de hoje, nesta ordem
+(iOS → o app → App Store Connect API Key → adicionar). Confirme com ele antes
+de enviar, e **não revogue nem apague** nada que já exista.
 
-### 1. Build de desenvolvimento
+### 2. Registro do app e contratos
+
+No App Store Connect: criar o registro do app (nome **Spot**, bundle
+`app.meuspot.spot`) e aceitar os contratos de apps gratuitos em **Business**.
+Sem os contratos aceitos, o envio trava — e isso só aparece na última hora.
+
+Se o registro já existir, não crie outro. Confirme e siga.
+
+### 3. Se sobrar tempo: um build com o código de hoje
+
+O build que está no iPhone dele é de **antes do redesenho inteiro**. Entre lá
+e hoje mudou: todas as telas da web, o ícone do app, o splash, a paleta e a
+fonte das quatro abas nativas — e **nada disso foi visto rodando**, porque não
+há como abrir o app nativo na máquina dele.
+
+**Esta pasta pode estar velha.** Ela veio de um ZIP. Antes de compilar,
+confira se `mobile/cores.js` existe: se não existir, baixe o repositório de
+novo (é público) —
+`https://github.com/patriarchalucas-blip/SPOT/archive/refs/heads/main.zip` —
+e trabalhe na pasta `mobile` de dentro dele.
 
 ```
 npm install
 npx eas-cli build --platform ios --profile development
 ```
 
-O que ele vai encontrar, e a resposta certa:
+O `development` instala direto por QR code e serve pra ele ver o redesenho no
+telefone hoje. O `production` só vale a pena depois que o registro e os
+contratos estiverem de pé, e as capturas da loja ainda não estão prontas —
+então não é o alvo desta hora.
 
-| pergunta | resposta |
-|---|---|
-| "Do you want to log in to your Apple account?" | **Y** |
-| Apple ID e senha | ele digita — é a conta de desenvolvedor, liberada em 16/09/2026 |
-| código de dois fatores | chega no iPhone dele |
-| "Generate a new Apple Distribution Certificate?" | **Y** |
-| registrar o dispositivo / provisioning profile | **Y** — vai gerar um link/QR pra abrir no Safari DO IPHONE |
+A compilação roda na nuvem da Expo (10 a 25 min) e não precisa desta máquina
+depois de começar.
 
-A compilação acontece na nuvem da Expo (10 a 25 min). No fim sai um link:
-ele abre **no Safari do iPhone** e instala.
+## O que já está pronto (não refaça)
 
-O certificado fica guardado nos servidores da Expo, não nesta máquina — é por
-isso que isto só precisa ser feito uma vez.
+- Projeto ligado ao EAS — o `projectId` está no `app.json`.
+- Conta Expo: **lucaspatriarcha** (pessoal, não a de time).
+- Bundle identifier **app.meuspot.spot** — permanente depois do primeiro envio.
+- `eas.json` já tem os perfis `development`, `preview` e `production`.
+- Um build de desenvolvimento já foi gerado uma vez e instalado no iPhone dele.
+  O certificado ficou guardado nos servidores da Expo, então não precisa ser
+  criado de novo.
 
-### 2. Chave de API da App Store Connect (arquivo .p8)
+Se o `eas-cli` pedir login da Expo e ele não lembrar a senha: existe um token
+de acesso, mas ele **não está neste repositório de propósito**. Peça pro Lucas
+buscar na conversa do computador dele.
 
-Sem ela, enviar o app pra Apple mais tarde vai travar no mesmo bloqueio.
+## Como ele trabalha (importante)
 
-No site do App Store Connect, em **Users and Access → Integrations**, ele cria
-uma chave com papel de **Admin** e baixa o `.p8`. **O download só acontece uma
-vez** — se perder o arquivo, tem que gerar outra.
+- Ele é **leigo em terminal**. "Abre um terminal na pasta" não é instrução
+  suficiente — já travou nisso. **Rode os comandos você mesmo.**
+- **Ele não consegue copiar e colar nesta máquina.** Não peça textos longos;
+  digite você.
+- Guie **um passo por vez**: diga o que vai acontecer, espere ele confirmar,
+  só então siga.
+- Português brasileiro, direto, sem jargão. Ele odeia explicação longa.
+- Quando não souber, diga que não sabe. Ele aceita "não sei"; não aceita ser
+  mandado pra parede três vezes.
+- **Nunca digite a senha da Apple por ele.** Esse login é dele: você para,
+  explica onde digitar, ele digita.
 
-Ele precisa guardar três coisas: o arquivo `.p8`, o **Key ID** e o **Issuer
-ID**. Oriente-o a salvar num lugar que ele leve embora (não na Área de
-Trabalho do computador emprestado) e a NÃO commitar o `.p8` no repositório.
+## LIMITES
 
-### 3. Registro do app e contratos
-
-No App Store Connect: criar o registro do app (nome **Spot**, bundle
-`app.meuspot.spot`) e aceitar os contratos de apps gratuitos, em **Business**
-(ou "Acordos"). Sem os contratos aceitos, o envio trava — e é o tipo de coisa
-que só aparece na última hora.
+1. **Não mude o bundle identifier** (`app.meuspot.spot`).
+2. **Não revogue, apague nem regenere** certificado ou perfil que já exista. Se
+   o `eas` oferecer *revoke* ou *remove*, a resposta é NÃO — pergunte antes.
+   Criar o que falta, pode.
+3. **Não reescreva nem refatore código.** Esta pasta é cópia descartável: nada
+   daqui volta pro repositório. Achou um problema, **diga qual é** em vez de
+   corrigir — o conserto sai no outro computador, onde está o git.
+4. **Não tente contornar** o bloqueio corporativo do outro notebook.
+5. Diante de qualquer pergunta cuja resposta você não tenha certeza —
+   principalmente vindas da Apple — **pare e mostre o texto exato** ao Lucas.
+   A maioria dos estragos vem de um "sim" dado rápido demais.
 
 ## Antes de ele devolver o computador
 
-Confirme com ele que tem em mãos: o app instalado no iPhone, o arquivo `.p8`
-com os dois IDs, e os contratos aceitos. Qualquer um desses que falte
-significa pedir o computador emprestado de novo.
+Confirme que ele tem em mãos:
+
+- [ ] o arquivo `.p8`, com o **Key ID** e o **Issuer ID** anotados
+- [ ] o registro do app criado e os contratos aceitos
+- [ ] (se deu tempo) o build novo instalado no iPhone
+
+Os dois primeiros são o que encerra a dependência desta máquina. Se faltar
+algum, é pedir o computador emprestado de novo.
