@@ -898,8 +898,10 @@ body.na-casca .bottom-nav{display:none}
    ilegível sobre foto clara (visto numa foto de letreiro em Tóquio). */
 .fd-img::after{content:"";position:absolute;inset:0;z-index:2;
   background:linear-gradient(to top,rgba(0,0,0,.55),transparent 55%)}
-/* Cabecalho do card: avatar, "Fulano foi a X" e o tempo, fora da foto. */
-.fd-quem{display:flex;align-items:center;gap:10px}
+/* Cabecalho do card: avatar, "Fulano foi a X" e o tempo, fora da foto.
+   E um alvo de toque: abre o perfil de quem postou. */
+.fd-quem{display:flex;align-items:center;gap:10px;cursor:pointer;min-height:44px}
+.fd-quem:active{opacity:.6}
 .fd-av{width:36px;height:36px;border-radius:50%;background:var(--green);display:flex;align-items:center;
   justify-content:center;font-size:12px;font-weight:600;color:var(--on-green);flex-shrink:0}
 .fd-quem-t{flex:1;min-width:0;font-size:15px;color:var(--ink2);line-height:1.35}
@@ -3128,7 +3130,7 @@ function renderList(){
     const list=Object.values(map).sort((a,b)=>b.spots-a.spots||a.country.localeCompare(b.country,'pt-BR'));
     LS.items=list;
     title.textContent=list.length+(list.length===1?' país':' países');
-    kicker.textContent='de 195';
+    kicker.textContent='de '+PAISES_NO_MUNDO+' · '+percentualDoMundo(list.length)+' do mundo';
     list.forEach((c,i)=>{
       const meta=[c.viagens?c.viagens+(c.viagens===1?' viagem':' viagens'):'',c.spots?c.spots+(c.spots===1?' spot':' spots'):''].filter(Boolean).join(' · ')||'sem spots ainda';
       h+=`<div class="lrow" onclick="drillFromList(${i},'country')"><span class="lflag">${flagHTML(c.country)}</span><div class="lmain"><div class="lname">${esc(c.country)}</div><div class="lmeta">${esc(meta)}</div></div><span class="lcount">${regionFor(c.country)}</span></div>`;
@@ -5253,6 +5255,25 @@ async function createTrip(){
 function fmtD(d){const[y,m,day]=d.split('-');const ms=['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'];return parseInt(day)+' '+ms[parseInt(m)-1]}
 
 // ═══ COUNTRIES DATABASE ═══
+// QUANTOS PAÍSES EXISTEM. 195 = os 193 membros da ONU mais os 2 observadores
+// (Vaticano e Palestina). É a resposta que as pessoas reconhecem.
+//
+// Não é o tamanho de COUNTRIES, que tem 243: aquela é a ISO 3166-1 inteira e
+// inclui território que não é país soberano (Porto Rico, Guadalupe, Groenlândia).
+// A lista precisa ser a completa — quem foi pra Aruba quer marcar Aruba —, mas
+// contar 243 como "o mundo" daria um denominador que ninguém reconhece.
+//
+// O efeito colateral: quem marcar muito território pode passar de 195. Por isso
+// a porcentagem é limitada a 100 em percentualDoMundo().
+const PAISES_NO_MUNDO=195;
+// Arredonda pra inteiro, menos abaixo de 10%, onde uma casa decimal é a
+// diferença entre "1%" e "1,5%" — e no começo é justamente quando cada país
+// novo mexe no número.
+function percentualDoMundo(n){
+  const p=Math.min(100,(Number(n)||0)/PAISES_NO_MUNDO*100);
+  if(!p)return '';
+  return (p<10?p.toFixed(1).replace('.',','):String(Math.round(p)))+'%';
+}
 const COUNTRIES=[
   {flag:'🇦🇫',name:'Afeganistão',region:'Ásia',geo:'Afghanistan'},{flag:'🇦🇱',name:'Albânia',region:'Europa',geo:'Albania'},{flag:'🇩🇪',name:'Alemanha',region:'Europa',geo:'Germany'},
   {flag:'🇦🇩',name:'Andorra',region:'Europa',geo:'Andorra'},{flag:'🇦🇴',name:'Angola',region:'África',geo:'Angola'},{flag:'🇦🇮',name:'Anguila',region:'América do Norte',geo:'Anguilla'},
@@ -7314,7 +7335,8 @@ let voltarDoMapa='dashboard';
 function abrirMapaMundi(origem){
   voltarDoMapa=origem||'dashboard';
   const visited=visitedCountryNames();
-  document.getElementById('mapaTitulo').textContent=visited.length+' de 195 países';
+  document.getElementById('mapaTitulo').textContent=
+    visited.length+' de '+PAISES_NO_MUNDO+' países · '+percentualDoMundo(visited.length)+' do mundo';
   goTo('mapaMundi');
   renderWorldMap(visited);
   renderListaDePaises(visited,'mapaPaises');
@@ -7947,8 +7969,12 @@ function cardDeVisita(it,i,nome){
   // Corpo só existe se houver nota OU estrelas OU o botão — senão o card fica
   // com uma faixa vazia embaixo da foto.
   const temCorpo=nota||estrelas||!salvo;
+  // O cabeçalho abre o PERFIL de quem postou; a foto e a nota abrem o SPOT.
+  // São dois destinos diferentes no mesmo card, e é assim que se espera:
+  // tocar na pessoa leva à pessoa, tocar no lugar leva ao lugar.
   return '<div class="fd-card">'
-    +'<div class="fd-quem"><span class="fd-av">'+esc(initials(nome))+'</span>'
+    +'<div class="fd-quem" onclick="openFriend(\''+esc(it.user_id)+'\')">'
+      +'<span class="fd-av">'+esc(initials(nome))+'</span>'
       +'<span class="fd-quem-t"><b>'+esc(nome)+'</b> foi a <b>'+esc(sp.name)+'</b></span>'
       +'<span class="fd-quando">'+esc(timeAgo(it.created_at))+'</span></div>'
     +'<div class="fd-img" style="'+fundo+'" onclick="abrirVisitaDoFeed('+i+')">'
