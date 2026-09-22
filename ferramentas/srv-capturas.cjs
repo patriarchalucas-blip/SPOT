@@ -15,7 +15,7 @@ const { pngRGB } = require(__dirname + '/png-sem-alfa.cjs');
 
 const APP = 'C:/Users/lucas.patriarcha_sol/Downloads/Spot';
 const SAIDA = APP + '/mobile/app-store/capturas';
-const PORTA = 8897;
+const PORTA = 8932;
 const tipos = {
   '.html': 'text/html; charset=utf-8', '.js': 'text/javascript', '.css': 'text/css',
   '.png': 'image/png', '.svg': 'image/svg+xml', '.json': 'application/json', '.webp': 'image/webp'
@@ -25,7 +25,11 @@ function encaminhar(req, res) {
   const corpo = [];
   req.on('data', c => corpo.push(c));
   req.on('end', () => {
-    const args = ['-s', '-i', '-X', req.method, 'https://meuspot.app' + req.url];
+    // -L: a foto do lugar responde 302 pro servidor de imagem do Google, e
+    // este encaminhador so repassava Content-Type — o Location sumia, o
+    // navegador nao tinha pra onde ir e TODA foto de spot caia no icone.
+    // Deixando o curl seguir o salto, o que chega aqui ja e a imagem.
+    const args = ['-s', '-i', '-L', '-X', req.method, 'https://meuspot.app' + req.url];
     for (const k of ['content-type', 'authorization', 'apikey']) {
       if (req.headers[k]) { args.push('-H', k + ': ' + req.headers[k]); }
     }
@@ -36,15 +40,21 @@ function encaminhar(req, res) {
     c.stdout.on('data', d => saida.push(d));
     c.on('error', e => { res.writeHead(502); res.end(String(e.message)); });
     c.on('close', () => {
-      const bruto = Buffer.concat(saida);
-      const corte = bruto.indexOf('\r\n\r\n');
-      if (corte < 0) { res.writeHead(502); res.end('resposta sem cabecalho'); return; }
-      const cab = bruto.slice(0, corte).toString();
+      // Com -L o curl imprime o cabecalho de CADA salto, um atras do outro.
+      // Vale o ultimo: e dele que vem o status e o tipo do que esta no corpo.
+      let resto = Buffer.concat(saida), cab = '';
+      while (resto.slice(0, 5).toString() === 'HTTP/') {
+        const corte = resto.indexOf('\r\n\r\n');
+        if (corte < 0) break;
+        cab = resto.slice(0, corte).toString();
+        resto = resto.slice(corte + 4);
+      }
+      if (!cab) { res.writeHead(502); res.end('resposta sem cabecalho'); return; }
       const mTipo = /content-type:\s*([^\r\n]+)/i.exec(cab);
       const mStatus = /HTTP\/[\d.]+ (\d+)/.exec(cab);
       res.writeHead(mStatus ? parseInt(mStatus[1], 10) : 200,
         { 'Content-Type': (mTipo && mTipo[1].trim()) || 'application/octet-stream' });
-      res.end(bruto.slice(corte + 4));
+      res.end(resto);
     });
     if (temCorpo) c.stdin.end(Buffer.concat(corpo));
   });
