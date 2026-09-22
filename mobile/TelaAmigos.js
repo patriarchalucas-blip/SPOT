@@ -150,7 +150,9 @@ function CardDeVisita({ item, aoAbrir, aoSalvar, salvando }) {
             <Text style={e.quemAvTxt}>{item.quem.iniciais}</Text>
           </View>
           <Text style={e.quemTxt} numberOfLines={1}>
-            <Text style={e.forte}>{item.quem.nome}</Text> foi
+            {/* "salvou", nao "foi": o app sabe quando o spot foi registrado,
+                nao quando a visita aconteceu — ver o mesmo card no index.html. */}
+            <Text style={e.forte}>{item.quem.nome}</Text> salvou
           </Text>
         </View>
 

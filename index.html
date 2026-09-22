@@ -902,7 +902,7 @@ body.na-casca .bottom-nav{display:none}
    ilegível sobre foto clara (visto numa foto de letreiro em Tóquio). */
 .fd-img::after{content:"";position:absolute;inset:0;z-index:2;
   background:linear-gradient(to top,rgba(0,0,0,.55),transparent 55%)}
-/* Cabecalho do card: avatar, "Fulano foi a X" e o tempo, fora da foto.
+/* Cabecalho do card: avatar, "Fulano salvou X" e o tempo, fora da foto.
    E um alvo de toque: abre o perfil de quem postou. */
 .fd-quem{display:flex;align-items:center;gap:10px;cursor:pointer;min-height:44px}
 .fd-quem:active{opacity:.6}
@@ -8012,7 +8012,7 @@ function cardDeVisita(it,i,nome){
   return '<div class="fd-card">'
     +'<div class="fd-quem" onclick="openFriend(\''+esc(it.user_id)+'\')">'
       +'<span class="fd-av">'+esc(initials(nome))+'</span>'
-      +'<span class="fd-quem-t"><b>'+esc(nome)+'</b> foi a <b>'+esc(sp.name)+'</b></span>'
+      +'<span class="fd-quem-t"><b>'+esc(nome)+'</b> salvou <b>'+esc(sp.name)+'</b></span>'
       +'<span class="fd-quando">'+esc(timeAgo(it.created_at))+'</span></div>'
     +'<div class="fd-img" style="'+fundo+'" onclick="abrirVisitaDoFeed('+i+')">'
       +camadaFoto
