@@ -24,7 +24,7 @@ import React from 'react';
 import { Platform, Pressable, StyleSheet, Text, View } from 'react-native';
 import { BlurView } from 'expo-blur';
 import Svg, { Circle, Path } from 'react-native-svg';
-import { INK, INK3, ESCURO, ATIVO_FUNDO, BORDA } from './cores';
+import { BASE, INK, INK3, GREEN } from './cores';
 
 // Valores lidos do :root do index.html — não inventar aqui.
 
@@ -74,16 +74,23 @@ export const ABAS = [
 ];
 
 export default function BarraDeAbas({ ativa, aoTocar, margemDeBaixo }) {
+  const folga = margemDeBaixo || 0;
   return (
-    <View style={[estilo.ancora, { bottom: 13 + (margemDeBaixo || 0) }]} pointerEvents="box-none">
-      <View style={estilo.pilula}>
+    <View style={estilo.ancora} pointerEvents="box-none">
+      <View style={[estilo.barra, { height: 78 + folga, paddingBottom: folga }]}>
         {/* O site usa backdrop-filter; aqui o equivalente é o BlurView. No
             Android o blur é caro e irregular, então lá vai fundo sólido —
-            mesma decisão do @supports que o CSS já tem. */}
+            mesma decisão do @supports que o CSS já tem.
+            A camada de cor vem DEPOIS do desfoque: o BlurView é um filho que
+            pinta por cima do fundo do pai, então um backgroundColor na barra
+            ficaria embaixo dele e não teria efeito nenhum. */}
         {Platform.OS === 'ios' ? (
-          <BlurView intensity={34} tint="dark" style={StyleSheet.absoluteFill} />
+          <>
+            <BlurView intensity={30} tint="light" style={StyleSheet.absoluteFill} />
+            <View style={[StyleSheet.absoluteFill, { backgroundColor: 'rgba(245,245,243,0.85)' }]} />
+          </>
         ) : (
-          <View style={[StyleSheet.absoluteFill, { backgroundColor: ESCURO }]} />
+          <View style={[StyleSheet.absoluteFill, { backgroundColor: BASE }]} />
         )}
         <View style={estilo.linha}>
           {ABAS.map((a) => {
@@ -92,11 +99,7 @@ export default function BarraDeAbas({ ativa, aoTocar, margemDeBaixo }) {
               <Pressable
                 key={a.tela}
                 onPress={() => aoTocar(a.tela)}
-                style={({ pressed }) => [
-                  estilo.item,
-                  sel && estilo.itemAtivo,
-                  pressed && estilo.itemPressionado,
-                ]}
+                style={({ pressed }) => [estilo.item, pressed && estilo.itemPressionado]}
                 accessibilityRole="tab"
                 accessibilityState={{ selected: sel }}
                 accessibilityLabel={a.rotulo}
@@ -104,7 +107,7 @@ export default function BarraDeAbas({ ativa, aoTocar, margemDeBaixo }) {
                 // não chega lá.
                 hitSlop={4}
               >
-                <Icone nome={a.icone} cor={sel ? INK : INK3} />
+                <Icone nome={a.icone} cor={sel ? GREEN : INK3} />
                 <Text style={[estilo.rotulo, sel && estilo.rotuloAtivo]}>{a.rotulo}</Text>
               </Pressable>
             );
@@ -115,44 +118,35 @@ export default function BarraDeAbas({ ativa, aoTocar, margemDeBaixo }) {
   );
 }
 
+// A CÁPSULA FLUTUANTE SAIU, igual ao site. Ela era pastilha escura descolada
+// do rodapé, com borda e sombra — a forma de barra que mais denuncia app
+// gerado, e o que sobrou de mais gritante dentro do app claro. Agora a barra é
+// o próprio rodapé: mesma cor da base, encostada embaixo, de ponta a ponta,
+// sem borda e sem sombra. O que a separa do conteúdo é o desfoque.
 const estilo = StyleSheet.create({
   ancora: {
     position: 'absolute',
     left: 0,
     right: 0,
+    bottom: 0,
     alignItems: 'center',
-    // A folga lateral vem daqui, como padding do ancoradouro. Se fosse margem
-    // na pílula, o width:'100%' seria calculado ANTES da margem e a barra
-    // estouraria 26px pra fora da tela — no React Native margem não é
-    // descontada da largura como no box-sizing do CSS.
-    paddingHorizontal: 13,
   },
-  pilula: {
-    // width: min(430px, 100% - 26px) do CSS
+  barra: {
+    // width: min(430px, 100%) do CSS
     width: '100%',
     maxWidth: 430,
-    borderRadius: 24,
-    borderWidth: StyleSheet.hairlineWidth,
-    borderColor: BORDA,
     overflow: 'hidden',
-    backgroundColor: Platform.OS === 'ios' ? 'rgba(11,22,32,0.62)' : ESCURO,
-    shadowColor: '#000',
-    shadowOpacity: 0.42,
-    shadowRadius: 16,
-    shadowOffset: { width: 0, height: 12 },
-    elevation: 12,
+    justifyContent: 'center',
   },
-  linha: { flexDirection: 'row', padding: 6, gap: 2 },
+  linha: { flexDirection: 'row' },
   item: {
     flex: 1,
     alignItems: 'center',
     gap: 4,
-    paddingTop: 9,
-    paddingBottom: 7,
-    borderRadius: 18,
   },
-  itemAtivo: { backgroundColor: ATIVO_FUNDO },
-  itemPressionado: { transform: [{ scale: 0.94 }] },
-  rotulo: { fontSize: 10.5, fontWeight: '500', color: INK3 },
+  itemPressionado: { opacity: 0.6 },
+  rotulo: { fontSize: 11, fontWeight: '500', color: INK3 },
+  // O rótulo ativo é tinta, não verde: o acento fica no ÍCONE. É o que o site
+  // desenha hoje em todas as telas.
   rotuloAtivo: { color: INK, fontWeight: '600' },
 });

@@ -36,7 +36,7 @@ import {
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Svg, { Circle, Path } from 'react-native-svg';
-import { INK, INK2, INK3, ESCURO, SUPERFICIE, ELEV, BORDA, TERRA, VERDE, AMBAR, FRAUNCES, MONO } from './cores';
+import { BASE, SURFACE, INK, INK2, INK3, VERDE, ON_GREEN, PHOTO_EMPTY, FRAUNCES } from './cores';
 
 // :root do index.html — não inventar aqui.
 
@@ -51,21 +51,31 @@ function Avatar({ iniciais, tamanho = 38 }) {
   );
 }
 
-// Mesma estrela do site: cheia em âmbar, vazia com traço fino.
+// Mesma estrela do site: DUAS empilhadas, a de baixo cinza e a de cima verde,
+// com a de cima cortada na fração — é assim que meia estrela existe desde a
+// migração 020. Sem o corte, 4,5 aparecia como 5 aqui e 4,5 no site.
 function Estrelas({ n, tamanho = 14 }) {
   if (!n) return null;
   const d = 'M12 3l2.6 5.6 6 .8-4.4 4.2 1.1 6.1L12 16.8 6.7 19.7l1.1-6.1L3.4 9.4l6-.8z';
   return (
     <View style={e.estrelas}>
-      {[1, 2, 3, 4, 5].map((i) => (
-        <Svg key={i} width={tamanho} height={tamanho} viewBox="0 0 24 24">
-          {i <= n ? (
-            <Path d={d} fill={AMBAR} />
-          ) : (
-            <Path d={d} fill="none" stroke="rgba(234,231,224,.3)" strokeWidth={1.6} strokeLinejoin="round" />
-          )}
-        </Svg>
-      ))}
+      {[1, 2, 3, 4, 5].map((i) => {
+        const fatia = Math.max(0, Math.min(1, n - (i - 1)));
+        return (
+          <View key={i} style={{ width: tamanho, height: tamanho }}>
+            <Svg width={tamanho} height={tamanho} viewBox="0 0 24 24">
+              <Path d={d} fill={INK3} />
+            </Svg>
+            {fatia > 0 ? (
+              <View style={[e.estrelaCheia, { width: tamanho * fatia }]} pointerEvents="none">
+                <Svg width={tamanho} height={tamanho} viewBox="0 0 24 24">
+                  <Path d={d} fill={VERDE} />
+                </Svg>
+              </View>
+            ) : null}
+          </View>
+        );
+      })}
     </View>
   );
 }
@@ -116,9 +126,9 @@ function Vazio({ titulo, texto }) {
 // razão do site: endereço de foto do Google expira, e quando a imagem falha o
 // que aparece é o degradê, não um retângulo chapado.
 
-function CardDeVisita({ item, aoAbrir, aoSalvar, salvando }) {
+function CardDeVisita({ item, aoAbrir, aoPerfil, aoSalvar, salvando }) {
   const [falhou, setFalhou] = React.useState(false);
-  const [c1, c2] = item.cores || [ELEV, ESCURO];
+  const [c1, c2] = item.cores || [PHOTO_EMPTY, PHOTO_EMPTY];
   const temCorpo = item.nota || item.estrelas || !item.salvo;
   // Sem estrelas, a linha ficava com um filho so e o botao encostava na
   // esquerda. A web resolve com um vao vazio; aqui e o mesmo.
@@ -126,6 +136,24 @@ function CardDeVisita({ item, aoAbrir, aoSalvar, salvando }) {
 
   return (
     <View style={e.card}>
+      {/* O CARD DEIXOU DE SER UMA CAIXA. Quem postou saiu de cima da foto —
+          onde era uma pastilha de vidro escuro, o enfeite mais evidente que
+          sobrou — e virou linha de texto normal acima dela. O toque aqui abre
+          o PERFIL; o da foto e o da nota abrem o SPOT. Dois destinos no mesmo
+          card, igual ao site. */}
+      <Pressable onPress={aoPerfil} style={({ pressed }) => [e.quem, pressed && { opacity: 0.6 }]}>
+        <View style={e.quemAv}>
+          <Text style={e.quemAvTxt}>{item.quem.iniciais}</Text>
+        </View>
+        <Text style={e.quemTxt} numberOfLines={2}>
+          {/* "salvou", nao "foi": o app sabe quando o spot foi registrado,
+              nao quando a visita aconteceu — ver o mesmo card no index.html. */}
+          <Text style={e.forte}>{item.quem.nome}</Text> salvou{' '}
+          <Text style={e.forte}>{item.lugar}</Text>
+        </Text>
+        <Text style={e.quando}>{item.quando}</Text>
+      </Pressable>
+
       <Pressable onPress={aoAbrir} style={[e.cardImg, { backgroundColor: c1 }]}>
         {/* duas faixas de cor no lugar do degradê do CSS: sem biblioteca de
             gradiente, e a foto cobre isso quase sempre */}
@@ -140,23 +168,10 @@ function CardDeVisita({ item, aoAbrir, aoSalvar, salvando }) {
           />
         ) : null}
         {/* O mesmo escurecimento da web, que nasceu de um caso real de foto
-            clara: sem ele o nome do lugar e o do amigo somem. */}
+            clara: sem ele o nome do lugar some. */}
         <View style={e.veu1} pointerEvents="none" />
         <View style={e.veu2} pointerEvents="none" />
         <View style={e.veu3} pointerEvents="none" />
-
-        <View style={e.quem}>
-          <View style={e.quemAv}>
-            <Text style={e.quemAvTxt}>{item.quem.iniciais}</Text>
-          </View>
-          <Text style={e.quemTxt} numberOfLines={1}>
-            {/* "salvou", nao "foi": o app sabe quando o spot foi registrado,
-                nao quando a visita aconteceu — ver o mesmo card no index.html. */}
-            <Text style={e.forte}>{item.quem.nome}</Text> salvou
-          </Text>
-        </View>
-
-        <Text style={e.quando}>{item.quando}</Text>
 
         <View style={e.cardPe}>
           {item.rotulo ? <Text style={e.cardK}>{item.rotulo}</Text> : null}
@@ -168,7 +183,7 @@ function CardDeVisita({ item, aoAbrir, aoSalvar, salvando }) {
         <View style={e.cardCorpo}>
           {item.nota ? (
             <Pressable onPress={aoAbrir}>
-              <Text style={e.cardNota}>{'“' + item.nota + '”'}</Text>
+              <Text style={e.cardNota}>{item.nota}</Text>
             </Pressable>
           ) : null}
           <View style={e.cardLinha}>
@@ -201,7 +216,7 @@ export default function TelaAmigos({ dados, ocupado, acao }) {
   if (!dados) {
     return (
       <View style={[e.fundo, e.centro]}>
-        <ActivityIndicator size="large" color={TERRA} />
+        <ActivityIndicator size="large" color={VERDE} />
       </View>
     );
   }
@@ -303,6 +318,7 @@ export default function TelaAmigos({ dados, ocupado, acao }) {
                 key={it.i}
                 item={it}
                 aoAbrir={() => acao('abrirVisita', it.i)}
+                aoPerfil={() => acao('perfil', it.quem.id)}
                 aoSalvar={() => acao('salvar', it.i)}
                 salvando={dados.salvando === it.i}
               />
@@ -331,9 +347,9 @@ export default function TelaAmigos({ dados, ocupado, acao }) {
 }
 
 const e = StyleSheet.create({
-  // No site esta tela usa a cor de PAINEL (#101C24), nao a de fundo geral.
-  // Com o escuro, o contraste entre card e fundo ficava menor que o da web.
-  fundo: { flex: 1, backgroundColor: SUPERFICIE },
+  // Fundo da PÁGINA, não uma cor de painel à parte: o sistema novo tem uma cor
+  // de fundo só, e o que separa bloco de bloco é espaço, não superfície.
+  fundo: { flex: 1, backgroundColor: BASE },
   centro: { alignItems: 'center', justifyContent: 'center' },
 
   // .am-topo / .am-titulo / .am-add
@@ -342,152 +358,115 @@ const e = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'space-between',
     gap: 14,
-    paddingHorizontal: 24,
+    paddingHorizontal: 20,
   },
-  titulo: { fontFamily: FRAUNCES, fontWeight: '400', fontSize: 30, color: INK, letterSpacing: -0.3 },
+  titulo: { fontFamily: FRAUNCES, fontSize: 34, lineHeight: 36, color: INK, letterSpacing: -1.36 },
   adicionar: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    borderWidth: 1,
-    borderColor: 'rgba(234,231,224,0.2)',
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: SURFACE,
     alignItems: 'center',
     justifyContent: 'center',
   },
 
-  // .am-abas
+  // .am-abas — ABA DE TEXTO, não segmentado. O trilho com a pastilha
+  // deslizante era o segmentado do iOS, e ele saiu do app inteiro: aqui a
+  // escolha não é de estado (quero ir / fui), é de assunto.
   abas: {
     flexDirection: 'row',
-    gap: 4,
-    backgroundColor: 'rgba(234,231,224,0.06)',
-    borderRadius: 12,
-    padding: 4,
-    marginHorizontal: 24,
-    marginTop: 18,
+    gap: 18,
+    paddingHorizontal: 20,
+    paddingTop: 16,
   },
   abaBotao: {
-    flex: 1,
-    minHeight: 40,
-    borderRadius: 9,
+    paddingTop: 6,
+    paddingBottom: 10,
     alignItems: 'center',
-    justifyContent: 'center',
     flexDirection: 'row',
     gap: 6,
   },
-  abaBotaoOn: { backgroundColor: ELEV },
-  abaTxt: { fontSize: 13, fontWeight: '500', color: INK3 },
-  abaTxtOn: { fontWeight: '600', color: INK },
-  selo: { backgroundColor: TERRA, borderRadius: 999, paddingHorizontal: 6, paddingVertical: 1 },
-  seloTxt: { fontFamily: MONO, fontSize: 10, color: '#fff' },
+  abaBotaoOn: { borderBottomWidth: 2, borderBottomColor: INK },
+  abaTxt: { fontSize: 15, fontWeight: '600', color: INK3 },
+  abaTxtOn: { color: INK },
+  selo: { backgroundColor: VERDE, borderRadius: 10, paddingHorizontal: 6, paddingVertical: 1 },
+  seloTxt: { fontSize: 11, fontWeight: '600', color: ON_GREEN },
 
-  corpo: { flex: 1, paddingHorizontal: 24 },
+  // Margem lateral 20 — a do app inteiro. Era 24 aqui e só aqui.
+  corpo: { flex: 1, paddingHorizontal: 20 },
 
   avatar: { backgroundColor: VERDE, alignItems: 'center', justifyContent: 'center' },
-  avatarTxt: { color: ESCURO, fontWeight: '600' },
+  avatarTxt: { color: ON_GREEN, fontWeight: '600' },
   forte: { fontWeight: '600', color: INK },
 
-  // .feed-item
+  // .feed-item — sem divisor. O que separa uma linha da outra é o espaço.
   feedItem: {
     flexDirection: 'row',
-    gap: 13,
-    paddingVertical: 15,
-    borderBottomWidth: StyleSheet.hairlineWidth,
-    borderBottomColor: BORDA,
+    gap: 12,
+    paddingBottom: 20,
     alignItems: 'flex-start',
   },
-  feedTexto: { fontSize: 14, color: INK2, lineHeight: 20 },
+  feedTexto: { fontSize: 15, color: INK2, lineHeight: 20 },
   feedHora: { fontSize: 12, color: INK3, marginTop: 4 },
 
-  // .fd-card
-  card: {
-    borderRadius: 20,
-    backgroundColor: ELEV,
-    borderWidth: StyleSheet.hairlineWidth,
-    borderColor: BORDA,
-    overflow: 'hidden',
-    marginBottom: 14,
-  },
-  // Degrade da web em tres faixas: rgba(11,22,32,.45) no topo -> .88 no pe.
-  veu1: { position: 'absolute', left: 0, right: 0, top: 0, height: '40%', backgroundColor: 'rgba(11,22,32,0.45)' },
-  veu2: { position: 'absolute', left: 0, right: 0, top: '40%', height: '32%', backgroundColor: 'rgba(11,22,32,0.66)' },
-  veu3: { position: 'absolute', left: 0, right: 0, bottom: 0, height: '28%', backgroundColor: 'rgba(11,22,32,0.86)' },
-  cardImg: { height: 186, overflow: 'hidden' },
+  // .fd-card — NÃO É MAIS UMA CAIXA: sem fundo, sem borda, sem raio próprio.
+  // A foto é que tem cantos arredondados; o resto é texto solto na página.
+  card: { marginBottom: 28 },
+  // O degradê do site (to top, rgba(0,0,0,.55) → transparente em 55%) em três
+  // faixas, que é o que dá sem biblioteca de gradiente. Ele existe pro nome do
+  // lugar sobreviver a foto clara — nada mais.
+  veu1: { position: 'absolute', left: 0, right: 0, bottom: 0, height: '18%', backgroundColor: 'rgba(0,0,0,0.42)' },
+  veu2: { position: 'absolute', left: 0, right: 0, bottom: '18%', height: '15%', backgroundColor: 'rgba(0,0,0,0.26)' },
+  veu3: { position: 'absolute', left: 0, right: 0, bottom: '33%', height: '12%', backgroundColor: 'rgba(0,0,0,0.11)' },
+  cardImg: { height: 220, marginTop: 10, borderRadius: 18, overflow: 'hidden' },
   metadeDeBaixo: { position: 'absolute', left: 0, right: 0, bottom: 0, height: '60%', opacity: 0.9 },
-  quem: {
-    position: 'absolute',
-    top: 14,
-    left: 14,
-    zIndex: 3,
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-    backgroundColor: 'rgba(11,22,32,0.55)',
-    borderRadius: 999,
-    paddingVertical: 4,
-    paddingHorizontal: 8,
-    maxWidth: '70%',
-  },
-  quemAv: { width: 24, height: 24, borderRadius: 12, backgroundColor: VERDE, alignItems: 'center', justifyContent: 'center' },
-  quemAvTxt: { fontFamily: MONO, fontSize: 9, color: '#cfe9e6' },
-  quemTxt: { fontSize: 12.5, color: INK, flexShrink: 1 },
-  quando: { position: 'absolute', top: 19, right: 14, zIndex: 3, fontFamily: MONO, fontSize: 10, color: INK2 },
-  cardPe: { position: 'absolute', left: 16, right: 16, bottom: 14, zIndex: 3 },
-  cardK: { fontFamily: MONO, fontSize: 10, letterSpacing: 1, color: INK2, },
-  cardNome: { fontFamily: FRAUNCES, fontWeight: '400', fontSize: 25, color: '#fff', marginTop: 4, lineHeight: 27 },
-  cardCorpo: { paddingHorizontal: 16, paddingTop: 14, paddingBottom: 15 },
-  cardNota: { fontFamily: FRAUNCES, fontStyle: 'italic', fontSize: 16.5, lineHeight: 23, color: INK },
-  cardLinha: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 12, marginTop: 13 },
+  // .fd-quem — linha de texto ACIMA da foto, com 44 de altura mínima porque é
+  // alvo de toque (abre o perfil de quem postou).
+  quem: { flexDirection: 'row', alignItems: 'center', gap: 10, minHeight: 44 },
+  quemAv: { width: 36, height: 36, borderRadius: 18, backgroundColor: VERDE, alignItems: 'center', justifyContent: 'center' },
+  quemAvTxt: { fontSize: 12, fontWeight: '600', color: ON_GREEN },
+  quemTxt: { flex: 1, fontSize: 15, lineHeight: 20, color: INK2 },
+  quando: { fontSize: 12, color: INK3 },
+  cardPe: { position: 'absolute', left: 14, right: 14, bottom: 12, zIndex: 3 },
+  cardK: { fontSize: 13, fontWeight: '500', color: 'rgba(255,255,255,0.85)' },
+  cardNome: { fontFamily: FRAUNCES, fontSize: 22, lineHeight: 24, letterSpacing: -0.66, color: '#fff', marginTop: 2 },
+  cardCorpo: { paddingTop: 12 },
+  // A nota do amigo saiu do itálico entre aspas: é o que ele escreveu, não uma
+  // citação de livro.
+  cardNota: { fontSize: 17, fontWeight: '500', letterSpacing: -0.17, lineHeight: 23, color: INK },
+  cardLinha: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 12, marginTop: 12 },
   estrelas: { flexDirection: 'row', gap: 3 },
-  salvar: { minHeight: 36, backgroundColor: TERRA, borderRadius: 999, paddingHorizontal: 15, justifyContent: 'center' },
-  salvarTxt: { color: '#fff', fontSize: 12.5, fontWeight: '600' },
-  // Pastilha verde, como no site: era texto cinza solto e sumia ao lado do
-  // botao laranja de salvar.
-  jaSalvo: {
-    fontSize: 12.5,
-    fontWeight: '500',
-    color: '#8FD3CE',
-    backgroundColor: 'rgba(78,148,144,0.24)',
-    borderWidth: StyleSheet.hairlineWidth,
-    borderColor: 'rgba(78,148,144,0.55)',
-    borderRadius: 999,
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    overflow: 'hidden',
-  },
+  estrelaCheia: { position: 'absolute', left: 0, top: 0, bottom: 0, overflow: 'hidden' },
+  salvar: { minHeight: 36, backgroundColor: VERDE, borderRadius: 10, paddingHorizontal: 14, justifyContent: 'center' },
+  salvarTxt: { color: ON_GREEN, fontSize: 14, fontWeight: '600' },
+  // Sem pastilha: "na sua lista" não é um botão, é um estado. Texto e ponto.
+  jaSalvo: { fontSize: 14, fontWeight: '500', color: INK2 },
 
-  // .friend-row
+  // .friend-row — sem divisor, igual ao resto.
   linhaAmigo: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 12,
-    paddingVertical: 12,
-    borderBottomWidth: StyleSheet.hairlineWidth,
-    borderBottomColor: BORDA,
+    paddingVertical: 10,
   },
-  linhaNome: { flex: 1, fontSize: 14.5, fontWeight: '500', color: INK },
-  linhaUser: { fontFamily: MONO, fontSize: 11.5, color: INK3 },
-  seta: { color: INK3, fontSize: 18 },
+  linhaNome: { flex: 1, fontSize: 15, fontWeight: '600', color: INK },
+  linhaUser: { fontSize: 13, color: INK2 },
+  seta: { color: INK3, fontSize: 17 },
 
-  // .req-card
+  // .req-card — também deixou de ser caixa.
   secao: { fontSize: 13, fontWeight: '600', color: INK2, marginBottom: 10 },
   reqCard: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 9,
-    backgroundColor: ELEV,
-    borderWidth: StyleSheet.hairlineWidth,
-    borderColor: BORDA,
-    borderRadius: 16,
-    paddingVertical: 13,
-    paddingHorizontal: 14,
-    marginBottom: 10,
+    gap: 10,
+    paddingVertical: 10,
   },
-  reqNome: { flex: 1, fontSize: 14.5, fontWeight: '600', color: INK },
-  reqBotao: { borderRadius: 9, paddingVertical: 9, paddingHorizontal: 13, minHeight: 36, justifyContent: 'center' },
-  reqAceitar: { backgroundColor: TERRA },
-  reqAceitarTxt: { color: '#fff', fontSize: 13, fontWeight: '600' },
-  reqRecusar: { backgroundColor: 'rgba(234,231,224,0.07)' },
-  reqRecusarTxt: { color: INK3, fontSize: 13, fontWeight: '600' },
+  reqNome: { flex: 1, fontSize: 15, fontWeight: '600', color: INK },
+  reqBotao: { borderRadius: 10, paddingHorizontal: 14, minHeight: 40, justifyContent: 'center' },
+  reqAceitar: { backgroundColor: VERDE },
+  reqAceitarTxt: { color: ON_GREEN, fontSize: 14, fontWeight: '600' },
+  reqRecusar: { backgroundColor: SURFACE },
+  reqRecusarTxt: { color: INK, fontSize: 14, fontWeight: '600' },
 
   vazio: { alignItems: 'center', paddingVertical: 56, gap: 10 },
   vazioTitulo: { fontFamily: FRAUNCES, fontSize: 19, color: INK, marginTop: 6 },

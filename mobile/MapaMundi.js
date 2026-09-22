@@ -17,10 +17,15 @@ import React from 'react';
 import { View } from 'react-native';
 import Svg, { Path, Rect } from 'react-native-svg';
 import { LARGURA, ALTURA, PAISES } from './mundo';
+import { MAP_LAND, GREEN } from './cores';
 
-const TERRA = '#1c2f40';
-const TRACO = '#0B1620';
-const VISITADO = '#4E9490';
+// .wm-country e .wm-country.visited do site. As três cores estavam ESCRITAS
+// aqui (terra azul-escura, visitado verde-água, contorno mais escuro ainda) e
+// por isso escaparam da unificação: o mapa continuou no visual antigo dentro
+// de um app claro. O site também não desenha contorno nenhum — o que separa
+// país de país é a diferença de preenchimento.
+const TERRA = MAP_LAND;
+const VISITADO = GREEN;
 
 function MapaMundiBase({ opacidade = 1, fundo = 'transparent', visitados }) {
   // Recebe nomes no padrão do world-atlas (em inglês) — é o mesmo campo que o
@@ -57,8 +62,6 @@ function MapaMundiBase({ opacidade = 1, fundo = 'transparent', visitados }) {
             key={p.n}
             d={p.d}
             fill={marcados.has(p.n) ? VISITADO : TERRA}
-            stroke={TRACO}
-            strokeWidth={0.4}
           />
         ))}
       </Svg>

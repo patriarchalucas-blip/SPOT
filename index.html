@@ -3025,7 +3025,13 @@ function darDadosDeViagens(){
   const visiveis=S.trips.filter(t=>!isNonTrip(t));
   const{groups,ordem}=regioesComViagem();
   const regiao=(REGIAO_ATIVA&&groups[REGIAO_ATIVA])?REGIAO_ATIVA:ordem[0];
-  const daRegiao=groups[regiao]||[];
+  // Mesma ordem do mosaico do site: o destaque (card do dobro do tamanho) vai
+  // pra viagem com MAIS SPOTS, não pra primeira da lista — que vem em
+  // created_at.desc e pode ser uma viagem vazia e sem foto. Ordenar AQUI, e
+  // não no nativo, mantém a regra num lugar só. Copiar antes de ordenar: o
+  // vetor é do agrupamento, e ordenar no lugar muda o que a tela web usa.
+  const nSpotsDe=t=>(t._spots||[]).length;
+  const daRegiao=(groups[regiao]||[]).slice().sort((a,b)=>nSpotsDe(b)-nSpotsDe(a));
 
   // A faixa de check-in existia so no HTML, entao a tela nativa nunca soube
   // dela: quem usa o app pelas abas nativas simplesmente nunca era
@@ -3059,7 +3065,10 @@ function darDadosDeViagens(){
       return{
         id:t.id,
         nome:t.name||'',
+        // Duas versões: o card grande do mosaico cabe a linha inteira, os
+        // pequenos não. É o mesmo tripMetaText(t,curta) que o site chama.
         meta:tripMetaText(t),
+        metaCurta:tripMetaText(t,true),
         pais:destino||'',
         bandeira:flagFor(destino),
         foto:m?fotoPraCasca(safeUrl(m[1])):'',
@@ -7213,6 +7222,11 @@ function darDadosDePerfil(){
   spots.forEach(s=>{const c=cityOf(s)||'Outros';if(!paisDe[c])paisDe[c]=s._country||''});
   const cidades=Object.keys(byCity).filter(c=>byCity[c].length)
     .sort((a,b)=>byCity[b].length-byCity[a].length||a.localeCompare(b,'pt-BR'));
+  // Quem toca no mosaico manda o ÍNDICE, e quem resolve índice → cidade é
+  // ESTANTE_CIDADES. Ele só era preenchido por renderEstante(), que roda
+  // quando a tela WEB do perfil desenha — e no app nativo ela nunca desenha.
+  // Sem esta linha, tocar numa cidade do mosaico não fazia nada.
+  ESTANTE_CIDADES=cidades;
 
   const estante=cidades.map(function(c){
     const lista=byCity[c].slice().sort(function(x,y){
@@ -7257,17 +7271,31 @@ function darDadosDePerfil(){
     inicial:(nomeDeExibicao().charAt(0)||'?').toUpperCase(),
     avatar:safeUrl(p.avatar_url||'')||'',
     email:S.user.email||'',
-    // Uma linha de dado logo abaixo do nome. O Dashboard ja tem os numeros
-    // grandes; aqui eles sao legenda de quem e a pessoa, nao o assunto da
-    // tela — e ocupam uma linha no lugar de tres caixas.
+    // pintarResumoDoPerfil desenha os TRES numeros grandes na web. O retorno
+    // e a mesma conta em uma linha; a tela nativa recebe os tres separados
+    // pra desenhar os mesmos blocos, e nao um paragrafo de legenda.
     resumoNumeros:pintarResumoDoPerfil(visitados.length,spots.length,cidades.length),
-    _resumoAntigo:[
-      visitados.length?(visitados.length+(visitados.length===1?' país':' países')):'',
-      spots.length?(spots.length+(spots.length===1?' spot':' spots')):'',
-      cidades.length?(cidades.length+(cidades.length===1?' cidade':' cidades')):''
-    ].filter(Boolean).join('  ·  '),
-    resumo:spots.length?(spots.length+(spots.length===1?' lugar · ':' lugares · ')
+    numeros:[
+      {n:visitados.length,rotulo:visitados.length===1?'país':'países',modo:'countries'},
+      {n:cidades.length,rotulo:cidades.length===1?'cidade':'cidades',modo:'cities'},
+      {n:spots.length,rotulo:spots.length===1?'spot':'spots',modo:'spots'}
+    ].filter(b=>b.n),
+    resumo:spots.length?(spots.length+(spots.length===1?' spot · ':' spots · ')
       +cidades.length+(cidades.length===1?' cidade':' cidades')):'',
+    // O MOSAICO de "Meus spots", igual ao da web: uma peça por cidade, com a
+    // foto de um lugar que a própria pessoa salvou lá. O índice é o que
+    // atravessa a ponte, nunca o nome — nome de cidade tem acento e apóstrofo.
+    mosaico:cidades.slice(0,ESTANTE_NO_PERFIL).map(function(c,i){
+      const lista=byCity[c];
+      const comFoto=lista.find(sp=>sp.photo_url);
+      return{
+        i:i,
+        cidade:c,
+        foto:comFoto?(fotoPraCasca(safeUrl(fotoNaLargura(semChaveDoPlaces(comFoto.photo_url),600)))||''):'',
+        meta:lista.length+(lista.length===1?' spot':' spots')
+      };
+    }),
+    cidadesTotal:cidades.length,
     estante:estante,
     paises:paises.linhas,
     paisesTotal:paises.total,
@@ -7278,6 +7306,8 @@ function darDadosDePerfil(){
 window.darDadosDePerfil=darDadosDePerfil;
 window.acaoDePerfil=function(acao,valor){
   if(acao==='cidade'){alternarCidadeDaEstante(valor);darDadosDePerfil();return}
+  if(acao==='cidadeMosaico'){abrirCidadeDaEstante(valor);return}
+  if(acao==='lista'){openList(valor);return}
   if(acao==='lugar'){openPlace(valor,'profile');return}
   if(acao==='config'){abrirConfig();return}
   if(acao==='visitado'){openVisitedCountryPicker();return}
@@ -8035,7 +8065,9 @@ function darDadosDeAmigos(){
       foto:fotoPraCasca(safeUrl(fotoNaLargura(semChaveDoPlaces(sp.photo_url),760))),
       cores:coresDoGradiente(sp.name||cidade),
       nota:String(sp.my_note||'').trim(),
-      estrelas:Math.round(Number(sp.my_rating)||0),
+      // Sem arredondar: a nota vai de meia em meia desde a migração 020, e
+      // arredondar aqui fazia o mesmo spot aparecer com 5 no app e 4,5 no site.
+      estrelas:Number(sp.my_rating)||0,
       salvo:jaNaMinhaLista(sp)
     });
   });

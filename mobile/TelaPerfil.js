@@ -25,8 +25,8 @@ import {
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import MapaMundi from './MapaMundi';
-import Svg, { Circle, Path } from 'react-native-svg';
-import { INK, INK2, INK3, ESCURO, ELEV, BORDA, TERRA, VERDE, AMBAR, FRAUNCES, MONO } from './cores';
+import Svg, { Path } from 'react-native-svg';
+import { BASE, SURFACE, INK, INK2, INK3, VERDE, ON_GREEN, PHOTO_EMPTY, FRAUNCES } from './cores';
 
 
 // Mesmos desenhos do sistema de ícones do site.
@@ -45,40 +45,6 @@ function Icone({ nome, cor = INK3, tamanho = 18 }) {
   return (
     <Svg width={tamanho} height={tamanho} viewBox="0 0 24 24">
       {(DESENHOS[nome] || []).map((d, i) => <Path key={i} d={d} {...c} />)}
-    </Svg>
-  );
-}
-
-function CategoriaIcone({ cat }) {
-  const c = { stroke: INK3, strokeWidth: 1.8, strokeLinecap: 'round', strokeLinejoin: 'round', fill: 'none' };
-  return (
-    <Svg width={15} height={15} viewBox="0 0 24 24">
-      {cat === 'hotel' ? (
-        <>
-          <Path d="M3 18v-8h12a4 4 0 0 1 4 4v4" {...c} />
-          <Path d="M3 18h18M3 10V7" {...c} />
-          <Circle cx="7.5" cy="13" r="1.8" {...c} />
-        </>
-      ) : cat === 'experience' ? (
-        // Bussola, como na web. Era um pin de localizacao, que la e o icone
-        // de "nao sei a categoria" — dois significados no mesmo desenho.
-        <>
-          <Circle cx="12" cy="12" r="9" {...c} />
-          <Path d="M15.5 8.5l-2.2 5.2-5.2 2.2 2.2-5.2 5.2-2.2Z" {...c} />
-        </>
-      ) : cat === 'food' ? (
-        <>
-          <Path d="M7 3v8a2.5 2.5 0 0 0 5 0V3" {...c} />
-          <Path d="M9.5 11v10M17 3c-1.5 1.5-2 3-2 5s.5 2.5 2 2.5V21" {...c} />
-        </>
-      ) : (
-        // Sem categoria vira PIN, nao garfo. Cair no garfo rotulava como
-        // restaurante um lugar que nunca foi classificado.
-        <>
-          <Path d="M12 21s6.5-5.8 6.5-10.4A6.5 6.5 0 0 0 5.5 10.6C5.5 15.2 12 21 12 21Z" {...c} />
-          <Circle cx="12" cy="10.6" r="2.4" {...c} />
-        </>
-      )}
     </Svg>
   );
 }
@@ -124,36 +90,52 @@ function Linha({ icone, texto, onPress }) {
   );
 }
 
-function Cidade({ c, acao }) {
+// O MOSAICO de "Meus spots", igual ao da web: a primeira cidade ocupa a
+// largura inteira e as outras vêm em pares. Era uma sanfona de cidades — linha
+// com seta que abria a lista de lugares dentro da própria tela. A sanfona é
+// controle de site, e escondia a única coisa que faz alguém querer olhar essa
+// seção: a foto do lugar.
+function Mosaico({ itens, acao }) {
+  const pares = [];
+  for (let i = 1; i < itens.length; i += 2) pares.push(itens.slice(i, i + 2));
   return (
-    <View style={e.cidade}>
-      <Pressable
-        onPress={() => acao('cidade', c.cidade)}
-        style={({ pressed }) => [e.cidadeTopo, pressed && { opacity: 0.7 }]}
-      >
-        <Text style={e.bandeira}>{c.bandeira}</Text>
-        <Text style={e.cidadeNome} numberOfLines={1}>{c.cidade}</Text>
-        <Text style={e.cidadeMeta}>{c.meta}</Text>
-        <Text style={[e.seta, c.aberta && { transform: [{ rotate: '90deg' }] }]}>{'›'}</Text>
-      </Pressable>
-      {c.aberta
-        ? c.lugares.map((s) => (
-            <Pressable
-              key={s.id}
-              onPress={() => acao('lugar', s.id)}
-              style={({ pressed }) => [e.lugar, pressed && { opacity: 0.7 }]}
-            >
-              <CategoriaIcone cat={s.categoria} />
-              <Text style={e.lugarNome} numberOfLines={1}>{s.nome}</Text>
-              {s.nota ? (
-                <Text style={e.lugarNota}>{s.nota}</Text>
-              ) : s.quer ? (
-                <Text style={e.lugarQuer}>quero ir</Text>
-              ) : null}
-            </Pressable>
-          ))
-        : null}
+    <View>
+      {itens.length ? <Peca item={itens[0]} grande acao={acao} /> : null}
+      {pares.map((par, k) => (
+        <View key={k} style={e.mosLinha}>
+          {par.map((it) => <Peca key={it.i} item={it} acao={acao} />)}
+          {par.length === 1 ? <View style={{ flex: 1 }} /> : null}
+        </View>
+      ))}
     </View>
+  );
+}
+
+function Peca({ item, grande, acao }) {
+  const [falhou, setFalhou] = React.useState(false);
+  return (
+    <Pressable
+      onPress={() => acao('cidadeMosaico', item.i)}
+      style={({ pressed }) => [e.peca, grande ? e.pecaGrande : { flex: 1 }, pressed && { opacity: 0.9 }]}
+    >
+      {item.foto && !falhou ? (
+        <Image
+          source={{ uri: item.foto }}
+          style={StyleSheet.absoluteFill}
+          resizeMode="cover"
+          onError={() => setFalhou(true)}
+        />
+      ) : null}
+      {/* O degradê do site em três faixas: existe pro nome da cidade
+          sobreviver a foto clara, e nada além disso. */}
+      <View style={e.veu1} pointerEvents="none" />
+      <View style={e.veu2} pointerEvents="none" />
+      <View style={e.veu3} pointerEvents="none" />
+      <View style={e.pecaPe}>
+        <Text style={[e.pecaNome, grande && e.pecaNomeGrande]} numberOfLines={2}>{item.cidade}</Text>
+        <Text style={e.pecaMeta}>{item.meta}</Text>
+      </View>
+    </Pressable>
   );
 }
 
@@ -163,7 +145,7 @@ export default function TelaPerfil({ dados, ocupado, acao }) {
   if (!dados) {
     return (
       <View style={[e.fundo, e.centro]}>
-        <ActivityIndicator size="large" color={TERRA} />
+        <ActivityIndicator size="large" color={VERDE} />
       </View>
     );
   }
@@ -178,7 +160,23 @@ export default function TelaPerfil({ dados, ocupado, acao }) {
         <RefreshControl refreshing={!!ocupado} onRefresh={() => acao('recarregar')} tintColor={INK3} />
       }
     >
-      <View style={[e.ident, { paddingTop: 26 + margem.top }]}>
+      {/* Uma linha só pra "Perfil" e a engrenagem, e o bloco de identidade
+          embaixo — avatar EM CIMA, nome embaixo. Ao lado do avatar o nome
+          nunca passaria de 20px; sozinho ele sai em 34 e vira o assunto da
+          tela, que é o que ele é. */}
+      <View style={[e.topoLinha, { paddingTop: 18 + margem.top }]}>
+        <Text style={e.marca}>Perfil</Text>
+        <Pressable
+          onPress={() => acao('config')}
+          style={({ pressed }) => [e.config, pressed && { opacity: 0.6 }]}
+          accessibilityRole="button"
+          accessibilityLabel="Configurações"
+        >
+          <Icone nome="gear" cor={INK} tamanho={20} />
+        </Pressable>
+      </View>
+
+      <View style={e.ident}>
         <Pressable onPress={() => acao('foto')} style={e.avatarWrap}>
           {d.avatar ? (
             <Image source={{ uri: d.avatar }} style={e.avatar} />
@@ -188,24 +186,20 @@ export default function TelaPerfil({ dados, ocupado, acao }) {
             </View>
           )}
           <View style={e.selo}>
-            <Icone nome="edit" cor="#fff" tamanho={11} />
+            <Icone nome="edit" cor={INK} tamanho={13} />
           </View>
         </Pressable>
-        <View style={{ flex: 1, minWidth: 0 }}>
-          <Text style={e.nome} numberOfLines={1}>{d.nome}</Text>
-          {d.username ? <Text style={e.user}>@{d.username}</Text> : null}
-        </View>
-        <Pressable
-          onPress={() => acao('config')}
-          style={({ pressed }) => [e.config, pressed && { opacity: 0.7 }]}
-          accessibilityRole="button"
-          accessibilityLabel="Configurações"
-        >
-          <Icone nome="gear" cor={INK} tamanho={20} />
-        </Pressable>
+        <Text style={e.nome} numberOfLines={2}>{d.nome}</Text>
+        {/* @usuário e bio na MESMA linha: eram dois blocos de texto cinza
+            empilhados, e a bio raramente passa de meia linha. */}
+        {d.username || d.bio ? (
+          <Text style={e.sub}>
+            {d.username ? '@' + d.username : ''}
+            {d.username && d.bio ? ' · ' : ''}
+            {d.bio || ''}
+          </Text>
+        ) : null}
       </View>
-
-      {d.bio ? <Text style={e.bio}>{d.bio}</Text> : null}
 
       {/* A ORDEM MUDOU, e e o miolo do conserto. Antes: identidade, lista de
           lugares, mapa, paises, duas acoes e o email solto no fim — seis
@@ -221,7 +215,23 @@ export default function TelaPerfil({ dados, ocupado, acao }) {
           O email saiu: ele ja esta em Configuracoes, e no perfil so ocupava
           a ultima linha sem ninguem nunca precisar dele. */}
       <View style={e.corpo}>
-        {d.resumoNumeros ? <Text style={e.resumoNumeros}>{d.resumoNumeros}</Text> : null}
+        {/* Os TRÊS números, no mesmo tamanho da web. Eram uma linha de legenda
+            em monoespacada miúda — a mesma conta, ilegível. Cada um abre a
+            Lista filtrada, igual ao placar da tela inicial. */}
+        {d.numeros && d.numeros.length ? (
+          <View style={e.numeros}>
+            {d.numeros.map((b) => (
+              <Pressable
+                key={b.modo}
+                onPress={() => acao('lista', b.modo)}
+                style={({ pressed }) => [e.numItem, pressed && { opacity: 0.6 }]}
+              >
+                <Text style={e.numN}>{b.n}</Text>
+                <Text style={e.numR}>{b.rotulo}</Text>
+              </Pressable>
+            ))}
+          </View>
+        ) : null}
 
         <View style={e.cabecalho}>
           <Text style={e.secao}>Onde já estive</Text>
@@ -252,16 +262,26 @@ export default function TelaPerfil({ dados, ocupado, acao }) {
           <Text style={e.paises}>Crie viagens para pintar o mundo.</Text>
         )}
 
-        <View style={[e.cabecalho, { marginTop: 26 }]}>
-          <Text style={e.secao}>Meus lugares</Text>
+        <View style={[e.cabecalho, { marginTop: 32 }]}>
+          <Text style={e.secao}>Meus spots</Text>
           {d.resumo ? <Text style={e.secaoSub}>{d.resumo}</Text> : null}
         </View>
-        {!d.estante.length ? (
+        {!(d.mosaico && d.mosaico.length) ? (
           <Text style={e.aviso}>
-            Os lugares que você salvar aparecem aqui, separados por cidade.
+            Os spots que você salvar aparecem aqui, por cidade.
           </Text>
         ) : (
-          d.estante.map((c) => <Cidade key={c.cidade} c={c} acao={acao} />)
+          <>
+            <Mosaico itens={d.mosaico} acao={acao} />
+            {d.cidadesTotal > d.mosaico.length ? (
+              <Pressable
+                onPress={() => acao('lista', 'cities')}
+                style={({ pressed }) => [e.verTodas, pressed && { opacity: 0.6 }]}
+              >
+                <Text style={e.verTodasTxt}>{'Ver todas as ' + d.cidadesTotal + ' cidades'}</Text>
+              </Pressable>
+            ) : null}
+          </>
         )}
 
         <View style={e.acoes}>
@@ -274,126 +294,108 @@ export default function TelaPerfil({ dados, ocupado, acao }) {
 }
 
 const e = StyleSheet.create({
-  fundo: { flex: 1, backgroundColor: ESCURO },
+  fundo: { flex: 1, backgroundColor: BASE },
   centro: { alignItems: 'center', justifyContent: 'center' },
 
-  ident: { flexDirection: 'row', alignItems: 'center', gap: 14, paddingHorizontal: 24, paddingBottom: 4 },
-  avatarWrap: { width: 62, height: 62 },
+  topoLinha: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: 20,
+  },
+  marca: { fontSize: 20, fontWeight: '700', letterSpacing: -0.6, color: INK },
+  config: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: SURFACE,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+
+  ident: { paddingHorizontal: 20, paddingTop: 20 },
+  // Quadrado arredondado de 88, não círculo de 62: o círculo com o lápis
+  // pendurado no canto é o avatar de rede social genérico.
+  avatarWrap: { width: 88, height: 88, marginBottom: 14 },
   avatar: {
-    width: 62,
-    height: 62,
-    borderRadius: 31,
+    width: 88,
+    height: 88,
+    borderRadius: 22,
     backgroundColor: VERDE,
     alignItems: 'center',
     justifyContent: 'center',
+    overflow: 'hidden',
   },
-  avatarTxt: { fontSize: 24, color: ESCURO, fontWeight: '600' },
+  avatarTxt: { fontSize: 30, color: ON_GREEN, fontWeight: '600' },
+  // O selo é superfície com ícone de tinta — era terracota com ícone branco, e
+  // a terracota saiu do app. A borda de 3 na cor do fundo não é contorno: é o
+  // recorte que descola o selo do avatar.
   selo: {
     position: 'absolute',
-    right: -2,
-    bottom: -2,
-    width: 22,
-    height: 22,
-    borderRadius: 11,
-    // Terracota com icone branco, como o site. Estava invertido: bolinha
-    // creme com icone escuro.
-    backgroundColor: TERRA,
-    alignItems: 'center',
-    justifyContent: 'center',
-    borderWidth: 2,
-    borderColor: ESCURO,
-  },
-  nome: { fontFamily: FRAUNCES, fontSize: 27, color: INK, letterSpacing: -0.3 },
-  user: { fontFamily: MONO, fontSize: 12.5, color: INK3, marginTop: 2 },
-  config: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    borderWidth: StyleSheet.hairlineWidth,
-    borderColor: 'rgba(234,231,224,0.2)',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  bio: { paddingHorizontal: 24, paddingTop: 12, fontSize: 14.5, color: INK2, lineHeight: 20 },
-
-  corpo: { paddingHorizontal: 24, paddingTop: 20 },
-  // Uma linha de dado logo abaixo do nome, no lugar de tres caixas: o
-  // Dashboard ja tem os numeros grandes, aqui eles sao legenda de quem e a
-  // pessoa, nao o assunto.
-  resumoNumeros: { fontFamily: MONO, fontSize: 11.5, letterSpacing: 0.4, color: INK3, marginBottom: 20 },
-  cabecalho: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 },
-  // No Perfil o site troca o titulo de secao por mono versalete — e o que
-  // separa esta tela das outras.
-  secao: { fontFamily: MONO, fontSize: 10, letterSpacing: 1.6, color: INK3, },
-  secaoSub: { fontFamily: MONO, fontSize: 11, color: INK3 },
-  aviso: { fontSize: 13.5, color: INK3, lineHeight: 19 },
-  paises: { fontSize: 13.5, color: INK2, lineHeight: 21 },
-  paisesLista: { marginTop: 2 },
-  pais: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 11,
-    paddingVertical: 11,
-    borderBottomWidth: StyleSheet.hairlineWidth,
-    borderBottomColor: BORDA,
-  },
-  paisBandeira: { fontSize: 17 },
-  paisNome: { flex: 1, fontSize: 14.5, color: INK },
-  paisConta: { fontFamily: MONO, fontSize: 11, color: INK3 },
-  paisCasa: {
-    fontFamily: MONO,
-    fontSize: 9.5,
-    letterSpacing: 0.4,
-    color: TERRA,
-    backgroundColor: 'rgba(193,85,47,0.14)',
-    borderRadius: 999,
-    paddingHorizontal: 7,
-    paddingVertical: 2,
-    overflow: 'hidden',
-  },
-  paisX: { width: 26, height: 26, alignItems: 'center', justifyContent: 'center', marginRight: -6 },
-  paisTodos: { paddingTop: 12, paddingBottom: 2 },
-  paisTodosTxt: { fontSize: 12.5, color: INK3 },
-  mapa: { marginHorizontal: -24, marginBottom: 14 },
-
-  cidade: {
-    borderWidth: StyleSheet.hairlineWidth,
-    borderColor: BORDA,
+    right: -4,
+    bottom: -4,
+    width: 28,
+    height: 28,
     borderRadius: 14,
-    backgroundColor: ELEV,
-    marginBottom: 8,
-    overflow: 'hidden',
-  },
-  cidadeTopo: { flexDirection: 'row', alignItems: 'center', gap: 10, paddingHorizontal: 14, paddingVertical: 13 },
-  bandeira: { fontSize: 17 },
-  cidadeNome: { flex: 1, fontSize: 14.5, fontWeight: '500', color: INK },
-  cidadeMeta: { fontFamily: MONO, fontSize: 10.5, color: INK3 },
-  seta: { color: INK3, fontSize: 17 },
-
-  lugar: {
-    flexDirection: 'row',
+    backgroundColor: SURFACE,
     alignItems: 'center',
-    gap: 10,
-    paddingHorizontal: 14,
-    paddingVertical: 11,
-    borderTopWidth: StyleSheet.hairlineWidth,
-    borderTopColor: BORDA,
+    justifyContent: 'center',
+    borderWidth: 3,
+    borderColor: BASE,
   },
-  lugarNome: { flex: 1, fontSize: 14, color: INK2 },
-  // Verde e a cor de "positivo" do sistema, e e o que o site usa pra nota.
-  lugarNota: { fontFamily: MONO, fontSize: 12, fontWeight: '600', color: VERDE },
-  lugarQuer: { fontFamily: MONO, fontSize: 10, color: AMBAR, letterSpacing: 0.6 },
+  nome: { fontFamily: FRAUNCES, fontSize: 34, lineHeight: 36, color: INK, letterSpacing: -1.36 },
+  sub: { marginTop: 4, fontSize: 14, lineHeight: 20, color: INK2 },
 
-  acoes: { marginTop: 22 },
+  corpo: { paddingHorizontal: 20, paddingTop: 0 },
+  // .prof-numeros — três números grandes, cada um abre a Lista filtrada.
+  numeros: { flexDirection: 'row', alignItems: 'flex-end', gap: 28, paddingTop: 24 },
+  numItem: { gap: 2, minHeight: 44, justifyContent: 'flex-end' },
+  numN: { fontFamily: FRAUNCES, fontSize: 28, lineHeight: 28, letterSpacing: -1.12, color: INK },
+  numR: { fontSize: 13, color: INK2 },
+  cabecalho: { flexDirection: 'row', alignItems: 'baseline', gap: 8, marginTop: 32, marginBottom: 14 },
+  // .section-title — mesmo título de seção do resto do app. Era monoespacada
+  // miúda em caixa alta com tracking, que é o rótulo de "app gerado".
+  secao: { fontSize: 20, fontWeight: '700', letterSpacing: -0.6, color: INK },
+  secaoSub: { fontSize: 14, color: INK2 },
+  aviso: { fontSize: 14, color: INK2, lineHeight: 20 },
+  paises: { fontSize: 14, color: INK2, lineHeight: 21 },
+  paisesLista: { marginTop: 2 },
+  // .country-row: linha sem divisor. O que separa é o espaço.
+  pais: { flexDirection: 'row', alignItems: 'center', gap: 12, paddingVertical: 12 },
+  paisBandeira: { fontSize: 20 },
+  paisNome: { flex: 1, fontSize: 16, fontWeight: '600', letterSpacing: -0.3, color: INK },
+  paisConta: { fontSize: 13, color: INK2 },
+  // "mora aqui" perdeu a pílula colorida e virou o próprio verde do sistema.
+  // A pílula terracota era o que mais saltava da paleta velha nesta tela.
+  paisCasa: { fontSize: 13, fontWeight: '600', color: VERDE },
+  paisX: { width: 26, height: 26, alignItems: 'center', justifyContent: 'center', marginRight: -6 },
+  paisTodos: { paddingTop: 14, paddingBottom: 2 },
+  paisTodosTxt: { fontSize: 14, fontWeight: '600', color: VERDE },
+  mapa: { marginHorizontal: -20, marginBottom: 14 },
+
+  // .est-mosaico — a primeira peça ocupa as duas colunas.
+  mosLinha: { flexDirection: 'row', gap: 8, marginTop: 8 },
+  peca: { height: 150, borderRadius: 18, overflow: 'hidden', backgroundColor: PHOTO_EMPTY },
+  pecaGrande: { height: 180 },
+  veu1: { position: 'absolute', left: 0, right: 0, bottom: 0, height: '18%', backgroundColor: 'rgba(0,0,0,0.42)' },
+  veu2: { position: 'absolute', left: 0, right: 0, bottom: '18%', height: '15%', backgroundColor: 'rgba(0,0,0,0.26)' },
+  veu3: { position: 'absolute', left: 0, right: 0, bottom: '33%', height: '12%', backgroundColor: 'rgba(0,0,0,0.11)' },
+  pecaPe: { position: 'absolute', left: 14, right: 14, bottom: 12 },
+  pecaNome: { fontFamily: FRAUNCES, fontSize: 16, lineHeight: 18, letterSpacing: -0.32, color: '#fff' },
+  pecaNomeGrande: { fontSize: 22, lineHeight: 25, letterSpacing: -0.66 },
+  pecaMeta: { fontSize: 12, color: 'rgba(255,255,255,0.85)', marginTop: 2 },
+  verTodas: { paddingTop: 14 },
+  verTodasTxt: { fontSize: 14, fontWeight: '600', color: VERDE },
+
+  acoes: { marginTop: 32 },
+  // .prof-linha — sem divisor.
   linha: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 12,
     paddingVertical: 15,
-    borderTopWidth: StyleSheet.hairlineWidth,
-    borderTopColor: BORDA,
+    paddingHorizontal: 2,
   },
-  linhaTxt: { flex: 1, fontSize: 14.5, color: INK },
-
-  email: { fontFamily: MONO, fontSize: 11.5, color: INK3, marginTop: 22 },
+  linhaTxt: { flex: 1, fontSize: 15, color: INK },
+  seta: { color: INK3, fontSize: 17 },
 });

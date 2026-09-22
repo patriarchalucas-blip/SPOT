@@ -3,10 +3,21 @@
 // Terceira tela que deixa de ser HTML, e a primeira que a pessoa vê ao abrir
 // o app. Mesma divisão das outras: o site tem as regras, aqui é só o desenho.
 //
-// O mapa-múndi aqui é DECORAÇÃO: sem toque, sem zoom, atrás do placar. Quem
-// quiser o mapa de verdade toca no número de países. Mesma divisão do site.
+// POR QUE ELA FOI REDESENHADA EM 22/09/2026
 //
-// Valores copiados do CSS (.vg-card, .cont-chip, .stat-block, .dash-paises).
+// O site trocou a composição do Início e esta tela ficou pra trás — invisível,
+// porque não há como abrir o app nativo na máquina onde ele é escrito. Ela
+// ainda tinha o painel de três retângulos escuros, as pílulas coloridas de
+// continente e o carrossel de cards, todos aposentados no site. Além disso as
+// cores escuras estavam ESCRITAS aqui dentro, então a unificação de `cores.js`
+// passou por cima delas sem tocar em nada.
+//
+// Agora é a composição do site: o mapa como metade de cima da tela, o placar
+// num card com o anel, continente como aba de texto, e as viagens em mosaico
+// com a primeira ocupando o dobro.
+//
+// Valores copiados do CSS (.dash-mapa-area, .placar-card, .cont-aba,
+// .mosaico, .vg-card, .checkin-banner). Não inventar aqui.
 
 import React from 'react';
 import {
@@ -20,79 +31,97 @@ import {
   View,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import Svg, { Path } from 'react-native-svg';
+import Svg, { Circle, Path } from 'react-native-svg';
 import MapaMundi from './MapaMundi';
-import { INK, INK2, INK3, ESCURO, ELEV, BORDA, TERRA, VERDE, ON_GREEN, FRAUNCES, MONO, MONO_MEDIO, MONO_FORTE } from './cores';
+import { BASE, SURFACE, INK, INK2, INK3, GREEN, ON_GREEN, MAP_BG, PHOTO_EMPTY } from './cores';
 
+// Mesmo denominador do site. Ver a nota de PAISES_NO_MUNDO no index.html:
+// não é o tamanho de COUNTRIES (243), que inclui território não soberano.
+const PAISES_NO_MUNDO = 195;
 
-function Caixa({ n, rotulo, onPress }) {
+// O anel: um arco sobre um trilho, sem gradiente e sem sombra. O trilho é a
+// cor da PÁGINA, então o vazio do anel é o fundo aparecendo por baixo do card.
+function Anel({ paises }) {
+  const r = 33;
+  const volta = 2 * Math.PI * r;
+  const fatia = Math.min(1, (Number(paises) || 0) / PAISES_NO_MUNDO);
+  const pc = Math.min(100, ((Number(paises) || 0) / PAISES_NO_MUNDO) * 100);
+  return (
+    <View style={e.anel}>
+      <Svg width={76} height={76} viewBox="0 0 76 76">
+        {/* girado -90° pra fatia começar no topo, e não às 3 horas */}
+        <Circle cx="38" cy="38" r={r} fill="none" stroke={BASE} strokeWidth={7} />
+        <Circle
+          cx="38" cy="38" r={r} fill="none" stroke={GREEN} strokeWidth={7}
+          strokeLinecap="round"
+          strokeDasharray={`${volta * fatia} ${volta}`}
+          transform="rotate(-90 38 38)"
+        />
+      </Svg>
+      {/* Sempre inteiro, sem casa decimal: abrir espaço pra vírgula faz o
+          número balançar de largura conforme a pessoa viaja. */}
+      <View style={e.anelTxtCaixa} pointerEvents="none">
+        <Text style={e.anelTxt}>{pc ? Math.round(pc) + '%' : '0%'}</Text>
+      </View>
+    </View>
+  );
+}
+
+function LinhaDoPlacar({ n, rotulo, onPress }) {
   return (
     <Pressable
       onPress={onPress}
-      style={({ pressed }) => [e.caixa, pressed && { transform: [{ scale: 0.96 }] }]}
+      style={({ pressed }) => [e.pcItem, pressed && { opacity: 0.6 }]}
       accessibilityRole="button"
       accessibilityLabel={n + ' ' + rotulo}
     >
-      <Text style={e.caixaN}>{n}</Text>
-      <Text style={e.caixaL}>{rotulo}</Text>
+      <Text style={e.pcN}>{n}</Text>
+      <Text style={e.pcR}>{rotulo}</Text>
+      <Text style={e.pcSeta}>›</Text>
     </Pressable>
   );
 }
 
-// "Voce esta no X?" — a faixa que aparece quando o aparelho reconhece um
-// lugar por perto. Ela existia so na versao web: quem usa o app pelas abas
-// nativas nunca era perguntado.
+// "Você está no X?" — a faixa que aparece quando o aparelho reconhece um
+// lugar por perto. No site ela virou um bloco verde inteiro, e o ícone saiu:
+// dentro de um bloco verde ele só repetia que ali tem algo acontecendo.
 function FaixaDeCheckin({ nome, acao }) {
   return (
     <View style={e.checkin}>
-      <View style={e.checkinIcone}>
-        <Svg width={13} height={13} viewBox="0 0 24 24">
-          <Path
-            d="M12 21s6.5-5.8 6.5-10.4A6.5 6.5 0 0 0 5.5 10.6C5.5 15.2 12 21 12 21Z"
-            stroke="#fff" strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round" fill="none"
-          />
-          <Path
-            d="M12 13a2.4 2.4 0 1 0 0-4.8 2.4 2.4 0 0 0 0 4.8Z"
-            stroke="#fff" strokeWidth={1.8} fill="none"
-          />
-        </Svg>
-      </View>
       <Text style={e.checkinQ} numberOfLines={2}>
         Você está em <Text style={e.checkinNome}>{nome}</Text>?
       </Text>
       <Pressable
         onPress={() => acao('checkinAdd')}
         style={({ pressed }) => [e.checkinAdd, pressed && { opacity: 0.85 }]}
+        accessibilityRole="button"
       >
         <Text style={e.checkinAddTxt}>Adicionar</Text>
       </Pressable>
       <Pressable
         onPress={() => acao('checkinIgnorar')}
         hitSlop={6}
-        style={({ pressed }) => [e.checkinX, pressed && { opacity: 0.5 }]}
+        style={({ pressed }) => [e.checkinX, pressed && { opacity: 0.4 }]}
         accessibilityRole="button"
         accessibilityLabel="Ignorar"
       >
-        <Svg width={14} height={14} viewBox="0 0 24 24">
-          <Path d="M6.5 6.5l11 11M17.5 6.5l-11 11" stroke={INK3} strokeWidth={1.8} strokeLinecap="round" fill="none" />
+        <Svg width={18} height={18} viewBox="0 0 24 24">
+          <Path d="M6.5 6.5l11 11M17.5 6.5l-11 11" stroke={ON_GREEN} strokeWidth={1.8} strokeLinecap="round" fill="none" />
         </Svg>
       </Pressable>
     </View>
   );
 }
 
-function CardDeViagem({ t, aoAbrir }) {
+function CardDeViagem({ t, grande, altura, aoAbrir }) {
   const [falhou, setFalhou] = React.useState(false);
-  const [c1, c2] = t.cores || [ELEV, ESCURO];
   return (
     <Pressable
       onPress={aoAbrir}
-      style={({ pressed }) => [e.vgCard, pressed && { transform: [{ scale: 0.98 }] }]}
+      style={({ pressed }) => [e.vgCard, { height: altura }, pressed && { opacity: 0.9 }]}
       accessibilityRole="button"
       accessibilityLabel={t.nome}
     >
-      <View style={[StyleSheet.absoluteFill, { backgroundColor: c1 }]} />
-      <View style={[e.metadeDeBaixo, { backgroundColor: c2 }]} />
       {t.foto && !falhou ? (
         <Image
           source={{ uri: t.foto }}
@@ -101,16 +130,64 @@ function CardDeViagem({ t, aoAbrir }) {
           onError={() => setFalhou(true)}
         />
       ) : null}
-      {/* o véu escuro que faz o nome ficar legível sobre qualquer foto */}
+      {/* O site usa um degradê só (preto .55 embaixo, transparente aos 55%).
+          Aqui são três faixas: é a única forma sem arrastar biblioteca de
+          gradiente pra dentro do aplicativo por causa de um véu. */}
       <View style={e.veu1} pointerEvents="none" />
       <View style={e.veu2} pointerEvents="none" />
       <View style={e.veu3} pointerEvents="none" />
-      <Text style={e.bandeira}>{t.bandeira}</Text>
       <View style={e.vgPe}>
-        <Text style={e.vgNome} numberOfLines={2}>{t.nome}</Text>
-        <Text style={e.vgMeta}>{t.meta}</Text>
+        <Text style={grande ? e.vgNomeG : e.vgNome} numberOfLines={2}>{t.nome}</Text>
+        <Text style={grande ? e.vgMetaG : e.vgMeta} numberOfLines={1}>
+          {(grande ? t.meta : t.metaCurta || t.meta) || ''}
+        </Text>
       </View>
     </Pressable>
+  );
+}
+
+// O mosaico do site é uma grade 2fr/1fr em que o primeiro card ocupa duas
+// linhas. Não existe grade em React Native, então a mesma disposição é montada
+// à mão — e o resultado é o mesmo que o navegador produz por posicionamento
+// automático: o destaque na coluna larga, os dois seguintes empilhados na
+// estreita, e daí em diante uma linha larga + uma estreita por vez.
+const LINHA = 118;
+const FOLGA = 8;
+
+function Mosaico({ viagens, acao }) {
+  const abrir = (t) => () => acao('abrir', t.id);
+  const [destaque, ...resto] = viagens;
+  const coluna = resto.slice(0, 2);
+  const pares = [];
+  for (let i = 2; i < resto.length; i += 2) pares.push(resto.slice(i, i + 2));
+
+  return (
+    <View style={e.mosaico}>
+      <View style={e.mosaicoLinha}>
+        <View style={e.colLarga}>
+          <CardDeViagem t={destaque} grande altura={LINHA * 2 + FOLGA} aoAbrir={abrir(destaque)} />
+        </View>
+        <View style={e.colEstreita}>
+          {coluna.map((t) => (
+            <CardDeViagem key={t.id} t={t} altura={LINHA} aoAbrir={abrir(t)} />
+          ))}
+          {/* Com uma viagem só na coluna, o vazio embaixo é o próprio fundo:
+              nada de card fantasma pra fechar a grade. */}
+        </View>
+      </View>
+      {pares.map((par) => (
+        <View key={par[0].id} style={e.mosaicoLinha}>
+          <View style={e.colLarga}>
+            <CardDeViagem t={par[0]} altura={LINHA} aoAbrir={abrir(par[0])} />
+          </View>
+          <View style={e.colEstreita}>
+            {par[1] ? (
+              <CardDeViagem t={par[1]} altura={LINHA} aoAbrir={abrir(par[1])} />
+            ) : null}
+          </View>
+        </View>
+      ))}
+    </View>
   );
 }
 
@@ -120,15 +197,13 @@ export default function TelaViagens({ dados, ocupado, acao }) {
   if (!dados) {
     return (
       <View style={[e.fundo, e.centro]}>
-        <ActivityIndicator size="large" color={TERRA} />
+        <ActivityIndicator size="large" color={GREEN} />
       </View>
     );
   }
 
   const d = dados;
-  return corpo();
-
-  function corpo() {
+  const viagens = d.viagensDaRegiao || [];
 
   return (
     <ScrollView
@@ -138,16 +213,16 @@ export default function TelaViagens({ dados, ocupado, acao }) {
         <RefreshControl refreshing={!!ocupado} onRefresh={() => acao('recarregar')} tintColor={INK3} />
       }
     >
-      <View style={[e.topo, { paddingTop: 26 + margem.top }]}>
-        <View style={e.linhaTopo}>
-          <Text style={e.marca}>Spot</Text>
+      {/* A faixa da marca fica ACIMA do mapa, não em cima dele: o logotipo
+          caía sobre o Canadá e o avatar sobre o Japão. */}
+      <View style={[e.mapaArea, { paddingTop: 18 + margem.top }]}>
+        <View style={e.topoLinha}>
+          <Text style={e.marca}>SPOT</Text>
           <Pressable
             onPress={() => acao('perfil')}
             accessibilityRole="button"
             accessibilityLabel="Abrir seu perfil"
           >
-            {/* Mesma regra da tela de perfil: foto quando existe, inicial
-                quando não. Aqui só a inicial tinha sido portada. */}
             {d.avatar ? (
               <Image source={{ uri: d.avatar }} style={e.avatar} />
             ) : (
@@ -157,36 +232,41 @@ export default function TelaViagens({ dados, ocupado, acao }) {
             )}
           </Pressable>
         </View>
-
-        {/* No site o mapa abre a tela cheia; na primeira versão nativa ele
-            tinha virado só desenho. O desenho em si fica surdo ao toque pra
-            não disputar com o botão. */}
         <Pressable
           onPress={() => acao('mapa')}
-          style={({ pressed }) => [e.mapa, pressed && { opacity: 0.6 }]}
+          style={({ pressed }) => [e.mapa, pressed && { opacity: 0.7 }]}
           accessibilityRole="button"
           accessibilityLabel="Abrir o mapa-múndi"
         >
           <View pointerEvents="none">
-            <MapaMundi visitados={d.mapa} opacidade={0.5} />
+            <MapaMundi visitados={d.mapa} />
           </View>
         </Pressable>
+      </View>
 
-        {d.convite ? (
-          <Text style={e.convite}>Crie uma viagem para pintar o primeiro país.</Text>
-        ) : null}
-
-        <Pressable onPress={() => acao('lista', 'countries')} style={e.paises}>
-          <Text style={e.paisesN}>{d.paises}</Text>
-          <Text style={e.paisesT}>de 195 países</Text>
+      {/* A SOMBRA AQUI É EXCEÇÃO, e é a única do app: o --surface está a 12
+          pontos de luminosidade do --base e sem ela o olho não acha a borda do
+          bloco. Escolha do Lucas entre três saídas testadas. */}
+      <View style={e.placar}>
+        <Pressable
+          onPress={() => acao('mapa')}
+          style={({ pressed }) => [e.anelBloco, pressed && { opacity: 0.6 }]}
+          accessibilityRole="button"
+          accessibilityLabel="Ver o mapa-múndi"
+        >
+          <Anel paises={d.paises} />
+          <Text style={e.anelRot}>de {PAISES_NO_MUNDO} países</Text>
         </Pressable>
-
-        <View style={e.caixas}>
-          <Caixa n={d.spots} rotulo="spots" onPress={() => acao('lista', 'spots')} />
-          <Caixa n={d.cidades} rotulo="cidades" onPress={() => acao('lista', 'cities')} />
-          <Caixa n={d.viagens} rotulo="viagens" onPress={() => acao('lista', 'trips')} />
+        <View style={e.placarCol}>
+          <LinhaDoPlacar n={d.paises} rotulo="países" onPress={() => acao('mapa')} />
+          <LinhaDoPlacar n={d.cidades} rotulo="cidades" onPress={() => acao('lista', 'cities')} />
+          <LinhaDoPlacar n={d.spots} rotulo="spots" onPress={() => acao('lista', 'spots')} />
         </View>
       </View>
+
+      {d.convite ? (
+        <Text style={e.convite}>Crie uma viagem para pintar o primeiro país.</Text>
+      ) : null}
 
       {d.checkin ? <FaixaDeCheckin nome={d.checkin.nome} acao={acao} /> : null}
 
@@ -194,16 +274,24 @@ export default function TelaViagens({ dados, ocupado, acao }) {
         <View style={e.vazio}>
           <Text style={e.vazioTitulo}>Nenhuma viagem ainda</Text>
           <Text style={e.vazioTexto}>Salve o primeiro spot e a viagem nasce sozinha</Text>
-          <Pressable onPress={() => acao('nova')} style={e.botaoNova}>
-            <Text style={e.botaoNovaTxt}>Criar viagem</Text>
+          <Pressable
+            onPress={() => acao('novoLugar')}
+            style={({ pressed }) => [e.adicionar, e.adicionarSolto, pressed && { opacity: 0.85 }]}
+            accessibilityRole="button"
+          >
+            <Text style={e.adicionarTxt}>Adicionar spot</Text>
           </Pressable>
         </View>
       ) : (
-        <>
+        <View style={e.corpo}>
+          <Text style={e.secaoTitulo}>Minhas viagens</Text>
+
+          {/* Continente: aba de texto, não pílula colorida. A ativa é tinta
+              com um traço embaixo — pastilha preenchida saiu do app inteiro. */}
           <ScrollView
             horizontal
             showsHorizontalScrollIndicator={false}
-            contentContainerStyle={e.trilho}
+            contentContainerStyle={e.abas}
           >
             {(d.regioes || []).map((r) => {
               const on = r.nome === d.regiao;
@@ -211,172 +299,146 @@ export default function TelaViagens({ dados, ocupado, acao }) {
                 <Pressable
                   key={r.nome}
                   onPress={() => acao('regiao', r.nome)}
-                  style={[e.chip, on && e.chipOn]}
+                  style={({ pressed }) => [e.aba, on && e.abaOn, pressed && { opacity: 0.6 }]}
+                  accessibilityRole="tab"
+                  accessibilityState={{ selected: on }}
                 >
-                  <Text style={[e.chipTxt, on && e.chipTxtOn]}>
-                    {r.nome} · {r.n}
-                  </Text>
+                  <Text style={[e.abaTxt, on && e.abaTxtOn]}>{r.nome} · {r.n}</Text>
                 </Pressable>
               );
             })}
           </ScrollView>
 
-          <ScrollView
-            horizontal
-            showsHorizontalScrollIndicator={false}
-            decelerationRate="fast"
-            snapToInterval={262 /* largura do card + espaço */}
-            snapToAlignment="start"
-            contentContainerStyle={e.filme}
-          >
-            {(d.viagensDaRegiao || []).map((t) => (
-              <CardDeViagem key={t.id} t={t} aoAbrir={() => acao('abrir', t.id)} />
-            ))}
-          </ScrollView>
+          {viagens.length ? <Mosaico viagens={viagens} acao={acao} /> : null}
 
-          <BotaoAdicionar acao={acao} />
-        </>
+          <Pressable
+            onPress={() => acao('novoLugar')}
+            style={({ pressed }) => [e.adicionar, pressed && { opacity: 0.85 }]}
+            accessibilityRole="button"
+            accessibilityLabel="Adicionar um spot"
+          >
+            <Text style={e.adicionarTxt}>Adicionar spot</Text>
+          </Pressable>
+        </View>
       )}
     </ScrollView>
-  );
-  }
-}
-
-// Era um "+" redondo flutuando sobre a lista — o unico jeito de adicionar
-// nesta aba. No site esse botao virou uma barra de largura cheia no fim da
-// lista, e aqui ele tinha ficado pra tras. A acao e a MESMA (`novoLugar`):
-// escolher categoria e cair no fluxo que cria a viagem sozinho.
-//
-// Valores de .btn-primario + .btn-largo + .btn-solto do site.
-function BotaoAdicionar({ acao }) {
-  return (
-    <Pressable
-      onPress={() => acao('novoLugar')}
-      style={({ pressed }) => [e.adicionar, pressed && { opacity: 0.85 }]}
-      accessibilityRole="button"
-      accessibilityLabel="Adicionar um spot"
-    >
-      <Text style={e.adicionarTxt}>Adicionar spot</Text>
-    </Pressable>
   );
 }
 
 const e = StyleSheet.create({
-  // Valores copiados do .checkin-* do site. O degrade de fundo vira uma cor
-  // so, no meio do caminho entre as duas pontas dele.
-  // Uma linha, nao um bloco: antes ocupava a altura de um card de viagem pra
-  // perguntar uma coisa so, e empurrava a tela inteira pra baixo.
+  fundo: { flex: 1, backgroundColor: BASE },
+  centro: { alignItems: 'center', justifyContent: 'center' },
+
+  // .dash-mapa-area — a altura nasce do mapa, não de um número escolhido.
+  mapaArea: { backgroundColor: MAP_BG, overflow: 'hidden' },
+  topoLinha: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: 20,
+  },
+  // O wordmark do site é desenho: Cinzel 100 com espaçamento 6, num quadro de
+  // 76 de altura reduzido a 20px na tela. 100×20/76 = 26, e 6×20/76 = 1,6.
+  marca: { fontFamily: 'Cinzel', fontSize: 26, lineHeight: 30, color: GREEN, letterSpacing: 1.6 },
+  mapa: { marginTop: 24 },
+  avatar: {
+    width: 40, height: 40, borderRadius: 20, backgroundColor: GREEN,
+    alignItems: 'center', justifyContent: 'center',
+  },
+  avatarTxt: { fontSize: 16, color: ON_GREEN, fontWeight: '600' },
+
+  // .placar-card
+  placar: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 20,
+    marginHorizontal: 20,
+    marginTop: 14,
+    backgroundColor: SURFACE,
+    borderRadius: 14,
+    paddingVertical: 16,
+    paddingHorizontal: 18,
+    shadowColor: '#111111',
+    shadowOpacity: 0.07,
+    shadowRadius: 13,
+    shadowOffset: { width: 0, height: 5 },
+    elevation: 3,
+  },
+  anelBloco: { alignItems: 'center', gap: 6 },
+  anel: { width: 76, height: 76 },
+  anelTxtCaixa: { ...StyleSheet.absoluteFillObject, alignItems: 'center', justifyContent: 'center' },
+  anelTxt: { fontSize: 19, fontWeight: '700', letterSpacing: -0.6, color: INK },
+  // Diz PAÍSES, não "do mundo": o anel fica ao lado de três números
+  // diferentes, e sem isto nada amarra a porcentagem a um deles.
+  anelRot: { fontSize: 10, color: INK2 },
+  placarCol: { flex: 1, minWidth: 0 },
+  pcItem: { flexDirection: 'row', alignItems: 'baseline', gap: 8, paddingVertical: 3 },
+  pcN: { fontSize: 23, fontWeight: '700', letterSpacing: -0.9, color: INK, minWidth: 36 },
+  pcR: { flex: 1, fontSize: 14, color: INK2 },
+  pcSeta: { fontSize: 14, color: INK3 },
+
+  convite: { fontSize: 12.5, color: INK3, maxWidth: 230, lineHeight: 18, marginTop: 14, marginHorizontal: 20 },
+
+  // .checkin-banner — bloco verde inteiro, sem borda e sem ícone.
   checkin: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 11,
-    marginHorizontal: 24,
-    marginTop: 14,
-    paddingVertical: 10,
-    paddingLeft: 12,
-    paddingRight: 10,
-    backgroundColor: 'rgba(193,85,47,0.10)',
-    borderWidth: StyleSheet.hairlineWidth,
-    borderColor: 'rgba(193,85,47,0.30)',
-    borderRadius: 14,
-  },
-  checkinIcone: {
-    width: 26, height: 26, borderRadius: 13, backgroundColor: TERRA,
-    alignItems: 'center', justifyContent: 'center',
-  },
-  checkinQ: { flex: 1, minWidth: 0, fontSize: 13.5, color: INK, lineHeight: 18 },
-  checkinNome: { color: TERRA, fontWeight: '600' },
-  checkinAdd: { borderRadius: 9, paddingVertical: 8, paddingHorizontal: 13, backgroundColor: TERRA },
-  checkinAddTxt: { color: '#fff', fontSize: 12.5, fontWeight: '600' },
-  checkinX: { width: 30, height: 30, alignItems: 'center', justifyContent: 'center' },
-
-  adicionar: {
-    height: 48,
+    gap: 12,
     marginHorizontal: 20,
-    marginTop: 20,
+    marginTop: 16,
+    paddingVertical: 12,
+    paddingLeft: 16,
+    paddingRight: 12,
+    backgroundColor: GREEN,
     borderRadius: 14,
-    backgroundColor: TERRA,
-    alignItems: 'center',
-    justifyContent: 'center',
   },
-  adicionarTxt: { color: ON_GREEN, fontSize: 14, fontWeight: '600' },
-
-  fundo: { flex: 1, backgroundColor: ESCURO },
-  centro: { alignItems: 'center', justifyContent: 'center' },
-
-  topo: { paddingHorizontal: 24 },
-  linhaTopo: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 6 },
-  marca: { fontFamily: 'Cinzel', fontSize: 19, color: INK, letterSpacing: 2.7 },
-  avatar: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: VERDE,
-    alignItems: 'center',
-    justifyContent: 'center',
+  checkinQ: { flex: 1, minWidth: 0, fontSize: 15, color: ON_GREEN, lineHeight: 20 },
+  checkinNome: { color: ON_GREEN, fontWeight: '600' },
+  checkinAdd: {
+    borderRadius: 10, minHeight: 36, paddingHorizontal: 14,
+    backgroundColor: BASE, alignItems: 'center', justifyContent: 'center',
   },
-  avatarTxt: { fontSize: 16, color: ESCURO, fontWeight: '600' },
+  checkinAddTxt: { color: GREEN, fontSize: 14, fontWeight: '600' },
+  checkinX: { width: 30, height: 30, alignItems: 'center', justifyContent: 'center', opacity: 0.6 },
 
-  // Sangra pra fora da margem lateral, como o do site: mapa com margem
-  // parece figura, e este é fundo.
-  mapa: { marginHorizontal: -24, marginTop: 4, marginBottom: 10 },
+  // .dash-body
+  corpo: { paddingHorizontal: 20, paddingTop: 32 },
+  secaoTitulo: { fontSize: 20, fontWeight: '700', letterSpacing: -0.6, color: INK, marginBottom: 10 },
 
-  convite: { fontSize: 12.5, color: INK3, maxWidth: 230, lineHeight: 18, marginBottom: 14 },
+  // .cont-aba
+  abas: { gap: 18, paddingRight: 20 },
+  aba: { paddingVertical: 6 },
+  abaOn: { borderBottomWidth: 2, borderBottomColor: INK },
+  abaTxt: { fontSize: 15, fontWeight: '600', color: INK3 },
+  abaTxtOn: { color: INK },
 
-  paises: { flexDirection: 'row', alignItems: 'baseline', gap: 6, marginBottom: 14 },
-  // Peso de monoespacada com nome proprio: ver o comentario de FONTES no App.
-  paisesN: { fontFamily: MONO_MEDIO, fontSize: 30, color: INK, letterSpacing: -1 },
-  paisesT: { fontFamily: MONO, fontSize: 13, color: INK3 },
+  // .mosaico
+  mosaico: { marginTop: 14, gap: FOLGA },
+  mosaicoLinha: { flexDirection: 'row', gap: FOLGA },
+  colLarga: { flex: 2 },
+  colEstreita: { flex: 1, gap: FOLGA },
 
-  caixas: { flexDirection: 'row', gap: 8, marginBottom: 18 },
-  caixa: {
-    flex: 1,
-    backgroundColor: '#1D272F',
-    borderWidth: StyleSheet.hairlineWidth,
-    borderColor: BORDA,
-    borderRadius: 12,
-    paddingVertical: 13,
-    paddingHorizontal: 8,
-    alignItems: 'center',
-  },
-  caixaN: { fontFamily: MONO_FORTE, fontSize: 21, color: INK },
-  caixaL: { fontFamily: MONO, fontSize: 10.5, color: INK3, marginTop: 4, letterSpacing: 0.5 },
-
-  trilho: { gap: 8, paddingHorizontal: 24, paddingTop: 2 },
-  chip: {
-    minHeight: 38,
-    justifyContent: 'center',
-    paddingHorizontal: 14,
-    borderRadius: 999,
-    borderWidth: StyleSheet.hairlineWidth,
-    borderColor: 'rgba(234,231,224,0.2)',
-  },
-  chipOn: { backgroundColor: TERRA, borderColor: TERRA },
-  chipTxt: { fontFamily: MONO, fontSize: 10.5, letterSpacing: 1.2, color: INK2, },
-  chipTxtOn: { color: '#fff' },
-
-  filme: { gap: 12, paddingHorizontal: 24, paddingTop: 18, paddingBottom: 10 },
-  vgCard: {
-    width: 250,
-    height: 330,
-    borderRadius: 20,
-    overflow: 'hidden',
-    backgroundColor: ELEV,
-  },
-  metadeDeBaixo: { position: 'absolute', left: 0, right: 0, bottom: 0, height: '60%', opacity: 0.9 },
-  // O site usa degrade: topo limpo, pe quase opaco. Chapado, o topo ficava
-  // sujo e o pe claro demais pro nome branco em foto clara.
-  veu1: { position: 'absolute', left: 0, right: 0, top: 0, height: '45%', backgroundColor: 'rgba(11,22,32,0.10)' },
-  veu2: { position: 'absolute', left: 0, right: 0, top: '45%', height: '30%', backgroundColor: 'rgba(11,22,32,0.50)' },
-  veu3: { position: 'absolute', left: 0, right: 0, bottom: 0, height: '25%', backgroundColor: 'rgba(11,22,32,0.86)' },
-  bandeira: { position: 'absolute', top: 16, left: 16, zIndex: 2, fontSize: 26 },
-  vgPe: { position: 'absolute', left: 18, right: 18, bottom: 18, zIndex: 2 },
-  vgNome: { fontFamily: FRAUNCES, fontWeight: '400', fontSize: 31, color: '#fff', lineHeight: 33 },
-  vgMeta: { fontFamily: MONO, fontSize: 11, color: INK2, marginTop: 8 },
+  // .vg-card
+  vgCard: { borderRadius: 18, overflow: 'hidden', backgroundColor: PHOTO_EMPTY },
+  veu1: { position: 'absolute', left: 0, right: 0, bottom: 0, height: '22%', backgroundColor: 'rgba(0,0,0,0.42)' },
+  veu2: { position: 'absolute', left: 0, right: 0, bottom: '22%', height: '16%', backgroundColor: 'rgba(0,0,0,0.26)' },
+  veu3: { position: 'absolute', left: 0, right: 0, bottom: '38%', height: '17%', backgroundColor: 'rgba(0,0,0,0.11)' },
+  vgPe: { position: 'absolute', left: 14, right: 14, bottom: 12 },
+  vgNome: { fontSize: 16, fontWeight: '700', letterSpacing: -0.3, color: '#fff' },
+  vgNomeG: { fontSize: 22, fontWeight: '700', letterSpacing: -0.7, color: '#fff' },
+  vgMeta: { fontSize: 12, color: 'rgba(255,255,255,0.75)', marginTop: 3 },
+  vgMetaG: { fontSize: 13, color: 'rgba(255,255,255,0.75)', marginTop: 3 },
 
   vazio: { alignItems: 'center', paddingHorizontal: 40, paddingVertical: 56, gap: 10 },
-  vazioTitulo: { fontFamily: FRAUNCES, fontSize: 22, color: INK2 },
+  vazioTitulo: { fontSize: 22, fontWeight: '700', letterSpacing: -0.5, color: INK2 },
   vazioTexto: { fontSize: 14, color: INK3, textAlign: 'center', lineHeight: 20 },
-  botaoNova: { marginTop: 14, backgroundColor: TERRA, borderRadius: 999, paddingVertical: 13, paddingHorizontal: 24 },
-  botaoNovaTxt: { color: '#fff', fontSize: 15, fontWeight: '600' },
+
+  // .btn-primario .btn-largo — a ação saiu do botão flutuante e virou palavra
+  // escrita no fim da lista.
+  adicionar: {
+    height: 48, marginTop: 20, borderRadius: 14, backgroundColor: GREEN,
+    alignItems: 'center', justifyContent: 'center', alignSelf: 'stretch',
+  },
+  adicionarSolto: { paddingHorizontal: 24, alignSelf: 'center' },
+  adicionarTxt: { color: ON_GREEN, fontSize: 14, fontWeight: '600' },
 });

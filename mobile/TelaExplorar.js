@@ -26,7 +26,7 @@ import {
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Svg, { Circle, Path } from 'react-native-svg';
-import { INK, INK2, INK3, ESCURO, ELEV, BORDA, TERRA, VERDE, AMBAR, FRAUNCES, MONO } from './cores';
+import { BASE, SURFACE, INK, INK2, INK3, VERDE, ON_GREEN, PHOTO_EMPTY, FRAUNCES } from './cores';
 
 
 function IconeBusca({ cor = INK3 }) {
@@ -41,7 +41,7 @@ function IconeBusca({ cor = INK3 }) {
 
 function CardDeLugar({ item, aoSalvar }) {
   const [falhou, setFalhou] = React.useState(false);
-  const [c1, c2] = item.cores || [ELEV, ESCURO];
+  const [c1, c2] = item.cores || [PHOTO_EMPTY, PHOTO_EMPTY];
   return (
     <View style={e.card}>
       <Pressable onPress={aoSalvar} style={e.cardImg}>
@@ -244,12 +244,14 @@ export default function TelaExplorar({ dados, ocupado, acao }) {
 }
 
 const e = StyleSheet.create({
-  fundo: { flex: 1, backgroundColor: ESCURO },
-  topo: { paddingHorizontal: 24, paddingBottom: 18 },
-  olho: { fontSize: 14, color: INK3, marginBottom: 5 },
-  titulo: { fontFamily: FRAUNCES, fontWeight: '400', fontSize: 26, color: INK, letterSpacing: -0.3 },
+  fundo: { flex: 1, backgroundColor: BASE },
+  // Margem lateral 20, a do app inteiro. Era 24 aqui e só aqui.
+  topo: { paddingHorizontal: 20, paddingBottom: 18 },
+  titulo: { fontFamily: FRAUNCES, fontSize: 26, lineHeight: 28, color: INK, letterSpacing: -0.39 },
 
   busca: { flexDirection: 'row', gap: 8, alignItems: 'center', marginTop: 16 },
+  // .search-input: superfície, SEM borda. A caixa vazada de 1px era o campo de
+  // formulário genérico; aqui o que diz "dá pra digitar" é a superfície.
   campo: {
     flex: 1,
     flexDirection: 'row',
@@ -257,98 +259,83 @@ const e = StyleSheet.create({
     gap: 10,
     height: 48,
     paddingHorizontal: 14,
-    borderRadius: 12,
-    backgroundColor: 'rgba(234,231,224,0.06)',
-    borderWidth: StyleSheet.hairlineWidth,
-    borderColor: BORDA,
+    borderRadius: 14,
+    backgroundColor: SURFACE,
   },
   input: { flex: 1, color: INK, fontSize: 15, padding: 0 },
-  ir: { height: 48, paddingHorizontal: 16, borderRadius: 12, backgroundColor: TERRA, justifyContent: 'center' },
-  irTxt: { color: '#fff', fontSize: 14, fontWeight: '600' },
+  ir: { height: 48, paddingHorizontal: 16, borderRadius: 10, backgroundColor: VERDE, justifyContent: 'center' },
+  irTxt: { color: ON_GREEN, fontSize: 14, fontWeight: '600' },
 
   corpo: { flex: 1, paddingHorizontal: 20 },
 
-  amgTitulo: { fontFamily: MONO, fontSize: 11, letterSpacing: 0.5, color: INK3, marginBottom: 10 },
-  // No site este bloco nao e cartao: e lista corrida, e o que separa uma
-  // pessoa da outra e um traco fino.
+  amgTitulo: { fontSize: 13, fontWeight: '600', color: INK2, marginBottom: 10 },
+  // Lista corrida, sem cartão e sem divisor: o que separa uma pessoa da outra
+  // é o espaço.
   blocoAmigos: { paddingTop: 4, paddingBottom: 6, marginBottom: 8 },
   avisoAmigos: { fontSize: 13.5, color: INK3, lineHeight: 19, paddingVertical: 10 },
   amgLinha: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 11,
-    paddingVertical: 11,
-    borderBottomWidth: StyleSheet.hairlineWidth,
-    borderBottomColor: BORDA,
+    gap: 12,
+    paddingVertical: 10,
   },
-  amgAv: { width: 44, height: 44, borderRadius: 22, backgroundColor: VERDE, alignItems: 'center', justifyContent: 'center' },
-  amgAvTxt: { fontFamily: MONO, color: '#fff', fontSize: 14 },
-  amgNome: { fontSize: 14.5, fontWeight: '600', color: INK },
-  amgOnde: { fontFamily: MONO, fontSize: 11, color: INK3, marginTop: 2 },
+  amgAv: { width: 40, height: 40, borderRadius: 20, backgroundColor: VERDE, alignItems: 'center', justifyContent: 'center' },
+  amgAvTxt: { color: ON_GREEN, fontSize: 14, fontWeight: '600' },
+  amgNome: { fontSize: 15, fontWeight: '600', color: INK },
+  amgOnde: { fontSize: 13, color: INK2, marginTop: 2 },
+  // "já foi" era verde e "quer ir" era âmbar: duas cores pra dizer estado. O
+  // acento é um só, então quem carrega a diferença é a palavra.
   jaFoi: { color: VERDE, fontWeight: '600' },
-  querIr: { color: AMBAR, fontWeight: '600' },
-  seta: { color: INK3, fontSize: 18 },
+  querIr: { color: INK2, fontWeight: '600' },
+  seta: { color: INK3, fontSize: 17 },
 
-  chips: { flexDirection: 'row', gap: 8, marginBottom: 16, flexWrap: 'wrap' },
-  chip: {
-    paddingHorizontal: 14,
-    paddingVertical: 8,
-    borderRadius: 999,
-    borderWidth: StyleSheet.hairlineWidth,
-    borderColor: BORDA,
-  },
-  chipOn: { backgroundColor: TERRA, borderColor: TERRA },
-  // No site estes chips NAO sao monoespacados nem maiusculos: e DM Sans em
-  // caixa normal, 12.5px, cor ink2. O que existe de mono e versalete no app
-  // e a linguagem de DADO (numeros, datas, rotulos) — um filtro nao e dado.
-  chipTxt: { fontSize: 12.5, color: INK2 },
-  chipTxtOn: { color: '#fff' },
+  // .filter-chip — ABA DE TEXTO. A pílula preenchida saiu do app inteiro: ela
+  // era o acento mais forte da tela só pra dizer como a lista está ordenada.
+  chips: { flexDirection: 'row', gap: 18, marginBottom: 16 },
+  chip: { paddingTop: 6, paddingBottom: 10 },
+  chipOn: { borderBottomWidth: 2, borderBottomColor: INK },
+  chipTxt: { fontSize: 15, fontWeight: '600', color: INK3 },
+  chipTxtOn: { color: INK },
 
-  card: {
-    borderRadius: 20,
-    backgroundColor: ELEV,
-    borderWidth: StyleSheet.hairlineWidth,
-    borderColor: BORDA,
-    overflow: 'hidden',
-    marginBottom: 14,
-  },
-  cardImg: { height: 170, overflow: 'hidden' },
-  // O degrade do site vai de rgba(11,22,32,.4) no topo a .9 no pe. Tres
-  // faixas empilhadas chegam perto o bastante sem biblioteca de gradiente.
-  veu1: { position: 'absolute', left: 0, right: 0, top: 0, height: '45%', backgroundColor: 'rgba(11,22,32,0.40)' },
-  veu2: { position: 'absolute', left: 0, right: 0, top: '45%', height: '30%', backgroundColor: 'rgba(11,22,32,0.62)' },
-  veu3: { position: 'absolute', left: 0, right: 0, bottom: 0, height: '25%', backgroundColor: 'rgba(11,22,32,0.86)' },
+  // .ex-card — não é mais caixa: sem fundo, sem borda, sem raio próprio. A
+  // foto é que tem cantos arredondados.
+  card: { marginBottom: 24 },
+  cardImg: { height: 200, borderRadius: 18, overflow: 'hidden' },
+  // O degradê do site (to top, rgba(0,0,0,.55) → transparente em 55%) em três
+  // faixas. Existe pro nome do lugar sobreviver a foto clara, nada mais.
+  veu1: { position: 'absolute', left: 0, right: 0, bottom: 0, height: '18%', backgroundColor: 'rgba(0,0,0,0.42)' },
+  veu2: { position: 'absolute', left: 0, right: 0, bottom: '18%', height: '15%', backgroundColor: 'rgba(0,0,0,0.26)' },
+  veu3: { position: 'absolute', left: 0, right: 0, bottom: '33%', height: '12%', backgroundColor: 'rgba(0,0,0,0.11)' },
   metadeDeBaixo: { position: 'absolute', left: 0, right: 0, bottom: 0, height: '60%', opacity: 0.9 },
   selo: {
     position: 'absolute',
-    top: 14,
-    right: 14,
+    top: 12,
+    right: 12,
     zIndex: 3,
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: 'rgba(11,22,32,0.55)',
-    borderRadius: 999,
-    paddingHorizontal: 9,
-    paddingVertical: 4,
+    backgroundColor: 'rgba(0,0,0,0.45)',
+    borderRadius: 10,
+    paddingHorizontal: 10,
+    paddingVertical: 5,
   },
-  seloTxt: { fontFamily: MONO, fontSize: 11.5, color: INK },
-  seloEstrela: { fontSize: 11, color: AMBAR },
-  cardPe: { position: 'absolute', left: 16, right: 16, bottom: 14, zIndex: 3 },
-  cardK: { fontFamily: MONO, fontSize: 10, letterSpacing: 1, color: INK2, },
-  cardNome: { fontFamily: FRAUNCES, fontWeight: '400', fontSize: 25, color: '#fff', marginTop: 4, lineHeight: 27 },
+  seloTxt: { fontSize: 13, fontWeight: '600', color: '#fff' },
+  seloEstrela: { fontSize: 12, color: '#fff' },
+  cardPe: { position: 'absolute', left: 14, right: 14, bottom: 12, zIndex: 3 },
+  cardK: { fontSize: 13, fontWeight: '500', color: 'rgba(255,255,255,0.85)' },
+  cardNome: { fontFamily: FRAUNCES, fontSize: 22, lineHeight: 24, letterSpacing: -0.66, color: '#fff', marginTop: 2 },
   cardCorpo: {
-    paddingHorizontal: 16,
-    paddingVertical: 13,
+    paddingTop: 12,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
     gap: 12,
   },
-  aval: { flex: 1, fontSize: 12, color: INK3, lineHeight: 17 },
-  salvar: { minHeight: 36, backgroundColor: TERRA, borderRadius: 999, paddingHorizontal: 15, justifyContent: 'center' },
-  salvarTxt: { color: '#fff', fontSize: 12.5, fontWeight: '600' },
+  aval: { flex: 1, fontSize: 13, color: INK2, lineHeight: 18 },
+  salvar: { minHeight: 36, backgroundColor: VERDE, borderRadius: 10, paddingHorizontal: 14, justifyContent: 'center' },
+  salvarTxt: { color: ON_GREEN, fontSize: 14, fontWeight: '600' },
 
-  credito: { textAlign: 'center', fontSize: 11.5, color: INK3, paddingVertical: 16 },
+  credito: { textAlign: 'center', fontSize: 12, color: INK3, paddingVertical: 16 },
 
   vazio: { alignItems: 'center', paddingVertical: 56, gap: 10 },
   vazioTitulo: { fontFamily: FRAUNCES, fontSize: 19, color: INK, marginTop: 6, textAlign: 'center' },

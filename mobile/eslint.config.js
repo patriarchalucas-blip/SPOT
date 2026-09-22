@@ -19,6 +19,12 @@ module.exports = [
     ignores: ['node_modules/**', 'dist/**', '.expo/**', 'mundo.js'],
   },
   {
+    // Os .cjs desta pasta sao ferramenta de linha de comando, nao codigo do
+    // app: rodam no Node, onde `__dirname` e `require` existem.
+    files: ['**/*.cjs'],
+    languageOptions: { sourceType: 'commonjs', globals: { __dirname: 'readonly', require: 'readonly', module: 'writable', process: 'readonly', console: 'readonly' } },
+  },
+  {
     rules: {
       // O que importa aqui e o que QUEBRA em producao, nao estilo.
       'no-undef': 'error',
