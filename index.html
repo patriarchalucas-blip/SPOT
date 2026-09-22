@@ -3096,7 +3096,7 @@ function cardDeViagem(t,grande){
 // pelo índice — nome de cidade/país pode ter acento e apóstrofo, e interpolar
 // isso direto num atributo onclick quebra.
 const LS={mode:'spots',sort:'rating',cat:'',country:'',city:'',items:[]};
-const LIST_TITLES={spots:'Todos os spots',cities:'Cidades',countries:'Países',trips:'Viagens'};
+const LIST_TITLES={spots:'Todos os spots',cities:'Cidades',trips:'Viagens'};
 
 function allSpotsFlat(){
   const out=[];
@@ -3106,7 +3106,16 @@ function allSpotsFlat(){
   });
   return out;
 }
+// Guarda de qual tela a Lista foi aberta, pra o voltar do mapa não cair
+// sempre no mesmo lugar.
+function telaAtual(){
+  const a=document.querySelector('.screen.active');
+  return a?a.id:'dashboard';
+}
 function openList(mode){
+  // "countries" nao e mais um modo da Lista: e o mapa-mundi. Ver a nota em
+  // renderList sobre as duas telas que mostravam a mesma coisa.
+  if(mode==='countries'){abrirMapaMundi(telaAtual());return}
   LS.mode=mode;LS.sort='rating';LS.cat='';LS.country='';LS.city='';LS.cityQuery='';
   goTo('list');renderList();
 }
@@ -3187,23 +3196,8 @@ function renderList(){
     });
   }
 
-  else if(LS.mode==='countries'){
-    const map={};
-    S.trips.forEach(t=>{
-      const c=(t.destinations&&t.destinations[0])||t.name;if(!c)return;
-      const e=map[c]=map[c]||{country:c,viagens:0,spots:0};
-      if(!isNonTrip(t))e.viagens++;
-      e.spots+=(t._spots||[]).length;
-    });
-    const list=Object.values(map).sort((a,b)=>b.spots-a.spots||a.country.localeCompare(b.country,'pt-BR'));
-    LS.items=list;
-    title.textContent=list.length+(list.length===1?' país':' países');
-    kicker.textContent='de '+PAISES_NO_MUNDO+' · '+percentualDoMundo(list.length)+' do mundo';
-    list.forEach((c,i)=>{
-      const meta=[c.viagens?c.viagens+(c.viagens===1?' viagem':' viagens'):'',c.spots?c.spots+(c.spots===1?' spot':' spots'):''].filter(Boolean).join(' · ')||'sem spots ainda';
-      h+=`<div class="lrow" onclick="drillFromList(${i},'country')"><span class="lflag">${flagHTML(c.country)}</span><div class="lmain"><div class="lname">${esc(c.country)}</div><div class="lmeta">${esc(meta)}</div></div><span class="lcount">${regionFor(c.country)}</span></div>`;
-    });
-  }
+  // O modo 'countries' saiu: a tela de paises e o mapa-mundi, que mostrava
+  // exatamente a mesma lista com o mapa por cima. Ver openList().
 
   else if(LS.mode==='trips'){
     const list=S.trips.filter(t=>!isNonTrip(t));
@@ -7307,7 +7301,8 @@ function renderListaDePaises(visited,alvo){
   // que mais diz sobre a pessoa.
   const ordenado=visited.slice().sort((a,b)=>
     (porPais[b]||0)-(porPais[a]||0)||a.localeCompare(b,'pt-BR'));
-  const mostrar=ordenado.slice(0,PAISES_NO_PERFIL);
+  // Sem corte: esta lista só é desenhada dentro do mapa, e lá ela é a tela.
+  const mostrar=ordenado;
   let h=mostrar.map(c=>{
     const n=porPais[c]||0;
     const direita=c===homeName
@@ -7322,9 +7317,6 @@ function renderListaDePaises(visited,alvo){
       +'<span class="cr-flag">'+flagHTML(c)+'</span>'
       +'<span class="cr-name">'+esc(c)+'</span>'+direita+tirar+'</div>';
   }).join('');
-  if(ordenado.length>PAISES_NO_PERFIL){
-    h+='<div class="country-vertodos" onclick="openList(\'countries\')">Ver todos os '+ordenado.length+' \u203a</div>';
-  }
   box.innerHTML=h;
   hydrateIcons(box);
 }
