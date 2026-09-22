@@ -1087,6 +1087,9 @@ body.na-casca .bottom-nav{display:none}
    cima dela, e o verde marca so onde a pessoa esteve. */
 .wm-country{fill:#CBD3CD;stroke:none;transition:fill .4s}
 .wm-country.visited{fill:var(--green)}
+/* No mapa em tela cheia cada pais e um alvo; no mini do Inicio nao, que la
+   o mapa inteiro abre esta tela. */
+#worldMapWrap .wm-country{cursor:pointer}
 .map-zoom-hint{position:absolute;bottom:10px;left:0;right:0;text-align:center;color:var(--ink3);
   font-size:12px;pointer-events:none;z-index:2}
 .mapa-topo{display:flex;align-items:center;gap:12px;padding:18px 20px 14px;background:var(--base);
@@ -7011,6 +7014,16 @@ function destGradient(){
 // ═══ PROFILE + 3D GLOBE ═══
 // Map Portuguese country name → {geo: name in world-atlas GeoJSON, cont: continent}
 function geoFor(name){const c=COUNTRIES.find(x=>x.name===name);return c?c.geo:null}
+// O caminho inverso: o mapa fala ingles ("Germany"), o app fala portugues
+// ("Alemanha"). Sem isto, tocar num pais nao vira nada.
+let GEO_PRA_PAIS=null;
+function paisDoGeo(geo){
+  if(!GEO_PRA_PAIS){
+    GEO_PRA_PAIS={};
+    COUNTRIES.forEach(c=>{if(c.geo)GEO_PRA_PAIS[c.geo]=c.name});
+  }
+  return GEO_PRA_PAIS[geo]||null;
+}
 // Dynamically load a script, trying multiple CDNs in order
 function loadScript(urls){
   return new Promise((resolve,reject)=>{
@@ -7400,7 +7413,8 @@ function gerarPathsMundo(visitedGeo){
     const path=d3.geoPath(projection);
     worldGeoData.features.forEach(f=>{
       const d=path(f);
-      if(d)paths+=`<path class="wm-country${visitedGeo.has(f.properties.name)?' visited':''}" d="${d}"/>`;
+      if(d)paths+=`<path class="wm-country${visitedGeo.has(f.properties.name)?' visited':''}"` +
+        ` data-geo="${esc(f.properties.name||'')}" d="${d}"/>`;
     });
     vb={x:0,y:0,w:MAP_W,h:MAP_H};
   }else{
@@ -7411,7 +7425,8 @@ function gerarPathsMundo(visitedGeo){
       const g=f.geometry;if(!g)return;let d='';
       if(g.type==='Polygon')g.coordinates.forEach(r=>d+=ring(r));
       else if(g.type==='MultiPolygon')g.coordinates.forEach(pl=>pl.forEach(r=>d+=ring(r)));
-      if(d)paths+=`<path class="wm-country${visitedGeo.has(f.properties.name)?' visited':''}" d="${d}"/>`;
+      if(d)paths+=`<path class="wm-country${visitedGeo.has(f.properties.name)?' visited':''}"` +
+        ` data-geo="${esc(f.properties.name||'')}" d="${d}"/>`;
     });
     vb={x:0,y:40,w:W,h:320};
   }
@@ -7450,6 +7465,52 @@ async function renderMiniMapa(){
   wrap.innerHTML=`<svg viewBox="${vb.x} ${vb.y} ${vb.w} ${alturaSemPolo}" preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">${paths}</svg>`;
   wrap.classList.add('pronto');
   wrap.onclick=()=>abrirMapaMundi('dashboard');
+}
+// TOCAR NUM PAÍS DO MAPA.
+//
+// Dois destinos, e a diferença é o que torna isto útil:
+//  · país já visitado  → os seus spots de lá (o mesmo destino da lista)
+//  · país não visitado → a pergunta de marcar
+//
+// O segundo é o motivo de existir. Marcar um país hoje é Perfil → "Marcar
+// país que já visitei" → rolar uma lista de 243. No mapa é tocar no país.
+//
+// País minúsculo (Mônaco, Singapura, Malta) vira um pixel e não tem como
+// ser alvo de toque — pra esses a lista de baixo continua sendo o caminho,
+// e não adianta fingir o contrário.
+async function tocouNoPais(geo){
+  const nome=paisDoGeo(geo);
+  // Território que o mapa desenha e a lista do app não conhece: sem ação,
+  // melhor que uma ação errada.
+  if(!nome)return;
+  if(visitedCountryNames().includes(nome)){
+    drillTo('country',nome);goTo('list');return;
+  }
+  // SEM PREPOSICAO ANTES DO PAIS. Em portugues ela muda com o genero e o
+  // numero — em Portugal, NA Argentina, NO Japao, NOS Estados Unidos — e a
+  // lista de paises nao guarda isso. Em vez de acertar 60% e escrever 'em
+  // Argentina' nos outros 40%, o nome vai no titulo e a pergunta vem depois.
+  const r=await perguntar(nome,'Marcar como visitado no seu mapa?',
+    [{rotulo:'Marcar como visitado',valor:'marcar'}]);
+  if(r==='marcar')await marcarPaisVisitado(nome);
+}
+// Uma linha de viagem escondida, igual à que o seletor de países cria — é
+// assim que o app guarda 'estive aqui' sem viagem de verdade (ver
+// isQuickVisit).
+async function marcarPaisVisitado(nome){
+  const{data,error}=await dbInsertMany('trips',[{user_id:S.user.id,name:nome,
+    destinations:[nome],dates:'__quickvisit__',status:'done'}]);
+  if(error||!data||!data.length){toast('Erro','Não consegui marcar. Tenta de novo.');return}
+  data.forEach(t=>{t._spots=[];S.trips.unshift(t)});
+  renderTrips();populateTripOpts();
+  // O mapa tem que ficar verde na hora: é o retorno do toque.
+  const visitados=visitedCountryNames();
+  document.getElementById('mapaTitulo').textContent=
+    visitados.length+' de '+PAISES_NO_MUNDO+' países · '+percentualDoMundo(visitados.length)+' do mundo';
+  await renderWorldMap(visitados);
+  renderListaDePaises(visitados,'mapaPaises');
+  geoPronta.then(()=>renderMiniMapa());
+  toast('Marcado!',nome+' agora está no seu mapa.','globe');
 }
 async function renderWorldMap(visited){
   const wrap=document.getElementById('worldMapWrap');
@@ -7499,21 +7560,40 @@ function initMapZoom(baseVB){
     if(vb.x<0)vb.x=0;if(vb.y<topY)vb.y=topY;
   }
   // double tap / double click to zoom in (and reset when fully zoomed)
-  let lastTap=0;
+  // TOQUE x ARRASTO. O mapa arrasta e dá zoom, então nem todo "click" é um
+  // toque: arrastar o mapa termina num click em cima de algum país, e sem
+  // limiar de movimento arrastar até a Argentina marcaria a Argentina.
+  // Guardo onde o dedo desceu e só considero toque se ele andou menos de 8px.
+  const LIMIAR=8;
+  let lastTap=0, tapPendente=null, andou=0;
   svg.addEventListener('click',e=>{
     const now=Date.now();
-    if(now-lastTap<300){
+    const duplo=now-lastTap<300;
+    lastTap=now;
+    if(duplo){
+      // Chegou o segundo toque: o primeiro era metade de um duplo, não um
+      // toque em país. Desfaz a intenção antes que ela vire navegação.
+      if(tapPendente){clearTimeout(tapPendente);tapPendente=null}
       if(vb.w<=minW*1.05){vb={...baseVB}} // reset
       else zoomAt(e.clientX,e.clientY,1.8);
       apply();
+      return;
     }
-    lastTap=now;
+    if(andou>LIMIAR)return;
+    const alvo=e.target.closest?e.target.closest('.wm-country'):null;
+    const geo=alvo&&alvo.getAttribute('data-geo');
+    if(!geo)return;
+    // Espera a janela do duplo toque antes de agir. São 300ms de atraso num
+    // toque que abre tela ou pergunta — o preço de manter o zoom por duplo
+    // toque, que num mapa vale mais que a pressa.
+    tapPendente=setTimeout(()=>{tapPendente=null;tocouNoPais(geo)},300);
   });
   // drag to pan
   let dragging=false,sx=0,sy=0,svb=null;
-  svg.addEventListener('pointerdown',e=>{dragging=true;sx=e.clientX;sy=e.clientY;svb={...vb};svg.setPointerCapture(e.pointerId)});
+  svg.addEventListener('pointerdown',e=>{dragging=true;andou=0;sx=e.clientX;sy=e.clientY;svb={...vb};svg.setPointerCapture(e.pointerId)});
   svg.addEventListener('pointermove',e=>{
     if(!dragging)return;
+    andou=Math.max(andou,Math.hypot(e.clientX-sx,e.clientY-sy));
     const rect=svg.getBoundingClientRect();
     const dx=(e.clientX-sx)/rect.width*vb.w, dy=(e.clientY-sy)/rect.height*vb.h;
     vb.x=svb.x-dx;vb.y=svb.y-dy;clampVB();apply();
