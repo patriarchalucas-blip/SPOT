@@ -1078,10 +1078,21 @@ body.na-casca .bottom-nav{display:none}
 .friend-user{font-size:13px;color:var(--ink2);margin-top:2px}
 .friend-bio{padding:0 20px 16px;background:var(--base);font-size:15px;color:var(--ink2);line-height:1.45}
 /* Linha de amigo na aba Amigos */
-.friend-row{display:flex;align-items:center;gap:12px;padding:10px 0;cursor:pointer}
+/* Linha de 64 com avatar de 44: cada linha tem UMA coisa, que é a pessoa.
+   O avatar cresce de 36 pra 44 porque aqui ele é o assunto, não um enfeite
+   ao lado de um texto. */
+.friend-row{display:flex;align-items:center;gap:12px;min-height:64px;cursor:pointer}
 .friend-row:active{opacity:.6}
-.friend-row-name{flex:1;font-size:15px;font-weight:600;color:var(--ink);min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.friend-row-user{font-size:13px;color:var(--ink2)}
+.friend-row .feed-avatar{width:44px;height:44px;font-size:14px}
+.friend-row-name{flex:1;font-size:17px;font-weight:600;letter-spacing:-.01em;color:var(--ink);min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+/* O número de lugares da pessoa, discreto: é referência, não o assunto. */
+.friend-row-user{font-size:14px;color:var(--ink3)}
+/* Pedidos: uma linha, não um card. Ponto verde porque é a única coisa da
+   tela que pede ação — e ele some junto com a linha quando não há pedido. */
+.am-pedidos{display:flex;align-items:center;gap:10px;min-height:52px;cursor:pointer}
+.am-pedidos:active{opacity:.6}
+.am-ponto{width:8px;height:8px;border-radius:50%;background:var(--green);flex-shrink:0}
+.am-pedidos-txt{flex:1;font-size:15px;font-weight:600;color:var(--ink)}
 .friend-row-arrow{color:var(--ink3);font-size:17px;flex-shrink:0}
 
 /* Quadrado arredondado, nao circulo: o circulo com o lapis laranja pendurado
@@ -9396,6 +9407,17 @@ function initials(name){
 // O feed é o motivo de voltar no app; a lista de nomes é a parte estática.
 // Abrir em 'amigos' escondia atrás de um toque justamente o que muda.
 let friendsTab='recente';
+// Filtro da lista de amigos. Só existe a partir de 12 pessoas — ver a nota
+// em renderFriendsTab.
+let amFiltro='';
+function amFiltrar(v){
+  amFiltro=String(v||'');
+  renderFriendsTab();
+  // O innerHTML recriou o campo: sem devolver o foco e o cursor, a pessoa
+  // digitava uma letra e o teclado fechava.
+  const c=document.getElementById('amBusca');
+  if(c){c.focus();c.setSelectionRange(c.value.length,c.value.length)}
+}
 // O que a última busca trouxe. Separar buscar de desenhar é o que permite
 // trocar de aba sem ir ao banco de novo.
 let FRIENDS_DATA=null;
@@ -9811,8 +9833,12 @@ function renderFriendsTab(){
   // pessoa está olhando agora.
   const novas=friendsTab==='recente'?0:novidadesNoFeed(feedItems);
   const pendentes=incoming.length;
-  const abas=[['recente','Recente',novas],['amigos','Todos',0]];
-  if(pendentes||friendsTab==='pedidos')abas.push(['pedidos','Pedidos',pendentes]);
+  // DUAS ABAS, e "Todos" leva a contagem junto. "Pedidos" deixou de ser aba:
+  // virou uma linha no topo da lista, que some quando não há pedido — aba que
+  // aparece e desaparece faz a barra pular de tamanho, e ninguém procura
+  // pedido numa terceira aba.
+  const abas=[['recente','Recente',novas],['amigos','Todos'+(friendIds.length?' · '+friendIds.length:''),0]];
+  if(friendsTab==='pedidos')abas.push(['pedidos','Pedidos',pendentes]);
   document.getElementById('amAbas').innerHTML=abas.map(([id,rot,n])=>
     '<button class="'+(friendsTab===id?'on':'')+'" onclick="switchFriendsTab(\''+id+'\')">'+rot
     +(n?' <span class="am-badge">'+n+'</span>':'')+'</button>').join('');
@@ -9843,17 +9869,39 @@ function renderFriendsTab(){
     }
   }else
   if(friendsTab==='amigos'){
+    // PEDIDOS COMO LINHA, no topo da lista. Ponto verde, a contagem e a seta.
+    // Some quando não há — e some de verdade, não vira "0 pedidos".
+    if(pendentes){
+      h+='<div class="am-pedidos" onclick="switchFriendsTab(\'pedidos\')">'
+        +'<span class="am-ponto"></span>'
+        +'<span class="am-pedidos-txt">'+pendentes
+        +(pendentes===1?' pedido de amizade':' pedidos de amizade')+'</span>'
+        +'<span class="friend-row-arrow">›</span></div>';
+    }
     if(!friendIds.length){
       h+='<div class="empty-state"><div class="ei">'+icon('users')+'</div><h3>Sem amigos ainda</h3><p>Toca no + pra adicionar um amigo pelo username</p></div>';
     }else{
+      // A busca só aparece a partir de 12: com cinco amigos, um campo de
+      // busca é mais trabalho que rolar a lista.
+      if(friendIds.length>=12){
+        h+='<div class="nt-wrap" style="padding:0 0 14px"><input class="nt-input" id="amBusca" type="text" '
+          +'placeholder="Buscar amigo" autocomplete="off" value="'+esc(amFiltro)+'" oninput="amFiltrar(this.value)"></div>';
+      }
       // cada linha abre o perfil; o onclick passa só o id (uuid do banco)
       // NOME OU @, NUNCA OS DOIS: a linha mostrava "M\u00e1rcio Matos @marciomatos"
       // \u2014 a mesma pessoa dita duas vezes. O @ vive no perfil dela.
       // \u00c0 direita, quantos lugares ela tem. Ordem alfab\u00e9tica.
       const conta=(FRIENDS_DATA&&FRIENDS_DATA.lugaresPorAmigo)||{};
-      const ordenados=friendIds.slice().sort(function(a,b){
+      const filtro=amFiltro.trim().toLowerCase();
+      const ordenados=friendIds.slice().filter(function(fid){
+        if(!filtro)return true;
+        const p=pmap[fid];
+        return (String(friendName(p)).toLowerCase().indexOf(filtro)>=0)
+          ||(p&&p.username&&String(p.username).toLowerCase().indexOf(filtro)>=0);
+      }).sort(function(a,b){
         return String(friendName(pmap[a])).localeCompare(String(friendName(pmap[b])),'pt-BR');
       });
+      if(!ordenados.length)h+='<div class="ml-vazio">Ninguém com esse nome.</div>';
       h+=ordenados.map(fid=>{
         const p=pmap[fid];const nome=friendName(p);
         const n=conta[fid];
@@ -9869,6 +9917,12 @@ function renderFriendsTab(){
       }).join('');
     }
     // Pedidos enviados saíram daqui: agora moram na aba Pedidos.
+    // O convite fecha a lista: quem chegou até o fim dos amigos que tem é
+    // exatamente quem pode querer mais.
+    h+='<div class="conv-bloco" style="margin-top:24px">'
+      +'<div class="conv-tit">Traga mais gente</div>'
+      +'<div class="conv-txt">Quem entrar pelo seu link vira seu amigo e vê seus lugares.</div>'
+      +'<button class="conv-btn" onclick="compartilharConvite()">Compartilhar convite</button></div>';
   }else{
     if(!friendIds.length){
       h+='<div class="empty-state"><div class="ei">'+icon('users')+'</div><h3>Sem amigos ainda</h3><p>Adiciona alguém pra ver a atividade aqui</p></div>';
@@ -10437,6 +10491,7 @@ async function resgatarConvitePendente(){
 // deliberado e tem teto, não é a tabela de perfis aberta.
 let BUSCA_PESSOAS=[];      // resultados da última busca, por índice
 let BUSCA_VINCULOS={};     // id da pessoa -> 'accepted' | 'pending'
+let BUSCA_COMUM={};        // id da pessoa -> nome de UM amigo em comum (025)
 let buscaPessoaTO=null;
 
 function buscarPessoas(termo){
@@ -10469,6 +10524,17 @@ async function rodarBuscaPessoas(t){
     return;
   }
   BUSCA_PESSOAS=achados;
+  // Amigo em comum, em segundo plano: a lista aparece na hora e ganha o
+  // "amigo de Fulana" quando a resposta chega. Falhou (função ainda não
+  // criada, rede fora), a lista fica como sempre foi.
+  BUSCA_COMUM={};
+  dbRpc('amigo_em_comum',{ids:achados.map(p=>p.id)}).then(function(linhas){
+    if(falhou(linhas)||!linhas.length)return;
+    linhas.forEach(function(l){BUSCA_COMUM[l.pessoa]=l.amigo});
+    const atual=(document.getElementById('friendUsernameInput')||{}).value||'';
+    if(atual.trim().replace(/^@/,'')!==t)return;
+    cx.innerHTML=BUSCA_PESSOAS.map((p,i)=>linhaDePessoa(p,i)).join('');
+  }).catch(function(){});
   if(!achados.length){
     cx.innerHTML='<div class="busca-dica">Ninguém encontrado. Confere o nome, ou convida por link abaixo.</div>';
     return;
@@ -10501,9 +10567,14 @@ function linhaDePessoa(p,i){
   if(vinculo==='accepted')acao='<span class="busca-estado">já são amigos</span>';
   else if(vinculo==='pending')acao='<span class="busca-estado">pedido enviado</span>';
   else acao='<button class="req-btn req-accept" id="bp-'+i+'" onclick="pedirAmizade('+i+')">Adicionar</button>';
+  // "@fulano · amigo da Isabella" — o amigo em comum é o que transforma um
+  // username estranho em alguém que dá pra reconhecer. Vem da 025, que
+  // devolve só UM nome e só quando ele também é amigo SEU.
+  const comum=BUSCA_COMUM[p.id];
+  const sub=[p.username?'@'+p.username:'',comum?'amigo de '+comum:''].filter(Boolean).join(' · ');
   return '<div class="req-card">'+av
     +'<div style="flex:1;min-width:0"><div class="req-name">'+esc(nome)+'</div>'
-    +(p.username?'<div class="busca-user">@'+esc(p.username)+'</div>':'')
+    +(sub?'<div class="busca-user">'+esc(sub)+'</div>':'')
     +'</div>'+acao+'</div>';
 }
 
