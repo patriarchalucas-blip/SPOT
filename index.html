@@ -5051,7 +5051,11 @@ function searchPlaces(v){
         const country=countryFromComponents(p.addressComponents);
         const rating=p.rating?String(p.rating):'';
         const fotos=placePhotoUrls(p);
-        return{name,meta:addr,icon:catIcon(S.addCat),city,country,address:addr,subcat:guessSubcat(p.types),phone:p.nationalPhoneNumber||'',photo_url:fotos.full,photo_thumb:fotos.thumb,photo_author:autorDaFoto(p),rating_google:rating,website_url:p.websiteUri||'',maps_url:p.googleMapsUri||''};
+        // A COORDENADA JÁ VINHA E ERA JOGADA FORA: `places.location` está na
+        // máscara acima desde sempre, e este map não copiava os dois campos.
+        // Guardar não custa chamada nenhuma — é a mesma resposta.
+        const loc=p.location||{};
+        return{name,meta:addr,icon:catIcon(S.addCat),city,country,address:addr,subcat:guessSubcat(p.types),phone:p.nationalPhoneNumber||'',photo_url:fotos.full,photo_thumb:fotos.thumb,photo_author:autorDaFoto(p),rating_google:rating,website_url:p.websiteUri||'',maps_url:p.googleMapsUri||'',lat:Number(loc.latitude)||null,lng:Number(loc.longitude)||null};
       });
       if(myReqId!==searchReqId)return;
       r.innerHTML=S.searchResults.map((p,i)=>{
@@ -5476,6 +5480,9 @@ async function resolverCidadeDoSpot(p,trip){
   // Só faz sentido em experiência — nas outras categorias a coluna fica nula
   if(S.addCat==='experience'&&subcatsDe(addSubcat).length)rec.subcategory=subcatsPara(addSubcat);
   if(p.phone)rec.phone=p.phone;
+  // Coordenada (023). Vai junto dos outros opcionais: se a migração ainda não
+  // rodou, o insert retenta sem ela e o spot é salvo do mesmo jeito.
+  if(p.lat!=null&&p.lng!=null){rec.lat=p.lat;rec.lng=p.lng}
   // Credito do autor da foto (exigencia do Google). Vai como coluna
   // opcional: se a migracao 017 ainda nao rodou, o insert retenta sem ele.
   if(p.photo_author&&p.photo_author.nome){
@@ -5491,9 +5498,10 @@ async function resolverCidadeDoSpot(p,trip){
   // Colunas que vêm de migração: se ela ainda não rodou, o Postgres recusa o
   // insert INTEIRO por causa de uma coluna desconhecida e o spot não seria
   // salvo. Retenta sem os opcionais — perder o campo é melhor que perder o spot.
-  if(error&&(rec.subcategory||rec.phone||rec.photo_author)){
-    console.warn('insert sem colunas opcionais (migração 009/010 ainda não rodou?)');
+  if(error&&(rec.subcategory||rec.phone||rec.photo_author||rec.lat!=null)){
+    console.warn('insert sem colunas opcionais (migração 009/010/023 ainda não rodou?)');
     delete rec.subcategory;delete rec.phone;delete rec.photo_author;delete rec.photo_author_url;
+    delete rec.lat;delete rec.lng;
     ({data,error}=await dbInsert('spots',rec));
   }
   if(!error&&data){
@@ -7486,6 +7494,9 @@ async function loadProfile(){
     am.style.display=AMIGOS_TOTAL?'inline':'none';
   }
   renderEstante();
+  // Em segundo plano, sem segurar a tela: o Perfil é onde o mapa vai morar,
+  // então é aqui que vale começar a preencher o que falta.
+  preencherCoordenadasQueFaltam(6).catch(function(){});
 }
 // Lista de países visitados. Mostra os primeiros e joga o resto pra tela de
 // lista que já existe (a mesma que abre pelo contador do Dashboard) — sem
@@ -7541,6 +7552,60 @@ const NOTAS_NO_PERFIL = 6;
 const FAVORITOS_NO_PERFIL = 4;
 // Preenchido por loadProfile(), lido por darDadosDePerfil(). Ver a nota lá.
 let AMIGOS_TOTAL = 0;
+// ═══ PREENCHER A COORDENADA DOS SPOTS ANTIGOS ═══
+//
+// Os spots salvos antes da 023 não têm lat/lng, e sem isso não existe mapa
+// nem distância. Este preenchimento roda UMA VEZ por spot, em segundo plano,
+// usando a MESMA busca do resto do app — que já tem cache no KV, teto por
+// usuário e teto global. Nenhuma peça nova no servidor.
+//
+// REGRAS QUE MANTÊM ISSO BARATO E SEGURO:
+//   · um spot por vez, com pausa: não é urgente, e uma rajada de 88 chamadas
+//     acorda o teto de gasto por nada;
+//   · só quando a pessoa está numa tela que precisa do dado;
+//   · nome + endereço na busca, não só o nome: "Bar do Zé" sem endereço acha
+//     um bar do Zé qualquer no mundo;
+//   · marca o spot como tentado na memória da sessão, então um erro não vira
+//     laço infinito de chamadas pagas;
+//   · falha em silêncio. Isso é enfeite de tela, não pode quebrar nada.
+const COORD_TENTADOS = new Set();
+let coordRodando = false;
+
+async function preencherCoordenadasQueFaltam(limite){
+  if(coordRodando||!S.user)return;
+  const faltam=allSpotsFlat().filter(function(s){
+    return s.lat==null&&!COORD_TENTADOS.has(s.id)&&(s.address||s.name);
+  });
+  if(!faltam.length)return;
+  coordRodando=true;
+  try{
+    for(const s of faltam.slice(0,limite||6)){
+      COORD_TENTADOS.add(s.id);
+      // O endereço é o que desambigua. Sem ele, o nome sozinho com a cidade.
+      const consulta=[s.name,s.address||cityOf(s)].filter(Boolean).join(', ');
+      let r;
+      try{
+        r=await googlePlaces('searchText',{
+          headers:{'Content-Type':'application/json','X-Goog-FieldMask':'places.location'},
+          body:JSON.stringify({textQuery:consulta,languageCode:'pt-BR',maxResultCount:1})
+        });
+      }catch(e){continue}
+      let d=null;
+      try{d=await r.json()}catch(e){continue}
+      const loc=d&&d.places&&d.places[0]&&d.places[0].location;
+      if(!loc||loc.latitude==null)continue;
+      const lat=Number(loc.latitude), lng=Number(loc.longitude);
+      if(!isFinite(lat)||!isFinite(lng))continue;
+      const{error}=await dbUpdate('spots',s.id,{lat:lat,lng:lng});
+      // Coluna ainda não existe (023 não rodou): para tudo em vez de gastar
+      // 88 buscas cujo resultado não tem onde ser guardado.
+      if(error){console.warn('coordenada: sem coluna? parando',error);return}
+      s.lat=lat;s.lng=lng;
+      await new Promise(r2=>setTimeout(r2,400));
+    }
+  }finally{coordRodando=false}
+}
+
 // ═══ MEUS LUGARES ═══
 //
 // Substituiu a estante por cidade, os números e o "Onde já estive". Os três
