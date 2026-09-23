@@ -35,8 +35,18 @@
 # navegador: quem fala com a API da Unsplash hoje é /api/city-photo, no
 # servidor, onde CSP não se aplica. images.unsplash.com (a foto em si)
 # continua, e agora nos dois lugares.
+#
+# maps.googleapis.com entrou em script-src porque o mapa que arrasta e amplia
+# é a biblioteca do Google rodando NA PÁGINA — sem isso a CSP barra o script e
+# o mapa não nasce. Junto vêm maps.gstatic.com e *.ggpht.com em img-src: são
+# os quadradinhos do mapa e os ícones, servidos desses dois hosts.
+#
+# Isto AFROUXA a CSP, e de propósito: passa a existir um script de terceiro
+# com permissão de rodar aqui. O terceiro é o Google, no mesmo domínio que já
+# servia as fotos do Places. A chave que ele usa é outra — só Maps, só
+# meuspot.app — e não é a do Places, que paga por requisição.
 /*
   Cache-Control: no-store, no-cache, must-revalidate, max-age=0
-  Content-Security-Policy: default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://unpkg.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: blob: https://kzidnilsyrvauzgelsqd.supabase.co https://places.googleapis.com https://*.googleusercontent.com https://images.unsplash.com https://cdn.jsdelivr.net; connect-src 'self' https://kzidnilsyrvauzgelsqd.supabase.co https://places.googleapis.com https://*.googleusercontent.com https://images.unsplash.com https://cdn.jsdelivr.net https://unpkg.com; object-src 'none'; base-uri 'none'; form-action 'none'; frame-ancestors 'none'
+  Content-Security-Policy: default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://unpkg.com https://maps.googleapis.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: blob: https://kzidnilsyrvauzgelsqd.supabase.co https://places.googleapis.com https://*.googleusercontent.com https://images.unsplash.com https://cdn.jsdelivr.net https://maps.googleapis.com https://maps.gstatic.com https://*.ggpht.com; connect-src 'self' https://kzidnilsyrvauzgelsqd.supabase.co https://places.googleapis.com https://*.googleusercontent.com https://images.unsplash.com https://cdn.jsdelivr.net https://unpkg.com https://maps.googleapis.com; object-src 'none'; base-uri 'none'; form-action 'none'; frame-ancestors 'none'
   Referrer-Policy: strict-origin-when-cross-origin
   X-Content-Type-Options: nosniff

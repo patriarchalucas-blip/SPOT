@@ -1152,6 +1152,7 @@ body.na-casca .bottom-nav{display:none}
   font-size:11px;color:var(--ink3);pointer-events:none;transition:opacity .3s}
 .ml-mapa.mexeu .ml-mapadica{opacity:0}
 .ml-mapaimg{display:block;width:100%;height:360px;object-fit:cover}
+.ml-mapavivo{width:100%;height:360px}
 .ml-svg{display:block;width:100%;height:230px}
 /* A regra global de .wm-country já pinta a terra; aqui só desligo a transição
    de cor, que existe pro mapa grande e aqui não tem o que animar. */
@@ -8163,6 +8164,100 @@ function mlTextoDeVazio(){
 let mlModo='lista';
 try{mlModo=localStorage.getItem('spot_ml_modo')||'lista'}catch(e){}
 
+// ═══ O MAPA QUE ARRASTA E AMPLIA ═══
+//
+// É a biblioteca do Google rodando na página. A chave vem de /api/mapa-chave
+// (ver o porquê lá), e sem ela esta função devolve false e o app segue com a
+// imagem estática.
+//
+// O estilo é o mesmo da imagem: mar e fundo em --map-bg, ruas em --base, sem
+// ponto de interesse e sem transporte. O mapa é pano de fundo do pino.
+let MAPA_JS=null;       // promessa de carregamento, pra não carregar duas vezes
+let MAPA_CHAVE=undefined; // undefined = ainda não perguntei; null = não tem
+const ESTILO_DO_MAPA=[
+  {elementType:'labels.icon',stylers:[{visibility:'off'}]},
+  {featureType:'poi',stylers:[{visibility:'off'}]},
+  {featureType:'transit',stylers:[{visibility:'off'}]},
+  {featureType:'administrative',elementType:'geometry',stylers:[{visibility:'off'}]},
+  {featureType:'landscape',elementType:'geometry',stylers:[{color:'#E4E8E4'}]},
+  {featureType:'water',elementType:'geometry',stylers:[{color:'#D7DDD8'}]},
+  {featureType:'road',elementType:'geometry',stylers:[{color:'#F5F5F3'}]},
+  {featureType:'road',elementType:'labels',stylers:[{visibility:'off'}]},
+  {elementType:'labels.text.fill',stylers:[{color:'#6B6B67'}]},
+  {elementType:'labels.text.stroke',stylers:[{visibility:'off'}]}
+];
+
+async function chaveDoMapa(){
+  if(MAPA_CHAVE!==undefined)return MAPA_CHAVE;
+  MAPA_CHAVE=null;
+  try{
+    const tk=await ensureToken();
+    if(!tk)return null;
+    const r=await fetch('/api/mapa-chave',{headers:{'Authorization':'Bearer '+tk}});
+    if(!r.ok)return null;
+    const d=await r.json();
+    if(d&&d.configurado&&d.chave)MAPA_CHAVE=d.chave;
+  }catch(e){}
+  return MAPA_CHAVE;
+}
+function carregarMapaJS(chave){
+  if(MAPA_JS)return MAPA_JS;
+  MAPA_JS=new Promise(function(ok,falhou){
+    const s=document.createElement('script');
+    s.src='https://maps.googleapis.com/maps/api/js?key='+encodeURIComponent(chave)+'&language=pt-BR';
+    s.async=true;
+    s.onload=()=>ok(true);
+    s.onerror=()=>{MAPA_JS=null;falhou(new Error('mapa'))};
+    document.head.appendChild(s);
+  });
+  return MAPA_JS;
+}
+
+// Devolve true se conseguiu desenhar. False manda quem chamou usar a imagem.
+async function mapaInterativoDaCidade(box,spotsDaCidade){
+  const chave=await chaveDoMapa();
+  if(!chave)return false;
+  try{await carregarMapaJS(chave)}catch(e){return false}
+  if(!window.google||!google.maps)return false;
+
+  box.innerHTML='<div class="ml-mapa"><div class="ml-mapavivo" id="mlMapaVivo"></div></div>';
+  const el=document.getElementById('mlMapaVivo');
+  const mapa=new google.maps.Map(el,{
+    styles:ESTILO_DO_MAPA,
+    disableDefaultUI:true,
+    zoomControl:false,
+    gestureHandling:'greedy', // arrasta com um dedo: o mapa está dentro de uma tela que rola
+    clickableIcons:false
+  });
+
+  // O enquadramento sai dos próprios pontos: nada de centro e zoom na mão.
+  const limites=new google.maps.LatLngBounds();
+  spotsDaCidade.forEach(function(s){
+    const pos={lat:Number(s.lat),lng:Number(s.lng)};
+    limites.extend(pos);
+    const fui=(s.status||'want')==='been';
+    new google.maps.Marker({
+      map:mapa,position:pos,title:s.name||'',
+      // Círculo, não o balão do Google: é o mesmo pino do resto do app.
+      // Cheio pra onde você foi, vazado pra onde quer ir — o desenho pede.
+      icon:{
+        path:google.maps.SymbolPath.CIRCLE,
+        scale:7,
+        fillColor:fui?'#0B3D2E':'#F5F5F3',
+        fillOpacity:1,
+        strokeColor:'#0B3D2E',
+        strokeWeight:fui?3:2.5
+      }
+    }).addListener('click',function(){openPlace(s.id,'profile')});
+  });
+  mapa.fitBounds(limites,{top:28,right:28,bottom:28,left:28});
+  // Com UM spot só, o fitBounds aproxima até o talo e a rua vira um borrão.
+  if(spotsDaCidade.length===1){
+    google.maps.event.addListenerOnce(mapa,'idle',function(){mapa.setZoom(15)});
+  }
+  return true;
+}
+
 function centroDaCidade(spots,cidade){
   const com=spots.filter(s=>cityOf(s)===cidade&&s.lat!=null&&s.lng!=null);
   if(!com.length)return null;
@@ -8202,6 +8297,9 @@ async function renderMapaDeLugares(lista){
       return;
     }
     box.style.display='block';
+    // PRIMEIRO tenta o mapa de verdade, que arrasta e amplia. Se a chave dele
+    // não estiver configurada, cai na imagem — ninguém fica sem mapa.
+    if(await mapaInterativoDaCidade(box,daCidade))return;
     box.innerHTML='<div class="ml-mapa"><img class="ml-mapaimg" alt=""></div>';
     const img=box.querySelector('.ml-mapaimg');
     const par=s=>Number(s.lat).toFixed(5)+','+Number(s.lng).toFixed(5);
