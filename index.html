@@ -1139,6 +1139,26 @@ body.na-casca .bottom-nav{display:none}
 .ml-vertodos{display:block;background:none;border:none;padding:14px 0 0;font-size:14px;
   font-weight:600;color:var(--green);cursor:pointer;font-family:inherit}
 .ml-vertodos:active{opacity:.6}
+/* Segmentado do sistema, na versão pequena: trilho surface, escolhido com o
+   fundo da página por cima. */
+.ml-segmento{display:flex;gap:2px;background:var(--surface);border-radius:var(--r-btn);padding:3px}
+.ml-seg{border:none;background:none;border-radius:8px;padding:5px 12px;font-size:13px;
+  font-weight:600;color:var(--ink2);cursor:pointer;font-family:inherit}
+.ml-seg.on{background:var(--base);color:var(--ink)}
+.ml-mapa{border-radius:var(--r-photo);overflow:hidden;background:var(--map-bg)}
+.ml-mapaimg{display:block;width:100%;height:360px;object-fit:cover}
+.ml-svg{display:block;width:100%;height:230px}
+/* A regra global de .wm-country já pinta a terra; aqui só desligo a transição
+   de cor, que existe pro mapa grande e aqui não tem o que animar. */
+.ml-svg .wm-country{transition:none}
+.ml-bolha{cursor:pointer}
+/* stroke-width e font-size vêm no atributo, calculados em unidades do
+   viewBox — em CSS eles seriam lidos como pixels da tela e sairiam errados. */
+.ml-bolha circle{fill:var(--green);stroke:var(--base)}
+.ml-bolha text{fill:var(--on-green);font-weight:700;text-anchor:middle;
+  font-family:inherit;pointer-events:none}
+.ml-bolha:active circle{opacity:.7}
+.ml-cidlista{margin-top:6px}
 
 /* ═══ FICHA DO LUGAR ═══ */
 #place{background:var(--base)}
@@ -1694,7 +1714,7 @@ svg.ic path,svg.ic circle,svg.ic line,svg.ic polyline,svg.ic rect{fill:none;stro
     <!-- MEUS LUGARES. Substituiu os números, o "Onde já estive" e a estante
          por cidade: os três diziam quanto a pessoa viajou, e isso a tela
          inicial já diz inteiro. Aqui fica só o que é dela. -->
-    <div class="ml-cab"><span class="section-title">Meus lugares</span></div>
+    <div class="ml-cab"><span class="section-title">Meus lugares</span><span class="ml-segmento" id="mlSegmento"></span></div>
     <div class="ml-status" id="mlStatus"></div>
     <div class="ml-filtros">
       <button class="ml-filtro" id="mlFiltroCidade" onclick="abrirFolhaDeCidades()"><span class="mf-pino" data-ic="pin"></span><span id="mlCidadeTxt">Todas as cidades</span><span class="mf-chev">⌄</span></button>
@@ -7997,11 +8017,28 @@ function renderEstante(){
   document.getElementById('mlCidadeTxt').textContent=mlCidade||'Todas as cidades';
   document.getElementById('mlCatTxt').textContent=mlRotuloDaCategoria(mlCat);
 
+  // O segmentado Lista | Mapa. Fica no cabeçalho, à direita do título.
+  const seg=document.getElementById('mlSegmento');
+  if(seg){
+    seg.innerHTML=['lista','mapa'].map(function(m){
+      return '<button class="ml-seg'+(mlModo===m?' on':'')+'" onclick="mlTrocarModo(\''+m+'\')">'
+        +(m==='lista'?'Lista':'Mapa')+'</button>';
+    }).join('');
+  }
+
   const lista=mlFiltrar(spots,mlStatus,mlCidade,mlCat);
   const ver=document.getElementById('mlVerTodos');
   if(!lista.length){
     trilho.innerHTML='<div class="ml-vazio">'+esc(mlTextoDeVazio())+'</div>';
     ver.innerHTML='';
+    darDadosDePerfil();
+    return;
+  }
+  trilho.style.display='';
+  if(mlModo==='mapa'){
+    ver.innerHTML='<button class="ml-vertodos" onclick="mlVerTodos()">'
+      +esc(mlCidade?('Ver os '+lista.length+' em '+mlCidade):('Ver todos os '+lista.length))+'</button>';
+    renderMapaDeLugares(lista).catch(function(){});
     darDadosDePerfil();
     return;
   }
@@ -8041,6 +8078,173 @@ function mlTextoDeVazio(){
   if(mlStatus==='skip')return 'Você ainda não marcou nenhum lugar como não recomendado.';
   return 'Nenhum lugar na sua lista de "quero ir" com estes filtros.';
 }
+// ═══ MEUS LUGARES: O MAPA ═══
+//
+// São dois mapas diferentes, e de propósito:
+//
+//  · SEM cidade escolhida, é o mundo, com UMA BOLHA POR CIDADE — nunca pino
+//    solto. Vinte pinos espalhados pelo planeta não dizem nada; "9 em São
+//    Paulo" diz. O tamanho da bolha acompanha a quantidade.
+//  · COM cidade escolhida, é a cidade, e aí sim o mapa de ruas.
+//
+// O mapa-múndi é VETOR, desenhado aqui: a mesma geometria que a tela inicial
+// já carrega. Custa zero — nenhuma chamada a lugar nenhum. Só o mapa de uma
+// cidade é imagem, e essa é paga (com cache de 30 dias).
+//
+// A coordenada da cidade é a MÉDIA dos spots dela. Não precisa consultar
+// ninguém pra saber onde fica São Paulo quando já se sabe onde ficam sete
+// lugares em São Paulo.
+let mlModo='lista';
+try{mlModo=localStorage.getItem('spot_ml_modo')||'lista'}catch(e){}
+
+function centroDaCidade(spots,cidade){
+  const com=spots.filter(s=>cityOf(s)===cidade&&s.lat!=null&&s.lng!=null);
+  if(!com.length)return null;
+  const somaLat=com.reduce((a,s)=>a+Number(s.lat),0);
+  const somaLng=com.reduce((a,s)=>a+Number(s.lng),0);
+  return{lat:somaLat/com.length,lng:somaLng/com.length,n:com.length};
+}
+
+function mlTrocarModo(m){
+  mlModo=m;
+  try{localStorage.setItem('spot_ml_modo',m)}catch(e){}
+  renderEstante();
+}
+
+async function renderMapaDeLugares(lista){
+  const box=document.getElementById('mlTrilho');
+  const spots=allSpotsFlat();
+
+  // COM CIDADE: mapa de ruas, como imagem.
+  if(mlCidade){
+    const c=centroDaCidade(spots,mlCidade);
+    if(!c){
+      box.innerHTML='<div class="ml-vazio">Ainda não sei onde ficam os lugares desta cidade. Abre o Perfil de novo daqui a pouco — o app está descobrindo aos poucos.</div>';
+      return;
+    }
+    box.style.display='block';
+    box.innerHTML='<div class="ml-mapa"><img class="ml-mapaimg" alt=""></div>';
+    const img=box.querySelector('.ml-mapaimg');
+    try{
+      const tk=await ensureToken();
+      if(!tk){box.innerHTML='';return}
+      const r=await fetch('/api/mapa?lat='+encodeURIComponent(c.lat.toFixed(5))
+        +'&lng='+encodeURIComponent(c.lng.toFixed(5))+'&tam=350x360&z=12',
+        {headers:{'Authorization':'Bearer '+tk}});
+      if(!r.ok||(r.headers.get('Content-Type')||'').indexOf('image')<0){box.innerHTML='';return}
+      const b=await r.blob();
+      if(img.isConnected)img.src=URL.createObjectURL(b);
+    }catch(e){box.innerHTML=''}
+    return;
+  }
+
+  // SEM CIDADE: o mundo, com uma bolha por cidade.
+  // O trilho é uma fileira horizontal (é o que ele é no modo Lista). No modo
+  // Mapa o conteúdo empilha, senão o mapa e a lista de cidades ficam lado a
+  // lado, cada um com metade da largura.
+  box.style.display='block';
+  box.innerHTML='<div class="ml-mapa"><div class="ml-vazio" style="padding:40px 0;text-align:center">carregando mapa…</div></div>';
+  if(!worldGeoData&&!await carregarGeoMundo()){box.innerHTML='';return}
+  try{await carregarD3Geo()}catch(e){}
+
+  const porCidade={};
+  lista.forEach(function(s){
+    const c=cityOf(s);if(!c)return;
+    (porCidade[c]=porCidade[c]||[]).push(s);
+  });
+  const cidades=Object.keys(porCidade)
+    .map(c=>({nome:c,n:porCidade[c].length,centro:centroDaCidade(spots,c)}))
+    .filter(c=>c.centro)
+    .sort((a,b)=>b.n-a.n);
+
+  if(!cidades.length){
+    box.innerHTML='<div class="ml-vazio">Ainda não sei onde ficam estes lugares. Abre o Perfil de novo daqui a pouco — o app está descobrindo aos poucos.</div>';
+    return;
+  }
+
+  const{paths,vb,proj}=gerarPathsMundo(new Set());
+  // AGRUPAR O QUE ESTÁ COLADO. Kotor e Sarajevo ficam a 130 km: no mapa do
+  // mundo elas viram duas bolhas em cima uma da outra, ilegíveis. Cidades a
+  // menos de 24px NA TELA viram uma bolha só, somando — e ela abre a lista de
+  // cidades, porque a bolha sozinha não diz qual das duas você quis.
+  const escalaPre=(vb.h?230/vb.h:1);
+  const grupos=[];
+  cidades.forEach(function(c){
+    const p=proj(c.centro.lng,c.centro.lat);
+    if(!p||!isFinite(p[0])||!isFinite(p[1]))return;
+    const perto=grupos.find(function(g){
+      const dx=(g.x-p[0])*escalaPre, dy=(g.y-p[1])*escalaPre;
+      return Math.sqrt(dx*dx+dy*dy)<24;
+    });
+    // A posição do grupo é a da PRIMEIRA cidade (a maior, porque a lista vem
+    // ordenada): mover a bolha pra média faria a maior sair do lugar por
+    // causa de uma vizinha pequena.
+    if(perto){perto.n+=c.n;perto.cidades.push(c)}
+    else grupos.push({x:p[0],y:p[1],n:c.n,cidades:[c]});
+  });
+
+  const maior=grupos.reduce(function(m,g){return Math.max(m,g.n)},0);
+  // Diâmetro de 26 a 40 NA TELA, como o desenho pede — e o desenho é em
+  // pixels, enquanto o círculo é desenhado em unidades do viewBox. O SVG tem
+  // 800 de largura mostrados em ~330, então tudo aqui dentro aparece a 41%:
+  // um raio 13 viraria 5px. Por isso o raio é dividido pela escala.
+  const escala=(vb.h?230/vb.h:1);
+  const rTela=r=>r/escala;
+  const bolhas=grupos.map(function(g,i){
+    const x=g.x,y=g.y;
+    // Raiz quadrada, e não razão direta: o olho compara ÁREA de círculo, e
+    // proporção no raio faz a cidade com o dobro parecer ter o quádruplo.
+    const r=rTela(13+7*(maior>1?Math.sqrt((g.n-1)/(maior-1)):0));
+    const c={n:g.n};
+    return '<g class="ml-bolha" data-i="'+i+'">'
+      +'<circle cx="'+x.toFixed(1)+'" cy="'+y.toFixed(1)+'" r="'+r.toFixed(1)+'"'
+      +' stroke-width="'+rTela(3).toFixed(1)+'"/>'
+      +'<text x="'+x.toFixed(1)+'" y="'+(y+rTela(4.5)).toFixed(1)+'"'
+      +' font-size="'+rTela(12).toFixed(1)+'">'+c.n+'</text></g>';
+  }).join('');
+
+  ML_CIDADES_MAPA=grupos;
+  box.innerHTML='<div class="ml-mapa"><svg class="ml-svg" viewBox="'+vb.x+' '+vb.y+' '+vb.w+' '+vb.h+'" preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg">'
+    +paths+bolhas+'</svg></div>'
+    // As três com mais lugares, embaixo: tocar numa bolha pequena no celular é
+    // difícil, e a lista é o mesmo destino com alvo de dedo.
+    +'<div class="ml-cidlista">'+cidades.slice(0,3).map(function(c,i){
+      // Índice da LISTA de cidades, não dos grupos do mapa: uma bolha pode
+      // juntar duas cidades, então os dois índices não são o mesmo.
+      return '<div class="prof-linha" onclick="mlCidadeDaLista('+i+')">'
+        +'<span class="pl-txt">'+esc(c.nome)
+        +'<span class="busca-user">'+c.n+(c.n===1?' lugar':' lugares')+'</span></span>'
+        +'<span class="pl-seta">›</span></div>';
+    }).join('')
+    +(cidades.length>3
+      ?'<button class="ml-vertodos" onclick="abrirFolhaDeCidades()">Ver as '+cidades.length+' cidades</button>'
+      :'')+'</div>';
+  ML_CIDADES_LISTA=cidades;
+
+  box.querySelectorAll('.ml-bolha').forEach(function(g){
+    g.addEventListener('click',function(){mlCidadeDoMapa(Number(g.dataset.i))});
+  });
+}
+let ML_CIDADES_MAPA=[], ML_CIDADES_LISTA=[];
+function mlCidadeDaLista(i){
+  const c=ML_CIDADES_LISTA[i];
+  if(!c)return;
+  mlCidade=c.nome;
+  renderEstante();
+}
+// A bolha pode ser UMA cidade ou várias grudadas. Com uma, escolhe direto;
+// com várias, abre a folha de cidades — a bolha não diz qual das duas você
+// quis, e adivinhar levaria pra cidade errada.
+function mlCidadeDoMapa(i){
+  const g=ML_CIDADES_MAPA[i];
+  if(!g)return;
+  if(g.cidades&&g.cidades.length>1){abrirFolhaDeCidades();return}
+  const nome=g.cidades?g.cidades[0].nome:g.nome;
+  if(!nome)return;
+  mlCidade=nome;
+  renderEstante();
+}
+
 function mlTrocarStatus(st){mlStatus=st;renderEstante()}
 function mlEscolherCidade(i){mlCidade=(i<0?'':(ML_CIDADES[i]||''));closeOv('ov-mlcidade');renderEstante()}
 function mlEscolherCat(c){mlCat=c;closeOv('ov-mlcat');renderEstante()}
@@ -8393,12 +8597,16 @@ async function carregarGeoMundo(){
 }
 // Gera os <path> do mundo com os visitados marcados. Devolve também o viewBox,
 // que muda conforme a projeção disponível.
+// Devolve também `proj`: a mesma projeção usada nos países, pra quem precisar
+// pôr alguma coisa EM CIMA do mapa e cair no lugar certo. Sem isto, as bolhas
+// de cidade do Perfil teriam que adivinhar a projeção e cairiam no mar.
 function gerarPathsMundo(visitedGeo){
   let useD3=false;
   try{useD3=(typeof d3!=='undefined'&&!!d3.geoNaturalEarth1)}catch(e){useD3=false}
-  let paths='',vb;
+  let paths='',vb,proj=null;
   if(useD3){
     const projection=d3.geoNaturalEarth1().fitExtent([[6,6],[MAP_W-6,MAP_H-6]],worldGeoData);
+    proj=(lon,lat)=>projection([lon,lat]);
     const path=d3.geoPath(projection);
     worldGeoData.features.forEach(f=>{
       const d=path(f);
@@ -8408,7 +8616,7 @@ function gerarPathsMundo(visitedGeo){
     vb={x:0,y:0,w:MAP_W,h:MAP_H};
   }else{
     const W=800,H=400;
-    const proj=(lon,lat)=>[(lon+180)/360*W,(90-lat)/180*H];
+    proj=(lon,lat)=>[(lon+180)/360*W,(90-lat)/180*H];
     const ring=r=>{let d='';r.forEach((p,i)=>{const[x,y]=proj(p[0],p[1]);d+=(i?'L':'M')+x.toFixed(1)+' '+y.toFixed(1)});return d+'Z'};
     worldGeoData.features.forEach(f=>{
       const g=f.geometry;if(!g)return;let d='';
@@ -8419,7 +8627,7 @@ function gerarPathsMundo(visitedGeo){
     });
     vb={x:0,y:40,w:W,h:320};
   }
-  return{paths,vb};
+  return{paths,vb,proj};
 }
 // Mapa do topo do Dashboard: só decoração, sem zoom e sem toque. Entra DEPOIS
 // que a tela já está desenhada — a geometria é pesada e não pode atrasar a
