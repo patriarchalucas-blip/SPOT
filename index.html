@@ -10264,8 +10264,16 @@ function novoCodigoConvite(){
   crypto.getRandomValues(b);
   return Array.from(b,x=>alfabeto[x%alfabeto.length]).join('');
 }
+// /c/<codigo>, e não /?c=<codigo>. Os dois levam ao mesmo lugar: o primeiro
+// passa por uma função no servidor que devolve a PRÉVIA do convite (nome de
+// quem convidou, quantos lugares, uma foto) e depois manda pro segundo.
+//
+// A diferença só aparece quando o link é COLADO numa conversa: o WhatsApp lê
+// as etiquetas do servidor e monta o cartão. Ele não executa JavaScript, então
+// com `/?c=` nada do que o app monta na tela chegava até ele — a prévia era o
+// retângulo genérico do site.
 function linkDoConvite(codigo){
-  return location.origin+'/?c='+encodeURIComponent(codigo);
+  return location.origin+'/c/'+encodeURIComponent(codigo);
 }
 // Reaproveita o convite ativo se já existir — o link que você já mandou pros
 // outros continua valendo em vez de virar lixo a cada toque no botão.
