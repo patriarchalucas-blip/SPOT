@@ -1193,9 +1193,13 @@ body.na-casca .bottom-nav{display:none}
 .fi-ac span{font-size:12px;font-weight:600}
 .fi-endereco{margin-top:12px}
 .fi-endereco:empty{display:none}
-.fi-end{display:flex;align-items:center;gap:12px;background:var(--surface);
-  border-radius:var(--r-card);padding:14px 16px;text-decoration:none;color:inherit}
+.fi-end{display:block;background:var(--surface);border-radius:var(--r-card);
+  text-decoration:none;color:inherit;overflow:hidden}
 .fi-end:active{opacity:.7}
+.fi-end-linha{display:flex;align-items:center;gap:12px;padding:14px 16px}
+/* A imagem do mapa preenche a largura do bloco e é cortada na altura: o PNG
+   vem em escala 2 pra não sair borrado em tela de retina. */
+.fi-mini{display:block;width:100%;height:120px;object-fit:cover;background:var(--map-bg)}
 .fi-end-txt{flex:1;min-width:0}
 .fi-rua{display:block;font-size:14px;font-weight:600;color:var(--ink);
   overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
@@ -4063,9 +4067,14 @@ function desenharFichaDoLugar(s){
 // ENDEREÇO. Era uma linha solta com o endereço inteiro, CEP incluído. Agora é
 // um bloco: rua e número em cima, bairro embaixo, e o toque abre o mapa.
 //
-// O MINI-MAPA do desenho ainda não entra: ele precisa de um provedor de mapa
-// de ruas, que é decisão de custo em aberto. A coordenada já está sendo
-// guardada (023), então quando o provedor for escolhido é só desenhar aqui.
+// O MINI-MAPA é uma IMAGEM vinda de /api/mapa, não um mapa de verdade rodando
+// aqui. Toda biblioteca de mapa no navegador exige a chave no client, que é o
+// que este projeto passou meses tirando de lá. Como imagem, a chave fica no
+// servidor e o navegador só recebe um PNG — e o toque abre o Maps de verdade,
+// que é o que a pessoa quer quando toca num mapa pequeno.
+//
+// Sem coordenada (spot antigo ainda não preenchido), o bloco fica só com o
+// endereço. Nada de caixa cinza vazia esperando.
 function desenharEnderecoDoLugar(s){
   const box=document.getElementById('placeInfoGrid');
   const ende=String(s.address||'').trim();
@@ -4078,11 +4087,18 @@ function desenharEnderecoDoLugar(s){
   const partes=ende?ende.split(' - '):[];
   const rua=partes[0]||ende||cityOf(s);
   const resto=partes.slice(1).join(' · ').replace(/,\s*\d{5}-?\d{3}\b/,'').trim();
+  const temCoord=s.lat!=null&&s.lng!=null;
+  const mini=temCoord
+    ?'<img class="fi-mini" alt="" loading="lazy" src="/api/mapa?lat='+encodeURIComponent(s.lat)
+      +'&lng='+encodeURIComponent(s.lng)+'&tam=344x120&z=15" onerror="this.remove()">'
+    :'';
   box.innerHTML='<a class="fi-end" href="'+alvo+'" target="_blank" rel="noopener">'
+    +mini
+    +'<span class="fi-end-linha">'
     +'<span class="pl-ic" data-ic="pin"></span>'
     +'<span class="fi-end-txt"><span class="fi-rua">'+esc(rua)+'</span>'
     +(resto?'<span class="fi-bairro">'+esc(resto)+'</span>':'')+'</span>'
-    +'<span class="pl-seta">›</span></a>';
+    +'<span class="pl-seta">›</span></span></a>';
   hydrateIcons(box);
 }
 // Botões de ação na tela do spot — extraído pra função própria porque o
