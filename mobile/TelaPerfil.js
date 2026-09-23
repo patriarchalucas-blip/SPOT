@@ -4,8 +4,12 @@
 // tem as regras (a ordenação da estante, a média por cidade, o que conta como
 // visitado), aqui é só o desenho.
 //
-// O mapa aqui é o principal da seção "Onde já estive": maior que o de
-// Viagens e com a lista de países logo abaixo.
+// O MAPA SAIU DAQUI em 22/09/2026, e com ele a lista de países. Eles eram a
+// seção "Onde já estive" — que é exatamente a metade de cima da tela inicial,
+// a primeira coisa que a pessoa vê ao abrir o app. Duas telas em quatro
+// mostravam o mesmo mapa, e o Perfil virou eco do Início. No lugar entrou "O
+// que eu achei": as notas que a pessoa escreveu, que só existem aqui. A
+// contagem de países continua acima, e abre a lista inteira num toque.
 //
 // É a tela que o revisor da App Store visita pra achar exclusão de conta,
 // termos e privacidade. Esses caminhos ficam na ficha de configurações, que
@@ -24,9 +28,9 @@ import {
   View,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import MapaMundi from './MapaMundi';
 import Svg, { Path } from 'react-native-svg';
 import { BASE, SURFACE, INK, INK2, INK3, VERDE, ON_GREEN, PHOTO_EMPTY, FRAUNCES } from './cores';
+import { folgaDeRolagem } from './BarraDeAbas';
 
 
 // Mesmos desenhos do sistema de ícones do site.
@@ -49,33 +53,61 @@ function Icone({ nome, cor = INK3, tamanho = 18 }) {
   );
 }
 
-// Uma linha por país: bandeira, nome, e à direita quantos lugares tem lá — ou
-// o selo de onde a pessoa mora. O X só aparece em país que é só marcação de
-// mapa: tirar um país que tem viagem de verdade apagaria a viagem junto.
-function Pais({ p, acao }) {
+// A estrela cheia pela metade, igual à da aba Amigos: duas empilhadas, e a
+// de cima cortada na largura da fatia. É o que dá conta do x,5 da migração 020.
+function Estrelas({ n, tamanho = 13 }) {
+  if (!n) return null;
+  const d = 'M12 3l2.6 5.6 6 .8-4.4 4.2 1.1 6.1L12 16.8 6.7 19.7l1.1-6.1L3.4 9.4l6-.8z';
+  return (
+    <View style={e.estrelas}>
+      {[1, 2, 3, 4, 5].map((i) => {
+        const fatia = Math.max(0, Math.min(1, n - (i - 1)));
+        return (
+          <View key={i} style={{ width: tamanho, height: tamanho }}>
+            <Svg width={tamanho} height={tamanho} viewBox="0 0 24 24"><Path d={d} fill={INK3} /></Svg>
+            {fatia > 0 ? (
+              <View style={[e.estrelaCheia, { width: tamanho * fatia }]} pointerEvents="none">
+                <Svg width={tamanho} height={tamanho} viewBox="0 0 24 24"><Path d={d} fill={VERDE} /></Svg>
+              </View>
+            ) : null}
+          </View>
+        );
+      })}
+    </View>
+  );
+}
+
+// Uma nota sua: foto pequena, nome, cidade, estrelas e o texto que você
+// escreveu. O texto é o assunto — por isso ele vem em 15 e em INK, e o resto
+// em 13 e cinza. Três linhas no máximo: quem quiser o resto toca e abre a
+// ficha do lugar, que é onde a nota vive inteira.
+//
+// Sem texto a linha fecha na foto e nas estrelas, e não sobra espaço em
+// branco: nota com estrela e sem palavra é o caso comum.
+function Nota({ n, acao }) {
+  const [falhou, setFalhou] = React.useState(false);
   return (
     <Pressable
-      onPress={() => acao('pais', p.nome)}
-      style={({ pressed }) => [e.pais, pressed && { opacity: 0.6 }]}
+      onPress={() => acao('lugar', n.id)}
+      style={({ pressed }) => [e.nota, !n.texto && e.notaSeca, pressed && { opacity: 0.6 }]}
+      accessibilityRole="button"
+      accessibilityLabel={n.nome}
     >
-      <Text style={e.paisBandeira}>{p.bandeira}</Text>
-      <Text style={e.paisNome} numberOfLines={1}>{p.nome}</Text>
-      {p.casa ? (
-        <Text style={e.paisCasa}>mora aqui</Text>
-      ) : (
-        <Text style={e.paisConta}>{p.contagem}</Text>
-      )}
-      {p.podeTirar ? (
-        <Pressable
-          onPress={() => acao('tirarPais', p.nome)}
-          hitSlop={8}
-          style={({ pressed }) => [e.paisX, pressed && { opacity: 0.5 }]}
-          accessibilityRole="button"
-          accessibilityLabel={'Tirar ' + p.nome + ' do mapa'}
-        >
-          <Icone nome="close" cor={INK3} tamanho={15} />
-        </Pressable>
-      ) : null}
+      <View style={e.notaTopo}>
+        {n.foto && !falhou ? (
+          <Image source={{ uri: n.foto }} style={e.notaFoto} onError={() => setFalhou(true)} />
+        ) : (
+          <View style={e.notaFoto} />
+        )}
+        <View style={e.notaCab}>
+          <Text style={e.notaNome} numberOfLines={1}>{n.nome}</Text>
+          <View style={e.notaMetaLinha}>
+            <Estrelas n={n.estrelas} />
+            {n.cidade ? <Text style={e.notaCidade} numberOfLines={1}>{n.cidade}</Text> : null}
+          </View>
+        </View>
+      </View>
+      {n.texto ? <Text style={e.notaTexto} numberOfLines={3}>{n.texto}</Text> : null}
     </Pressable>
   );
 }
@@ -155,7 +187,7 @@ export default function TelaPerfil({ dados, ocupado, acao }) {
   return (
     <ScrollView
       style={e.fundo}
-      contentContainerStyle={{ paddingBottom: 120 }}
+      contentContainerStyle={{ paddingBottom: folgaDeRolagem(margem.bottom) }}
       refreshControl={
         <RefreshControl refreshing={!!ocupado} onRefresh={() => acao('recarregar')} tintColor={INK3} />
       }
@@ -233,34 +265,27 @@ export default function TelaPerfil({ dados, ocupado, acao }) {
           </View>
         ) : null}
 
-        <View style={e.cabecalho}>
-          <Text style={e.secao}>Onde já estive</Text>
-        </View>
-        <Pressable
-          onPress={() => acao('mapa')}
-          style={({ pressed }) => [e.mapa, pressed && { opacity: 0.6 }]}
-          accessibilityRole="button"
-          accessibilityLabel="Abrir o mapa-múndi"
-        >
-          <View pointerEvents="none">
-            <MapaMundi visitados={d.mapa} />
-          </View>
-        </Pressable>
-        {d.paises && d.paises.length ? (
-          <View style={e.paisesLista}>
-            {d.paises.map((p) => <Pais key={p.nome} p={p} acao={acao} />)}
-            {d.paisesTotal > d.paises.length ? (
+        {/* O QUE VOCÊ ESCREVEU vem primeiro, e é a razão desta aba existir.
+            O mapa-múndi ficava aqui e SAIU: ele já é a metade de cima da tela
+            inicial, e ver o mesmo mapa duas vezes no mesmo app não acrescenta
+            nada. A lista de países foi junto pelo mesmo motivo — o número de
+            países continua logo acima, e abre a lista inteira num toque. */}
+        {d.notas && d.notas.length ? (
+          <>
+            <View style={e.cabecalho}>
+              <Text style={e.secao}>{d.notasTitulo || 'Minhas notas'}</Text>
+            </View>
+            {d.notas.map((n) => <Nota key={n.id} n={n} acao={acao} />)}
+            {d.notasTotal > d.notas.length ? (
               <Pressable
-                onPress={() => acao('todosOsPaises')}
-                style={({ pressed }) => [e.paisTodos, pressed && { opacity: 0.6 }]}
+                onPress={() => acao('lista', 'spots')}
+                style={({ pressed }) => [e.verTodas, pressed && { opacity: 0.6 }]}
               >
-                <Text style={e.paisTodosTxt}>{'Ver todos os ' + d.paisesTotal + ' ›'}</Text>
+                <Text style={e.verTodasTxt}>{'Ver todas as ' + d.notasTotal + ' notas'}</Text>
               </Pressable>
             ) : null}
-          </View>
-        ) : (
-          <Text style={e.paises}>Crie viagens para pintar o mundo.</Text>
-        )}
+          </>
+        ) : null}
 
         <View style={[e.cabecalho, { marginTop: 32 }]}>
           <Text style={e.secao}>Meus spots</Text>
@@ -358,20 +383,24 @@ const e = StyleSheet.create({
   secao: { fontSize: 20, fontWeight: '700', letterSpacing: -0.6, color: INK },
   secaoSub: { fontSize: 14, color: INK2 },
   aviso: { fontSize: 14, color: INK2, lineHeight: 20 },
-  paises: { fontSize: 14, color: INK2, lineHeight: 21 },
-  paisesLista: { marginTop: 2 },
-  // .country-row: linha sem divisor. O que separa é o espaço.
-  pais: { flexDirection: 'row', alignItems: 'center', gap: 12, paddingVertical: 12 },
-  paisBandeira: { fontSize: 20 },
-  paisNome: { flex: 1, fontSize: 16, fontWeight: '600', letterSpacing: -0.3, color: INK },
-  paisConta: { fontSize: 13, color: INK2 },
-  // "mora aqui" perdeu a pílula colorida e virou o próprio verde do sistema.
-  // A pílula terracota era o que mais saltava da paleta velha nesta tela.
-  paisCasa: { fontSize: 13, fontWeight: '600', color: VERDE },
-  paisX: { width: 26, height: 26, alignItems: 'center', justifyContent: 'center', marginRight: -6 },
-  paisTodos: { paddingTop: 14, paddingBottom: 2 },
-  paisTodosTxt: { fontSize: 14, fontWeight: '600', color: VERDE },
-  mapa: { marginHorizontal: -20, marginBottom: 14 },
+
+  // Uma nota sua. Sem card e sem divisor, como o resto do app: o que separa
+  // uma da outra é o espaço de 22 embaixo.
+  nota: { paddingBottom: 22 },
+  // Sem texto, o 22 vira buraco: a linha acaba na foto e o olho lê o vazio
+  // como fim da seção.
+  notaSeca: { paddingBottom: 14 },
+  notaTopo: { flexDirection: 'row', alignItems: 'center', gap: 12 },
+  // Foto de 52, menor que os 64 da linha de lista: aqui ela é referência, e
+  // o assunto é o texto embaixo.
+  notaFoto: { width: 52, height: 52, borderRadius: 14, backgroundColor: PHOTO_EMPTY },
+  notaCab: { flex: 1, minWidth: 0, gap: 3 },
+  notaNome: { fontSize: 16, fontWeight: '600', letterSpacing: -0.3, color: INK },
+  notaMetaLinha: { flexDirection: 'row', alignItems: 'center', gap: 8 },
+  notaCidade: { flex: 1, fontSize: 13, color: INK2 },
+  notaTexto: { marginTop: 10, fontSize: 15, lineHeight: 21, color: INK },
+  estrelas: { flexDirection: 'row', gap: 2 },
+  estrelaCheia: { position: 'absolute', left: 0, top: 0, bottom: 0, overflow: 'hidden' },
 
   // .est-mosaico — a primeira peça ocupa as duas colunas.
   mosLinha: { flexDirection: 'row', gap: 8, marginTop: 8 },

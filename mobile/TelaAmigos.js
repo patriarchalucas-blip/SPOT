@@ -37,6 +37,7 @@ import {
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Svg, { Circle, Path } from 'react-native-svg';
 import { BASE, SURFACE, INK, INK2, INK3, VERDE, ON_GREEN, PHOTO_EMPTY, FRAUNCES } from './cores';
+import { folgaDeRolagem } from './BarraDeAbas';
 
 // :root do index.html — não inventar aqui.
 
@@ -254,7 +255,7 @@ export default function TelaAmigos({ dados, ocupado, acao }) {
 
       <ScrollView
         style={e.corpo}
-        contentContainerStyle={{ paddingTop: 16, paddingBottom: 120 }}
+        contentContainerStyle={{ paddingTop: 16, paddingBottom: folgaDeRolagem(margem.bottom) }}
         refreshControl={
           <RefreshControl refreshing={!!ocupado} onRefresh={() => acao('recarregar')} tintColor={INK3} />
         }

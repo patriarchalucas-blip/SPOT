@@ -65,6 +65,14 @@ function Icone({ nome, cor }) {
   );
 }
 
+// A ALTURA DA BARRA, EM UM LUGAR SÓ. As quatro telas precisam reservar espaço
+// embaixo pra última coisa da rolagem não morrer atrás da barra, e cada uma
+// tinha um `paddingBottom: 120` escrito na mão. Num iPhone com o risquinho a
+// barra mede 78 + 34 = 112, então sobravam 8px — a última linha encostava. E
+// o número não acompanhava a barra se ela mudasse de altura.
+export const ALTURA_DA_BARRA = 78;
+export const folgaDeRolagem = (margemDeBaixo) => ALTURA_DA_BARRA + (margemDeBaixo || 0) + 24;
+
 // A ordem é a mesma da barra do site. `tela` é o id que o goTo() do app usa.
 export const ABAS = [
   { tela: 'dashboard', icone: 'map', rotulo: 'Viagens' },
@@ -77,7 +85,7 @@ export default function BarraDeAbas({ ativa, aoTocar, margemDeBaixo }) {
   const folga = margemDeBaixo || 0;
   return (
     <View style={estilo.ancora} pointerEvents="box-none">
-      <View style={[estilo.barra, { height: 78 + folga, paddingBottom: folga }]}>
+      <View style={[estilo.barra, { height: ALTURA_DA_BARRA + folga, paddingBottom: folga }]}>
         {/* O site usa backdrop-filter; aqui o equivalente é o BlurView. No
             Android o blur é caro e irregular, então lá vai fundo sólido —
             mesma decisão do @supports que o CSS já tem.

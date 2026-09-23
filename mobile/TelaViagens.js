@@ -31,9 +31,10 @@ import {
   View,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import Svg, { Circle, Path } from 'react-native-svg';
+import Svg, { Circle, Path, Text as SvgText } from 'react-native-svg';
 import MapaMundi from './MapaMundi';
 import { BASE, SURFACE, INK, INK2, INK3, GREEN, ON_GREEN, MAP_BG, PHOTO_EMPTY } from './cores';
+import { folgaDeRolagem } from './BarraDeAbas';
 
 // Mesmo denominador do site. Ver a nota de PAISES_NO_MUNDO no index.html:
 // não é o tamanho de COUNTRIES (243), que inclui território não soberano.
@@ -57,12 +58,22 @@ function Anel({ paises }) {
           strokeDasharray={`${volta * fatia} ${volta}`}
           transform="rotate(-90 38 38)"
         />
+        {/* O NÚMERO É DESENHO, NÃO TEXTO POR CIMA. Ele era um View absoluto
+            sobre o SVG e no iPhone apareceu FORA do círculo, escrito em cima
+            do rótulo de baixo. Dentro do próprio desenho não há layout que
+            possa errar: x=38 y=38 é o centro, e ponto.
+            Sempre inteiro, sem casa decimal: abrir espaço pra vírgula faz o
+            número balançar de largura conforme a pessoa viaja. */}
+        <SvgText
+          x={38} y={38} fill={INK} fontSize={19} fontWeight="700"
+          textAnchor="middle" alignmentBaseline="middle"
+          // alignmentBaseline não é honrado no Android: o dy de 0,35em é o
+          // truque que centra vertical em qualquer um dos dois.
+          dy="0.35em"
+        >
+          {pc ? Math.round(pc) + '%' : '0%'}
+        </SvgText>
       </Svg>
-      {/* Sempre inteiro, sem casa decimal: abrir espaço pra vírgula faz o
-          número balançar de largura conforme a pessoa viaja. */}
-      <View style={e.anelTxtCaixa} pointerEvents="none">
-        <Text style={e.anelTxt}>{pc ? Math.round(pc) + '%' : '0%'}</Text>
-      </View>
     </View>
   );
 }
@@ -208,7 +219,7 @@ export default function TelaViagens({ dados, ocupado, acao }) {
   return (
     <ScrollView
       style={e.fundo}
-      contentContainerStyle={{ paddingBottom: 120 }}
+      contentContainerStyle={{ paddingBottom: folgaDeRolagem(margem.bottom) }}
       refreshControl={
         <RefreshControl refreshing={!!ocupado} onRefresh={() => acao('recarregar')} tintColor={INK3} />
       }
@@ -366,8 +377,6 @@ const e = StyleSheet.create({
   },
   anelBloco: { alignItems: 'center', gap: 6 },
   anel: { width: 76, height: 76 },
-  anelTxtCaixa: { ...StyleSheet.absoluteFillObject, alignItems: 'center', justifyContent: 'center' },
-  anelTxt: { fontSize: 19, fontWeight: '700', letterSpacing: -0.6, color: INK },
   // Diz PAÍSES, não "do mundo": o anel fica ao lado de três números
   // diferentes, e sem isto nada amarra a porcentagem a um deles.
   anelRot: { fontSize: 10, color: INK2 },

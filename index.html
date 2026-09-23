@@ -7141,6 +7141,9 @@ let ESTANTE_ABERTA = {};
 // em cima e duas fileiras de duas.
 const ESTANTE_NO_PERFIL = 5;
 let ESTANTE_CIDADES = [];
+// Quantas notas suas o Perfil mostra antes do "ver todas". Ver a nota de
+// `notas` em darDadosDePerfil().
+const NOTAS_NO_PERFIL = 6;
 function renderEstante(){
   const box=document.getElementById('estante');
   if(!box)return;
@@ -7264,6 +7267,36 @@ function darDadosDePerfil(){
   // um país. A web sempre teve tudo isso em linhas. As REGRAS ficam aqui, do
   // mesmo jeito que na web; a tela nativa só desenha o que chegar.
   const paises=listaDePaisesPraTela(visitados);
+
+  // AS SUAS NOTAS. O Perfil nativo repetia a tela inicial (mapa, contagem de
+  // paises, cidades) e nao mostrava a unica coisa que so existe ali: o que
+  // VOCE achou dos lugares. Nota mais alta primeiro, e entre notas iguais o
+  // mais recente — quem abre o proprio perfil quer rever o que amou.
+  //
+  // BASTA TER NOTA — o texto e opcional. Eu tinha exigido texto escrito, o que
+  // deixaria a secao VAZIA pra quem avalia com estrela e nao escreve, e aí o
+  // Perfil perderia o mapa sem ganhar nada no lugar. Quem escreveu aparece
+  // primeiro entre notas iguais, porque o texto e o que vale mais olhar.
+  const notas=spots.filter(function(s){
+    return s.status==='been'&&Number(s.my_rating)>0;
+  }).sort(function(a,b){
+    const ta=String(a.my_review||'').trim()?1:0, tb=String(b.my_review||'').trim()?1:0;
+    return (Number(b.my_rating)||0)-(Number(a.my_rating)||0)
+      ||tb-ta
+      ||String(b.created_at||'').localeCompare(String(a.created_at||''));
+  }).map(function(s){
+    return{
+      id:s.id,
+      nome:s.name||'',
+      cidade:cityOf(s)||'',
+      // Sem arredondar: a nota vai de meia em meia desde a migracao 020.
+      estrelas:Number(s.my_rating)||0,
+      nota:fmtRating(s.my_rating),
+      texto:String(s.my_review||'').trim(),
+      foto:fotoPraCasca(safeUrl(fotoNaLargura(semChaveDoPlaces(s.photo_url||''),400)))||''
+    };
+  });
+
   falarComACasca({tipo:'perfil',pronto:true,dados:{
     nome:nomeDeExibicao(),
     username:p.username||'',
@@ -7296,6 +7329,11 @@ function darDadosDePerfil(){
       };
     }),
     cidadesTotal:cidades.length,
+    notas:notas.slice(0,NOTAS_NO_PERFIL),
+    notasTotal:notas.length,
+    // "O que eu achei" so vale se houver texto escrito. Com estrela e sem
+    // palavra nenhuma, o titulo honesto e outro.
+    notasTitulo:notas.some(function(n){return n.texto})?'O que eu achei':'Minhas notas',
     estante:estante,
     paises:paises.linhas,
     paisesTotal:paises.total,
