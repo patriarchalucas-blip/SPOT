@@ -1136,7 +1136,40 @@ body.na-casca .bottom-nav{display:none}
   font-weight:600;color:var(--green);cursor:pointer;font-family:inherit}
 .ml-vertodos:active{opacity:.6}
 
-/* ═══ CONVITE ═══ */
+/* ═══ PÁGINA DO CONVITE ═══ */
+#convite{background:var(--base);overflow-y:auto}
+.cv-capa{position:relative;height:420px;background:var(--photo-empty);
+  background-size:cover;background-position:center}
+/* O único gradiente permitido fora do mapa: o véu de rodapé de foto. */
+.cv-scrim{position:absolute;inset:0;
+  background:linear-gradient(to top,var(--base) 2%,rgba(245,245,243,0) 45%)}
+.cv-corpo{padding:0 20px 40px;margin-top:-56px;position:relative}
+.cv-quem{display:flex;align-items:center;gap:12px}
+.cv-avatar{width:56px;height:56px;border-radius:18px;background:var(--green);
+  color:var(--on-green);display:flex;align-items:center;justify-content:center;
+  font-size:20px;font-weight:600;overflow:hidden;background-size:cover;background-position:center;flex-shrink:0}
+.cv-rot{font-size:13px;color:var(--ink2)}
+.cv-nome{font-size:20px;font-weight:700;letter-spacing:-.03em;color:var(--ink)}
+.cv-titulo{margin-top:20px;font-size:28px;font-weight:700;letter-spacing:-.04em;
+  line-height:1.15;color:var(--ink)}
+.cv-texto{margin-top:12px;font-size:15px;line-height:1.5;color:var(--ink2)}
+.cv-fotos{display:flex;gap:8px;margin-top:20px}
+.cv-foto{width:96px;height:96px;border-radius:var(--r-card);background:var(--photo-empty);
+  background-size:cover;background-position:center;flex:none}
+.cv-acoes{margin-top:28px}
+/* Os botões de entrar nasceram na tela de LOGIN, que é foto escura: lá o texto
+   é branco e o fundo é translúcido. Aqui o fundo é claro, então viravam texto
+   preto sobre nada. Botão primário do sistema: verde, 52 de altura. */
+#convite .btn-google{width:100%;height:52px;background:var(--green);color:var(--on-green);
+  border:none;border-radius:var(--r-card);display:flex;align-items:center;justify-content:center;
+  gap:10px;font-size:15px;font-weight:600;font-family:inherit;cursor:pointer;backdrop-filter:none}
+#convite .btn-google:active{opacity:.85}
+#convite .btn-email-ghost{width:100%;height:48px;margin-top:10px;background:none;border:none;
+  color:var(--ink2);font-size:14px;font-weight:600;font-family:inherit;cursor:pointer;text-decoration:none}
+#convite .login-legal{margin-top:16px;font-size:12px;line-height:1.5;color:var(--ink3);text-align:left}
+#convite .login-legal a{color:var(--ink2)}
+
+/* ═══ CONVITE (bloco do Perfil) ═══ */
 .conv-bloco{margin-top:28px;background:var(--green);border-radius:var(--r-card);padding:18px 16px}
 .conv-tit{font-size:17px;font-weight:700;letter-spacing:-.02em;color:var(--on-green)}
 .conv-txt{margin-top:6px;font-size:14px;line-height:1.45;color:rgba(245,245,243,.8)}
@@ -1382,6 +1415,39 @@ svg.ic path,svg.ic circle,svg.ic line,svg.ic polyline,svg.ic rect{fill:none;stro
 
 <div class="screen active" id="loading">
   <div style="text-align:center"><svg class="brand-wordmark" viewBox="3 77 273 76" height="46" role="img" aria-label="Spot"><text x="0" y="150" font-family="Cinzel" font-weight="500" font-size="100" letter-spacing="6" fill="#0B3D2E">SPOT</text></svg><div class="spinner" style="margin-top:20px"></div></div>
+</div>
+
+<!-- PÁGINA DO CONVITE. Quem abre um link caía na tela de entrada comum, que
+     não diz de quem é o convite nem o que tem do outro lado. Aqui a pessoa vê
+     QUEM convidou e o tamanho do acervo antes de decidir entrar. Os dados vêm
+     de invite_preview() (022), que é security definer porque quem abre o link
+     ainda não tem conta e o RLS — corretamente — não deixa anônimo ler nada. -->
+<div class="screen" id="convite">
+  <div class="cv-capa" id="cvCapa"><div class="cv-scrim"></div></div>
+  <div class="cv-corpo">
+    <div class="cv-quem">
+      <div class="cv-avatar" id="cvAvatar"></div>
+      <div>
+        <div class="cv-rot">Convite de</div>
+        <div class="cv-nome" id="cvNome">—</div>
+      </div>
+    </div>
+    <div class="cv-titulo" id="cvTitulo"></div>
+    <div class="cv-texto">Entre e vocês viram amigos no Spot: você vê os lugares de quem te convidou, e essa pessoa vê os seus.</div>
+    <div class="cv-fotos" id="cvFotos"></div>
+    <div class="cv-acoes">
+      <div class="auth-error" id="cvErro"></div>
+      <button class="btn-google" onclick="signInGoogle()">
+        <svg width="18" height="18" viewBox="0 0 24 24"><path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.07 5.07 0 01-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#fff"/><path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#fff"/><path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18A11 11 0 001 12c0 1.78.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#fff"/><path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#fff"/></svg>
+        Continuar com Google
+      </button>
+      <button class="btn-email-ghost" onclick="goTo('login');showEmailForm()">Entrar com email</button>
+      <div class="login-legal" style="color:var(--ink3)">
+        Ao continuar, você concorda com os <a href="/termos" target="_blank" rel="noopener">Termos de uso</a>
+        e a <a href="/privacidade" target="_blank" rel="noopener">Política de privacidade</a>.
+      </div>
+    </div>
+  </div>
 </div>
 
 <div class="screen" id="login">
@@ -2246,6 +2312,14 @@ async function dbRpc(fn,params){
 // ═══ INIT ═══
 async function init(){
   capturarConviteDaURL();
+  // Quem chegou por link vê a PÁGINA do convite no lugar da tela de entrada.
+  // Ela é montada em paralelo e só entra se conseguir: sem rede, sem a 022 ou
+  // com código inválido, o app cai no login normal e a faixa antiga aparece.
+  // Nada aqui pode segurar a abertura do app — por isso não tem `await` no
+  // caminho de quem já está logado.
+  montarPaginaDeConvite().then(function(deu){
+    if(deu&&!S.user)goTo('convite');
+  }).catch(function(){});
   if(!sb){goTo('login');mostrarQuemConvidou();return}
   mostrarQuemConvidou();
   sb.auth.onAuthStateChange(async(ev,sess)=>{
@@ -2286,6 +2360,9 @@ async function init(){
     if(document.getElementById('loading').classList.contains('active')){
       goTo(S.user?'dashboard':'login');
     }
+    // Se a página do convite já tinha assumido, o resgate a mantém — mas esta
+    // rede de segurança roda cega aos 3 segundos e mandaria pro login.
+    if(!S.user&&document.getElementById('cvNome').textContent!=='—')goTo('convite');
   },3000);
 }
 
@@ -7474,11 +7551,16 @@ const ML_STATUS = [
   {chave:'want', rotulo:'Quero ir'},
   {chave:'skip', rotulo:'Não recomendo'}
 ];
+// "Compras" NÃO é categoria de cima: é um dos tipos de experiência, ao lado de
+// Natureza, Nightlife, Wellness, Cultura e Passeio (ver EXP_SUBCATS). O
+// handoff lista as quatro numa fila só, e é assim que a pessoa procura — então
+// a fila é plana aqui e o filtro sabe descer um nível quando precisa.
 const ML_CATEGORIAS = [
   {chave:'', rotulo:'Todas as categorias'},
   {chave:'food', rotulo:'Gastronomia'},
   {chave:'experience', rotulo:'Experiências'},
-  {chave:'hotel', rotulo:'Hospedagem'}
+  {chave:'hotel', rotulo:'Hospedagem'},
+  {chave:'experience:compras', rotulo:'Compras'}
 ];
 let mlStatus='been', mlCidade='', mlCat='';
 // Cidades vão pelo ÍNDICE no onclick, nunca pelo nome: nome de cidade tem
@@ -7494,7 +7576,13 @@ function mlFiltrar(spots,comStatus,comCidade,comCat){
   return spots.filter(function(s){
     if(comStatus&&(s.status||'want')!==comStatus)return false;
     if(comCidade&&cityOf(s)!==comCidade)return false;
-    if(comCat&&s.category!==comCat)return false;
+    if(comCat){
+      // "experience:compras" = categoria de cima MAIS tipo de experiência. Um
+      // spot pode ter vários tipos na mesma coluna, por isso temSubcat().
+      const p=comCat.split(':');
+      if(s.category!==p[0])return false;
+      if(p[1]&&!temSubcat(s.subcategory,p[1]))return false;
+    }
     return true;
   });
 }
@@ -9242,6 +9330,48 @@ function capturarConviteDaURL(){
     history.replaceState(null,'',location.pathname);
   }catch(e){}
 }
+// A PÁGINA do convite, que substitui a tela de entrada pra quem chegou por
+// link. Devolve true se conseguiu montar — quem chama usa isso pra decidir
+// entre esta tela e o login comum.
+//
+// Falha em silêncio de propósito: sem rede, com a 022 ainda não rodada, ou
+// com código inválido, cai no login normal. O código continua guardado, e
+// quem decide se ele vale é o resgate, depois do login.
+async function montarPaginaDeConvite(){
+  let c=null;
+  try{c=localStorage.getItem(CONVITE_GUARDADO)}catch(e){}
+  if(!c)return false;
+  let r=null;
+  try{r=await dbRpc('invite_preview',{invite_code:c})}catch(e){}
+  if(!r||!r.length)return false;
+  const p=r[0];
+  const nome=p.display_name||(p.username?'@'+p.username:'Alguém');
+  document.getElementById('cvNome').textContent=nome;
+
+  const av=document.getElementById('cvAvatar');
+  const fotoAv=safeUrl(p.avatar_url||'');
+  if(fotoAv){av.style.backgroundImage=cssUrl(fotoAv);av.textContent=''}
+  else{av.style.backgroundImage='';av.textContent=initials(nome)}
+
+  const fotos=(p.fotos||[]).map(u=>safeUrl(fotoNaLargura(semChaveDoPlaces(u),600))).filter(Boolean);
+  const capa=document.getElementById('cvCapa');
+  if(fotos[0])capa.style.backgroundImage=cssUrl(fotos[0]);
+  // As três miúdas: a primeira já é a capa, então elas começam da segunda e
+  // só aparecem quando há pelo menos duas — uma sozinha parece sobra.
+  const tres=fotos.slice(1,4);
+  document.getElementById('cvFotos').innerHTML=tres.length>1
+    ?tres.map(u=>'<div class="cv-foto" style="background-image:'+cssUrl(u)+'"></div>').join(''):'';
+
+  const n=Number(p.lugares)||0, nc=Number(p.cidades)||0;
+  // Sem nenhum lugar ainda, a frase de número seria "0 lugares em 0 cidades",
+  // que é um convite pra não entrar. Nesse caso o convite fala do vínculo.
+  document.getElementById('cvTitulo').textContent = n
+    ? (n+(n===1?' lugar':' lugares')+(nc?(' em '+nc+(nc===1?' cidade':' cidades')):'')
+       +', cada um com a nota de quem foi.')
+    : ('Você foi convidado a ver os lugares de '+nome+'.');
+  return true;
+}
+
 async function mostrarQuemConvidou(){
   let c=null;
   try{c=localStorage.getItem(CONVITE_GUARDADO)}catch(e){}
