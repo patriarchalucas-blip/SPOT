@@ -1140,6 +1140,79 @@ body.na-casca .bottom-nav{display:none}
   font-weight:600;color:var(--green);cursor:pointer;font-family:inherit}
 .ml-vertodos:active{opacity:.6}
 
+/* ═══ FICHA DO LUGAR ═══ */
+#place{background:var(--base)}
+.fi-foto{position:relative;height:340px;background:var(--photo-empty)}
+.fi-foto .place-hero-img{position:absolute;inset:0;background-size:cover;background-position:center}
+/* Só no TOPO, e só pela barra de status do telefone. O véu de baixo saiu
+   junto com o título que morava lá. */
+.fi-topo-veu{position:absolute;left:0;right:0;top:0;height:30%;
+  background:linear-gradient(to bottom,rgba(0,0,0,.35),transparent)}
+.fi-redondo{position:absolute;top:18px;width:40px;height:40px;border:none;border-radius:50%;
+  background:rgba(245,245,243,.92);color:var(--ink);display:flex;align-items:center;
+  justify-content:center;cursor:pointer;z-index:2}
+.fi-redondo:active{opacity:.7}
+.fi-redondo svg{width:20px;height:20px}
+.fi-voltar{left:20px}
+.fi-mais{right:20px}
+.fi-corpo{padding:20px 20px 0}
+.fi-tipo{font-size:13px;font-weight:500;color:var(--ink2)}
+.fi-nome{margin:4px 0 0;font-size:30px;font-weight:700;letter-spacing:-.04em;
+  line-height:1.05;color:var(--ink)}
+.fi-servico{display:flex;align-items:center;gap:8px;margin-top:10px;font-size:14px;color:var(--ink2);flex-wrap:wrap}
+.fi-servico .fi-aberto{font-weight:600;color:var(--green)}
+.fi-servico .fi-fechado{color:var(--ink3)}
+.fi-servico .fi-google{margin-left:auto;color:var(--ink2)}
+.fi-servico .fi-google b{font-weight:600;color:var(--ink)}
+/* Segmentado global: trilho surface, escolhido com o fundo da página por cima. */
+.fi-status{display:flex;gap:2px;margin-top:20px;background:var(--surface);
+  border-radius:var(--r-card);padding:4px}
+.fi-st{flex:1;height:40px;border:none;background:none;border-radius:var(--r-btn);
+  font-size:14px;font-weight:600;color:var(--ink2);cursor:pointer;font-family:inherit;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.fi-st.on{background:var(--base);color:var(--ink)}
+.fi-nota{margin-top:20px}
+.fi-estrelas{display:flex;gap:10px;margin-bottom:14px}
+.fi-star{width:32px;height:32px;padding:0;border:none;background:none;cursor:pointer;position:relative}
+.fi-star svg{width:32px;height:32px}
+/* O campo não é caixa: é o texto da tela. Fundo da página, sem borda — o que
+   o separa é o tamanho da letra, como no resto do sistema. */
+.fi-campo{width:100%;border:none;background:none;resize:none;outline:none;
+  font-family:inherit;font-size:22px;font-weight:500;letter-spacing:-.02em;
+  line-height:1.28;color:var(--ink);padding:0;min-height:60px}
+.fi-campo::placeholder{color:var(--ink3)}
+.fi-dica{margin-top:6px;font-size:12px;color:var(--ink3)}
+.fi-antes{margin-top:12px;font-size:13px;line-height:1.45;color:var(--ink3)}
+.fi-acoes{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-top:28px}
+.fi-acoes:empty{display:none}
+.fi-ac{height:72px;background:var(--surface);border:none;border-radius:var(--r-card);
+  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;
+  color:var(--ink);text-decoration:none;cursor:pointer;font-family:inherit}
+.fi-ac:active{opacity:.6}
+.fi-ac svg{width:20px;height:20px}
+.fi-ac span{font-size:12px;font-weight:600}
+.fi-endereco{margin-top:12px}
+.fi-endereco:empty{display:none}
+.fi-end{display:flex;align-items:center;gap:12px;background:var(--surface);
+  border-radius:var(--r-card);padding:14px 16px;text-decoration:none;color:inherit}
+.fi-end:active{opacity:.7}
+.fi-end-txt{flex:1;min-width:0}
+.fi-rua{display:block;font-size:14px;font-weight:600;color:var(--ink);
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.fi-bairro{display:block;margin-top:2px;font-size:13px;color:var(--ink2);
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+/* As estrelas da ficha são 32, não 16: aqui elas são o controle principal do
+   status "Fui", não um indicador de leitura. Herdam o resto de .star-btn, que
+   é quem o pintarEstrelas() conhece. */
+/* Pelo id: `svg.ic` tem regra própria de tamanho e ganhava de qualquer
+   seletor só de classe — as estrelas saíam com 13px dentro de um botão de 32. */
+.fi-star{width:32px;height:32px}
+#placeStars .star-btn svg{width:32px;height:32px}
+.fi-amigos{margin-top:32px}
+.fi-amcab{display:flex;align-items:baseline;justify-content:space-between;gap:8px;margin-bottom:14px}
+.fi-amsub{font-size:13px;color:var(--ink2)}
+.fi-menunome{padding:0 20px 14px;font-size:13px;color:var(--ink2)}
+
 /* ═══ PÁGINA DO CONVITE ═══ */
 #convite{background:var(--base);overflow-y:auto}
 .cv-capa{position:relative;height:420px;background:var(--photo-empty);
@@ -1746,13 +1819,55 @@ svg.ic path,svg.ic circle,svg.ic line,svg.ic polyline,svg.ic rect{fill:none;stro
 </div>
 
 <div class="screen" id="place">
-  <div class="place-hero"><div class="place-hero-img" id="placeHeroImg"></div><div class="hero-overlay"></div><button class="hero-back" onclick="backFromPlace()" data-ic="back" aria-label="Voltar"></button><button class="hero-photo-btn" onclick="document.getElementById('spotPhotoFileInput').click()" data-ic="edit" aria-label="Trocar foto"></button><input type="file" id="spotPhotoFileInput" accept="image/*" style="display:none" onchange="onSpotPhotoFileChosen(this)"><div class="hero-chip chip-want" id="placeChip" onclick="cycleStatus()">Quero ir</div><div class="hero-bottom"><div class="hero-type" id="placeType"></div><div class="hero-name" id="placeName"></div></div></div>
-  <div class="d-section"><div class="note-card" id="notaLeitura"><div class="note-glow"></div><div class="note-quote" id="placeNote"></div><div class="note-attr" id="placeNoteAttr"></div></div><div id="notaEdicao" style="display:none"><textarea class="note-input" id="notaTexto" rows="4" placeholder="Por que esse lugar te chamou atenção?"></textarea><div class="nota-acoes"><button class="action-btn" style="margin:0" id="btnSalvarNota" onclick="salvarNota()">Salvar nota</button><button class="secondary-link" style="margin:0" onclick="cancelarNota()">Cancelar</button></div></div><div class="nota-linha"><div class="stars-row" id="placeStars"><button class="star-btn" onclick="rateStar(1,event)" aria-label="Dar nota 1"><span class="st-base" data-ic="star"></span><span class="st-fill" data-ic="star"></span></button><button class="star-btn" onclick="rateStar(2,event)" aria-label="Dar nota 2"><span class="st-base" data-ic="star"></span><span class="st-fill" data-ic="star"></span></button><button class="star-btn" onclick="rateStar(3,event)" aria-label="Dar nota 3"><span class="st-base" data-ic="star"></span><span class="st-fill" data-ic="star"></span></button><button class="star-btn" onclick="rateStar(4,event)" aria-label="Dar nota 4"><span class="st-base" data-ic="star"></span><span class="st-fill" data-ic="star"></span></button><button class="star-btn" onclick="rateStar(5,event)" aria-label="Dar nota 5"><span class="st-base" data-ic="star"></span><span class="st-fill" data-ic="star"></span></button></div><span class="nota-rot">sua nota</span><button class="sec-editar" id="btnEditarNota" onclick="editarNota()">Editar</button></div><div class="sp-social" id="placeSocial" style="display:none"></div></div>
-  <div class="d-section"><div id="placeReserveWrap"></div><div class="info-linha" id="placeInfoGrid"></div><div class="foto-credito" id="placeFotoCredito"></div></div>
-  <div class="d-section"><div class="coment-bloco" id="placeComentarios"></div></div>
-  <div class="d-section" id="placeSubcatSection" style="display:none"><div class="sec-label sec-pequeno">Tipo de experiência</div><div class="subcat-row" id="placeSubcatChips"></div></div>
-  <div class="d-section"><div class="status-toggle"><button class="toggle-btn sel-want" id="t-want" onclick="setStatus('want')">Quero ir</button><button class="toggle-btn" id="t-been" onclick="setStatus('been')">Fui</button><button class="toggle-btn" id="t-skip" onclick="setStatus('skip')">Pular</button></div></div>
-  <div class="d-section"><div class="sec-label">Sua avaliação</div><textarea class="review-area" id="reviewText" rows="3" placeholder="O que você achou?"></textarea><button class="action-btn" id="saveReviewBtn" onclick="saveReview()">Salvar avaliação</button><button class="delete-link" onclick="deleteSpot()">Excluir spot</button></div>
+  <!-- A foto perdeu o título, a pastilha de status e o véu de baixo. Sobrou o
+       degradê do TOPO, que existe só pra barra de status do telefone
+       continuar legível sobre foto clara. -->
+  <div class="fi-foto"><div class="place-hero-img" id="placeHeroImg"></div><div class="fi-topo-veu"></div><button class="fi-redondo fi-voltar" onclick="backFromPlace()" data-ic="back" aria-label="Voltar"></button><button class="fi-redondo fi-mais" onclick="abrirMenuDoLugar()" data-ic="mais" aria-label="Mais"></button><input type="file" id="spotPhotoFileInput" accept="image/*" style="display:none" onchange="onSpotPhotoFileChosen(this)"></div>
+  <div class="fi-corpo">
+    <!-- CABEÇALHO. O nome saiu de cima da foto: ali ele era cortado em nome
+         comprido e obrigava a escurecer a imagem inteira pra continuar
+         legível. Embaixo ele tem a largura toda e a foto fica limpa. -->
+    <div class="fi-tipo" id="placeType"></div>
+    <h1 class="fi-nome" id="placeName"></h1>
+    <div class="fi-servico" id="placeServico"></div>
+
+    <!-- O STATUS é a primeira decisão da tela, então vem antes de tudo que
+         depende dele. Era uma pastilha na foto e um segmentado lá embaixo,
+         os dois mexendo na mesma coisa. -->
+    <div class="fi-status">
+      <button class="fi-st" id="t-want" onclick="setStatus('want')">Quero ir</button>
+      <button class="fi-st" id="t-been" onclick="setStatus('been')">Fui</button>
+      <button class="fi-st" id="t-skip" onclick="setStatus('skip')">Não recomendo</button>
+    </div>
+
+    <!-- UM CAMPO POR STATUS, e a pergunta muda junto. Antes eram dois campos
+         (nota e avaliação) sempre visíveis, com um botão de salvar cada. -->
+    <div class="fi-nota">
+      <div class="fi-estrelas" id="placeStars" style="display:none">
+        <button class="star-btn fi-star" onclick="rateStar(1,event)" aria-label="Dar nota 1"><span class="st-base" data-ic="star"></span><span class="st-fill" data-ic="star"></span></button>
+        <button class="star-btn fi-star" onclick="rateStar(2,event)" aria-label="Dar nota 2"><span class="st-base" data-ic="star"></span><span class="st-fill" data-ic="star"></span></button>
+        <button class="star-btn fi-star" onclick="rateStar(3,event)" aria-label="Dar nota 3"><span class="st-base" data-ic="star"></span><span class="st-fill" data-ic="star"></span></button>
+        <button class="star-btn fi-star" onclick="rateStar(4,event)" aria-label="Dar nota 4"><span class="st-base" data-ic="star"></span><span class="st-fill" data-ic="star"></span></button>
+        <button class="star-btn fi-star" onclick="rateStar(5,event)" aria-label="Dar nota 5"><span class="st-base" data-ic="star"></span><span class="st-fill" data-ic="star"></span></button>
+      </div>
+      <textarea class="fi-campo" id="fiCampo" rows="3" oninput="fiCampoMudou()"></textarea>
+      <div class="fi-dica" id="fiDica">Salva sozinho</div>
+      <div class="fi-antes" id="fiAntes" style="display:none"></div>
+    </div>
+
+    <div class="fi-acoes" id="placeReserveWrap"></div>
+
+    <div class="fi-endereco" id="placeInfoGrid"></div>
+
+    <div class="fi-amigos">
+      <div class="fi-amcab"><span class="section-title">Amigos</span><span class="fi-amsub" id="fiAmigosSub"></span></div>
+      <div class="coment-bloco" id="placeComentarios"></div>
+    </div>
+
+    <div class="d-section" id="placeSubcatSection" style="display:none"><div class="sec-label sec-pequeno">Tipo de experiência</div><div class="subcat-row" id="placeSubcatChips"></div></div>
+    <div class="foto-credito" id="placeFotoCredito"></div>
+    <div style="height:40px"></div>
+  </div>
 </div>
 
 <!-- OVERLAYS -->
@@ -1775,6 +1890,15 @@ svg.ic path,svg.ic circle,svg.ic line,svg.ic polyline,svg.ic rect{fill:none;stro
 <!-- PRIMEIRO ACESSO. Não fecha clicando fora de propósito: é a única folha do
      app que existe pra ser respondida, não consultada. Tem "Agora não". -->
 <div class="overlay" id="ov-boasvindas"><div class="sheet"><div class="sheet-handle"></div><div class="sheet-title">Onde você mora?</div><div class="den-sobre">Serve pra abrir o Explorar já cheio — o que seus amigos marcaram perto de você.</div><div class="nt-label">Sua cidade</div><div class="nt-wrap"><input class="nt-input" id="cidadeCasaInput" type="text" placeholder="ex: São Paulo" autocomplete="off" oninput="buscarCidadeDeCasa(this.value)"><div class="busca-res" id="cidadeCasaRes"></div></div><button class="secondary-link" style="margin:0 0 18px" onclick="pularCidadeDeCasa()">Agora não</button></div></div>
+
+<!-- O ⋯ da ficha. O lápis flutuante e a engrenagem viraram este menu: tudo que
+     é raro mora aqui, e a tela fica com o que se usa todo dia. -->
+<div class="overlay" id="ov-menulugar" onclick="closeOut(event,'ov-menulugar')"><div class="sheet"><div class="sheet-handle"></div><div class="fi-menunome" id="fiMenuNome"></div>
+<div class="prof-linha" onclick="closeOv('ov-menulugar');compartilharLugar()"><span class="pl-ic" data-ic="share"></span><span class="pl-txt">Compartilhar lugar</span></div>
+<div class="prof-linha" onclick="closeOv('ov-menulugar');document.getElementById('spotPhotoFileInput').click()"><span class="pl-ic" data-ic="edit"></span><span class="pl-txt">Trocar foto</span></div>
+<div class="prof-linha" onclick="closeOv('ov-menulugar');abrirTrocaDeCategoria()"><span class="pl-ic" data-ic="compass"></span><span class="pl-txt">Mudar categoria</span></div>
+<div class="prof-linha" onclick="closeOv('ov-menulugar');deleteSpot()"><span class="pl-ic" data-ic="trash"></span><span class="pl-txt" style="color:var(--ink3)">Excluir lugar</span></div>
+<div style="height:14px"></div></div></div>
 
 <div class="overlay" id="ov-mlcidade" onclick="closeOut(event,'ov-mlcidade')"><div class="sheet"><button class="sheet-close" onclick="closeOv('ov-mlcidade')" data-ic="close" aria-label="Fechar"></button><div class="sheet-handle"></div><div class="sheet-title">Cidade</div><div id="mlCidadeLista" style="padding-bottom:12px"></div></div></div>
 
@@ -1852,6 +1976,9 @@ chevron:'<path d="M9 5.5 15.5 12 9 18.5"/>',
 alert:'<circle cx="12" cy="12" r="9"/><path d="M12 7.5v6"/><path d="M12 16v.01"/>',
 send:'<path d="M22 2 11 13"/><path d="M22 2 15 22l-4-9-9-4 20-7Z"/>',
 share:'<path d="M12 15V3.5"/><path d="M8.2 7.3 12 3.5l3.8 3.8"/><path d="M6.5 11H5.5A1.5 1.5 0 0 0 4 12.5v6.5a1.5 1.5 0 0 0 1.5 1.5h13a1.5 1.5 0 0 0 1.5-1.5v-6.5a1.5 1.5 0 0 0-1.5-1.5h-1"/>',
+// O ⋯ da ficha. Pontos cheios, não traço: com fill="none" do svg.ic eles
+// sairiam como três anéis vazios.
+mais:'<circle cx="5.5" cy="12" r="1.6" fill="currentColor" stroke="none"/><circle cx="12" cy="12" r="1.6" fill="currentColor" stroke="none"/><circle cx="18.5" cy="12" r="1.6" fill="currentColor" stroke="none"/>',
 menu:'<path d="M4 6.5h16"/><path d="M4 12h16"/><path d="M4 17.5h10"/>',
 instagram:'<rect x="3.5" y="3.5" width="17" height="17" rx="5"/><circle cx="12" cy="12" r="4.2"/><path d="M16.3 7.3v.01"/>',
 mapPin:'<path d="M12 21c4-4.4 6-7.7 6-10.5a6 6 0 1 0-12 0C6 13.3 8 16.6 12 21Z"/><path d="M9 10.5l1.7 1.7L15 8.3"/>',
@@ -3856,16 +3983,6 @@ async function openPlace(id,origin){
   if(!s)return;
   S.curPlace=s;
   S.placeOrigin=origin||'trip'; // pra saber pra onde o "voltar" deve levar
-  document.getElementById('placeName').textContent=s.name;
-  document.getElementById('placeType').textContent=`${subcatLabel(s.subcategory)||catLabel(s.category)} · ${cityOf(s)}`;
-  // Sem nota, o espaco vira convite pra escrever uma.
-  // As aspas sairam: a nota agora e o texto grande da tela, e texto grande
-  // entre aspas se le como citacao de outra pessoa — e ela e da propria.
-  const nota=String(s.my_note||'').trim();
-  const elNota=document.getElementById('placeNote');
-  elNota.textContent=nota||'Por que esse lugar te chamou atenção?';
-  elNota.classList.toggle('nota-vazia',!nota);
-  document.getElementById('placeNoteAttr').style.display='none';
   const phEl=document.getElementById('placeHeroImg');
   const cid=cityOf(s)||s.name;
   const aindaNesteSpot=()=>S.curPlace&&S.curPlace.id===s.id;
@@ -3908,25 +4025,65 @@ async function openPlace(id,origin){
   // nota. Cidade ja aparece na capa ("COMER & BEBER · KOTOR") e a nota do
   // Google ja aparece na linha social logo acima: eram repeticao ocupando
   // meia tela. Sobrou UMA linha, que e o endereco e abre o mapa ao tocar.
-  const ende=s.address||cityOf(s)||'';
-  const alvoMapa=s.maps_url
-    ?escUrl(s.maps_url)
-    :'https://www.google.com/maps/search/?api=1&query='+encodeURIComponent((s.name||'')+' '+ende);
-  const ig=ende
-    ?'<a class="info-linha-item" href="'+alvoMapa+'" target="_blank" rel="noopener">'
-      +'<span class="ili-ic">'+icon('pin')+'</span>'
-      +'<span class="ili-txt">'+esc(ende)+'</span>'
-      +'<span class="ili-seta">›</span></a>'
-    :'';
-  document.getElementById('placeInfoGrid').innerHTML=ig;
-  renderPlaceLinks(s);
+  desenharFichaDoLugar(s);
   abrirComentarios(s.id,'placeComentarios',s.user_id||(S.user&&S.user.id));
   renderPlaceSubcat();
-  setStatus(s.status||'want',false);
+  goTo('place');
+  // DEPOIS de a tela existir na medida certa: textarea escondida tem
+  // scrollHeight zerado, então a altura calculada antes do goTo cortava o
+  // texto em duas linhas com barra de rolagem.
+  ajustarAlturaDoCampo();
+}
+
+// Tudo que depende do spot e não da foto. Separado de openPlace porque mudar
+// a categoria pelo menu ⋯ precisa redesenhar isto sem recarregar a foto.
+function desenharFichaDoLugar(s){
+  document.getElementById('placeName').textContent=s.name||'';
+  // "Tipo · bairro, cidade". O tipo de experiência é mais específico que a
+  // categoria, então ganha dela quando existe.
+  document.getElementById('placeType').textContent=
+    [subcatLabel(s.subcategory)||catLabel(s.category),cityOf(s)].filter(Boolean).join(' · ');
+
+  // LINHA DE SERVIÇO. Só o que existe de fato — hoje, a nota do Google. O
+  // desenho prevê "Aberto · fecha às 23h · $$" também, mas horário e faixa de
+  // preço são campos que o app ainda não pede ao Google; o próprio handoff
+  // manda sumir o item que não tiver, então a linha simplesmente encurta.
+  const serv=document.getElementById('placeServico');
+  const ng=String(s.rating_google||'').trim();
+  serv.innerHTML=ng?'<span class="fi-google"><b>'+esc(ng)+'</b> Google</span>':'';
+  serv.style.display=ng?'flex':'none';
+
   notaDaFicha=Number(s.my_rating)||0;
   pintarEstrelas('#placeStars',notaDaFicha);
-  document.getElementById('reviewText').value=s.my_review||'';
-  goTo('place');
+  setStatus(s.status||'want',false);
+  renderPlaceLinks(s);
+  desenharEnderecoDoLugar(s);
+}
+
+// ENDEREÇO. Era uma linha solta com o endereço inteiro, CEP incluído. Agora é
+// um bloco: rua e número em cima, bairro embaixo, e o toque abre o mapa.
+//
+// O MINI-MAPA do desenho ainda não entra: ele precisa de um provedor de mapa
+// de ruas, que é decisão de custo em aberto. A coordenada já está sendo
+// guardada (023), então quando o provedor for escolhido é só desenhar aqui.
+function desenharEnderecoDoLugar(s){
+  const box=document.getElementById('placeInfoGrid');
+  const ende=String(s.address||'').trim();
+  if(!ende&&!cityOf(s)){box.innerHTML='';return}
+  const alvo=s.maps_url
+    ?escUrl(s.maps_url)
+    :'https://www.google.com/maps/search/?api=1&query='+encodeURIComponent((s.name||'')+' '+(ende||cityOf(s)));
+  // O endereço do Google vem "Rua X, 1092 - Bairro, Cidade - UF, CEP". A
+  // primeira parte é rua e número; o resto vira a linha de baixo, sem o CEP.
+  const partes=ende?ende.split(' - '):[];
+  const rua=partes[0]||ende||cityOf(s);
+  const resto=partes.slice(1).join(' · ').replace(/,\s*\d{5}-?\d{3}\b/,'').trim();
+  box.innerHTML='<a class="fi-end" href="'+alvo+'" target="_blank" rel="noopener">'
+    +'<span class="pl-ic" data-ic="pin"></span>'
+    +'<span class="fi-end-txt"><span class="fi-rua">'+esc(rua)+'</span>'
+    +(resto?'<span class="fi-bairro">'+esc(resto)+'</span>':'')+'</span>'
+    +'<span class="pl-seta">›</span></a>';
+  hydrateIcons(box);
 }
 // Botões de ação na tela do spot — extraído pra função própria porque o
 // backfill automático precisa redesenhar isso quando o link chega depois
@@ -3946,39 +4103,44 @@ function telHref(fone){
   const digitos=limpo.replace(/[^0-9]/g,'').length;
   return digitos>=6?'tel:'+limpo:'';
 }
+// QUATRO BLOCOS IGUAIS: Ligar · Cardápio · Instagram · Rota. Eram botões
+// largos empilhados, de larguras diferentes, e o "Ligar" usava ícone de
+// TALHERES — o ícone da categoria, não da ação. O telefone saiu de dentro do
+// botão: ele é o que a pessoa menos lê e era o que mais ocupava espaço.
+//
+// O item sem dado não aparece, e a grade fecha com o que sobrou. O segundo
+// bloco muda de nome por categoria: comer tem Cardápio, hotel tem Reservar,
+// experiência tem Site.
 function renderPlaceLinks(s){
-  const reserveWrap=document.getElementById('placeReserveWrap');
-  if(s.category==='food'){
-    let rh='';
-    const tel=telHref(s.phone);
-    if(tel)rh+=`<a class="reserve-btn" href="${esc(tel)}">${icon('food')} Ligar · ${esc(s.phone)}</a>`;
-    if(s.website_url){
-      const isInstagram=/instagram\.com/i.test(s.website_url);
-      rh+=`<a class="reserve-btn" href="${escUrl(s.website_url)}" target="_blank" rel="noopener">${icon(isInstagram?'instagram':'menu')} ${isInstagram?'Abrir Instagram':'Ver cardápio'}</a>`;
-    }
-    // "Ver no Google Maps" saiu daqui: a linha do endereco, logo acima, ja
-    // abre o mapa. Eram dois botoes pro mesmo destino.
-    // Sem Instagram: um botão pra procurar AGORA, neste spot.
-    //
-    // A busca automática roda em segundo plano e em fila; quando ela não acha
-    // (ou nem chega no spot), não havia nada a fazer além de esperar sem saber
-    // o quê. Este botão tira a espera do caminho e, quando não acha, DIZ POR
-    // QUÊ — não some em silêncio.
-    if(!/instagram\.com/i.test(s.website_url||'')){
-      rh+=`<button class="reserve-btn" id="btnBuscaInsta" onclick="buscarInstagramAgora('${esc(s.id)}',this)">${icon('instagram')} Buscar Instagram</button>`;
-    }
-    reserveWrap.innerHTML=rh;
-  }else if(s.category==='hotel'){
-    // Os chips Booking.com / Hotéis.com sairam (pedido do Lucas, 09/09/2026):
-    // eram busca generica por nome+cidade e nao caiam no hotel certo — link
-    // que leva pro lugar errado e pior que link nenhum. Hotel fica com o
-    // Maps, que e o unico que aponta pro estabelecimento de fato.
-    reserveWrap.innerHTML=s.maps_url?`<a class="reserve-btn" href="${escUrl(s.maps_url)}" target="_blank" rel="noopener">${icon('mapPin')} Ver no Google Maps</a>`:'';
-  }else if(s.category==='experience'){
-    reserveWrap.innerHTML=s.maps_url?`<a class="reserve-btn" href="${escUrl(s.maps_url)}" target="_blank" rel="noopener">${icon('mapPin')} Ver no Google Maps</a>`:'';
-  }else{
-    reserveWrap.innerHTML='';
+  const box=document.getElementById('placeReserveWrap');
+  const blocos=[];
+  const bloco=(href,ic,rotulo,alvoExterno)=>
+    '<a class="fi-ac" href="'+href+'"'+(alvoExterno?' target="_blank" rel="noopener"':'')+'>'
+    +icon(ic)+'<span>'+esc(rotulo)+'</span></a>';
+
+  const tel=telHref(s.phone);
+  if(tel)blocos.push(bloco(esc(tel),'send','Ligar',false));
+
+  const site=String(s.website_url||'');
+  const ehInsta=/instagram\.com/i.test(site);
+  const rotuloDoSite=s.category==='hotel'?'Reservar':(s.category==='experience'?'Site':'Cardápio');
+  if(site&&!ehInsta)blocos.push(bloco(escUrl(site),'menu',rotuloDoSite,true));
+
+  if(ehInsta)blocos.push(bloco(escUrl(site),'instagram','Instagram',true));
+  else if(s.category==='food'){
+    // Sem Instagram salvo, o bloco vira a busca — e quando ela não acha, diz
+    // por quê em vez de sumir em silêncio.
+    blocos.push('<button class="fi-ac" id="btnBuscaInsta" onclick="buscarInstagramAgora(\''+esc(s.id)+'\',this)">'
+      +icon('instagram')+'<span>Instagram</span></button>');
   }
+
+  const alvoMapa=s.maps_url
+    ?escUrl(s.maps_url)
+    :'https://www.google.com/maps/search/?api=1&query='+encodeURIComponent((s.name||'')+' '+(s.address||cityOf(s)||''));
+  blocos.push(bloco(alvoMapa,'mapPin','Rota',true));
+
+  box.innerHTML=blocos.join('');
+  box.style.gridTemplateColumns='repeat('+Math.max(1,blocos.length)+',1fr)';
 }
 function renderPlaceSubcat(){
   const sec=document.getElementById('placeSubcatSection');
@@ -4013,18 +4175,110 @@ async function setPlaceSubcat(k){
 // de gravar, DESCARTAVA o {error} do dbUpdate e escrevia em memória de
 // qualquer jeito. Numa rede ruim a pessoa marcava dez lugares como visitados,
 // via os dez acenderem, recarregava, e nenhum tinha ficado.
-const STATUS_ROTULO={want:['chip-want','Quero ir'],been:['chip-been','Fui'],skip:['','Pulando']};
+// "Pular" virou NÃO RECOMENDO na tela. Mesmo dado (`skip`), nome honesto: a
+// pessoa que marca isso foi e não gostou — não é "deixar pra depois".
+const STATUS_ROTULO={want:['','Quero ir'],been:['','Fui'],skip:['','Não recomendo']};
 function pintarStatus(s){
-  ['want','been','skip'].forEach(k=>document.getElementById('t-'+k).className='toggle-btn');
-  document.getElementById('t-'+s).classList.add('sel-'+s);
-  const ch=document.getElementById('placeChip');
-  ch.className='hero-chip '+STATUS_ROTULO[s][0];
-  ch.textContent=STATUS_ROTULO[s][1];
+  ['want','been','skip'].forEach(function(k){
+    document.getElementById('t-'+k).className='fi-st'+(k===s?' on':'');
+  });
+  pintarCampoDaFicha(s);
+}
+
+// ═══ A PERGUNTA MUDA COM O STATUS ═══
+//
+// A tela tinha DOIS campos sempre visíveis — "sua nota" e "sua avaliação" —
+// cada um com botão de salvar próprio, mais estrelas que apareciam mesmo em
+// lugar onde a pessoa nunca foi. Agora é um campo só, e a pergunta é a que
+// faz sentido pro status:
+//
+//   Quero ir      → "Por que esse lugar te chamou atenção?"  (my_note)
+//   Fui           → estrelas + "O que você achou?"           (my_review)
+//   Não recomendo → "O que deu errado?"                      (my_review)
+//
+// As duas colunas já existiam, e é por isso que TROCAR O STATUS NUNCA APAGA
+// TEXTO: o que você escreveu antes de ir continua em my_note e reaparece
+// embaixo, pequeno, como "Antes de ir".
+const FICHA_PERGUNTA={
+  want:'Por que esse lugar te chamou atenção?',
+  been:'O que você achou?',
+  skip:'O que deu errado?'
+};
+function campoDaFicha(status){return status==='want'?'my_note':'my_review'}
+function pintarCampoDaFicha(status){
+  const s=S.curPlace;if(!s)return;
+  const campo=document.getElementById('fiCampo');
+  const estrelas=document.getElementById('placeStars');
+  const antes=document.getElementById('fiAntes');
+  campo.placeholder=FICHA_PERGUNTA[status]||FICHA_PERGUNTA.want;
+  campo.value=String(s[campoDaFicha(status)]||'');
+  ajustarAlturaDoCampo();
+  // Estrelas só em "Fui": quem ainda não foi não tem o que avaliar, e quem
+  // não recomenda já disse tudo no próprio status.
+  estrelas.style.display=status==='been'?'flex':'none';
+  // O texto de "quero ir" sobrevive à troca de status e vira contexto.
+  const nota=String(s.my_note||'').trim();
+  if(status!=='want'&&nota){
+    antes.textContent='Antes de ir: "'+nota+'"';
+    antes.style.display='';
+  }else{
+    antes.style.display='none';
+  }
+  atualizarDicaDeSalvar();
+}
+function ajustarAlturaDoCampo(){
+  const c=document.getElementById('fiCampo');
+  if(!c)return;
+  c.style.height='auto';
+  c.style.height=Math.max(60,c.scrollHeight)+'px';
+}
+function atualizarDicaDeSalvar(){
+  const c=document.getElementById('fiCampo'), d=document.getElementById('fiDica');
+  if(!c||!d)return;
+  // A legenda só existe pra ensinar que não há botão de salvar. Com texto
+  // escrito ela já cumpriu o papel e vira ruído.
+  d.style.display=String(c.value||'').trim()?'none':'';
+  d.textContent='Salva sozinho';
+}
+// Salva sozinho, 800ms depois da última tecla. Sem botão: o botão "Salvar
+// avaliação" era o único jeito de gravar, e quem saía da tela sem tocar nele
+// perdia o que escreveu.
+let fichaSalvarTO=null;
+function fiCampoMudou(){
+  ajustarAlturaDoCampo();
+  atualizarDicaDeSalvar();
+  clearTimeout(fichaSalvarTO);
+  fichaSalvarTO=setTimeout(salvarCampoDaFicha,800);
+}
+async function salvarCampoDaFicha(){
+  const s=S.curPlace;if(!s)return;
+  const status=s.status||'want';
+  const coluna=campoDaFicha(status);
+  const novo=String(document.getElementById('fiCampo').value||'').trim();
+  if(novo===String(s[coluna]||'').trim())return;
+  // O texto é lido pelos amigos, então passa pelo mesmo filtro do comentário.
+  if(textoBarrado(novo)){avisarConteudoBarrado();return}
+  const d=document.getElementById('fiDica');
+  const rec={};rec[coluna]=novo;
+  const{error}=await dbUpdate('spots',s.id,rec);
+  if(error){
+    // Não desfaz o que a pessoa digitou: ela continua com o texto na tela e
+    // pode tentar de novo. Some o "salva sozinho" e diz a verdade.
+    d.style.display='';d.textContent='Não deu pra salvar. Confere a conexão.';
+    return;
+  }
+  s[coluna]=novo;
+  atualizarDicaDeSalvar();
+  if(document.getElementById('city').classList.contains('active'))renderCityBody();
 }
 async function setStatus(s,save=true){
   if(!STATUS_ROTULO[s])return;
   const spot=S.curPlace;
   const anterior=spot?spot.status:null;
+  // GRAVA O QUE ESTÁ NO CAMPO ANTES DE TROCAR. Sem isto, escrever e tocar em
+  // "Fui" dentro da janela de 800ms do salvamento automático perdia o texto —
+  // o campo é repintado com o valor da outra coluna e o que foi digitado some.
+  if(save&&spot){clearTimeout(fichaSalvarTO);await salvarCampoDaFicha()}
   pintarStatus(s);
   if(!save||!spot)return;
   const{error}=await dbUpdate('spots',spot.id,{status:s});
@@ -4044,43 +4298,9 @@ async function setStatus(s,save=true){
 // caminho nenhum pra corrigir. E ela e o conteudo central do app: a nota
 // pessoal e o que diferencia o Spot de uma lista de lugares. O lapis do hero
 // troca a foto, o que fazia parecer que dava pra editar o spot.
-function editarNota(){
-  const s=S.curPlace;if(!s)return;
-  document.getElementById('notaTexto').value=s.my_note||'';
-  document.getElementById('notaLeitura').style.display='none';
-  document.getElementById('notaEdicao').style.display='';
-  document.getElementById('btnEditarNota').style.display='none';
-  document.getElementById('notaTexto').focus();
-}
-function cancelarNota(){
-  document.getElementById('notaEdicao').style.display='none';
-  document.getElementById('notaLeitura').style.display='';
-  document.getElementById('btnEditarNota').style.display='';
-}
-async function salvarNota(){
-  const s=S.curPlace;if(!s)return;
-  const btn=document.getElementById('btnSalvarNota');
-  const nova=document.getElementById('notaTexto').value.trim();
-  if(nova===(s.my_note||'')){cancelarNota();return}
-  // A nota também é lida pelos amigos, então passa pelo mesmo filtro do
-  // comentário. Barra antes de travar o botão, senão ele fica morto.
-  if(textoBarrado(nova)){avisarConteudoBarrado();return}
-  btn.textContent='Salvando...';btn.style.pointerEvents='none';
-  const{error}=await dbUpdate('spots',s.id,{my_note:nova});
-  btn.textContent='Salvar nota';btn.style.pointerEvents='';
-  if(error){toast('Não salvou','Tenta de novo.','alert');return}
-  s.my_note=nova;
-  // A nota aparece na lista da cidade e no card do spot: as duas telas tem que
-  // refletir na hora, senao a antiga fica ali ate recarregar.
-  // Apagar a nota tem que devolver o convite, nao deixar um espaco branco.
-  const elN=document.getElementById('placeNote');
-  elN.textContent=nova||'Por que esse lugar te chamou atenção?';
-  elN.classList.toggle('nota-vazia',!nova);
-  cancelarNota();
-  if(document.getElementById('city').classList.contains('active'))renderCityBody();
-  toast('Nota salva','','check');
-}
-function cycleStatus(){document.getElementById('placeChip').classList.contains('chip-want')?setStatus('been'):setStatus('want')}
+// editarNota/cancelarNota/salvarNota/cycleStatus SAIRAM: a nota virou o
+// campo unico da ficha, que salva sozinho, e o status virou o segmentado do
+// topo. Nao havia mais botao de editar nem pastilha pra alternar.
 // Escopado em #placeStars: o seletor global também acendia/apagava as estrelas
 // da ficha de "adicionar spot", que é outro grupo de .star-btn no mesmo DOM.
 // Metade esquerda da estrela = x,5. Metade direita = x. Tocar de novo na
@@ -4104,32 +4324,65 @@ function pintarEstrelas(seletor,n){
   });
 }
 let notaDaFicha=0;
-function rateStar(base,ev){
+// A ESTRELA GRAVA NA HORA. Antes ela só acendia, e a gravação dependia do
+// botão "Salvar avaliação" lá no fim da tela — quem dava a nota e saía
+// perdia. O botão não existe mais, então a estrela salva sozinha, igual ao
+// status e ao tipo de experiência.
+async function rateStar(base,ev){
+  const s=S.curPlace;if(!s)return;
   const v=notaDoToque(base,ev);
+  const anterior=notaDaFicha;
   notaDaFicha=(notaDaFicha===v?0:v);
   pintarEstrelas('#placeStars',notaDaFicha);
+  const{error}=await dbUpdate('spots',s.id,{my_rating:notaDaFicha});
+  if(error){
+    if(S.curPlace===s){notaDaFicha=anterior;pintarEstrelas('#placeStars',notaDaFicha)}
+    toast('Não salvou','Confere a conexão e tenta de novo.','alert');
+    return;
+  }
+  s.my_rating=notaDaFicha;
+  if(document.getElementById('city').classList.contains('active'))renderCityBody();
 }
-async function saveReview(){
-  if(!S.curPlace)return;
-  const r=notaDaFicha;
-  const rv=document.getElementById('reviewText').value.trim();
-  // Mesmo filtro do comentário: a avaliação escrita aparece pros amigos.
-  if(textoBarrado(rv)){avisarConteudoBarrado();return}
-  // getElementById, não querySelector('.action-btn'): o primeiro .action-btn do
-  // documento é o "Sair da conta" da tela de Perfil, então salvar uma avaliação
-  // reescrevia o botão de logout pra "Salvando..." e depois pra "Salvar
-  // avaliação" — o logout ficava com o rótulo errado até recarregar.
-  const btn=document.getElementById('saveReviewBtn');
-  btn.textContent='Salvando...';btn.disabled=true;
-  const{error}=await dbUpdate('spots',S.curPlace.id,{my_rating:r,my_review:rv});
-  btn.disabled=false;
-  if(error){btn.textContent='Salvar avaliação';toast('Erro','Não foi possível salvar a avaliação.');return}
-  // Espelha no objeto em memória (é a mesma referência que vive em
-  // S.curTrip._spots) — sem isso a nota estava salva no banco mas a tela
-  // mostrava a antiga ao reabrir o spot, e a lista continuava desatualizada.
-  S.curPlace.my_rating=r;S.curPlace.my_review=rv;
-  btn.textContent='Salvo ✓';setTimeout(()=>{btn.textContent='Salvar avaliação'},2000);
-  toast('Avaliação salva!','','star');
+
+// ═══ O MENU ⋯ ═══
+// O lápis flutuante da foto e a engrenagem viraram um menu só. Tudo que é
+// raro (trocar foto, mudar categoria, excluir) mora aqui, e a tela fica com o
+// que se usa todo dia.
+function abrirMenuDoLugar(){
+  const s=S.curPlace;if(!s)return;
+  document.getElementById('fiMenuNome').textContent=s.name||'';
+  showOv('ov-menulugar');
+}
+async function compartilharLugar(){
+  const s=S.curPlace;if(!s)return;
+  const nota=Number(s.my_rating)>0?' ('+fmtRating(s.my_rating)+'★)':'';
+  const rev=String(s.my_review||'').trim();
+  const linhas=[s.name+nota];
+  if(rev)linhas.push(rev);
+  if(s.address)linhas.push(s.address);
+  linhas.push('');
+  linhas.push((nomeDeExibicao()?nomeDeExibicao()+' · ':'')+'salvo no Spot');
+  linhas.push(location.origin);
+  await mandarTextoPraFora(linhas.join('\n'),s.name||'Spot');
+}
+function abrirTrocaDeCategoria(){
+  // Reaproveita a folha de categoria do fluxo de adicionar. `trocandoCategoria`
+  // diz ao pickCat que ele está editando um spot que já existe, e não
+  // escolhendo a categoria de um novo.
+  trocandoCategoria=true;
+  showOv('ov-cat');
+}
+let trocandoCategoria=false;
+async function trocarCategoriaDoLugar(cat){
+  const s=S.curPlace;if(!s)return;
+  const anterior=s.category;
+  if(cat===anterior){closeOv('ov-cat');return}
+  const{error}=await dbUpdate('spots',s.id,{category:cat,place_type:catLabel(cat)});
+  if(error){toast('Não salvou','Confere a conexão e tenta de novo.','alert');return}
+  s.category=cat;s.place_type=catLabel(cat);
+  closeOv('ov-cat');
+  desenharFichaDoLugar(s);
+  if(document.getElementById('city').classList.contains('active')){renderCitySubcatFilter();renderCityBody()}
 }
 
 // ═══ ADD SPOT FLOW ═══
@@ -4213,6 +4466,10 @@ function addSpotToCurrentTrip(){
   showOv('ov-cat');
 }
 function pickCat(c){
+  // A MESMA folha serve pra duas coisas: escolher a categoria de um spot novo
+  // e TROCAR a de um que já existe (menu ⋯ da ficha). Sem este desvio, mudar
+  // a categoria de um lugar salvo empurrava a pessoa pro fluxo de adicionar.
+  if(trocandoCategoria){trocandoCategoria=false;trocarCategoriaDoLugar(c);return}
   // ov-cat só abre quando a categoria ainda não era sabida — Explorar e
   // check-in pulam essa tela direto (ver selTripForSpot/jumpToNoteSheet).
   S.addCat=c;document.querySelectorAll('.cat-option').forEach(o=>o.classList.remove('sel'));document.getElementById('co-'+c).classList.add('sel');
@@ -6460,12 +6717,21 @@ function renderComentarios(spotId,alvo,donoDoSpot){
   // aparece quando alguém comentou, e o bloco inteiro some quando ninguém
   // comentou. No spot dos outros nada muda.
   const meuSpot=!!meu&&donoDoSpot===meu;
-  if(meuSpot&&!lista.length){box.innerHTML='';return}
+  // NA FICHA o bloco vive dentro da seção "Amigos", que já tem título — então
+  // o título interno sai, e o vazio DIZ o que vai aparecer ali em vez de a
+  // seção simplesmente não existir.
+  const naFicha=alvo==='placeComentarios';
+  if(meuSpot&&!lista.length){
+    box.innerHTML=naFicha
+      ?'<div class="ml-vazio">Nenhum amigo seu salvou este lugar. Quando alguém salvar ou comentar, aparece aqui.</div>'
+      :'';
+    return;
+  }
 
-  const titulo=lista.length
+  const titulo=naFicha?'':(lista.length
     ?(lista.length===1?'1 comentário':lista.length+' comentários')
-    :'Comentários';
-  box.innerHTML='<div class="coment-titulo">'+titulo+'</div>'+linhas
+    :'Comentários');
+  box.innerHTML=(titulo?'<div class="coment-titulo">'+titulo+'</div>':'')+linhas
     +'<div class="coment-escrever">'
     +'<textarea class="coment-campo" id="campo-'+esc(alvo)+'" rows="1" maxlength="1000" placeholder="'+(meuSpot?'Responda quem comentou...':'Escreva algo sobre esse lugar...')+'"></textarea>'
     +'<button class="coment-enviar" onclick="enviarComentario(\''+esc(spotId)+'\',\''+esc(alvo)+'\',\''+esc(donoDoSpot||'')+'\')">Enviar</button>'
