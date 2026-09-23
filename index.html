@@ -3522,9 +3522,12 @@ function openCityScreen(city){
 // WhatsApp e voce digitava de novo, ou mandava print. Era a unica coisa que o
 // app fazia pior que o bloco de notas.
 //
-// E o link do CONVITE no fim, nao um link qualquer: quem abre ja entra como
-// seu amigo e ve o resto dos seus lugares. A lista e a isca; o convite e o
-// laco. Sem ele, compartilhar so dava trabalho e nao trazia ninguem.
+// O LINK DO FIM E O DO SITE, NAO O DO CONVITE. Eu tinha posto o convite aqui
+// pra fechar o laco de crescimento — quem abre ja entra como seu amigo. Esta
+// errado, e o Lucas pegou: uma lista existe pra ser ENCAMINHADA. Cai num
+// grupo, alguem repassa, e qualquer desconhecido que abrir vira seu amigo e
+// ve todos os seus spots. O convite e ato deliberado, um a um, e continua no
+// botao de Adicionar amigo; aqui vai so o endereco do site.
 //
 // Vai a cidade INTEIRA, nao a aba aberta. Quem compartilha quer mandar Kotor,
 // nao "os restaurantes de Kotor" — e a pessoa do outro lado nao sabe que
@@ -3565,16 +3568,8 @@ function textoDaCidadePraCompartilhar(){
 async function compartilharCidade(){
   const corpo=textoDaCidadePraCompartilhar();
   if(!corpo){toast('Nada pra compartilhar','Salve um spot nesta cidade primeiro.');return}
-  const btn=document.getElementById('cityShareBtn');
-  if(btn)btn.style.pointerEvents='none';
-  // O convite pode falhar (migracao 011 fora do ar, rede). Nesse caso a lista
-  // vai sozinha: metade do recurso funcionando e melhor que um erro.
-  let codigo=null;
-  try{codigo=await obterOuCriarConvite()}catch(e){}
-  if(btn)btn.style.pointerEvents='auto';
   const nome=nomeDeExibicao();
-  const texto=corpo+'\n\n'+(nome?nome+' · ':'')+'salvos no Spot'
-    +(codigo?'\n'+linkDoConvite(codigo):'');
+  const texto=corpo+'\n\n'+(nome?nome+' · ':'')+'salvos no Spot\n'+location.origin;
   await mandarTextoPraFora(texto,'Meus spots em '+S.curCity);
 }
 // O MESMO caminho do convite: folha nativa do celular, area de transferencia
