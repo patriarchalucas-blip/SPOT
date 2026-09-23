@@ -1620,6 +1620,10 @@ svg.ic path,svg.ic circle,svg.ic line,svg.ic polyline,svg.ic rect{fill:none;stro
 <div class="overlay" id="ov-mismatch" onclick="closeOut(event,'ov-mismatch')"><div class="sheet"><button class="sheet-close" onclick="closeOv('ov-mismatch')" data-ic="close" aria-label="Fechar"></button><div class="sheet-handle"></div><div class="sheet-title">País diferente</div><div class="cm-text" id="cmText"></div><button class="sheet-cta" id="cmMoveBtn">Mover</button><button class="delete-link" style="color:var(--ink3)" onclick="keepInThisTripAnyway()">Adicionar nesta viagem mesmo assim</button></div></div>
 <div class="overlay" id="ov-newtrip" onclick="closeOut(event,'ov-newtrip')"><div class="sheet sheet-fixa"><button class="sheet-close" onclick="closeOv('ov-newtrip')" data-ic="close" aria-label="Fechar"></button><div class="sheet-handle"></div><div class="sheet-title">Para qual cidade?</div><div class="nt-label">Cidade da viagem — o país é identificado sozinho</div><div class="dest-search-wrap"><span class="dsi" data-ic="search"></span><input class="nt-input" style="padding-left:44px" id="countrySearch" placeholder="Buscar cidade..." oninput="filterNewTripCity(this.value)"></div><div class="lista-rolante" id="countryList"></div><button class="sheet-cta" id="createTripBtn" onclick="createTrip()" style="opacity:.4;pointer-events:none">Selecione uma cidade</button></div></div>
 <div class="overlay" id="ov-quickvisit" onclick="closeOut(event,'ov-quickvisit')"><div class="sheet sheet-fixa"><button class="sheet-close" onclick="closeOv('ov-quickvisit')" data-ic="close" aria-label="Fechar"></button><div class="sheet-handle"></div><div class="sheet-title" id="quickVisitTitle">Quais países você já visitou?</div><div class="dest-search-wrap"><span class="dsi" data-ic="search"></span><input class="nt-input" style="padding-left:44px" id="countrySearch2" placeholder="Buscar país..." oninput="filterCountries2(this.value)"></div><div class="lista-rolante" id="countryList2"></div><button class="sheet-cta" id="createVisitBtn" onclick="markVisited()" style="opacity:.4;pointer-events:none">Selecione um país</button></div></div>
+<!-- PRIMEIRO ACESSO. Não fecha clicando fora de propósito: é a única folha do
+     app que existe pra ser respondida, não consultada. Tem "Agora não". -->
+<div class="overlay" id="ov-boasvindas"><div class="sheet"><div class="sheet-handle"></div><div class="sheet-title">Onde você mora?</div><div class="den-sobre">Serve pra abrir o Explorar já cheio — o que seus amigos marcaram perto de você.</div><div class="nt-label">Sua cidade</div><div class="nt-wrap"><input class="nt-input" id="cidadeCasaInput" type="text" placeholder="ex: São Paulo" autocomplete="off" oninput="buscarCidadeDeCasa(this.value)"><div class="busca-res" id="cidadeCasaRes"></div></div><button class="secondary-link" style="margin:0 0 18px" onclick="pularCidadeDeCasa()">Agora não</button></div></div>
+
 <div class="overlay" id="ov-detalheamigo" onclick="closeOut(event,'ov-detalheamigo')"><div class="sheet"><button class="sheet-close" onclick="closeOv('ov-detalheamigo')" data-ic="close" aria-label="Fechar"></button><div class="sheet-handle"></div><div class="sheet-title" id="daTitulo">—</div><div id="daCorpo"></div></div></div>
 
 <div class="overlay" id="ov-editperfil" onclick="closeOut(event,'ov-editperfil')"><div class="sheet"><button class="sheet-close" onclick="closeOv('ov-editperfil')" data-ic="close" aria-label="Fechar"></button><div class="sheet-handle"></div><div class="sheet-title">Configurações</div>
@@ -2183,6 +2187,10 @@ async function init(){
         // depois do dashboard: se a pessoa chegou por um link de convite, a
         // amizade é criada agora que existe sessão
         try{await resgatarConvitePendente()}catch(e){console.error('convite:',e)}
+        // Por último: as duas perguntas de primeiro acesso. Depois do convite
+        // de propósito — quem chegou por link já entra com um amigo, e a
+        // sequência não deve atropelar isso.
+        try{await talvezAbrirBoasVindas()}catch(e){console.error('boas-vindas:',e)}
       }
       if(ev==='SIGNED_OUT'){S.user=null;S.token=null;tokenExp=0;goTo('login')}
     }catch(e){console.error('Auth error:',e);goTo('login')}
@@ -5606,6 +5614,118 @@ function selectNewTripCity(i){
   btn.textContent='Criar viagem';btn.style.opacity='1';btn.style.pointerEvents='auto';
 }
 // ── Quick "mark as already visited" flow (no dates, no spots needed) ──
+
+// ═══ PRIMEIRO ACESSO ═══
+//
+// Duas perguntas, nesta ordem: ONDE VOCÊ MORA e QUAIS PAÍSES JÁ VISITOU.
+//
+// POR QUE A CIDADE: o Explorar abre vazio e manda a pessoa digitar uma cidade.
+// No primeiro dia isso é um app em branco cobrando trabalho antes de entregar
+// qualquer coisa. Com a cidade de casa guardada, ele abre cheio.
+//
+// POR QUE OS PAÍSES: é a pergunta que faz o app virar DELA em trinta segundos
+// — toca em dez países, o mapa pinta, e o número da tela inicial já é o dela.
+// A tela já existia, enterrada dentro do Perfil; aqui ela só vem pra frente.
+//
+// O QUE NÃO COPIAMOS: a tela de "selecione seus interesses" (foodie, yoga,
+// fashion) que o app concorrente tem. Gosto declarado mente — todo mundo
+// marca "aventura" e depois salva restaurante — e aqui já existe fonte
+// melhor: o que a pessoa salvou e a nota que deu.
+//
+// NADA AQUI É OBRIGATÓRIO. As duas folhas têm saída, e quem pular cai no app
+// funcionando do mesmo jeito. Cadastro que trava na terceira pergunta é o
+// motivo clássico de alguém desistir antes de ver o produto.
+let BUSCA_CIDADES=[];
+let buscaCidadeTO=null;
+
+async function talvezAbrirBoasVindas(){
+  if(!S.user)return;
+  let p={};
+  try{p=await fetchOwnProfile()}catch(e){return}
+  // Só no primeiro acesso: quem já respondeu, ou já usou o app, não vê mais.
+  if(p.home_city||p.home_country)return;
+  if((S.trips||[]).length)return;
+  BUSCA_CIDADES=[];
+  const campo=document.getElementById('cidadeCasaInput');
+  if(campo)campo.value='';
+  const cx=document.getElementById('cidadeCasaRes');
+  if(cx)cx.innerHTML='';
+  showOv('ov-boasvindas');
+}
+
+function buscarCidadeDeCasa(termo){
+  clearTimeout(buscaCidadeTO);
+  const t=String(termo||'').trim();
+  const cx=document.getElementById('cidadeCasaRes');
+  if(!cx)return;
+  if(t.length<3){
+    BUSCA_CIDADES=[];
+    cx.innerHTML=t.length?'<div class="busca-dica">Digite pelo menos 3 letras</div>':'';
+    return;
+  }
+  cx.innerHTML='<div class="busca-dica">Buscando...</div>';
+  // Mesma espera da busca de pessoas: sem ela são seis idas ao Places pra
+  // escrever "curitiba", e o Places COBRA POR REQUISIÇÃO.
+  buscaCidadeTO=setTimeout(()=>rodarBuscaDeCidade(t),320);
+}
+
+async function rodarBuscaDeCidade(t){
+  const cx=document.getElementById('cidadeCasaRes');
+  if(!cx)return;
+  // `includedType:'locality'` é o que faz o Places devolver CIDADE e não
+  // restaurante com o nome parecido. E é a mesma fonte que nomeia a cidade de
+  // cada spot — então "São Paulo" aqui é a mesma string de "São Paulo" lá, e
+  // o Explorar casa os dois sem precisar adivinhar.
+  const r=await googlePlaces('searchText',{
+    headers:{'X-Goog-FieldMask':'places.displayName,places.formattedAddress'},
+    body:JSON.stringify({textQuery:t,includedType:'locality',maxResultCount:6})
+  });
+  const atual=(document.getElementById('cidadeCasaInput')||{}).value||'';
+  if(atual.trim()!==t)return; // o campo mudou enquanto a resposta vinha
+  const d=await r.json();
+  const achados=(d&&d.places)||[];
+  if(!achados.length){
+    cx.innerHTML='<div class="busca-dica">Nenhuma cidade encontrada. Confere o nome.</div>';
+    return;
+  }
+  BUSCA_CIDADES=achados;
+  // O ÍNDICE vai no onclick, nunca o nome: nome de cidade tem acento e
+  // apóstrofo, e esc() não protege dentro de atributo de evento.
+  cx.innerHTML=achados.map(function(pl,i){
+    const nome=(pl.displayName&&pl.displayName.text)||'';
+    const onde=String(pl.formattedAddress||'').replace(/^.*?,\s*/,'');
+    // Mesma linha da busca de pessoas (.req-card), pra não nascer um terceiro
+    // jeito de desenhar "resultado de busca" no app. Sem ícone e sem seta: o
+    // nome da cidade é a única coisa que a pessoa lê aqui, e os dois só
+    // roubavam a largura dele.
+    return '<div class="req-card" onclick="escolherCidadeDeCasa('+i+')" style="cursor:pointer">'
+      +'<div style="flex:1;min-width:0"><div class="req-name">'+esc(nome)+'</div>'
+      +(onde?'<div class="busca-user">'+esc(onde)+'</div>':'')+'</div></div>';
+  }).join('');
+}
+
+async function escolherCidadeDeCasa(i){
+  const pl=BUSCA_CIDADES[i];
+  if(!pl)return;
+  const nome=(pl.displayName&&pl.displayName.text)||'';
+  if(!nome)return;
+  // A GRAVAÇÃO PODE FALHAR e isso NÃO pode travar o cadastro: se a migração
+  // 021 ainda não rodou, o PostgREST devolve 400 `42703` (coluna não existe).
+  // A pessoa perde o preenchimento do Explorar, não a conta.
+  try{
+    const{error}=await dbUpdate('profiles',S.user.id,{home_city:nome});
+    if(error)console.warn('cidade de casa:',error);
+    else{S.profile=S.profile||{};S.profile.home_city=nome}
+  }catch(e){console.warn('cidade de casa:',e)}
+  pularCidadeDeCasa();
+}
+
+// Fecha a primeira folha e emenda na segunda. As duas saídas passam por aqui
+// — quem responde e quem pula veem a mesma sequência.
+function pularCidadeDeCasa(){
+  closeOv('ov-boasvindas');
+  setTimeout(function(){openVisitedCountryPicker()},260);
+}
 
 let quickVisitMode='visited'; // 'visited' | 'home' — mesmo sheet, dois marcadores diferentes
 function openVisitedCountryPicker(){quickVisitMode='visited';showOv('ov-quickvisit')}
