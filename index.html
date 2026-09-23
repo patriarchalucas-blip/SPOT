@@ -4081,25 +4081,97 @@ async function openPlace(id,origin){
   ajustarAlturaDoCampo();
 }
 
+// ═══ A LINHA DE SERVIÇO ═══
+//
+// O Google manda a faixa de preço como TEXTO ("PRICE_LEVEL_MODERATE"), não
+// como número. Guardo número porque é o que a tela usa pra contar cifrões.
+function nivelDePreco(v){
+  const tabela={PRICE_LEVEL_FREE:0,PRICE_LEVEL_INEXPENSIVE:1,PRICE_LEVEL_MODERATE:2,
+    PRICE_LEVEL_EXPENSIVE:3,PRICE_LEVEL_VERY_EXPENSIVE:4};
+  if(typeof v==='number')return v;
+  return (v&&tabela[v]!=null)?tabela[v]:null;
+}
+// Zero é "de graça", e mostrar nenhum cifrão pra isso seria igual a não saber.
+function cifraoDoPreco(n){
+  if(n==null||n==='')return '';
+  const v=Number(n);
+  if(!isFinite(v)||v<0)return '';
+  if(v===0)return 'Grátis';
+  return '$'.repeat(Math.min(4,v));
+}
+// ABERTO AGORA, calculado do horário guardado no dia em que o lugar foi
+// salvo. NÃO vai ao Google perguntar: consultar ao vivo custaria uma chamada
+// paga por abertura de ficha, que é o padrão que gerou a cobrança da semana.
+//
+// O formato do Google é uma lista de períodos com {open:{day,hour,minute},
+// close:{...}}, com `day` de 0 (domingo) a 6. Período sem `close` é lugar que
+// abre 24 horas.
+//
+// Devolve null quando não há horário guardado — e aí a linha não mostra nada,
+// em vez de chutar "fechado".
+function estaAbertoAgora(oh){
+  const periodos=oh&&oh.periods;
+  if(!periodos||!periodos.length)return null;
+  const agora=new Date();
+  const hoje=agora.getDay(), minutosAgora=agora.getHours()*60+agora.getMinutes();
+  const hhmm=p=>String(p.hour).padStart(2,'0')+':'+String(p.minute||0).padStart(2,'0');
+  for(const p of periodos){
+    if(!p.open)continue;
+    if(!p.close)return{aberto:true,ate:''}; // 24 horas
+    const dIni=p.open.day, dFim=p.close.day;
+    const ini=p.open.hour*60+(p.open.minute||0);
+    const fim=p.close.hour*60+(p.close.minute||0);
+    // Período que atravessa a meia-noite tem dia de fechar diferente do de
+    // abrir. Sem este caso, um bar que fecha às 2h aparecia fechado à 1h.
+    if(dIni===dFim){
+      if(hoje===dIni&&minutosAgora>=ini&&minutosAgora<fim)return{aberto:true,ate:hhmm(p.close)};
+    }else{
+      if(hoje===dIni&&minutosAgora>=ini)return{aberto:true,ate:hhmm(p.close)};
+      if(hoje===dFim&&minutosAgora<fim)return{aberto:true,ate:hhmm(p.close)};
+    }
+  }
+  // Fechado: diz a que horas abre de novo hoje, se ainda abrir.
+  const aindaHoje=periodos
+    .filter(p=>p.open&&p.open.day===hoje&&(p.open.hour*60+(p.open.minute||0))>minutosAgora)
+    .sort((a,b)=>(a.open.hour*60+(a.open.minute||0))-(b.open.hour*60+(b.open.minute||0)))[0];
+  return{aberto:false,abre:aindaHoje?hhmm(aindaHoje.open):''};
+}
+
 // Tudo que depende do spot e não da foto. Separado de openPlace porque mudar
 // a categoria pelo menu ⋯ precisa redesenhar isto sem recarregar a foto.
 function desenharFichaDoLugar(s){
   document.getElementById('placeName').textContent=s.name||'';
   // "Tipo · bairro, cidade". O tipo de experiência é mais específico que a
   // categoria, então ganha dela quando existe.
+  const quem=nomeDeQuemIndicou(s);
   document.getElementById('placeType').textContent=
-    [subcatLabel(s.subcategory)||catLabel(s.category),cityOf(s)].filter(Boolean).join(' · ');
+    [subcatLabel(s.subcategory)||catLabel(s.category),cityOf(s),
+     quem?('dica de '+quem):''].filter(Boolean).join(' · ');
+  // O nome pode não estar em mãos ainda: busca e redesenha só esta linha.
+  if(s.from_user_id&&!quem)garantirPerfilDaOrigem(s,function(){
+    if(S.curPlace===s)desenharFichaDoLugar(s);
+  });
 
-  // LINHA DE SERVIÇO. Só o que existe de fato — hoje, a nota do Google. O
-  // desenho prevê "Aberto · fecha às 23h · $$" também, mas horário e faixa de
-  // preço são campos que o app ainda não pede ao Google; o próprio handoff
-  // manda sumir o item que não tiver, então a linha simplesmente encurta.
+  // LINHA DE SERVIÇO: "Aberto · fecha às 23h · $$" e a nota do Google à
+  // direita. Some o item que o lugar não tiver — o handoff manda encurtar a
+  // linha em vez de mostrar campo vazio.
   const serv=document.getElementById('placeServico');
+  const partes=[];
+  const ab=estaAbertoAgora(s.opening_hours);
+  if(ab){
+    partes.push('<span class="'+(ab.aberto?'fi-aberto':'fi-fechado')+'">'
+      +(ab.aberto?'Aberto':'Fechado')+'</span>');
+    if(ab.ate)partes.push('<span>fecha às '+esc(ab.ate)+'</span>');
+    else if(ab.abre)partes.push('<span>abre às '+esc(ab.abre)+'</span>');
+  }
+  const cifroes=cifraoDoPreco(s.price_level);
+  if(cifroes)partes.push('<span>'+cifroes+'</span>');
   const ng=String(s.rating_google||'').trim();
   // "4,5 Google" não se lia como nota — parecia um código. Com a estrela e o
   // "no", vira frase: é a nota DO GOOGLE, não a sua, que fica logo abaixo.
-  serv.innerHTML=ng?'<span class="fi-google">'+icon('star')+'<b>'+esc(ng)+'</b> no Google</span>':'';
-  serv.style.display=ng?'flex':'none';
+  if(ng)partes.push('<span class="fi-google">'+icon('star')+'<b>'+esc(ng)+'</b> no Google</span>');
+  serv.innerHTML=partes.join('');
+  serv.style.display=partes.length?'flex':'none';
 
   notaDaFicha=Number(s.my_rating)||0;
   pintarEstrelas('#placeStars',notaDaFicha);
@@ -4849,7 +4921,14 @@ async function adicionarSpotAbertoDoAmigo(btn){
     city:cidade,country:pais,address:s.address||'',
     subcat:s.subcategory||'',phone:s.phone||'',photo_url:s.photo_url||'',
     photo_author:{nome:s.photo_author||'',url:s.photo_author_url||''},
-    rating_google:s.rating_google||'',website_url:s.website_url||'',maps_url:s.maps_url||''
+    rating_google:s.rating_google||'',website_url:s.website_url||'',maps_url:s.maps_url||'',
+    lat:s.lat!=null?Number(s.lat):null,lng:s.lng!=null?Number(s.lng):null,
+    price_level:s.price_level!=null?s.price_level:null,
+    opening_hours:s.opening_hours||null,
+    // DE QUEM VEIO A DICA (024). É o dado que faltava pra ficha e o perfil
+    // dizerem "dica do Bruno" em vez de tratar o lugar como se você tivesse
+    // achado sozinho. Só existe neste caminho: salvar do perfil de um amigo.
+    from_user_id:s.user_id||null
   };
   const cat=s.category||'food';
 
@@ -5391,7 +5470,7 @@ let searchReqId=0;
 // mínimo (com uma ou duas, o resultado não serve pra nada) e 450ms de espera
 // no lugar de 250 — a pausa natural entre sílabas é de uns 300ms.
 const CAMPOS_DA_LISTA='places.id,places.displayName,places.formattedAddress';
-const CAMPOS_DA_FICHA='places.id,places.displayName,places.formattedAddress,places.addressComponents,places.location,places.photos,places.rating,places.websiteUri,places.googleMapsUri,places.types,places.nationalPhoneNumber';
+const CAMPOS_DA_FICHA='places.id,places.displayName,places.formattedAddress,places.addressComponents,places.location,places.photos,places.rating,places.websiteUri,places.googleMapsUri,places.types,places.nationalPhoneNumber,places.regularOpeningHours,places.priceLevel';
 function searchPlaces(v){
   clearTimeout(searchTO);const r=document.getElementById('searchResults');
   const termo=String(v||'').trim();
@@ -5643,7 +5722,12 @@ async function pickSearchResult(i){
         photo_url:fotos.full,photo_thumb:fotos.thumb,photo_author:autorDaFoto(g),
         rating_google:g.rating?String(g.rating):'',
         website_url:g.websiteUri||'',maps_url:g.googleMapsUri||'',
-        lat:Number(loc.latitude)||null,lng:Number(loc.longitude)||null
+        lat:Number(loc.latitude)||null,lng:Number(loc.longitude)||null,
+        // A linha de serviço (024). `priceLevel` vem como texto do Google
+        // ("PRICE_LEVEL_MODERATE"); guardo como número, que é o que a tela usa.
+        price_level:nivelDePreco(g.priceLevel),
+        opening_hours:(g.regularOpeningHours&&g.regularOpeningHours.periods)
+          ?{periods:g.regularOpeningHours.periods}:null
       };
     }
   }catch(e){/* segue com o básico */}
@@ -5889,6 +5973,10 @@ async function resolverCidadeDoSpot(p,trip){
   // Coordenada (023). Vai junto dos outros opcionais: se a migração ainda não
   // rodou, o insert retenta sem ela e o spot é salvo do mesmo jeito.
   if(p.lat!=null&&p.lng!=null){rec.lat=p.lat;rec.lng=p.lng}
+  // Origem da dica e linha de serviço (024), mesma regra dos opcionais.
+  if(p.from_user_id)rec.from_user_id=p.from_user_id;
+  if(p.price_level!=null)rec.price_level=p.price_level;
+  if(p.opening_hours)rec.opening_hours=p.opening_hours;
   // Credito do autor da foto (exigencia do Google). Vai como coluna
   // opcional: se a migracao 017 ainda nao rodou, o insert retenta sem ele.
   if(p.photo_author&&p.photo_author.nome){
@@ -5904,10 +5992,12 @@ async function resolverCidadeDoSpot(p,trip){
   // Colunas que vêm de migração: se ela ainda não rodou, o Postgres recusa o
   // insert INTEIRO por causa de uma coluna desconhecida e o spot não seria
   // salvo. Retenta sem os opcionais — perder o campo é melhor que perder o spot.
-  if(error&&(rec.subcategory||rec.phone||rec.photo_author||rec.lat!=null)){
-    console.warn('insert sem colunas opcionais (migração 009/010/023 ainda não rodou?)');
+  if(error&&(rec.subcategory||rec.phone||rec.photo_author||rec.lat!=null
+             ||rec.from_user_id||rec.price_level!=null||rec.opening_hours)){
+    console.warn('insert sem colunas opcionais (migração 009/010/023/024 ainda não rodou?)');
     delete rec.subcategory;delete rec.phone;delete rec.photo_author;delete rec.photo_author_url;
     delete rec.lat;delete rec.lng;
+    delete rec.from_user_id;delete rec.price_level;delete rec.opening_hours;
     ({data,error}=await dbInsert('spots',rec));
   }
   if(!error&&data){
@@ -6814,6 +6904,31 @@ async function corrigirCidadesAntigas(opcoes){
 // primeira mudanca.
 let COMENTARIOS={};      // spot_id -> lista carregada
 let COMENT_PERFIS={};    // user_id -> perfil, pra nao rebuscar a cada render
+
+// DE QUEM VEIO A DICA (024). `from_user_id` é gravado quando você salva o
+// lugar do perfil de um amigo; aqui ele vira nome. Usa o mesmo cache dos
+// comentários — quase sempre a pessoa já está lá, e quando não está é uma
+// consulta só, feita em segundo plano.
+//
+// Devolve '' quando não há origem (spot que você achou sozinho, ou salvo
+// antes da 024) e quando o perfil não veio — nome que não chegou não pode
+// virar "dica de undefined".
+function nomeDeQuemIndicou(s){
+  const id=s&&s.from_user_id;
+  if(!id)return'';
+  const p=COMENT_PERFIS[id];
+  if(!p)return'';
+  const nome=friendName(p);
+  return nome?String(nome).split(' ')[0]:'';
+}
+async function garantirPerfilDaOrigem(s,depois){
+  const id=s&&s.from_user_id;
+  if(!id||COMENT_PERFIS[id])return;
+  try{
+    const perfis=await dbGet('profiles','id=eq.'+encodeURIComponent(id));
+    if(perfis&&perfis[0]){COMENT_PERFIS[perfis[0].id]=perfis[0];if(depois)depois()}
+  }catch(e){}
+}
 
 async function carregarComentarios(spotId){
   if(!spotId)return[];
@@ -8141,16 +8256,18 @@ function renderEstante(){
 // A legenda muda com o status, porque a pergunta muda: em "Fui" interessa
 // o que você achou; em "Quero ir", de quem veio a dica.
 //
-// A ORIGEM ("dica do Bruno") ainda não existe no banco — é dado novo, gravado
-// só quando alguém salva um spot de amigo. Até existir, a legenda mostra
-// cidade, que é o que o handoff manda fazer na falta dela.
+// Em "Fui" interessa a sua nota; em "Quero ir", de quem veio a dica — que é o
+// que faz alguém lembrar por que aquilo está na lista. Sem origem guardada
+// (spot que você achou sozinho, ou salvo antes da 024), mostra só a cidade,
+// que é o que o handoff manda fazer na falta do dado.
 function mlLegenda(s){
   const onde=cityOf(s)||'';
   if((s.status||'want')==='been'){
     const nota=Number(s.my_rating)>0?fmtRating(s.my_rating):'';
     return nota?(onde?onde+' · ★ '+nota:'★ '+nota):onde;
   }
-  return onde;
+  const quem=nomeDeQuemIndicou(s);
+  return quem?(onde?onde+' · dica de '+quem:'dica de '+quem):onde;
 }
 function mlTextoDeVazio(){
   if(mlStatus==='been')return 'Nada marcado como "já fui" por aqui ainda.';

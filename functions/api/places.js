@@ -48,7 +48,11 @@ export const CAMPOS_OK = new Set([
   'places.id', 'places.displayName', 'places.formattedAddress', 'places.addressComponents',
   'places.location', 'places.photos', 'places.rating', 'places.userRatingCount',
   'places.websiteUri', 'places.googleMapsUri', 'places.types', 'places.primaryType',
-  'places.nationalPhoneNumber'
+  'places.nationalPhoneNumber',
+  // A linha de serviço da ficha ("Aberto · fecha às 23h · $$"). Vêm na MESMA
+  // busca que já roda ao adicionar um lugar — pedir não custa chamada nova, e
+  // o resultado é guardado no spot em vez de consultado a cada abertura.
+  'places.regularOpeningHours', 'places.priceLevel'
 ]);
 
 const OPS = {
