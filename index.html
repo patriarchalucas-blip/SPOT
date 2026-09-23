@@ -843,7 +843,40 @@ body.na-casca .bottom-nav{display:none}
 .busca-res{margin-top:12px;max-height:46vh;overflow-y:auto;-webkit-overflow-scrolling:touch}
 .busca-dica{font-size:13.5px;color:var(--ink3);padding:12px 2px;line-height:1.5}
 .busca-user{font-family:'Inter Tight',sans-serif;font-size:11.5px;color:var(--ink3);margin-top:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.busca-estado{font-family:'Inter Tight',sans-serif;font-size:10.5px;color:var(--ink3);flex-shrink:0;white-space:nowrap}
+/* "pedido enviado" é ESTADO, não botão: fundo surface e texto ink2, do mesmo
+   tamanho do "Adicionar" ao lado — em 10.5px ele parecia nota de rodapé. */
+.busca-estado{font-size:14px;font-weight:600;color:var(--ink2);background:var(--surface);
+  border-radius:var(--r-btn);padding:8px 12px;flex-shrink:0;white-space:nowrap}
+
+/* ═══ FOLHA ADICIONAR AMIGO ═══ */
+.af-topo{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:0 20px 14px}
+.af-titulo{font-size:20px;font-weight:700;letter-spacing:-.03em;color:var(--ink)}
+.af-fechar{background:none;border:none;padding:0;font-family:inherit;font-size:15px;
+  font-weight:600;color:var(--green);cursor:pointer}
+.af-fechar:active{opacity:.6}
+.af-campo{position:relative;display:flex;align-items:center}
+.af-lupa{position:absolute;left:14px;display:flex;color:var(--ink3);pointer-events:none}
+.af-lupa svg{width:18px;height:18px}
+.af-input{width:100%;min-height:48px;background:var(--surface);border:none;
+  border-radius:var(--r-card);padding:14px 16px 14px 42px;font-size:15px;
+  font-family:inherit;color:var(--ink);outline:none}
+.af-input:focus{box-shadow:inset 0 0 0 2px var(--ink3)}
+.af-input::placeholder{color:var(--ink3)}
+/* O convite não é a ação principal daqui — é a saída pra quem não achou. Por
+   isso botão de superfície, e não o verde. */
+/* A linha de resultado é a mesma pessoa da lista de amigos, então o avatar é
+   o mesmo 44 e o nome o mesmo peso. Só o tamanho do nome cai de 17 pra 16:
+   aqui ele divide a linha com um botão. */
+.af-linha{gap:12px;min-height:64px}
+.af-linha .feed-avatar{width:44px;height:44px;font-size:14px}
+.af-linha .req-name{font-size:16px;letter-spacing:-.02em}
+.af-linha .busca-user{font-size:13px;color:var(--ink2);margin-top:2px}
+.af-rodape{padding:6px 20px 18px}
+.af-rodape-txt{font-size:13px;color:var(--ink2);margin-bottom:10px}
+.af-convite{width:100%;height:48px;background:var(--surface);border:none;
+  border-radius:var(--r-card);font-size:14px;font-weight:600;color:var(--ink);
+  cursor:pointer;font-family:inherit}
+.af-convite:active{opacity:.7}
 .req-decline{background:var(--surface);color:var(--ink)}
 /* ═══ EXPLORAR E PERFIL — mesma linguagem ═══
    Estas duas não foram desenhadas no modelo. O documento de entrega diz que
@@ -1010,7 +1043,7 @@ body.na-casca .bottom-nav{display:none}
    que ninguem dava a margem lateral. */
 #daCorpo{padding:0 24px}
 /* Divisor "ou" e a dica do convite, na ficha de adicionar amigo. */
-.conv-ou,.conv-dica{padding-left:24px;padding-right:24px}
+.conv-dica{padding-left:24px;padding-right:24px}
 /* Ficha de excluir conta: o corpo ja tem 24px, entao os filhos que tambem
    trazem os proprios 24 (nt-label) somavam 48. */
 .ex-corpo .nt-label{padding-left:0;padding-right:0}
@@ -1349,8 +1382,6 @@ body.na-casca .bottom-nav{display:none}
 .cr-home{font-size:13px;font-weight:600;color:var(--green);flex-shrink:0}
 .country-vertodos{display:block;padding:14px 0 2px;font-size:14px;font-weight:600;color:var(--green);cursor:pointer}
 /* separador "ou" entre enviar pedido e convidar por link */
-.conv-ou{display:flex;align-items:center;gap:10px;margin:16px 0 12px;color:var(--ink3);font-size:13px}
-.conv-ou::before,.conv-ou::after{content:'';flex:1;height:1px;background:var(--border)}
 .conv-dica{font-size:11.5px;color:var(--ink3);text-align:center;margin-top:10px;line-height:1.5}
 /* faixa de quem convidou, na tela de login */
 .convite-faixa{display:flex;align-items:center;gap:11px;background:rgba(245,245,243,.14);border:none;
@@ -1982,7 +2013,13 @@ svg.ic path,svg.ic circle,svg.ic line,svg.ic polyline,svg.ic rect{fill:none;stro
 
 <div class="overlay" id="ov-excluir" onclick="closeOut(event,'ov-excluir')"><div class="sheet"><button class="sheet-close" onclick="closeOv('ov-excluir')" data-ic="close" aria-label="Fechar"></button><div class="sheet-handle"></div><div class="sheet-title">Excluir minha conta</div><div class="ex-corpo" style="padding:0 24px 4px"><div class="nt-label" style="margin-bottom:10px">Isso apaga de vez, e não tem como desfazer:</div><ul style="margin:0 0 16px;padding-left:20px;font-size:14px;line-height:1.7;color:var(--ink2)"><li>suas viagens e todos os seus lugares</li><li>suas notas, avaliações e comentários</li><li>suas fotos de perfil e de lugares</li><li>seus amigos e os links de convite que você criou</li></ul><div class="nt-label">Para confirmar, digite <b>EXCLUIR</b></div><input class="nt-input" id="confirmaExcluir" placeholder="digite aqui" autocapitalize="characters" autocomplete="off" oninput="atualizarBotaoExcluir()"></div><button class="sheet-cta" id="btnExcluirConta" style="background:var(--red);box-shadow:none;opacity:.4;pointer-events:none" onclick="excluirConta()">Excluir minha conta</button></div></div>
 
-<div class="overlay" id="ov-addfriend" onclick="closeOut(event,'ov-addfriend')"><div class="sheet"><button class="sheet-close" onclick="closeOv('ov-addfriend')" data-ic="close" aria-label="Fechar"></button><div class="sheet-handle"></div><div class="sheet-title">Adicionar amigo</div><div class="nt-label">Nome ou username</div><input class="nt-input" id="friendUsernameInput" type="text" placeholder="ex: Marina, ou marina" autocapitalize="none" autocomplete="off" oninput="buscarPessoas(this.value)"><div class="auth-error" id="friendAddErr"></div><div class="busca-res" id="buscaPessoasRes"></div><div class="conv-ou"><span>ou</span></div><button class="secondary-link" id="convidarBtn" style="margin-top:0" onclick="compartilharConvite()">Convidar por link</button><div class="conv-dica">Quem abrir o link entra já como seu amigo, sem precisar do seu username.</div></div></div>
+<!-- O X virou "Fechar" escrito: num alvo de 36 no canto, o X é o controle que
+     mais gente erra, e aqui a folha tem uma ação só. O divisor "ou" saiu — era
+     uma linha de 1px, que a direção não usa em lugar nenhum. -->
+<div class="overlay" id="ov-addfriend" onclick="closeOut(event,'ov-addfriend')"><div class="sheet"><div class="sheet-handle"></div>
+<div class="af-topo"><span class="af-titulo">Adicionar amigo</span><button class="af-fechar" onclick="closeOv('ov-addfriend')">Fechar</button></div>
+<div class="nt-wrap"><div class="af-campo"><span class="af-lupa" data-ic="search"></span><input class="af-input" id="friendUsernameInput" type="text" placeholder="Buscar por @username" autocapitalize="none" autocomplete="off" oninput="buscarPessoas(this.value)"></div><div class="auth-error" id="friendAddErr"></div><div class="busca-res" id="buscaPessoasRes"></div></div>
+<div class="af-rodape"><div class="af-rodape-txt">Seu amigo ainda não está no Spot?</div><button class="af-convite" id="convidarBtn" onclick="compartilharConvite()">Compartilhar convite</button></div></div></div>
 
 <div class="overlay" id="ov-novasenha"><div class="sheet"><div class="sheet-handle"></div><div class="sheet-title">Escolha uma senha nova</div><div class="den-sobre">Você chegou pelo link de recuperação. Defina a nova senha para entrar.</div><div class="nt-label" style="padding:0 24px">Nova senha</div><input class="nt-input" id="novaSenha" type="password" autocomplete="new-password" placeholder="8+ caracteres, com letras e números"><div class="auth-error show" id="erroNovaSenha" style="padding:0 24px;min-height:18px;background:none;border:none"></div><button class="sheet-cta" id="btnNovaSenha" onclick="salvarNovaSenha()">Salvar e entrar</button></div></div>
 
@@ -10564,15 +10601,15 @@ function linhaDePessoa(p,i){
     : '<div class="feed-avatar">'+esc(initials(nome))+'</div>';
   const vinculo=BUSCA_VINCULOS[p.id];
   let acao;
-  if(vinculo==='accepted')acao='<span class="busca-estado">já são amigos</span>';
-  else if(vinculo==='pending')acao='<span class="busca-estado">pedido enviado</span>';
+  if(vinculo==='accepted')acao='<span class="busca-estado">Já são amigos</span>';
+  else if(vinculo==='pending')acao='<span class="busca-estado">Pedido enviado</span>';
   else acao='<button class="req-btn req-accept" id="bp-'+i+'" onclick="pedirAmizade('+i+')">Adicionar</button>';
   // "@fulano · amigo da Isabella" — o amigo em comum é o que transforma um
   // username estranho em alguém que dá pra reconhecer. Vem da 025, que
   // devolve só UM nome e só quando ele também é amigo SEU.
   const comum=BUSCA_COMUM[p.id];
   const sub=[p.username?'@'+p.username:'',comum?'amigo de '+comum:''].filter(Boolean).join(' · ');
-  return '<div class="req-card">'+av
+  return '<div class="req-card af-linha">'+av
     +'<div style="flex:1;min-width:0"><div class="req-name">'+esc(nome)+'</div>'
     +(sub?'<div class="busca-user">'+esc(sub)+'</div>':'')
     +'</div>'+acao+'</div>';
