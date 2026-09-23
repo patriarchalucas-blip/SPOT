@@ -1162,8 +1162,12 @@ body.na-casca .bottom-nav{display:none}
 .fi-servico{display:flex;align-items:center;gap:8px;margin-top:10px;font-size:14px;color:var(--ink2);flex-wrap:wrap}
 .fi-servico .fi-aberto{font-weight:600;color:var(--green)}
 .fi-servico .fi-fechado{color:var(--ink3)}
-.fi-servico .fi-google{margin-left:auto;color:var(--ink2)}
+/* A nota do Google fica à DIREITA e em cinza: ela é referência de terceiro.
+   A sua, que é o assunto da tela, vem logo abaixo em 32px e verde. */
+.fi-servico .fi-google{margin-left:auto;display:flex;align-items:center;gap:4px;color:var(--ink2)}
 .fi-servico .fi-google b{font-weight:600;color:var(--ink)}
+.fi-servico .fi-google svg{width:14px;height:14px;color:var(--ink3)}
+.fi-servico .fi-google svg path{fill:currentColor;stroke:none}
 /* Segmentado global: trilho surface, escolhido com o fundo da página por cima. */
 .fi-status{display:flex;gap:2px;margin-top:20px;background:var(--surface);
   border-radius:var(--r-card);padding:4px}
@@ -4054,7 +4058,9 @@ function desenharFichaDoLugar(s){
   // manda sumir o item que não tiver, então a linha simplesmente encurta.
   const serv=document.getElementById('placeServico');
   const ng=String(s.rating_google||'').trim();
-  serv.innerHTML=ng?'<span class="fi-google"><b>'+esc(ng)+'</b> Google</span>':'';
+  // "4,5 Google" não se lia como nota — parecia um código. Com a estrela e o
+  // "no", vira frase: é a nota DO GOOGLE, não a sua, que fica logo abaixo.
+  serv.innerHTML=ng?'<span class="fi-google">'+icon('star')+'<b>'+esc(ng)+'</b> no Google</span>':'';
   serv.style.display=ng?'flex':'none';
 
   notaDaFicha=Number(s.my_rating)||0;
@@ -4088,18 +4094,46 @@ function desenharEnderecoDoLugar(s){
   const rua=partes[0]||ende||cityOf(s);
   const resto=partes.slice(1).join(' · ').replace(/,\s*\d{5}-?\d{3}\b/,'').trim();
   const temCoord=s.lat!=null&&s.lng!=null;
-  const mini=temCoord
-    ?'<img class="fi-mini" alt="" loading="lazy" src="/api/mapa?lat='+encodeURIComponent(s.lat)
-      +'&lng='+encodeURIComponent(s.lng)+'&tam=344x120&z=15" onerror="this.remove()">'
-    :'';
   box.innerHTML='<a class="fi-end" href="'+alvo+'" target="_blank" rel="noopener">'
-    +mini
+    +(temCoord?'<img class="fi-mini" alt="" style="display:none">':'')
     +'<span class="fi-end-linha">'
     +'<span class="pl-ic" data-ic="pin"></span>'
     +'<span class="fi-end-txt"><span class="fi-rua">'+esc(rua)+'</span>'
     +(resto?'<span class="fi-bairro">'+esc(resto)+'</span>':'')+'</span>'
     +'<span class="pl-seta">›</span></span></a>';
   hydrateIcons(box);
+  if(temCoord)carregarMiniMapa(box.querySelector('.fi-mini'),s);
+}
+
+// A IMAGEM DO MAPA PRECISA DE FETCH, NÃO DE <img src>.
+//
+// Eu tinha posto o endereço direto no src. Não funciona: /api/mapa exige
+// sessão (é chamada paga) e `<img>` NÃO manda cabeçalho de autorização —
+// todo pedido voltaria 401 e o mapa nunca apareceria. Pôr o token na URL
+// resolveria e é pior: endereço vaza em log, em histórico e no referer.
+//
+// Então busca com fetch, que manda o cabeçalho, e vira blob. De quebra dá pra
+// tratar a resposta de teto estourado, que chega como JSON com status 200 e
+// no <img> viraria ícone quebrado.
+async function carregarMiniMapa(img,s){
+  if(!img)return;
+  try{
+    const tk=await ensureToken();
+    if(!tk){img.remove();return}
+    const r=await fetch('/api/mapa?lat='+encodeURIComponent(s.lat)
+      +'&lng='+encodeURIComponent(s.lng)+'&tam=344x120&z=15',
+      {headers:{'Authorization':'Bearer '+tk}});
+    if(!r.ok){img.remove();return}
+    const tipo=r.headers.get('Content-Type')||'';
+    // Sem chave no servidor, ou teto batido: vem JSON. Some sem barulho — o
+    // endereço continua ali, que é o que importa.
+    if(tipo.indexOf('image')<0){img.remove();return}
+    const b=await r.blob();
+    // A pessoa pode ter aberto outro lugar enquanto a imagem vinha.
+    if(!img.isConnected){return}
+    img.src=URL.createObjectURL(b);
+    img.style.display='';
+  }catch(e){img.remove()}
 }
 // Botões de ação na tela do spot — extraído pra função própria porque o
 // backfill automático precisa redesenhar isso quando o link chega depois
