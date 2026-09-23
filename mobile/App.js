@@ -45,7 +45,6 @@ import BarraDeAbas from './BarraDeAbas';
 import TelaAmigos from './TelaAmigos';
 import TelaExplorar from './TelaExplorar';
 import TelaViagens from './TelaViagens';
-import TelaPerfil from './TelaPerfil';
 import { StatusBar } from 'expo-status-bar';
 import { WebView } from 'react-native-webview';
 import * as WebBrowser from 'expo-web-browser';
@@ -132,14 +131,26 @@ const FUNCAO_DA_ABA = {
   friends: 'acaoDeAmigos',
   explore: 'acaoDeExplorar',
   dashboard: 'acaoDeViagens',
-  profile: 'acaoDePerfil',
 };
 
+// O PERFIL SAIU DAQUI em 22/09/2026, e voltou a vir do site.
+//
+// Ele foi redesenhado por inteiro (handoff do Lucas: cabeçalho, Meus lugares
+// com status/cidade/categoria, convite) e o desenho pede coisas que só
+// existem no navegador — a começar pelo mapa de ruas com pins, que do lado
+// nativo não existe pronto.
+//
+// Manter as duas versões custou caro uma vez: as quatro abas ficaram uma
+// geração atrás do site sem ninguém perceber, porque não há como abrir o app
+// nativo na máquina onde ele é escrito. Uma tela é uma tela pra manter.
+//
+// A regra 4.2 da Apple continua atendida pelas outras três abas nativas, a
+// barra, a notificação, a folha de compartilhar, as permissões, a tela de
+// offline e o link externo.
 const TELAS = {
   dashboard: TelaViagens,
   explore: TelaExplorar,
   friends: TelaAmigos,
-  profile: TelaPerfil,
 };
 
 // A casca (fundo atras da WebView, aviso de offline, girador) acompanha o

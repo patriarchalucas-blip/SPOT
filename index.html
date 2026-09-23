@@ -1080,15 +1080,70 @@ body.na-casca .bottom-nav{display:none}
 
 /* Quadrado arredondado, nao circulo: o circulo com o lapis laranja pendurado
    no canto e o avatar de rede social generico. */
-.profile-avatar{width:88px;height:88px;border-radius:22px;background:var(--green);color:var(--on-green);
-  display:flex;align-items:center;justify-content:center;font-size:30px;font-weight:600;overflow:hidden}
+/* 72, não 88: o avatar saiu de cima do nome e foi pro lado dele. Empilhado,
+   o bloco de identidade comia meia tela antes de mostrar um lugar sequer. */
+.profile-avatar{width:72px;height:72px;border-radius:22px;background:var(--green);color:var(--on-green);
+  display:flex;align-items:center;justify-content:center;font-size:26px;font-weight:600;overflow:hidden}
 .profile-avatar img{width:100%;height:100%;object-fit:cover}
-.profile-avatar-wrap{position:relative;cursor:pointer;width:88px;margin-bottom:14px}
+.profile-avatar-wrap{position:relative;cursor:pointer;width:72px;flex-shrink:0}
+.pi-linha{display:flex;align-items:center;gap:14px}
+.pi-txt{flex:1;min-width:0}
+/* "14 amigos" é o único pedaço clicável da sub-linha, então é o único em
+   tinta cheia — o resto fica em ink2 e não convida toque. */
+.pi-amigos{color:var(--ink);font-weight:600;cursor:pointer}
+.pi-amigos::after{content:" ›";color:var(--ink3)}
+.pi-amigos:active{opacity:.6}
 .avatar-edit-badge{position:absolute;bottom:-4px;right:-4px;width:28px;height:28px;border-radius:50%;
   background:var(--surface);color:var(--ink);display:flex;align-items:center;justify-content:center;
   border:3px solid var(--base)}
 .avatar-edit-badge svg{width:13px;height:13px}
-.profile-name{font-size:34px;font-weight:700;letter-spacing:-.04em;color:var(--ink);line-height:1.05}
+.profile-name{font-size:30px;font-weight:700;letter-spacing:-.04em;color:var(--ink);line-height:1.05}
+/* A bio desceu pra linha própria: ao lado do @usuário ela era cortada em
+   qualquer nome de duas palavras. Margem direita 40 pra não virar bloco. */
+.profile-bio{display:block;margin:10px 40px 0 0;font-size:16px;line-height:1.45;color:var(--ink2)}
+
+/* ═══ MEUS LUGARES ═══ */
+.ml-cab{display:flex;align-items:center;justify-content:space-between;margin:28px 0 14px}
+.ml-status{display:flex;gap:18px;overflow-x:auto;scrollbar-width:none;margin-bottom:14px}
+.ml-status::-webkit-scrollbar{display:none}
+.ml-aba{flex:none;background:none;border:none;padding:0 0 8px;font-size:15px;font-weight:600;
+  color:var(--ink3);cursor:pointer;white-space:nowrap;font-family:inherit}
+.ml-aba.on{color:var(--ink);box-shadow:inset 0 -2px 0 var(--ink)}
+.ml-filtros{display:flex;gap:8px;margin-bottom:14px;overflow-x:auto;scrollbar-width:none}
+.ml-filtros::-webkit-scrollbar{display:none}
+.ml-filtro{flex:none;display:flex;align-items:center;gap:6px;height:36px;padding:0 12px;
+  background:var(--surface);border:none;border-radius:var(--r-btn);font-size:14px;font-weight:600;
+  color:var(--ink);cursor:pointer;font-family:inherit;white-space:nowrap}
+.ml-filtro:active{opacity:.6}
+.mf-pino{display:flex;color:var(--green)}
+.mf-pino svg{width:15px;height:15px}
+.mf-chev{color:var(--ink3);font-size:13px;line-height:1}
+/* Trilho horizontal: a foto é o que faz alguém parar, e empilhada em coluna
+   só caberiam duas antes do convite. Deitada, cabem quatro no polegar. */
+.ml-trilho{display:flex;gap:10px;overflow-x:auto;scrollbar-width:none;
+  margin:0 -20px;padding:0 20px 2px;scroll-padding-left:20px}
+.ml-trilho::-webkit-scrollbar{display:none}
+.ml-card{flex:none;width:140px;cursor:pointer}
+.ml-foto{width:140px;height:170px;border-radius:var(--r-photo);background:var(--photo-empty);
+  background-size:cover;background-position:center}
+.ml-card:active{opacity:.85}
+.ml-nome{margin-top:8px;font-size:14px;font-weight:600;letter-spacing:-.02em;color:var(--ink);
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.ml-meta{margin-top:2px;font-size:12px;color:var(--ink2);
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.ml-vazio{font-size:14px;color:var(--ink2);line-height:1.5;padding:4px 0 2px}
+.ml-vertodos{display:block;background:none;border:none;padding:14px 0 0;font-size:14px;
+  font-weight:600;color:var(--green);cursor:pointer;font-family:inherit}
+.ml-vertodos:active{opacity:.6}
+
+/* ═══ CONVITE ═══ */
+.conv-bloco{margin-top:28px;background:var(--green);border-radius:var(--r-card);padding:18px 16px}
+.conv-tit{font-size:17px;font-weight:700;letter-spacing:-.02em;color:var(--on-green)}
+.conv-txt{margin-top:6px;font-size:14px;line-height:1.45;color:rgba(245,245,243,.8)}
+.conv-btn{margin-top:14px;width:100%;height:44px;background:var(--base);border:none;
+  border-radius:var(--r-btn);font-size:14px;font-weight:600;color:var(--green);cursor:pointer;
+  font-family:inherit}
+.conv-btn:active{opacity:.8}
 .profile-map-block{position:relative;width:100%;aspect-ratio:800/420;background:var(--map-bg);overflow:hidden}
 .world-map-wrap{position:absolute;inset:0;line-height:0;touch-action:none}
 .world-map-wrap svg{width:100%;height:100%;display:block;cursor:grab}
@@ -1467,25 +1522,52 @@ svg.ic path,svg.ic circle,svg.ic line,svg.ic polyline,svg.ic rect{fill:none;stro
     <div class="prof-marca">Perfil</div>
     <button class="prof-config-btn" onclick="abrirConfig()" data-ic="gear" aria-label="Configurações"></button>
   </div>
+  <!-- Avatar AO LADO do nome, não em cima: empilhado, o nome saía em 34 e o
+       bloco de identidade comia meia tela antes de mostrar um lugar sequer. -->
   <div class="profile-ident">
-    <div class="profile-avatar-wrap" onclick="document.getElementById('avatarFileInput').click()">
-      <div class="profile-avatar" id="profAvatar">?</div>
-      <div class="avatar-edit-badge" data-ic="edit"></div>
+    <div class="pi-linha">
+      <div class="profile-avatar-wrap" onclick="document.getElementById('avatarFileInput').click()">
+        <div class="profile-avatar" id="profAvatar">?</div>
+        <div class="avatar-edit-badge" data-ic="edit"></div>
+      </div>
+      <input type="file" id="avatarFileInput" accept="image/*" style="display:none" onchange="onAvatarFileChosen(this)">
+      <div class="pi-txt">
+        <div class="profile-name" id="profName">—</div>
+        <div class="profile-sub"><span class="profile-user" id="profUser"></span><span class="pi-amigos" id="profAmigos" style="display:none" onclick="goTo('friends');loadFriends()"></span></div>
+      </div>
     </div>
-    <input type="file" id="avatarFileInput" accept="image/*" style="display:none" onchange="onAvatarFileChosen(this)">
-    <div class="profile-name" id="profName">—</div>
-    <div class="profile-sub"><span class="profile-user" id="profUser"></span><span class="profile-bio" id="profBio" style="display:none"></span></div>
+    <div class="profile-bio" id="profBio" style="display:none"></div>
   </div>
 
   <div class="profile-body">
-    <div class="prof-numeros" id="profResumo"></div>
-    <div class="section-head"><span class="section-title">Meus spots</span><span class="section-sub" id="estanteResumo"></span></div>
-    <div id="estante"></div>
+    <!-- MEUS LUGARES. Substituiu os números, o "Onde já estive" e a estante
+         por cidade: os três diziam quanto a pessoa viajou, e isso a tela
+         inicial já diz inteiro. Aqui fica só o que é dela. -->
+    <div class="ml-cab"><span class="section-title">Meus lugares</span></div>
+    <div class="ml-status" id="mlStatus"></div>
+    <div class="ml-filtros">
+      <button class="ml-filtro" id="mlFiltroCidade" onclick="abrirFolhaDeCidades()"><span class="mf-pino" data-ic="pin"></span><span id="mlCidadeTxt">Todas as cidades</span><span class="mf-chev">⌄</span></button>
+      <button class="ml-filtro" id="mlFiltroCat" onclick="abrirFolhaDeCategorias()"><span id="mlCatTxt">Todas as categorias</span><span class="mf-chev">⌄</span></button>
+    </div>
+    <div class="ml-trilho" id="mlTrilho"></div>
+    <div id="mlVerTodos"></div>
+
+    <!-- CONVITE. Único bloco verde da tela, e o único lugar do app onde o
+         convite nasce: ele cria amizade JÁ ACEITA, então não pode estar
+         pendurado em nada que circule sozinho. -->
+    <div class="conv-bloco">
+      <div class="conv-tit">Traga seus amigos pro Spot</div>
+      <div class="conv-txt">Quem entrar pelo seu link vira seu amigo aqui e vê seus lugares.</div>
+      <button class="conv-btn" onclick="compartilharConvite()">Compartilhar convite</button>
+    </div>
+
     <div class="prof-acoes">
       <div class="prof-linha" onclick="openVisitedCountryPicker()"><span class="pl-ic" data-ic="globe"></span><span class="pl-txt">Marcar país que já visitei</span><span class="pl-seta">›</span></div>
       <div class="prof-linha" onclick="openHomeCountryPicker()"><span class="pl-ic" data-ic="pin"></span><span class="pl-txt">Marcar país onde moro</span><span class="pl-seta">›</span></div>
     </div>
-    <div style="height:40px"></div>
+    <!-- A barra de baixo mede 78 mais a faixa do aparelho. Com 40 aqui, o
+         bloco de convite ficava embaixo dela. -->
+    <div style="height:110px"></div>
   </div>
   <div class="bottom-nav"><div class="nav-item" onclick="goTo('dashboard');loadDashboard()"><div class="nav-icon" data-ic="map"></div><div class="nav-label">Viagens</div></div><div class="nav-item" onclick="goTo('explore');loadExplore()"><div class="nav-icon" data-ic="search"></div><div class="nav-label">Explorar</div></div><div class="nav-item" onclick="goTo('friends');loadFriends()"><div class="nav-icon" data-ic="users"></div><div class="nav-label">Amigos</div></div><div class="nav-item active" onclick="goTo('profile');loadProfile()"><div class="nav-icon" data-ic="user"></div><div class="nav-label" style="color:var(--ink);font-weight:600">Perfil</div></div></div>
 </div>
@@ -1623,6 +1705,10 @@ svg.ic path,svg.ic circle,svg.ic line,svg.ic polyline,svg.ic rect{fill:none;stro
 <!-- PRIMEIRO ACESSO. Não fecha clicando fora de propósito: é a única folha do
      app que existe pra ser respondida, não consultada. Tem "Agora não". -->
 <div class="overlay" id="ov-boasvindas"><div class="sheet"><div class="sheet-handle"></div><div class="sheet-title">Onde você mora?</div><div class="den-sobre">Serve pra abrir o Explorar já cheio — o que seus amigos marcaram perto de você.</div><div class="nt-label">Sua cidade</div><div class="nt-wrap"><input class="nt-input" id="cidadeCasaInput" type="text" placeholder="ex: São Paulo" autocomplete="off" oninput="buscarCidadeDeCasa(this.value)"><div class="busca-res" id="cidadeCasaRes"></div></div><button class="secondary-link" style="margin:0 0 18px" onclick="pularCidadeDeCasa()">Agora não</button></div></div>
+
+<div class="overlay" id="ov-mlcidade" onclick="closeOut(event,'ov-mlcidade')"><div class="sheet"><button class="sheet-close" onclick="closeOv('ov-mlcidade')" data-ic="close" aria-label="Fechar"></button><div class="sheet-handle"></div><div class="sheet-title">Cidade</div><div id="mlCidadeLista" style="padding-bottom:12px"></div></div></div>
+
+<div class="overlay" id="ov-mlcat" onclick="closeOut(event,'ov-mlcat')"><div class="sheet"><button class="sheet-close" onclick="closeOv('ov-mlcat')" data-ic="close" aria-label="Fechar"></button><div class="sheet-handle"></div><div class="sheet-title">Categoria</div><div id="mlCatLista" style="padding-bottom:12px"></div></div></div>
 
 <div class="overlay" id="ov-detalheamigo" onclick="closeOut(event,'ov-detalheamigo')"><div class="sheet"><button class="sheet-close" onclick="closeOv('ov-detalheamigo')" data-ic="close" aria-label="Fechar"></button><div class="sheet-handle"></div><div class="sheet-title" id="daTitulo">—</div><div id="daCorpo"></div></div></div>
 
@@ -6212,7 +6298,7 @@ async function corrigirCidadesAntigas(opcoes){
   if(mudou){
     rebuildCityCanon();
     renderTrips();
-    if(document.getElementById('estante'))renderEstante();
+    if(document.getElementById('mlTrilho'))renderEstante();
     if(!o.silencioso)toast(mudou===1?'1 cidade corrigida':mudou+' cidades corrigidas','','check');
   }
   return r;
@@ -7295,7 +7381,7 @@ async function loadProfile(){
   const p=await fetchOwnProfile(true);
   document.getElementById('profUser').textContent=p.username?'@'+p.username:'';
   const bio=document.getElementById('profBio');
-  if(p.bio){bio.textContent=p.bio;bio.style.display='inline'}else{bio.style.display='none'}
+  if(p.bio){bio.textContent=p.bio;bio.style.display='block'}else{bio.style.display='none'}
   document.getElementById('usernameInput').value=p.username||'';
   document.getElementById('bioInput').value=p.bio||'';
   applyAvatar('dashAvatar',name,p.avatar_url);
@@ -7313,6 +7399,11 @@ async function loadProfile(){
   // Amizade no Spot é MÚTUA (a 008 só aceita vínculo dos dois lados), então é
   // um número só — "12 amigos" — e não seguidores/seguindo.
   try{AMIGOS_TOTAL=(await idsDosAmigos()).length}catch(e){}
+  const am=document.getElementById('profAmigos');
+  if(am){
+    am.textContent=AMIGOS_TOTAL+(AMIGOS_TOTAL===1?' amigo':' amigos');
+    am.style.display=AMIGOS_TOTAL?'inline':'none';
+  }
   renderEstante();
 }
 // Lista de países visitados. Mostra os primeiros e joga o resto pra tela de
@@ -7369,52 +7460,145 @@ const NOTAS_NO_PERFIL = 6;
 const FAVORITOS_NO_PERFIL = 4;
 // Preenchido por loadProfile(), lido por darDadosDePerfil(). Ver a nota lá.
 let AMIGOS_TOTAL = 0;
+// ═══ MEUS LUGARES ═══
+//
+// Substituiu a estante por cidade, os números e o "Onde já estive". Os três
+// diziam quanto a pessoa viajou, e isso a tela inicial já diz inteiro — o
+// Perfil virava eco. Aqui fica só o que é dela: os lugares, filtrados do
+// jeito que ela procura (status → cidade → categoria).
+//
+// O nome dos três status vem do produto, não do banco: `skip` sempre foi
+// "Pular" no código e agora se chama NÃO RECOMENDO na tela. É o mesmo dado.
+const ML_STATUS = [
+  {chave:'been', rotulo:'Fui'},
+  {chave:'want', rotulo:'Quero ir'},
+  {chave:'skip', rotulo:'Não recomendo'}
+];
+const ML_CATEGORIAS = [
+  {chave:'', rotulo:'Todas as categorias'},
+  {chave:'food', rotulo:'Gastronomia'},
+  {chave:'experience', rotulo:'Experiências'},
+  {chave:'hotel', rotulo:'Hospedagem'}
+];
+let mlStatus='been', mlCidade='', mlCat='';
+// Cidades vão pelo ÍNDICE no onclick, nunca pelo nome: nome de cidade tem
+// acento e apóstrofo, e esc() não protege dentro de atributo de evento.
+let ML_CIDADES=[];
+
+function mlRotuloDaCategoria(c){
+  const achou=ML_CATEGORIAS.find(x=>x.chave===c);
+  return achou?achou.rotulo:'Todas as categorias';
+}
+// O filtro de status é aplicado SEMPRE; cidade e categoria só quando escolhidos.
+function mlFiltrar(spots,comStatus,comCidade,comCat){
+  return spots.filter(function(s){
+    if(comStatus&&(s.status||'want')!==comStatus)return false;
+    if(comCidade&&cityOf(s)!==comCidade)return false;
+    if(comCat&&s.category!==comCat)return false;
+    return true;
+  });
+}
+
 function renderEstante(){
-  const box=document.getElementById('estante');
-  if(!box)return;
+  const trilho=document.getElementById('mlTrilho');
+  if(!trilho)return;
   const spots=allSpotsFlat();
-  const resumo=document.getElementById('estanteResumo');
-  if(!spots.length){
-    box.innerHTML='<div class="empty-state"><div class="ei">'+icon('pin')+'</div>'
-      +'<h3>Nada salvo ainda</h3><p>Os spots que você salvar aparecem aqui, por cidade.</p></div>';
-    if(resumo)resumo.textContent='';
-    // Quem so marcou pais no mapa cai exatamente aqui — e e justamente quem
-    // usa o X pra tirar pais. Sem este aviso o pais continuava na tela
-    // depois de tirado, e o girar de atualizar nao parava mais.
+
+  // As abas mostram a contagem DENTRO dos filtros de cidade e categoria: com
+  // "São Paulo" escolhido, "Fui · 28" tem que ser 28 em São Paulo, senão o
+  // número promete uma lista que a tela não mostra.
+  const abas=document.getElementById('mlStatus');
+  abas.innerHTML=ML_STATUS.map(function(st){
+    const n=mlFiltrar(spots,st.chave,mlCidade,mlCat).length;
+    return '<button class="ml-aba'+(mlStatus===st.chave?' on':'')+'" onclick="mlTrocarStatus(\''+st.chave+'\')">'
+      +esc(st.rotulo)+' · '+n+'</button>';
+  }).join('');
+
+  ML_CIDADES=Object.keys(agruparPorCidade(spots)).sort(function(a,b){
+    return mlFiltrar(spots,mlStatus,b,'').length-mlFiltrar(spots,mlStatus,a,'').length
+      ||a.localeCompare(b,'pt-BR');
+  });
+  document.getElementById('mlCidadeTxt').textContent=mlCidade||'Todas as cidades';
+  document.getElementById('mlCatTxt').textContent=mlRotuloDaCategoria(mlCat);
+
+  const lista=mlFiltrar(spots,mlStatus,mlCidade,mlCat);
+  const ver=document.getElementById('mlVerTodos');
+  if(!lista.length){
+    trilho.innerHTML='<div class="ml-vazio">'+esc(mlTextoDeVazio())+'</div>';
+    ver.innerHTML='';
     darDadosDePerfil();
     return;
   }
-  const byCity=agruparPorCidade(spots);
-  const paisDe={};
-  spots.forEach(s=>{const c=cityOf(s)||'Outros';if(!paisDe[c])paisDe[c]=s._country||''});
-  const cidades=Object.keys(byCity).filter(c=>byCity[c].length)
-    .sort((a,b)=>byCity[b].length-byCity[a].length||a.localeCompare(b,'pt-BR'));
-  if(resumo)resumo.textContent=spots.length+(spots.length===1?' spot · ':' spots · ')
-    +cidades.length+(cidades.length===1?' cidade':' cidades');
-
-  // As cidades do mosaico ficam em ESTANTE_CIDADES: o clique referencia pelo
-  // INDICE, nunca pelo nome — nome de cidade tem acento e apóstrofo, e
-  // interpolar isso dentro de um onclick quebra a tela inteira.
-  ESTANTE_CIDADES=cidades;
-  const mostrar=cidades.slice(0,ESTANTE_NO_PERFIL);
-  box.innerHTML='<div class="est-mosaico">'+mostrar.map(function(c,i){
-    const lista=byCity[c];
-    // A foto do mosaico e a de um lugar que a pessoa mesma salvou naquela
-    // cidade — ja esta carregada. Buscar foto de cidade aqui gastaria uma
-    // chamada de Unsplash por cidade, e a cota e de 50 por hora pro app todo.
-    const comFoto=lista.find(sp=>sp.photo_url);
-    const foto=comFoto?'<div class="est-foto" style="background-image:'+cssUrl(fotoNaLargura(comFoto.photo_url,600))+'"></div>':'';
-    const n=lista.length;
-    return'<button class="est-tile'+(i===0?' grande':'')+'" onclick="abrirCidadeDaEstante('+i+')">'
-      +foto+'<div class="est-scrim"></div><div class="est-pe">'
-      +'<div class="est-cnome">'+esc(c)+'</div>'
-      +'<div class="est-meta">'+n+(n===1?' spot':' spots')+'</div></div></button>';
-  }).join('')+'</div>'
-    +(cidades.length>ESTANTE_NO_PERFIL
-      ?'<button class="est-vertodas" onclick="openList(\'cities\')">Ver todas as '+cidades.length+' cidades</button>'
-      :'');
-  hydrateIcons(box);
+  // Os mais recentes primeiro: o trilho mostra quatro ou cinco, e o que a
+  // pessoa salvou ontem é o que ela procura.
+  const ordenada=lista.slice().sort(function(a,b){
+    return String(b.created_at||'').localeCompare(String(a.created_at||''));
+  });
+  trilho.innerHTML=ordenada.slice(0,12).map(function(s){
+    const foto=s.photo_url?' style="background-image:'+cssUrl(fotoNaLargura(s.photo_url,400))+'"':'';
+    return '<div class="ml-card" onclick="openPlace(\''+s.id+'\',\'profile\')">'
+      +'<div class="ml-foto"'+foto+'></div>'
+      +'<div class="ml-nome">'+esc(s.name||'')+'</div>'
+      +'<div class="ml-meta">'+esc(mlLegenda(s))+'</div></div>';
+  }).join('');
+  ver.innerHTML='<button class="ml-vertodos" onclick="mlVerTodos()">'
+    +esc(mlCidade?('Ver os '+lista.length+' em '+mlCidade):('Ver todos os '+lista.length))+'</button>';
   darDadosDePerfil();
+}
+
+// A legenda muda com o status, porque a pergunta muda: em "Fui" interessa
+// o que você achou; em "Quero ir", de quem veio a dica.
+//
+// A ORIGEM ("dica do Bruno") ainda não existe no banco — é dado novo, gravado
+// só quando alguém salva um spot de amigo. Até existir, a legenda mostra
+// cidade, que é o que o handoff manda fazer na falta dela.
+function mlLegenda(s){
+  const onde=cityOf(s)||'';
+  if((s.status||'want')==='been'){
+    const nota=Number(s.my_rating)>0?fmtRating(s.my_rating):'';
+    return nota?(onde?onde+' · ★ '+nota:'★ '+nota):onde;
+  }
+  return onde;
+}
+function mlTextoDeVazio(){
+  if(mlStatus==='been')return 'Nada marcado como "já fui" por aqui ainda.';
+  if(mlStatus==='skip')return 'Você ainda não marcou nenhum lugar como não recomendado.';
+  return 'Nenhum lugar na sua lista de "quero ir" com estes filtros.';
+}
+function mlTrocarStatus(st){mlStatus=st;renderEstante()}
+function mlEscolherCidade(i){mlCidade=(i<0?'':(ML_CIDADES[i]||''));closeOv('ov-mlcidade');renderEstante()}
+function mlEscolherCat(c){mlCat=c;closeOv('ov-mlcat');renderEstante()}
+
+// "Ver os N" abre a tela Lista que já existe, com os mesmos filtros. A Lista
+// não tem modo por status+cidade+categoria, então o caminho é o drill que ela
+// já entende: por cidade quando há uma, senão a lista de spots inteira.
+function mlVerTodos(){
+  if(mlCidade){drillTo('city',mlCidade);goTo('list');return}
+  openList('spots');
+}
+
+function abrirFolhaDeCidades(){
+  const box=document.getElementById('mlCidadeLista');
+  const spots=allSpotsFlat();
+  box.innerHTML='<div class="prof-linha" onclick="mlEscolherCidade(-1)"><span class="pl-txt">Todas as cidades</span>'
+    +(mlCidade?'':'<span class="pl-seta" style="color:var(--green)">✓</span>')+'</div>'
+    +ML_CIDADES.map(function(c,i){
+      const nq=mlFiltrar(spots,'want',c,'').length, nf=mlFiltrar(spots,'been',c,'').length;
+      const meta=[nq?nq+' quero ir':'',nf?nf+' fui':''].filter(Boolean).join(' · ');
+      return '<div class="prof-linha" onclick="mlEscolherCidade('+i+')">'
+        +'<span class="pl-txt">'+esc(c)+(meta?'<span class="busca-user">'+esc(meta)+'</span>':'')+'</span>'
+        +(mlCidade===c?'<span class="pl-seta" style="color:var(--green)">✓</span>':'')+'</div>';
+    }).join('');
+  showOv('ov-mlcidade');
+}
+function abrirFolhaDeCategorias(){
+  const box=document.getElementById('mlCatLista');
+  box.innerHTML=ML_CATEGORIAS.map(function(c){
+    return '<div class="prof-linha" onclick="mlEscolherCat(\''+c.chave+'\')">'
+      +'<span class="pl-txt">'+esc(c.rotulo)+'</span>'
+      +(mlCat===c.chave?'<span class="pl-seta" style="color:var(--green)">✓</span>':'')+'</div>';
+  }).join('');
+  showOv('ov-mlcat');
 }
 // ═══ DADOS DA TELA DE PERFIL, PRONTOS PRA DESENHAR ═══
 // Mesma divisão das outras. A estante (seus lugares agrupados por cidade) é
