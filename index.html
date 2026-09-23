@@ -232,20 +232,22 @@ body{font-family:'Inter Tight',sans-serif;background:var(--base);color:var(--ink
 .anel{width:76px;height:76px;position:relative}
 /* girado -90° pra fatia começar no topo, e não às 3 horas */
 .anel svg{width:100%;height:100%;display:block;transform:rotate(-90deg)}
-.anel-txt{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;
-  font-size:19px;font-weight:700;letter-spacing:-.03em;color:var(--ink)}
-/* O rótulo diz PAÍSES, não "do mundo": o anel fica ao lado de três números
-   diferentes, e sem isto nada amarra a porcentagem a um deles. */
-.anel-rot{font-size:10px;color:var(--ink2);white-space:nowrap}
+/* O rótulo desceu pra DENTRO do anel, embaixo da porcentagem: fora dele
+   sobrava uma linha solta sob o círculo, e o card ficava mais alto que o
+   conteúdo pedia. */
+.anel-txt{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;
+  justify-content:center;gap:1px;font-size:19px;font-weight:700;letter-spacing:-.03em;color:var(--ink)}
+.anel-rot{font-size:9.5px;font-weight:400;letter-spacing:0;color:var(--ink2);white-space:nowrap}
 
-.placar-col{flex:1;min-width:0}
-.pc-item{display:flex;align-items:baseline;gap:8px;width:100%;background:none;border:none;
-  padding:3px 0;cursor:pointer;text-align:left}
+/* Os três em FILEIRA, não empilhados: lado a lado eles se comparam, que é o
+   que a pessoa faz com eles. Empilhados viravam uma lista de três linhas. */
+.placar-col{flex:1;min-width:0;display:flex;align-items:flex-end;gap:14px}
+.pc-item{flex:1;min-width:0;display:flex;flex-direction:column;align-items:flex-start;gap:1px;
+  background:none;border:none;padding:0;cursor:pointer;text-align:left}
 .pc-item:active{opacity:.6}
-.pc-n{font-size:23px;font-weight:700;letter-spacing:-.04em;color:var(--ink);line-height:1.15;
-  min-width:36px}
-.pc-r{flex:1;font-size:14px;color:var(--ink2)}
-.pc-seta{font-style:normal;font-size:14px;color:var(--ink3)}
+.pc-n{font-size:26px;font-weight:700;letter-spacing:-.04em;color:var(--ink);line-height:1.05}
+.pc-r{display:flex;align-items:center;gap:3px;font-size:13px;color:var(--ink2);white-space:nowrap}
+.pc-seta{font-style:normal;font-size:12px;color:var(--ink3)}
 .sc-item{background:none;border:none;padding:0;cursor:pointer;text-align:left;
   display:flex;flex-direction:column;gap:2px;min-height:44px;justify-content:flex-end}
 .sc-item:active{opacity:.6}
@@ -1632,20 +1634,16 @@ svg.ic path,svg.ic circle,svg.ic line,svg.ic polyline,svg.ic rect{fill:none;stro
     <div class="placar-card">
       <button class="anel-bloco" onclick="abrirMapaMundi('dashboard')" aria-label="Ver o mapa-múndi">
         <div class="anel" id="dashAnel"></div>
-        <div class="anel-rot" id="dashAnelRot">de 195 países</div>
       </button>
       <div class="placar-col">
         <button class="pc-item" onclick="openList('countries')">
-          <span class="pc-n" id="dashPaisesN">0</span><span class="pc-r">países</span>
-          <i class="pc-seta">›</i>
+          <span class="pc-n" id="dashPaisesN">0</span><span class="pc-r">países<i class="pc-seta">›</i></span>
         </button>
         <button class="pc-item" onclick="openList('cities')">
-          <span class="pc-n" id="statCities">0</span><span class="pc-r">cidades</span>
-          <i class="pc-seta">›</i>
+          <span class="pc-n" id="statCities">0</span><span class="pc-r">cidades<i class="pc-seta">›</i></span>
         </button>
         <button class="pc-item" onclick="openList('spots')">
-          <span class="pc-n" id="statSpots">0</span><span class="pc-r">spots</span>
-          <i class="pc-seta">›</i>
+          <span class="pc-n" id="statSpots">0</span><span class="pc-r">spots<i class="pc-seta">›</i></span>
         </button>
       </div>
     </div>
@@ -6122,8 +6120,6 @@ const PAISES_NO_MUNDO=195;
 // e literalmente o fundo aparecendo por baixo do card.
 function pintarAnelDoMundo(paises){
   const anel=document.getElementById('dashAnel');
-  const rot=document.getElementById('dashAnelRot');
-  if(rot)rot.textContent='de '+PAISES_NO_MUNDO+' países';
   if(!anel)return;
   const fatia=Math.min(1,(Number(paises)||0)/PAISES_NO_MUNDO);
   const r=33, volta=2*Math.PI*r;
@@ -6133,7 +6129,11 @@ function pintarAnelDoMundo(paises){
     +'<circle cx="38" cy="38" r="'+r+'" fill="none" stroke="var(--green)" stroke-width="7"'
     +' stroke-linecap="round" stroke-dasharray="'+(volta*fatia)+' '+volta+'"/>'
     +'</svg>'
-    +'<div class="anel-txt">'+(percentualDoMundo(paises)||'0%')+'</div>';
+    // O rótulo ficava numa linha solta EMBAIXO do anel; agora mora dentro
+    // dele. "de 195" e não "do mundo": diz de que 195 se trata logo ao lado
+    // do "23 países", e não obriga a pessoa a saber quantos países existem.
+    +'<div class="anel-txt">'+(percentualDoMundo(paises)||'0%')
+    +'<span class="anel-rot">de '+PAISES_NO_MUNDO+'</span></div>';
 }
 // SEMPRE INTEIRO, sem casa decimal (pedido do Lucas, 22/09/2026). Eu tinha
 // posto uma casa abaixo de 10% achando que "0,5%" dizia mais que "1%" — mas
@@ -9547,7 +9547,21 @@ async function loadFriends(){
   friendIds.forEach(fid=>{FRIEND_NOMES[fid]=friendName(pmap[fid])});
   feedItems.forEach(it=>{FRIEND_NOMES[it.user_id]=friendName(pmap[it.user_id])});
 
-  FRIENDS_DATA={friendIds,incoming,outgoing,pmap,feedItems};
+  FRIENDS_DATA={friendIds,incoming,outgoing,pmap,feedItems,lugaresPorAmigo:{}};
+  // QUANTOS LUGARES CADA UM TEM — o número discreto à direita de cada linha.
+  // Uma consulta só pra todos, pedindo apenas a coluna de dono: o RLS da 008
+  // já libera spots de amigo aceito, e contar aqui evita uma consulta por
+  // pessoa. Falhou, os números simplesmente não aparecem.
+  if(friendIds.length){
+    dbGet('spots','user_id=in.('+friendIds.join(',')+')&status=eq.been&select=user_id')
+      .then(function(linhas){
+        if(falhou(linhas)||!FRIENDS_DATA)return;
+        const conta={};
+        linhas.forEach(function(l){conta[l.user_id]=(conta[l.user_id]||0)+1});
+        FRIENDS_DATA.lugaresPorAmigo=conta;
+        if(friendsTab==='amigos')renderFriendsTab();
+      }).catch(function(){});
+  }
   // Carregou com a aba Recente ja aberta (voltando de outra tela, por
   // exemplo): tambem conta como visto.
   if(friendsTab==='recente')marcarFeedComoVisto();
@@ -9833,12 +9847,24 @@ function renderFriendsTab(){
       h+='<div class="empty-state"><div class="ei">'+icon('users')+'</div><h3>Sem amigos ainda</h3><p>Toca no + pra adicionar um amigo pelo username</p></div>';
     }else{
       // cada linha abre o perfil; o onclick passa só o id (uuid do banco)
-      h+=friendIds.map(fid=>{
+      // NOME OU @, NUNCA OS DOIS: a linha mostrava "M\u00e1rcio Matos @marciomatos"
+      // \u2014 a mesma pessoa dita duas vezes. O @ vive no perfil dela.
+      // \u00c0 direita, quantos lugares ela tem. Ordem alfab\u00e9tica.
+      const conta=(FRIENDS_DATA&&FRIENDS_DATA.lugaresPorAmigo)||{};
+      const ordenados=friendIds.slice().sort(function(a,b){
+        return String(friendName(pmap[a])).localeCompare(String(friendName(pmap[b])),'pt-BR');
+      });
+      h+=ordenados.map(fid=>{
         const p=pmap[fid];const nome=friendName(p);
+        const n=conta[fid];
+        const foto=safeUrl((p&&p.avatar_url)||'');
+        const av=foto
+          ?'<div class="feed-avatar" style="background-image:'+cssUrl(foto)+';background-size:cover;background-position:center"></div>'
+          :'<div class="feed-avatar">'+esc(initials(nome))+'</div>';
         return '<div class="friend-row" onclick="openFriend(\''+esc(fid)+'\')">'
-          +'<div class="feed-avatar">'+esc(initials(nome))+'</div>'
+          +av
           +'<div class="friend-row-name">'+esc(nome)+'</div>'
-          +(p&&p.username?'<div class="friend-row-user">@'+esc(p.username)+'</div>':'')
+          +(n?'<div class="friend-row-user">'+n+'</div>':'')
           +'<div class="friend-row-arrow">\u203a</div></div>';
       }).join('');
     }
