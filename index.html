@@ -5355,34 +5355,50 @@ function checkinAdd(){
 }
 let searchTO;
 let searchReqId=0;
+// ═══ POR QUE A BUSCA PEDE POUCO, E O RESTO SÓ NA ESCOLHA ═══
+//
+// Esta busca custava caro e ninguém tinha notado. Ela pedia ao Google, A CADA
+// PAUSA NA DIGITAÇÃO, a ficha inteira do lugar: telefone, site, nota, fotos,
+// componentes de endereço. Esses campos jogam a consulta na faixa ENTERPRISE
+// do Places — a mais cara do catálogo, com MIL chamadas grátis por mês.
+// Escrever "Mocotó" com três pausas gastava três delas. Com três pessoas
+// testando, a conta apareceu na primeira semana.
+//
+// Agora são duas consultas de naturezas diferentes:
+//   · ENQUANTO DIGITA — só id, nome e endereço. É o suficiente pra mostrar a
+//     lista, e fica na faixa barata.
+//   · QUANDO ESCOLHE — UMA consulta com a ficha inteira, pro lugar escolhido.
+//
+// Isso troca "N consultas caras por spot" por "uma". E o resto: três letras no
+// mínimo (com uma ou duas, o resultado não serve pra nada) e 450ms de espera
+// no lugar de 250 — a pausa natural entre sílabas é de uns 300ms.
+const CAMPOS_DA_LISTA='places.id,places.displayName,places.formattedAddress';
+const CAMPOS_DA_FICHA='places.id,places.displayName,places.formattedAddress,places.addressComponents,places.location,places.photos,places.rating,places.websiteUri,places.googleMapsUri,places.types,places.nationalPhoneNumber';
 function searchPlaces(v){
   clearTimeout(searchTO);const r=document.getElementById('searchResults');
-  if(!v.trim()){r.innerHTML='<div class="search-loading">Digite para buscar...</div>';return}
+  const termo=String(v||'').trim();
+  if(!termo){r.innerHTML='<div class="search-loading">Digite para buscar...</div>';return}
+  if(termo.length<3){r.innerHTML='<div class="search-loading">Digite pelo menos 3 letras...</div>';return}
   r.innerHTML='<div class="search-loading">Buscando...</div>';
   const myReqId=++searchReqId;
   searchTO=setTimeout(async()=>{
     try{
       const resp=await googlePlaces('searchText',{
         method:'POST',
-        headers:{'Content-Type':'application/json','X-Goog-FieldMask':'places.id,places.displayName,places.formattedAddress,places.addressComponents,places.location,places.photos,places.rating,places.websiteUri,places.googleMapsUri,places.types,places.nationalPhoneNumber'},
-        body:JSON.stringify({textQuery:v,languageCode:'pt-BR',maxResultCount:6})
+        headers:{'Content-Type':'application/json','X-Goog-FieldMask':CAMPOS_DA_LISTA},
+        body:JSON.stringify({textQuery:termo,languageCode:'pt-BR',maxResultCount:6})
       });
       if(myReqId!==searchReqId)return; // busca mais nova já foi disparada, ignora essa resposta atrasada
       const data=await resp.json();
       if(myReqId!==searchReqId)return;
       if(!data.places||!data.places.length){r.innerHTML='<div class="search-loading">Nenhum resultado</div>';return}
+      // A lista só precisa de nome e endereço. O resto chega quando a pessoa
+      // escolher — ver pickSearchResult().
       S.searchResults=data.places.map(p=>{
         const name=p.displayName?.text||'';
         const addr=p.formattedAddress||'';
-        const city=cityFromComponents(p.addressComponents)||extractCityFromAddr(addr);
-        const country=countryFromComponents(p.addressComponents);
-        const rating=p.rating?String(p.rating):'';
-        const fotos=placePhotoUrls(p);
-        // A COORDENADA JÁ VINHA E ERA JOGADA FORA: `places.location` está na
-        // máscara acima desde sempre, e este map não copiava os dois campos.
-        // Guardar não custa chamada nenhuma — é a mesma resposta.
-        const loc=p.location||{};
-        return{name,meta:addr,icon:catIcon(S.addCat),city,country,address:addr,subcat:guessSubcat(p.types),phone:p.nationalPhoneNumber||'',photo_url:fotos.full,photo_thumb:fotos.thumb,photo_author:autorDaFoto(p),rating_google:rating,website_url:p.websiteUri||'',maps_url:p.googleMapsUri||'',lat:Number(loc.latitude)||null,lng:Number(loc.longitude)||null};
+        return{id:p.id||'',name,meta:addr,icon:catIcon(S.addCat),address:addr,
+          city:extractCityFromAddr(addr),photo_thumb:'',rating_google:''};
       });
       if(myReqId!==searchReqId)return;
       r.innerHTML=S.searchResults.map((p,i)=>{
@@ -5394,7 +5410,9 @@ function searchPlaces(v){
       console.error(e);
       r.innerHTML='<div class="search-loading">Erro na busca. Tente novamente.</div>';
     }
-  },250);
+  // 450ms, não 250: a pausa natural entre sílabas fica perto de 300, então a
+  // espera curta disparava uma consulta no meio da palavra.
+  },450);
 }
 // Os 23 distritos especiais de Toquio. Sao a UNICA anomalia deste tipo no
 // mundo: em qualquer outra metropole o Google devolve a cidade em `locality`
@@ -5570,7 +5588,50 @@ function extractCityFromAddr(addr){
   if(parts.length>=2)return parts[parts.length-2];
   return parts[0];
 }
-function pickSearchResult(i){pickPlace(S.searchResults[i])}
+// AQUI é onde a consulta cara acontece — UMA vez, pro lugar escolhido, em vez
+// de uma por pausa na digitação. A busca da lista trouxe só nome e endereço;
+// a ficha completa (telefone, site, nota, foto, coordenada, componentes de
+// endereço) vem agora.
+//
+// A consulta usa NOME + ENDEREÇO e pede um resultado só: com o endereço
+// completo em mãos, o Google devolve o mesmo lugar. Se falhar, segue com o
+// que já tem — perder o telefone é melhor que travar o fluxo de salvar.
+async function pickSearchResult(i){
+  const base=S.searchResults[i];
+  if(!base)return;
+  const el=document.querySelectorAll('#searchResults .search-result')[i];
+  if(el)el.style.opacity='.5';
+  let p=base;
+  try{
+    const resp=await googlePlaces('searchText',{
+      method:'POST',
+      headers:{'Content-Type':'application/json','X-Goog-FieldMask':CAMPOS_DA_FICHA},
+      body:JSON.stringify({textQuery:[base.name,base.address].filter(Boolean).join(', '),
+        languageCode:'pt-BR',maxResultCount:1})
+    });
+    const d=await resp.json();
+    const g=d&&d.places&&d.places[0];
+    if(g){
+      const addr=g.formattedAddress||base.address;
+      const fotos=placePhotoUrls(g);
+      const loc=g.location||{};
+      p={
+        name:g.displayName?.text||base.name,
+        meta:addr,icon:catIcon(S.addCat),address:addr,
+        city:cityFromComponents(g.addressComponents)||extractCityFromAddr(addr),
+        country:countryFromComponents(g.addressComponents),
+        subcat:guessSubcat(g.types),
+        phone:g.nationalPhoneNumber||'',
+        photo_url:fotos.full,photo_thumb:fotos.thumb,photo_author:autorDaFoto(g),
+        rating_google:g.rating?String(g.rating):'',
+        website_url:g.websiteUri||'',maps_url:g.googleMapsUri||'',
+        lat:Number(loc.latitude)||null,lng:Number(loc.longitude)||null
+      };
+    }
+  }catch(e){/* segue com o básico */}
+  if(el)el.style.opacity='';
+  pickPlace(p);
+}
 // O + perguntava "Em qual viagem?" ANTES de saber o lugar. Era a ordem
 // errada: quem escolhe a viagem e o lugar, nao o contrario. Agora o fluxo e
 // categoria -> buscar o lugar -> pronto, e a viagem cai por conta.
