@@ -77,6 +77,40 @@ function Estrelas({ n, tamanho = 13 }) {
   );
 }
 
+// A ESTANTE — quatro fotos lado a lado, os lugares que você mais gostou.
+// É o que o Perfil passa a ser: os três contadores diziam quanto você viajou,
+// e nada dizia COMO você viaja. Quatro capas dizem isso num segundo.
+//
+// A nota fica sobre a foto, no canto de baixo, e o nome embaixo dela — em duas
+// linhas, porque nome de restaurante não cabe em 82 de largura.
+function Estante({ itens, acao }) {
+  return (
+    <View style={e.estante}>
+      {itens.map((f) => (
+        <Pressable
+          key={f.id}
+          onPress={() => acao('lugar', f.id)}
+          style={({ pressed }) => [e.favItem, pressed && { opacity: 0.6 }]}
+          accessibilityRole="button"
+          accessibilityLabel={f.nome}
+        >
+          <View style={e.favFoto}>
+            {f.foto ? <Image source={{ uri: f.foto }} style={StyleSheet.absoluteFill} /> : null}
+            <View style={e.favVeu} pointerEvents="none" />
+            <Text style={e.favNota}>{f.nota}</Text>
+          </View>
+          <Text style={e.favNome} numberOfLines={2}>{f.nome}</Text>
+        </Pressable>
+      ))}
+      {/* Com menos de quatro, o que falta vira espaço vazio e não estica os
+          que existem: três fotos gordas não são uma estante. */}
+      {Array.from({ length: Math.max(0, 4 - itens.length) }).map((_, i) => (
+        <View key={'v' + i} style={e.favItem} />
+      ))}
+    </View>
+  );
+}
+
 // Uma nota sua: foto pequena, nome, cidade, estrelas e o texto que você
 // escreveu. O texto é o assunto — por isso ele vem em 15 e em INK, e o resto
 // em 13 e cinza. Três linhas no máximo: quem quiser o resto toca e abre a
@@ -270,10 +304,20 @@ export default function TelaPerfil({ dados, ocupado, acao }) {
             inicial, e ver o mesmo mapa duas vezes no mesmo app não acrescenta
             nada. A lista de países foi junto pelo mesmo motivo — o número de
             países continua logo acima, e abre a lista inteira num toque. */}
-        {d.notas && d.notas.length ? (
+        {d.favoritos && d.favoritos.length ? (
           <>
             <View style={e.cabecalho}>
-              <Text style={e.secao}>{d.notasTitulo || 'Minhas notas'}</Text>
+              <Text style={e.secao}>Meus favoritos</Text>
+              <Text style={e.secaoSub}>o que eu mais gostei</Text>
+            </View>
+            <Estante itens={d.favoritos} acao={acao} />
+          </>
+        ) : null}
+
+        {d.notas && d.notas.length ? (
+          <>
+            <View style={[e.cabecalho, { marginTop: 32 }]}>
+              <Text style={e.secao}>{d.notasTitulo || 'Últimas notas'}</Text>
             </View>
             {d.notas.map((n) => <Nota key={n.id} n={n} acao={acao} />)}
             {d.notasTotal > d.notas.length ? (
@@ -373,7 +417,9 @@ const e = StyleSheet.create({
 
   corpo: { paddingHorizontal: 20, paddingTop: 0 },
   // .prof-numeros — três números grandes, cada um abre a Lista filtrada.
-  numeros: { flexDirection: 'row', alignItems: 'flex-end', gap: 28, paddingTop: 24 },
+  // Gap 20, não 28: entrou um quarto número (amigos) e a 28 a linha estourava
+  // a largura assim que a contagem de spots passa de dois dígitos.
+  numeros: { flexDirection: 'row', alignItems: 'flex-end', gap: 20, paddingTop: 24 },
   numItem: { gap: 2, minHeight: 44, justifyContent: 'flex-end' },
   numN: { fontFamily: FRAUNCES, fontSize: 28, lineHeight: 28, letterSpacing: -1.12, color: INK },
   numR: { fontSize: 13, color: INK2 },
@@ -383,6 +429,24 @@ const e = StyleSheet.create({
   secao: { fontSize: 20, fontWeight: '700', letterSpacing: -0.6, color: INK },
   secaoSub: { fontSize: 14, color: INK2 },
   aviso: { fontSize: 14, color: INK2, lineHeight: 20 },
+
+  // Quatro colunas iguais. O `flex:1` com gap 8 resolve a largura em qualquer
+  // aparelho — 82 num iPhone comum — sem número escrito na mão.
+  estante: { flexDirection: 'row', gap: 8 },
+  favItem: { flex: 1 },
+  favFoto: {
+    width: '100%',
+    aspectRatio: 1,
+    borderRadius: 14,
+    overflow: 'hidden',
+    backgroundColor: PHOTO_EMPTY,
+    justifyContent: 'flex-end',
+  },
+  // Uma faixa só, não as três de sempre: aqui embaixo fica um número curto,
+  // não um nome comprido, e três faixas num quadrado de 82 viram mancha.
+  favVeu: { position: 'absolute', left: 0, right: 0, bottom: 0, height: '42%', backgroundColor: 'rgba(0,0,0,0.38)' },
+  favNota: { paddingLeft: 8, paddingBottom: 6, fontSize: 13, fontWeight: '700', color: '#fff' },
+  favNome: { marginTop: 6, fontSize: 12, lineHeight: 15, color: INK2 },
 
   // Uma nota sua. Sem card e sem divisor, como o resto do app: o que separa
   // uma da outra é o espaço de 22 embaixo.

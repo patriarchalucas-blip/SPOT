@@ -627,6 +627,13 @@ body.na-casca .bottom-nav{display:none}
   justify-content:center;z-index:2}
 .back-btn:active{opacity:.7}
 .back-btn svg{width:20px;height:20px}
+/* Espelho do voltar, do outro lado da capa. Mesma forma e mesmo tamanho: sao
+   os dois unicos controles sobre a foto, e formas diferentes ali brigariam. */
+.hero-share{position:absolute;top:18px;right:20px;width:36px;height:36px;
+  background:rgba(245,245,243,.92);border:none;border-radius:50%;color:var(--ink);
+  cursor:pointer;display:flex;align-items:center;justify-content:center;z-index:2}
+.hero-share:active{opacity:.7}
+.hero-share svg{width:19px;height:19px}
 .btn-texto{display:block;width:100%;background:none;border:none;padding:14px 0;cursor:pointer;
   font-size:14px;font-weight:500;color:var(--ink3);text-align:center}
 .btn-texto:active{opacity:.6}
@@ -1430,7 +1437,7 @@ svg.ic path,svg.ic circle,svg.ic line,svg.ic polyline,svg.ic rect{fill:none;stro
 </div>
 
 <div class="screen" id="city">
-  <div class="trip-hero"><div class="trip-hero-img" id="cityHeroImg"></div><div class="foto-credito" id="cityFotoCredito"></div><div class="trip-float"></div><div class="trip-hero-content"><button class="back-btn" onclick="goTo('trip')" data-ic="back" aria-label="Voltar"></button><div><div class="trip-hero-label" id="cityLabel"></div><div class="trip-hero-name" id="cityName"></div><div class="trip-hero-meta" id="cityMeta"></div></div></div></div>
+  <div class="trip-hero"><div class="trip-hero-img" id="cityHeroImg"></div><div class="foto-credito" id="cityFotoCredito"></div><div class="trip-float"></div><div class="trip-hero-content"><button class="back-btn" onclick="goTo('trip')" data-ic="back" aria-label="Voltar"></button><button class="hero-share" id="cityShareBtn" onclick="compartilharCidade()" data-ic="share" aria-label="Compartilhar meus spots desta cidade"></button><div><div class="trip-hero-label" id="cityLabel"></div><div class="trip-hero-name" id="cityName"></div><div class="trip-hero-meta" id="cityMeta"></div></div></div></div>
   <div class="cat-tabs-wrap"><div class="cat-tabs"><div class="cat-tab active" onclick="switchCityCat('food',this)"><div class="ct-icon" data-ic="food"></div><div>Comer</div><div class="ct-count" id="cityCnt-food">0</div></div><div class="cat-tab" onclick="switchCityCat('hotel',this)"><div class="ct-icon" data-ic="hotel"></div><div>Ficar</div><div class="ct-count" id="cityCnt-hotel">0</div></div><div class="cat-tab" onclick="switchCityCat('experience',this)"><div class="ct-icon" data-ic="compass"></div><div>Experiências</div><div class="ct-count" id="cityCnt-experience">0</div></div></div></div>
   <div class="subcat-row" id="citySubcatFilter" style="display:none;padding:14px 20px 0;scroll-padding-left:20px"></div>
   <div class="subcat-row" id="cityStatusFilter" style="display:none;padding:12px 20px 0;scroll-padding-left:20px"></div>
@@ -1684,6 +1691,7 @@ plus:'<path d="M12 5.5v13M5.5 12h13"/>',
 chevron:'<path d="M9 5.5 15.5 12 9 18.5"/>',
 alert:'<circle cx="12" cy="12" r="9"/><path d="M12 7.5v6"/><path d="M12 16v.01"/>',
 send:'<path d="M22 2 11 13"/><path d="M22 2 15 22l-4-9-9-4 20-7Z"/>',
+share:'<path d="M12 15V3.5"/><path d="M8.2 7.3 12 3.5l3.8 3.8"/><path d="M6.5 11H5.5A1.5 1.5 0 0 0 4 12.5v6.5a1.5 1.5 0 0 0 1.5 1.5h13a1.5 1.5 0 0 0 1.5-1.5v-6.5a1.5 1.5 0 0 0-1.5-1.5h-1"/>',
 menu:'<path d="M4 6.5h16"/><path d="M4 12h16"/><path d="M4 17.5h10"/>',
 instagram:'<rect x="3.5" y="3.5" width="17" height="17" rx="5"/><circle cx="12" cy="12" r="4.2"/><path d="M16.3 7.3v.01"/>',
 mapPin:'<path d="M12 21c4-4.4 6-7.7 6-10.5a6 6 0 1 0-12 0C6 13.3 8 16.6 12 21Z"/><path d="M9 10.5l1.7 1.7L15 8.3"/>',
@@ -3501,7 +3509,96 @@ function openCityScreen(city){
   limparCredito('cityFotoCredito');
   fetchCityPhoto(city,paisDaViagem(S.curTrip)).then(url=>{if(url&&S.curCity===city){heroEl.style.backgroundImage=cssUrl(url);pintarCreditoCidade('cityFotoCredito',url)}});
   renderCityBody();
+  // Cidade sem nenhum spot nao tem o que mandar: o botao some em vez de
+  // existir pra avisar que nao funciona.
+  const sh=document.getElementById('cityShareBtn');
+  if(sh)sh.style.display=textoDaCidadePraCompartilhar()?'':'none';
   goTo('city');
+}
+// ═══ MANDAR A LISTA PRA FORA DO APP ═══
+//
+// POR QUE ISTO EXISTE: o Spot era todo pra dentro. Voce juntava 13 spots em
+// Kotor e nao tinha como entregar isso pra quem ia viajar — a pessoa pedia no
+// WhatsApp e voce digitava de novo, ou mandava print. Era a unica coisa que o
+// app fazia pior que o bloco de notas.
+//
+// E o link do CONVITE no fim, nao um link qualquer: quem abre ja entra como
+// seu amigo e ve o resto dos seus lugares. A lista e a isca; o convite e o
+// laco. Sem ele, compartilhar so dava trabalho e nao trazia ninguem.
+//
+// Vai a cidade INTEIRA, nao a aba aberta. Quem compartilha quer mandar Kotor,
+// nao "os restaurantes de Kotor" — e a pessoa do outro lado nao sabe que
+// existia uma aba selecionada aqui.
+function textoDaCidadePraCompartilhar(){
+  const t=S.curTrip, cidade=S.curCity;
+  if(!t||!cidade)return'';
+  const lista=(t._spots||[]).filter(sp=>cityOf(sp)===cidade);
+  if(!lista.length)return'';
+  const fui=lista.filter(sp=>sp.status==='been')
+    .sort((a,b)=>(Number(b.my_rating)||0)-(Number(a.my_rating)||0)
+      ||String(a.name).localeCompare(String(b.name),'pt-BR'));
+  const quero=lista.filter(sp=>sp.status==='want')
+    .sort((a,b)=>String(a.name).localeCompare(String(b.name),'pt-BR'));
+
+  const pais=paisDaViagem(t);
+  // O titulo tem que se explicar sozinho: isto cai numa conversa de WhatsApp
+  // sem nenhum contexto em volta. So "Kotor" deixa a pessoa adivinhando.
+  const linhas=['Meus spots em '+cidade+(pais?' '+flagFor(pais):'')];
+
+  if(fui.length){
+    linhas.push('');
+    fui.forEach(function(sp){
+      const nota=Number(sp.my_rating)>0?' ('+fmtRating(sp.my_rating)+'★)':'';
+      // A resenha entra em UMA linha. Ela e o que diferencia isto de uma lista
+      // de nomes que qualquer buscador devolve.
+      const rev=String(sp.my_review||'').trim().replace(/\s+/g,' ');
+      linhas.push('- '+sp.name+nota+(rev?' — '+(rev.length>90?rev.slice(0,89)+'…':rev):''));
+    });
+  }
+  if(quero.length){
+    linhas.push('');
+    linhas.push('Ainda quero ir:');
+    quero.forEach(function(sp){linhas.push('- '+sp.name)});
+  }
+  return linhas.join('\n');
+}
+async function compartilharCidade(){
+  const corpo=textoDaCidadePraCompartilhar();
+  if(!corpo){toast('Nada pra compartilhar','Salve um spot nesta cidade primeiro.');return}
+  const btn=document.getElementById('cityShareBtn');
+  if(btn)btn.style.pointerEvents='none';
+  // O convite pode falhar (migracao 011 fora do ar, rede). Nesse caso a lista
+  // vai sozinha: metade do recurso funcionando e melhor que um erro.
+  let codigo=null;
+  try{codigo=await obterOuCriarConvite()}catch(e){}
+  if(btn)btn.style.pointerEvents='auto';
+  const nome=nomeDeExibicao();
+  const texto=corpo+'\n\n'+(nome?nome+' · ':'')+'salvos no Spot'
+    +(codigo?'\n'+linkDoConvite(codigo):'');
+  await mandarTextoPraFora(texto,'Meus spots em '+S.curCity);
+}
+// O MESMO caminho do convite: folha nativa do celular, area de transferencia
+// no desktop, e a folha do proprio app como ultimo recurso. Estava escrito
+// dentro de compartilharConvite(); agora sao dois usos, entao virou funcao.
+//
+// Dentro do app NATIVO nao existe navigator.share: quem abre a folha do
+// sistema e a casca, pela ponte `compartilhar` que o App.js ja escuta.
+async function mandarTextoPraFora(texto,titulo){
+  if(window.ReactNativeWebView&&window.ReactNativeWebView.postMessage){
+    window.ReactNativeWebView.postMessage(JSON.stringify({tipo:'compartilhar',texto:texto}));
+    return;
+  }
+  try{
+    if(navigator.share){await navigator.share({title:titulo||'Spot',text:texto});return}
+  }catch(e){
+    if(e&&e.name==='AbortError')return; // fechou a folha; nao e erro
+  }
+  try{
+    await navigator.clipboard.writeText(texto);
+    toast('Copiado','Cole no WhatsApp pra mandar.','check');
+  }catch(e){
+    await perguntar(titulo||'Compartilhar',texto,[{rotulo:'Entendi',valor:'ok'}]);
+  }
 }
 function switchCityCat(cat,el){
   curCityCat=cat;curCitySubcat='';curCityStatus=0;
@@ -7094,6 +7191,13 @@ async function loadProfile(){
   // Os contadores de países/cidades/continentes saíram daqui: o Dashboard já
   // mostra os mesmos números, e mostrava com denominador diferente ("X/243"
   // contra "de 195"), o que só gerava dúvida sobre qual estava certo.
+  //
+  // A contagem de amigos é buscada AQUI e guardada porque darDadosDePerfil()
+  // é síncrona — tornar ela assíncrona obrigaria a mexer em todos os pontos
+  // que a chamam, e a ponte pro app nativo é um deles.
+  // Amizade no Spot é MÚTUA (a 008 só aceita vínculo dos dois lados), então é
+  // um número só — "12 amigos" — e não seguidores/seguindo.
+  try{AMIGOS_TOTAL=(await idsDosAmigos()).length}catch(e){}
   renderEstante();
 }
 // Lista de países visitados. Mostra os primeiros e joga o resto pra tela de
@@ -7144,6 +7248,12 @@ let ESTANTE_CIDADES = [];
 // Quantas notas suas o Perfil mostra antes do "ver todas". Ver a nota de
 // `notas` em darDadosDePerfil().
 const NOTAS_NO_PERFIL = 6;
+// Os FAVORITOS do perfil: quatro, em uma fileira. Quatro é o que cabe lado a
+// lado a 20 de margem sem a foto virar selo, e é pouco o bastante pra a
+// escolha significar alguma coisa.
+const FAVORITOS_NO_PERFIL = 4;
+// Preenchido por loadProfile(), lido por darDadosDePerfil(). Ver a nota lá.
+let AMIGOS_TOTAL = 0;
 function renderEstante(){
   const box=document.getElementById('estante');
   if(!box)return;
@@ -7275,15 +7385,16 @@ function darDadosDePerfil(){
   //
   // BASTA TER NOTA — o texto e opcional. Eu tinha exigido texto escrito, o que
   // deixaria a secao VAZIA pra quem avalia com estrela e nao escreve, e aí o
-  // Perfil perderia o mapa sem ganhar nada no lugar. Quem escreveu aparece
-  // primeiro entre notas iguais, porque o texto e o que vale mais olhar.
+  // Perfil perderia o mapa sem ganhar nada no lugar.
+  //
+  // A ORDEM AQUI E POR MAIS RECENTE, nao por nota. Os melhores de todos ja
+  // estao logo acima, na estante de favoritos; repetir os mesmos quatro numa
+  // lista embaixo deles faria a tela dizer a mesma coisa duas vezes. Aqui e o
+  // diario: o que voce andou achando ULTIMAMENTE.
   const notas=spots.filter(function(s){
     return s.status==='been'&&Number(s.my_rating)>0;
   }).sort(function(a,b){
-    const ta=String(a.my_review||'').trim()?1:0, tb=String(b.my_review||'').trim()?1:0;
-    return (Number(b.my_rating)||0)-(Number(a.my_rating)||0)
-      ||tb-ta
-      ||String(b.created_at||'').localeCompare(String(a.created_at||''));
+    return String(b.created_at||'').localeCompare(String(a.created_at||''));
   }).map(function(s){
     return{
       id:s.id,
@@ -7293,6 +7404,28 @@ function darDadosDePerfil(){
       estrelas:Number(s.my_rating)||0,
       nota:fmtRating(s.my_rating),
       texto:String(s.my_review||'').trim(),
+      foto:fotoPraCasca(safeUrl(fotoNaLargura(semChaveDoPlaces(s.photo_url||''),400)))||''
+    };
+  });
+
+  // A ESTANTE DE FAVORITOS — o que o Perfil passa a ser. Ele mostrava os
+  // mesmos numeros da tela inicial e nao dizia nada sobre QUEM voce e como
+  // viajante. Quatro lugares com a sua nota mais alta dizem em um segundo o
+  // que tres contadores nao dizem em nenhum.
+  //
+  // Empate na nota desempata pelo mais recente: cinco estrelas de ontem
+  // representam melhor o seu gosto de hoje que cinco de dois anos atras.
+  const favoritos=spots.filter(function(s){
+    return s.status==='been'&&Number(s.my_rating)>0;
+  }).sort(function(a,b){
+    return (Number(b.my_rating)||0)-(Number(a.my_rating)||0)
+      ||String(b.created_at||'').localeCompare(String(a.created_at||''));
+  }).slice(0,FAVORITOS_NO_PERFIL).map(function(s){
+    return{
+      id:s.id,
+      nome:s.name||'',
+      cidade:cityOf(s)||'',
+      nota:fmtRating(s.my_rating),
       foto:fotoPraCasca(safeUrl(fotoNaLargura(semChaveDoPlaces(s.photo_url||''),400)))||''
     };
   });
@@ -7311,7 +7444,9 @@ function darDadosDePerfil(){
     numeros:[
       {n:visitados.length,rotulo:visitados.length===1?'país':'países',modo:'countries'},
       {n:cidades.length,rotulo:cidades.length===1?'cidade':'cidades',modo:'cities'},
-      {n:spots.length,rotulo:spots.length===1?'spot':'spots',modo:'spots'}
+      {n:spots.length,rotulo:spots.length===1?'spot':'spots',modo:'spots'},
+      // Amizade aqui é mútua (008), então é UM número, não seguidores/seguindo.
+      {n:AMIGOS_TOTAL,rotulo:AMIGOS_TOTAL===1?'amigo':'amigos',modo:'amigos'}
     ].filter(b=>b.n),
     resumo:spots.length?(spots.length+(spots.length===1?' spot · ':' spots · ')
       +cidades.length+(cidades.length===1?' cidade':' cidades')):'',
@@ -7329,11 +7464,13 @@ function darDadosDePerfil(){
       };
     }),
     cidadesTotal:cidades.length,
+    favoritos:favoritos,
     notas:notas.slice(0,NOTAS_NO_PERFIL),
     notasTotal:notas.length,
-    // "O que eu achei" so vale se houver texto escrito. Com estrela e sem
-    // palavra nenhuma, o titulo honesto e outro.
-    notasTitulo:notas.some(function(n){return n.texto})?'O que eu achei':'Minhas notas',
+    // O titulo segue a ORDEM da lista. Ela era por nota e dizia "O que eu
+    // achei"; agora e por data, e prometer julgamento onde ha cronologia
+    // faria a pessoa procurar os melhores no meio dos mais recentes.
+    notasTitulo:'Últimas notas',
     estante:estante,
     paises:paises.linhas,
     paisesTotal:paises.total,
@@ -7345,6 +7482,9 @@ window.darDadosDePerfil=darDadosDePerfil;
 window.acaoDePerfil=function(acao,valor){
   if(acao==='cidade'){alternarCidadeDaEstante(valor);darDadosDePerfil();return}
   if(acao==='cidadeMosaico'){abrirCidadeDaEstante(valor);return}
+  // "amigos" não é um modo da Lista: ele abre a ABA de amigos. Sem este desvio
+  // o openList receberia um modo que não existe e a tela ficaria vazia.
+  if(acao==='lista'&&valor==='amigos'){goTo('friends');loadFriends();return}
   if(acao==='lista'){openList(valor);return}
   if(acao==='lugar'){openPlace(valor,'profile');return}
   if(acao==='config'){abrirConfig();return}
@@ -8784,24 +8924,11 @@ async function compartilharConvite(){
   const url=linkDoConvite(codigo);
   const nome=(S.profile&&S.profile.display_name)||'Um amigo';
   const texto=nome+' te convidou pro Spot — os lugares favoritos de quem você conhece.';
-  // navigator.share abre a folha nativa do celular (WhatsApp, mensagens...).
-  // Sem ela (desktop), copia. Sem as duas, mostra o link pra copiar na mão.
-  try{
-    if(navigator.share){
-      await navigator.share({title:'Spot',text:texto,url});
-      return;
-    }
-  }catch(e){
-    if(e&&e.name==='AbortError')return; // a pessoa fechou a folha; não é erro
-  }
-  try{
-    await navigator.clipboard.writeText(url);
-    toast('Link copiado','Cole no WhatsApp pra convidar.','check');
-  }catch(e){
-    // Sem área de transferência também: mostra o link na folha, pra copiar na
-    // mão. É o último recurso, e antes era um prompt do navegador.
-    await perguntar('Seu link de convite',url,[{rotulo:'Entendi',valor:'ok'}]);
-  }
+  // Mesmo caminho de "compartilhar cidade": folha nativa, área de transferência,
+  // folha do app. Estava escrito aqui dentro; com dois usos virou uma função só,
+  // e de brinde o convite passou a abrir a folha NATIVA dentro do app — antes
+  // caía na cópia, porque lá o navigator.share não existe.
+  await mandarTextoPraFora(texto+'\n'+url,'Seu link de convite');
 }
 
 // ── do outro lado: quem abriu o link ──
