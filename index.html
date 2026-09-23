@@ -1145,7 +1145,12 @@ body.na-casca .bottom-nav{display:none}
 .ml-seg{border:none;background:none;border-radius:8px;padding:5px 12px;font-size:13px;
   font-weight:600;color:var(--ink2);cursor:pointer;font-family:inherit}
 .ml-seg.on{background:var(--base);color:var(--ink)}
-.ml-mapa{border-radius:var(--r-photo);overflow:hidden;background:var(--map-bg)}
+.ml-mapa{position:relative;border-radius:var(--r-photo);overflow:hidden;background:var(--map-bg)}
+/* O mapa não parece que arrasta até alguém arrastar. A dica some no primeiro
+   toque — ela ensina uma vez, não fica avisando pra sempre. */
+.ml-mapadica{position:absolute;left:0;right:0;bottom:8px;text-align:center;
+  font-size:11px;color:var(--ink3);pointer-events:none;transition:opacity .3s}
+.ml-mapa.mexeu .ml-mapadica{opacity:0}
 .ml-mapaimg{display:block;width:100%;height:360px;object-fit:cover}
 .ml-svg{display:block;width:100%;height:230px}
 /* A regra global de .wm-country já pinta a terra; aqui só desligo a transição
@@ -8176,21 +8181,37 @@ async function renderMapaDeLugares(lista){
   const box=document.getElementById('mlTrilho');
   const spots=allSpotsFlat();
 
-  // COM CIDADE: mapa de ruas, como imagem.
+  // COM CIDADE: mapa de ruas, com UM PINO POR LUGAR.
+  //
+  // Ele mostrava um pino só, na média das coordenadas — ou seja, um alfinete
+  // no meio da cidade, onde não há lugar nenhum. O Lucas pegou na hora: "não
+  // está me mostrando nada". Agora vai um pino por spot, e o enquadramento é
+  // o Google que decide, pra caber todos.
   if(mlCidade){
+    // O mapa NÃO segue a aba de status: ele mostra onde você foi E onde quer
+    // ir, que é a pergunta que se faz olhando um mapa ("o que tem por perto
+    // que eu marquei?"). "Não recomendo" fica de fora — o desenho pede, e faz
+    // sentido: ninguém abre o mapa pra encontrar o que não presta.
+    const daCidade=mlFiltrar(spots,'',mlCidade,mlCat)
+      .filter(s=>s.lat!=null&&s.lng!=null&&(s.status||'want')!=='skip');
     const c=centroDaCidade(spots,mlCidade);
-    if(!c){
+    if(!daCidade.length||!c){
       box.innerHTML='<div class="ml-vazio">Ainda não sei onde ficam os lugares desta cidade. Abre o Perfil de novo daqui a pouco — o app está descobrindo aos poucos.</div>';
       return;
     }
     box.style.display='block';
     box.innerHTML='<div class="ml-mapa"><img class="ml-mapaimg" alt=""></div>';
     const img=box.querySelector('.ml-mapaimg');
+    const par=s=>Number(s.lat).toFixed(5)+','+Number(s.lng).toFixed(5);
+    const fui=daCidade.filter(s=>s.status==='been').map(par);
+    const quero=daCidade.filter(s=>s.status!=='been').map(par);
     try{
       const tk=await ensureToken();
       if(!tk){box.innerHTML='';return}
       const r=await fetch('/api/mapa?lat='+encodeURIComponent(c.lat.toFixed(5))
-        +'&lng='+encodeURIComponent(c.lng.toFixed(5))+'&tam=350x360&z=12',
+        +'&lng='+encodeURIComponent(c.lng.toFixed(5))+'&tam=350x360&z=12'
+        +(fui.length?'&fui='+encodeURIComponent(fui.join('|')):'')
+        +(quero.length?'&quero='+encodeURIComponent(quero.join('|')):''),
         {headers:{'Authorization':'Bearer '+tk}});
       if(!r.ok||(r.headers.get('Content-Type')||'').indexOf('image')<0){box.innerHTML='';return}
       const b=await r.blob();
@@ -8224,49 +8245,70 @@ async function renderMapaDeLugares(lista){
   }
 
   const{paths,vb,proj}=gerarPathsMundo(new Set());
-  // AGRUPAR O QUE ESTÁ COLADO. Kotor e Sarajevo ficam a 130 km: no mapa do
-  // mundo elas viram duas bolhas em cima uma da outra, ilegíveis. Cidades a
-  // menos de 24px NA TELA viram uma bolha só, somando — e ela abre a lista de
-  // cidades, porque a bolha sozinha não diz qual das duas você quis.
-  const escalaPre=(vb.h?230/vb.h:1);
-  const grupos=[];
-  cidades.forEach(function(c){
+  // As posições, calculadas UMA vez. O agrupamento e o tamanho são refeitos a
+  // cada zoom, porque os dois dependem de quanto o mapa está ampliado.
+  const pontos=cidades.map(function(c){
     const p=proj(c.centro.lng,c.centro.lat);
-    if(!p||!isFinite(p[0])||!isFinite(p[1]))return;
-    const perto=grupos.find(function(g){
-      const dx=(g.x-p[0])*escalaPre, dy=(g.y-p[1])*escalaPre;
-      return Math.sqrt(dx*dx+dy*dy)<24;
+    if(!p||!isFinite(p[0])||!isFinite(p[1]))return null;
+    return{x:p[0],y:p[1],n:c.n,cidade:c};
+  }).filter(Boolean);
+
+  // AGRUPAR O QUE ESTÁ COLADO. Kotor e Sarajevo ficam a 130 km: no mapa do
+  // mundo inteiro elas viram duas bolhas em cima uma da outra, ilegíveis.
+  // Cidades a menos de 24px NA TELA viram uma bolha só, somando.
+  //
+  // E é por isso que ampliar SEPARA: com o mapa duas vezes maior, a mesma
+  // distância em quilômetros passa a valer o dobro de pixels, e as duas
+  // deixam de se tocar. É o que o desenho pede, e sai de graça do fato de o
+  // agrupamento ser refeito a cada mudança.
+  function agrupar(escalaPx){
+    const gs=[];
+    pontos.forEach(function(p){
+      const perto=gs.find(function(g){
+        const dx=(g.x-p.x)*escalaPx, dy=(g.y-p.y)*escalaPx;
+        return Math.sqrt(dx*dx+dy*dy)<24;
+      });
+      // A posição do grupo é a da PRIMEIRA cidade (a maior, porque a lista vem
+      // ordenada): mover a bolha pra média faria a maior sair do lugar por
+      // causa de uma vizinha pequena.
+      if(perto){perto.n+=p.n;perto.cidades.push(p.cidade)}
+      else gs.push({x:p.x,y:p.y,n:p.n,cidades:[p.cidade]});
     });
-    // A posição do grupo é a da PRIMEIRA cidade (a maior, porque a lista vem
-    // ordenada): mover a bolha pra média faria a maior sair do lugar por
-    // causa de uma vizinha pequena.
-    if(perto){perto.n+=c.n;perto.cidades.push(c)}
-    else grupos.push({x:p[0],y:p[1],n:c.n,cidades:[c]});
-  });
+    return gs;
+  }
 
-  const maior=grupos.reduce(function(m,g){return Math.max(m,g.n)},0);
-  // Diâmetro de 26 a 40 NA TELA, como o desenho pede — e o desenho é em
-  // pixels, enquanto o círculo é desenhado em unidades do viewBox. O SVG tem
-  // 800 de largura mostrados em ~330, então tudo aqui dentro aparece a 41%:
-  // um raio 13 viraria 5px. Por isso o raio é dividido pela escala.
-  const escala=(vb.h?230/vb.h:1);
-  const rTela=r=>r/escala;
-  const bolhas=grupos.map(function(g,i){
-    const x=g.x,y=g.y;
-    // Raiz quadrada, e não razão direta: o olho compara ÁREA de círculo, e
-    // proporção no raio faz a cidade com o dobro parecer ter o quádruplo.
-    const r=rTela(13+7*(maior>1?Math.sqrt((g.n-1)/(maior-1)):0));
-    const c={n:g.n};
-    return '<g class="ml-bolha" data-i="'+i+'">'
-      +'<circle cx="'+x.toFixed(1)+'" cy="'+y.toFixed(1)+'" r="'+r.toFixed(1)+'"'
-      +' stroke-width="'+rTela(3).toFixed(1)+'"/>'
-      +'<text x="'+x.toFixed(1)+'" y="'+(y+rTela(4.5)).toFixed(1)+'"'
-      +' font-size="'+rTela(12).toFixed(1)+'">'+c.n+'</text></g>';
-  }).join('');
+  // Redesenha as bolhas pro nível de zoom atual. `vbAtual` é a janela visível;
+  // quanto menor ela é, mais ampliado está, e menor tem que ser o raio em
+  // unidades do viewBox pra a bolha continuar do mesmo tamanho na tela.
+  function pintarBolhas(svg,vbAtual){
+    const escalaPx=230/vbAtual.h;          // unidades do viewBox -> pixels
+    const rTela=r=>r/escalaPx;
+    const gs=agrupar(escalaPx);
+    ML_CIDADES_MAPA=gs;
+    const maior=gs.reduce(function(m,g){return Math.max(m,g.n)},0);
+    const svgNS='http://www.w3.org/2000/svg';
+    svg.querySelectorAll('.ml-bolha').forEach(e=>e.remove());
+    gs.forEach(function(g,i){
+      // Raiz quadrada, e não razão direta: o olho compara ÁREA de círculo, e
+      // proporção no raio faz a cidade com o dobro parecer ter o quádruplo.
+      const r=rTela(13+7*(maior>1?Math.sqrt((g.n-1)/(maior-1)):0));
+      const grupo=document.createElementNS(svgNS,'g');
+      grupo.setAttribute('class','ml-bolha');
+      grupo.setAttribute('data-i',String(i));
+      const c=document.createElementNS(svgNS,'circle');
+      c.setAttribute('cx',g.x.toFixed(1));c.setAttribute('cy',g.y.toFixed(1));
+      c.setAttribute('r',r.toFixed(1));c.setAttribute('stroke-width',rTela(3).toFixed(1));
+      const t=document.createElementNS(svgNS,'text');
+      t.setAttribute('x',g.x.toFixed(1));t.setAttribute('y',(g.y+rTela(4.5)).toFixed(1));
+      t.setAttribute('font-size',rTela(12).toFixed(1));
+      t.textContent=String(g.n);
+      grupo.appendChild(c);grupo.appendChild(t);
+      svg.appendChild(grupo);
+    });
+  }
 
-  ML_CIDADES_MAPA=grupos;
   box.innerHTML='<div class="ml-mapa"><svg class="ml-svg" viewBox="'+vb.x+' '+vb.y+' '+vb.w+' '+vb.h+'" preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg">'
-    +paths+bolhas+'</svg></div>'
+    +paths+'</svg><div class="ml-mapadica">arraste · dois toques amplia</div></div>'
     // As três com mais lugares, embaixo: tocar numa bolha pequena no celular é
     // difícil, e a lista é o mesmo destino com alvo de dedo.
     +'<div class="ml-cidlista">'+cidades.slice(0,3).map(function(c,i){
@@ -8282,8 +8324,19 @@ async function renderMapaDeLugares(lista){
       :'')+'</div>';
   ML_CIDADES_LISTA=cidades;
 
-  box.querySelectorAll('.ml-bolha').forEach(function(g){
-    g.addEventListener('click',function(){mlCidadeDoMapa(Number(g.dataset.i))});
+  const svg=box.querySelector('.ml-svg');
+  pintarBolhas(svg,vb);
+  // Arrastar, pinçar e dois toques — o mesmo motor do mapa-múndi grande. A
+  // cada mudança as bolhas são redesenhadas: mantêm o tamanho na tela e as
+  // que estavam grudadas se separam.
+  initMapZoom(vb,{
+    svg:svg,
+    aoMudar:function(vbAtual){pintarBolhas(svg,vbAtual)},
+    aoTocar:function(ev){
+      const alvo=ev.target.closest?ev.target.closest('.ml-bolha'):null;
+      if(!alvo)return;
+      mlCidadeDoMapa(Number(alvo.getAttribute('data-i')));
+    }
   });
 }
 let ML_CIDADES_MAPA=[], ML_CIDADES_LISTA=[];
@@ -8790,11 +8843,20 @@ async function renderWorldMap(visited){
 }
 
 // Pan + pinch/double-tap zoom on the SVG world map
-function initMapZoom(baseVB){
-  const svg=document.getElementById('worldSvg');
+// Arrastar + ampliar no SVG. Nasceu pro mapa-múndi grande e agora serve dois:
+// `op.svg` diz qual, `op.aoTocar` o que fazer com o toque (país no grande,
+// bolha no Perfil) e `op.aoMudar` avisa a cada zoom/arrasto — é o que deixa o
+// Perfil redesenhar as bolhas no tamanho certo e separar as que estavam
+// grudadas. Sem opções nenhuma, se comporta como antes.
+function initMapZoom(baseVB,op){
+  op=op||{};
+  const svg=op.svg||document.getElementById('worldSvg');
   if(!svg)return;
   let vb={...baseVB};
-  const apply=()=>svg.setAttribute('viewBox',`${vb.x} ${vb.y} ${vb.w} ${vb.h}`);
+  const apply=()=>{
+    svg.setAttribute('viewBox',`${vb.x} ${vb.y} ${vb.w} ${vb.h}`);
+    if(op.aoMudar)op.aoMudar(vb,baseVB.w/vb.w);
+  };
   const minW=baseVB.w*0.25, maxW=baseVB.w;
   function zoomAt(cx,cy,factor){
     let nw=vb.w/factor, nh=vb.h/factor;
@@ -8838,6 +8900,10 @@ function initMapZoom(baseVB){
       return;
     }
     if(andou>LIMIAR)return;
+    // Quem usa o mapa com bolhas trata o toque do seu jeito e não espera os
+    // 300ms: lá o duplo toque cai na bolha, e atrasar a escolha da cidade em
+    // três décimos por causa disso não compensa.
+    if(op.aoTocar){op.aoTocar(e);return}
     const alvo=e.target.closest?e.target.closest('.wm-country'):null;
     const geo=alvo&&alvo.getAttribute('data-geo');
     if(!geo)return;

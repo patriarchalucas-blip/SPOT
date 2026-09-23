@@ -63,6 +63,31 @@ function coord(v, limite) {
   return Math.round(n * 1e5) / 1e5;
 }
 
+// Quantos pinos o mapa de uma cidade aceita. O teto existe por dois motivos:
+// o endereço do Static Maps tem limite de tamanho, e sem teto alguém pediria
+// um mapa com mil pinos — mesma chamada paga, só que gigante.
+const MAX_PINOS = 40;
+
+// Só pra encurtar a chave de cache: a lista de pinos vira um número curto em
+// vez de entrar inteira no nome da chave.
+async function hashCurto(t) {
+  const b = await crypto.subtle.digest('SHA-1', new TextEncoder().encode(t));
+  return Array.from(new Uint8Array(b)).slice(0, 8)
+    .map(x => x.toString(16).padStart(2, '0')).join('');
+}
+
+// "lat,lng" repetido, separado por "|". O que não for coordenada válida some,
+// em vez de ser repassado ao Google.
+function lerPinos(bruto) {
+  return String(bruto || '').split('|').slice(0, MAX_PINOS)
+    .map(par => {
+      const p = par.split(',');
+      const a = coord(p[0], 90), b = coord(p[1], 180);
+      return (a === null || b === null) ? null : a + ',' + b;
+    })
+    .filter(Boolean);
+}
+
 export async function onRequestGet(context) {
   const { request, env } = context;
   const u = new URL(request.url);
@@ -76,7 +101,16 @@ export async function onRequestGet(context) {
 
   const zoom = Math.min(18, Math.max(1, parseInt(u.searchParams.get('z') || '15', 10) || 15));
 
-  const chave = 'mapa_' + lat + '_' + lng + '_' + tam + '_' + zoom;
+  // Pinos do mapa de uma cidade, em dois grupos: onde a pessoa FOI e onde ela
+  // QUER IR. São cores diferentes porque são estados diferentes — o desenho
+  // pede cheio e vazado, e o Static Maps não faz vazado sem ícone próprio.
+  const fui = lerPinos(u.searchParams.get('fui'));
+  const quero = lerPinos(u.searchParams.get('quero'));
+
+  const chave = 'mapa_' + lat + '_' + lng + '_' + tam + '_' + zoom
+    + ((fui.length || quero.length)
+      ? '_' + (await hashCurto(fui.join('|') + '#' + quero.join('|')))
+      : '');
   const kv = env.SPOT_KV;
   if (kv) {
     try {
@@ -105,14 +139,24 @@ export async function onRequestGet(context) {
   }
 
   const alvo = new URL('https://maps.googleapis.com/maps/api/staticmap');
-  alvo.searchParams.set('center', lat + ',' + lng);
-  alvo.searchParams.set('zoom', String(zoom));
   alvo.searchParams.set('size', tam);
   alvo.searchParams.set('scale', '2');
   alvo.searchParams.set('maptype', 'roadmap');
   alvo.searchParams.set('language', 'pt-BR');
-  // Pin verde do app, não o balão vermelho do Google.
-  alvo.searchParams.set('markers', 'color:0x0B3D2E|' + lat + ',' + lng);
+
+  if (fui.length || quero.length) {
+    // COM PINOS o centro e o zoom SAEM de propósito: o Static Maps enquadra
+    // sozinho pra caber tudo. Fixar o centro na média e o zoom num número
+    // deixava spot de fora do enquadramento — que foi exatamente o defeito.
+    if (fui.length) alvo.searchParams.append('markers', 'color:0x0B3D2E|' + fui.join('|'));
+    // Quem ainda não foi vem no verde apagado: mesma família, menos peso.
+    if (quero.length) alvo.searchParams.append('markers', 'color:0x6E7F73|' + quero.join('|'));
+  } else {
+    alvo.searchParams.set('center', lat + ',' + lng);
+    alvo.searchParams.set('zoom', String(zoom));
+    // Pin verde do app, não o balão vermelho do Google.
+    alvo.searchParams.set('markers', 'color:0x0B3D2E|' + lat + ',' + lng);
+  }
   ESTILO.forEach(s => alvo.searchParams.append('style', s));
   alvo.searchParams.set('key', env.GOOGLE_PLACES_KEY);
 
