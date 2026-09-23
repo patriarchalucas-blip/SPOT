@@ -80,11 +80,23 @@ test('marcacao de pais visitado nao serve de viagem', async () => {
   assert.strictEqual(e.perguntou, false);
 });
 
-test('so pergunta quando o endereco nao diz o pais', async () => {
+// Sem pais no endereco a viagem nasce com o nome da CIDADE — residuo assumido
+// no proprio app (adicionarSpotAbertoDoAmigo). O que nao pode e chutar pais.
+test('sem pais no endereco, a viagem leva o nome da cidade — nunca um pais chutado', async () => {
   const e = cenario([]);
   A.avaliar("FRIEND.spot.address='Rua Sem Pais 123'");
   await A.adicionarSpotAbertoDoAmigo();
-  assert.strictEqual(e.viagensCriadas.length, 0, 'criou viagem chutando o pais');
+  assert.strictEqual(e.viagensCriadas.length, 1);
+  assert.strictEqual(e.viagensCriadas[0].name, 'São Paulo', 'chutou o pais');
+  assert.strictEqual(e.perguntou, false);
+});
+
+test('so pergunta quando nao ha cidade nem pais', async () => {
+  const e = cenario([]);
+  A.avaliar("FRIEND.spot.address='Rua Sem Pais 123';FRIEND.spot.city=''");
+  const volta = trocar(A, 'cityOf', () => '');
+  try { await A.adicionarSpotAbertoDoAmigo() } finally { volta() }
+  assert.strictEqual(e.viagensCriadas.length, 0, 'criou viagem sem ter nome pra ela');
   assert.strictEqual(e.perguntou, true, 'devia perguntar quando nao da pra saber');
 });
 

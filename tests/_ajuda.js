@@ -38,7 +38,9 @@ const nada = () => {};
 // existam. Teste que depende de DOM de verdade não mora aqui.
 function elementoFalso() {
   const alvo = {
-    style: new Proxy({}, { get: () => '', set: () => true }),
+    // setProperty/removeProperty/getPropertyValue precisam ser função: o app
+    // grava variável de CSS no <html> (--vv-h) já na carga.
+    style: new Proxy({}, { get: (_, k) => /^(set|remove|getProperty)/.test(String(k)) ? nada : '', set: () => true }),
     classList: { add: nada, remove: nada, toggle: nada, contains: () => false },
     dataset: {}, value: '', textContent: '', innerHTML: '', src: '', href: '',
     children: [], childNodes: [], files: [], checked: false, disabled: false,

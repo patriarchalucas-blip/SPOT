@@ -122,6 +122,7 @@ test('spot sem foto tenta a foto do LUGAR antes da foto da cidade', async () => 
   try {
     const url = await A.healSpotPhoto('sf');
     assert.ok(url, 'nao achou foto pro spot que estava sem nenhuma');
-    assert.ok(url.includes('places/X/photos/Y'), url);
+    // A foto sai pelo proxy, com o ref codificado na query.
+    assert.ok(decodeURIComponent(url).includes('places/X/photos/Y'), url);
   } finally { restaura.forEach(f => f()) }
 });

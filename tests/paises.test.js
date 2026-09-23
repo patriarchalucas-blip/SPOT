@@ -24,7 +24,9 @@ function cenario() {
   A.loadProfile = () => {};
   A.renderTrips = () => {};
   A.populateTripOpts = () => {};
-  A.confirm = () => true;
+  // O app pergunta pela folha própria (confirmar), não pelo confirm() do
+  // navegador — responder ao confirm deixava o teste esperando pra sempre.
+  A.confirmar = async () => true;
   return apagados;
 }
 
@@ -52,7 +54,7 @@ test('desmarcar apaga so a viagem escondida daquele pais', async () => {
 
 test('desistir no aviso nao apaga nada', async () => {
   const apagados = cenario();
-  A.confirm = () => false;
+  A.confirmar = async () => false;
   await A.desmarcarPais('Japão');
   assert.strictEqual(apagados.length, 0);
   assert.ok(A.avaliar("S.trips.some(t=>t.name==='Japão')"));

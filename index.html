@@ -881,7 +881,7 @@ body.na-casca .bottom-nav{display:none}
 /* ═══ EXPLORAR E PERFIL — mesma linguagem ═══
    Estas duas não foram desenhadas no modelo. O documento de entrega diz que
    devem seguir a mesma linguagem, então recebem só o que define a direção:
-   título em Fraunces grande e sozinho (sem a linha pequena por cima, que era
+   título grande e sozinho (sem a linha pequena por cima, que era
    ruído), e o rótulo de seção como etiqueta de ficha. Nada de estrutura muda. */
 #explore .dash-hello,#friends .dash-hello{display:none}
 #explore .dash-name{margin:0 0 16px}
@@ -4623,6 +4623,14 @@ function mesmoLugar(a,b){
   const n=x=>String(x||'').normalize('NFD').replace(/\p{Diacritic}/gu,'').trim().toLowerCase();
   return !!n(a)&&n(a)===n(b);
 }
+// "Grad Split" contém "Split"; "Lima" não contém "Barranco"; "Splitska" não
+// conta como "Split" — tem que ser a palavra inteira.
+function contemComoPalavra(maior,menor){
+  const n=x=>String(x||'').normalize('NFD').replace(/\p{Diacritic}/gu,'').trim().toLowerCase();
+  const m=n(menor);
+  if(!m)return false;
+  return (' '+n(maior).replace(/[^\p{L}\p{N}]+/gu,' ')+' ').includes(' '+m.replace(/[^\p{L}\p{N}]+/gu,' ')+' ');
+}
 function populateTripOpts(destaque){
   const c=document.getElementById('tripOptions');
   let lista=S.trips.slice();
@@ -5274,7 +5282,7 @@ function placePhotoUrl(p,largura){
 // proxy /api/place-photo voltar e aqui que a conversao entra — um lugar so,
 // em vez de sete pontos de exibicao. Foi exatamente isso que quebrou: eu
 // reverti a parte do Places e levei junto uma funcao que outra feature usava.
-function fotoUrl(u){return u||''}
+function fotoUrl(u){return semChaveDoPlaces(u)||''}
 // ── Crédito de foto ─────────────────────────────────────────────────────
 // Obrigação contratual, não enfeite: o Google exige que o nome de quem tirou
 // a foto do lugar apareça junto com ela, e o Unsplash exige o mesmo (com
@@ -5297,7 +5305,7 @@ function limparCredito(elId){const el=document.getElementById(elId);if(el)el.inn
 // usuário enviou vive no storage do Supabase e não tem autor a creditar.
 function fotoEhDoGoogle(u){
   const s=String(u||'');
-  return s.indexOf('https://places.googleapis.com/')===0||s.indexOf('/api/place-photo')===0;
+  return RE_FOTO_PLACES.test(s)||s.indexOf('/api/place-photo')===0;
 }
 // Spot salvo ANTES de existir a coluna de crédito tem foto do Google e nenhum
 // autor gravado — e ficaria assim para sempre, porque o auto-conserto só roda
@@ -5653,7 +5661,12 @@ function cityFromComponents(comps){
     // Conferido com dado real: Barranco/Miraflores/La Molina -> Lima;
     // Vitacura/Providencia -> Santiago; Modena fica Modena; Sintra fica
     // Sintra; Bragança e Santos (sem locality) seguem pelo adm2.
-    if(adm2&&!mesmoLugar(adm2,loc)&&!CITY_ADMIN_TEST.test(adm2))return adm2;
+    //
+    // E quando o adm2 é a própria cidade com a palavra "cidade" no idioma
+    // local — "Grad Split" (croata), "City of X" —, ele CONTÉM a locality como
+    // palavra inteira. Aí é o mesmo lugar, e o nome limpo é o da locality.
+    // Sem isso Split virava "Grad Split", uma segunda cidade na mesma viagem.
+    if(adm2&&!mesmoLugar(adm2,loc)&&!contemComoPalavra(adm2,loc)&&!CITY_ADMIN_TEST.test(adm2))return adm2;
     return loc;
   }
   return municipio||adm2||adm1||'';
@@ -9649,7 +9662,10 @@ async function loadFriends(){
 function coresDoGradiente(nome){
   const g=destGradient(nome)||'';
   const achadas=g.match(/#[0-9a-f]{3,8}/gi)||[];
-  return achadas.length>=2?[achadas[0],achadas[achadas.length-1]]:['#16232A','#0B1620'];
+  // A reserva era o par escuro da paleta ANTIGA. Ela quase nunca é alcançada
+  // (destGradient sempre devolve --photo-empty duas vezes), mas no dia em que
+  // fosse, pintaria um fundo preto-azulado no meio de um app claro.
+  return achadas.length>=2?[achadas[0],achadas[achadas.length-1]]:['#6E7F73','#6E7F73'];
 }
 
 function pessoaPraTela(id,pmap){

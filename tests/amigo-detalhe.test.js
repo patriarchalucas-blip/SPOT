@@ -13,9 +13,9 @@ function cenario() {
   A.avaliar("FRIEND.profile={id:'bru',display_name:'Bruno Camargo'}");
   A.avaliar(`FRIEND.trips=[
     {id:'t1',name:'Brasil',destinations:['Brasil'],dates:'jun',status:'done',_spotsLoaded:true,_spots:[
-      {id:'a',trip_id:'t1',name:'Rubaiyat',category:'food',city:'São Paulo',status:'been',my_rating:9},
+      {id:'a',trip_id:'t1',name:'Rubaiyat',category:'food',city:'São Paulo',status:'been',my_rating:4.5},
       {id:'b',trip_id:'t1',name:'Astor',category:'food',city:'São Paulo',status:'want'},
-      {id:'c',trip_id:'t1',name:'Casa da Praia',category:'hotel',city:'Santos',status:'been',my_rating:7}]},
+      {id:'c',trip_id:'t1',name:'Casa da Praia',category:'hotel',city:'Santos',status:'been',my_rating:3.5}]},
     {id:'q1',name:'Japão',destinations:['Japão'],dates:'__quickvisit__',status:'done',_spotsLoaded:true,_spots:[]},
     {id:'q2',name:'Peru',destinations:['Peru'],dates:'__quickvisit__',status:'done',_spotsLoaded:true,_spots:[]}
   ]`);
@@ -69,7 +69,8 @@ test('lugares vem agrupado por cidade, com quem ele foi antes de quem quer ir', 
   const h = textoDaSheet();
   assert.ok(h.indexOf('Rubaiyat') < h.indexOf('Astor'), 'quem ele foi tem que vir antes');
   assert.ok(h.includes('quer ir'), 'nao marca o que ele so quer ir');
-  assert.ok(h.includes('9.0'), 'nao mostra a nota dele');
+  // Escala de 0 a 5 com meia estrela (020), com virgula.
+  assert.ok(h.includes('4,5'), 'nao mostra a nota dele');
 });
 
 test('amigo sem nada nao quebra nenhuma das quatro', () => {

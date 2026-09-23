@@ -24,7 +24,7 @@ function cenario(comentarios) {
   });
   trocar(A, 'dbDelete', async (t, id) => { apagados.push(id); return { error: null } });
   trocar(A, 'toast', () => {});
-  trocar(A, 'confirm', () => true);
+  trocar(A, 'confirmar', async () => true);
   return { enviados, apagados };
 }
 

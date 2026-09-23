@@ -13,7 +13,7 @@ test('a FieldMask so deixa passar campo que o app usa', () => {
   // `editorialSummary` estão entre os mais caros e o app não usa nenhum.
   assert.strictEqual(
     filtrarMascara('places.displayName,places.reviews,places.priceLevel,places.editorialSummary'),
-    'places.displayName');
+    'places.displayName,places.priceLevel');
   assert.strictEqual(filtrarMascara('places.reviews'), null, 'so campo caro deve ser recusado');
   assert.strictEqual(filtrarMascara('*'), null, 'curinga pede o registro inteiro, o mais caro possivel');
   assert.strictEqual(filtrarMascara(''), null);
@@ -25,7 +25,10 @@ test('a FieldMask nao repete campo', () => {
 });
 
 test('nenhum campo caro entrou na lista permitida por descuido', () => {
-  for (const caro of ['places.reviews', 'places.editorialSummary', 'places.priceLevel',
+  // `priceLevel` saiu desta lista em 23/09 (migração 024, linha de serviço da
+  // ficha): é do mesmo nível de preço de `rating` e `websiteUri`, que o app já
+  // pedia — liberar não muda o preço da chamada.
+  for (const caro of ['places.reviews', 'places.editorialSummary',
     'places.currentOpeningHours', 'places.servesBeer', '*']) {
     assert.ok(!CAMPOS_OK.has(caro), caro + ' nao deveria estar liberado');
   }
