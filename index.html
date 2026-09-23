@@ -1153,6 +1153,18 @@ body.na-casca .bottom-nav{display:none}
 .ml-mapa.mexeu .ml-mapadica{opacity:0}
 .ml-mapaimg{display:block;width:100%;height:360px;object-fit:cover}
 .ml-mapavivo{width:100%;height:360px}
+/* Flutua sobre o mapa, no rodapé. Fundo da página (não surface): ele está em
+   cima do mapa, e precisa de contraste contra as ruas. */
+.ml-cartao{position:absolute;left:10px;right:10px;bottom:10px;display:flex;align-items:center;
+  gap:12px;background:var(--base);border-radius:var(--r-card);padding:10px 12px;cursor:pointer}
+.ml-cartao:active{opacity:.8}
+.mlc-foto{width:56px;height:56px;border-radius:var(--r-btn);background:var(--photo-empty);
+  background-size:cover;background-position:center;flex-shrink:0}
+.mlc-txt{flex:1;min-width:0}
+.mlc-nome{display:block;font-size:15px;font-weight:600;letter-spacing:-.02em;color:var(--ink);
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.mlc-meta{display:block;margin-top:2px;font-size:13px;color:var(--ink2);
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .ml-svg{display:block;width:100%;height:230px}
 /* A regra global de .wm-country já pinta a terra; aqui só desligo a transição
    de cor, que existe pro mapa grande e aqui não tem o que animar. */
@@ -8220,7 +8232,8 @@ async function mapaInterativoDaCidade(box,spotsDaCidade){
   try{await carregarMapaJS(chave)}catch(e){return false}
   if(!window.google||!google.maps)return false;
 
-  box.innerHTML='<div class="ml-mapa"><div class="ml-mapavivo" id="mlMapaVivo"></div></div>';
+  box.innerHTML='<div class="ml-mapa"><div class="ml-mapavivo" id="mlMapaVivo"></div>'
+    +'<div class="ml-cartao" id="mlCartao" style="display:none"></div></div>';
   const el=document.getElementById('mlMapaVivo');
   const mapa=new google.maps.Map(el,{
     styles:ESTILO_DO_MAPA,
@@ -8230,27 +8243,56 @@ async function mapaInterativoDaCidade(box,spotsDaCidade){
     clickableIcons:false
   });
 
-  // O enquadramento sai dos próprios pontos: nada de centro e zoom na mão.
-  const limites=new google.maps.LatLngBounds();
-  spotsDaCidade.forEach(function(s){
-    const pos={lat:Number(s.lat),lng:Number(s.lng)};
-    limites.extend(pos);
+  // O CARTÃO DO RODAPÉ. Um pino verde sozinho não diz que lugar é aquele —
+  // e no celular não existe passar o mouse por cima pra descobrir. Tocar o
+  // pino troca o cartão; tocar o cartão abre a ficha. É o que o desenho pede,
+  // e separa "quero ver qual é" de "quero entrar", que são gestos diferentes.
+  const cartao=document.getElementById('mlCartao');
+  const marcadores=[];
+  function mostrarNoCartao(s,indice){
+    const foto=s.photo_url?'<span class="mlc-foto" style="background-image:'+cssUrl(fotoNaLargura(s.photo_url,200))+'"></span>':'<span class="mlc-foto"></span>';
+    const nota=Number(s.my_rating)>0?fmtRating(s.my_rating):'';
+    const meta=[cityOf(s),nota?'★ '+nota:''].filter(Boolean).join(' · ');
+    cartao.innerHTML=foto
+      +'<span class="mlc-txt"><span class="mlc-nome">'+esc(s.name||'')+'</span>'
+      +(meta?'<span class="mlc-meta">'+esc(meta)+'</span>':'')+'</span>'
+      +'<span class="pl-seta">›</span>';
+    cartao.style.display='flex';
+    cartao.onclick=function(){openPlace(s.id,'profile')};
+    // O escolhido cresce e os outros voltam ao normal: sem isso não dá pra
+    // saber de qual pino o cartão está falando.
+    marcadores.forEach(function(m,i){m.setIcon(iconeDoPino(m._spot,i===indice))});
+  }
+  function iconeDoPino(s,escolhido){
     const fui=(s.status||'want')==='been';
-    new google.maps.Marker({
-      map:mapa,position:pos,title:s.name||'',
+    return{
       // Círculo, não o balão do Google: é o mesmo pino do resto do app.
       // Cheio pra onde você foi, vazado pra onde quer ir — o desenho pede.
-      icon:{
-        path:google.maps.SymbolPath.CIRCLE,
-        scale:7,
-        fillColor:fui?'#0B3D2E':'#F5F5F3',
-        fillOpacity:1,
-        strokeColor:'#0B3D2E',
-        strokeWeight:fui?3:2.5
-      }
-    }).addListener('click',function(){openPlace(s.id,'profile')});
+      path:google.maps.SymbolPath.CIRCLE,
+      scale:escolhido?10:7,
+      fillColor:fui?'#0B3D2E':'#F5F5F3',
+      fillOpacity:1,
+      strokeColor:'#0B3D2E',
+      strokeWeight:fui?3:2.5
+    };
+  }
+
+  // O enquadramento sai dos próprios pontos: nada de centro e zoom na mão.
+  const limites=new google.maps.LatLngBounds();
+  spotsDaCidade.forEach(function(s,i){
+    const pos={lat:Number(s.lat),lng:Number(s.lng)};
+    limites.extend(pos);
+    const m=new google.maps.Marker({map:mapa,position:pos,title:s.name||'',icon:iconeDoPino(s,false)});
+    m._spot=s;
+    marcadores.push(m);
+    m.addListener('click',function(){mostrarNoCartao(s,i)});
   });
-  mapa.fitBounds(limites,{top:28,right:28,bottom:28,left:28});
+  // Começa mostrando o primeiro (o mais recente): o cartão vazio deixaria a
+  // pessoa sem saber que ele existe.
+  if(spotsDaCidade.length)mostrarNoCartao(spotsDaCidade[0],0);
+  // 96 embaixo: é a altura do cartão flutuante. Sem essa folga o enquadramento
+  // põe um pino exatamente atrás dele.
+  mapa.fitBounds(limites,{top:28,right:28,bottom:96,left:28});
   // Com UM spot só, o fitBounds aproxima até o talo e a rua vira um borrão.
   if(spotsDaCidade.length===1){
     google.maps.event.addListenerOnce(mapa,'idle',function(){mapa.setZoom(15)});
