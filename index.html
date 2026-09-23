@@ -8188,12 +8188,14 @@ async function renderMapaDeLugares(lista){
   // está me mostrando nada". Agora vai um pino por spot, e o enquadramento é
   // o Google que decide, pra caber todos.
   if(mlCidade){
-    // O mapa NÃO segue a aba de status: ele mostra onde você foi E onde quer
-    // ir, que é a pergunta que se faz olhando um mapa ("o que tem por perto
-    // que eu marquei?"). "Não recomendo" fica de fora — o desenho pede, e faz
-    // sentido: ninguém abre o mapa pra encontrar o que não presta.
-    const daCidade=mlFiltrar(spots,'',mlCidade,mlCat)
-      .filter(s=>s.lat!=null&&s.lng!=null&&(s.status||'want')!=='skip');
+    // O MAPA SEGUE A ABA DE STATUS, como o resto da tela.
+    //
+    // Eu tinha feito ele ignorar a aba e mostrar "fui" e "quero ir" juntos,
+    // achando que era a pergunta natural diante de um mapa. Está errado pelo
+    // motivo mais simples: a aba diz "Fui · 8" e apareciam dez pinos. Filtro
+    // que a tela inteira respeita e o mapa não é filtro quebrado. (Decisão do
+    // Lucas, 23/09/2026.)
+    const daCidade=lista.filter(s=>s.lat!=null&&s.lng!=null);
     const c=centroDaCidade(spots,mlCidade);
     if(!daCidade.length||!c){
       box.innerHTML='<div class="ml-vazio">Ainda não sei onde ficam os lugares desta cidade. Abre o Perfil de novo daqui a pouco — o app está descobrindo aos poucos.</div>';
