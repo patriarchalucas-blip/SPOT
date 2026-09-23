@@ -1041,7 +1041,11 @@ body.na-casca .bottom-nav{display:none}
 .prof-linha:active{opacity:.6}
 .pl-ic{color:var(--ink3);display:flex;flex-shrink:0}
 .pl-ic svg{width:18px;height:18px}
-.pl-txt{flex:1;font-size:15px;color:var(--ink)}
+.pl-txt{flex:1;min-width:0;font-size:15px;color:var(--ink)}
+/* A contagem embaixo do nome, não colada nele. `.busca-user` é um span, e
+   dentro da linha de lista ele ficava na mesma linha — "Rio de Janeiro2 quero
+   ir · 11 fui" virava uma palavra só. */
+.pl-txt .busca-user{display:block;font-size:13px;margin-top:3px;color:var(--ink2);white-space:normal}
 .pl-seta{color:var(--ink3);font-size:17px;flex-shrink:0}
 /* Sair da conta perde a cor propria: destrutivo e cinza, nao vermelho. */
 .prof-sair .pl-txt{color:var(--ink3)}
