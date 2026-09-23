@@ -7903,7 +7903,10 @@ async function preencherCoordenadasQueFaltam(limite){
       try{
         r=await googlePlaces('searchText',{
           headers:{'Content-Type':'application/json','X-Goog-FieldMask':'places.location'},
-          body:JSON.stringify({textQuery:consulta,languageCode:'pt-BR',maxResultCount:1})
+          // `uso:'coordenada'` tira isto do orçamento da BUSCA. Sem separar,
+          // quem testou bastante ficava sem procurar lugar porque o
+          // preenchimento tinha comido a cota — e o contrário também.
+          body:JSON.stringify({textQuery:consulta,languageCode:'pt-BR',maxResultCount:1,uso:'coordenada'})
         });
       }catch(e){continue}
       let d=null;

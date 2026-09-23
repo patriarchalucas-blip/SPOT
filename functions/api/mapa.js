@@ -32,6 +32,7 @@ const TTL = 60 * 60 * 24 * 30;
 // — sem isto, /api/mapa viraria um gerador de imagem pago aberto ao mundo.
 const TAMANHOS_OK = new Set(['350x230', '350x360', '344x120', '160x120']);
 
+
 // Tira os pontos de interesse, o transporte e os rótulos de negócio, e pinta
 // o resto com a paleta do app.
 const ESTILO = [

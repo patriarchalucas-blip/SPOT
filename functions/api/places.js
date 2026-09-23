@@ -25,8 +25,21 @@ import { quemEsta, podeGastar } from './_auth.js';
 // searchNearby NÃO é cacheado de propósito: a chave de cache teria que conter
 // a coordenada de quem chamou, e localização de usuário não vai pro KV.
 
-const CAP_MENSAL = 20000;  // teto global — o freio que existe mesmo se o resto falhar
-const CAP_USUARIO = 600;   // por conta, por mês: uma conta criada de propósito não queima a de todos
+// OS TETOS, RECALIBRADOS EM 23/09/2026 CONTRA O PREÇO DE VERDADE.
+//
+// Text Search é a chamada mais cara do catálogo: US$ 32 por MIL, com 5.000
+// grátis por mês no projeto inteiro. O teto global era 20.000 — ou seja, se
+// tudo o mais falhasse, ele deixava passar 15.000 chamadas pagas, US$ 480.
+// Um freio que só age depois de meio salário não é freio.
+//
+// Agora o teto global é a própria borda do gratuito: passou de 5.000, para.
+// Quem quiser ir além muda este número de propósito, sabendo o preço.
+const CAP_MENSAL = 5000;
+// E o teto por pessoa sobe de 600 pra 1.500: 600 é pouco pra quem usa o app
+// de verdade (o Lucas bateu em duas semanas testando), e 3 pessoas a 1.500
+// ainda cabem nos 5.000 grátis. O que este número protege é o caso de uma
+// conta criada de propósito pra queimar a cota de todos.
+const CAP_USUARIO = 1500;
 const TTL_BUSCA = 60 * 60 * 24 * 7;
 
 // Campos que o app usa hoje. Pedir além disso custa mais caro por requisição,
@@ -79,8 +92,19 @@ export async function onRequestPost(context) {
   const quem = await quemEsta(request, env);
   if (!quem.permitir) return json({ places: [], unauthorized: true }, 401);
   if (!env.GOOGLE_PLACES_KEY) return json({ places: [], configured: false });
-  if (!await podeGastar(env, 'places', quem.uid, 1, CAP_USUARIO)) {
-    return json({ places: [], capped: true, scope: 'user' });
+  // ORÇAMENTO SEPARADO PRO PREENCHIMENTO DE COORDENADA.
+  //
+  // Ele roda em segundo plano e não é pedido de ninguém — mas gastava do
+  // mesmo bolso da busca. Resultado: quem testou bastante ficou sem BUSCAR
+  // porque o preenchimento tinha consumido a cota, e vice-versa. Duas
+  // necessidades diferentes, dois tetos.
+  //
+  // O cliente escolhe o bolso, e isso é seguro porque os DOIS são limitados:
+  // o pior caso é alguém gastar 1.500 + 200 em vez de 1.500.
+  const fundo = body.uso === 'coordenada' ? 'coord' : 'places';
+  const tetoDoFundo = fundo === 'coord' ? 200 : CAP_USUARIO;
+  if (!await podeGastar(env, fundo, quem.uid, 1, tetoDoFundo)) {
+    return json({ places: [], capped: true, scope: 'user', fundo });
   }
 
   if (kv) {
