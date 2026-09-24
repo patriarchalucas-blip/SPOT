@@ -3089,6 +3089,17 @@ function avisar(tipo,alvo,extra){
     });
   }).catch(()=>{});
 }
+// Mesmo espírito: extra em cima de uma denúncia que já foi gravada.
+function avisarModerador(id){
+  ensureToken().then(tk=>{
+    if(!tk)return;
+    return fetch('/api/denuncia-aviso',{
+      method:'POST',
+      headers:{'Content-Type':'application/json','Authorization':'Bearer '+tk},
+      body:JSON.stringify({id})
+    });
+  }).catch(()=>{});
+}
 
 // ═══ OFFLINE ═══
 // Viagem é justamente quando falta sinal: avião, metrô, roaming ruim. E é a
@@ -7310,7 +7321,7 @@ async function enviarDenuncia(){
   const antes=btn.textContent;
   btn.textContent='Enviando...';btn.style.pointerEvents='none';
   const detalhe=document.getElementById('denunciaDetalhe').value.trim();
-  const{error}=await dbInsert('denuncias',{
+  const{data,error}=await dbInsert('denuncias',{
     autor_id:S.user.id,
     tipo:DENUNCIA_ALVO.tipo,
     alvo_id:DENUNCIA_ALVO.alvo_id,
@@ -7322,6 +7333,9 @@ async function enviarDenuncia(){
   // Denunciar duas vezes a mesma coisa não é erro do ponto de vista de quem usa.
   const repetida=error&&String(error.code||'')==='23505';
   if(error&&!repetida){toast('Não enviou','Confere a conexão e tenta de novo.','alert');return}
+  // O "em até 24 horas" do aviso abaixo só se cumpre se alguém SOUBER que a
+  // denúncia chegou: isto põe uma notificação no celular do moderador.
+  if(data&&data.id)avisarModerador(data.id);
   closeOv('ov-denuncia');
   toast('Denúncia enviada','Vamos analisar em até 24 horas.','check');
 }

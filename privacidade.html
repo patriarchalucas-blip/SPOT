@@ -58,7 +58,7 @@ footer a{color:var(--ink2);font-weight:500}
 <header>
   <p class="marca">Spot</p>
   <h1>Política de Privacidade</h1>
-  <p class="data">Última atualização: 12 de setembro de 2026</p>
+  <p class="data">Última atualização: 23 de setembro de 2026</p>
 </header>
 
 <p style="margin-top:26px">O Spot é um app para você guardar os lugares por onde passou, com a sua nota
@@ -85,7 +85,10 @@ aos seus dados — acesso, correção, exclusão ou dúvida — escreva para
     <tr><td>Nome, nome de usuário, bio e foto de perfil</td><td>Quando você preenche</td><td>Aparecer para seus amigos dentro do app.</td></tr>
     <tr><td>Viagens, lugares, notas pessoais e avaliações</td><td>Quando você cria</td><td>É o conteúdo do app — o motivo dele existir.</td></tr>
     <tr><td>Fotos que você envia</td><td>Quando você escolhe uma foto</td><td>Ilustrar um lugar ou seu perfil.</td></tr>
-    <tr><td>Localização aproximada</td><td>Só quando você usa "perto de você" ou faz check-in</td><td>Sugerir lugares próximos e registrar onde você esteve. <strong>Não é coletada em segundo plano</strong> e não fica guardada como histórico de deslocamento.</td></tr>
+    <tr><td>Sua localização</td><td>Só quando você usa "perto de você" ou faz check-in, e só se você permitir</td><td>Sugerir lugares próximos. A posição vai para o Google para fazer essa busca e não fica guardada. <strong>Não é coletada em segundo plano</strong> e não existe histórico de deslocamento.</td></tr>
+    <tr><td>Onde fica cada lugar que você salva</td><td>Quando você adiciona um lugar</td><td>Mostrar seus lugares no mapa. É a localização do estabelecimento, que vem do Google — não a sua.</td></tr>
+    <tr><td>Cidade onde você mora e países que já visitou</td><td>Quando você informa</td><td>Abrir o Explorar já com a sua cidade e pintar o seu mapa-múndi. Seus amigos veem.</td></tr>
+    <tr><td>Endereço de notificação do aparelho</td><td>Se você permitir notificações</td><td>Avisar de pedido de amizade, amizade aceita e comentário. O aviso enviado não leva o texto do comentário.</td></tr>
     <tr><td>Comentários</td><td>Quando você comenta no lugar de um amigo</td><td>A conversa sobre aquele lugar.</td></tr>
     <tr><td>Denúncias que você envia</td><td>Ao denunciar conteúdo</td><td>Analisar o caso. Guardamos quem denunciou para evitar abuso do próprio recurso.</td></tr>
     <tr><td>Quem você bloqueou</td><td>Ao bloquear alguém</td><td>Esconder o conteúdo dessa pessoa de você. A lista é sua e ninguém mais a vê — nem quem foi bloqueado.</td></tr>
@@ -102,7 +105,9 @@ identificador de publicidade, nem localização enquanto o app está fechado.</p
 <ul>
   <li><strong>Supabase</strong> — guarda sua conta, seus dados e suas fotos. É onde o banco de dados vive.</li>
   <li><strong>Cloudflare</strong> — entrega o site e o app ao seu aparelho.</li>
-  <li><strong>Google</strong> — quando você busca um lugar, o termo buscado vai para o serviço de mapas do Google, que devolve nome, endereço e foto do estabelecimento.</li>
+  <li><strong>Google</strong> — quando você busca um lugar, o termo buscado vai para o serviço de mapas do Google, que devolve nome, endereço e foto do estabelecimento. Os mapas do app também são do Google, e ele enxerga a região que o mapa mostra. Se você entra com a conta Google, o login passa por ele.</li>
+  <li><strong>Expo</strong> — entrega as notificações ao seu aparelho. Recebe o endereço de notificação e o aviso, sem o texto de comentário.</li>
+  <li><strong>Resend</strong> — envia os e-mails de confirmação de cadastro e de recuperação de senha. Recebe o seu e-mail.</li>
   <li><strong>Unsplash</strong> — fornece as fotos de cidades e países que ilustram suas viagens. Recebe apenas o nome do lugar.</li>
   <li><strong>Visual Crossing</strong> — fornece a previsão do tempo. Recebe apenas o nome da cidade.</li>
   <li><strong>Brave Search</strong> — quando o app procura o Instagram oficial de um restaurante, o nome e a cidade do estabelecimento vão para essa busca. Nada seu vai junto.</li>
@@ -136,7 +141,7 @@ foi barrado. Nenhuma pessoa lê o que você escreve nessa etapa.</p>
 
 <h2>Como apagar tudo</h2>
 <div class="destaque">
-  <p>Dentro do app: <strong>Perfil → Excluir minha conta</strong>. Isso apaga suas viagens, seus
+  <p>Dentro do app: <strong>Perfil → Configurações → Excluir minha conta</strong>. Isso apaga suas viagens, seus
   lugares, suas notas, suas avaliações, seus comentários, suas fotos, seus amigos e os links de
   convite que você criou. A ação é imediata e não tem como desfazer.</p>
 </div>

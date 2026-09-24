@@ -1,7 +1,8 @@
 # Etiquetas de privacidade — respostas do questionário
 
-App Store Connect → **App Privacy**. Escrito em 20/09/2026, lendo o código, não
-de memória. Cada linha tem o arquivo onde dá para conferir.
+App Store Connect → **App Privacy**. Escrito em 20/09/2026, revisto em
+23/09/2026 (localização dos spots, cidade onde mora, mapas do Google), lendo o
+código, não de memória. Cada linha tem o arquivo onde dá para conferir.
 
 Esse questionário é declaração formal: errar para menos é motivo de rejeição, e
 depois de publicado ele aparece na ficha do app como "Privacidade do app". Por
@@ -86,25 +87,31 @@ de amizade, aceite e comentário.
 | | |
 |---|---|
 | Finalidade | Funcionalidade do app |
-| Ligado à identidade | **Não** |
+| Ligado à identidade | **Sim** — mudou em 23/09/2026, ver abaixo |
 | Usado para rastreamento | Não |
 
-**Isto precisa ser declarado mesmo sem ser guardado.** A coordenada sai do
-aparelho: vai para a API do Google Places, por dentro da função
-`functions/api/places.js`, para achar o lugar em que a pessoa está ("Você está
-em X?") e os lugares a até 600 m.
+A coordenada do aparelho sai dele: vai para a API do Google Places, por dentro
+de `functions/api/places.js`, para achar o lugar em que a pessoa está ("Você
+está em X?") e os lugares por perto. Ela **não** é gravada e **não** entra no
+cache do Cloudflare (busca por proximidade não é cacheada, só por texto).
 
-O que acontece com ela depois:
+**Por que agora é "ligado":** desde a migração 023, cada spot guarda `lat` e
+`lng` — a coordenada do **estabelecimento**, vinda do Google, não do GPS. Mas é
+um par (pessoa, coordenada) no banco, e um spot marcado como "fui" diz onde a
+pessoa esteve. A versão de 20/09 dizia "a tabela `spots` não tem coluna de
+coordenada" — deixou de ser verdade. Declarar como ligado é o lado seguro:
+declarar menos do que existe é o que dá rejeição.
 
-- **não** é gravada no banco — a tabela `spots` não tem coluna de coordenada;
-  o que fica salvo é nome, endereço e cidade do lugar escolhido;
-- **não** entra no cache do Cloudflare. O comentário na linha 26 de
-  `functions/api/places.js` diz isso explicitamente, e o código confere: busca
-  por proximidade não é cacheada, só busca por texto.
+### 6b. Localização → Localização aproximada
 
-Por isso "não ligado à identidade": em nenhum lugar existe o par (pessoa,
-coordenada) guardado. Se preferir ser conservador, declarar como **ligado** não
-causa problema nenhum além de aparecer assim na ficha.
+| | |
+|---|---|
+| Finalidade | Funcionalidade do app |
+| Ligado à identidade | **Sim** |
+| Usado para rastreamento | Não |
+
+A cidade onde a pessoa mora (`profiles.home_city`, migração 021) e o país
+(`profiles.home_country`), pedidos no primeiro acesso. Os amigos veem.
 
 ### 7. Histórico de busca — decisão sua
 
@@ -150,7 +157,10 @@ entra em contato com dado de usuário:
 | Supabase | tudo: e-mail, perfil, viagens, lugares, notas, comentários, fotos | é o banco e a autenticação |
 | Cloudflare | tráfego do site e das funções; o token de sessão passa por ali | hospedagem e as funções de API |
 | Google Places | nome do lugar buscado e, no check-in, a coordenada | busca de lugar, foto, telefone, nota |
+| Google Maps | a região que o mapa mostra (a biblioteca roda no aparelho, chave via `/api/mapa-chave`) e as imagens de `/api/mapa` | mapa da cidade, do Perfil e da ficha |
+| Google (login) | o login de quem entra com a conta Google | autenticação |
 | Unsplash | o nome da cidade | foto de capa de cidade |
+| Visual Crossing | o nome da cidade | temperatura no card de cidade (`/api/climate`) |
 | Resend | e-mail de quem se cadastra | confirmação de cadastro e recuperação de senha |
 | Expo | endereço de push do aparelho | entrega da notificação |
 | Brave Search | nome e cidade do restaurante | achar o Instagram do lugar |
@@ -167,8 +177,8 @@ O que eu conferi em 20/09/2026, e como conferir de novo:
 # nenhum rastreador no app
 grep -ci "gtag\|google-analytics\|googletagmanager\|mixpanel\|amplitude\|posthog\|sentry\|fbq" index.html   # esperado: 0
 
-# coordenada não é gravada em spots
-grep -n "latitude" index.html   # esperado: só dentro de maybeShowCheckin e showNearbySuggestions
+# a posição do APARELHO só é lida nesses dois pontos (check-in e "perto de você")
+grep -n "getCurrentPosition" index.html   # esperado: 2 ocorrências
 
 # as páginas obrigatórias estão no ar
 curl -s -o /dev/null -w "%{http_code}\n" -L https://meuspot.app/privacidade
