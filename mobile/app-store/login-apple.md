@@ -23,10 +23,16 @@ O botão aparece quando as duas coisas são verdade (`temApple()` no
 
 ## O que falta
 
-1. **Build novo** (eu faço, com o ok do Lucas): `eas build --platform ios
-   --profile production` e `eas submit`. O EAS liga a capacidade "Sign In with
-   Apple" no identificador do app sozinho, pela chave da App Store Connect que
-   já está guardada nele. Substitui a build 4 na versão, antes da revisão.
+1. ~~**Build novo**~~ — **feito em 24/09: build 7**, enviada ao App Store
+   Connect. Substitui a build 4 na versão, antes da revisão.
+   **Pegadinha que custou a build 6:** o EAS NÃO liga a capacidade "Sign In with
+   Apple" no identificador quando roda sem login da Apple (só com a chave da
+   App Store Connect). O build falha com "Provisioning profile doesn't include
+   the Sign In with Apple capability". Foi ligado pela App Store Connect API
+   (`POST /v1/bundleIdCapabilities`, `APPLE_ID_AUTH`), com a chave
+   `56ZN5Z4H2V` — o Issuer ID sai da API do Expo. Com a capacidade ligada, o EAS
+   refez o perfil sozinho. Rodar sem `EXPO_APPLE_TEAM_ID=JULM2M3YJJ` faz o EAS
+   nem autenticar na Apple.
 2. **Supabase** (só o Lucas, é o login dele — 1 minuto): *Authentication →
    Sign In / Providers → Apple* → ligar, e em **Client IDs** pôr
    `app.meuspot.spot`. O campo de segredo fica vazio: é só pro caminho da web.
