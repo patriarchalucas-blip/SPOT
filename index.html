@@ -159,6 +159,13 @@ body{font-family:'Inter Tight',sans-serif;background:var(--base);color:var(--ink
 .btn-google:active{opacity:.85}
 /* O G do Google era branco chapado; sobre fundo claro ele sumia. */
 .btn-google svg path{fill:var(--ink)}
+/* Entrar com a Apple. Branco puro e logo preto: é o estilo que a Apple
+   manda usar sobre fundo escuro (a foto do login), e é a única peça do app
+   com cor fora das fichas — a regra deles vale mais que a nossa aqui.
+   Escondido até o Supabase dizer que o provedor está ligado (temApple). */
+.btn-apple{display:none;background:#fff;color:#000}
+.btn-apple svg path{fill:#000}
+body.tem-apple .btn-apple{display:flex}
 .btn-email-ghost{background:transparent;border:none;color:var(--base);font-size:15px;font-weight:600;
   font-family:'Inter Tight',sans-serif;cursor:pointer;width:100%;min-height:44px;padding:8px;
   text-decoration:underline;text-underline-offset:3px}
@@ -1333,6 +1340,11 @@ body.na-casca .bottom-nav{display:none}
   border:none;border-radius:var(--r-card);display:flex;align-items:center;justify-content:center;
   gap:10px;font-size:15px;font-weight:600;font-family:inherit;cursor:pointer;backdrop-filter:none}
 #convite .btn-google:active{opacity:.85}
+/* A página do convite é clara: aqui vale o estilo PRETO da Apple. A regra
+   acima liga display:flex com peso de id, então o esconder tem que repetir. */
+#convite .btn-apple{display:none;background:#000;color:#fff;margin-bottom:8px}
+#convite .btn-apple svg path{fill:#fff}
+body.tem-apple #convite .btn-apple{display:flex}
 #convite .btn-email-ghost{width:100%;height:48px;margin-top:10px;background:none;border:none;
   color:var(--ink2);font-size:14px;font-weight:600;font-family:inherit;cursor:pointer;text-decoration:none}
 #convite .login-legal{margin-top:16px;font-size:12px;line-height:1.5;color:var(--ink3);text-align:left}
@@ -1604,6 +1616,10 @@ svg.ic path,svg.ic circle,svg.ic line,svg.ic polyline,svg.ic rect{fill:none;stro
     <div class="cv-fotos" id="cvFotos"></div>
     <div class="cv-acoes">
       <div class="auth-error" id="cvErro"></div>
+      <button class="btn-google btn-apple" onclick="signInApple()">
+        <svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true"><path d="M16.37 1.43c0 1.14-.49 2.27-1.18 3.08-.74.9-1.99 1.57-2.99 1.57-.12 0-.23-.02-.3-.03-.01-.06-.04-.22-.04-.39 0-1.15.57-2.27 1.21-2.98.8-.94 2.14-1.64 3.25-1.68.03.13.05.28.05.43zm4.56 15.71c-.03.07-.46 1.58-1.52 3.12-.94 1.34-1.94 2.71-3.43 2.71-1.52 0-1.9-.88-3.63-.88-1.7 0-2.3.91-3.67.91-1.38 0-2.33-1.26-3.43-2.8-1.29-1.82-2.32-4.63-2.32-7.28 0-4.28 2.8-6.55 5.55-6.55 1.45 0 2.68.95 3.6.95.87 0 2.22-1.01 3.9-1.01.61 0 2.89.06 4.37 2.19-.13.09-2.38 1.37-2.38 4.19 0 3.26 2.85 4.42 2.96 4.45z"/></svg>
+        Continuar com a Apple
+      </button>
       <button class="btn-google" onclick="signInGoogle()">
         <svg width="18" height="18" viewBox="0 0 24 24"><path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.07 5.07 0 01-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#fff"/><path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#fff"/><path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18A11 11 0 001 12c0 1.78.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#fff"/><path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#fff"/></svg>
         Continuar com Google
@@ -1636,6 +1652,10 @@ svg.ic path,svg.ic circle,svg.ic line,svg.ic polyline,svg.ic rect{fill:none;stro
       <div class="form-stack">
         <div class="auth-error" id="authError"></div>
         <div id="loginButtons">
+          <button class="btn-google btn-apple" onclick="signInApple()">
+            <svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true"><path d="M16.37 1.43c0 1.14-.49 2.27-1.18 3.08-.74.9-1.99 1.57-2.99 1.57-.12 0-.23-.02-.3-.03-.01-.06-.04-.22-.04-.39 0-1.15.57-2.27 1.21-2.98.8-.94 2.14-1.64 3.25-1.68.03.13.05.28.05.43zm4.56 15.71c-.03.07-.46 1.58-1.52 3.12-.94 1.34-1.94 2.71-3.43 2.71-1.52 0-1.9-.88-3.63-.88-1.7 0-2.3.91-3.67.91-1.38 0-2.33-1.26-3.43-2.8-1.29-1.82-2.32-4.63-2.32-7.28 0-4.28 2.8-6.55 5.55-6.55 1.45 0 2.68.95 3.6.95.87 0 2.22-1.01 3.9-1.01.61 0 2.89.06 4.37 2.19-.13.09-2.38 1.37-2.38 4.19 0 3.26 2.85 4.42 2.96 4.45z"/></svg>
+            Continuar com a Apple
+          </button>
           <button class="btn-google" onclick="signInGoogle()">
             <svg width="18" height="18" viewBox="0 0 24 24"><path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.07 5.07 0 01-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#fff"/><path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#fff"/><path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18A11 11 0 001 12c0 1.78.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#fff"/><path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#fff"/></svg>
             Continuar com Google
@@ -2611,11 +2631,19 @@ async function init(){
 // navegador e traz a resposta de volta — ela não sabe nada de login.
 //
 // No navegador comum nada disso acontece: segue o fluxo normal de sempre.
-async function signInGoogle(){
+//
+// A Apple usa exatamente o mesmo caminho. Ela é obrigatória desde que o
+// Google existe (diretriz 4.8: login de terceiro pede uma opção que deixe
+// esconder o email). A mensagem pra casca continua 'login-google' de
+// propósito: a casca só abre o endereço e devolve a volta, não olha qual
+// provedor é — e mudar o nome exigiria um build novo do app.
+function signInGoogle(){return signInOAuth('google')}
+function signInApple(){return signInOAuth('apple')}
+async function signInOAuth(provedor){
   if(!sb)return;
 
   if(!naCasca()){
-    const{error}=await sb.auth.signInWithOAuth({provider:'google',options:{redirectTo:window.location.origin}});
+    const{error}=await sb.auth.signInWithOAuth({provider:provedor,options:{redirectTo:window.location.origin}});
     if(error)showAuthErr(error.message);
     return;
   }
@@ -2624,7 +2652,7 @@ async function signInGoogle(){
   // a casca, no navegador do sistema. O endereço de volta quem diz é ela,
   // porque muda entre o app publicado e o app de teste pelo Expo Go.
   const{data,error}=await sb.auth.signInWithOAuth({
-    provider:'google',
+    provider:provedor,
     options:{
       redirectTo:window.enderecoDeVoltaDoLogin||'spot://auth',
       skipBrowserRedirect:true
@@ -2633,6 +2661,18 @@ async function signInGoogle(){
   if(error||!data||!data.url){showAuthErr((error&&error.message)||'Não deu pra abrir o login.');return}
   falarComACasca({tipo:'login-google',url:data.url});
 }
+// O botão da Apple só aparece quando o provedor está LIGADO no Supabase. O
+// próprio Supabase diz isso em /auth/v1/settings, sem login. Assim o botão
+// não vai ao ar quebrado antes da configuração, e não precisa de interruptor
+// no código pra ligar depois.
+async function temApple(){
+  try{
+    const r=await fetch(SB_URL+'/auth/v1/settings',{headers:{apikey:SB_KEY}});
+    const j=r.ok?await r.json():null;
+    if(j&&j.external&&j.external.apple)document.body.classList.add('tem-apple');
+  }catch(e){}
+}
+temApple();
 
 // Chamado PELA casca quando o navegador do sistema volta com o resultado.
 // Recebe o endereço inteiro de retorno. A sessão pode voltar de dois jeitos,
