@@ -12,7 +12,7 @@ App pessoal de viagem — "Letterboxd para viagem". Salva lugares (restaurante/h
 
 ## Arquitetura atual
 
-- **Frontend:** `index.html` — single file, HTML+CSS+JS inline, sem framework, sem build step. ~8800 linhas (o "~1750" deste documento ficou 5 vezes desatualizado; ver Dívida técnica 3).
+- **Frontend:** `index.html` — single file, HTML+CSS+JS inline, sem framework, sem build step. ~10.500 linhas em 24/09/2026 (este número envelhece rápido; ver Dívida técnica 3).
 - **Backend:** Supabase (auth + Postgres via REST direto — **nunca usar o SDK JS pra writes**, tem bug de schema cache que trava infinito; toda a camada de dados usa `fetch` direto com `apikey`+`Authorization: Bearer <token>`).
 - **Deploy:** Cloudflare Pages, auto-deploy a cada push no branch `main` do GitHub.
 - **Repo:** `github.com/patriarchalucas-blip/SPOT`
@@ -155,15 +155,28 @@ só. Os NOMES lá são os de antes (`INK`, `ESCURO`, `ELEV`, `TERRA`...) pra nã
 reescrever nenhum lugar de uso — então alguns mentem, e `ESCURO` hoje é a cor mais
 CLARA da tela. Está anotado linha por linha no módulo.
 
-**O que ainda falta nelas:** a fonte. Fraunces e IBM Plex Mono sairiam junto, mas
-trocar pela Inter Tight pede `@expo-google-fonts/inter-tight` e um build; ficaram na
-fonte do sistema. E **nada disso foi visto rodando** — não há como abrir o app nativo
-nesta máquina. A verificação foi eslint limpo mais uma checagem de que todo nome
-importado existe no módulo, que é o erro que apareceria como tela branca no celular.
-Sobrou também o botão flutuante "+" na aba Viagens, que saiu da web mas está lá.
+A fonte delas também já é a Inter Tight (`@expo-google-fonts/inter-tight`, um
+arquivo por peso — no React Native `fontWeight` é ignorado com fonte carregada), e
+o "+" flutuante da aba Viagens saiu em 22/09. **Nada do nativo é visto rodando
+nesta máquina** (Windows, sem simulador de iPhone): a verificação é `npx eslint .`
+mais `npx expo export --platform ios`, que pega import quebrado — o erro que vira
+tela branca no celular. Ver na tela depende do TestFlight no iPhone do Lucas.
+
+## Estado da App Store (24/09/2026)
+
+App registrado (id `6814856044`), build 4 enviada em 23/09. O contexto completo —
+o que foi feito no App Store Connect, decisões e pendências — está em
+`_local/PASSAGEM-DE-BASTAO.md` (fora do git: tem IDs de conta). Os textos da loja e
+as respostas dos questionários estão em `mobile/app-store/` (`ficha-da-loja.md`,
+`etiquetas-de-privacidade.md`, `classificacao-etaria.md`, `login-apple.md`), e as
+capturas e a receita que as gera em `ferramentas/capturas-loja/`.
+
+**Entrar com a Apple** (diretriz 4.8, obrigatório porque existe Google) é nativo —
+ver `mobile/app-store/login-apple.md`. Pede um build novo que substitui a build 4.
 ## Features construídas (funcionando em produção)
 
-- Auth (Google OAuth + email/senha), CRUD de viagens/spots, foto do lugar via Google
+- Auth (Google OAuth + email/senha; Apple nativo só no app de iPhone, a partir do
+  build que vier depois da 4), CRUD de viagens/spots, foto do lugar via Google
   Places e foto de destino via Unsplash — as duas atrás de Pages Function, com cache
   compartilhado no KV (ver Dívida técnica).
 - **Nota de 0,5 em 0,5** no spot: toque na metade esquerda da estrela vale x,5
@@ -198,22 +211,22 @@ Sobrou também o botão flutuante "+" na aba Viagens, que saiu da web mas está 
    download, crédito com link e `utm_source`) já estão atendidas em
    `functions/api/city-photo.js`.
 3. **Single HTML file gigante** — ótimo pra iterar rápido em chat, ruim pra qualquer dev revisar/testar depois. Candidato natural a virar múltiplos arquivos agora que o projeto migrou pro Claude Code.
-4. **Deploy manual, sem staging/CI** — cada mudança vai direto pra produção.
+4. **Sem staging** — cada push no `main` vai direto pra produção. Existe CI
+   (`.github/workflows/ci.yml`: `node --test` + sintaxe do script e das functions),
+   mas ele roda EM PARALELO com o deploy: avisa, não impede. Rodar `node --test`
+   antes de todo push.
 
 ## Próximos passos discutidos (não construídos ainda, sem ordem de prioridade fechada)
 
 - **IA dentro do Spot** — duas ideias concretas already discutidas com o Lucas:
   1. **Recapitulação de viagem**: gerar texto narrativo juntando notas+spots de uma viagem, pra compartilhar.
-  2. **Buscar sugestões via blogs** (preenche a aba "Explorar", hoje só um placeholder "em breve"): backend chama Claude com a ferramenta de web search ativada, pesquisa blogs de viagem reais sobre o destino, devolve lugares sugeridos com motivo — usuário confirma e adiciona (cai no fluxo normal de Google Places + nota pessoal). Enquadrar como sugestão, nunca como fato.
+  2. **Buscar sugestões via blogs** (complementaria a aba "Explorar", que hoje busca por cidade e mostra o que os amigos marcaram; o Lucas chamou a ideia de "SpotAI" em 23/09, sem decisão): backend chama Claude com a ferramenta de web search ativada, pesquisa blogs de viagem reais sobre o destino, devolve lugares sugeridos com motivo — usuário confirma e adiciona (cai no fluxo normal de Google Places + nota pessoal). Enquadrar como sugestão, nunca como fato.
   - As duas precisam da MESMA peça de infra (function serverless escondendo a chave Anthropic) — construir uma vez, os dois recursos em cima.
   - Modelo sugerido: Claude Haiku (rápido/barato, mais que suficiente pra essas tarefas). Não confiar em preço de cabeça — checar docs.claude.com antes de decidir volume de uso.
 - ~~**Rebranding do app inteiro**~~ — **feito** em 20–21/09/2026. Os emoji de
   interface já tinham virado ícones SVG (`icon()`/`ICONS`/`data-ic`) numa leva
   anterior; a direção "F" cobriu o resto, tela por tela (ver "Sistema de design").
   **O que sobrou dessa frente:**
-  - As **quatro abas nativas** (`mobile/Tela*.js`, `BarraDeAbas.js`) continuam no
-    visual escuro antigo. São código separado e não estavam na direção. Quem abrir o
-    app nativo hoje vê quatro telas escuras e o resto claro.
   - A aba **Explorar** existe e funciona (busca por cidade + o que os amigos
     marcaram), mas ainda é a mais fraca — foi a única que o pacote de design não
     desenhou, só herdou os tokens.
@@ -263,8 +276,9 @@ anon key devolve **200 + `confirmation_sent_at`** quando o SMTP está de pé, e
 
 ## Estado do banco (migrações aplicadas)
 
-Todas as migrações de `migrations/` já foram rodadas no Supabase — 001 a 020.
-Conferido em 21/09/2026. Isso inclui:
+001 a 025 já foram rodadas no Supabase — conferido coluna a coluna em 23/09/2026.
+**026 está pendente** (fecha `amigo_em_comum` e `esquecer_meus_aparelhos` pra quem
+não está logado; nenhuma das duas vaza dado hoje). Destaques:
 
 - **008** — RLS de verdade em `follows`, `profiles`, `trips` e `spots`. Antes disso a
   política de INSERT em `follows` não checava o `status`, então dava pra virar amigo
