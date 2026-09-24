@@ -73,6 +73,22 @@ import { BASE, INK, INK2, GREEN } from './cores';
 // olhando pra tela de entrada de novo. O 'spot' vem do app.json.
 const VOLTA_DO_LOGIN = 'spot://auth';
 
+// Entrar com a Apple, NATIVO: a folha do sistema com Face ID. É obrigatório
+// porque o app oferece Google (diretriz 4.8), e o nativo dispensa o Services
+// ID, a chave e o segredo de 6 meses que o caminho pela web exigiria — o
+// Supabase só confere o token contra o bundle id.
+//
+// Carregado com try: um JS novo entregue por atualização pelo ar pode chegar
+// a um build antigo que não tem este módulo nativo. Sem o try, o app morreria
+// na abertura; com ele, o site só não mostra o botão (cascaTemApple=false).
+let AppleAuth = null;
+try {
+  AppleAuth = require('expo-apple-authentication');
+} catch (e) {
+  AppleAuth = null;
+}
+const TEM_APPLE = Platform.OS === 'ios' && !!AppleAuth;
+
 // Notificação recebida com o app ABERTO também aparece. Sem isto ela chega
 // silenciosa e a pessoa jura que o app não avisa.
 Notifications.setNotificationHandler({
@@ -325,6 +341,30 @@ function Conteudo() {
       setSemSinal(!!dados.semRede);
       return;
     }
+    // O site pede o login da Apple; a folha é do sistema e o token volta pro
+    // site, que é quem guarda a sessão (igual ao Google). Cancelar não é erro.
+    if (dados && dados.tipo === 'login-apple') {
+      const devolver = (x) => webRef.current?.injectJavaScript(
+        'window.voltouDoLoginApple && window.voltouDoLoginApple(' + JSON.stringify(x) + ');true;'
+      );
+      if (!TEM_APPLE) { devolver({ erro: 'indisponivel' }); return; }
+      AppleAuth.signInAsync({
+        requestedScopes: [
+          AppleAuth.AppleAuthenticationScope.FULL_NAME,
+          AppleAuth.AppleAuthenticationScope.EMAIL,
+        ],
+      })
+        .then((c) => {
+          // O nome só vem no PRIMEIRO login com a Apple; depois vem vazio.
+          const n = (c && c.fullName) || {};
+          devolver({
+            token: (c && c.identityToken) || '',
+            nome: [n.givenName, n.familyName].filter(Boolean).join(' '),
+          });
+        })
+        .catch((e) => devolver({ erro: e && e.code === 'ERR_REQUEST_CANCELED' ? 'cancelado' : 'falhou' }));
+      return;
+    }
     if (dados && dados.tipo === 'login-google' && typeof dados.url === 'string') {
       WebBrowser.openAuthSessionAsync(dados.url, VOLTA_DO_LOGIN)
         .then((r) => {
@@ -454,7 +494,8 @@ function Conteudo() {
             // do Google, então entra antes do conteúdo carregar.
             injectedJavaScriptBeforeContentLoaded={
               'window.enderecoDeVoltaDoLogin=' +
-              JSON.stringify(VOLTA_DO_LOGIN) + ';true;'
+              JSON.stringify(VOLTA_DO_LOGIN) + ';' +
+              'window.cascaTemApple=' + (TEM_APPLE ? 'true' : 'false') + ';true;'
             }
             onMessage={aoReceberMensagem}
             onLoadStart={() => {

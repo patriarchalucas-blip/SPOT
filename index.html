@@ -2631,14 +2631,7 @@ async function init(){
 // navegador e traz a resposta de volta — ela não sabe nada de login.
 //
 // No navegador comum nada disso acontece: segue o fluxo normal de sempre.
-//
-// A Apple usa exatamente o mesmo caminho. Ela é obrigatória desde que o
-// Google existe (diretriz 4.8: login de terceiro pede uma opção que deixe
-// esconder o email). A mensagem pra casca continua 'login-google' de
-// propósito: a casca só abre o endereço e devolve a volta, não olha qual
-// provedor é — e mudar o nome exigiria um build novo do app.
 function signInGoogle(){return signInOAuth('google')}
-function signInApple(){return signInOAuth('apple')}
 async function signInOAuth(provedor){
   if(!sb)return;
 
@@ -2661,11 +2654,21 @@ async function signInOAuth(provedor){
   if(error||!data||!data.url){showAuthErr((error&&error.message)||'Não deu pra abrir o login.');return}
   falarComACasca({tipo:'login-google',url:data.url});
 }
-// O botão da Apple só aparece quando o provedor está LIGADO no Supabase. O
-// próprio Supabase diz isso em /auth/v1/settings, sem login. Assim o botão
-// não vai ao ar quebrado antes da configuração, e não precisa de interruptor
-// no código pra ligar depois.
+// ═══ ENTRAR COM A APPLE ═══
+//
+// Obrigatório desde que o Google existe: a diretriz 4.8 pede, junto de login
+// de terceiro, uma opção que deixe a pessoa esconder o email. É NATIVO — a
+// folha do sistema, pela casca — e não pela web: o caminho da web exigiria
+// Services ID, uma chave e um segredo que vence a cada 6 meses. O nativo só
+// precisa do bundle id cadastrado no provedor Apple do Supabase.
+//
+// Consequência: o botão existe só dentro do app de iPhone, que é onde a
+// Apple exige. Aparece quando as DUAS coisas são verdade — a casca tem o
+// módulo (cascaTemApple, que um build antigo não tem) e o provedor está
+// ligado no Supabase (/auth/v1/settings, que responde sem login). Assim nada
+// vai ao ar quebrado, e ligar depois não precisa de interruptor no código.
 async function temApple(){
+  if(!(naCasca()&&window.cascaTemApple))return;
   try{
     const r=await fetch(SB_URL+'/auth/v1/settings',{headers:{apikey:SB_KEY}});
     const j=r.ok?await r.json():null;
@@ -2673,6 +2676,38 @@ async function temApple(){
   }catch(e){}
 }
 temApple();
+function signInApple(){
+  if(!sb||!naCasca())return;
+  falarComACasca({tipo:'login-apple'});
+}
+window.voltouDoLoginApple=async function(r){
+  try{
+    if(!sb)return;
+    if(!r||!r.token){
+      if(!r||r.erro!=='cancelado')showAuthErr('Não deu pra entrar com a Apple. Tenta de novo.');
+      return;
+    }
+    const{data,error}=await sb.auth.signInWithIdToken({provider:'apple',token:r.token});
+    if(error){showAuthErr(error.message);return}
+    // O perfil nasce com o começo do email como nome (handle_new_user). Com a
+    // Apple o email pode ser o de retransmissão, e o nome sairia "x7k2p9ab".
+    // A Apple manda o nome de verdade só no PRIMEIRO login: grava aqui, e só
+    // se o perfil ainda estiver com o nome automático.
+    const u=data&&data.user,tk=data&&data.session&&data.session.access_token;
+    const nome=String(r.nome||'').replace(/\s+/g,' ').trim().slice(0,60);
+    if(nome&&u&&tk&&u.email){
+      const automatico=u.email.split('@')[0];
+      fetch(SB_URL+'/rest/v1/profiles?id=eq.'+encodeURIComponent(u.id)+'&display_name=eq.'+encodeURIComponent(automatico),{
+        method:'PATCH',
+        headers:{apikey:SB_KEY,Authorization:'Bearer '+tk,'Content-Type':'application/json'},
+        body:JSON.stringify({display_name:nome})
+      }).then(()=>{if(S.profile&&S.profile.display_name===automatico)S.profile.display_name=nome}).catch(()=>{});
+    }
+    // A sessão entrou: o onAuthStateChange leva pro dashboard sozinho.
+  }catch(e){
+    showAuthErr('Não deu pra entrar com a Apple. Tenta de novo.');
+  }
+};
 
 // Chamado PELA casca quando o navegador do sistema volta com o resultado.
 // Recebe o endereço inteiro de retorno. A sessão pode voltar de dois jeitos,

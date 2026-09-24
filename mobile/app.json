@@ -19,6 +19,7 @@
     "ios": {
       "supportsTablet": false,
       "bundleIdentifier": "app.meuspot.spot",
+      "usesAppleSignIn": true,
       "buildNumber": "1",
       "config": {
         "usesNonExemptEncryption": false
@@ -63,12 +64,13 @@
       [
         "expo-notifications",
         {
-          "color": "#c1552f",
+          "color": "#0B3D2E",
           "defaultChannel": "default"
         }
       ],
       "expo-web-browser",
-      "expo-font"
+      "expo-font",
+      "expo-apple-authentication"
     ],
     "extra": {
       "eas": {
