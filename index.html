@@ -373,6 +373,10 @@ body.tem-apple .btn-apple{display:flex}
 .ex-selo{position:absolute;top:12px;left:12px;background:var(--base);color:var(--green);font-size:12px;font-weight:600;padding:4px 10px;border-radius:var(--r-btn)}
 .ex-mais{width:40px;height:40px;flex:none;border:none;border-radius:50%;background:var(--green);color:var(--on-green);font-size:24px;font-weight:300;line-height:1;cursor:pointer;display:flex;align-items:center;justify-content:center}
 .ex-mais:disabled{opacity:.6}
+/* Ficha em modo prévia (lugar do Explorar ainda não salvo). */
+.fi-previa-dica{display:none;font-size:13px;font-weight:600;color:var(--ink2);margin:16px 0 8px}
+#place.previa .fi-previa-dica{display:block}
+#place.previa .fi-nota,#place.previa .fi-amigos,#place.previa .fi-mais,#place.previa #placeSubcatSection{display:none!important}
 .vg-casa{display:block;width:100%;height:150px;border:none;padding:0;cursor:pointer}
 .vg-nome-g{font-size:22px;letter-spacing:-.03em}
 .vg-vazio{font-size:15px;line-height:1.45;color:var(--ink2);margin:0 0 4px}
@@ -2031,6 +2035,7 @@ svg.ic path,svg.ic circle,svg.ic line,svg.ic polyline,svg.ic rect{fill:none;stro
     <!-- O STATUS é a primeira decisão da tela, então vem antes de tudo que
          depende dele. Era uma pastilha na foto e um segmentado lá embaixo,
          os dois mexendo na mesma coisa. -->
+    <div class="fi-previa-dica">Salvar na sua lista</div>
     <div class="fi-status">
       <button class="fi-st" id="t-want" onclick="setStatus('want')">Quero ir</button>
       <button class="fi-st" id="t-been" onclick="setStatus('been')">Fui</button>
@@ -4411,6 +4416,7 @@ async function openPlace(id,origin){
     }
   }
   if(!s)return;
+  document.getElementById('place').classList.remove('previa');
   S.curPlace=s;
   S.placeOrigin=origin||'trip'; // pra saber pra onde o "voltar" deve levar
   const phEl=document.getElementById('placeHeroImg');
@@ -4817,6 +4823,8 @@ async function salvarCampoDaFicha(){
 }
 async function setStatus(s,save=true){
   if(!STATUS_ROTULO[s])return;
+  // Prévia do Explorar: o lugar ainda não é seu, e tocar no status é salvar.
+  if(save&&S.curPlace&&S.curPlace._previa)return salvarPreviaDoExplorar(s);
   const spot=S.curPlace;
   const anterior=spot?spot.status:null;
   // GRAVA O QUE ESTÁ NO CAMPO ANTES DE TROCAR. Sem isto, escrever e tocar em
@@ -5523,9 +5531,11 @@ async function salvarDoExplorar(i,status){
   const p=EXPLORE.items[i];if(!p||p._salvando)return null;
   if(statusNaMinhaLista(p)){toast('Já está na sua lista',p.name,'check');return null}
   p._salvando=true;renderExploreResults();
+  // Instagram achado na prévia vai junto.
+  const prev=S.curPlace&&S.curPlace._previa&&S.curPlace._i===i?S.curPlace:null;
   const lugar={name:p.name,meta:p.address,address:p.address,city:p.city,country:p.country,
     subcat:p.subcat||'',phone:p.phone||'',photo_url:p.photo_url,photo_author:p.photo_author,
-    rating_google:p.rating,website_url:p.website_url,maps_url:p.maps_url,lat:p.lat,lng:p.lng};
+    rating_google:p.rating,website_url:(prev&&prev.website_url)||p.website_url,maps_url:p.maps_url,lat:p.lat,lng:p.lng};
   const data=await salvarSpotDireto(lugar,EXPLORE.cat,status,'');
   p._salvando=false;
   if(!data||data==='sem_pais'){renderExploreResults();toast('Não salvou','Confere a conexão e tenta de novo.','alert');return null}
@@ -5623,7 +5633,7 @@ window.acaoDeExplorar=function(acao,valor){
     runExplore();
     return;
   }
-  if(acao==='salvar'){escolherNoExplorar(Number(valor));return}
+  if(acao==='salvar'){abrirPreviaDoExplorar(Number(valor));return}
   if(acao==='queroIr'){queroIrDoExplorar(Number(valor));return}
   if(acao==='mais'){maisDoExplorar();return}
   if(acao==='amigo'){abrirAmigoNoLugar(Number(valor));return}
@@ -5643,7 +5653,7 @@ function renderExploreResults(){
     // manda exibir a autoria junto com a foto que a API devolveu.
     const autor=(p.photo_author&&p.photo_author.nome)||'';
     return '<div class="ex-card">'
-      +'<div class="ex-img" style="background-image:'+destGradient(p.name||local)+'" onclick="escolherNoExplorar('+i+')">'
+      +'<div class="ex-img" style="background-image:'+destGradient(p.name||local)+'" onclick="abrirPreviaDoExplorar('+i+')">'
         +(foto?'<img class="ex-foto" src="'+escUrl(foto)+'" alt=""'+(i===0?' fetchpriority="high"':' loading="lazy"')+' decoding="async" onload="this.style.opacity=1" onerror="this.remove()">':'')
         +(nota?'<span class="ex-nota">'+esc(nota)+' <span class="ex-estrela">★</span></span>':'')
         +(statusNaMinhaLista(p)?'<span class="ex-selo">'+esc(statusNaMinhaLista(p))+'</span>':'')
@@ -5674,6 +5684,34 @@ function renderExploreResults(){
     const ob=new IntersectionObserver(function(ents){if(ents.some(e=>e.isIntersecting)){ob.disconnect();maisDoExplorar()}},{rootMargin:'400px'});
     ob.observe(alvo);
   }
+}
+// A FOTO do card abre a PÁGINA DO LUGAR — endereço, Instagram, ligar, rota —
+// antes de salvar (pedido do Lucas, 25/09). É a mesma ficha dos seus spots, em
+// modo prévia: sem nota, sem comentários e sem menu, e os três status viram os
+// botões de salvar. Salvou, a ficha vira a do seu spot de verdade.
+function abrirPreviaDoExplorar(i){
+  const p=EXPLORE.items[i];if(!p)return;
+  const meu=allSpotsFlat().find(x=>mesmoLugar(x.name,p.name)&&(!p.city||!cityOf(x)||mesmoLugar(cityOf(x),p.city)));
+  if(meu){openPlace(meu.id,'explore');return}
+  const s={id:'previa',_previa:true,_i:i,name:p.name,category:EXPLORE.cat,city:p.city,
+    address:p.address,phone:p.phone||'',website_url:p.website_url||'',maps_url:p.maps_url||'',
+    rating_google:p.rating?fmtRating(p.rating):'',photo_url:p.photo_url||'',lat:p.lat,lng:p.lng,
+    status:null,my_rating:null,subcategory:null,opening_hours:null,price_level:null};
+  document.getElementById('place').classList.add('previa');
+  S.curPlace=s;S.placeOrigin='explore';
+  const ph=document.getElementById('placeHeroImg');
+  ph.style.backgroundImage=s.photo_url?cssUrl(s.photo_url):destGradient(s.city||s.name);
+  limparCredito('placeFotoCredito');
+  if(p.photo_author&&p.photo_author.nome)pintarCreditoSpot('placeFotoCredito',{photo_author:p.photo_author.nome,photo_author_url:p.photo_author.url||''});
+  desenharFichaDoLugar(s);
+  // Nenhum status marcado: ainda não é seu.
+  document.querySelectorAll('#place .fi-st').forEach(b=>b.classList.remove('on'));
+  goTo('place');
+}
+async function salvarPreviaDoExplorar(status){
+  const s=S.curPlace;if(!s||!s._previa)return;
+  const data=await salvarDoExplorar(s._i,status);
+  if(data&&S.curPlace===s)openPlace(data.id,'explore');
 }
 // A FOTO do card: pergunta só o que importa — quero ir ou já fui — e salva.
 // Perguntar a viagem aqui não fazia sentido (a viagem sai do próprio lugar),
@@ -8467,8 +8505,11 @@ const MOTIVO_HUMANO={
   rede:'Sem conexão com o servidor de busca.'
 };
 async function buscarInstagramAgora(id,btn){
-  const s=findSpotById(id);
+  // Na prévia do Explorar o lugar ainda não existe no banco: acha, mostra e
+  // não grava — quem grava é o salvar, com o Instagram já junto.
+  const s=(id==='previa'&&S.curPlace&&S.curPlace._previa)?S.curPlace:findSpotById(id);
   if(!s)return;
+  const grava=s._previa?async function(){return{error:null}}:function(campos){return grava(campos)};
   const rotulo=btn?btn.innerHTML:'';
   if(btn){btn.innerHTML='Buscando...';btn.style.pointerEvents='none'}
   const devolve=()=>{if(btn){btn.innerHTML=rotulo;btn.style.pointerEvents=''}};
@@ -8490,7 +8531,7 @@ async function buscarInstagramAgora(id,btn){
   const r=await findInstagramViaBrave(s.name,cityOf(s),site);
   devolve();
   if(r.url){
-    const{error}=await dbUpdate('spots',s.id,{website_url:r.url,insta_checked:true});
+    const{error}=await grava({website_url:r.url,insta_checked:true});
     if(error){toast('Achei, mas não salvou','Tenta de novo.','alert');return}
     s.website_url=r.url;s.insta_checked=true;
     renderPlaceLinks(s);
@@ -8499,7 +8540,7 @@ async function buscarInstagramAgora(id,btn){
   }
   if(r.conclusivo){
     // Procurou de verdade e não achou. Marca, pra fila automática não repetir.
-    await dbUpdate('spots',s.id,{insta_checked:true});
+    await grava({insta_checked:true});
     s.insta_checked=true;
     toast('Não achei o Instagram','Esse lugar pode não ter perfil, ou o nome salvo não bate com ele.','alert');
     return;
