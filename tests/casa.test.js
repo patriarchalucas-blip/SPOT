@@ -86,3 +86,26 @@ test('mudar de cidade transforma a casa antiga em viagem comum, sem perder spots
     assert.strictEqual(A.avaliar("S.trips.find(t=>t.id==='c1')._spots.length"), 1);
   } finally { voltas.forEach((v) => v()); c.volta() }
 });
+
+test('mudar de cidade junta os spots da casa antiga na viagem do pais, sem card solto', async () => {
+  const c = cenario({ home_city: 'São Paulo', home_country: 'Brasil' }, [
+    { id: 'c1', name: 'São Paulo', destinations: ['Brasil'], dates: '__casa__', _spots: [{ id: 's1', name: 'Mocotó', city: 'São Paulo' }] },
+    { id: 'b1', name: 'Brasil', destinations: ['Brasil'], dates: '', _spots: [{ id: 's2', name: 'Aprazível', city: 'Rio de Janeiro' }] }
+  ]);
+  const movidos = [], apagados = [];
+  const voltas = [
+    trocar(A, 'dbUpdate', async (t, id, obj) => { movidos.push([t, id, obj]); return { error: null } }),
+    trocar(A, 'dbDelete', async (t, id) => { apagados.push([t, id]); return { error: null } }),
+    trocar(A, 'loadProfile', () => {}), trocar(A, 'loadDashboard', () => {}),
+    trocar(A, 'toast', () => {}), trocar(A, 'closeOv', () => {}), trocar(A, 'showOv', () => {}),
+  ];
+  try {
+    A.abrirCidadeDeCasa();
+    A.avaliar("ONB.cidade={nome:'Rio de Janeiro',pais:'Brasil'}");
+    await A.onbSalvarCidade();
+    assert.ok(movidos.some(([t, id, o]) => t === 'spots' && id === 's1' && o.trip_id === 'b1'), 'nao moveu o spot pro Brasil');
+    assert.ok(apagados.some(([t, id]) => t === 'trips' && id === 'c1'), 'deixou o card de Sao Paulo solto');
+    assert.strictEqual(A.avaliar("S.trips.map(t=>t.id).join(',')"), 'b1');
+    assert.strictEqual(A.avaliar("S.trips[0]._spots.length"), 2);
+  } finally { voltas.forEach((v) => v()); c.volta() }
+});

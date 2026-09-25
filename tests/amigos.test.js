@@ -1,6 +1,6 @@
 const { test } = require('node:test');
 const assert = require('node:assert');
-const { app } = require('./_ajuda.js');
+const { app, trocar } = require('./_ajuda.js');
 
 const A = app();
 
@@ -182,4 +182,16 @@ test('a viagem do lugar pesquisado vai pro topo, mesmo com acento diferente', ()
   A.populateTripOpts('São Paulo');
   const marcadas = A.avaliar('S.trips.filter(t=>t._sugerida).map(t=>t.name)');
   assert.deepStrictEqual([...marcadas], ['Brasil']);
+});
+
+test('sem amigo nenhum, a aba nativa recebe os dados (nao fica girando)', async () => {
+  const msgs = [];
+  A.avaliar("S.user={id:'eu',email:'l@x.z'};S.profile={}");
+  A.avaliar('window.ReactNativeWebView={postMessage:function(m){window.__msgs.push(m)}};window.__msgs=[]');
+  const volta = trocar(A, 'dbGet', async () => []);
+  try {
+    await A.loadFriends();
+    const recebidas = A.avaliar("window.__msgs.map(m=>JSON.parse(m)).filter(m=>m.tipo==='amigos'&&m.pronto).length");
+    assert.ok(recebidas >= 1, 'a casca nao recebeu os dados de Amigos');
+  } finally { volta(); A.avaliar('window.ReactNativeWebView=undefined') }
 });

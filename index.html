@@ -3983,6 +3983,8 @@ function backFromPlace(){
   // Aberto pela estante: voltar tem que devolver pro Perfil, nao jogar
   // numa viagem que a pessoa nem sabia que estava aberta.
   if(S.placeOrigin==='profile'){goTo('profile');loadProfile();return}
+  // Salvo como Fui pelo Explorar: volta pra lista de onde a pessoa veio.
+  if(S.placeOrigin==='explore'){goTo('explore');renderExploreResults();return}
   // Aberto de dentro da tela da cidade, o voltar tem que devolver PRA cidade.
   // Antes caía sempre na tela da viagem, um nível acima de onde a pessoa estava.
   if(S.placeOrigin==='city'&&S.curCity){goTo('city');updateCityHeader();renderCityBody();return}
@@ -5516,19 +5518,21 @@ function statusNaMinhaLista(p){
   return s?(s.status==='been'?'Fui':'Quero ir'):'';
 }
 // O ⊕: direto pra Quero ir, sem folha nenhuma.
-async function queroIrDoExplorar(i){
-  const p=EXPLORE.items[i];if(!p||p._salvando)return;
-  if(statusNaMinhaLista(p)){toast('Já está na sua lista',p.name,'check');return}
+function queroIrDoExplorar(i){return salvarDoExplorar(i,'want')}
+async function salvarDoExplorar(i,status){
+  const p=EXPLORE.items[i];if(!p||p._salvando)return null;
+  if(statusNaMinhaLista(p)){toast('Já está na sua lista',p.name,'check');return null}
   p._salvando=true;renderExploreResults();
   const lugar={name:p.name,meta:p.address,address:p.address,city:p.city,country:p.country,
     subcat:p.subcat||'',phone:p.phone||'',photo_url:p.photo_url,photo_author:p.photo_author,
     rating_google:p.rating,website_url:p.website_url,maps_url:p.maps_url,lat:p.lat,lng:p.lng};
-  const data=await salvarSpotDireto(lugar,EXPLORE.cat,'want','');
+  const data=await salvarSpotDireto(lugar,EXPLORE.cat,status,'');
   p._salvando=false;
-  if(!data||data==='sem_pais'){renderExploreResults();toast('Não salvou','Confere a conexão e tenta de novo.','alert');return}
+  if(!data||data==='sem_pais'){renderExploreResults();toast('Não salvou','Confere a conexão e tenta de novo.','alert');return null}
   renderExploreResults();
-  toast('Salvo em Quero ir',p.name,'check');
+  toast(status==='been'?'Salvo em Fui':'Salvo em Quero ir',p.name,'check');
   loadDashboard();
+  return data;
 }
 // Resultado do Explorar vira card com foto, na mesma linguagem do feed.
 // Era uma linha de lista com selo de 64px, número de posição e "1.243
@@ -5619,7 +5623,7 @@ window.acaoDeExplorar=function(acao,valor){
     runExplore();
     return;
   }
-  if(acao==='salvar'){addExploreSpot(Number(valor));return}
+  if(acao==='salvar'){escolherNoExplorar(Number(valor));return}
   if(acao==='queroIr'){queroIrDoExplorar(Number(valor));return}
   if(acao==='mais'){maisDoExplorar();return}
   if(acao==='amigo'){abrirAmigoNoLugar(Number(valor));return}
@@ -5639,7 +5643,7 @@ function renderExploreResults(){
     // manda exibir a autoria junto com a foto que a API devolveu.
     const autor=(p.photo_author&&p.photo_author.nome)||'';
     return '<div class="ex-card">'
-      +'<div class="ex-img" style="background-image:'+destGradient(p.name||local)+'" onclick="addExploreSpot('+i+')">'
+      +'<div class="ex-img" style="background-image:'+destGradient(p.name||local)+'" onclick="escolherNoExplorar('+i+')">'
         +(foto?'<img class="ex-foto" src="'+escUrl(foto)+'" alt=""'+(i===0?' fetchpriority="high"':' loading="lazy"')+' decoding="async" onload="this.style.opacity=1" onerror="this.remove()">':'')
         +(nota?'<span class="ex-nota">'+esc(nota)+' <span class="ex-estrela">★</span></span>':'')
         +(statusNaMinhaLista(p)?'<span class="ex-selo">'+esc(statusNaMinhaLista(p))+'</span>':'')
@@ -5670,6 +5674,22 @@ function renderExploreResults(){
     const ob=new IntersectionObserver(function(ents){if(ents.some(e=>e.isIntersecting)){ob.disconnect();maisDoExplorar()}},{rootMargin:'400px'});
     ob.observe(alvo);
   }
+}
+// A FOTO do card: pergunta só o que importa — quero ir ou já fui — e salva.
+// Perguntar a viagem aqui não fazia sentido (a viagem sai do próprio lugar),
+// e o Explorar não deixava marcar como Fui um lugar onde a pessoa já esteve.
+// Fui abre a ficha logo depois, pra dar a nota e escrever o que achou.
+async function escolherNoExplorar(i){
+  const p=EXPLORE.items[i];if(!p||p._salvando)return;
+  if(statusNaMinhaLista(p)){
+    const s=allSpotsFlat().find(x=>mesmoLugar(x.name,p.name)&&(!p.city||!cityOf(x)||mesmoLugar(cityOf(x),p.city)));
+    if(s)openPlace(s.id,'explore');
+    return;
+  }
+  const r=await perguntar(p.name,'',[{rotulo:'Quero ir',valor:'want'},{rotulo:'Já fui',valor:'been'}]);
+  if(r!=='want'&&r!=='been')return;
+  const data=await salvarDoExplorar(i,r);
+  if(data&&r==='been')openPlace(data.id,'explore');
 }
 function addExploreSpot(i){
   const t=EXPLORE.items[i];if(!t)return;
@@ -6001,7 +6021,11 @@ let searchReqId=0;
 // Isso troca "N consultas caras por spot" por "uma". E o resto: três letras no
 // mínimo (com uma ou duas, o resultado não serve pra nada) e 450ms de espera
 // no lugar de 250 — a pausa natural entre sílabas é de uns 300ms.
-const CAMPOS_DA_LISTA='places.id,places.displayName,places.formattedAddress';
+// places.photos entrou em 25/09, a pedido do Lucas: sem foto, escolher o lugar
+// certo na lista era adivinhar. O campo é da mesma faixa de preço do nome e do
+// endereço; o que custa é cada foto exibida (Place Photo, cobrada por imagem),
+// por isso a miniatura sai pequena e só na lista.
+const CAMPOS_DA_LISTA='places.id,places.displayName,places.formattedAddress,places.photos';
 const CAMPOS_DA_FICHA='places.id,places.displayName,places.formattedAddress,places.addressComponents,places.location,places.photos,places.rating,places.websiteUri,places.googleMapsUri,places.types,places.nationalPhoneNumber,places.regularOpeningHours,places.priceLevel';
 function searchPlaces(v){
   clearTimeout(searchTO);const r=document.getElementById('searchResults');
@@ -6027,7 +6051,7 @@ function searchPlaces(v){
         const name=p.displayName?.text||'';
         const addr=p.formattedAddress||'';
         return{id:p.id||'',name,meta:addr,icon:catIcon(S.addCat),address:addr,
-          city:extractCityFromAddr(addr),photo_thumb:'',rating_google:''};
+          city:extractCityFromAddr(addr),photo_thumb:placePhotoUrl(p,160),rating_google:''};
       });
       if(myReqId!==searchReqId)return;
       r.innerHTML=S.searchResults.map((p,i)=>{
@@ -6871,6 +6895,31 @@ function abrirCidadeDeCasa(){
   showOv('ov-onb');
 }
 function fecharCidadeDeCasa(){ONB.soCidade=false;closeOv('ov-onb')}
+// A casa antiga entra na viagem do PAÍS, se ela existir — era um card "São
+// Paulo" solto ao lado do card "Brasil" (25/09), quando São Paulo é uma
+// cidade dentro do Brasil. Sem viagem do país, a própria casa vira ela.
+async function desfazerCasa(casa){
+  const pais=(casa.destinations&&casa.destinations[0])||'';
+  const destino=(S.trips||[]).find(t=>t!==casa&&!isNonTrip(t)&&pais&&
+    (mesmoLugar(t.name,pais)||(t.destinations||[]).some(d=>mesmoLugar(d,pais))));
+  if(!destino){
+    casa.dates='';casa.name=pais||casa.name;
+    await dbUpdate('trips',casa.id,{dates:'',name:casa.name});
+    return;
+  }
+  const spots=(casa._spots||[]).slice();
+  for(const sp of spots){
+    const{error}=await dbUpdate('spots',sp.id,{trip_id:destino.id});
+    // Falhou um: a casa fica como viagem comum, com o que sobrou nela. Nunca
+    // apagar uma viagem que ainda tem spot.
+    if(error){casa.dates='';casa.name=pais||casa.name;dbUpdate('trips',casa.id,{dates:'',name:casa.name});return}
+    sp.trip_id=destino.id;
+    (destino._spots=destino._spots||[]).push(sp);
+    casa._spots=casa._spots.filter(x=>x!==sp);
+  }
+  await dbDelete('trips',casa.id);
+  S.trips=S.trips.filter(t=>t!==casa);
+}
 
 async function talvezAbrirBoasVindas(){
   if(!S.user)return;
@@ -6998,15 +7047,24 @@ function onbBuscarCidade(v){
   onbBuscaTO=setTimeout(async function(){
     const meu=++onbReq;
     try{
-      // strictTypeFiltering: sem ele o includedType é só preferência, e "São
-      // Paulo" voltava Parque Ibirapuera, Morumbi e hotel.
-      const r=await googlePlaces('searchText',{
+      // DOIS tipos, em paralelo. strictTypeFiltering é o que impede "São
+      // Paulo" de voltar Parque Ibirapuera e hotel — mas com ele só vem o tipo
+      // pedido, e no Brasil o Google cataloga boa parte das cidades como
+      // MUNICÍPIO (administrative_area_level_2), não como localidade: só com
+      // 'locality', Salvador não aparecia (25/09). Mesma regra do
+      // cityFromComponents, que já aceita os dois níveis como cidade.
+      const buscar=tipo=>googlePlaces('searchText',{
         headers:{'X-Goog-FieldMask':'places.displayName,places.formattedAddress,places.addressComponents'},
-        body:JSON.stringify({textQuery:t,includedType:'locality',strictTypeFiltering:true,languageCode:'pt-BR',maxResultCount:6})
-      });
-      const d=await r.json();
+        body:JSON.stringify({textQuery:t,includedType:tipo,strictTypeFiltering:true,languageCode:'pt-BR',maxResultCount:5})
+      }).then(r=>r.json()).catch(()=>({}));
+      const[a,b]=await Promise.all([buscar('locality'),buscar('administrative_area_level_2')]);
       if(meu!==onbReq)return;
-      ONB.cidades=((d&&d.places)||[]).map(onbCidadeDoPlace).filter(c=>c.nome);
+      const vistas=new Set();
+      ONB.cidades=[...((a&&a.places)||[]),...((b&&b.places)||[])].map(onbCidadeDoPlace).filter(c=>{
+        const k=normName(c.nome)+'|'+normName(c.pais);
+        if(!c.nome||vistas.has(k))return false;
+        vistas.add(k);return true;
+      }).slice(0,6);
       onbListarCidades(ONB.cidades.length?'':'Nenhuma cidade encontrada. Confere o nome.');
     }catch(e){if(meu===onbReq)onbListarCidades('Não deu pra buscar agora. Confere a conexão.')}
   },320);
@@ -7086,13 +7144,10 @@ async function onbSalvarCidade(){
   const antes=(S.profile&&S.profile.home_city)||'';
   S.profile=Object.assign(S.profile||{},campos);
   if(ONB.soCidade){
-    // Mudou de cidade: a seção de casa antiga vira uma viagem comum — os
-    // spots de lá não somem, e a próxima cidade começa a própria seção.
+    // Mudou de cidade: os spots da casa antiga não somem — voltam a ser
+    // viagem, e a próxima cidade começa a própria seção.
     const casa=(S.trips||[]).find(ehCasa);
-    if(casa&&antes&&!mesmoLugar(antes,c.nome)){
-      casa.dates='';
-      dbUpdate('trips',casa.id,{dates:''});
-    }
+    if(casa&&antes&&!mesmoLugar(antes,c.nome))await desfazerCasa(casa);
     FOTO_DE_CASA='';
     fecharCidadeDeCasa();
     loadProfile();loadDashboard();
@@ -10835,6 +10890,9 @@ function renderFriendsTab(){
     }
     c.innerHTML=v+vazioDeAmigos(!!d.convidou);
     hydrateIcons(c);
+    // A tela nativa também espera por este desenho: sair sem avisar deixava
+    // a aba Amigos girando pra sempre em conta sem amigo (25/09).
+    darDadosDeAmigos();
     return;
   }
   document.getElementById('amAbas').innerHTML=abas.map(([id,rot,n])=>
