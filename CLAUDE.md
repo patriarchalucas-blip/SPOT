@@ -276,9 +276,11 @@ anon key devolve **200 + `confirmation_sent_at`** quando o SMTP está de pé, e
 
 ## Estado do banco (migrações aplicadas)
 
-001 a 025 já foram rodadas no Supabase — conferido coluna a coluna em 23/09/2026.
-**026 está pendente** (fecha `amigo_em_comum` e `esquecer_meus_aparelhos` pra quem
-não está logado; nenhuma das duas vaza dado hoje). Destaques:
+001 a 026 já foram rodadas no Supabase — 001–025 conferidas coluna a coluna em
+23/09/2026, 026 rodada e conferida (`anon = false` nas duas) em 25/09/2026.
+**Pegadinha da 026:** função criada sem `revoke ... from public` continua
+executável por `anon` mesmo depois de `revoke ... from anon`, porque o EXECUTE
+padrão do Postgres vai pra PUBLIC. Função nova precisa dos DOIS. Destaques:
 
 - **008** — RLS de verdade em `follows`, `profiles`, `trips` e `spots`. Antes disso a
   política de INSERT em `follows` não checava o `status`, então dava pra virar amigo
