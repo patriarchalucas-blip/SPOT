@@ -17,6 +17,9 @@ const U = 'https://upload.wikimedia.org/wikipedia/commons/';
 
 // ── Fotos, uma por lugar, todas do lugar nomeado ───────────────────────────
 const FOTO = {
+  // São Paulo — a cidade onde a Marina mora (seção "Onde você mora", 25/09)
+  'Mercado Municipal':   T + 'f/fd/Municipal_Market_of_S%C3%A3o_Paulo_city.jpg/1920px-Municipal_Market_of_S%C3%A3o_Paulo_city.jpg',
+  'Pinacoteca':          T + 'c/c4/Pinacoteca_de_S%C3%A3o_Paulo%2C_Brazil.jpg/1920px-Pinacoteca_de_S%C3%A3o_Paulo%2C_Brazil.jpg',
   // Lisboa
   'Cervejaria Ramiro':   T + 'd/d0/Cervejaria_Ramiro_%2842079848325%29.jpg/1920px-Cervejaria_Ramiro_%2842079848325%29.jpg',
   'Time Out Market':     T + '9/98/Time_Out_Market_Lisboa.jpg/1920px-Time_Out_Market_Lisboa.jpg',
@@ -51,6 +54,7 @@ const FOTO = {
 // Capa de país e de cidade. A chave é o NOME DA VIAGEM na tela inicial e o
 // NOME DA CIDADE na tela de cidade — as duas passam pelo mesmo fetchCityPhoto.
 const CAPA = {
+  'São Paulo': T + 'b/b5/Panorama_of_Sao_Paulo_from_Avenida_Santa_Catarina.jpg/1920px-Panorama_of_Sao_Paulo_from_Avenida_Santa_Catarina.jpg',
   'Portugal':  T + '0/0f/Alfama%2C_Lisbon%2C_Portugal_July_2021.jpg/1920px-Alfama%2C_Lisbon%2C_Portugal_July_2021.jpg',
   'Croácia':   FOTO['Muralhas da Cidade'],
   'Japão':     FOTO['Fushimi Inari'],
@@ -68,6 +72,9 @@ const CAPA = {
 // ── Os spots. A resenha é escrita pra combinar com a foto daquele lugar. ────
 const CRIADO = '2026-09-01T12:00:00Z';
 const SPOTS_DEMO = [
+  // Os da cidade onde mora vão pra seção de casa, não viram viagem.
+  ['Brasil', 'São Paulo', 'Mercado Municipal', 'food', 'been', 4.5, 'O sanduíche de mortadela é exagero, e é por isso que vale. Vai de manhã.', 2],
+  ['Brasil', 'São Paulo', 'Pinacoteca', 'experience', 'been', 5, 'O prédio sozinho já vale. Termina no café, olhando o Jardim da Luz.', null],
   ['Portugal', 'Lisboa', 'Cervejaria Ramiro', 'food', 'been', 5, 'O camarão da costa vale a fila inteira. Fui três vezes na mesma semana e não me arrependo de nenhuma.', 2],
   ['Portugal', 'Lisboa', 'Pastéis de Belém', 'food', 'been', 4.5, 'Quente, com canela por cima. A fila anda rápido, não desiste.', 1],
   ['Portugal', 'Lisboa', 'Time Out Market', 'food', 'been', 4, 'Bom pra decidir em grupo quando ninguém concorda. Vai fora do horário de pico.', 2],
@@ -106,10 +113,13 @@ window.prepararDemo = function () {
   ].forEach(n => { window[n] = nop; });
 
   window.fetchCityPhoto = async c => (CAPA[c] ? P(CAPA[c]) : null);
+  // O perfil vem do próprio S.profile: desligado, a linha '@usuário · cidade'
+  // do Perfil saía vazia na captura.
+  window.fetchOwnProfile = async () => S.profile;
 
   S.user = { id: 'demo-0000', email: 'marina@exemplo.com' };
   S.token = 'falso';
-  S.profile = { id: 'demo-0000', display_name: 'Marina Duarte', username: 'marinaduarte', home_city: 'São Paulo' };
+  S.profile = { id: 'demo-0000', display_name: 'Marina Duarte', username: 'marinaduarte', home_city: 'São Paulo', home_country: 'Brasil' };
 
   let n = 0; const id = () => 'd' + (++n);
   const viagem = (nome, cidade, datas) => ({
@@ -121,6 +131,10 @@ window.prepararDemo = function () {
   ['Portugal', 'Croácia', 'Japão', 'Espanha', 'Itália'].forEach((p, i) => {
     porPais[p] = viagem(p, ['Lisboa', 'Dubrovnik', 'Tóquio', 'Sevilha', 'Florença'][i]);
   });
+
+  // A seção "Onde você mora" (ver ehCasa no index.html).
+  const casa = Object.assign(viagem('Brasil', 'São Paulo', '__casa__'), { name: 'São Paulo', status: 'planning' });
+  porPais.Brasil = casa;
 
   window.__TRIPS = [...Object.values(porPais),
     ...PAISES_SO_VISITADOS.map(p => viagem(p, '', '__quickvisit__'))];
