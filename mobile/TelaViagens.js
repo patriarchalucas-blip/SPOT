@@ -124,6 +124,36 @@ function FaixaDeCheckin({ nome, acao }) {
   );
 }
 
+// Os três passos de quem ainda não marcou país nenhum. O primeiro pinta o
+// mapa na hora, sem precisar criar viagem.
+function MapaEmBranco({ nome, acao }) {
+  const passos = [
+    ['marcarPaises', 'Marcar países que já visitei', 'o mapa pinta na hora'],
+    ['novoLugar', 'Salvar seu primeiro spot', 'um lugar que você amou ou quer ir'],
+    ['convidar', 'Chamar um amigo', 'pra ver os lugares dele'],
+  ];
+  return (
+    <View style={e.branco}>
+      <Text style={e.brancoTitulo}>{nome ? 'Oi, ' + nome + '. ' : ''}Seu mapa está em branco.</Text>
+      <Text style={e.brancoSub}>Comece pelos países onde você já esteve. Leva um minuto.</Text>
+      {passos.map(([a, titulo, sub], i) => (
+        <Pressable
+          key={a}
+          onPress={() => acao(a)}
+          style={({ pressed }) => [e.passo, pressed && { opacity: 0.6 }]}
+          accessibilityRole="button"
+        >
+          <View style={e.passoN}><Text style={e.passoNTxt}>{i + 1}</Text></View>
+          <View style={{ flex: 1 }}>
+            <Text style={e.passoTitulo}>{titulo}</Text>
+            <Text style={e.passoSub}>{sub}</Text>
+          </View>
+        </Pressable>
+      ))}
+    </View>
+  );
+}
+
 function CardDeViagem({ t, grande, altura, aoAbrir }) {
   const [falhou, setFalhou] = React.useState(false);
   return (
@@ -260,6 +290,7 @@ export default function TelaViagens({ dados, ocupado, acao }) {
       {/* A SOMBRA AQUI É EXCEÇÃO, e é a única do app: o --surface está a 12
           pontos de luminosidade do --base e sem ela o olho não acha a borda do
           bloco. Escolha do Lucas entre três saídas testadas. */}
+      {d.placar !== false ? (
       <View style={e.placar}>
         <Pressable
           onPress={() => acao('mapa')}
@@ -276,6 +307,11 @@ export default function TelaViagens({ dados, ocupado, acao }) {
           <LinhaDoPlacar n={d.spots} rotulo="spots" onPress={() => acao('lista', 'spots')} />
         </View>
       </View>
+      ) : null}
+
+      {/* Sem país nenhum, o placar zerado some e entram os três passos
+          (rodada 1 do desenho de 25/09). */}
+      {d.emBranco ? <MapaEmBranco nome={d.emBranco.nome} acao={acao} /> : null}
 
       {d.convite ? (
         <Text style={e.convite}>Crie uma viagem para pintar o primeiro país.</Text>
@@ -283,13 +319,27 @@ export default function TelaViagens({ dados, ocupado, acao }) {
 
       {d.checkin ? <FaixaDeCheckin nome={d.checkin.nome} acao={acao} /> : null}
 
+      {/* Onde você mora: fixa, acima das viagens, e não some nunca. Lugar da
+          cidade de casa não é viagem. */}
+      {d.casa ? (
+        <View style={e.corpo}>
+          <Text style={e.secaoTitulo}>Onde você mora</Text>
+          <CardDeViagem
+            t={{ nome: d.casa.cidade, meta: d.casa.meta, foto: d.casa.foto }}
+            grande
+            altura={150}
+            aoAbrir={() => acao('casa')}
+          />
+        </View>
+      ) : null}
+
       {d.vazio ? (
-        <View style={e.vazio}>
-          <Text style={e.vazioTitulo}>Nenhuma viagem ainda</Text>
-          <Text style={e.vazioTexto}>Salve o primeiro spot e a viagem nasce sozinha</Text>
+        <View style={e.corpo}>
+          <Text style={e.secaoTitulo}>Viagens</Text>
+          <Text style={e.vazioTexto}>{d.vazioTexto || 'Salve o primeiro spot e a viagem aparece aqui sozinha.'}</Text>
           <Pressable
             onPress={() => acao('novoLugar')}
-            style={({ pressed }) => [e.adicionar, e.adicionarSolto, pressed && { opacity: 0.85 }]}
+            style={({ pressed }) => [e.adicionar, pressed && { opacity: 0.85 }]}
             accessibilityRole="button"
           >
             <Text style={e.adicionarTxt}>Adicionar spot</Text>
@@ -297,7 +347,7 @@ export default function TelaViagens({ dados, ocupado, acao }) {
         </View>
       ) : (
         <View style={e.corpo}>
-          <Text style={e.secaoTitulo}>Minhas viagens</Text>
+          <Text style={e.secaoTitulo}>Viagens</Text>
 
           {/* Continente: aba de texto, não pílula colorida. A ativa é tinta
               com um traço embaixo — pastilha preenchida saiu do app inteiro. */}
@@ -440,9 +490,17 @@ const e = StyleSheet.create({
   vgMeta: { fontSize: 12, color: 'rgba(255,255,255,0.75)', marginTop: 3 },
   vgMetaG: { fontSize: 13, color: 'rgba(255,255,255,0.75)', marginTop: 3 },
 
-  vazio: { alignItems: 'center', paddingHorizontal: 40, paddingVertical: 56, gap: 10 },
-  vazioTitulo: { fontSize: 22, fontWeight: '700', letterSpacing: -0.5, color: INK2 },
-  vazioTexto: { fontSize: 14, color: INK3, textAlign: 'center', lineHeight: 20 },
+  vazioTexto: { fontSize: 15, color: INK2, lineHeight: 22 },
+
+  // .mapa-branco
+  branco: { marginHorizontal: 20, marginTop: 24 },
+  brancoTitulo: { fontSize: 24, fontWeight: '700', letterSpacing: -0.7, lineHeight: 28, color: INK },
+  brancoSub: { fontSize: 15, lineHeight: 22, color: INK2, marginTop: 8, marginBottom: 12 },
+  passo: { flexDirection: 'row', alignItems: 'center', gap: 14, paddingVertical: 12 },
+  passoN: { width: 32, height: 32, borderRadius: 16, backgroundColor: SURFACE, alignItems: 'center', justifyContent: 'center' },
+  passoNTxt: { fontSize: 15, fontWeight: '700', color: GREEN },
+  passoTitulo: { fontSize: 16, fontWeight: '600', color: INK },
+  passoSub: { fontSize: 13, color: INK2, marginTop: 2 },
 
   // .btn-primario .btn-largo — a ação saiu do botão flutuante e virou palavra
   // escrita no fim da lista.

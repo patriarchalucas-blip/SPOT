@@ -347,6 +347,17 @@ body.tem-apple .btn-apple{display:flex}
 .dash-wordmark{display:block;height:20px;width:auto}
 /* A frase inteira é o contador de países e abre a lista deles. */
 .dash-convite{font-size:12.5px;color:var(--ink3);margin:-16px 0 20px;max-width:230px;line-height:1.45}
+/* Onde você mora: um card só, largura inteira, a mesma linguagem das viagens. */
+.vg-casa{display:block;width:100%;height:150px;border:none;padding:0;cursor:pointer}
+.vg-nome-g{font-size:22px;letter-spacing:-.03em}
+.vg-vazio{font-size:15px;line-height:1.45;color:var(--ink2);margin:0 0 4px}
+/* Mapa em branco (rodada 1): três passos numerados, sem placar zerado. */
+.mapa-branco{margin:24px 20px 0}
+.mb-titulo{font-size:24px;font-weight:700;letter-spacing:-.03em;line-height:1.15;color:var(--ink)}
+.mb-sub{font-size:15px;line-height:1.45;color:var(--ink2);margin:8px 0 12px}
+.mb-passo{display:flex;align-items:center;gap:14px;width:100%;padding:12px 0;border:none;background:none;text-align:left;cursor:pointer;font-family:inherit}
+.mb-passo .l-nome,.mb-passo .l-meta{display:block}
+.mb-n{width:32px;height:32px;flex:none;border-radius:50%;background:var(--surface);color:var(--green);font-size:15px;font-weight:700;display:flex;align-items:center;justify-content:center}
 /* Esta classe ficou SEM regra própria: o Início, que era quem a usava, passou
    a montar o cabeçalho com .dash-topo-linha, e a única tela que continuou
    vestindo .dash-top foi o Explorar — sem margem lateral e sem respiro no
@@ -1742,7 +1753,7 @@ svg.ic path,svg.ic circle,svg.ic line,svg.ic polyline,svg.ic rect{fill:none;stro
       <div class="avatar" id="dashAvatar" onclick="goTo('profile');loadProfile()" role="button" tabindex="0" aria-label="Abrir seu perfil">?</div>
     </div>
   </div>
-    <div class="placar-card">
+    <div class="placar-card" id="dashPlacar">
       <button class="anel-bloco" onclick="abrirMapaMundi('dashboard')" aria-label="Ver o mapa-múndi">
         <div class="anel" id="dashAnel"></div>
       </button>
@@ -1758,7 +1769,7 @@ svg.ic path,svg.ic circle,svg.ic line,svg.ic polyline,svg.ic rect{fill:none;stro
         </button>
       </div>
     </div>
-  <div class="dash-convite" id="dashConvite" style="display:none">Crie uma viagem para pintar o primeiro país.</div>
+  <div class="mapa-branco" id="dashConvite" style="display:none"></div>
   <div class="checkin-banner" id="checkinBanner" style="display:none">
     <div class="checkin-icon" data-ic="pin"></div>
     <div class="checkin-q">Você está em <span id="checkinName"></span>?</div>
@@ -3435,8 +3446,15 @@ async function loadDashboard(){
   // pendurar no resumo do Perfil deixava a linha vazia ate alguem abrir o
   // Perfil, que e uma tela que a pessoa pode nunca visitar.
   pintarAnelDoMundo(PLACAR.paises);
+  // Placar só com pelo menos um país. Com zero, os três passos no lugar
+  // (rodada 1 do desenho): quem pulou o cadastro não vê uma fileira de zeros.
+  const placar=document.getElementById('dashPlacar');
+  if(placar)placar.style.display=PLACAR.paises?'':'none';
   const convite=document.getElementById('dashConvite');
-  if(convite)convite.style.display=PLACAR.paises?'none':'block';
+  if(convite){
+    if(PLACAR.paises){convite.style.display='none'}
+    else{convite.innerHTML=blocoDeMapaEmBranco();convite.style.display='block'}
+  }
   // A geometria já vinha carregando desde o começo desta função, em paralelo
   // com as consultas — aqui ela normalmente já chegou.
   geoPronta.then(()=>renderMiniMapa());
@@ -3458,7 +3476,106 @@ function isQuickVisit(t){return t.dates==='__quickvisit__'&&(!t._spots||!t._spot
 // e migrations/004) — só isQuickVisit mesmo. isNonTrip ficou como nome porque
 // é o que os 8 call sites abaixo já chamam; se surgir outro tipo de marcador
 // de "não é viagem de fato" no futuro, entra aqui.
-function isNonTrip(t){return isQuickVisit(t)}
+function isNonTrip(t){return isQuickVisit(t)||ehCasa(t)}
+// ═══ ONDE VOCÊ MORA ═══
+//
+// Desenho "Spot Primeiro Acesso", rodada 2 (25/09): lugar da sua cidade não
+// é viagem. Ele vai pra uma seção fixa "Onde você mora", acima das viagens,
+// que nunca some.
+//
+// COMO ISSO É GUARDADO, sem migração: uma linha de viagem escondida, igual à
+// do "já visitei" — `dates='__casa__'`, nome = a cidade, destino = o país
+// onde mora. Os spots da cidade entram NELA em vez de criar a viagem
+// "Brasil". Ela fica fora da lista de viagens (isNonTrip), mas o país conta
+// no mapa e os spots contam no placar, como qualquer outro.
+//
+// Vale daqui pra frente: spot da cidade que já estava numa viagem antiga
+// continua lá. A seção conta os spots da cidade em QUALQUER viagem, então o
+// número já nasce certo.
+function ehCasa(t){return !!t&&t.dates==='__casa__'}
+function cidadeDeCasa(){
+  const c=(S.profile&&S.profile.home_city)||'';
+  return c?(cityOf({city:c})||c):'';
+}
+function ehDaCasa(cidade){
+  const c=cidadeDeCasa();
+  if(!c||!cidade)return false;
+  return mesmoLugar(cityOf({city:cidade})||cidade,c);
+}
+async function viagemDeCasa(pais){
+  const ja=(S.trips||[]).find(ehCasa);
+  if(ja)return ja;
+  const nome=(S.profile&&S.profile.home_city)||'';
+  if(!nome||!S.user)return null;
+  const destino=(S.profile&&S.profile.home_country)||pais||nome;
+  const{data,error}=await dbInsert('trips',{user_id:S.user.id,name:nome,
+    destinations:[destino],dates:'__casa__',status:'planning',initial_city:nome});
+  if(error||!data)return null;
+  data._spots=[];data._spotsLoaded=true;
+  S.trips.unshift(data);
+  return data;
+}
+function resumoDeCasa(){
+  const c=cidadeDeCasa();
+  if(!c)return null;
+  const spots=allSpotsFlat().filter(s=>mesmoLugar(cityOf(s),c));
+  const ultimo=spots.slice().sort((a,b)=>String(b.created_at||'').localeCompare(String(a.created_at||'')))[0];
+  const n=spots.length;
+  return{cidade:(S.profile&&S.profile.home_city)||c,
+    meta:n?n+(n===1?' spot':' spots')+(ultimo?' · '+ultimo.name:''):'Os spots daqui aparecem nesta seção'};
+}
+function abrirCasa(){
+  const c=cidadeDeCasa();if(!c)return;
+  drillTo('city',c);goTo('list');
+}
+let FOTO_DE_CASA='';
+function cardDeCasa(){
+  const r=resumoDeCasa();
+  if(!r)return'';
+  const pais=(S.profile&&S.profile.home_country)||'';
+  return '<div class="section-head"><span class="section-title">Onde você mora</span></div>'
+    +'<button class="vg-card vg-casa" onclick="abrirCasa()">'
+    +'<div class="vg-foto" id="casaFoto" style="background-image:'+(FOTO_DE_CASA?cssUrl(FOTO_DE_CASA):destGradient(pais))+'"></div>'
+    +'<div class="vg-scrim"></div>'
+    +'<div class="vg-pe"><h3 class="vg-nome vg-nome-g">'+esc(r.cidade)+'</h3><p class="vg-meta">'+esc(r.meta)+'</p></div>'
+    +'</button>';
+}
+// A foto da cidade de casa chega em segundo plano, como a das viagens.
+async function pintarFotoDeCasa(){
+  const c=(S.profile&&S.profile.home_city)||'';
+  if(!c||FOTO_DE_CASA)return;
+  try{
+    const u=await fetchCityPhoto(c,(S.profile&&S.profile.home_country)||'');
+    if(!u)return;
+    FOTO_DE_CASA=u;
+    const el=document.getElementById('casaFoto');
+    if(el)el.style.backgroundImage=cssUrl(u);
+    darDadosDeViagens();
+  }catch(e){}
+}
+// Os três passos de quem ainda não pintou nenhum país (rodada 1). O placar
+// com zeros não aparece: número zerado não diz nada a quem acabou de chegar.
+function blocoDeMapaEmBranco(){
+  const nome=String((S.profile&&S.profile.display_name)||'').trim().split(/\s+/)[0]||'';
+  const passo=(n,titulo,sub,acao)=>'<button class="mb-passo" onclick="'+acao+'"><span class="mb-n">'+n+'</span>'
+    +'<span class="l-txt"><span class="l-nome">'+titulo+'</span><span class="l-meta">'+sub+'</span></span></button>';
+  return '<div class="mb-titulo">'+(nome?'Oi, '+esc(nome)+'. ':'')+'Seu mapa está em branco.</div>'
+    +'<p class="mb-sub">Comece pelos países onde você já esteve. Leva um minuto.</p>'
+    +passo(1,'Marcar países que já visitei','o mapa pinta na hora','openVisitedCountryPicker()')
+    +passo(2,'Salvar seu primeiro spot','um lugar que você amou ou quer ir','comecarSpotSemViagem()')
+    +passo(3,'Chamar um amigo','pra ver os lugares dele','convidarAmigo()');
+}
+// Convite sem depender de um botão específico: o Início, o primeiro acesso e
+// a aba Amigos chamam o mesmo.
+async function convidarAmigo(){
+  const codigo=await obterOuCriarConvite();
+  if(!codigo){toast('Não deu','Não consegui criar o convite agora.','alert');return}
+  CONVIDOU=true;
+  const nome=(S.profile&&S.profile.display_name)||'Um amigo';
+  await mandarTextoPraFora(nome+' te convidou pro Spot — os lugares favoritos de quem você conhece.\n'+linkDoConvite(codigo),'Seu link de convite');
+  if(document.getElementById('friends')&&document.getElementById('friends').classList.contains('active'))loadFriends();
+}
+let CONVIDOU=false;
 function regionFor(name){const c=COUNTRIES.find(x=>x.name===name);return c?c.region:'Outros'}
 const REGION_ORDER=['Europa','América do Sul','América do Norte','Ásia','África','Oceania','Antártida','Outros'];
 // Linha de metadados do card. Separada porque os cards são desenhados assim que
@@ -3535,7 +3652,16 @@ function renderTrips(){
   // Conta sem viagem: a saida antecipada daqui era a unica no caminho de quem
   // acabou de criar conta, e deixava a tela nativa girando pra sempre — a
   // pessoa nao chegava nem no botao de criar a primeira viagem.
-  if(!visibleTrips.length){c.innerHTML='<div class="empty-state"><div class="ei">'+icon('suitcase')+'</div><h3>Nenhuma viagem ainda</h3><p>Salve o primeiro spot e a viagem nasce sozinha</p></div>';darDadosDeViagens();return}
+  // Onde você mora vem ANTES das viagens, e fica mesmo sem viagem nenhuma.
+  const casa=cardDeCasa();
+  if(casa)pintarFotoDeCasa();
+  const titulo='<div class="section-head"><span class="section-title">Viagens</span></div>';
+  if(!visibleTrips.length){
+    const cidade=(S.profile&&S.profile.home_city)||'';
+    c.innerHTML=casa+titulo+'<p class="vg-vazio">'+(cidade?'Salve um lugar fora de '+esc(cidade)+' e a viagem aparece aqui sozinha.':'Salve o primeiro spot e a viagem aparece aqui sozinha.')+'</p>'
+      +'<button class="btn-primario btn-largo" onclick="comecarSpotSemViagem()">Adicionar spot</button>';
+    darDadosDeViagens();return;
+  }
 
   const{groups,ordem}=regioesComViagem();
   // Continente que sumiu (viagem apagada) não pode deixar a tela vazia.
@@ -3544,7 +3670,7 @@ function renderTrips(){
 
   // Continentes viram ABAS DE TEXTO. A pilula colorida e o mesmo cacoete do
   // painel de indicadores: enfeite carregando informacao que o texto ja da.
-  let h='<nav class="cont-abas">';
+  let h=casa+titulo+'<nav class="cont-abas">';
   h+=ordem.map(r=>'<button class="cont-aba'+(r===REGIAO_ATIVA?' on':'')
     +'" onclick="trocarRegiao(\''+esc(r)+'\')">'+esc(r)+' · '+groups[r].length+'</button>').join('');
   h+='</nav>';
@@ -3611,7 +3737,19 @@ function darDadosDeViagens(){
     viagens:PLACAR.viagens,
     inicial:(nomeDeExibicao().charAt(0)||'?').toUpperCase(),
     avatar:fotoPraCasca(safeUrl((S.profile&&S.profile.avatar_url)||'')),
-    convite:!PLACAR.paises,
+    convite:false,
+    // Rodada 2 do desenho: placar só com país, os três passos sem país,
+    // a seção fixa da cidade onde mora e o texto do vazio que cita a cidade.
+    placar:PLACAR.paises>0,
+    emBranco:PLACAR.paises>0?null:{
+      nome:String((S.profile&&S.profile.display_name)||'').trim().split(/\s+/)[0]||''
+    },
+    casa:(function(){const r=resumoDeCasa();if(!r)return null;
+      return{cidade:r.cidade,meta:r.meta,foto:FOTO_DE_CASA?fotoPraCasca(safeUrl(FOTO_DE_CASA)):'',
+        cores:coresDoGradiente((S.profile&&S.profile.home_country)||'')}})(),
+    vazioTexto:(S.profile&&S.profile.home_city)
+      ?'Salve um lugar fora de '+S.profile.home_city+' e a viagem aparece aqui sozinha.'
+      :'Salve o primeiro spot e a viagem aparece aqui sozinha.',
     // Pro mapa nativo: nome que os contornos usam (world-atlas, em inglês),
     // não o nome em português. País sem correspondência fica de fora em vez
     // de pintar o país errado.
@@ -3659,6 +3797,9 @@ window.acaoDeViagens=function(acao,valor){
   if(acao==='checkinIgnorar'){checkinIgnore();return}
   if(acao==='mapa'){abrirMapaMundi('dashboard');return}
   if(acao==='recarregar'){loadDashboard();return}
+  if(acao==='casa'){abrirCasa();return}
+  if(acao==='marcarPaises'){openVisitedCountryPicker();return}
+  if(acao==='convidar'){convidarAmigo();return}
 };
 
 // A bandeira sai do card: ela aparece na tela da viagem, onde ha espaco pra
@@ -5148,7 +5289,7 @@ async function adicionarSpotAbertoDoAmigo(btn){
   };
   const cat=s.category||'food';
 
-  let viagem=viagemQueCobre(cidade,pais);
+  let viagem=(ehDaCasa(cidade)&&await viagemDeCasa(pais))||viagemQueCobre(cidade,pais);
   if(!viagem){
     // Residuo assumido: sem pais, a viagem nasce com o nome da cidade. Fica
     // fora do mapa-mundi (que conta pais), mas o lugar nao se perde e nao ha
@@ -5658,6 +5799,7 @@ function checkinAdd(){
   // padrão óbvio — você está literalmente lá. Viagem: se só existir uma que
   // bate com o país do lugar, nem pergunta; só pergunta quando é ambíguo
   // (nenhuma viagem pro país, ou mais de uma).
+  if(ehDaCasa(p.city)){viagemDeCasa(p.country).then(v=>{if(v)jumpToNoteSheet(v,'food',place,'been')});return}
   const candidatas=S.trips.filter(t=>((t.destinations&&t.destinations[0])||t.name)===p.country);
   if(candidatas.length===1){
     jumpToNoteSheet(candidatas[0],'food',place,'been');
@@ -6000,6 +6142,8 @@ async function viagemParaOLugar(p){
 // Usado pelo fluxo do + e pelo "adicionar a minha lista" do amigo: os dois
 // criavam viagem por conta propria, cada um do seu jeito.
 async function garantirViagem(cidade,pais){
+  // Lugar da cidade onde mora não vira viagem (ver "ONDE VOCÊ MORA").
+  if(ehDaCasa(cidade)){const casa=await viagemDeCasa(pais);if(casa)return casa}
   let viagem=viagemQueCobre(cidade,pais);
   if(viagem)return viagem;
   if(!pais)return null;
@@ -6917,15 +7061,7 @@ async function onbSalvarLugar(){
 }
 
 // ── 4 · amigos ──
-async function onbConvidar(){
-  const b=document.getElementById('onbConvite');
-  if(b){b.style.opacity='.6';b.style.pointerEvents='none'}
-  const codigo=await obterOuCriarConvite();
-  if(b){b.style.opacity='';b.style.pointerEvents=''}
-  if(!codigo){toast('Não deu','Não consegui criar o convite agora.','alert');return}
-  const nome=(S.profile&&S.profile.display_name)||'Um amigo';
-  await mandarTextoPraFora(nome+' te convidou pro Spot — os lugares favoritos de quem você conhece.\n'+linkDoConvite(codigo),'Seu link de convite');
-}
+function onbConvidar(){return convidarAmigo()}
 
 // ── 5 · pronto ──
 // A localização é pedida AQUI, no fim e com o motivo — não no primeiro
@@ -7049,7 +7185,9 @@ async function markVisited(){
     data.forEach(t=>{t._spots=[];S.trips.unshift(t)});
     paisesSelecionados.clear();
     closeOv('ov-quickvisit');
-    renderTrips();populateTripOpts();loadProfile();
+    // loadDashboard e nao so renderTrips: o placar e o mapa em branco
+    // dependem da contagem de paises, que so ele refaz.
+    loadDashboard();loadProfile();
     toast('Marcado!',data.length===1?data[0].name+' agora está no seu mapa.'
       :data.length+' países agora estão no seu mapa.','globe');
   }else{
