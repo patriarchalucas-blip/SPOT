@@ -3013,6 +3013,7 @@ async function signOut(){
   // cache local guarda viagens e notas, e num aparelho emprestado isso não
   // pode sobrar pra quem entrar depois.
   limparDadosLocais();
+  DADOS_DA_CONTA=false;
   try{await sb.auth.signOut()}catch(e){}
   S.user=null;S.token=null;S.trips=[];location.reload();
 }
@@ -3151,6 +3152,50 @@ function nomeDeExibicao(){
   return nome.charAt(0).toUpperCase()+nome.slice(1).toLowerCase();
 }
 let PLACAR={viagens:0,spots:0,cidades:0,paises:0};
+// Já existe dado DESTA conta pra desenhar (o guardado no aparelho ou o que
+// veio do banco)? Antes disso a tela de Viagens não pode concluir nada: com
+// PLACAR zerado ela anunciava "Seu mapa está em branco" por dois segundos a
+// cada abertura, até o banco responder (25/09).
+let DADOS_DA_CONTA=false;
+// O placar sai de S.trips, e roda tanto com o que está guardado no aparelho
+// quanto com a resposta do banco — antes só com a segunda.
+function contarPlacar(){
+  let ts=0;const ctrs=new Set(),cities=new Set();
+  for(const t of S.trips){
+    ts+=t._spots.length;
+    t._spots.forEach(sp=>{const c=cityOf(sp);if(c)cities.add(c)});
+    (t.destinations||[]).forEach(d=>ctrs.add(d));
+  }
+  PLACAR={
+    viagens:S.trips.filter(t=>!isNonTrip(t)).length,
+    spots:ts,
+    cidades:cities.size,
+    paises:ctrs.size
+  };
+}
+function pintarPlacar(){
+  const pinta=(id,v)=>{const el=document.getElementById(id);if(el)el.textContent=v};
+  pinta('statTrips',PLACAR.viagens);
+  pinta('statSpots',PLACAR.spots);
+  pinta('statCities',PLACAR.cidades);
+  // O contador de países virou a frase do topo, e leva pra mesma lista de antes.
+  // 195 é o número de países soberanos — o mesmo denominador que o Perfil já
+  // usa pra calcular a porcentagem (o "X/243" de lá conta territórios também).
+  pinta('dashPaisesN',PLACAR.paises);
+  // "12% do mundo" sai do mesmo numero do placar, e e pintado aqui junto —
+  // pendurar no resumo do Perfil deixava a linha vazia ate alguem abrir o
+  // Perfil, que e uma tela que a pessoa pode nunca visitar.
+  pintarAnelDoMundo(PLACAR.paises);
+  // Placar só com pelo menos um país. Com zero, os três passos no lugar
+  // (rodada 1 do desenho): quem pulou o cadastro não vê uma fileira de zeros.
+  const placar=document.getElementById('dashPlacar');
+  if(placar)placar.style.display=PLACAR.paises?'':'none';
+  const convite=document.getElementById('dashConvite');
+  if(convite){
+    if(PLACAR.paises){convite.style.display='none'}
+    else{convite.innerHTML=blocoDeMapaEmBranco();convite.style.display='block'}
+  }
+}
 let dashboardReqId=0;
 // ═══ BARRA DE ABAS NATIVA ═══
 // Dentro da casca, quem desenha a navegação de baixo é o app nativo, não esta
@@ -3340,6 +3385,8 @@ function usarDadosLocais(){
   if(g.profile&&!S.profile)S.profile=g.profile;
   S.trips.forEach(t=>{if(!Array.isArray(t._spots))t._spots=[];t._spotsLoaded=true});
   rebuildCityCanon();
+  DADOS_DA_CONTA=true;
+  contarPlacar();pintarPlacar();
   renderTrips();
   populateTripOpts();
   return true;
@@ -3420,6 +3467,9 @@ async function loadDashboard(){
   // viagem duplicada do mesmo país — o bug dos dois cards da Islândia por
   // outra porta. Aqui o estado anterior é preservado e o app avisa.
   if(falhou(trips)||falhou(allSpots)){
+    // Sem nada guardado e sem banco, girar pra sempre é pior que mostrar a
+    // tela com o que houver: o aviso de erro vem junto, logo abaixo.
+    DADOS_DA_CONTA=true;
     // Offline não é erro: é o modo esperado dentro de um avião. O aviso fixo
     // já está na tela, então um toast de erro por cima só assusta à toa.
     if(!navigator.onLine){
@@ -3433,7 +3483,7 @@ async function loadDashboard(){
     return;
   }
   S.trips=trips||[];
-  let ts=0,ctrs=new Set(),cities=new Set();
+  DADOS_DA_CONTA=true;
   const byId={};
   S.trips.forEach(t=>{t._spots=[];t._spotsLoaded=false;byId[t.id]=t});
   (allSpots||[]).forEach(s=>{const t=byId[s.trip_id];if(t)t._spots.push(s)});
@@ -3443,17 +3493,7 @@ async function loadDashboard(){
   // Conta AQUI: depois da fusao de nomes (senao "Split" conta duas vezes) e
   // ANTES de desenhar, porque renderTrips avisa a tela nativa e ela precisa
   // dos numeros desta rodada, nao da passada.
-  for(const t of S.trips){
-    ts+=t._spots.length;
-    t._spots.forEach(sp=>{const c=cityOf(sp);if(c)cities.add(c)});
-    (t.destinations||[]).forEach(d=>ctrs.add(d));
-  }
-  PLACAR={
-    viagens:S.trips.filter(t=>!isNonTrip(t)).length,
-    spots:ts,
-    cidades:cities.size,
-    paises:ctrs.size
-  };
+  contarPlacar();
   renderTrips();populateTripOpts();
   guardarDadosLocais(); // pra próxima abertura sem sinal
   carregarBloqueios(); // quem você bloqueou some do feed, dos amigos e dos comentários
@@ -3472,27 +3512,7 @@ async function loadDashboard(){
   // statTrips saiu do scorecard: quantas viagens existem ja se le no
   // mosaico logo abaixo. Escrever em elemento que pode nao existir mais e o
   // tipo de coisa que derruba a tela inteira por um numero.
-  const pinta=(id,v)=>{const el=document.getElementById(id);if(el)el.textContent=v};
-  pinta('statTrips',PLACAR.viagens);
-  pinta('statSpots',PLACAR.spots);
-  pinta('statCities',PLACAR.cidades);
-  // O contador de países virou a frase do topo, e leva pra mesma lista de antes.
-  // 195 é o número de países soberanos — o mesmo denominador que o Perfil já
-  // usa pra calcular a porcentagem (o "X/243" de lá conta territórios também).
-  pinta('dashPaisesN',PLACAR.paises);
-  // "12% do mundo" sai do mesmo numero do placar, e e pintado aqui junto —
-  // pendurar no resumo do Perfil deixava a linha vazia ate alguem abrir o
-  // Perfil, que e uma tela que a pessoa pode nunca visitar.
-  pintarAnelDoMundo(PLACAR.paises);
-  // Placar só com pelo menos um país. Com zero, os três passos no lugar
-  // (rodada 1 do desenho): quem pulou o cadastro não vê uma fileira de zeros.
-  const placar=document.getElementById('dashPlacar');
-  if(placar)placar.style.display=PLACAR.paises?'':'none';
-  const convite=document.getElementById('dashConvite');
-  if(convite){
-    if(PLACAR.paises){convite.style.display='none'}
-    else{convite.innerHTML=blocoDeMapaEmBranco();convite.style.display='block'}
-  }
+  pintarPlacar();
   // A geometria já vinha carregando desde o começo desta função, em paralelo
   // com as consultas — aqui ela normalmente já chegou.
   geoPronta.then(()=>renderMiniMapa());
@@ -3749,7 +3769,7 @@ function renderTrips(){
 // nativo recebe o emoji cru e desenha direto, sem carregar imagem de um CDN
 // pra resolver um problema que ele não tem.
 function darDadosDeViagens(){
-  if(!S.user){falarComACasca({tipo:'viagens',pronto:false});return}
+  if(!S.user||!DADOS_DA_CONTA){falarComACasca({tipo:'viagens',pronto:false});return}
   const visiveis=S.trips.filter(t=>!isNonTrip(t));
   const{groups,ordem}=regioesComViagem();
   const regiao=(REGIAO_ATIVA&&groups[REGIAO_ATIVA])?REGIAO_ATIVA:ordem[0];
