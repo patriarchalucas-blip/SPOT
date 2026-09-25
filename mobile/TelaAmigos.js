@@ -226,7 +226,7 @@ export default function TelaAmigos({ dados, ocupado, acao }) {
 
   return (
     <View style={e.fundo}>
-      <View style={[e.topo, { paddingTop: 26 + margem.top }]}>
+      <View style={[e.topo, { paddingTop: 26 /* a casca já desconta o topo (SafeAreaView) */ }]}>
         <Text style={e.titulo}>Amigos</Text>
         <BotaoAdicionar onPress={() => acao('adicionar')} />
       </View>

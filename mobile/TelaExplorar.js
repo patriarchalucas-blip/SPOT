@@ -107,7 +107,7 @@ export default function TelaExplorar({ dados, ocupado, acao }) {
 
   return (
     <View style={e.fundo}>
-      <View style={[e.topo, { paddingTop: 26 + margem.top }]}>
+      <View style={[e.topo, { paddingTop: 26 /* a casca já desconta o topo (SafeAreaView) */ }]}>
         {/* O site tem esta palavra no HTML mas a esconde por CSS. Aqui ela
             aparecia, e o app ficava com uma linha a mais que o site. */}
         <Text style={e.titulo}>Tendências por lugar</Text>

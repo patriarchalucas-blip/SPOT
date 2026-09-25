@@ -226,7 +226,9 @@ export default function TelaViagens({ dados, ocupado, acao }) {
     >
       {/* A faixa da marca fica ACIMA do mapa, não em cima dele: o logotipo
           caía sobre o Canadá e o avatar sobre o Japão. */}
-      <View style={[e.mapaArea, { paddingTop: 18 + margem.top }]}>
+      {/* Sem margem.top: a casca já está dentro de um SafeAreaView com a
+          borda de cima, e somar de novo dobrava o vão acima do SPOT (25/09). */}
+      <View style={[e.mapaArea, { paddingTop: 18 }]}>
         <View style={e.topoLinha}>
           <Text style={e.marca}>SPOT</Text>
           <Pressable
