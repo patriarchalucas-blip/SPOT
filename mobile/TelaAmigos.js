@@ -112,6 +112,62 @@ function BotaoAdicionar({ onPress }) {
   );
 }
 
+// Como o feed vai ficar, apagado. Explica a aba melhor que qualquer frase.
+function ExemploDeFeed() {
+  return (
+    <View style={e.exemplo} pointerEvents="none">
+      <View style={e.exTopo}>
+        <Avatar iniciais="M" />
+        <View style={{ flex: 1 }}>
+          <Text style={e.exLinha}>
+            <Text style={e.exForte}>Marina</Text> foi a <Text style={e.exForte}>Cervejaria Ramiro</Text>
+          </Text>
+          <Text style={e.exMeta}>Lisboa · há 2 dias</Text>
+        </View>
+      </View>
+      <View style={e.exFoto} />
+      <Text style={e.exNota}>{'"Vai cedo, senão a fila vira a noite."'}</Text>
+    </View>
+  );
+}
+
+function VazioDeAmigos({ convidou, acao }) {
+  if (convidou) {
+    return (
+      <View style={e.vz}>
+        <View style={e.vzConvite}>
+          <Text style={e.vzConviteTit}>Convite enviado</Text>
+          <Text style={e.vzConviteTxt}>Quando alguém entrar pelo seu link, aparece aqui e vira seu amigo.</Text>
+          <Pressable onPress={() => acao('convidar')} hitSlop={8}>
+            <Text style={e.vzReenviar}>Enviar de novo</Text>
+          </Pressable>
+        </View>
+        <Text style={e.vzRotulo}>Assim fica o seu feed</Text>
+        <ExemploDeFeed />
+      </View>
+    );
+  }
+  return (
+    <View style={e.vz}>
+      <ExemploDeFeed />
+      <Text style={e.vzTitulo}>Aqui aparecem os lugares{'\n'}que seus amigos salvam.</Text>
+      <Text style={e.vzSub}>Quem entrar pelo seu link já vira seu amigo.</Text>
+      <Pressable
+        onPress={() => acao('convidar')}
+        style={({ pressed }) => [e.vzBotao, pressed && { opacity: 0.85 }]}
+        accessibilityRole="button"
+      >
+        <Text style={e.vzBotaoTxt}>Compartilhar convite</Text>
+      </Pressable>
+      {/* A busca por @username é a da folha de adicionar amigo, que já
+          existe: o campo abre ela. */}
+      <Pressable onPress={() => acao('adicionar')} style={e.vzBusca} accessibilityRole="button">
+        <Text style={e.vzBuscaTxt}>Buscar por @username</Text>
+      </Pressable>
+    </View>
+  );
+}
+
 function Vazio({ titulo, texto }) {
   return (
     <View style={e.vazio}>
@@ -223,6 +279,34 @@ export default function TelaAmigos({ dados, ocupado, acao }) {
   }
 
   const { aba, abas, feed, recebidos, enviados, amigos } = dados;
+
+  // Sem amigo nenhum: a tela inteira é o vazio, sem abas (desenho de 25/09).
+  if (dados.vazio && aba !== 'pedidos') {
+    return (
+      <View style={e.fundo}>
+        <View style={[e.topo, { paddingTop: 26 }]}>
+          <Text style={e.titulo}>Amigos</Text>
+          <BotaoAdicionar onPress={() => acao('adicionar')} />
+        </View>
+        <ScrollView
+          style={e.corpo}
+          contentContainerStyle={{ paddingTop: 16, paddingBottom: folgaDeRolagem(margem.bottom) }}
+          refreshControl={
+            <RefreshControl refreshing={!!ocupado} onRefresh={() => acao('recarregar')} tintColor={INK3} />
+          }
+        >
+          {dados.vazio.pedidos ? (
+            <Pressable onPress={() => acao('aba', 'pedidos')} style={e.vzPedidos}>
+              <Text style={e.vzPedidosTxt}>
+                {dados.vazio.pedidos}{dados.vazio.pedidos === 1 ? ' pedido de amizade' : ' pedidos de amizade'} ›
+              </Text>
+            </Pressable>
+          ) : null}
+          <VazioDeAmigos convidou={dados.vazio.convidou} acao={acao} />
+        </ScrollView>
+      </View>
+    );
+  }
 
   return (
     <View style={e.fundo}>
@@ -348,6 +432,29 @@ export default function TelaAmigos({ dados, ocupado, acao }) {
 }
 
 const e = StyleSheet.create({
+  // Vazio sem amigo (desenho de 25/09)
+  vz: { paddingHorizontal: 20 },
+  vzPedidos: { paddingHorizontal: 20, paddingBottom: 12 },
+  vzPedidosTxt: { fontSize: 15, fontWeight: '600', color: VERDE },
+  exemplo: { opacity: 0.4, marginTop: 8, marginBottom: 24 },
+  exTopo: { flexDirection: 'row', alignItems: 'center', gap: 12 },
+  exLinha: { fontSize: 15, color: INK, lineHeight: 20 },
+  exForte: { fontWeight: '700' },
+  exMeta: { fontSize: 13, color: INK2, marginTop: 2 },
+  exFoto: { height: 160, borderRadius: 18, backgroundColor: PHOTO_EMPTY, marginTop: 12, marginBottom: 10 },
+  exNota: { fontSize: 15, color: INK2 },
+  vzTitulo: { fontSize: 22, fontWeight: '700', letterSpacing: -0.6, lineHeight: 27, color: INK, textAlign: 'center' },
+  vzSub: { fontSize: 15, color: INK2, textAlign: 'center', marginTop: 8, marginBottom: 20 },
+  vzBotao: { height: 52, borderRadius: 14, backgroundColor: VERDE, alignItems: 'center', justifyContent: 'center' },
+  vzBotaoTxt: { fontSize: 16, fontWeight: '600', color: ON_GREEN },
+  vzBusca: { height: 52, borderRadius: 14, backgroundColor: SURFACE, justifyContent: 'center', paddingHorizontal: 16, marginTop: 12 },
+  vzBuscaTxt: { fontSize: 16, color: INK3 },
+  vzConvite: { backgroundColor: SURFACE, borderRadius: 14, padding: 16, marginTop: 8, marginBottom: 24 },
+  vzConviteTit: { fontSize: 16, fontWeight: '600', color: INK },
+  vzConviteTxt: { fontSize: 13, color: INK2, lineHeight: 18, marginTop: 6 },
+  vzReenviar: { fontSize: 15, fontWeight: '600', color: VERDE, marginTop: 12 },
+  vzRotulo: { fontSize: 13, fontWeight: '600', color: INK2, marginBottom: 12 },
+
   // Fundo da PÁGINA, não uma cor de painel à parte: o sistema novo tem uma cor
   // de fundo só, e o que separa bloco de bloco é espaço, não superfície.
   fundo: { flex: 1, backgroundColor: BASE },

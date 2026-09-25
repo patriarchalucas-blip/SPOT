@@ -348,6 +348,20 @@ body.tem-apple .btn-apple{display:flex}
 /* A frase inteira é o contador de países e abre a lista deles. */
 .dash-convite{font-size:12.5px;color:var(--ink3);margin:-16px 0 20px;max-width:230px;line-height:1.45}
 /* Onde você mora: um card só, largura inteira, a mesma linguagem das viagens. */
+/* Amigos sem amigo: exemplo apagado do feed + convite. */
+.am-exemplo{opacity:.4;pointer-events:none;margin:8px 0 24px}
+.am-ex-topo{display:flex;gap:12px;align-items:center;font-size:15px;color:var(--ink);line-height:1.35}
+.am-ex-topo .l-meta{display:block}
+.am-ex-foto{height:160px;border-radius:var(--r-photo);background:var(--photo-empty);margin:12px 0 10px}
+.am-ex-nota{font-size:15px;color:var(--ink2);margin:0}
+.am-vazio-txt{font-size:22px;font-weight:700;letter-spacing:-.03em;line-height:1.2;color:var(--ink);text-align:center}
+.am-vazio-sub{font-size:15px;color:var(--ink2);text-align:center;margin:8px 0 20px}
+/* A tela de Amigos é --surface: card e campo invertem pra --base. */
+.am-busca{margin-top:12px;background:var(--base)}
+.am-convite{background:var(--base);border-radius:var(--r-card);padding:16px;margin:8px 0 24px}
+.am-convite .l-meta{margin:6px 0 0;line-height:1.4}
+.am-reenviar{display:block;background:none;border:none;padding:12px 0 0;color:var(--green);font:600 15px 'Inter Tight',sans-serif;cursor:pointer;text-align:left}
+.am-rotulo{font-size:13px;font-weight:600;color:var(--ink2);margin-bottom:12px}
 .vg-casa{display:block;width:100%;height:150px;border:none;padding:0;cursor:pointer}
 .vg-nome-g{font-size:22px;letter-spacing:-.03em}
 .vg-vazio{font-size:15px;line-height:1.45;color:var(--ink2);margin:0 0 4px}
@@ -10261,7 +10275,17 @@ async function loadFriends(){
   friendIds.forEach(fid=>{FRIEND_NOMES[fid]=friendName(pmap[fid])});
   feedItems.forEach(it=>{FRIEND_NOMES[it.user_id]=friendName(pmap[it.user_id])});
 
-  FRIENDS_DATA={friendIds,incoming,outgoing,pmap,feedItems,lugaresPorAmigo:{}};
+  FRIENDS_DATA={friendIds,incoming,outgoing,pmap,feedItems,lugaresPorAmigo:{},convidou:CONVIDOU};
+  // Já gerou um link de convite? Decide o vazio: "Convite enviado" em vez
+  // de pedir de novo o que a pessoa já fez. Falhou a consulta, fica o vazio
+  // de quem nunca convidou — o pior caso é oferecer o convite outra vez.
+  if(!friendIds.length&&!CONVIDOU){
+    dbGet('invites','user_id=eq.'+encodeURIComponent(uid)+'&select=code&limit=1').then(function(r){
+      if(falhou(r)||!r.length||!FRIENDS_DATA)return;
+      CONVIDOU=true;FRIENDS_DATA.convidou=true;
+      renderFriendsTab();darDadosDeAmigos();
+    }).catch(function(){});
+  }
   // QUANTOS LUGARES CADA UM TEM — o número discreto à direita de cada linha.
   // Uma consulta só pra todos, pedindo apenas a coluna de dono: o RLS da 008
   // já libera spots de amigo aceito, e contar aqui evita uma consulta por
@@ -10357,7 +10381,10 @@ function darDadosDeAmigos(){
     feed:feed,
     recebidos:incoming.map(r=>Object.assign({pedido:r.id},pessoaPraTela(r.follower_id,pmap))),
     enviados:outgoing.map(r=>Object.assign({pedido:r.id},pessoaPraTela(r.following_id,pmap))),
-    amigos:(friendIds||[]).map(fid=>pessoaPraTela(fid,pmap))
+    amigos:(friendIds||[]).map(fid=>pessoaPraTela(fid,pmap)),
+    // Sem amigo nenhum a tela é o vazio do desenho, sem abas. convidou
+    // escolhe entre "Convite enviado" e o convite do zero.
+    vazio:(friendIds||[]).length?null:{convidou:!!d.convidou,pedidos:incoming.length}
   }});
 }
 
@@ -10367,6 +10394,7 @@ window.acaoDeAmigos=function(acao,valor){
   if(acao==='aba'){switchFriendsTab(valor);darDadosDeAmigos();return}
   if(acao==='recarregar'){loadFriends();return}
   if(acao==='adicionar'){abrirAddFriend();return}
+  if(acao==='convidar'){convidarAmigo();return}
   if(acao==='perfil'){openFriend(valor);return}
   if(acao==='abrirVisita'){abrirVisitaDoFeed(Number(valor));return}
   // O botao da web vira "Adicionando..." enquanto roda, porque a busca do
@@ -10511,6 +10539,27 @@ async function salvarDoFeed(i,btn){
   renderFriendsTab();
 }
 
+// O vazio de Amigos, nos dois casos do desenho. O exemplo apagado mostra como
+// o feed vai ficar — é o que explica a aba melhor que qualquer frase.
+function exemploDeFeed(){
+  return '<div class="am-exemplo" aria-hidden="true"><div class="am-ex-topo"><span class="feed-avatar">M</span>'
+    +'<span><b>Marina</b> foi a <b>Cervejaria Ramiro</b><span class="l-meta">Lisboa · há 2 dias</span></span></div>'
+    +'<div class="am-ex-foto"></div><p class="am-ex-nota">"Vai cedo, senão a fila vira a noite."</p></div>';
+}
+function vazioDeAmigos(convidou){
+  if(convidou){
+    return '<div class="am-convite"><div class="l-nome">Convite enviado</div>'
+      +'<p class="l-meta">Quando alguém entrar pelo seu link, aparece aqui e vira seu amigo.</p>'
+      +'<button class="am-reenviar" onclick="convidarAmigo()">Enviar de novo</button></div>'
+      +'<div class="am-rotulo">Assim fica o seu feed</div>'+exemploDeFeed();
+  }
+  return exemploDeFeed()
+    +'<div class="am-vazio-txt">Aqui aparecem os lugares<br>que seus amigos salvam.</div>'
+    +'<p class="am-vazio-sub">Quem entrar pelo seu link já vira seu amigo.</p>'
+    +'<button class="btn-primario btn-largo" onclick="convidarAmigo()">Compartilhar convite</button>'
+    +'<label class="onb-campo am-busca">'+icon('search')+'<input id="amVazioBusca" type="text" placeholder="Buscar por @username" autocomplete="off" autocapitalize="off" oninput="buscarPessoas(this.value,\'amVazioRes\',\'amVazioBusca\')"></label>'
+    +'<div id="amVazioRes"></div>';
+}
 function renderFriendsTab(){
   const d=FRIENDS_DATA;if(!d)return;
   const c=document.getElementById('friendsContainer');
@@ -10534,6 +10583,20 @@ function renderFriendsTab(){
   // pedido numa terceira aba.
   const abas=[['recente','Recente',novas],['amigos','Todos'+(friendIds.length?' · '+friendIds.length:''),0]];
   if(friendsTab==='pedidos')abas.push(['pedidos','Pedidos',pendentes]);
+  // SEM AMIGO NENHUM, a tela inteira é o vazio (desenho "Primeiro Acesso"):
+  // sem abas, que só mostrariam duas vezes que não há nada.
+  if(!friendIds.length&&friendsTab!=='pedidos'){
+    document.getElementById('amAbas').innerHTML='';
+    let v='';
+    if(pendentes){
+      v+='<div class="am-pedidos" onclick="switchFriendsTab(\'pedidos\')"><span class="am-ponto"></span>'
+        +'<span class="am-pedidos-txt">'+pendentes+(pendentes===1?' pedido de amizade':' pedidos de amizade')+'</span>'
+        +'<span class="friend-row-arrow">›</span></div>';
+    }
+    c.innerHTML=v+vazioDeAmigos(!!d.convidou);
+    hydrateIcons(c);
+    return;
+  }
   document.getElementById('amAbas').innerHTML=abas.map(([id,rot,n])=>
     '<button class="'+(friendsTab===id?'on':'')+'" onclick="switchFriendsTab(\''+id+'\')">'+rot
     +(n?' <span class="am-badge">'+n+'</span>':'')+'</button>').join('');
