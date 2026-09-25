@@ -309,7 +309,10 @@ A tela do Google mostrava "para continuar em kzidnilsyrvauzgelsqd.supabase.co".
 Em 25/09/2026 a marca foi mandada pra verificação no Google Cloud (projeto
 `spot-499219` → Google Auth Platform → Branding), com o nome
 **"Spot - seus lugares"** — "Spot" sozinho foi recusado por poder ser
-confundido com outras marcas. O Google leva alguns dias úteis.
+confundido com outras marcas. **Verificada e publicada no mesmo dia**, SEM
+logo: o logo foi recusado duas vezes ("não identifica a marca") mesmo aparecendo
+na /sobre, e é opcional — o nome é o que tira o endereço do Supabase da tela.
+Público-alvo em produção.
 
 O que a verificação exige e já está no ar — **não apagar nada disto**:
 - `meuspot.app/sobre` (`sobre.html`): a página inicial pública. A raiz do
