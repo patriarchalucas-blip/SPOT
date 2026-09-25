@@ -303,6 +303,25 @@ PostgREST valida a coluna antes da permissão. Então
 devolve **400 `42703`** se a coluna não existe e **200 `[]`** se existe (o `[]` é o RLS
 barrando, o que de brinde confirma que ele está ligado).
 
+## Login com Google: a marca na tela de consentimento
+
+A tela do Google mostrava "para continuar em kzidnilsyrvauzgelsqd.supabase.co".
+Em 25/09/2026 a marca foi mandada pra verificação no Google Cloud (projeto
+`spot-499219` → Google Auth Platform → Branding), com o nome
+**"Spot - seus lugares"** — "Spot" sozinho foi recusado por poder ser
+confundido com outras marcas. O Google leva alguns dias úteis.
+
+O que a verificação exige e já está no ar — **não apagar nada disto**:
+- `meuspot.app/sobre` (`sobre.html`): a página inicial pública. A raiz do
+  site é o app (um login), e o Google recusa login como página inicial. Ela
+  precisa ter o nome exato "Spot - seus lugares" escrito.
+- `functions/googlee9a933c6e0f8cda5.html.js`: a verificação do domínio no
+  Search Console. É function e não arquivo porque a Cloudflare redireciona
+  `.html` pro endereço sem extensão (308). O Google reconfere de tempos em
+  tempos; se sumir, a propriedade cai e a marca junto.
+- `privacidade.html`: a linha do que o app recebe do Google/Apple no login.
+- Logo de 120×120: `ferramentas/capturas-loja/logo-google-120.png`.
+
 ## Acesso ao GitHub
 
 O push é por **SSH** (`git@github.com:patriarchalucas-blip/SPOT.git`), com a chave em
