@@ -215,7 +215,7 @@ salvaram.
 
 CONTA DE DEMONSTRAÇÃO
 E-mail e senha vão nos campos próprios do formulário, logo acima desta caixa.
-A conta já vem com viagens, lugares, um amigo e comentários, para a revisão não
+A conta já vem com viagens e lugares, para a revisão não
 esbarrar num app vazio.
 
 SOBRE O GRAFO SOCIAL
@@ -236,8 +236,7 @@ coordenada é enviada para a API do Google Places e descartada — não é grava
 no banco nem em cache.
 
 PARTE NATIVA
-As quatro abas principais (Viagens, Explorar, Amigos, Perfil) são telas
-nativas. Localização, câmera, galeria, compartilhamento pela folha do sistema
+As abas Viagens, Explorar e Amigos são telas nativas (Perfil é web). Localização, câmera, galeria, compartilhamento pela folha do sistema
 e abertura de Instagram, Maps e telefone nos aplicativos nativos.
 ```
 
