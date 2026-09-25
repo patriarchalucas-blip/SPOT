@@ -371,6 +371,8 @@ body.tem-apple .btn-apple{display:flex}
 /* Explorar: rótulo da cidade, selo Fui/Quero ir e o ⊕ de salvar direto. */
 .ex-rotulo{font-size:13px;font-weight:600;color:var(--green);padding:0 20px 8px}
 .ex-selo{position:absolute;top:12px;left:12px;background:var(--base);color:var(--green);font-size:12px;font-weight:600;padding:4px 10px;border-radius:var(--r-btn)}
+.ex-img .ex-mais{position:absolute;right:12px;bottom:12px;z-index:4}
+.ex-img .ex-mais~.ex-pe,.ex-img .ex-pe{right:64px}
 .ex-mais{width:40px;height:40px;flex:none;border:none;border-radius:50%;background:var(--green);color:var(--on-green);font-size:24px;font-weight:300;line-height:1;cursor:pointer;display:flex;align-items:center;justify-content:center}
 .ex-mais:disabled{opacity:.6}
 /* Ficha em modo prévia (lugar do Explorar ainda não salvo). */
@@ -5684,10 +5686,12 @@ function renderExploreResults(){
           +(local?'<span class="ex-k">'+esc(local)+'</span>':'')
           +'<h3 class="ex-nome">'+esc(p.name)+'</h3>'
         +'</div>'
+        // O + mora NA FOTO, no canto de baixo (pedido do Lucas, 25/09). O
+        // stopPropagation é o que impede o toque nele de abrir a prévia.
+        +(statusNaMinhaLista(p)?'':'<button class="ex-mais" onclick="event.stopPropagation();queroIrDoExplorar('+i+')" aria-label="Salvar em Quero ir"'+(p._salvando?' disabled':'')+'>'+(p._salvando?'…':'+')+'</button>')
       +'</div>'
       +'<div class="ex-corpo-card">'
         +'<span class="ex-aval">'+esc(p.count||0)+' avaliações no Google'+(autor&&foto?' · foto de '+esc(autor):'')+'</span>'
-        +(statusNaMinhaLista(p)?'':'<button class="ex-mais" onclick="queroIrDoExplorar('+i+')" aria-label="Salvar em Quero ir"'+(p._salvando?' disabled':'')+'>'+(p._salvando?'…':'+')+'</button>')
       +'</div></div>';
   }).join('');
   // "Powered by Google" é obrigatório quando dados do Places aparecem fora

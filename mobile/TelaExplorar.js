@@ -75,6 +75,19 @@ function CardDeLugar({ item, aoSalvar, aoQueroIr }) {
             <Text style={e.seloEstrela}>★</Text>
           </View>
         ) : null}
+        {/* O ⊕ salva direto como Quero ir, sem perguntar viagem. */}
+        {!item.selo ? (
+          <Pressable
+            onPress={aoQueroIr}
+            disabled={!!item.salvando}
+            hitSlop={6}
+            style={({ pressed }) => [e.mais, e.maisNaFoto, (pressed || item.salvando) && { opacity: 0.6 }]}
+            accessibilityRole="button"
+            accessibilityLabel="Salvar em Quero ir"
+          >
+            <Text style={e.maisTxt}>{item.salvando ? '…' : '+'}</Text>
+          </Pressable>
+        ) : null}
         <View style={e.cardPe}>
           {item.local ? <Text style={e.cardK}>{item.local}</Text> : null}
           <Text style={e.cardNome} numberOfLines={2}>{item.lugar}</Text>
@@ -85,19 +98,7 @@ function CardDeLugar({ item, aoSalvar, aoQueroIr }) {
           {item.avaliacoes} avaliações no Google
           {item.autor && item.foto && !falhou ? ' · foto de ' + item.autor : ''}
         </Text>
-        {/* O ⊕ salva direto como Quero ir, sem perguntar viagem. */}
-        {!item.selo ? (
-          <Pressable
-            onPress={aoQueroIr}
-            disabled={!!item.salvando}
-            hitSlop={6}
-            style={({ pressed }) => [e.mais, (pressed || item.salvando) && { opacity: 0.6 }]}
-            accessibilityRole="button"
-            accessibilityLabel="Salvar em Quero ir"
-          >
-            <Text style={e.maisTxt}>{item.salvando ? '…' : '+'}</Text>
-          </Pressable>
-        ) : null}
+
       </View>
     </View>
   );
@@ -289,6 +290,8 @@ const e = StyleSheet.create({
     alignItems: 'center', justifyContent: 'center',
   },
   maisTxt: { fontSize: 24, lineHeight: 26, color: ON_GREEN, fontWeight: '300' },
+  // O + fica na foto, no canto de baixo (pedido do Lucas, 25/09).
+  maisNaFoto: { position: 'absolute', right: 12, bottom: 12, zIndex: 4 },
   maisCarregando: { paddingVertical: 20, alignItems: 'center' },
   fundo: { flex: 1, backgroundColor: BASE },
   // Margem lateral 20, a do app inteiro. Era 24 aqui e só aqui.
@@ -367,7 +370,7 @@ const e = StyleSheet.create({
   },
   seloTxt: { fontSize: 13, fontWeight: '600', color: '#fff' },
   seloEstrela: { fontSize: 12, color: '#fff' },
-  cardPe: { position: 'absolute', left: 14, right: 14, bottom: 12, zIndex: 3 },
+  cardPe: { position: 'absolute', left: 14, right: 64, bottom: 12, zIndex: 3 },
   cardK: { fontSize: 13, fontWeight: '500', color: 'rgba(255,255,255,0.85)' },
   cardNome: { fontFamily: FRAUNCES, fontSize: 22, lineHeight: 24, letterSpacing: -0.66, color: '#fff', marginTop: 2 },
   cardCorpo: {
