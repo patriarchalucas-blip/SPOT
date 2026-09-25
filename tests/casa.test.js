@@ -65,3 +65,24 @@ test('a casa nao aparece como viagem, e o resumo conta os spots da cidade', () =
     assert.strictEqual(r.meta, '2 spots · A Casa do Porco');
   } finally { c.volta() }
 });
+
+test('mudar de cidade transforma a casa antiga em viagem comum, sem perder spots', async () => {
+  const c = cenario({ home_city: 'São Paulo', home_country: 'Brasil' }, [
+    { id: 'c1', name: 'São Paulo', destinations: ['Brasil'], dates: '__casa__', _spots: [{ id: 's1', name: 'Mocotó', city: 'São Paulo' }] }
+  ]);
+  const mudou = [];
+  const voltas = [
+    trocar(A, 'dbUpdate', async (t, id, obj) => { mudou.push([t, id, obj]); return { error: null } }),
+    trocar(A, 'loadProfile', () => {}), trocar(A, 'loadDashboard', () => {}),
+    trocar(A, 'toast', () => {}), trocar(A, 'closeOv', () => {}), trocar(A, 'showOv', () => {}),
+  ];
+  try {
+    A.abrirCidadeDeCasa();
+    A.avaliar("ONB.cidade={nome:'Lisboa',pais:'Portugal'}");
+    await A.onbSalvarCidade();
+    assert.strictEqual(A.avaliar("S.trips.find(t=>t.id==='c1').dates"), '');
+    assert.ok(mudou.some(([t, id, o]) => t === 'trips' && id === 'c1' && o.dates === ''));
+    assert.strictEqual(A.avaliar('S.profile.home_city'), 'Lisboa');
+    assert.strictEqual(A.avaliar("S.trips.find(t=>t.id==='c1')._spots.length"), 1);
+  } finally { voltas.forEach((v) => v()); c.volta() }
+});

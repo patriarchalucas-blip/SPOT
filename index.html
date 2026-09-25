@@ -362,6 +362,12 @@ body.tem-apple .btn-apple{display:flex}
 .am-convite .l-meta{margin:6px 0 0;line-height:1.4}
 .am-reenviar{display:block;background:none;border:none;padding:12px 0 0;color:var(--green);font:600 15px 'Inter Tight',sans-serif;cursor:pointer;text-align:left}
 .am-rotulo{font-size:13px;font-weight:600;color:var(--ink2);margin-bottom:12px}
+/* Perfil: card tracejado no fim do trilho. O tracejado é do desenho, e é a
+   única borda da tela: ele diz "espaço vazio", que superfície não diz. */
+.ml-add{border:none;background:none;padding:0;text-align:left;cursor:pointer;font-family:inherit}
+.ml-add-foto{background:none!important;border:1.5px dashed var(--ink3);display:flex;align-items:center;justify-content:center;font-size:28px;font-weight:300;color:var(--ink3);box-sizing:border-box}
+.ml-vazio-solto{padding:0 0 16px;text-align:left}
+.pl-valor{color:var(--ink2);font-weight:400}
 .vg-casa{display:block;width:100%;height:150px;border:none;padding:0;cursor:pointer}
 .vg-nome-g{font-size:22px;letter-spacing:-.03em}
 .vg-vazio{font-size:15px;line-height:1.45;color:var(--ink2);margin:0 0 4px}
@@ -1099,7 +1105,9 @@ body.na-casca .bottom-nav{display:none}
 .profile-sub{display:block;margin-top:4px;
   font-size:14px;color:var(--ink2);line-height:1.4}
 .profile-user{color:var(--ink2)}
-.profile-user:not(:last-child)::after{content:" · ";color:var(--ink3);white-space:pre}
+/* O separador só quando a contagem de amigos aparece: com ela escondida,
+   sobrava um "·" solto no fim da linha. */
+.profile-user.com-amigos::after{content:" · ";color:var(--ink3);white-space:pre}
 .profile-bio{color:var(--ink2)}
 /* Ações em linha, no lugar de três estilos de botão diferentes. */
 .prof-acoes{margin-top:32px}
@@ -1884,9 +1892,12 @@ svg.ic path,svg.ic circle,svg.ic line,svg.ic polyline,svg.ic rect{fill:none;stro
       <button class="conv-btn" onclick="compartilharConvite()">Compartilhar convite</button>
     </div>
 
-    <div class="prof-acoes">
-      <div class="prof-linha" onclick="openVisitedCountryPicker()"><span class="pl-ic" data-ic="globe"></span><span class="pl-txt">Marcar país que já visitei</span><span class="pl-seta">›</span></div>
-      <div class="prof-linha" onclick="openHomeCountryPicker()"><span class="pl-ic" data-ic="pin"></span><span class="pl-txt">Marcar país onde moro</span><span class="pl-seta">›</span></div>
+    <!-- Só pra quem ainda não marcou país nenhum (rodada 1 do desenho de
+         25/09). Depois do primeiro país, as duas coisas vivem em
+         Configurações: já foram respondidas e não precisam ocupar o topo. -->
+    <div class="prof-acoes" id="profMarcar" style="display:none">
+      <div class="prof-linha" onclick="openVisitedCountryPicker()"><span class="pl-ic" data-ic="globe"></span><span class="pl-txt">Marcar países que já visitei</span><span class="pl-seta">›</span></div>
+      <div class="prof-linha" onclick="abrirCidadeDeCasa()"><span class="pl-ic" data-ic="pin"></span><span class="pl-txt">Marcar onde moro</span><span class="pl-seta">›</span></div>
     </div>
     <!-- A barra de baixo mede 78 mais a faixa do aparelho. Com 40 aqui, o
          bloco de convite ficava embaixo dela. -->
@@ -2088,6 +2099,8 @@ svg.ic path,svg.ic circle,svg.ic line,svg.ic polyline,svg.ic rect{fill:none;stro
 
 <div class="overlay" id="ov-editperfil" onclick="closeOut(event,'ov-editperfil')"><div class="sheet"><button class="sheet-close" onclick="closeOv('ov-editperfil')" data-ic="close" aria-label="Fechar"></button><div class="sheet-handle"></div><div class="sheet-title">Configurações</div>
 <div class="prof-linha" onclick="document.getElementById('avatarFileInput').click()"><span class="pl-ic" data-ic="user"></span><span class="pl-txt">Trocar foto de perfil</span><span class="pl-seta">›</span></div>
+<div class="prof-linha" onclick="closeOv('ov-editperfil');abrirCidadeDeCasa()"><span class="pl-ic" data-ic="pin"></span><span class="pl-txt">Onde moro<span class="pl-valor" id="cfgCidade"></span></span><span class="pl-seta">›</span></div>
+<div class="prof-linha" onclick="closeOv('ov-editperfil');openVisitedCountryPicker()"><span class="pl-ic" data-ic="globe"></span><span class="pl-txt">Países que já visitei</span><span class="pl-seta">›</span></div>
 <div style="height:18px"></div>
 <div class="nt-label">Seu nome de usuário</div>
 <input class="nt-input" id="usernameInput" placeholder="seu_username" style="margin-bottom:4px" autocapitalize="none" oninput="document.getElementById('usernameStatus').textContent=''">
@@ -6700,8 +6713,17 @@ function selectNewTripCity(i){
 //  · "% do mundo" usa o mesmo texto do mapa-múndi, pra não haver dois jeitos
 //    de contar a mesma coisa.
 const ONB={passo:0,cidade:null,cidades:[],paises:new Set(),busca:'',
-  cat:'food',lugares:[],lugar:null,nota:'',localOk:false,ocupado:false};
+  cat:'food',lugares:[],lugar:null,nota:'',localOk:false,ocupado:false,soCidade:false};
 let onbBuscaTO=null,onbReq=0;
+
+// "Onde moro" em Configurações: a mesma tela da cidade do primeiro acesso,
+// sozinha — sem barra de progresso, e salvar fecha em vez de seguir.
+function abrirCidadeDeCasa(){
+  Object.assign(ONB,{passo:1,soCidade:true,cidade:null,cidades:[],busca:'',ocupado:false});
+  onbDesenhar();
+  showOv('ov-onb');
+}
+function fecharCidadeDeCasa(){ONB.soCidade=false;closeOv('ov-onb')}
 
 async function talvezAbrirBoasVindas(){
   if(!S.user)return;
@@ -6711,7 +6733,7 @@ async function talvezAbrirBoasVindas(){
   if(p.home_city)return;
   if((S.trips||[]).length)return;
   Object.assign(ONB,{passo:0,cidade:null,cidades:[],paises:new Set(),busca:'',
-    cat:'food',lugares:[],lugar:null,nota:'',localOk:false,ocupado:false});
+    cat:'food',lugares:[],lugar:null,nota:'',localOk:false,ocupado:false,soCidade:false});
   onbDesenhar();
   showOv('ov-onb');
 }
@@ -6722,6 +6744,7 @@ function onbIr(n){ONB.passo=n;ONB.ocupado=false;onbDesenhar();
 function onbTopo(){
   const n=ONB.passo;
   if(!n)return'';
+  if(ONB.soCidade)return '<button class="onb-voltar" onclick="fecharCidadeDeCasa()" aria-label="Voltar">'+icon('back')+'</button>';
   const voltar=n<5
     ?'<button class="onb-voltar" onclick="onbIr('+(n-1)+')" aria-label="Voltar">'+icon('back')+'</button>'
     :'<span class="onb-voltar"></span>';
@@ -6752,7 +6775,7 @@ function onbDesenhar(){
       +'<div id="onbCidadeRes"></div>';
     const c=document.getElementById('onbCidade');if(c&&ONB.busca)c.value=ONB.busca;
     onbListarCidades();
-    pe.innerHTML='<button class="onb-btn" id="onbSeguir" onclick="onbSalvarCidade()"'+(ONB.cidade?'':' disabled')+'>Continuar</button>';
+    pe.innerHTML='<button class="onb-btn" id="onbSeguir" onclick="onbSalvarCidade()"'+(ONB.cidade?'':' disabled')+'>'+(ONB.soCidade?'Salvar':'Continuar')+'</button>';
   }else if(n===2){
     corpo.innerHTML='<h1 class="onb-titulo">Onde você já esteve?</h1>'
       +'<div class="onb-mapa-card"><div class="onb-mapa" id="onbMapa"></div><div class="onb-mapa-n" id="onbMapaN"></div></div>'
@@ -6910,7 +6933,22 @@ async function onbSalvarCidade(){
     toast('Não salvou','Confere a conexão e tenta de novo.','alert');
     return;
   }
+  const antes=(S.profile&&S.profile.home_city)||'';
   S.profile=Object.assign(S.profile||{},campos);
+  if(ONB.soCidade){
+    // Mudou de cidade: a seção de casa antiga vira uma viagem comum — os
+    // spots de lá não somem, e a próxima cidade começa a própria seção.
+    const casa=(S.trips||[]).find(ehCasa);
+    if(casa&&antes&&!mesmoLugar(antes,c.nome)){
+      casa.dates='';
+      dbUpdate('trips',casa.id,{dates:''});
+    }
+    FOTO_DE_CASA='';
+    fecharCidadeDeCasa();
+    loadProfile();loadDashboard();
+    toast('Pronto',c.nome+' agora é onde você mora.','pin');
+    return;
+  }
   // O país onde mora já vem marcado na tela seguinte.
   if(c.pais)ONB.paises.add(c.pais);
   onbIr(2);
@@ -8715,7 +8753,11 @@ async function loadProfile(){
   document.getElementById('profName').textContent=name;
   document.getElementById('profAvatar').textContent=name.charAt(0).toUpperCase();
   const p=await fetchOwnProfile(true);
-  document.getElementById('profUser').textContent=p.username?'@'+p.username:'';
+  // A cidade onde mora vai ao lado do @ (desenho de 25/09).
+  document.getElementById('profUser').textContent=[p.username?'@'+p.username:'',p.home_city||''].filter(Boolean).join(' · ');
+  const cfg=document.getElementById('cfgCidade');if(cfg)cfg.textContent=p.home_city?' · '+p.home_city:'';
+  const marcar=document.getElementById('profMarcar');
+  if(marcar)marcar.style.display=visitedCountryNames().length?'none':'';
   const bio=document.getElementById('profBio');
   if(p.bio){bio.textContent=p.bio;bio.style.display='block'}else{bio.style.display='none'}
   document.getElementById('usernameInput').value=p.username||'';
@@ -8739,6 +8781,7 @@ async function loadProfile(){
   if(am){
     am.textContent=AMIGOS_TOTAL+(AMIGOS_TOTAL===1?' amigo':' amigos');
     am.style.display=AMIGOS_TOTAL?'inline':'none';
+    const u=document.getElementById('profUser');if(u)u.classList.toggle('com-amigos',!!AMIGOS_TOTAL);
   }
   renderEstante();
   // Em segundo plano, sem segurar a tela: o Perfil é onde o mapa vai morar,
@@ -8910,6 +8953,19 @@ function renderEstante(){
   const trilho=document.getElementById('mlTrilho');
   if(!trilho)return;
   const spots=allSpotsFlat();
+  // Antes do primeiro spot, abas, filtros e Lista/Mapa não têm o que
+  // filtrar: some tudo, e fica uma frase e o botão (rodada 1).
+  const nada=!spots.length;
+  ['mlStatus','mlSegmento'].forEach(function(id){const el=document.getElementById(id);if(el)el.style.display=nada?'none':''});
+  const filtros=document.querySelector('#profile .ml-filtros');if(filtros)filtros.style.display=nada?'none':'';
+  if(nada){
+    trilho.style.display='';
+    trilho.innerHTML='<div class="ml-vazio ml-vazio-solto">Os spots que você salvar aparecem aqui, separados em Fui, Quero ir e Não recomendo.</div>'
+      +'<button class="btn-primario btn-largo" onclick="comecarSpotSemViagem()">Adicionar spot</button>';
+    document.getElementById('mlVerTodos').innerHTML='';
+    darDadosDePerfil();
+    return;
+  }
 
   // As abas mostram a contagem DENTRO dos filtros de cidade e categoria: com
   // "São Paulo" escolhido, "Fui · 28" tem que ser 28 em São Paulo, senão o
@@ -8918,7 +8974,8 @@ function renderEstante(){
   abas.innerHTML=ML_STATUS.map(function(st){
     const n=mlFiltrar(spots,st.chave,mlCidade,mlCat).length;
     return '<button class="ml-aba'+(mlStatus===st.chave?' on':'')+'" onclick="mlTrocarStatus(\''+st.chave+'\')">'
-      +esc(st.rotulo)+' · '+n+'</button>';
+      // Vazia mostra só o nome: "Quero ir", nunca "Quero ir · 0".
+      +esc(st.rotulo)+(n?' · '+n:'')+'</button>';
   }).join('');
 
   ML_CIDADES=Object.keys(agruparPorCidade(spots)).sort(function(a,b){
@@ -8964,7 +9021,9 @@ function renderEstante(){
       +'<div class="ml-foto"'+foto+'></div>'
       +'<div class="ml-nome">'+esc(s.name||'')+'</div>'
       +'<div class="ml-meta">'+esc(mlLegenda(s))+'</div></div>';
-  }).join('');
+  }).join('')
+    // O fim do trilho é o convite pro próximo spot.
+    +'<button class="ml-card ml-add" onclick="comecarSpotSemViagem()"><div class="ml-foto ml-add-foto">+</div><div class="ml-nome">Adicionar spot</div></button>';
   ver.innerHTML='<button class="ml-vertodos" onclick="mlVerTodos()">'
     +esc(mlCidade?('Ver os '+lista.length+' em '+mlCidade):('Ver todos os '+lista.length))+'</button>';
   darDadosDePerfil();
