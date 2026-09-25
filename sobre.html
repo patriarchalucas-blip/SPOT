@@ -1,0 +1,77 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Spot — seus lugares, sua voz</title>
+<meta name="description" content="O Spot guarda os lugares que você quer conhecer e os que já foi, com a sua nota, e mostra o que seus amigos recomendam.">
+<link rel="apple-touch-icon" href="/icon-180.png">
+<link rel="icon" href="/icon-192.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@400;500;600;700&family=Cinzel:wght@500&display=swap" rel="stylesheet">
+<style>
+/* A página pública do Spot (25/09). Existe porque a página inicial do
+   meuspot.app É o app — um login — e o Google, pra verificar a marca do
+   login com Google, pede uma página pública que diga o que o app faz e
+   leve à política de privacidade. Direção F, a mesma do app. */
+:root{
+  --base:#F5F5F3; --surface:#E9E9E6;
+  --ink:#111111; --ink2:#6B6B67; --ink3:#9A9A96;
+  --green:#0B3D2E; --on-green:#F5F5F3;
+  --r-card:14px; --r-btn:10px;
+}
+*{box-sizing:border-box}
+html{background:var(--base)}
+body{margin:0;background:var(--base);color:var(--ink);
+  font-family:'Inter Tight',-apple-system,sans-serif;font-size:16px;line-height:1.6;
+  padding:0 20px calc(56px + env(safe-area-inset-bottom,0px));-webkit-font-smoothing:antialiased}
+.wrap{max-width:640px;margin:0 auto}
+header{padding:48px 0 8px}
+.marca{display:block;margin:0 0 32px}
+h1{font-size:38px;font-weight:700;letter-spacing:-.04em;line-height:1.05;margin:0 0 12px}
+.sub{font-size:17px;color:var(--ink2);margin:0 0 28px}
+h2{font-size:20px;font-weight:700;letter-spacing:-.03em;margin:40px 0 12px}
+p{margin:0 0 14px;color:var(--ink2)}
+strong{color:var(--ink);font-weight:600}
+a{color:var(--green);font-weight:600}
+.cta{display:inline-flex;align-items:center;justify-content:center;height:52px;padding:0 24px;
+  border-radius:var(--r-card);background:var(--green);color:var(--on-green);text-decoration:none;font-size:16px}
+.lista{list-style:none;margin:0;padding:0}
+.lista li{background:var(--surface);border-radius:var(--r-card);padding:16px;margin-bottom:8px}
+.lista b{display:block;color:var(--ink);font-weight:600;margin-bottom:2px}
+.lista span{color:var(--ink2);font-size:15px}
+footer{margin-top:48px;padding-top:20px;font-size:13px;color:var(--ink3);line-height:1.8}
+footer a{color:var(--ink2);font-weight:500}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header>
+  <svg class="marca" viewBox="3 77 273 76" height="30" role="img" aria-label="Spot"><text x="0" y="150" font-family="Cinzel" font-weight="500" font-size="100" letter-spacing="6" fill="#0B3D2E">SPOT</text></svg>
+  <h1>Os lugares que valem a viagem.</h1>
+  <p class="sub">O Spot guarda os lugares que você quer conhecer e os que já foi, com a sua nota — e mostra o que os seus amigos recomendam de verdade.</p>
+  <a class="cta" href="/">Abrir o Spot</a>
+</header>
+
+<h2>O que dá pra fazer</h2>
+<ul class="lista">
+  <li><b>Salvar lugares com a sua nota</b><span>Restaurantes, hotéis e experiências, separados entre "quero ir" e "já fui".</span></li>
+  <li><b>Avaliar do seu jeito</b><span>Nota de meia em meia estrela e uma frase sobre o que você achou.</span></li>
+  <li><b>Organizar por viagem e por cidade</b><span>Os lugares da sua cidade ficam à parte, e as viagens se montam sozinhas.</span></li>
+  <li><b>Pintar o seu mapa</b><span>Quantos países você já visitou, num mapa-múndi.</span></li>
+  <li><b>Ver o que seus amigos recomendam</b><span>Os lugares de quem você conhece, em vez da média de estranhos da internet.</span></li>
+</ul>
+
+<h2>Grátis, sem anúncio</h2>
+<p>O Spot não vende dados e não mostra publicidade. O que ele guarda sobre você, e por quê, está na <a href="/privacidade">política de privacidade</a>.</p>
+
+<footer>
+  Spot — seus lugares · sua voz<br>
+  <a href="/privacidade">Política de privacidade</a> &middot; <a href="/termos">Termos de uso</a> &middot; <a href="/suporte">Suporte</a>
+</footer>
+
+</div>
+</body>
+</html>
