@@ -28,6 +28,7 @@ body{margin:0;background:var(--base);color:var(--ink);
   padding:0 20px calc(56px + env(safe-area-inset-bottom,0px));-webkit-font-smoothing:antialiased}
 .wrap{max-width:640px;margin:0 auto}
 header{padding:48px 0 8px}
+.logo{display:block;width:72px;height:72px;border-radius:16px;margin:0 0 20px}
 .marca{display:block;margin:0 0 32px}
 h1{font-size:38px;font-weight:700;letter-spacing:-.04em;line-height:1.05;margin:0 0 12px}
 /* O nome EXATO da tela de consentimento do Google e da App Store: a
@@ -52,6 +53,9 @@ footer a{color:var(--ink2);font-weight:500}
 <div class="wrap">
 
 <header>
+  <!-- O MESMO arquivo do logo da tela do Google: a verificação da marca confere
+       se o logo aparece na página inicial. -->
+  <img class="logo" src="/logo-120.png" width="72" height="72" alt="Spot - seus lugares">
   <svg class="marca" viewBox="3 77 273 76" height="30" role="img" aria-label="Spot"><text x="0" y="150" font-family="Cinzel" font-weight="500" font-size="100" letter-spacing="6" fill="#0B3D2E">SPOT</text></svg>
   <p class="nome-app">Spot - seus lugares</p>
   <h1>Os lugares que valem a viagem.</h1>
