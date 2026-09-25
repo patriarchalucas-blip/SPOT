@@ -1716,7 +1716,7 @@ svg.ic path,svg.ic circle,svg.ic line,svg.ic polyline,svg.ic rect{fill:none;stro
     <button class="checkin-add" onclick="checkinAdd()">Adicionar</button>
     <button class="checkin-x" onclick="checkinIgnore()" data-ic="close" aria-label="Ignorar"></button>
   </div>
-  <div class="dash-body" id="tripsContainer"><div class="section-head"><span class="section-title">Minhas viagens</span></div><div class="empty-state"><div class="ei" data-ic="suitcase"></div><h3>Nenhuma viagem ainda</h3><p>Toca no + para criar sua primeira viagem</p></div></div>
+  <div class="dash-body" id="tripsContainer"><div class="section-head"><span class="section-title">Minhas viagens</span></div><div class="empty-state"><div class="ei" data-ic="suitcase"></div><h3>Nenhuma viagem ainda</h3><p>Salve o primeiro spot e a viagem nasce sozinha</p></div></div>
   <div class="bottom-nav"><div class="nav-item active" onclick="goTo('dashboard');loadDashboard()"><div class="nav-icon" data-ic="map"></div><div class="nav-label" style="color:var(--ink);font-weight:600">Viagens</div></div><div class="nav-item" onclick="goTo('explore');loadExplore()"><div class="nav-icon" data-ic="search"></div><div class="nav-label">Explorar</div></div><div class="nav-item" onclick="goTo('friends');loadFriends()"><div class="nav-icon" data-ic="users"></div><div class="nav-label">Amigos</div></div><div class="nav-item" onclick="goTo('profile');loadProfile()"><div class="nav-icon" data-ic="user"></div><div class="nav-label">Perfil</div></div></div>
 </div>
 
@@ -2223,11 +2223,29 @@ document.addEventListener('focusin',function(e){
   // Ficha de lista longa ja sobe inteira pelo --kb e tem botao fixo: rolar
   // dentro dela so jogaria a lista pra fora da vista.
   if(sheet.classList.contains('sheet-fixa'))return;
+  // Rola SÓ a ficha. Era scrollIntoView, que rola todo ancestral rolável —
+  // inclusive a PÁGINA atrás do overlay. No app do iPhone isso empurrava a
+  // ficha (que é fixed) pra fora da tela: no primeiro acesso, tocar no campo
+  // da cidade deixava o teclado aberto sobre o Início rolado, sem ficha
+  // nenhuma à vista (25/09). A página de trás volta pro lugar junto.
   setTimeout(function(){
     const cta=sheet.querySelector('.sheet-cta')||sheet.querySelector('.secondary-link');
-    if(cta)cta.scrollIntoView({block:'end',behavior:'smooth'});
+    if(cta){
+      const falta=cta.getBoundingClientRect().bottom-sheet.getBoundingClientRect().bottom;
+      if(falta>0)sheet.scrollTop+=falta+8;
+    }
+    if(window.scrollY)window.scrollTo(0,0);
   },300);
 });
+// Com janela aberta, a página de trás não rola — nem pelo iOS, que rola o
+// documento sozinho pra mostrar o campo focado e com isso desloca a ficha.
+(function(){
+  const vv=window.visualViewport;
+  if(!vv)return;
+  vv.addEventListener('resize',function(){
+    if(window.scrollY&&document.querySelector('.overlay.show'))window.scrollTo(0,0);
+  });
+})();
 // ═══ TECLADO / ÁREA VISÍVEL ═══
 // O teclado do celular nao encolhe o `vh`, entao ficha dimensionada em vh
 // termina atras dele. `visualViewport` e a unica medida que sabe do teclado.
@@ -3068,8 +3086,17 @@ function falarComACasca(msg){
 
 // Chamado a cada troca de tela, inclusive pelo voltar de dentro da página.
 // A barra nativa REFLETE o app; ela nunca decide sozinha onde a pessoa está.
+//
+// Com janela aberta, a tela nativa NUNCA volta pra frente — nem quando a
+// troca de tela acontece DEPOIS da janela abrir. Foi o que travou o primeiro
+// acesso (25/09): a folha de boas-vindas abre durante o login, o login
+// termina com goTo('dashboard'), e esse aviso trazia a aba Viagens nativa por
+// cima da folha. O teclado abria pro campo da cidade, e o campo ficava atrás.
+function temJanelaAberta(){
+  return !!document.querySelector('.overlay.show,.cropper-overlay.show');
+}
 function avisarTelaAtual(id){
-  falarComACasca({tipo:'tela',aba:id,comAbas:!!ABAS_DO_APP[id]});
+  falarComACasca({tipo:'tela',aba:id,comAbas:!!ABAS_DO_APP[id]&&!temJanelaAberta()});
 }
 
 // Janela que abre POR CIMA (configurações, criar viagem, adicionar amigo,
@@ -3084,12 +3111,9 @@ function avisarSeTemJanela(){
   if(!naCasca())return;
   const atual=document.querySelector('.screen.active');
   if(!atual)return;
-  // O recorte de foto tem classe propria, nao .overlay: sem ele aqui, tocar
-  // no avatar abria o recorte ESCONDIDO atras da tela nativa.
-  if(document.querySelector('.overlay.show,.cropper-overlay.show')){
-    falarComACasca({tipo:'tela',aba:atual.id,comAbas:false});
-    return;
-  }
+  // O recorte de foto tem classe propria, nao .overlay: sem ele em
+  // temJanelaAberta, tocar no avatar abria o recorte ESCONDIDO atras da tela
+  // nativa.
   avisarTelaAtual(atual.id);
 }
 
@@ -3459,7 +3483,7 @@ function renderTrips(){
   // Conta sem viagem: a saida antecipada daqui era a unica no caminho de quem
   // acabou de criar conta, e deixava a tela nativa girando pra sempre — a
   // pessoa nao chegava nem no botao de criar a primeira viagem.
-  if(!visibleTrips.length){c.innerHTML='<div class="empty-state"><div class="ei">'+icon('suitcase')+'</div><h3>Nenhuma viagem ainda</h3><p>Toca no + para criar sua primeira viagem</p></div>';darDadosDeViagens();return}
+  if(!visibleTrips.length){c.innerHTML='<div class="empty-state"><div class="ei">'+icon('suitcase')+'</div><h3>Nenhuma viagem ainda</h3><p>Salve o primeiro spot e a viagem nasce sozinha</p></div>';darDadosDeViagens();return}
 
   const{groups,ordem}=regioesComViagem();
   // Continente que sumiu (viagem apagada) não pode deixar a tela vazia.
@@ -6496,7 +6520,9 @@ async function rodarBuscaDeCidade(t){
   // o Explorar casa os dois sem precisar adivinhar.
   const r=await googlePlaces('searchText',{
     headers:{'X-Goog-FieldMask':'places.displayName,places.formattedAddress'},
-    body:JSON.stringify({textQuery:t,includedType:'locality',maxResultCount:6})
+    // strictTypeFiltering: sem ele o includedType é só PREFERÊNCIA, e "São
+    // Paulo" voltava Parque Ibirapuera, Morumbi e hotel (25/09).
+    body:JSON.stringify({textQuery:t,includedType:'locality',strictTypeFiltering:true,languageCode:'pt-BR',maxResultCount:6})
   });
   const atual=(document.getElementById('cidadeCasaInput')||{}).value||'';
   if(atual.trim()!==t)return; // o campo mudou enquanto a resposta vinha
