@@ -24,6 +24,10 @@
 revoke execute on function public.amigo_em_comum(uuid[]) from anon;
 grant  execute on function public.amigo_em_comum(uuid[]) to authenticated;
 
+-- Esta precisa dos DOIS revokes: ela nasceu sem `revoke ... from public`, e
+-- o EXECUTE que o Postgres dá a PUBLIC por padrão também chega em `anon`.
+-- Só o `from anon` deixou `anon = true` na conferência (rodado em 25/09).
+revoke execute on function public.esquecer_meus_aparelhos() from public;
 revoke execute on function public.esquecer_meus_aparelhos() from anon;
 grant  execute on function public.esquecer_meus_aparelhos() to authenticated;
 
