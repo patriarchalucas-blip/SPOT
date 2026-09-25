@@ -2771,7 +2771,10 @@ async function signInOAuth(provedor){
     }
   });
   if(error||!data||!data.url){showAuthErr((error&&error.message)||'Não deu pra abrir o login.');return}
-  falarComACasca({tipo:'login-google',url:data.url});
+  // Passa por meuspot.app/entrar antes do Supabase: o iOS pergunta "Spot
+  // deseja usar ___ para iniciar sessão" com o domínio do PRIMEIRO endereço,
+  // e ele era o do Supabase. Ver functions/entrar.js.
+  falarComACasca({tipo:'login-google',url:location.origin+'/entrar?u='+encodeURIComponent(data.url)});
 }
 // ═══ ENTRAR COM A APPLE ═══
 //
