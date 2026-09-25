@@ -44,8 +44,17 @@ test('searchText poda o que passa do limite', () => {
 
 test('searchText descarta campo que nao foi previsto', () => {
   // O ponto todo: o corpo é montado campo a campo, nunca repassado.
-  const p = montarTexto({ textQuery: 'x', rankPreference: 'DISTANCE', pageSize: 99, evil: 1, priceLevels: ['a'] });
+  const p = montarTexto({ textQuery: 'x', rankPreference: 'DISTANCE', evil: 1, priceLevels: ['a'] });
   assert.deepStrictEqual(Object.keys(p).sort(), ['maxResultCount', 'textQuery']);
+});
+
+test('searchText pagina com teto de 20 e so aceita token com cara de token', () => {
+  const p = montarTexto({ textQuery: 'x', pageSize: 99 });
+  assert.strictEqual(p.pageSize, 20);
+  assert.ok(!('maxResultCount' in p), 'pageSize e maxResultCount juntos confundem o Google');
+  assert.strictEqual(montarTexto({ textQuery: 'x', pageToken: 'AbC-12_x' }).pageToken, 'AbC-12_x');
+  assert.strictEqual(montarTexto({ textQuery: 'x', pageToken: 'a b' }), null);
+  assert.strictEqual(montarTexto({ textQuery: 'x', pageToken: '"},{"evil":1' }), null);
 });
 
 test('searchNearby recusa coordenada impossivel', () => {

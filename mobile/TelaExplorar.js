@@ -40,7 +40,7 @@ function IconeBusca({ cor = INK3 }) {
   );
 }
 
-function CardDeLugar({ item, aoSalvar }) {
+function CardDeLugar({ item, aoSalvar, aoQueroIr }) {
   const [falhou, setFalhou] = React.useState(false);
   const [c1, c2] = item.cores || [PHOTO_EMPTY, PHOTO_EMPTY];
   return (
@@ -63,6 +63,12 @@ function CardDeLugar({ item, aoSalvar }) {
         <View style={e.veu1} pointerEvents="none" />
         <View style={e.veu2} pointerEvents="none" />
         <View style={e.veu3} pointerEvents="none" />
+        {/* Já salvo: o selo diz como (desenho de 25/09). */}
+        {item.selo ? (
+          <View style={e.seloMeu}>
+            <Text style={e.seloMeuTxt}>{item.selo}</Text>
+          </View>
+        ) : null}
         {item.nota ? (
           <View style={e.selo}>
             <Text style={e.seloTxt}>{item.nota} </Text>
@@ -79,9 +85,19 @@ function CardDeLugar({ item, aoSalvar }) {
           {item.avaliacoes} avaliações no Google
           {item.autor && item.foto && !falhou ? ' · foto de ' + item.autor : ''}
         </Text>
-        <Pressable onPress={aoSalvar} style={({ pressed }) => [e.salvar, pressed && { opacity: 0.85 }]}>
-          <Text style={e.salvarTxt}>+ minha lista</Text>
-        </Pressable>
+        {/* O ⊕ salva direto como Quero ir, sem perguntar viagem. */}
+        {!item.selo ? (
+          <Pressable
+            onPress={aoQueroIr}
+            disabled={!!item.salvando}
+            hitSlop={6}
+            style={({ pressed }) => [e.mais, (pressed || item.salvando) && { opacity: 0.6 }]}
+            accessibilityRole="button"
+            accessibilityLabel="Salvar em Quero ir"
+          >
+            <Text style={e.maisTxt}>{item.salvando ? '…' : '+'}</Text>
+          </Pressable>
+        ) : null}
       </View>
     </View>
   );
@@ -130,11 +146,19 @@ export default function TelaExplorar({ dados, ocupado, acao }) {
             <Text style={e.irTxt}>Ir</Text>
           </Pressable>
         </View>
+        {/* "Sua cidade · São Paulo" ou "Perto de você · Lisboa". */}
+        {d.rotulo ? <Text style={e.rotulo}>{d.rotulo}</Text> : null}
       </View>
 
       <ScrollView
         style={e.corpo}
         keyboardShouldPersistTaps="handled"
+        // Rolagem contínua: perto do fim, pede a próxima página ao site.
+        scrollEventThrottle={200}
+        onScroll={({ nativeEvent: n }) => {
+          const falta = n.contentSize.height - (n.contentOffset.y + n.layoutMeasurement.height);
+          if (falta < 600 && d.temMais && !d.carregandoMais) acao('mais');
+        }}
         contentContainerStyle={{ paddingBottom: folgaDeRolagem(margem.bottom) }}
         refreshControl={
           <RefreshControl refreshing={!!ocupado} onRefresh={buscar} tintColor={INK3} />
@@ -224,16 +248,25 @@ export default function TelaExplorar({ dados, ocupado, acao }) {
               <IconeBusca cor={INK3} />
               <Text style={e.vazioTitulo}>Descubra o que está bombando</Text>
               <Text style={e.vazioTexto}>
-                Digite uma cidade pra ver os lugares mais bem avaliados — o
-                começo de “patrocinado” chega depois.
+                Digite uma cidade pra ver os lugares mais bem avaliados.
               </Text>
             </View>
           )
         ) : (
           <>
             {d.itens.map((it) => (
-              <CardDeLugar key={it.i} item={it} aoSalvar={() => acao('salvar', it.i)} />
+              <CardDeLugar
+                key={it.i}
+                item={it}
+                aoSalvar={() => acao('salvar', it.i)}
+                aoQueroIr={() => acao('queroIr', it.i)}
+              />
             ))}
+            {d.carregandoMais ? (
+              <View style={e.maisCarregando}>
+                <ActivityIndicator color={INK3} />
+              </View>
+            ) : null}
             {d.creditoGoogle ? (
               <Text style={e.credito}>Lugares e fotos via Google</Text>
             ) : null}
@@ -245,6 +278,18 @@ export default function TelaExplorar({ dados, ocupado, acao }) {
 }
 
 const e = StyleSheet.create({
+  rotulo: { fontSize: 13, fontWeight: '600', color: VERDE, marginTop: 12 },
+  seloMeu: {
+    position: 'absolute', top: 12, left: 12, backgroundColor: BASE,
+    paddingHorizontal: 10, paddingVertical: 4, borderRadius: 10,
+  },
+  seloMeuTxt: { fontSize: 12, fontWeight: '600', color: VERDE },
+  mais: {
+    width: 40, height: 40, borderRadius: 20, backgroundColor: VERDE,
+    alignItems: 'center', justifyContent: 'center',
+  },
+  maisTxt: { fontSize: 24, lineHeight: 26, color: ON_GREEN, fontWeight: '300' },
+  maisCarregando: { paddingVertical: 20, alignItems: 'center' },
   fundo: { flex: 1, backgroundColor: BASE },
   // Margem lateral 20, a do app inteiro. Era 24 aqui e só aqui.
   topo: { paddingHorizontal: 20, paddingBottom: 18 },

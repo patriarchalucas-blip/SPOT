@@ -52,7 +52,10 @@ export const CAMPOS_OK = new Set([
   // A linha de serviço da ficha ("Aberto · fecha às 23h · $$"). Vêm na MESMA
   // busca que já roda ao adicionar um lugar — pedir não custa chamada nova, e
   // o resultado é guardado no spot em vez de consultado a cada abertura.
-  'places.regularOpeningHours', 'places.priceLevel'
+  'places.regularOpeningHours', 'places.priceLevel',
+  // Não é campo de lugar: é o marcador da próxima página. Pedir ele não
+  // muda o preço da chamada.
+  'nextPageToken'
 ]);
 
 const OPS = {
@@ -80,7 +83,9 @@ export async function onRequestPost(context) {
   if (!payload) return json({ error: 'parametros_invalidos' }, 400);
 
   const kv = env.SPOT_KV;
-  const cacheavel = op === 'searchText' && kv;
+  // Busca paginada não entra no cache: o token da próxima página vence, e
+  // servir um token velho do cache faria a rolagem parar na página 1.
+  const cacheavel = op === 'searchText' && kv && !payload.pageSize;
   let chave = null;
   if (cacheavel) {
     chave = 'places_' + (await hash(op + '|' + mascara + '|' + JSON.stringify(payload)));
@@ -145,6 +150,7 @@ export async function onRequestPost(context) {
   }
 
   const saida = { places: Array.isArray(dados.places) ? dados.places : [] };
+  if (typeof dados.nextPageToken === 'string' && dados.nextPageToken) saida.nextPageToken = dados.nextPageToken;
   if (cacheavel && chave) {
     try { await kv.put(chave, JSON.stringify(saida), { expirationTtl: TTL_BUSCA }) } catch (e) {}
   }
@@ -162,6 +168,19 @@ export function montarTexto(b) {
   if (b.languageCode) p.languageCode = String(b.languageCode).slice(0, 10);
   if (b.includedType) p.includedType = String(b.includedType).slice(0, 40);
   if (b.strictTypeFiltering === true) p.strictTypeFiltering = true;
+  // PAGINAÇÃO (Explorar, 25/09): rolagem contínua de 20 em 20. O Google
+  // pagina por pageSize + pageToken, e entrega no máximo 60 por busca.
+  // O token é opaco, mas é nosso pra validar: só letras, números, - e _.
+  if (b.pageSize != null) {
+    p.pageSize = limitar(b.pageSize, 1, 20, 20);
+    delete p.maxResultCount;
+  }
+  if (b.pageToken != null) {
+    const t = String(b.pageToken);
+    if (!/^[A-Za-z0-9_-]{1,2000}$/.test(t)) return null;
+    p.pageToken = t;
+    if (!p.pageSize) { p.pageSize = 20; delete p.maxResultCount }
+  }
   return p;
 }
 
