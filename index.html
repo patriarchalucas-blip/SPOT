@@ -1419,6 +1419,13 @@ body.tem-apple #convite .btn-apple{display:flex}
    ocupar exatamente ela remove a suposição. */
 .overlay{position:fixed;left:0;right:0;top:var(--vv-t,0px);height:var(--vv-h,100dvh);background:rgba(0,0,0,0.5);z-index:200;display:none;align-items:flex-end;backdrop-filter:blur(4px);padding-top:28px}
 .overlay.show{display:flex}
+/* Ficha curta cuja única ação é DIGITAR (o primeiro acesso): fica no ALTO
+   da tela. Encostar no teclado depende da medida do visualViewport, e dentro
+   do app de iPhone essa medida falhou duas vezes seguidas (25/09) — o teclado
+   cobria o campo da cidade. No alto, o campo está acima de qualquer teclado
+   sem conta nenhuma; a lista de resultados rola por baixo dele. */
+.overlay.overlay-topo{top:0;height:100dvh;align-items:flex-start;padding-top:calc(env(safe-area-inset-top,0px) + 12px)}
+.overlay-topo .sheet{border-radius:var(--r-sheet);animation:none;max-height:calc(100dvh - 24px)}
 .sheet{background:var(--base);border-radius:var(--r-sheet) var(--r-sheet) 0 0;width:100%;max-width:430px;
   margin:0 auto;max-height:100%;overflow-y:auto;scrollbar-width:none;animation:slideUp .28s ease;position:relative}
 /* Ficha de lista longa: quem rola e a LISTA, nao a ficha. Assim titulo,
@@ -1995,7 +2002,7 @@ svg.ic path,svg.ic circle,svg.ic line,svg.ic polyline,svg.ic rect{fill:none;stro
 <div class="overlay" id="ov-quickvisit" onclick="closeOut(event,'ov-quickvisit')"><div class="sheet sheet-fixa"><button class="sheet-close" onclick="closeOv('ov-quickvisit')" data-ic="close" aria-label="Fechar"></button><div class="sheet-handle"></div><div class="sheet-title" id="quickVisitTitle">Quais países você já visitou?</div><div class="dest-search-wrap"><span class="dsi" data-ic="search"></span><input class="nt-input" style="padding-left:44px" id="countrySearch2" placeholder="Buscar país..." oninput="filterCountries2(this.value)"></div><div class="lista-rolante" id="countryList2"></div><button class="sheet-cta" id="createVisitBtn" onclick="markVisited()" style="opacity:.4;pointer-events:none">Selecione um país</button></div></div>
 <!-- PRIMEIRO ACESSO. Não fecha clicando fora de propósito: é a única folha do
      app que existe pra ser respondida, não consultada. Tem "Agora não". -->
-<div class="overlay" id="ov-boasvindas"><div class="sheet"><div class="sheet-handle"></div><div class="sheet-title">Onde você mora?</div><div class="den-sobre">Serve pra abrir o Explorar já cheio — o que seus amigos marcaram perto de você.</div><div class="nt-label">Sua cidade</div><div class="nt-wrap"><input class="nt-input" id="cidadeCasaInput" type="text" placeholder="ex: São Paulo" autocomplete="off" oninput="buscarCidadeDeCasa(this.value)"><div class="busca-res" id="cidadeCasaRes"></div></div><button class="secondary-link" style="margin:0 0 18px" onclick="pularCidadeDeCasa()">Agora não</button></div></div>
+<div class="overlay overlay-topo" id="ov-boasvindas"><div class="sheet"><div class="sheet-handle"></div><div class="sheet-title">Onde você mora?</div><div class="den-sobre">Serve pra abrir o Explorar já cheio — o que seus amigos marcaram perto de você.</div><div class="nt-label">Sua cidade</div><div class="nt-wrap"><input class="nt-input" id="cidadeCasaInput" type="text" placeholder="ex: São Paulo" autocomplete="off" oninput="buscarCidadeDeCasa(this.value)"><div class="busca-res" id="cidadeCasaRes"></div></div><button class="secondary-link" style="margin:0 0 18px" onclick="pularCidadeDeCasa()">Agora não</button></div></div>
 
 <!-- O ⋯ da ficha. O lápis flutuante e a engrenagem viraram este menu: tudo que
      é raro mora aqui, e a tela fica com o que se usa todo dia. -->
@@ -2223,6 +2230,9 @@ document.addEventListener('focusin',function(e){
   // Ficha de lista longa ja sobe inteira pelo --kb e tem botao fixo: rolar
   // dentro dela so jogaria a lista pra fora da vista.
   if(sheet.classList.contains('sheet-fixa'))return;
+  // Ficha no alto da tela: o campo já está acima do teclado, e rolar até o
+  // botão do fim levaria o campo embora.
+  if(sheet.closest('.overlay-topo')){setTimeout(function(){if(window.scrollY)window.scrollTo(0,0)},300);return}
   // Rola SÓ a ficha. Era scrollIntoView, que rola todo ancestral rolável —
   // inclusive a PÁGINA atrás do overlay. No app do iPhone isso empurrava a
   // ficha (que é fixed) pra fora da tela: no primeiro acesso, tocar no campo
