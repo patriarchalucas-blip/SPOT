@@ -227,8 +227,10 @@ body.tem-apple .btn-apple{display:flex}
 
    Se algum dia isto virar padrão em outro lugar, use o mesmo token. */
 .placar-card{display:flex;align-items:center;gap:20px;margin:14px 20px 0;
-  background:var(--surface);border-radius:var(--r-card);padding:16px 18px;
-  box-shadow:var(--shadow-card)}
+  background:var(--surface);border-radius:var(--r-card);padding:16px 18px}
+/* Botão e campo não herdam a fonte da página por padrão: o placar, as abas
+   de continente e os nomes dos cards saíam em Arial. Uma regra só resolve. */
+button,input,textarea,select{font-family:inherit}
 
 /* O anel abre o mapa-mundi: e la que a mesma informacao esta inteira, com a
    lista de paises. Os tres contadores do lado ja abrem listas — o anel ser o
@@ -1894,7 +1896,7 @@ svg.ic path,svg.ic circle,svg.ic line,svg.ic polyline,svg.ic rect{fill:none;stro
     <!-- MEUS LUGARES. Substituiu os números, o "Onde já estive" e a estante
          por cidade: os três diziam quanto a pessoa viajou, e isso a tela
          inicial já diz inteiro. Aqui fica só o que é dela. -->
-    <div class="ml-cab"><span class="section-title">Meus lugares</span><span class="ml-segmento" id="mlSegmento"></span></div>
+    <div class="ml-cab"><span class="section-title">Meus spots</span><span class="ml-segmento" id="mlSegmento"></span></div>
     <div class="ml-status" id="mlStatus"></div>
     <div class="ml-filtros">
       <button class="ml-filtro" id="mlFiltroCidade" onclick="abrirFolhaDeCidades()"><span class="mf-pino" data-ic="pin"></span><span id="mlCidadeTxt">Todas as cidades</span><span class="mf-chev">⌄</span></button>
@@ -7596,7 +7598,7 @@ function onbTerminar(){
   closeOv('ov-onb');
   renderTrips();populateTripOpts();
   try{loadDashboard()}catch(e){}
-  geoPronta.then(()=>renderMiniMapa()).catch(()=>{});
+  carregarGeoMundo().catch(()=>false).then(()=>renderMiniMapa()).catch(()=>{});
 }
 
 let quickVisitMode='visited'; // 'visited' | 'home' — mesmo sheet, dois marcadores diferentes
@@ -7614,6 +7616,9 @@ function ehMultiplo(){return quickVisitMode!=='home'}
 function agrupadoPorContinente(lista){
   const grupos=new Map();
   lista.forEach(c=>{const r=c.region||'Outros';if(!grupos.has(r))grupos.set(r,[]);grupos.get(r).push(c)});
+  // Dentro de cada continente, ordem de dicionário: "Gâmbia" antes de "Guiné",
+  // "África do Sul" no A — a lista vinha na ordem de bytes.
+  grupos.forEach(l=>l.sort((a,b)=>a.name.localeCompare(b.name,'pt-BR')));
   return [...grupos.keys()].sort((a,b)=>a.localeCompare(b,'pt-BR')).map(r=>[r,grupos.get(r)]);
 }
 function renderCountryList2(filter){
@@ -8190,7 +8195,7 @@ function renderComentarios(spotId,alvo,donoDoSpot){
   const naFicha=alvo==='placeComentarios';
   if(meuSpot&&!lista.length){
     box.innerHTML=naFicha
-      ?'<div class="ml-vazio">Nenhum amigo seu salvou este lugar. Quando alguém salvar ou comentar, aparece aqui.</div>'
+      ?'<div class="ml-vazio">Nenhum amigo seu salvou este spot. Quando alguém salvar ou comentar, aparece aqui.</div>'
       :'';
     return;
   }
@@ -10309,7 +10314,7 @@ async function marcarPaisVisitado(nome){
     visitados.length+' de '+PAISES_NO_MUNDO+' países · '+percentualDoMundo(visitados.length)+' do mundo';
   await renderWorldMap(visitados);
   renderListaDePaises(visitados,'mapaPaises');
-  geoPronta.then(()=>renderMiniMapa());
+  carregarGeoMundo().catch(()=>false).then(()=>renderMiniMapa());
   toast('Marcado!',nome+' agora está no seu mapa.','globe');
 }
 async function renderWorldMap(visited){
@@ -11333,7 +11338,7 @@ function abrirDetalheAmigo(modo){
       +'<span class="cr-flag">'+flagHTML(porCidade[c].pais)+'</span>'
       +'<span class="cr-name">'+esc(c)+'</span>'
       +'<span class="cr-count">'+porCidade[c].n+(porCidade[c].n===1?' lugar':' lugares')+'</span></div>').join('');
-    if(!lista.length)h='<div class="amg-aviso">'+esc(nome)+' ainda não salvou lugares.</div>';
+    if(!lista.length)h='<div class="amg-aviso">'+esc(nome)+' ainda não salvou spots.</div>';
   }
 
   else if(modo==='spots'){
@@ -11362,7 +11367,7 @@ function abrirDetalheAmigo(modo){
         +'<span class="est-meta">'+porCidade[c].length+(porCidade[c].length===1?' lugar':' lugares')+'</span>'
         +'</div><div class="est-lista">'+linhas+'</div></div>';
     }).join('');
-    if(!cidades.length)h='<div class="amg-aviso">'+esc(nome)+' ainda não salvou lugares.</div>';
+    if(!cidades.length)h='<div class="amg-aviso">'+esc(nome)+' ainda não salvou spots.</div>';
   }
 
   else{ // trips
@@ -11513,11 +11518,18 @@ function abrirSpotDoAmigo(i){
   }else{secNota.style.display='none'}
 
   const secNota2=document.getElementById('fpRatingSection');
-  const nota=parseInt(s.my_rating,10)||0;
+  // parseFloat: a nota tem meia estrela desde a 020, e parseInt fazia 4,5 virar 4.
+  const nota=parseFloat(s.my_rating)||0;
   if(nota||s.my_review){
     document.getElementById('fpRatingLabel').textContent='A avaliação de '+primeiro;
-    document.getElementById('fpStars').innerHTML=Array.from({length:5},(_,k)=>
-      '<button class="star-btn'+(k<nota?' lit':'')+'" tabindex="-1">'+icon('star')+'</button>').join('');
+    // As duas camadas do componente de estrela: sem a de cima (.st-fill), a
+    // classe .lit não tinha o que pintar e as cinco saíam cinza.
+    const fp=document.getElementById('fpStars');
+    fp.setAttribute('role','img');fp.setAttribute('aria-label',nota?fmtRating(nota)+' de 5':'Sem nota');
+    fp.innerHTML=Array.from({length:5},(_,k)=>{
+      const cls=nota>=k+1?' lit':(nota>=k+0.5?' meia':'');
+      return '<span class="star-btn'+cls+'" aria-hidden="true"><span class="st-base">'+icon('star')+'</span><span class="st-fill">'+icon('star')+'</span></span>';
+    }).join('');
     const rev=document.getElementById('fpReview');
     if(s.my_review){rev.textContent='"'+s.my_review+'"';rev.style.display=''}else{rev.style.display='none'}
     secNota2.style.display='';
