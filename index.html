@@ -564,6 +564,7 @@ input,textarea,select{font-size:max(16px,1em)!important}
 /* Tipo de comida (desenho "Explorar Cozinhas" 1a + 2c, 26/09). A fileira de
    texto rolável parecia o mesmo nível das abas e cortava na borda. Virou uma
    linha só — a cozinha escolhida e ▾ — que abre uma folha com fotos de prato. */
+.ex-abas{display:flex;gap:18px;margin:0 0 14px}
 .coz-linha{display:flex;justify-content:space-between;align-items:baseline;padding:16px 20px 0}
 .coz-atual{display:flex;align-items:baseline;gap:6px;min-height:44px;padding:0;background:none;border:none;cursor:pointer;
   font-size:20px;font-weight:600;letter-spacing:-.02em;color:var(--ink)}
@@ -1879,13 +1880,13 @@ svg.ic path,svg.ic circle,svg.ic line,svg.ic polyline,svg.ic rect{fill:none;stro
 <div class="screen" id="explore">
   <div class="dash-top" style="padding-bottom:18px">
     <div class="dash-top-row"><div><div class="dash-hello">Explorar</div><div class="dash-name" style="font-size:26px">Tendências por lugar</div></div></div>
+    <div class="ex-abas" id="exploreAbas"></div>
     <div class="search-wrap" style="padding:0;display:flex;gap:8px;align-items:center">
       <div class="search-field" style="flex:1"><span class="si" data-ic="search"></span><input class="search-input" id="exploreCitySearch" placeholder="Cidade, bairro ou rua" enterkeyhint="search" onkeydown="if(event.key==='Enter')runExplore()"></div>
       <button class="req-btn req-accept" style="height:48px;padding:0 16px" onclick="runExplore()">Ir</button>
     </div>
   </div>
   <div class="ex-rotulo" id="exploreRotulo" style="display:none"></div>
-  <div id="exploreAmigos"></div>
   <div class="list-filters" id="exploreFilters"></div>
   <div class="coz-linha" id="exploreCozinhas"></div>
   <div class="list-body" id="exploreBody">
@@ -5161,7 +5162,7 @@ function pickCat(c){
 // cidade ANTERIOR com o nome da cidade nova em cima. O app mentia.
 // inicial | buscando | semResultado | erro | ok
 let EXPLORE_ESTADO='inicial';
-const EXPLORE={city:'',cat:'food',cozinha:'',items:[],token:'',fim:false,carregandoMais:false,termo:'',rotulo:''};
+const EXPLORE={aba:'voce',city:'',cat:'food',cozinha:'',items:[],token:'',fim:false,carregandoMais:false,termo:'',rotulo:''};
 // ═══ TIPO DE COMIDA (25/09, pedido do Lucas: "quero comer um japonês hoje") ═══
 // Só existe dentro de Comer. Cada opção é a FRASE que vai pro Google, não um
 // tipo da tabela dele: "japanese_restaurant" deixa de fora o sushi e o lámen
@@ -5198,8 +5199,9 @@ function contaDoExplorar(){
 function pintarLinhaDeCozinha(){
   const c=document.getElementById('exploreCozinhas');
   if(!c)return;
-  c.style.display=EXPLORE.cat==='food'?'':'none';
-  if(EXPLORE.cat!=='food'){c.innerHTML='';return}
+  const mostra=EXPLORE.cat==='food'&&EXPLORE.aba!=='amigos';
+  c.style.display=mostra?'':'none';
+  if(!mostra){c.innerHTML='';return}
   c.innerHTML='<button class="coz-atual" onclick="abrirCozinhas()" aria-haspopup="dialog">'+esc(cozinhaAtual().rotulo)+'<i>▾</i></button>'
     +'<span class="coz-conta">'+esc(contaDoExplorar())+'</span>';
 }
@@ -5680,27 +5682,10 @@ async function runExplore(rotulo){
   }
   // Amigos são comparados por cidade: buscando uma rua, vale a cidade dela.
   const onde=(pontual&&lugar.cidade)||city;
-  // Os amigos aparecem por conta própria, sem esperar o Google: são consultas
-  // diferentes e a mais interessante é a que chega primeiro.
+  // Aba Amigos: os spots dos amigos DENTRO da área buscada. Corre em paralelo
+  // com o Google — são consultas diferentes.
   LUGAR_PESQUISADO=onde;
-  renderAmigosNoLugar({estado:'carregando',grupos:[]},onde);
-  buscarAmigosNoLugar(onde,false).then(function(r){
-    if(EXPLORE.city!==city)return;
-    AMIGOS_LUGAR=r.grupos;renderAmigosNoLugar(r,onde);
-    // Segunda passada com o nome canônico ("Tokyo" -> "Tóquio"), que depende
-    // do Google e por isso não pode segurar a primeira resposta. Só substitui
-    // se achar MAIS coisa do que a primeira.
-    return buscarAmigosNoLugar(onde,true).then(function(r2){
-      if(EXPLORE.city===city&&r2.grupos.length>r.grupos.length){
-        AMIGOS_LUGAR=r2.grupos;renderAmigosNoLugar(r2,onde);
-      }
-    });
-  }).catch(function(e){
-    console.error('amigos no lugar',e);
-    // renderAmigosNoLugar avisa as DUAS telas. Escrever so no HTML deixava a
-    // tela nativa presa em "Procurando entre seus amigos..." pra sempre.
-    renderAmigosNoLugar({estado:'erro',grupos:[],amigos:0},onde);
-  });
+  carregarAmigosDaArea(meu,EXPLORE.area,pontual,onde);
   try{
     const{lugares:pagina,token}=await paginaDoExplorar('');
     if(meu!==EXPLORE_REQ)return;
@@ -5855,7 +5840,13 @@ function darDadosDeExplorar(){
     chips:[{id:'food',rotulo:'Comer'},{id:'hotel',rotulo:'Ficar'},{id:'experience',rotulo:'Experiências'}],
     // A segunda linha, só em Comer. Vazia nas outras abas: a tela nativa
     // esconde a linha quando não vem nada.
-    cozinhas:EXPLORE.cat==='food'?COZINHAS.map(z=>({id:z.id,rotulo:z.rotulo,foto:location.origin+fotoDaCozinha(z.id)})):[],
+    aba:EXPLORE.aba||'voce',
+    abas:ABAS_DO_EXPLORAR,
+    amigosLugares:lugaresDosAmigosNaCategoria().map((g,i)=>({i,lugar:g.capa.name||'',local:cityOf(g.capa)||'',
+      nota:g.media?fmtRating(g.media):'',foto:fotoPraCasca(safeUrl(fotoNaLargura(semChaveDoPlaces(g.foto),760))),
+      cores:coresDoGradiente(g.capa.name||''),linha:textoDosAmigos(g),selo:statusNaMinhaLista({name:g.capa.name,city:cityOf(g.capa)})})),
+    avisoAmigosArea:avisoDosAmigos(),
+    cozinhas:EXPLORE.cat==='food'&&EXPLORE.aba!=='amigos'?COZINHAS.map(z=>({id:z.id,rotulo:z.rotulo,foto:location.origin+fotoDaCozinha(z.id)})):[],
     cozinhaRotulo:cozinhaAtual().rotulo,
     contagem:contaDoExplorar(),
     cozinha:EXPLORE.cozinha||'',
@@ -5877,6 +5868,8 @@ function darDadosDeExplorar(){
 window.darDadosDeExplorar=darDadosDeExplorar;
 window.acaoDeExplorar=function(acao,valor){
   if(acao==='categoria'){setExploreCat(valor);darDadosDeExplorar();return}
+  if(acao==='aba'){setExploreAba(String(valor||''));return}
+  if(acao==='amigoLugar'){abrirLugarDosAmigos(Number(valor));return}
   if(acao==='cozinha'){setExploreCozinha(String(valor||''));darDadosDeExplorar();return}
   if(acao==='buscar'){
     const campo=document.getElementById('exploreCitySearch');
@@ -5890,9 +5883,133 @@ window.acaoDeExplorar=function(acao,valor){
   if(acao==='amigo'){abrirAmigoNoLugar(Number(valor));return}
 };
 
+// ═══ ABAS "PARA VOCÊ" E "AMIGOS" (26/09, ideia do Lucas, à la TikTok) ═══
+// O bloco "X amigos já foram" comparava só a CIDADE: buscando a Rua Itapura,
+// aparecia o amigo que foi a São Paulo — mas nunca àquela rua. Agora a aba
+// Amigos mostra os SPOTS que os amigos salvaram DENTRO da área buscada, pela
+// coordenada de cada spot (migração 023). Spot antigo sem coordenada só
+// entra em busca de cidade ou país, pelo nome da cidade.
+// Ordem (decisão do Lucas): 1º quantos amigos já foram, 2º a nota.
+let AMIGOS_AREA={estado:'inicial',lugares:[],amigos:0};
+const ABAS_DO_EXPLORAR=[{id:'voce',rotulo:'Para você'},{id:'amigos',rotulo:'Amigos'}];
+async function lugaresDosAmigos(area,pontual,cidade){
+  const ids=await idsDosAmigos();
+  if(falhou(ids))return{estado:'erro',lugares:[],amigos:0};
+  if(!ids.length)return{estado:'sem_amigos',lugares:[],amigos:0};
+  const lista=ids.join(',');
+  const base='user_id=in.('+lista+')&status=in.(been,want)';
+  const buscas=[];
+  if(area&&area.rectangle){
+    const r=area.rectangle;
+    buscas.push(dbGet('spots',base+'&lat=gte.'+r.low.latitude+'&lat=lte.'+r.high.latitude
+      +'&lng=gte.'+r.low.longitude+'&lng=lte.'+r.high.longitude));
+  }
+  const t=termoSeguro(cidade);
+  if(!pontual&&t)buscas.push(dbGet('spots',base+'&lat=is.null&city=ilike.*'+encodeURIComponent(t)+'*'));
+  if(!buscas.length)return{estado:'nada_aqui',lugares:[],amigos:ids.length};
+  const partes=await Promise.all(buscas);
+  if(partes.every(falhou))return{estado:'erro',lugares:[],amigos:ids.length};
+  const porId={};
+  partes.forEach(l=>(l||[]).forEach(s=>{if(!estaBloqueado(s.user_id))porId[s.id]=s}));
+  const spots=Object.values(porId);
+  if(!spots.length)return{estado:'nada_aqui',lugares:[],amigos:ids.length};
+  // O mesmo restaurante salvo por vários amigos vira UM card. Mesmo nome e,
+  // quando há coordenada, a ~100 m; sem coordenada, a mesma cidade.
+  const chave=s=>normName(s.name)+'|'+(s.lat!=null&&s.lng!=null
+    ?Math.round(Number(s.lat)*1000)+','+Math.round(Number(s.lng)*1000):normName(cityOf(s)));
+  const grupos={};
+  spots.forEach(s=>{(grupos[chave(s)]=grupos[chave(s)]||[]).push(s)});
+  const donos=[...new Set(spots.map(s=>s.user_id))];
+  const perfis={};
+  ((await dbGet('profiles','select=id,display_name,username&id=in.('+donos.join(',')+')'))||[]).forEach(p=>{perfis[p.id]=p});
+  const lugares=Object.values(grupos).map(g=>{
+    const foram=[...new Set(g.filter(s=>s.status==='been').map(s=>s.user_id))];
+    const querem=[...new Set(g.filter(s=>s.status!=='been').map(s=>s.user_id))].filter(u=>!foram.includes(u));
+    const notas=g.filter(s=>s.status==='been'&&Number(s.my_rating)>0).map(s=>Number(s.my_rating));
+    const media=notas.length?notas.reduce((a,b)=>a+b,0)/notas.length:0;
+    // A ficha que abre é a do amigo que deu a maior nota; a foto, a primeira que houver.
+    const capa=g.slice().sort((a,b)=>(b.status==='been')-(a.status==='been')||(Number(b.my_rating)||0)-(Number(a.my_rating)||0))[0];
+    return{spots:g,capa,foto:(g.find(s=>s.photo_url)||{}).photo_url||'',foram,querem,media,categoria:capa.category,
+      nomesForam:foram.map(u=>friendName(perfis[u])),nomesQuerem:querem.map(u=>friendName(perfis[u])),perfis};
+  });
+  lugares.sort((a,b)=>b.foram.length-a.foram.length||b.media-a.media||b.querem.length-a.querem.length
+    ||String(a.capa.name).localeCompare(String(b.capa.name),'pt-BR'));
+  return{estado:'ok',lugares,amigos:ids.length};
+}
+function lugaresDosAmigosNaCategoria(){
+  return(AMIGOS_AREA.lugares||[]).filter(g=>!g.categoria||g.categoria===EXPLORE.cat);
+}
+function primeirosNomes(nomes){
+  const n=nomes.map(x=>String(x).split(' ')[0]);
+  if(n.length<=2)return n.join(' e ');
+  return n.slice(0,2).join(', ')+' e mais '+(n.length-2);
+}
+function textoDosAmigos(g){
+  if(g.foram.length)return g.foram.length+(g.foram.length===1?' amigo foi':' amigos foram')+' · '+primeirosNomes(g.nomesForam);
+  return g.querem.length+(g.querem.length===1?' amigo quer ir':' amigos querem ir')+' · '+primeirosNomes(g.nomesQuerem);
+}
+function avisoDosAmigos(){
+  const e=AMIGOS_AREA.estado;
+  if(e==='inicial')return'Busque um lugar pra ver o que seus amigos salvaram por lá.';
+  if(e==='carregando')return'Procurando entre seus amigos...';
+  if(e==='sem_amigos')return'Você ainda não tem amigos no Spot. Quando tiver, os spots que eles salvarem aparecem aqui.';
+  if(e==='erro')return'Não consegui consultar seus amigos agora.';
+  if(!lugaresDosAmigosNaCategoria().length)return'Nenhum amigo seu salvou '+({food:'lugar pra comer',hotel:'hotel',experience:'experiência'}[EXPLORE.cat]||'spot')+' por aqui ainda.';
+  return'';
+}
+function setExploreAba(id){
+  if(!ABAS_DO_EXPLORAR.some(a=>a.id===id))id='voce';
+  EXPLORE.aba=id;
+  renderExploreResults();
+}
+function pintarAbasDoExplorar(){
+  const c=document.getElementById('exploreAbas');
+  if(!c)return;
+  const a=EXPLORE.aba||'voce';
+  c.innerHTML=ABAS_DO_EXPLORAR.map(x=>chip(x.rotulo,x.id===a,"setExploreAba('"+x.id+"')")).join('');
+}
+function abrirLugarDosAmigos(i){
+  const g=lugaresDosAmigosNaCategoria()[i];
+  if(!g)return;
+  const s=g.capa;
+  FRIEND.id=s.user_id;
+  FRIEND.profile=g.perfis[s.user_id]||null;
+  FRIEND_CITY_SPOTS=[s];
+  abrirSpotDoAmigo(0);
+  telaAntesDaFicha='explore';
+}
+function renderLugaresDosAmigos(body){
+  const aviso=avisoDosAmigos();
+  if(aviso){body.innerHTML='<div class="empty-state"><div class="ei" data-ic="users"></div><p>'+esc(aviso)+'</p></div>';hydrateIcons(body);return}
+  body.innerHTML=lugaresDosAmigosNaCategoria().map((g,i)=>{
+    const s=g.capa;
+    const foto=safeUrl(fotoNaLargura(semChaveDoPlaces(g.foto),760));
+    const local=cityOf(s)||'';
+    const selo=statusNaMinhaLista({name:s.name,city:cityOf(s)});
+    return '<div class="ex-card">'
+      +'<div class="ex-img" style="background-image:'+destGradient(s.name||local)+'" onclick="abrirLugarDosAmigos('+i+')">'
+        +(foto?'<img class="ex-foto" src="'+escUrl(foto)+'" alt=""'+(i===0?' fetchpriority="high"':' loading="lazy"')+' decoding="async" onload="this.style.opacity=1" onerror="this.remove()">':'')
+        +(g.media?'<span class="ex-nota">'+esc(fmtRating(g.media))+' <span class="ex-estrela">★</span></span>':'')
+        +(selo?'<span class="ex-selo">'+esc(selo)+'</span>':'')
+        +'<div class="ex-pe">'+(local?'<span class="ex-k">'+esc(local)+'</span>':'')+'<h3 class="ex-nome">'+esc(s.name)+'</h3></div>'
+      +'</div>'
+      +'<div class="ex-corpo-card"><span class="ex-aval">'+esc(textoDosAmigos(g))+'</span></div></div>';
+  }).join('');
+}
+async function carregarAmigosDaArea(meu,area,pontual,cidade){
+  AMIGOS_AREA={estado:'carregando',lugares:[],amigos:0};
+  if(EXPLORE.aba==='amigos')renderExploreResults();else darDadosDeExplorar();
+  let r;
+  try{r=await lugaresDosAmigos(area,pontual,cidade)}catch(e){console.error('amigos na area',e);r={estado:'erro',lugares:[],amigos:0}}
+  if(meu!==EXPLORE_REQ)return;
+  AMIGOS_AREA=r;
+  if(EXPLORE.aba==='amigos')renderExploreResults();else darDadosDeExplorar();
+}
 function renderExploreResults(){
   darDadosDeExplorar();
   pintarLinhaDeCozinha();
+  pintarAbasDoExplorar();
+  if(EXPLORE.aba==='amigos'){renderLugaresDosAmigos(document.getElementById('exploreBody'));return}
   const body=document.getElementById('exploreBody');
   body.innerHTML=EXPLORE.items.map((p,i)=>{
     const foto=safeUrl(fotoNaLargura(semChaveDoPlaces(p.photo_url),760));

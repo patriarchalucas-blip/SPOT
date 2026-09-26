@@ -170,3 +170,32 @@ test('buscar uma rua procura DENTRO da area dela, em todas as paginas', async ()
     assert.ok(pag2 && pag2.locationRestriction, 'pagina 2 sem a area');
   } finally { vs.forEach((v) => v()); A.avaliar("EXPLORE.rotulo='';EXPLORE.area=null;EXPLORE.city=''") }
 });
+
+// Aba Amigos (26/09): spots dos amigos DENTRO da área, 1º quantos foram, 2º nota.
+test('aba Amigos: o lugar onde mais amigos foram vem primeiro, depois a nota', async () => {
+  const consultas = [];
+  const spots = [
+    { id: 's1', user_id: 'a', name: 'Tuju', city: 'São Paulo', status: 'been', my_rating: 5, lat: -23.561, lng: -46.690, category: 'food' },
+    { id: 's2', user_id: 'b', name: 'Mocotó', city: 'São Paulo', status: 'been', my_rating: 4, lat: -23.562, lng: -46.691, category: 'food' },
+    { id: 's3', user_id: 'c', name: 'Mocotó', city: 'São Paulo', status: 'been', my_rating: 3.5, lat: -23.5621, lng: -46.6911, category: 'food' },
+    { id: 's4', user_id: 'd', name: 'Mocotó', city: 'São Paulo', status: 'want', lat: -23.562, lng: -46.691, category: 'food' },
+  ];
+  const vs = [
+    trocar(A, 'idsDosAmigos', async () => ['a', 'b', 'c', 'd']),
+    trocar(A, 'dbGet', async (t, q) => { consultas.push([t, q]); return t === 'spots' ? spots : [{ id: 'b', display_name: 'Clara Souza' }, { id: 'c', display_name: 'Rafael' }] }),
+  ];
+  try {
+    A.avaliar("EXPLORE.cat='food'");
+    const area = { rectangle: { low: { latitude: -23.57, longitude: -46.70 }, high: { latitude: -23.55, longitude: -46.68 } } };
+    const r = await A.lugaresDosAmigos(area, true, 'São Paulo');
+    assert.strictEqual(r.estado, 'ok');
+    assert.strictEqual(r.lugares[0].capa.name, 'Mocotó', 'Mocotó (2 foram) devia vir antes do Tuju (1 foi, nota 5)');
+    assert.strictEqual(r.lugares[0].foram.length, 2);
+    assert.strictEqual(r.lugares[0].querem.length, 1);
+    assert.ok(/2 amigos foram · Clara e Rafael/.test(A.textoDosAmigos(r.lugares[0])));
+    // busca por rua filtra pela coordenada, sem cair no nome da cidade
+    const q = consultas.filter((c) => c[0] === 'spots').map((c) => c[1]);
+    assert.ok(q.some((x) => /lat=gte\./.test(x) && /lng=lte\./.test(x)));
+    assert.ok(!q.some((x) => /city=ilike/.test(x)), 'rua nao pode buscar pela cidade');
+  } finally { vs.forEach((v) => v()) }
+});

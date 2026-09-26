@@ -77,7 +77,7 @@ function CardDeLugar({ item, aoSalvar, aoQueroIr }) {
           </View>
         ) : null}
         {/* O ⊕ salva direto como Quero ir, sem perguntar viagem. */}
-        {!item.selo ? (
+        {!item.selo && aoQueroIr ? (
           <Pressable
             onPress={aoQueroIr}
             disabled={!!item.salvando}
@@ -96,8 +96,9 @@ function CardDeLugar({ item, aoSalvar, aoQueroIr }) {
       </Pressable>
       <View style={e.cardCorpo}>
         <Text style={e.aval} numberOfLines={2}>
-          {item.avaliacoes} avaliações no Google
-          {item.autor && item.foto && !falhou ? ' · foto de ' + item.autor : ''}
+          {item.linha
+            ? item.linha
+            : item.avaliacoes + ' avaliações no Google' + (item.autor && item.foto && !falhou ? ' · foto de ' + item.autor : '')}
         </Text>
 
       </View>
@@ -175,6 +176,21 @@ export default function TelaExplorar({ dados, ocupado, acao }) {
         {/* O site tem esta palavra no HTML mas a esconde por CSS. Aqui ela
             aparecia, e o app ficava com uma linha a mais que o site. */}
         <Text style={e.titulo}>Tendências por lugar</Text>
+        {/* "Para você" e "Amigos" (26/09, ideia do Lucas): acima da busca,
+            alternando entre o que o Google recomenda e o que os amigos salvaram
+            DENTRO da área buscada. */}
+        {(d.abas || []).length ? (
+          <View style={e.abas}>
+            {d.abas.map((a) => {
+              const on = a.id === (d.aba || 'voce');
+              return (
+                <Pressable key={a.id} onPress={() => acao('aba', a.id)} style={[e.chip, on && e.chipOn]} hitSlop={6}>
+                  <Text style={[e.chipTxt, on && e.chipTxtOn]}>{a.rotulo}</Text>
+                </Pressable>
+              );
+            })}
+          </View>
+        ) : null}
         <View style={e.busca}>
           <View style={e.campo}>
             <IconeBusca />
@@ -297,7 +313,17 @@ export default function TelaExplorar({ dados, ocupado, acao }) {
         {/* Cada fim de busca diz uma coisa diferente. Antes existia UM estado
             vazio: quem buscasse e nao achasse nada via a tela de "ainda nao
             busquei", como se o toque nao tivesse feito nada. */}
-        {!d.itens.length ? (
+        {d.aba === 'amigos' ? (
+          !(d.amigosLugares || []).length ? (
+            <View style={e.vazio}>
+              <Text style={e.vazioTexto}>{d.avisoAmigosArea || 'Busque um lugar pra ver o que seus amigos salvaram por lá.'}</Text>
+            </View>
+          ) : (
+            d.amigosLugares.map((it) => (
+              <CardDeLugar key={'a' + it.i + it.lugar} item={it} aoSalvar={() => acao('amigoLugar', it.i)} />
+            ))
+          )
+        ) : !d.itens.length ? (
           d.estado === 'buscando' ? (
             <View style={e.vazio}>
               <ActivityIndicator color={INK3} />
@@ -369,6 +395,7 @@ const e = StyleSheet.create({
   topo: { paddingHorizontal: 20, paddingBottom: 18 },
   titulo: { fontFamily: FRAUNCES, fontSize: 26, lineHeight: 28, color: INK, letterSpacing: -0.39 },
 
+  abas: { flexDirection: 'row', gap: 18, marginTop: 12 },
   busca: { flexDirection: 'row', gap: 8, alignItems: 'center', marginTop: 16 },
   // .search-input: superfície, SEM borda. A caixa vazada de 1px era o campo de
   // formulário genérico; aqui o que diz "dá pra digitar" é a superfície.
