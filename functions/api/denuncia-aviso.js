@@ -1,4 +1,6 @@
 import { quemEsta } from './_auth.js';
+import { acharDono } from './_aviso-dono.js';
+import { lerKV, gravarKV } from './_kv.js';
 
 // Cloudflare Pages Function — avisa o moderador que chegou denúncia.
 //
@@ -61,10 +63,15 @@ export async function onRequestPost(context) {
   const [den] = await sb('/rest/v1/denuncias?select=autor_id,tipo,motivo,created_at&id=eq.' + id);
   if (!den || den.autor_id !== quem.uid) return json({ enviados: 0 });
   if (Date.now() - new Date(den.created_at).getTime() > JANELA_MS) return json({ enviados: 0, motivo: 'antiga' });
+  // Uma denúncia, um aviso: repetir a chamada com o mesmo id dentro da janela
+  // mandava o mesmo alerta de novo pro celular do moderador.
+  const jaAvisada = 'denuncia_avisada_' + id;
+  if (await lerKV(env, jaAvisada)) return json({ enviados: 0, motivo: 'ja_avisada' });
+  await gravarKV(env, jaAvisada, '1', 60 * 60 * 24);
 
   // 2. o moderador e os aparelhos dele
-  const email = String(env.MODERADOR_EMAIL || MODERADOR_PADRAO).trim().toLowerCase();
-  const [mod] = await sb('/rest/v1/profiles?select=id&email=eq.' + encodeURIComponent(email));
+  // Tabela moderadores (027); antes dela, o e-mail em profiles.
+  const mod = await acharDono(sb, env);
   if (!mod) return json({ enviados: 0, motivo: 'sem_moderador' });
   if (mod.id === quem.uid) return json({ enviados: 0, motivo: 'voce_mesmo' });
   const tokens = (await sb('/rest/v1/push_tokens?select=token&user_id=eq.' + mod.id))

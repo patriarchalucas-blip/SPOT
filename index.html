@@ -3382,6 +3382,12 @@ async function guardarEnderecoPush(){
   try{
     // Cabeçalhos vão no TERCEIRO argumento: sbFetch reescreve opts.headers
     // pra colar a apikey, então o que for posto dentro de opts é descartado.
+    // registrar_aparelho (027) passa o aparelho pra conta logada mesmo se
+    // outra conta nunca saiu dele. Antes da 027, a função não existe (404) e
+    // cai no caminho antigo, logo abaixo.
+    const rpc=await sbFetch('/rest/v1/rpc/registrar_aparelho',{method:'POST',
+      body:JSON.stringify({p_token:ENDERECO_PUSH,p_plataforma:'ios'})},{'Content-Type':'application/json'});
+    if(rpc.ok)return;
     const r=await sbFetch('/rest/v1/push_tokens?on_conflict=token',{
       method:'POST',
       body:JSON.stringify({user_id:S.user.id,token:ENDERECO_PUSH,plataforma:'ios'})
@@ -4207,7 +4213,8 @@ async function loadTrip(t){
   // sempre, só pra pegar o que já estava na mão — por isso abrir uma
   // viagem parecia mais lento do que devia.
   if(!t._spotsLoaded){
-    const spots=await dbGet('spots','trip_id=eq.'+t.id+'&order=created_at.asc');
+    // user_id junto: spot de outra conta gravado com este trip_id não entra.
+    const spots=await dbGet('spots','trip_id=eq.'+t.id+'&user_id=eq.'+S.user.id+'&order=created_at.asc');
     t._spots=spots||[];t._spotsLoaded=true;
   }
   renderTripBody();
@@ -5340,7 +5347,7 @@ async function buscarAmigosNoLugar(termo,tambemCanonico){
     const viagens=await dbGet('trips','user_id=in.('+lista+')&destinations=cs.{"'+t+'"}&select=id');
     const tripIds=(viagens||[]).map(v=>v.id);
     if(!tripIds.length)return[];
-    return dbGet('spots','trip_id=in.('+tripIds.join(',')+')&status=in.(been,want)');
+    return dbGet('spots','trip_id=in.('+tripIds.join(',')+')&user_id=in.('+lista+')&status=in.(been,want)');
   })());
 
   const partes=await Promise.all(buscas.map(p=>p.catch(()=>[])));
@@ -9489,7 +9496,7 @@ async function loadProfile(){
   applyAvatar('profAvatar',name,p.avatar_url);
   // Load trips + their spots (for city count) if missing
   if(!S.trips.length){const trips=await dbGet('trips','user_id=eq.'+S.user.id);S.trips=trips||[]}
-  for(const t of S.trips){if(!t._spots){const sp=await dbGet('spots','trip_id=eq.'+t.id);t._spots=sp||[]}}
+  for(const t of S.trips){if(!t._spots){const sp=await dbGet('spots','trip_id=eq.'+t.id+'&user_id=eq.'+S.user.id);t._spots=sp||[]}}
   // Os contadores de países/cidades/continentes saíram daqui: o Dashboard já
   // mostra os mesmos números, e mostrava com denominador diferente ("X/243"
   // contra "de 195"), o que só gerava dúvida sobre qual estava certo.
@@ -11546,7 +11553,7 @@ async function openFriend(id){
   if(FRIEND.trips.length){
     const byId={};FRIEND.trips.forEach(t=>{t._spots=[];byId[t.id]=t});
     const ids=FRIEND.trips.map(t=>t.id).join(',');
-    const spots=await dbGet('spots','trip_id=in.('+ids+')&order=created_at.asc');
+    const spots=await dbGet('spots','trip_id=in.('+ids+')&user_id=eq.'+encodeURIComponent(id)+'&order=created_at.asc');
     if(FRIEND.id!==id)return;
     (spots||[]).forEach(s=>{const t=byId[s.trip_id];if(t)t._spots.push(s)});
   }
