@@ -8746,7 +8746,9 @@ async function buscarInstagramAgora(id,btn){
   // não grava — quem grava é o salvar, com o Instagram já junto.
   const s=(id==='previa'&&S.curPlace&&S.curPlace._previa)?S.curPlace:findSpotById(id);
   if(!s)return;
-  const grava=s._previa?async function(){return{error:null}}:function(campos){return grava(campos)};
+  // Spot salvo grava no banco. (Esta linha chamava a si mesma — grava(campos)
+  // dentro de grava — e o botão de buscar Instagram travava em todo spot salvo.)
+  const grava=s._previa?async function(){return{error:null}}:function(campos){return dbUpdate('spots',s.id,campos)};
   const rotulo=btn?btn.innerHTML:'';
   if(btn){btn.innerHTML='Buscando...';btn.style.pointerEvents='none'}
   const devolve=()=>{if(btn){btn.innerHTML=rotulo;btn.style.pointerEvents=''}};

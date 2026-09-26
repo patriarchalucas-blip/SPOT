@@ -128,3 +128,17 @@ test('corrigido 26/09 — desfazerCasa muda o estado local antes (e apesar) do b
     assert.strictEqual(casa.dates, '__casa__');
   } finally { v() }
 });
+
+test('corrigido 26/09 — buscar Instagram de um spot salvo grava no banco (antes chamava a si mesmo)', async () => {
+  base({}, [{ id: 't1', name: 'Brasil', destinations: ['Brasil'], _spots: [{ id: 'sp1', name: 'Mocotó', city: 'São Paulo', website_url: 'https://mocoto.com.br' }] }]);
+  const gravados = [];
+  const vs = [
+    trocar(A, 'dbUpdate', async (t, id, o) => { gravados.push([t, id, o]); return { error: null } }),
+    trocar(A, 'findInstagramViaBrave', async () => ({ url: 'https://instagram.com/mocoto', conclusivo: true })),
+    trocar(A, 'toast', () => {}),
+  ];
+  try {
+    await A.buscarInstagramAgora('sp1', null);
+    assert.strictEqual(JSON.stringify(gravados[0]), JSON.stringify(['spots', 'sp1', { website_url: 'https://instagram.com/mocoto', insta_checked: true }]));
+  } finally { vs.forEach(v => v()) }
+});
