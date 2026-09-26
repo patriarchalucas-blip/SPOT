@@ -56,7 +56,8 @@ test('a proxima pagina entra no fim, sem repetir lugar, e para quando o Google p
   try {
     A.avaliar("EXPLORE.termo='restaurantes em São Paulo';EXPLORE.fim=false;EXPLORE.token=''");
     const p1 = await A.paginaDoExplorar('');
-    A.avaliar('EXPLORE.items=' + JSON.stringify(p1));
+    A.guardarMarcadorDoExplorar(p1.token);
+    A.avaliar('EXPLORE.items=' + JSON.stringify(p1.lugares));
     A.avaliar("EXPLORE_ESTADO='ok'");
     await A.maisDoExplorar();
     const nomes = A.avaliar('EXPLORE.items.map(p=>p.name).join(",")');

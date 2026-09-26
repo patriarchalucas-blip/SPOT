@@ -2710,6 +2710,10 @@ async function init(){
       }
       if((ev==='SIGNED_IN'||ev==='INITIAL_SESSION'||ev==='TOKEN_REFRESHED')&&sess?.user&&!S.user&&!emRecuperacao){
         S.user=sess.user;
+        // O endereço de notificação chega da casca logo que a página carrega —
+        // em geral ANTES do login. Sem gravar de novo aqui, quem acabou de
+        // entrar ficava sem aviso até fechar e abrir o app.
+        guardarEnderecoPush();
         // Troca de tela PRIMEIRO: o dashboard já mostra nome/avatar na hora e os
         // cards entram conforme os dados chegam. Antes, esperava o carregamento
         // inteiro terminar antes de sair da tela de loading — o usuário ficava
@@ -2724,7 +2728,18 @@ async function init(){
         // sequência não deve atropelar isso.
         try{await talvezAbrirBoasVindas()}catch(e){console.error('boas-vindas:',e)}
       }
-      if(ev==='SIGNED_OUT'){S.user=null;S.token=null;tokenExp=0;goTo('login')}
+      if(ev==='SIGNED_OUT'){
+        // O Supabase também sai sozinho (sessão revogada, renovação que falhou).
+        // Sem limpar, quem entrasse em seguida na mesma página herdava o perfil,
+        // as viagens e o cache da conta anterior. Recarregar zera tudo — mas só
+        // se havia alguém logado, senão a sessão inválida da abertura viraria
+        // recarga em laço.
+        const havia=!!S.user;
+        if(havia){try{limparDadosLocais()}catch(e){}}
+        S.user=null;S.token=null;tokenExp=0;S.trips=[];S.profile=null;DADOS_DA_CONTA=false;
+        if(havia){location.reload();return}
+        goTo('login');
+      }
     }catch(e){console.error('Auth error:',e);goTo('login')}
   });
   // Safety: if still on loading after 3s, force login
@@ -3027,6 +3042,10 @@ async function signOut(){
   // pode sobrar pra quem entrar depois.
   limparDadosLocais();
   DADOS_DA_CONTA=false;
+  // O aparelho deixa de receber os avisos desta conta. Sem isto, quem entrasse
+  // depois no mesmo iPhone via na tela de bloqueio os pedidos e comentários
+  // da conta anterior — e não conseguia gravar o próprio endereço.
+  if(ENDERECO_PUSH){try{await dbDeleteOnde('push_tokens','token=eq.'+encodeURIComponent(ENDERECO_PUSH))}catch(e){}}
   try{await sb.auth.signOut()}catch(e){}
   S.user=null;S.token=null;S.trips=[];location.reload();
 }
@@ -3314,9 +3333,9 @@ function ligarNotificacoes(){
   });
 }
 
-// Grava o endereço na conta logada. O aparelho pode ter sido usado por outra
-// pessoa antes: por isso a gravação é por (conta, endereço), e o endereço
-// antigo de outra conta é sobrescrito pelo dono atual do aparelho.
+// Grava o endereço na conta logada. Ao sair, o endereço é apagado (signOut):
+// a política do banco NÃO deixa uma conta sobrescrever a linha de outra, então
+// sem essa limpeza a segunda conta do aparelho ficava sem aviso.
 async function guardarEnderecoPush(){
   if(!ENDERECO_PUSH||!S.user)return;
   try{
@@ -3568,16 +3587,35 @@ function cidadeDeCasa(){
   const c=(S.profile&&S.profile.home_city)||'';
   return c?(cityOf({city:c})||c):'';
 }
-function ehDaCasa(cidade){
+function ehDaCasa(cidade,pais){
   const c=cidadeDeCasa();
   if(!c||!cidade)return false;
+  // Cidade homônima em outro país (Córdoba, Valencia, Santiago...) não é a
+  // casa: sem o país, o spot da Espanha sumia dentro da linha escondida da
+  // Argentina e a Espanha nunca contava no mapa.
+  const pc=S.profile&&S.profile.home_country;
+  if(pais&&pc&&!mesmoLugar(pais,pc))return false;
   return mesmoLugar(cityOf({city:cidade})||cidade,c);
+}
+// Criação de viagem em andamento, por chave. Dois toques no + seguidos (dois
+// sushis em Tóquio sem viagem Japão ainda) disparavam dois inserts antes de o
+// primeiro voltar: duas viagens "Japão", ou duas linhas de casa, sendo que a
+// segunda ficava invisível pra sempre. O segundo pedido agora espera o primeiro.
+const CRIANDO_VIAGEM=new Map();
+function criarViagemUmaVez(chave,criar){
+  if(CRIANDO_VIAGEM.has(chave))return CRIANDO_VIAGEM.get(chave);
+  const p=criar().finally(()=>CRIANDO_VIAGEM.delete(chave));
+  CRIANDO_VIAGEM.set(chave,p);
+  return p;
 }
 async function viagemDeCasa(pais){
   const ja=(S.trips||[]).find(ehCasa);
   if(ja)return ja;
   const nome=(S.profile&&S.profile.home_city)||'';
   if(!nome||!S.user)return null;
+  return criarViagemUmaVez('__casa__',async()=>{
+  const ja2=(S.trips||[]).find(ehCasa);
+  if(ja2)return ja2;
   const destino=(S.profile&&S.profile.home_country)||pais||nome;
   const{data,error}=await dbInsert('trips',{user_id:S.user.id,name:nome,
     destinations:[destino],dates:'__casa__',status:'planning',initial_city:nome});
@@ -3585,6 +3623,7 @@ async function viagemDeCasa(pais){
   data._spots=[];data._spotsLoaded=true;
   S.trips.unshift(data);
   return data;
+  });
 }
 function resumoDeCasa(){
   const c=cidadeDeCasa();
@@ -5055,7 +5094,7 @@ function addSpotToCurrentTrip(){
   // Viagem já é sabida (o + está dentro dela) — mas categoria não é mais
   // "a aba ativa": agora cada cidade tem a sua própria, e a tela pode
   // mostrar várias cidades ao mesmo tempo. Sem uma categoria óbvia, pergunta.
-  S.addTrip=S.curTrip;
+  S.addTrip=S.curTrip;trocandoCategoria=false;
   showOv('ov-cat');
 }
 function pickCat(c){
@@ -5403,7 +5442,7 @@ async function adicionarSpotAbertoDoAmigo(btn){
   };
   const cat=s.category||'food';
 
-  let viagem=(ehDaCasa(cidade)&&await viagemDeCasa(pais))||viagemQueCobre(cidade,pais);
+  let viagem=(ehDaCasa(cidade,pais)&&await viagemDeCasa(pais))||viagemQueCobre(cidade,pais);
   if(!viagem){
     // Residuo assumido: sem pais, a viagem nasce com o nome da cidade. Fica
     // fora do mapa-mundi (que conta pais), mas o lugar nao se perde e nao ha
@@ -5539,9 +5578,10 @@ async function runExplore(rotulo){
     renderAmigosNoLugar({estado:'erro',grupos:[],amigos:0},city);
   });
   try{
-    const pagina=await paginaDoExplorar('');
+    const{lugares:pagina,token}=await paginaDoExplorar('');
     if(meu!==EXPLORE_REQ)return;
-    if(!pagina.length){body.innerHTML='<div class="empty-state"><div class="ei" data-ic="pin"></div><h3>Nada encontrado</h3><p>'+(EXPLORE.cat==='food'&&EXPLORE.cozinha?'Não achei '+esc(cozinhaAtual().rotulo.toLowerCase())+' bem avaliada aqui. Tenta outro tipo.':'Tenta um nome de cidade diferente.')+'</p></div>';hydrateIcons(body);EXPLORE.items=[];EXPLORE_ESTADO='semResultado';darDadosDeExplorar();return}
+    guardarMarcadorDoExplorar(token);
+    if(!pagina.length){body.innerHTML='<div class="empty-state"><div class="ei" data-ic="pin"></div><h3>Nada encontrado</h3><p>'+(EXPLORE.cat==='food'&&EXPLORE.cozinha?'Nada bem avaliado em '+esc(cozinhaAtual().rotulo)+' por aqui. Tenta outro tipo.':'Tenta um nome de cidade diferente.')+'</p></div>';hydrateIcons(body);EXPLORE.items=[];EXPLORE_ESTADO='semResultado';darDadosDeExplorar();return}
     EXPLORE.items=pagina;
     EXPLORE_ESTADO='ok';
     renderExploreResults();
@@ -5565,23 +5605,26 @@ async function paginaDoExplorar(token){
     body:JSON.stringify(corpo)
   });
   const data=await resp.json();
-  EXPLORE.token=(data&&data.nextPageToken)||'';
-  if(!EXPLORE.token)EXPLORE.fim=true;
   const places=((data&&data.places)||[]).filter(p=>p.rating&&p.userRatingCount&&!isIrrelevantPlace(p));
   places.sort((a,b)=>notaDoExplorar(b)-notaDoExplorar(a));
-  return places.map(lugarDoExplorar);
+  // O marcador da próxima página volta JUNTO, e quem chamou só grava depois
+  // de conferir que a busca ainda é a atual. Gravado aqui dentro, a página 2
+  // atrasada de "Japonesa" apagava o marcador de "Pizza" e a rolagem parava.
+  return{lugares:places.map(lugarDoExplorar),token:(data&&data.nextPageToken)||''};
 }
+function guardarMarcadorDoExplorar(token){EXPLORE.token=token||'';EXPLORE.fim=!EXPLORE.token}
 async function maisDoExplorar(){
   if(EXPLORE.fim||EXPLORE.carregandoMais||!EXPLORE.token||EXPLORE_ESTADO!=='ok')return;
   const meu=EXPLORE_REQ;
   EXPLORE.carregandoMais=true;darDadosDeExplorar();
   try{
-    const pagina=await paginaDoExplorar(EXPLORE.token);
+    const{lugares:pagina,token}=await paginaDoExplorar(EXPLORE.token);
     if(meu!==EXPLORE_REQ)return;
+    guardarMarcadorDoExplorar(token);
     // Página nova que repete lugar da anterior não entra duas vezes.
     const ja=new Set(EXPLORE.items.map(p=>normName(p.name)+'|'+normName(p.city)));
     EXPLORE.items=EXPLORE.items.concat(pagina.filter(p=>!ja.has(normName(p.name)+'|'+normName(p.city))));
-  }catch(e){EXPLORE.fim=true}
+  }catch(e){if(meu===EXPLORE_REQ)EXPLORE.fim=true}
   if(meu!==EXPLORE_REQ)return;
   EXPLORE.carregandoMais=false;
   renderExploreResults();
@@ -5595,7 +5638,7 @@ function pintarRotuloDoExplorar(){
 // O selo: você já salvou esse lugar? Mesmo nome, mesma cidade.
 function statusNaMinhaLista(p){
   const s=allSpotsFlat().find(x=>mesmoLugar(x.name,p.name)&&(!p.city||!cityOf(x)||mesmoLugar(cityOf(x),p.city)));
-  return s?(s.status==='been'?'Fui':'Quero ir'):'';
+  return s?({been:'Fui',skip:'Não recomendo'}[s.status]||'Quero ir'):'';
 }
 // O ⊕: direto pra Quero ir, sem folha nenhuma.
 function queroIrDoExplorar(i){return salvarDoExplorar(i,'want')}
@@ -5604,7 +5647,9 @@ async function salvarDoExplorar(i,status){
   if(statusNaMinhaLista(p)){toast('Já está na sua lista',p.name,'check');return null}
   p._salvando=true;renderExploreResults();
   // Instagram achado na prévia vai junto.
-  const prev=S.curPlace&&S.curPlace._previa&&S.curPlace._i===i?S.curPlace:null;
+  // Índice sozinho não basta: toda busca nova reusa 0, 1, 2... e a prévia
+  // aberta numa busca antiga emprestava o site/Instagram pro lugar novo.
+  const prev=S.curPlace&&S.curPlace._previa&&S.curPlace._i===i&&mesmoLugar(S.curPlace.name,p.name)?S.curPlace:null;
   const lugar={name:p.name,meta:p.address,address:p.address,city:p.city,country:p.country,
     subcat:p.subcat||'',phone:p.phone||'',photo_url:p.photo_url,photo_author:p.photo_author,
     rating_google:p.rating,website_url:(prev&&prev.website_url)||p.website_url,maps_url:p.maps_url,lat:p.lat,lng:p.lng};
@@ -5612,7 +5657,7 @@ async function salvarDoExplorar(i,status){
   p._salvando=false;
   if(!data||data==='sem_pais'){renderExploreResults();toast('Não salvou','Confere a conexão e tenta de novo.','alert');return null}
   renderExploreResults();
-  toast(status==='been'?'Salvo em Fui':'Salvo em Quero ir',p.name,'check');
+  toast({been:'Salvo em Fui',skip:'Salvo em Não recomendo'}[status]||'Salvo em Quero ir',p.name,'check');
   loadDashboard();
   return data;
 }
@@ -5686,7 +5731,7 @@ function darDadosDeExplorar(){
     // esconde a linha quando não vem nada.
     cozinhas:EXPLORE.cat==='food'?COZINHAS.map(z=>({id:z.id,rotulo:z.rotulo})):[],
     cozinha:EXPLORE.cozinha||'',
-    semResultadoTexto:EXPLORE.cat==='food'&&EXPLORE.cozinha?'Não achei '+cozinhaAtual().rotulo.toLowerCase()+' bem avaliada aqui. Tenta outro tipo.':'',
+    semResultadoTexto:EXPLORE.cat==='food'&&EXPLORE.cozinha?'Nada bem avaliado em '+cozinhaAtual().rotulo+' por aqui. Tenta outro tipo.':'',
     estado:EXPLORE_ESTADO,
     itens:itens,
     amigos:grupos,
@@ -6092,9 +6137,10 @@ function maybeShowCheckin(){
 }
 function checkinIgnore(){
   document.getElementById('checkinBanner').style.display='none';
-  darDadosDeViagens();
   if(CHECKIN.place)localStorage.setItem('spot_checkin_dismissed_'+normName(CHECKIN.place.name),String(Date.now()+4*60*60*1000));
   CHECKIN.place=null;
+  // Depois de limpar: avisar antes mandava pra tela nativa a faixa ainda cheia.
+  darDadosDeViagens();
   // Tenta de novo na hora — se o lugar errado (o vizinho) acabou de ser
   // ignorado, o certo (próximo mais perto) pode aparecer imediatamente,
   // sem esperar os 2 minutos do intervalo normal entre checagens.
@@ -6104,14 +6150,14 @@ function checkinIgnore(){
 function checkinAdd(){
   const p=CHECKIN.place;if(!p)return;
   document.getElementById('checkinBanner').style.display='none';
-  darDadosDeViagens();
   const place={name:p.name,meta:p.meta,icon:p.icon,city:p.city,country:p.country,address:p.address,phone:p.phone||'',photo_url:p.photo_url||'',photo_thumb:p.photo_thumb||'',photo_author:p.photo_author,rating_google:p.rating_google,website_url:p.website_url,maps_url:p.maps_url};
   CHECKIN.place=null;
+  darDadosDeViagens();
   // Categoria já é sabida (check-in só busca comer/beber) e "Já fui" é o
   // padrão óbvio — você está literalmente lá. Viagem: se só existir uma que
   // bate com o país do lugar, nem pergunta; só pergunta quando é ambíguo
   // (nenhuma viagem pro país, ou mais de uma).
-  if(ehDaCasa(p.city)){viagemDeCasa(p.country).then(v=>{if(v)jumpToNoteSheet(v,'food',place,'been')});return}
+  if(ehDaCasa(p.city,p.country)){viagemDeCasa(p.country).then(v=>{if(v)jumpToNoteSheet(v,'food',place,'been')});return}
   const candidatas=S.trips.filter(t=>((t.destinations&&t.destinations[0])||t.name)===p.country);
   if(candidatas.length===1){
     jumpToNoteSheet(candidatas[0],'food',place,'been');
@@ -6435,7 +6481,7 @@ async function fichaDoLugar(base,cat){
 // viagem?", que aparece SO quando nem o endereco diz o pais. Sem isso aquele
 // caso viraria beco sem saida.
 function comecarSpotSemViagem(){
-  S.addTrip=null;
+  S.addTrip=null;trocandoCategoria=false;
   showOv('ov-cat');
 }
 // Decide a viagem a partir do proprio lugar. Mesma regra do fluxo de amigo:
@@ -6459,20 +6505,25 @@ async function viagemParaOLugar(p){
 // criavam viagem por conta propria, cada um do seu jeito.
 async function garantirViagem(cidade,pais){
   // Lugar da cidade onde mora não vira viagem (ver "ONDE VOCÊ MORA").
-  if(ehDaCasa(cidade)){const casa=await viagemDeCasa(pais);if(casa)return casa}
+  if(ehDaCasa(cidade,pais)){const casa=await viagemDeCasa(pais);if(casa)return casa}
   let viagem=viagemQueCobre(cidade,pais);
   if(viagem)return viagem;
   if(!pais)return null;
   // Ja existe viagem desse pais, mesmo que a cidade nao case?
-  const doPais=(S.trips||[]).find(t=>!isNonTrip(t)&&(
+  const doPaisAgora=()=>(S.trips||[]).find(t=>!isNonTrip(t)&&(
     mesmoLugar(t.name,pais)||(t.destinations||[]).some(d=>mesmoLugar(d,pais))));
+  const doPais=doPaisAgora();
   if(doPais)return doPais;
-  const{data,error}=await dbInsert('trips',{user_id:S.user.id,name:pais,
-    destinations:[pais],dates:'',status:'planning',initial_city:cidade||null});
-  if(error||!data)return null;
-  data._spots=[];data._spotsLoaded=true;
-  S.trips.unshift(data);
-  return data;
+  return criarViagemUmaVez('pais:'+normName(pais),async()=>{
+    const ja=doPaisAgora();
+    if(ja)return ja;
+    const{data,error}=await dbInsert('trips',{user_id:S.user.id,name:pais,
+      destinations:[pais],dates:'',status:'planning',initial_city:cidade||null});
+    if(error||!data)return null;
+    data._spots=[];data._spotsLoaded=true;
+    S.trips.unshift(data);
+    return data;
+  });
 }
 async function pickPlace(p){
   // Fluxo do + : a viagem ainda nao existe neste ponto e sai do lugar.
@@ -7016,27 +7067,38 @@ function fecharCidadeDeCasa(){ONB.soCidade=false;closeOv('ov-onb')}
 // A casa antiga entra na viagem do PAÍS, se ela existir — era um card "São
 // Paulo" solto ao lado do card "Brasil" (25/09), quando São Paulo é uma
 // cidade dentro do Brasil. Sem viagem do país, a própria casa vira ela.
+// Devolve true quando a casa antiga deixou de ser casa NO BANCO. O estado
+// local só muda depois da confirmação: mudar antes fazia a tela mostrar uma
+// viagem comum enquanto o banco guardava a linha de casa, e na próxima
+// abertura a cidade velha voltava como "onde você mora".
 async function desfazerCasa(casa){
   const pais=(casa.destinations&&casa.destinations[0])||'';
+  const virarViagem=async()=>{
+    const nome=pais||casa.name;
+    const{error}=await dbUpdate('trips',casa.id,{dates:'',name:nome});
+    if(error)return false;
+    casa.dates='';casa.name=nome;
+    return true;
+  };
   const destino=(S.trips||[]).find(t=>t!==casa&&!isNonTrip(t)&&pais&&
     (mesmoLugar(t.name,pais)||(t.destinations||[]).some(d=>mesmoLugar(d,pais))));
-  if(!destino){
-    casa.dates='';casa.name=pais||casa.name;
-    await dbUpdate('trips',casa.id,{dates:'',name:casa.name});
-    return;
-  }
+  if(!destino)return virarViagem();
   const spots=(casa._spots||[]).slice();
   for(const sp of spots){
     const{error}=await dbUpdate('spots',sp.id,{trip_id:destino.id});
     // Falhou um: a casa fica como viagem comum, com o que sobrou nela. Nunca
     // apagar uma viagem que ainda tem spot.
-    if(error){casa.dates='';casa.name=pais||casa.name;dbUpdate('trips',casa.id,{dates:'',name:casa.name});return}
+    if(error)return virarViagem();
     sp.trip_id=destino.id;
     (destino._spots=destino._spots||[]).push(sp);
     casa._spots=casa._spots.filter(x=>x!==sp);
   }
-  await dbDelete('trips',casa.id);
+  const{error}=await dbDelete('trips',casa.id);
+  // Vazia e não apagou: vira viagem comum (vazia, some da lista de viagens
+  // sozinha só se for de casa — então precisa deixar de ser).
+  if(error)return virarViagem();
   S.trips=S.trips.filter(t=>t!==casa);
+  return true;
 }
 
 async function talvezAbrirBoasVindas(){
@@ -7050,7 +7112,7 @@ async function talvezAbrirBoasVindas(){
   if(p.home_city)return;
   if((S.trips||[]).length)return;
   Object.assign(ONB,{passo:0,cidade:null,cidades:[],paises:new Set(),busca:'',
-    cat:'food',lugares:[],lugar:null,nota:'',localOk:false,ocupado:false,soCidade:false});
+    cat:'food',lugares:[],lugar:null,nota:'',localOk:false,ocupado:false,soCidade:false,salvo:null,paisesGravados:{}});
   onbDesenhar();
   showOv('ov-onb');
 }
@@ -7252,6 +7314,19 @@ async function onbSalvarCidade(){
   const b=document.getElementById('onbSeguir');if(b){b.disabled=true;b.textContent='Salvando...'}
   const campos={home_city:c.nome};
   if(c.pais)campos.home_country=c.pais;
+  const antesDeTudo=(S.profile&&S.profile.home_city)||'';
+  // Trocar de cidade: a casa antiga deixa de ser casa ANTES de o perfil mudar.
+  // Na ordem inversa, uma falha no meio deixava o perfil na cidade nova e a
+  // linha de casa ainda na velha — e a velha virava a casa da nova.
+  if(ONB.soCidade){
+    const casaVelha=(S.trips||[]).find(ehCasa);
+    if(casaVelha&&antesDeTudo&&!mesmoLugar(antesDeTudo,c.nome)&&!await desfazerCasa(casaVelha)){
+      ONB.ocupado=false;
+      if(b){b.disabled=false;b.textContent='Continuar'}
+      toast('Não salvou','Confere a conexão e tenta de novo.','alert');
+      return;
+    }
+  }
   const{error}=await dbUpdate('profiles',S.user.id,campos);
   ONB.ocupado=false;
   if(error){
@@ -7259,13 +7334,10 @@ async function onbSalvarCidade(){
     toast('Não salvou','Confere a conexão e tenta de novo.','alert');
     return;
   }
-  const antes=(S.profile&&S.profile.home_city)||'';
   S.profile=Object.assign(S.profile||{},campos);
   if(ONB.soCidade){
-    // Mudou de cidade: os spots da casa antiga não somem — voltam a ser
-    // viagem, e a próxima cidade começa a própria seção.
-    const casa=(S.trips||[]).find(ehCasa);
-    if(casa&&antes&&!mesmoLugar(antes,c.nome))await desfazerCasa(casa);
+    // Mudou de cidade: os spots da casa antiga não somem — voltaram a ser
+    // viagem lá em cima, e a próxima cidade começa a própria seção.
     FOTO_DE_CASA='';
     fecharCidadeDeCasa();
     loadProfile();loadDashboard();
@@ -7321,6 +7393,17 @@ function onbPePaises(){
 }
 async function onbSalvarPaises(){
   if(ONB.ocupado)return;
+  // Voltou e desmarcou um país que ESTE primeiro acesso já tinha gravado: sai.
+  // Só os daqui — país marcado antes, por outro caminho, não é mexido.
+  ONB.paisesGravados=ONB.paisesGravados||{};
+  for(const nome of Object.keys(ONB.paisesGravados)){
+    if(ONB.paises.has(nome))continue;
+    const id=ONB.paisesGravados[nome];
+    const{error}=await dbDelete('trips',id);
+    if(error){toast('Não salvou','Confere a conexão e tenta de novo.','alert');return}
+    S.trips=S.trips.filter(t=>t.id!==id);
+    delete ONB.paisesGravados[nome];
+  }
   const jaTem=new Set(visitedCountryNames());
   const nomes=[...ONB.paises].filter(n=>!jaTem.has(n));
   if(!nomes.length)return onbIr(3);
@@ -7335,7 +7418,7 @@ async function onbSalvarPaises(){
     toast('Não marcou','Confere a conexão e tenta de novo.','alert');
     return;
   }
-  data.forEach(t=>{t._spots=[];S.trips.unshift(t)});
+  data.forEach(t=>{t._spots=[];S.trips.unshift(t);ONB.paisesGravados[t.name]=t.id});
   onbIr(3);
 }
 
@@ -7411,10 +7494,24 @@ async function onbSalvarLugar(){
   ONB.ocupado=true;
   const b=document.getElementById('onbSeguir');if(b){b.disabled=true;b.textContent='Salvando...'}
   const volta=()=>{ONB.ocupado=false;if(b){b.disabled=false;b.textContent='Continuar'}};
+  // Voltou do passo 4 e tocou Continuar de novo com o MESMO lugar: já está
+  // salvo. Antes gravava outra vez. Só a frase pode ter mudado.
+  if(ONB.salvo&&ONB.salvo.lugar===p){
+    if(nota!==ONB.salvo.nota){
+      const{error}=await dbUpdate('spots',ONB.salvo.id,{my_review:nota||null});
+      if(error){volta();toast('Não salvou','Confere a conexão e tenta de novo.','alert');return}
+      const sp=allSpotsFlat().find(x=>x.id===ONB.salvo.id);if(sp)sp.my_review=nota||null;
+      ONB.salvo.nota=nota;
+    }
+    ONB.ocupado=false;
+    onbIr(4);
+    return;
+  }
   const data=await salvarSpotDireto(p,ONB.cat,'been',nota);
   if(data==='sem_pais'){volta();toast('Não salvou','Não achei o país desse lugar. Tenta outro ou pula.','alert');return}
   if(!data){volta();toast('Não salvou','Confere a conexão e tenta de novo.','alert');return}
   spotPrioritario=data.id;
+  ONB.salvo={lugar:p,id:data.id,nota};
   onbIr(4);
 }
 
@@ -10377,7 +10474,12 @@ async function confirmar(titulo,texto,rotulo){
 }
 
 function showOv(id){populateTripOpts();if(id==='ov-newtrip')prepNewTrip();if(id==='ov-quickvisit')prepQuickVisit();document.getElementById(id).classList.add('show');avisarSeTemJanela()}
-function closeOv(id){document.getElementById(id).classList.remove('show');avisarSeTemJanela()}
+function closeOv(id){
+  // Fechar a folha de categoria sem escolher encerra o "Mudar categoria": a
+  // trava ficava ligada, e o próximo + trocava a categoria do spot antigo.
+  if(id==='ov-cat')trocandoCategoria=false;
+  document.getElementById(id).classList.remove('show');avisarSeTemJanela();
+}
 function closeOut(e,id){if(e.target===document.getElementById(id))closeOv(id)}
 function nextOv(a,b){closeOv(a);if(b==='ov-newtrip')prepNewTrip();if(b==='ov-trip'){populateTripOpts();S.explorePick=null;S.explorePickCat=null;S.explorePickStatus=null}if(b==='ov-search')resetSearchSheet();setTimeout(()=>{document.getElementById(b).classList.add('show');avisarSeTemJanela()},220)}
 function prepNewTrip(){
@@ -10518,7 +10620,9 @@ function timeAgo(iso){
 // profiles) e pra pedido pendente (só id/nome/username/avatar, sem e-mail).
 function friendName(p){
   if(!p)return'Alguém';
-  return p.display_name||(p.username?'@'+p.username:null)||p.email||'Alguém';
+  // O e-mail NUNCA aparece como nome: amizade é por username, e o e-mail de
+  // um amigo não é coisa que o app mostre.
+  return p.display_name||(p.username?'@'+p.username:null)||'Alguém';
 }
 function initials(name){
   if(!name)return'?';
@@ -10635,7 +10739,7 @@ async function loadFriends(){
     // o .catch devolve lista vazia. O feed continua inteiro sem ela.
     const meusSpots=allSpotsFlat().map(x=>x.id);
     const[trips,spots,comentDeAmigos,comentNosMeus]=await Promise.all([
-      dbGet('trips',`user_id=in.(${friendIds.join(',')})&dates=not.in.(__quickvisit__,__home__)&order=created_at.desc&limit=15`),
+      dbGet('trips',`user_id=in.(${friendIds.join(',')})&dates=not.in.(__quickvisit__,__home__,__casa__)&order=created_at.desc&limit=15`),
       dbGet('spots',`user_id=in.(${friendIds.join(',')})&status=eq.been&order=created_at.desc&limit=15`),
       dbGet('spot_comments',`user_id=in.(${friendIds.join(',')})&order=created_at.desc&limit=15`).catch(()=>[]),
       meusSpots.length
@@ -10670,7 +10774,8 @@ async function loadFriends(){
     (spots||[]).forEach(sp=>{nomeDoSpot[sp.id]=sp.name});
     allSpotsFlat().forEach(sp=>{nomeDoSpot[sp.id]=sp.name});
     const jaVistos=new Set();
-    [...(comentDeAmigos||[]),...(comentNosMeus||[])].forEach(c=>{
+    // Bloqueado some daqui também: a ficha do spot já filtrava, o feed não.
+    [...(comentDeAmigos||[]),...(comentNosMeus||[])].filter(c=>!estaBloqueado(c.user_id)).forEach(c=>{
       if(jaVistos.has(c.id))return;   // um comentario de amigo NO seu spot cai nas duas consultas
       jaVistos.add(c.id);
       const p=pmap[c.user_id];const name=friendName(p);
