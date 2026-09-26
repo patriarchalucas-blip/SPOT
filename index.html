@@ -557,10 +557,30 @@ button,input,textarea,select{font-family:inherit}
 /* Tipo de comida, embaixo de Comer. Segunda linha, então um degrau abaixo da
    primeira: menor, sem o sublinhado (que é de quem manda na tela), e a escolhida
    só ganha a tinta cheia. */
-.coz-filters{display:flex;gap:16px;padding:8px 20px 0;overflow-x:auto;scrollbar-width:none}
-.coz-filters::-webkit-scrollbar{display:none}
-.coz-chip{flex-shrink:0;padding:4px 0;font-size:14px;font-weight:500;color:var(--ink3);cursor:pointer;white-space:nowrap}
-.coz-chip.on{color:var(--ink);font-weight:600}
+/* Tipo de comida (desenho "Explorar Cozinhas" 1a + 2c, 26/09). A fileira de
+   texto rolável parecia o mesmo nível das abas e cortava na borda. Virou uma
+   linha só — a cozinha escolhida e ▾ — que abre uma folha com fotos de prato. */
+.coz-linha{display:flex;justify-content:space-between;align-items:baseline;padding:16px 20px 0}
+.coz-atual{display:flex;align-items:baseline;gap:6px;min-height:44px;padding:0;background:none;border:none;cursor:pointer;
+  font-size:20px;font-weight:600;letter-spacing:-.02em;color:var(--ink)}
+.coz-atual i{font-style:normal;font-size:14px;color:var(--ink2)}
+.coz-conta{font-size:14px;color:var(--ink3)}
+.coz-sheet{padding:12px 0 calc(34px + env(safe-area-inset-bottom,0px));overflow:hidden}
+.coz-alca{width:36px;height:4px;border-radius:2px;background:#CFCFCB;margin:0 auto 16px}
+.coz-cab{display:flex;justify-content:space-between;align-items:baseline;padding:0 20px 16px}
+.coz-cab h2{margin:0;font-size:20px;font-weight:700;letter-spacing:-.02em;color:var(--ink)}
+.coz-cab span{font-size:14px;color:var(--ink3)}
+.coz-grade{display:grid;grid-template-rows:112px 112px;grid-auto-flow:column;grid-auto-columns:150px;gap:10px;
+  padding:0 20px;overflow-x:auto;scrollbar-width:none;scroll-snap-type:x proximity;scroll-padding:0 20px;-webkit-overflow-scrolling:touch}
+.coz-grade::-webkit-scrollbar{display:none}
+.coz-tile{position:relative;width:150px;height:112px;border-radius:14px;overflow:hidden;border:none;padding:0;cursor:pointer;
+  background:var(--photo-empty);opacity:.62;scroll-snap-align:start}
+.coz-tile.on{opacity:1}
+.coz-tile img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+.coz-tile::after{content:'';position:absolute;inset:0;background:linear-gradient(to top,rgba(0,0,0,.6),rgba(0,0,0,0) 60%)}
+.coz-tile span{position:absolute;left:12px;right:12px;bottom:10px;z-index:1;text-align:left;color:#F5F5F3;
+  font-size:16px;font-weight:500;letter-spacing:-.02em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.coz-tile.on span{font-weight:700}
 .list-body{padding:16px 20px 110px}
 .lrow{display:flex;align-items:center;gap:12px;padding:10px 0;cursor:pointer}
 .lrow:active{opacity:.6}
@@ -1863,7 +1883,7 @@ svg.ic path,svg.ic circle,svg.ic line,svg.ic polyline,svg.ic rect{fill:none;stro
   <div class="ex-rotulo" id="exploreRotulo" style="display:none"></div>
   <div id="exploreAmigos"></div>
   <div class="list-filters" id="exploreFilters"></div>
-  <div class="coz-filters" id="exploreCozinhas"></div>
+  <div class="coz-linha" id="exploreCozinhas"></div>
   <div class="list-body" id="exploreBody">
     <div class="empty-state"><div class="ei" data-ic="search"></div><h3>Descubra o que está bombando</h3><p>Digite uma cidade pra ver o que está bem avaliado por lá — e o que seus amigos já marcaram.</p></div>
   </div>
@@ -2153,6 +2173,7 @@ svg.ic path,svg.ic circle,svg.ic line,svg.ic polyline,svg.ic rect{fill:none;stro
 
 <div class="overlay" id="ov-novasenha"><div class="sheet"><div class="sheet-handle"></div><div class="sheet-title">Escolha uma senha nova</div><div class="den-sobre">Você chegou pelo link de recuperação. Defina a nova senha para entrar.</div><div class="nt-label" style="padding:0 24px">Nova senha</div><input class="nt-input" id="novaSenha" type="password" autocomplete="new-password" placeholder="8+ caracteres, com letras e números"><div class="auth-error show" id="erroNovaSenha" style="padding:0 24px;min-height:18px;background:none;border:none"></div><button class="sheet-cta" id="btnNovaSenha" onclick="salvarNovaSenha()">Salvar e entrar</button></div></div>
 
+<div class="overlay" id="ov-cozinhas" onclick="closeOut(event,'ov-cozinhas')"><div class="sheet coz-sheet"><div class="coz-alca"></div><div class="coz-cab"><h2>O que você quer comer?</h2><span id="cozTipos"></span></div><div class="coz-grade" id="cozGrade"></div></div></div>
 <div class="overlay" id="ov-denuncia" onclick="closeOut(event,'ov-denuncia')"><div class="sheet"><button class="sheet-close" onclick="closeOv('ov-denuncia')" data-ic="close" aria-label="Fechar"></button><div class="sheet-handle"></div><div class="sheet-title">Denunciar</div><div class="den-sobre" id="denunciaSobre"></div><div class="nt-label" style="padding:0 24px">O que houve?</div><div class="den-motivos" id="denunciaMotivos"></div><div class="nt-label" style="padding:0 24px">Quer contar mais? (opcional)</div><textarea class="nt-input" id="denunciaDetalhe" rows="3" maxlength="1000" placeholder="Descreva o problema"></textarea><button class="sheet-cta" id="btnEnviarDenuncia" onclick="enviarDenuncia()">Enviar denúncia</button><div class="conv-dica">Analisamos toda denúncia em até 24 horas. Se quiser parar de ver essa pessoa agora, você também pode bloquear.</div></div></div>
 
 <div class="overlay" id="ov-pergunta" onclick="if(event.target===this)responderPergunta(-1)"><div class="sheet"><div class="sheet-handle"></div><div class="sheet-title" id="perguntaTitulo"></div><div class="den-sobre" id="perguntaTexto"></div><div id="perguntaAcoes"></div></div></div>
@@ -5147,6 +5168,33 @@ const COZINHAS=[
   {id:'bar',rotulo:'Bar',frase:'bares'}
 ];
 function cozinhaAtual(){return COZINHAS.find(c=>c.id===EXPLORE.cozinha)||COZINHAS[0]}
+// Foto de PRATO por cozinha, fixa, servida pelo próprio site (fotos-cozinha/,
+// domínio público — procedência em creditos.json). A foto do lugar costuma ser
+// do salão, e o que abre o apetite é o prato.
+function fotoDaCozinha(id){return '/fotos-cozinha/'+(id||'todas')+'.jpg'}
+function contaDoExplorar(){
+  const n=(EXPLORE.items||[]).length;
+  return EXPLORE_ESTADO==='ok'&&n?n+(n===1?' lugar':' lugares'):'';
+}
+function pintarLinhaDeCozinha(){
+  const c=document.getElementById('exploreCozinhas');
+  if(!c)return;
+  c.style.display=EXPLORE.cat==='food'?'':'none';
+  if(EXPLORE.cat!=='food'){c.innerHTML='';return}
+  c.innerHTML='<button class="coz-atual" onclick="abrirCozinhas()" aria-haspopup="dialog">'+esc(cozinhaAtual().rotulo)+'<i>▾</i></button>'
+    +'<span class="coz-conta">'+esc(contaDoExplorar())+'</span>';
+}
+function abrirCozinhas(){
+  document.getElementById('cozTipos').textContent=(COZINHAS.length-1)+' tipos';
+  const g=document.getElementById('cozGrade');
+  g.innerHTML=COZINHAS.map(z=>'<button class="coz-tile'+(z.id===EXPLORE.cozinha?' on':'')+'" onclick="escolherCozinha(\''+z.id+'\')" aria-pressed="'+(z.id===EXPLORE.cozinha)+'">'
+    +'<img src="'+fotoDaCozinha(z.id)+'" alt="" loading="lazy" decoding="async" onerror="this.onerror=null;this.src=\''+fotoDaCozinha('')+'\'">'
+    +'<span>'+esc(z.rotulo)+'</span></button>').join('');
+  g.scrollLeft=0;
+  showOv('ov-cozinhas');
+}
+// Tocar aplica e fecha na hora — sem botão de aplicar.
+function escolherCozinha(id){closeOv('ov-cozinhas');setExploreCozinha(id)}
 function termoDoExplorar(cidade){
   const frase=EXPLORE.cat==='food'?cozinhaAtual().frase:{hotel:'hotéis',experience:'pontos turísticos'}[EXPLORE.cat];
   return frase+' em '+cidade;
@@ -5156,10 +5204,7 @@ function renderExploreFilters(){
   f.innerHTML=chip('Comer',EXPLORE.cat==='food',"setExploreCat('food')")
     +chip('Ficar',EXPLORE.cat==='hotel',"setExploreCat('hotel')")
     +chip('Experiências',EXPLORE.cat==='experience',"setExploreCat('experience')");
-  const c=document.getElementById('exploreCozinhas');
-  if(!c)return;
-  c.style.display=EXPLORE.cat==='food'?'':'none';
-  c.innerHTML=EXPLORE.cat!=='food'?'':COZINHAS.map(z=>'<div class="coz-chip'+(z.id===EXPLORE.cozinha?' on':'')+'" onclick="setExploreCozinha(\''+z.id+'\')">'+esc(z.rotulo)+'</div>').join('');
+  pintarLinhaDeCozinha();
 }
 function setExploreCozinha(id){
   if(!COZINHAS.some(c=>c.id===id))id='';
@@ -5731,7 +5776,9 @@ function darDadosDeExplorar(){
     chips:[{id:'food',rotulo:'Comer'},{id:'hotel',rotulo:'Ficar'},{id:'experience',rotulo:'Experiências'}],
     // A segunda linha, só em Comer. Vazia nas outras abas: a tela nativa
     // esconde a linha quando não vem nada.
-    cozinhas:EXPLORE.cat==='food'?COZINHAS.map(z=>({id:z.id,rotulo:z.rotulo})):[],
+    cozinhas:EXPLORE.cat==='food'?COZINHAS.map(z=>({id:z.id,rotulo:z.rotulo,foto:location.origin+fotoDaCozinha(z.id)})):[],
+    cozinhaRotulo:cozinhaAtual().rotulo,
+    contagem:contaDoExplorar(),
     cozinha:EXPLORE.cozinha||'',
     semResultadoTexto:EXPLORE.cat==='food'&&EXPLORE.cozinha?'Nada bem avaliado em '+cozinhaAtual().rotulo+' por aqui. Tenta outro tipo.':'',
     estado:EXPLORE_ESTADO,
@@ -5766,6 +5813,7 @@ window.acaoDeExplorar=function(acao,valor){
 
 function renderExploreResults(){
   darDadosDeExplorar();
+  pintarLinhaDeCozinha();
   const body=document.getElementById('exploreBody');
   body.innerHTML=EXPLORE.items.map((p,i)=>{
     const foto=safeUrl(fotoNaLargura(semChaveDoPlaces(p.photo_url),760));

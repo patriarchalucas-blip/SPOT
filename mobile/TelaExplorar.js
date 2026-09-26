@@ -18,6 +18,7 @@ import {
   Keyboard,
   Pressable,
   RefreshControl,
+  Modal,
   ScrollView,
   StyleSheet,
   Text,
@@ -104,6 +105,51 @@ function CardDeLugar({ item, aoSalvar, aoQueroIr }) {
   );
 }
 
+// ═══ FOLHA "O QUE VOCÊ QUER COMER?" (desenho Explorar Cozinhas 1a + 2c) ═══
+// Grade de fotos de prato, 2 fileiras rolando na horizontal. A foto vem do
+// site (fotos-cozinha/), então trocar uma foto não pede build.
+function FolhaDeCozinhas({ aberta, cozinhas, atual, fechar, escolher }) {
+  const margem = useSafeAreaInsets();
+  const colunas = [];
+  for (let i = 0; i < cozinhas.length; i += 2) colunas.push(cozinhas.slice(i, i + 2));
+  return (
+    <Modal visible={aberta} transparent animationType="slide" onRequestClose={fechar}>
+      <Pressable style={e.scrim} onPress={fechar} accessibilityLabel="Fechar" />
+      <View style={[e.folha, { paddingBottom: 34 + margem.bottom }]}>
+        <View style={e.alca} />
+        <View style={e.folhaCab}>
+          <Text style={e.folhaTitulo}>O que você quer comer?</Text>
+          <Text style={e.folhaTipos}>{Math.max(cozinhas.length - 1, 0)} tipos</Text>
+        </View>
+        <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={e.grade}>
+          {colunas.map((col, ci) => (
+            <View key={ci} style={e.gradeCol}>
+              {col.map((c) => {
+                const on = c.id === (atual || '');
+                return (
+                  <Pressable
+                    key={c.id || 'todas'}
+                    onPress={() => escolher(c.id)}
+                    style={[e.tile, !on && e.tileFora]}
+                    accessibilityRole="button"
+                    accessibilityState={{ selected: on }}
+                  >
+                    {c.foto ? <Image source={{ uri: c.foto }} style={StyleSheet.absoluteFill} /> : null}
+                    <View style={e.veu1} />
+                    <View style={e.veu2} />
+                    <View style={e.veu3} />
+                    <Text style={[e.tileNome, on && e.tileNomeOn]} numberOfLines={1}>{c.rotulo}</Text>
+                  </Pressable>
+                );
+              })}
+            </View>
+          ))}
+        </ScrollView>
+      </View>
+    </Modal>
+  );
+}
+
 export default function TelaExplorar({ dados, ocupado, acao }) {
   const margem = useSafeAreaInsets();
   // A cidade que o site conhece manda ENQUANTO ninguem digitou nada; a partir
@@ -111,6 +157,7 @@ export default function TelaExplorar({ dados, ocupado, acao }) {
   // era um efeito que copiava um estado no outro — copia de estado sempre
   // acaba desencontrada, e aqui desenhava duas vezes a toa.
   const [digitado, setDigitado] = React.useState(null);
+  const [folhaAberta, setFolhaAberta] = React.useState(false);
   const texto = digitado === null ? ((dados && dados.cidade) || '') : digitado;
 
   const buscar = () => {
@@ -224,24 +271,28 @@ export default function TelaExplorar({ dados, ocupado, acao }) {
         </View>
 
         {/* Tipo de comida, só em Comer (o site manda a lista vazia nas outras
-            abas). Um degrau abaixo das abas: menor e sem sublinhado. */}
+            abas): uma linha — a cozinha escolhida e ▾ — que abre a folha. */}
         {(d.cozinhas || []).length ? (
-          <ScrollView
-            horizontal
-            showsHorizontalScrollIndicator={false}
-            style={e.cozLinha}
-            contentContainerStyle={e.cozConteudo}
-          >
-            {d.cozinhas.map((c) => {
-              const on = c.id === (d.cozinha || '');
-              return (
-                <Pressable key={c.id || 'todas'} onPress={() => acao('cozinha', c.id)} hitSlop={8}>
-                  <Text style={[e.cozTxt, on && e.cozTxtOn]}>{c.rotulo}</Text>
-                </Pressable>
-              );
-            })}
-          </ScrollView>
+          <View style={e.cozLinha}>
+            <Pressable
+              onPress={() => setFolhaAberta(true)}
+              style={e.cozAtual}
+              accessibilityRole="button"
+              accessibilityLabel={'Tipo de comida: ' + (d.cozinhaRotulo || 'Todas')}
+            >
+              <Text style={e.cozAtualTxt}>{d.cozinhaRotulo || 'Todas'}</Text>
+              <Text style={e.cozSeta}>▾</Text>
+            </Pressable>
+            <Text style={e.cozConta}>{d.contagem || ''}</Text>
+          </View>
         ) : null}
+        <FolhaDeCozinhas
+          aberta={folhaAberta && (d.cozinhas || []).length > 0}
+          cozinhas={d.cozinhas || []}
+          atual={d.cozinha}
+          fechar={() => setFolhaAberta(false)}
+          escolher={(id) => { setFolhaAberta(false); acao('cozinha', id); }}
+        />
 
         {/* Cada fim de busca diz uma coisa diferente. Antes existia UM estado
             vazio: quem buscasse e nao achasse nada via a tela de "ainda nao
@@ -367,10 +418,25 @@ const e = StyleSheet.create({
   chipTxtOn: { color: INK },
   // .coz-filters — a margem negativa deixa a linha rolar até a borda da tela
   // sem perder o alinhamento de 20 com o resto.
-  cozLinha: { marginHorizontal: -20, marginTop: -8, marginBottom: 16 },
-  cozConteudo: { paddingHorizontal: 20, gap: 16 },
-  cozTxt: { fontSize: 14, fontWeight: '500', color: INK3, paddingVertical: 4 },
-  cozTxtOn: { color: INK, fontWeight: '600' },
+  // .coz-linha — 16 das abas, 20 até o primeiro card.
+  cozLinha: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: 20 },
+  cozAtual: { flexDirection: 'row', alignItems: 'baseline', gap: 6, minHeight: 44, paddingTop: 8 },
+  cozAtualTxt: { fontSize: 20, fontWeight: '600', letterSpacing: -0.4, color: INK },
+  cozSeta: { fontSize: 14, color: INK2 },
+  cozConta: { fontSize: 14, color: INK3 },
+  // A folha. O escurecido de fora é o mesmo das outras folhas do app.
+  scrim: { flex: 1, backgroundColor: 'rgba(17,17,17,0.35)' },
+  folha: { backgroundColor: BASE, borderTopLeftRadius: 28, borderTopRightRadius: 28, paddingTop: 12 },
+  alca: { width: 36, height: 4, borderRadius: 2, backgroundColor: '#CFCFCB', alignSelf: 'center', marginBottom: 16 },
+  folhaCab: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'baseline', paddingHorizontal: 20, marginBottom: 16 },
+  folhaTitulo: { fontSize: 20, fontWeight: '700', letterSpacing: -0.4, color: INK },
+  folhaTipos: { fontSize: 14, color: INK3 },
+  grade: { paddingHorizontal: 20, gap: 10 },
+  gradeCol: { gap: 10 },
+  tile: { width: 150, height: 112, borderRadius: 14, overflow: 'hidden', backgroundColor: PHOTO_EMPTY, justifyContent: 'flex-end' },
+  tileFora: { opacity: 0.62 },
+  tileNome: { color: '#F5F5F3', fontSize: 16, fontWeight: '500', letterSpacing: -0.32, marginHorizontal: 12, marginBottom: 10 },
+  tileNomeOn: { fontWeight: '700' },
 
   // .ex-card — não é mais caixa: sem fundo, sem borda, sem raio próprio. A
   // foto é que tem cantos arredondados.
