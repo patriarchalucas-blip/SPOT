@@ -8741,7 +8741,8 @@ async function findInstagramViaBrave(name,city,site){
     // Parar por causa deles descartava o único caminho que ainda funcionava —
     // e era o suficiente pra um spot no começo da fila impedir todos os
     // outros de serem resolvidos pelo site.
-    if(d.capped)return{url:'',conclusivo:false,motivo:'teto'};
+    // O servidor diz de QUEM é o teto: do mês inteiro ou só desta pessoa.
+    if(d.capped)return{url:'',conclusivo:false,motivo:d.scope==='user'?'teto_usuario':'teto'};
     if(d.configured===false)return{url:'',conclusivo:false,motivo:'sem_config'};
     if(d.unauthorized)return{url:'',conclusivo:false,motivo:'sem_sessao',parar:true};
     // Rodou a busca e nenhum perfil passou no critério: isso sim é resposta.
@@ -8752,6 +8753,7 @@ async function findInstagramViaBrave(name,city,site){
 // alguém tocou no botão é porque o resultado guardado não serve.
 const MOTIVO_HUMANO={
   teto:'Cota de busca do mês esgotada. Vira mês que já volta.',
+  teto_usuario:'Você chegou no limite de buscas de Instagram deste mês. Vira mês que já volta.',
   sem_sessao:'Sua sessão caiu. Recarrega a página e tenta de novo.',
   sem_config:'A busca não está configurada no servidor.',
   rede:'Sem conexão com o servidor de busca.'
@@ -8859,6 +8861,11 @@ async function autoBackfillPlaceLinks(){
           // não só pra este: insistir gasta uma busca no Google por spot e
           // recebe a mesma recusa. Para a rodada e volta no próximo load.
           if(r.parar){braveIndisponivel=r.motivo;if(Object.keys(patch).length)await dbUpdate('spots',s.id,patch);break}
+          // Teto estourado: os próximos spots recebem a mesma recusa, e cada
+          // tentativa gastava antes uma busca PAGA no Google só pra chegar lá —
+          // a cada abertura do app, spot por spot. Desliga o Instagram pelo
+          // resto da sessão; telefone e mapa seguem.
+          if(/^teto/.test(r.motivo||''))braveIndisponivel=r.motivo;
         }
       }
       if(s.maps_url===null)patch.maps_url=mapsUrl||'';

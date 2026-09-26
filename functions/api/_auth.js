@@ -42,6 +42,12 @@ export async function quemEsta(request, env) {
   const h = request.headers.get('Authorization') || '';
   const token = h.startsWith('Bearer ') ? h.slice(7).trim() : '';
   if (!token) return { permitir: false, uid: null, motivo: 'sem_token' };
+  // Token do Supabase é um JWT: três pedaços base64url, alguns KB no máximo.
+  // Lixo nem chega a ser consultado — um cabeçalho gigante fazia o Supabase
+  // responder 400/431, e isso caía no "deixa passar" lá embaixo.
+  if (token.length > 4096 || !/^[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+$/.test(token)) {
+    return { permitir: false, uid: null, motivo: 'token_malformado' };
+  }
 
   const kv = env.SPOT_KV;
   let chave = null;
@@ -63,9 +69,12 @@ export async function quemEsta(request, env) {
     return { permitir: true, uid: null, motivo: 'supabase_inacessivel' };
   }
 
-  // Só esses dois status são uma resposta de verdade sobre o token.
-  if (r.status === 401 || r.status === 403) {
-    return { permitir: false, uid: null, motivo: 'token_invalido' };
+  // Qualquer 4xx é o Supabase recusando ESTE pedido (token ruim, pedido
+  // malformado, excesso de chamadas) — recusa aqui também. Antes só 401/403
+  // recusavam, e um 400/429 deixava passar sem usuário, ou seja, sem o teto
+  // por pessoa. Deixar passar sobra só pra falha do Supabase (5xx) e de rede.
+  if (r.status >= 400 && r.status < 500) {
+    return { permitir: false, uid: null, motivo: 'token_invalido_' + r.status };
   }
   if (!r.ok) return { permitir: true, uid: null, motivo: 'supabase_erro_' + r.status };
 
