@@ -6561,7 +6561,7 @@ async function pickPlace(p){
 }
 // ── Country mismatch handling ──
 function showCountryMismatch(placeCountry,tripCountry){
-  document.getElementById('cmText').innerHTML=`Esse lugar fica em <strong>${esc(placeCountry)}</strong>, não na <strong>${esc(tripCountry)}</strong>.`;
+  document.getElementById('cmText').innerHTML=`Esse lugar fica em <strong>${esc(placeCountry)}</strong>, e não em <strong>${esc(tripCountry)}</strong>.`;
   // Does a trip for the correct country already exist?
   const existing=S.trips.find(t=>((t.destinations&&t.destinations[0])||t.name)===placeCountry);
   const btn=document.getElementById('cmMoveBtn');
@@ -6583,7 +6583,6 @@ async function moveToCorrectCountry(existingTrip,createNew){
     const{data,error}=await dbInsert('trips',{user_id:S.user.id,name:country,destinations:[country],dates:'',status:'planning'});
     if(error||!data){toast('Erro ao criar viagem','');return}
     data._spots=[];S.trips.unshift(data);trip=data;
-    document.getElementById('statTrips').textContent=S.trips.filter(t=>!isNonTrip(t)).length;
   }
   // Set the add target to the correct trip and proceed to note
   S.addTrip=trip;S.selPlace=p;S.pendingPlace=null;
@@ -6707,10 +6706,13 @@ async function resolverCidadeDoSpot(p,trip){
   // Canoniza antes de gravar: o banco passa a guardar um nome só por cidade,
   // e todo o resto do app (cards, contagem, foto) enxerga esse nome.
   const cidade=await resolverCidadeDoSpot(p,t);
-  const rec={user_id:S.user.id,trip_id:t.id,name:p.name,category:S.addCat,my_note:note,city:cidade,address:p.address||'',photo_url:p.photo_url||'',place_type:catLabel(S.addCat),rating_google:p.rating_google||'',status:addStatus,website_url:p.website_url||'',maps_url:p.maps_url||''};
+  // O texto vai pro campo do status, a mesma regra da ficha (campoDaFicha):
+  // "Já fui" com texto gravava em my_note e aparecia como "Antes de ir".
+  const rec={user_id:S.user.id,trip_id:t.id,name:p.name,category:S.addCat,my_note:addStatus==='want'?note:'',city:cidade,address:p.address||'',photo_url:p.photo_url||'',place_type:catLabel(S.addCat),rating_google:p.rating_google||'',status:addStatus,website_url:p.website_url||'',maps_url:p.maps_url||''};
   // Só faz sentido em experiência — nas outras categorias a coluna fica nula
   if(S.addCat==='experience'&&subcatsDe(addSubcat).length)rec.subcategory=subcatsPara(addSubcat);
   if(p.phone)rec.phone=p.phone;
+  if(addStatus!=='want'&&note)rec.my_review=note;
   // Coordenada (023). Vai junto dos outros opcionais: se a migração ainda não
   // rodou, o insert retenta sem ela e o spot é salvo do mesmo jeito.
   if(p.lat!=null&&p.lng!=null){rec.lat=p.lat;rec.lng=p.lng}
@@ -6816,7 +6818,6 @@ async function createTrip(){
     document.getElementById('countryList').innerHTML='';
 
     renderTrips();populateTripOpts();
-    document.getElementById('statTrips').textContent=S.trips.filter(t=>!isNonTrip(t)).length;
     toast('Viagem criada','"'+name+'"','suitcase');
     // Se veio de busca por cidade, o card dela já existe vazio (initial_city) —
     // leva direto pra adicionar o primeiro spot ali. Se veio de busca só por
@@ -8441,7 +8442,8 @@ function abrirDenuncia(tipo,alvoId,donoId){
   const box=document.getElementById('denunciaMotivos');
   box.innerHTML=MOTIVOS_DENUNCIA.map((m,i)=>
     '<button class="den-motivo" data-i="'+i+'" onclick="escolherMotivo('+i+')">'+esc(m)+'</button>').join('');
-  escolherMotivo(0);
+  // Nenhum motivo marcado de saída: com o primeiro pré-marcado, quem tocava
+  // em Enviar direto acusava "conteúdo ofensivo ou de ódio" sem ter escolhido.
   showOv('ov-denuncia');
 }
 function escolherMotivo(i){
@@ -8452,7 +8454,8 @@ function escolherMotivo(i){
   });
 }
 async function enviarDenuncia(){
-  if(!DENUNCIA_ALVO||!DENUNCIA_ALVO.motivo)return;
+  if(!DENUNCIA_ALVO)return;
+  if(!DENUNCIA_ALVO.motivo){toast('Escolha o que houve','Toque num dos motivos acima.','alert');return}
   const btn=document.getElementById('btnEnviarDenuncia');
   const antes=btn.textContent;
   btn.textContent='Enviando...';btn.style.pointerEvents='none';

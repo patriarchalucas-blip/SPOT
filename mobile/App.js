@@ -397,6 +397,15 @@ function Conteudo() {
       setOcupada((o) => (o === qual ? '' : o));
       if (dados.pronto !== false) {
         setDadosDaTela((d) => ({ ...d, [qual]: dados.dados }));
+      } else {
+        // "Ainda não tenho dados" também é resposta: sem apagar, a tela
+        // nativa seguia mostrando a conta ANTERIOR depois de trocar de conta.
+        setDadosDaTela((d) => {
+          if (!(qual in d)) return d;
+          const n = { ...d };
+          delete n[qual];
+          return n;
+        });
       }
     }
   }, []);
@@ -451,7 +460,7 @@ function Conteudo() {
   if (semRede) {
     return (
       <>
-        <StatusBar style="light" />
+        <StatusBar style="dark" />
         <SafeAreaView style={estilo.fundo}>
           <ScrollView
             contentContainerStyle={estilo.centro}
@@ -472,7 +481,7 @@ function Conteudo() {
 
   return (
     <>
-      <StatusBar style="light" />
+      <StatusBar style="dark" />
       <SafeAreaView style={estilo.fundo} edges={['top', 'left', 'right']}>
         <View style={estilo.pilha}>
           <WebView
@@ -498,6 +507,10 @@ function Conteudo() {
               'window.cascaTemApple=' + (TEM_APPLE ? 'true' : 'false') + ';true;'
             }
             onMessage={aoReceberMensagem}
+            // O iOS encerra o processo da página quando falta memória com o app
+            // em segundo plano. Sem isto as telas nativas ficavam desenhadas,
+            // mas todo toque caía numa página morta.
+            onContentProcessDidTerminate={() => webRef.current && webRef.current.reload()}
             onLoadStart={() => {
               setCarregando(true);
               // Recarregou: até o site dizer onde está, a barra some. Melhor
