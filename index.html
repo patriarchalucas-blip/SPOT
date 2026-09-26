@@ -2,7 +2,11 @@
 <html lang="pt-BR">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<!-- Sem zoom da página: dentro do app do iPhone, um toque duplo ou uma pinça
+     sem querer deixava a tela ampliada e a pessoa tinha que desfazer com os
+     dedos. App nativo não amplia a tela inteira. O mapa-múndi tem a própria
+     pinça (touch-action:none nele), que continua funcionando. -->
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>Spot — seus lugares, sua voz</title>
 <!-- Sem estas linhas, o link de convite no WhatsApp aparece como endereço
      cru: sem título, sem imagem, sem uma frase dizendo o que é. E o convite
@@ -231,6 +235,9 @@ body.tem-apple .btn-apple{display:flex}
 /* Botão e campo não herdam a fonte da página por padrão: o placar, as abas
    de continente e os nomes dos cards saíam em Arial. Uma regra só resolve. */
 button,input,textarea,select{font-family:inherit}
+/* Toque duplo não amplia (o iOS ainda amplia com toque duplo mesmo com
+   user-scalable=no em alguns casos); manipulation mantém rolagem e pinça do mapa. */
+html{touch-action:manipulation}
 /* O iPhone dá zoom sozinho ao tocar num campo com letra menor que 16 — e não
    volta: a pessoa tinha que desfazer o zoom com os dedos. Quase todo campo do
    app era 15. 16 é o mínimo; o !important vence as regras de cada campo. */
