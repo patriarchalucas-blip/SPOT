@@ -113,3 +113,11 @@ test('as duas rotas so respondem ao verbo que deveriam', async () => {
   assert.strictEqual(typeof foto.onRequestGet, 'function');
   assert.strictEqual(foto.onRequestPost, undefined);
 });
+
+test('area do Explorar: retangulo valido passa, coordenada fora do mundo e recusada', () => {
+  const ok = montarTexto({ textQuery: 'restaurantes', locationRestriction: { rectangle: { low: { latitude: -23.57, longitude: -46.70 }, high: { latitude: -23.55, longitude: -46.68 } } } });
+  assert.ok(ok.locationRestriction.rectangle.low.latitude === -23.57);
+  assert.strictEqual(montarTexto({ textQuery: 'x', locationRestriction: { rectangle: { low: { latitude: -95, longitude: 0 }, high: { latitude: 0, longitude: 0 } } } }), null);
+  assert.strictEqual(montarTexto({ textQuery: 'x', locationRestriction: { rectangle: { low: { latitude: 'a' }, high: {} } } }), null);
+  assert.ok(CAMPOS_OK.has('places.viewport'));
+});

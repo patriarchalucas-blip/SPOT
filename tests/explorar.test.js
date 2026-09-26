@@ -134,3 +134,39 @@ test('a tela nativa recebe os tipos so em Comer', () => {
     assert.strictEqual(msg.dados.cozinhas.length, 0);
   } finally { v(); A.avaliar("EXPLORE.cat='food';EXPLORE.cozinha=''") }
 });
+
+// Busca por rua / bairro / cidade (26/09): "Rua Fradique Coutinho", "Quinta Avenida".
+test('rua vira um retangulo de algumas quadras em volta; bairro usa o do Google', () => {
+  const r = A.areaDaBusca({ latitude: -23.56, longitude: -46.69 }, null, 'rua').rectangle;
+  const alt = r.high.latitude - r.low.latitude;
+  assert.ok(alt > 0.01 && alt < 0.02, 'altura da area da rua: ' + alt);
+  const vp = { low: { latitude: -23.60, longitude: -46.72 }, high: { latitude: -23.54, longitude: -46.66 } };
+  const b = A.areaDaBusca({ latitude: -23.57, longitude: -46.69 }, vp, 'bairro').rectangle;
+  assert.strictEqual(b.low.latitude, -23.60);
+  assert.strictEqual(b.high.longitude, -46.66);
+});
+
+test('buscar uma rua procura DENTRO da area dela, em todas as paginas', async () => {
+  const corpos = [];
+  const volta = trocar(A, 'googlePlaces', async (op, o) => {
+    const b = JSON.parse(o.body); corpos.push(b);
+    if (b.maxResultCount === 1) {
+      return { ok: true, json: async () => ({ places: [{ displayName: { text: 'Rua Fradique Coutinho' },
+        location: { latitude: -23.56, longitude: -46.69 }, types: ['route'],
+        addressComponents: [{ types: ['administrative_area_level_2'], longText: 'São Paulo' }, { types: ['country'], longText: 'Brasil', shortText: 'BR' }] }] }) };
+    }
+    return { ok: true, json: async () => ({ places: [lugar('Tuju')], nextPageToken: b.pageToken ? undefined : 'p2' }) };
+  });
+  const vs = [volta, trocar(A, 'renderExploreResults', () => {}), trocar(A, 'renderAmigosNoLugar', () => {}),
+    trocar(A, 'buscarAmigosNoLugar', async () => ({ estado: 'vazio', grupos: [] }))];
+  try {
+    A.avaliar("EXPLORE.cat='food';EXPLORE.cozinha='';document.getElementById('exploreCitySearch').value='Rua Fradique Coutinho'");
+    await A.runExplore();
+    const busca = corpos.find((c) => c.pageSize);
+    assert.ok(busca.locationRestriction && busca.locationRestriction.rectangle, 'sem area');
+    assert.ok(/Perto de Rua Fradique Coutinho/.test(A.avaliar('EXPLORE.rotulo')));
+    await A.maisDoExplorar();
+    const pag2 = corpos.find((c) => c.pageToken);
+    assert.ok(pag2 && pag2.locationRestriction, 'pagina 2 sem a area');
+  } finally { vs.forEach((v) => v()); A.avaliar("EXPLORE.rotulo='';EXPLORE.area=null;EXPLORE.city=''") }
+});

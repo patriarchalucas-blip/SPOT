@@ -49,6 +49,10 @@ export const CAMPOS_OK = new Set([
   'places.location', 'places.photos', 'places.rating', 'places.userRatingCount',
   'places.websiteUri', 'places.googleMapsUri', 'places.types', 'places.primaryType',
   'places.nationalPhoneNumber',
+  // O retângulo do lugar no mapa. O Explorar busca por rua/bairro/cidade
+  // (26/09): primeiro descobre ONDE é o que foi digitado, depois procura
+  // restaurante dentro dessa área.
+  'places.viewport',
   // A linha de serviço da ficha ("Aberto · fecha às 23h · $$"). Vêm na MESMA
   // busca que já roda ao adicionar um lugar — pedir não custa chamada nova, e
   // o resultado é guardado no spot em vez de consultado a cada abertura.
@@ -168,6 +172,18 @@ export function montarTexto(b) {
   if (b.languageCode) p.languageCode = String(b.languageCode).slice(0, 10);
   if (b.includedType) p.includedType = String(b.includedType).slice(0, 40);
   if (b.strictTypeFiltering === true) p.strictTypeFiltering = true;
+  // Área da busca do Explorar: o retângulo do lugar que a PESSOA DIGITOU (uma
+  // rua, um bairro), nunca a posição dela — por isso pode entrar no cache.
+  // Só números dentro do mundo passam.
+  const ret = b.locationRestriction && b.locationRestriction.rectangle;
+  if (ret) {
+    const lat = (v) => Number.isFinite(v) && Math.abs(v) <= 90;
+    const lng = (v) => Number.isFinite(v) && Math.abs(v) <= 180;
+    const lo = ret.low || {}, hi = ret.high || {};
+    const la1 = Number(lo.latitude), ln1 = Number(lo.longitude), la2 = Number(hi.latitude), ln2 = Number(hi.longitude);
+    if (!lat(la1) || !lng(ln1) || !lat(la2) || !lng(ln2) || la1 > la2) return null;
+    p.locationRestriction = { rectangle: { low: { latitude: la1, longitude: ln1 }, high: { latitude: la2, longitude: ln2 } } };
+  }
   // PAGINAÇÃO (Explorar, 25/09): rolagem contínua de 20 em 20. O Google
   // pagina por pageSize + pageToken, e entrega no máximo 60 por busca.
   // O token é opaco, mas é nosso pra validar: só letras, números, - e _.

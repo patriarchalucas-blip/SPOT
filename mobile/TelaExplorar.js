@@ -182,7 +182,7 @@ export default function TelaExplorar({ dados, ocupado, acao }) {
               style={e.input}
               value={texto}
               onChangeText={setDigitado}
-              placeholder="Buscar cidade..."
+              placeholder="Cidade, bairro ou rua"
               placeholderTextColor={INK3}
               returnKeyType="search"
               onSubmitEditing={buscar}
@@ -307,7 +307,7 @@ export default function TelaExplorar({ dados, ocupado, acao }) {
             <View style={e.vazio}>
               <IconeBusca cor={INK3} />
               <Text style={e.vazioTitulo}>Nada encontrado</Text>
-              <Text style={e.vazioTexto}>{d.semResultadoTexto || 'Tenta um nome de cidade diferente.'}</Text>
+              <Text style={e.vazioTexto}>{d.semResultadoTexto || 'Tenta outro lugar: uma cidade, um bairro ou uma rua.'}</Text>
             </View>
           ) : d.estado === 'erro' ? (
             <View style={e.vazio}>
