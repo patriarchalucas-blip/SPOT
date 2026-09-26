@@ -5,18 +5,20 @@ import{lerKV}from './_kv.js';
 // não pode ir pro client, senão qualquer um que abrir o app pode usá-la) e
 // travar um teto rígido de buscas por mês.
 //
-// Teto de segurança: a Brave dá 1000 buscas/mês de graça. MONTHLY_CAP fica
-// bem abaixo disso de propósito — o pior cenário matemático é *nunca*
-// passar do crédito grátis, ou seja, R$0/US$0 de risco. Quando o teto é
-// atingido, devolve instagram_url:null e o app simplesmente cai pro
-// fallback que já existe (Google Maps) — sem erro, sem cobrança extra.
-const MONTHLY_CAP = 900;
+// Teto de segurança. Era 900 — abaixo das 1.000 grátis, risco zero — e
+// estourou em 26/09 só com testes: o Instagram parou pra todo mundo até
+// virar o mês. Com o app virando produto, o Lucas decidiu pagar (26/09).
+// Preço conferido no site da Brave nesse dia: US$ 5 por mil buscas, com
+// US$ 5 de crédito grátis por mês (as primeiras mil). 5.000 = no máximo
+// uns US$ 20/mês. Passou disso, devolve instagram_url:null e o app cai
+// pro fallback (Google Maps) — sem erro, sem cobrança além do teto.
+const MONTHLY_CAP = 5000;
 // Teto por usuário. Diferente da /api/climate, aqui NÃO existe cache: toda
 // chamada consome uma busca da Brave. Então não há caminho "de graça" pra
 // liberar sem token — quem não está logado é recusado antes de qualquer coisa.
-// 150/mês por pessoa é muito acima do uso real (o backfill roda uma vez por
-// spot de comida) e impede que uma conta só zere as 900 do mês.
-const USER_CAP = 150;
+// 300/mês por pessoa: acima do uso real (o backfill roda uma vez por spot de
+// comida) e impede que uma conta só zere o teto do mês.
+const USER_CAP = 300;
 
 export async function onRequestPost(context) {
   const { request, env } = context;
