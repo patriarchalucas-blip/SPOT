@@ -2480,7 +2480,13 @@ async function sbFetch(path,opts,extraHeaders){
     r=await monta(true);
     // Só avisa quem de fato TINHA sessão: pra visitante anônimo, 401 é a
     // resposta esperada do RLS, não uma sessão que venceu.
-    if((r.status===401||r.status===403)&&S.user)avisaSessaoExpirada();
+    // 401 é sessão. 403 quase sempre é a regra do banco dizendo "isto não é
+    // seu" — tratar como sessão vencida mandava a pessoa recarregar à toa.
+    // Só avisa no 403 quando o próprio erro fala do token.
+    if(S.user&&r.status===401)avisaSessaoExpirada();
+    else if(S.user&&r.status===403){
+      try{if(/jwt|token/i.test(await r.clone().text()))avisaSessaoExpirada()}catch(e){}
+    }
   }
   return r;
 }
@@ -4083,16 +4089,16 @@ function renderList(){
 }
 function openSpotFromList(i){const s=LS.items[i];if(!s)return;const t=S.trips.find(x=>x.id===s._tripId);if(!t)return;S.curTrip=t;openPlace(s.id,'list')}
 function backFromPlace(){
-  if(S.placeOrigin==='list'){goTo('list');renderList();return}
+  if(S.placeOrigin==='list'){goTo('list',true);renderList();return}
   // Aberto pela estante: voltar tem que devolver pro Perfil, nao jogar
   // numa viagem que a pessoa nem sabia que estava aberta.
   if(S.placeOrigin==='profile'){goTo('profile');loadProfile();return}
   // Salvo como Fui pelo Explorar: volta pra lista de onde a pessoa veio.
-  if(S.placeOrigin==='explore'){goTo('explore');renderExploreResults();return}
+  if(S.placeOrigin==='explore'){goTo('explore',true);renderExploreResults();return}
   // Aberto de dentro da tela da cidade, o voltar tem que devolver PRA cidade.
   // Antes caía sempre na tela da viagem, um nível acima de onde a pessoa estava.
-  if(S.placeOrigin==='city'&&S.curCity){goTo('city');updateCityHeader();renderCityBody();return}
-  goTo('trip');loadTrip(S.curTrip);
+  if(S.placeOrigin==='city'&&S.curCity){goTo('city',true);updateCityHeader();renderCityBody();return}
+  goTo('trip',true);loadTrip(S.curTrip);
 }
 function openTripFromList(i){const t=LS.items[i];if(t)openTrip(t.id)}
 function drillFromList(i,kind){
@@ -4156,8 +4162,14 @@ async function deleteSpot(){
   const id=S.curPlace.id,tripId=S.curPlace.trip_id;
   const{error}=await dbDelete('spots',id);
   if(!error){
-    if(S.curTrip&&S.curTrip._spots){S.curTrip._spots=S.curTrip._spots.filter(s=>s.id!==id)}
-    goTo('trip');loadTrip(S.curTrip);
+    (S.trips||[]).forEach(t=>{if(t._spots)t._spots=t._spots.filter(s=>s.id!==id)});
+    // Volta pra onde a pessoa estava. Antes ia sempre pra tela da viagem — e
+    // spot da cidade onde mora caía na linha escondida da casa, numa tela com
+    // "Excluir viagem" que apagaria todos os spots da cidade.
+    const dono=(S.trips||[]).find(t=>t.id===tripId)||S.curTrip;
+    if(S.placeOrigin&&S.placeOrigin!=='trip')backFromPlace();
+    else if(!dono||isNonTrip(dono)){goTo('dashboard');loadDashboard()}
+    else{S.curTrip=dono;goTo('trip');loadTrip(dono)}
     toast('Spot excluído','','trash');
   }else toast('Erro ao excluir','');
 }
@@ -4985,7 +4997,8 @@ async function rateStar(base,ev){
   const anterior=notaDaFicha;
   notaDaFicha=(notaDaFicha===v?0:v);
   pintarEstrelas('#placeStars',notaDaFicha);
-  const{error}=await dbUpdate('spots',s.id,{my_rating:notaDaFicha});
+  // Zerar é tirar a nota: null, não 0 (0 parecia uma nota péssima gravada).
+  const{error}=await dbUpdate('spots',s.id,{my_rating:notaDaFicha||null});
   if(error){
     if(S.curPlace===s){notaDaFicha=anterior;pintarEstrelas('#placeStars',notaDaFicha)}
     toast('Não salvou','Confere a conexão e tenta de novo.','alert');
@@ -5078,7 +5091,9 @@ function contemComoPalavra(maior,menor){
 }
 function populateTripOpts(destaque){
   const c=document.getElementById('tripOptions');
-  let lista=S.trips.slice();
+  // Linha de casa e país marcado não são viagem: oferecer os dois como destino
+  // escondia o spot numa linha que não aparece em lista nenhuma.
+  let lista=S.trips.filter(t=>!isNonTrip(t));
   if(destaque){
     // Combina pela cidade da viagem ou pelo destino. Nao escolhe sozinho —
     // so poe na frente: a viagem certa continua sendo decisao sua.
@@ -6615,7 +6630,7 @@ async function pickPlace(p){
 function showCountryMismatch(placeCountry,tripCountry){
   document.getElementById('cmText').innerHTML=`Esse lugar fica em <strong>${esc(placeCountry)}</strong>, e não em <strong>${esc(tripCountry)}</strong>.`;
   // Does a trip for the correct country already exist?
-  const existing=S.trips.find(t=>((t.destinations&&t.destinations[0])||t.name)===placeCountry);
+  const existing=S.trips.find(t=>!ehCasa(t)&&((t.destinations&&t.destinations[0])||t.name)===placeCountry);
   const btn=document.getElementById('cmMoveBtn');
   if(existing){
     btn.textContent='Adicionar em '+placeCountry;
@@ -10488,10 +10503,18 @@ function initMapZoom(baseVB,op){
   },{passive:false});
   svg.addEventListener('touchend',()=>{pts={}});
 }
-function goTo(id){
+// Onde cada tela estava rolada quando a pessoa saiu dela. Voltar de uma ficha
+// pro Explorar ou pra cidade jogava pro topo — quem percorria 20 resultados
+// perdia o lugar a cada spot que abria.
+const ROLAGEM={};
+function goTo(id,manterRolagem){
+  const antes=document.querySelector('.screen.active');
+  if(antes)ROLAGEM[antes.id]=window.scrollY;
   document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
   document.getElementById(id).classList.add('active');
-  window.scrollTo(0,0);
+  const y=manterRolagem?(ROLAGEM[id]||0):0;
+  window.scrollTo(0,y);
+  if(y)requestAnimationFrame(()=>window.scrollTo(0,y));
   avisarTelaAtual(id);
 }
 // ═══ PERGUNTA ═══
