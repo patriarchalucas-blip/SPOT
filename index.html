@@ -8719,13 +8719,14 @@ let spotPrioritario=null;
 // O servidor JÁ distingue (`capped`, `unauthorized`, `configured:false`); só o
 // cliente é que jogava a informação fora. Agora devolve {url, conclusivo}:
 // conclusivo=true só quando a busca realmente rodou e terminou.
-async function findInstagramViaBrave(name,city,site){
+async function findInstagramViaBrave(name,city,site,forcar){
   try{
     const tk=await ensureToken();
     const resp=await fetch('/api/find-instagram',{
       method:'POST',
       headers:Object.assign({'Content-Type':'application/json'},tk?{'Authorization':'Bearer '+tk}:{}),
-      body:JSON.stringify({query:name+(city?' '+city:''),name,city,site:site||''})
+      // forcar: a pessoa tocou em buscar — a resposta guardada não serviu.
+      body:JSON.stringify({query:name+(city?' '+city:''),name,city,site:site||'',forcar:!!forcar})
     });
     // 401/403 é sessão, mesmo motivo do `unauthorized` do corpo — usa o mesmo
     // rótulo, senão a mensagem pro usuário sai como "http_401".
@@ -8784,7 +8785,7 @@ async function buscarInstagramAgora(id,btn){
       site=(best&&best.websiteUri)||'';
     }catch(e){}
   }
-  const r=await findInstagramViaBrave(s.name,cityOf(s),site);
+  const r=await findInstagramViaBrave(s.name,cityOf(s),site,true);
   devolve();
   if(r.url){
     const{error}=await grava({website_url:r.url,insta_checked:true});

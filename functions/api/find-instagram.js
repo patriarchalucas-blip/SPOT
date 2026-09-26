@@ -1,18 +1,34 @@
 import{quemEsta,podeGastar}from './_auth.js';
-import{lerKV}from './_kv.js';
+import{lerKV,gravarKV}from './_kv.js';
+import{avisarDono}from './_aviso-dono.js';
 // Cloudflare Pages Function — roda no servidor da Cloudflare, nunca no
 // navegador do usuário. Existe só pra isso: esconder a chave da Brave (que
 // não pode ir pro client, senão qualquer um que abrir o app pode usá-la) e
 // travar um teto rígido de buscas por mês.
 //
-// Teto de segurança. Era 900 — abaixo das 1.000 grátis, risco zero — e
-// estourou em 26/09 só com testes: o Instagram parou pra todo mundo até
-// virar o mês. Com o app virando produto, o Lucas decidiu pagar (26/09).
-// Preço conferido no site da Brave nesse dia: US$ 5 por mil buscas, com
-// US$ 5 de crédito grátis por mês (as primeiras mil). 5.000 = no máximo
-// uns US$ 20/mês. Passou disso, devolve instagram_url:null e o app cai
-// pro fallback (Google Maps) — sem erro, sem cobrança além do teto.
-const MONTHLY_CAP = 5000;
+// Teto do mês. Era 900 — abaixo das 1.000 grátis, risco zero — e estourou
+// em 26/09 só com testes: o Instagram parou pra todo mundo até virar o mês.
+// Decisão do Lucas (26/09): o Instagram NÃO PODE PARAR. Então este número
+// deixou de ser o limite de uso e virou só a rede contra desastre (robô,
+// laço de código): 20.000 ≈ US$ 95 no pior mês, pelo preço conferido no site
+// da Brave nesse dia (US$ 5 por mil, com US$ 5 de crédito grátis por mês).
+// Quem garante que ele nunca é atingido são duas coisas abaixo: a MEMÓRIA
+// por restaurante (o mesmo lugar não é buscado duas vezes, por ninguém) e o
+// AVISO no celular do Lucas em 50%, 80% e 100% — tempo de sobra pra subir.
+const MONTHLY_CAP = 20000;
+const AVISOS = [50, 80, 100];
+// Quanto tempo a resposta fica guardada. Achado dura mais: perfil de
+// restaurante não muda. "Não tem" dura menos: o lugar pode criar um perfil.
+const MEMORIA_ACHOU = 60 * 60 * 24 * 180;
+const MEMORIA_NAO_TEM = 60 * 60 * 24 * 30;
+// Chave da memória: nome + cidade, sem acento nem caixa. "Mocotó, São Paulo"
+// e "mocoto, sao paulo" são o mesmo restaurante; o de outra cidade, não.
+async function chaveDaMemoria(name, city) {
+  const n = (x) => String(x || '').normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase().replace(/\s+/g, ' ').trim();
+  const dado = new TextEncoder().encode(n(name) + '|' + n(city));
+  const h = await crypto.subtle.digest('SHA-256', dado);
+  return 'ig_' + [...new Uint8Array(h)].slice(0, 16).map((b) => b.toString(16).padStart(2, '0')).join('');
+}
 // Teto por usuário. Diferente da /api/climate, aqui NÃO existe cache: toda
 // chamada consome uma busca da Brave. Então não há caminho "de graça" pra
 // liberar sem token — quem não está logado é recusado antes de qualquer coisa.
@@ -53,8 +69,22 @@ export async function onRequestPost(context) {
   // Botanikafé: botanikafe.com linka instagram.com/botanikafe.
   //
   // Não custa nada do teto da Brave: é uma requisição HTTP comum.
+  // ═══ PASSO 0: alguém já procurou este restaurante? ═══
+  // Cinquenta amigos salvando o mesmo lugar eram cinquenta buscas pagas iguais.
+  // Agora a primeira resposta fica guardada pra todo mundo.
+  const memoria = await chaveDaMemoria(name, city);
+  // Toque manual em "buscar" passa por cima: se a pessoa pediu de novo, a
+  // resposta guardada não serviu pra ela.
+  const guardado = body.forcar === true ? null : await lerKV(env, memoria);
+  if (guardado !== null) {
+    return json({ instagram_url: guardado === '-' ? null : guardado, fonte: 'memoria' });
+  }
+
   const doSite = await instagramDoSite(site, name);
-  if (doSite) return json({ instagram_url: doSite, fonte: 'site' });
+  if (doSite) {
+    await gravarKV(env, memoria, doSite, MEMORIA_ACHOU);
+    return json({ instagram_url: doSite, fonte: 'site' });
+  }
 
   // ═══ PASSO 2: busca na web ═══
   if (!env.BRAVE_API_KEY || !env.SPOT_KV) {
@@ -105,8 +135,26 @@ export async function onRequestPost(context) {
   const urlsDe = (d) => ((d && d.web && d.web.results) || []);
   // Conta o que foi gasto mesmo quando a busca falha — é a chamada que
   // consome o crédito, não a resposta.
+  // gravarKV nunca levanta erro: o put direto derrubava a rota com 500 quando
+  // o KV recusava gravação, DEPOIS de a busca já ter sido paga.
   const registrar = async () => {
-    if (gastos) await env.SPOT_KV.put(counterKey, String(current + gastos), { expirationTtl: 60 * 60 * 24 * 40 });
+    if (!gastos) return;
+    const depois = current + gastos;
+    await gravarKV(env, counterKey, String(depois), 60 * 60 * 24 * 40);
+    // Aviso no celular do Lucas quando cruza 50%, 80% e 100% — uma vez por
+    // marca por mês. É o que faz o teto nunca ser surpresa.
+    for (const pct of AVISOS) {
+      const marca = Math.ceil(MONTHLY_CAP * pct / 100);
+      if (current < marca && depois >= marca) {
+        const k = 'brave_aviso_' + monthKey + '_' + pct;
+        if (await lerKV(env, k)) continue;
+        await gravarKV(env, k, '1', 60 * 60 * 24 * 40);
+        await avisarDono(env, 'Instagram: ' + pct + '% da cota do mês',
+          depois + ' de ' + MONTHLY_CAP + ' buscas usadas em ' + monthKey + '. ' +
+          (pct >= 100 ? 'A busca de Instagram parou — suba o teto em find-instagram.js.' : 'Se precisar, suba o teto antes de acabar.'),
+          'cota');
+      }
+    }
   };
 
   // UMA busca. Aqui existiu uma segunda, dirigida com `site:instagram.com`,
@@ -120,10 +168,14 @@ export async function onRequestPost(context) {
   // brasileiro é o pior caso. O Google acha porque é o Google; a Brave, não.
   // Pedir mais resultados é o único ganho barato e sem risco — a Brave cobra
   // por busca, não por resultado.
-  const resultados = urlsDe(await buscar(query + ' instagram'));
+  const resposta = await buscar(query + ' instagram');
+  const resultados = urlsDe(resposta);
   const hit = escolherPerfil(resultados, name, city);
 
   await registrar();
+  // Só guarda quando a busca de fato respondeu: falha da Brave não pode virar
+  // "esse restaurante não tem Instagram" por 30 dias.
+  if (resposta) await gravarKV(env, memoria, hit || '-', hit ? MEMORIA_ACHOU : MEMORIA_NAO_TEM);
   return json({ instagram_url: hit || null });
 }
 
