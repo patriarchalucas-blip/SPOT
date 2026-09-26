@@ -1,4 +1,5 @@
 import { quemEsta } from './_auth.js';
+import { lerKV, gravarKV } from './_kv.js';
 
 // Cloudflare Pages Function — manda a notificação pro celular de alguém.
 //
@@ -43,10 +44,11 @@ export async function onRequestPost(context) {
 
   const tipo = String(body.tipo || '');
   const alvo = String(body.alvo || '');
-  // Só um rótulo curto (nome do lugar). Cortado e sem quebra de linha: é a
-  // única parte do texto que vem de fora, então não pode crescer nem inventar
-  // uma segunda linha que pareça outra notificação.
-  const extra = String(body.extra || '').replace(/\s+/g, ' ').trim().slice(0, 60);
+  // O nome do lugar NÃO vem mais do app (26/09): vinha, e qualquer um
+  // escrevia o texto que quisesse na tela de bloqueio de um amigo ("...comentou
+  // em PIX GRÁTIS em golpe.co"). Agora o app manda só o id do spot, e o nome
+  // sai do banco, depois de conferir que o comentário existe.
+  const spotId = String(body.spot || '');
 
   if (!TEXTOS[tipo]) return json({ error: 'tipo_invalido' }, 400);
   if (!/^[0-9a-f-]{36}$/i.test(alvo)) return json({ error: 'alvo_invalido' }, 400);
@@ -67,6 +69,18 @@ export async function onRequestPost(context) {
       if (usado >= TETO_POR_PESSOA) return json({ enviados: 0, capped: true });
       await env.SPOT_KV.put(k, String(usado + 1), { expirationTtl: 3600 });
     } catch (e) { /* KV fora do ar não pode derrubar a notificação */ }
+  }
+
+  // Um aviso por par e por tipo: pedido e aceite, um por dia; comentário, um a
+  // cada 2 minutos no mesmo spot. Sem isto, um pedido de amizade (que só pede
+  // vínculo pendente) permitia 60 avisos por hora na tela de um estranho.
+  const par = 'push_par_' + tipo + '_' + quem.uid + '_' + alvo + (tipo === 'comentario' ? '_' + spotId : '');
+  if (await lerKV(env, par)) return json({ enviados: 0, motivo: 'repetido' });
+  await gravarKV(env, par, '1', tipo === 'comentario' ? 120 : 60 * 60 * 24);
+
+  let extra = '';
+  if (tipo === 'comentario' && /^[0-9a-f-]{36}$/i.test(spotId)) {
+    extra = await nomeDoSpotComentado(env, spotId, quem.uid, alvo);
   }
 
   // 2. o banco decide se o vínculo justifica, e devolve os endereços
@@ -123,6 +137,21 @@ export async function onRequestPost(context) {
   } catch (e) {
     return json({ enviados: 0, erro: 'envio' });
   }
+}
+
+// Nome do spot, só se: o spot é de quem vai receber E quem chamou comentou
+// nele nos últimos 10 minutos. Fora disso: sem nome, e a notificação sai
+// genérica ("comentou no seu lugar").
+async function nomeDoSpotComentado(env, spotId, de, para) {
+  try {
+    const h = { apikey: env.SUPABASE_SERVICE_KEY, Authorization: 'Bearer ' + env.SUPABASE_SERVICE_KEY };
+    const desde = new Date(Date.now() - 10 * 60 * 1000).toISOString();
+    const [c] = await (await fetch(SB_URL + '/rest/v1/spot_comments?select=id&spot_id=eq.' + spotId
+      + '&user_id=eq.' + de + '&created_at=gte.' + encodeURIComponent(desde) + '&limit=1', { headers: h })).json();
+    if (!c) return '';
+    const [sp] = await (await fetch(SB_URL + '/rest/v1/spots?select=name&id=eq.' + spotId + '&user_id=eq.' + para, { headers: h })).json();
+    return sp && sp.name ? String(sp.name).replace(/\s+/g, ' ').trim().slice(0, 60) : '';
+  } catch (e) { return '' }
 }
 
 async function nomeDe(env, uid) {

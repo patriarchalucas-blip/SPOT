@@ -3402,14 +3402,14 @@ async function guardarEnderecoPush(){
 //
 // Falhar aqui não pode atrapalhar nada: o aviso é um extra em cima de uma
 // ação que já deu certo. Sem await em quem chama, sem toast de erro.
-function avisar(tipo,alvo,extra){
+function avisar(tipo,alvo,extra,spot){
   if(!alvo||alvo===((S.user&&S.user.id)||''))return;
   ensureToken().then(tk=>{
     if(!tk)return;
     return fetch('/api/notificar',{
       method:'POST',
       headers:{'Content-Type':'application/json','Authorization':'Bearer '+tk},
-      body:JSON.stringify({tipo,alvo,extra:extra||''})
+      body:JSON.stringify({tipo,alvo,spot:spot||''})
     });
   }).catch(()=>{});
 }
@@ -8605,8 +8605,9 @@ async function enviarComentario(spotId,alvo,donoDoSpot){
   // Só quando o lugar é de outra pessoa: ninguém precisa ser avisado de que
   // comentou no próprio lugar.
   if(donoDoSpot&&donoDoSpot!==S.user.id){
-    const alvoSpot=(FRIEND.spot&&FRIEND.spot.id===spotId)?FRIEND.spot:null;
-    avisar('comentario',donoDoSpot,alvoSpot?alvoSpot.name:'');
+    // Só o id do spot: o nome sai do banco, no servidor (texto livre vindo
+    // do app virava mensagem de golpe na tela de bloqueio de outra pessoa).
+    avisar('comentario',donoDoSpot,'',spotId);
   }
   if(!COMENT_PERFIS[S.user.id])COMENT_PERFIS[S.user.id]=S.profile||{id:S.user.id,display_name:(S.user.email||'').split('@')[0]};
   renderComentarios(spotId,alvo,donoDoSpot);
