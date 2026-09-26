@@ -90,3 +90,46 @@ test('a foto abre a pagina do lugar em previa, e tocar em Fui salva e abre o spo
     assert.ok(abriu && abriu.startsWith('sp'), 'nao abriu o spot salvo');
   } finally { voltas.forEach((x) => x()) }
 });
+
+// Tipo de comida (25/09): "quero comer um japonês hoje".
+test('o tipo de comida muda a frase da busca, e so vale em Comer', () => {
+  A.avaliar("EXPLORE.cat='food';EXPLORE.cozinha=''");
+  assert.strictEqual(A.termoDoExplorar('São Paulo'), 'restaurantes em São Paulo');
+  A.avaliar("EXPLORE.cozinha='japonesa'");
+  assert.strictEqual(A.termoDoExplorar('São Paulo'), 'restaurantes de comida japonesa em São Paulo');
+  // Em Ficar a cozinha escolhida não contamina a busca de hotel.
+  A.avaliar("EXPLORE.cat='hotel'");
+  assert.strictEqual(A.termoDoExplorar('Split'), 'hotéis em Split');
+  A.avaliar("EXPLORE.cat='food';EXPLORE.cozinha=''");
+});
+
+test('trocar o tipo refaz a busca da mesma cidade; id desconhecido vira Todas', () => {
+  let buscou = 0;
+  const v = trocar(A, 'runExplore', () => { buscou++ });
+  try {
+    A.avaliar("EXPLORE.cat='food';EXPLORE.cozinha='';EXPLORE.city='Lisboa'");
+    A.setExploreCozinha('pizza');
+    assert.strictEqual(A.avaliar('EXPLORE.cozinha'), 'pizza');
+    assert.strictEqual(buscou, 1);
+    // Tocar no que já está escolhido não gasta outra busca paga.
+    A.setExploreCozinha('pizza');
+    assert.strictEqual(buscou, 1);
+    A.setExploreCozinha('inventada');
+    assert.strictEqual(A.avaliar('EXPLORE.cozinha'), '');
+  } finally { v(); A.avaliar("EXPLORE.city='';EXPLORE.cozinha=''") }
+});
+
+test('a tela nativa recebe os tipos so em Comer', () => {
+  let msg = null;
+  const v = trocar(A, 'falarComACasca', (m) => { msg = m });
+  try {
+    A.avaliar("EXPLORE.cat='food';EXPLORE.cozinha='japonesa';EXPLORE.items=[]");
+    A.darDadosDeExplorar();
+    assert.ok(msg.dados.cozinhas.length > 5);
+    assert.strictEqual(msg.dados.cozinhas[0].rotulo, 'Todas');
+    assert.strictEqual(msg.dados.cozinha, 'japonesa');
+    A.avaliar("EXPLORE.cat='hotel'");
+    A.darDadosDeExplorar();
+    assert.strictEqual(msg.dados.cozinhas.length, 0);
+  } finally { v(); A.avaliar("EXPLORE.cat='food';EXPLORE.cozinha=''") }
+});

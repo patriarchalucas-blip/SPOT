@@ -552,6 +552,13 @@ body.tem-apple .btn-apple{display:flex}
 .filter-chip{flex-shrink:0;background:none;border:none;padding:6px 0 10px;font-size:15px;
   font-weight:600;color:var(--ink3);cursor:pointer;white-space:nowrap;box-shadow:inset 0 -2px 0 transparent}
 .filter-chip.on{color:var(--ink);box-shadow:inset 0 -2px 0 var(--ink)}
+/* Tipo de comida, embaixo de Comer. Segunda linha, então um degrau abaixo da
+   primeira: menor, sem o sublinhado (que é de quem manda na tela), e a escolhida
+   só ganha a tinta cheia. */
+.coz-filters{display:flex;gap:16px;padding:8px 20px 0;overflow-x:auto;scrollbar-width:none}
+.coz-filters::-webkit-scrollbar{display:none}
+.coz-chip{flex-shrink:0;padding:4px 0;font-size:14px;font-weight:500;color:var(--ink3);cursor:pointer;white-space:nowrap}
+.coz-chip.on{color:var(--ink);font-weight:600}
 .list-body{padding:16px 20px 110px}
 .lrow{display:flex;align-items:center;gap:12px;padding:10px 0;cursor:pointer}
 .lrow:active{opacity:.6}
@@ -1854,6 +1861,7 @@ svg.ic path,svg.ic circle,svg.ic line,svg.ic polyline,svg.ic rect{fill:none;stro
   <div class="ex-rotulo" id="exploreRotulo" style="display:none"></div>
   <div id="exploreAmigos"></div>
   <div class="list-filters" id="exploreFilters"></div>
+  <div class="coz-filters" id="exploreCozinhas"></div>
   <div class="list-body" id="exploreBody">
     <div class="empty-state"><div class="ei" data-ic="search"></div><h3>Descubra o que está bombando</h3><p>Digite uma cidade pra ver o que está bem avaliado por lá — e o que seus amigos já marcaram.</p></div>
   </div>
@@ -5072,12 +5080,51 @@ function pickCat(c){
 // cidade ANTERIOR com o nome da cidade nova em cima. O app mentia.
 // inicial | buscando | semResultado | erro | ok
 let EXPLORE_ESTADO='inicial';
-const EXPLORE={city:'',cat:'food',items:[],token:'',fim:false,carregandoMais:false,termo:'',rotulo:''};
+const EXPLORE={city:'',cat:'food',cozinha:'',items:[],token:'',fim:false,carregandoMais:false,termo:'',rotulo:''};
+// ═══ TIPO DE COMIDA (25/09, pedido do Lucas: "quero comer um japonês hoje") ═══
+// Só existe dentro de Comer. Cada opção é a FRASE que vai pro Google, não um
+// tipo da tabela dele: "japanese_restaurant" deixa de fora o sushi e o lámen
+// (que são tipos separados), e muito restaurante nem tem o tipo preenchido.
+// A busca por texto entende "comida japonesa" do jeito que a pessoa entende.
+const COZINHAS=[
+  {id:'',rotulo:'Todas',frase:'restaurantes'},
+  {id:'brasileira',rotulo:'Brasileira',frase:'restaurantes de comida brasileira'},
+  {id:'japonesa',rotulo:'Japonesa',frase:'restaurantes de comida japonesa'},
+  {id:'italiana',rotulo:'Italiana',frase:'restaurantes italianos'},
+  {id:'pizza',rotulo:'Pizza',frase:'pizzarias'},
+  {id:'hamburguer',rotulo:'Hambúrguer',frase:'hamburguerias'},
+  {id:'carne',rotulo:'Carnes',frase:'churrascarias e steakhouses'},
+  {id:'frutos-do-mar',rotulo:'Frutos do mar',frase:'restaurantes de frutos do mar'},
+  {id:'arabe',rotulo:'Árabe',frase:'restaurantes árabes e libaneses'},
+  {id:'mexicana',rotulo:'Mexicana',frase:'restaurantes mexicanos'},
+  {id:'chinesa',rotulo:'Chinesa',frase:'restaurantes chineses'},
+  {id:'asiatica',rotulo:'Asiática',frase:'restaurantes tailandeses, coreanos e vietnamitas'},
+  {id:'peruana',rotulo:'Peruana',frase:'restaurantes peruanos'},
+  {id:'vegetariana',rotulo:'Vegetariana',frase:'restaurantes vegetarianos e veganos'},
+  {id:'cafe',rotulo:'Café',frase:'cafeterias'},
+  {id:'doces',rotulo:'Doces',frase:'docerias, confeitarias e sorveterias'},
+  {id:'bar',rotulo:'Bar',frase:'bares'}
+];
+function cozinhaAtual(){return COZINHAS.find(c=>c.id===EXPLORE.cozinha)||COZINHAS[0]}
+function termoDoExplorar(cidade){
+  const frase=EXPLORE.cat==='food'?cozinhaAtual().frase:{hotel:'hotéis',experience:'pontos turísticos'}[EXPLORE.cat];
+  return frase+' em '+cidade;
+}
 function renderExploreFilters(){
   const f=document.getElementById('exploreFilters');
   f.innerHTML=chip('Comer',EXPLORE.cat==='food',"setExploreCat('food')")
     +chip('Ficar',EXPLORE.cat==='hotel',"setExploreCat('hotel')")
     +chip('Experiências',EXPLORE.cat==='experience',"setExploreCat('experience')");
+  const c=document.getElementById('exploreCozinhas');
+  if(!c)return;
+  c.style.display=EXPLORE.cat==='food'?'':'none';
+  c.innerHTML=EXPLORE.cat!=='food'?'':COZINHAS.map(z=>'<div class="coz-chip'+(z.id===EXPLORE.cozinha?' on':'')+'" onclick="setExploreCozinha(\''+z.id+'\')">'+esc(z.rotulo)+'</div>').join('');
+}
+function setExploreCozinha(id){
+  if(!COZINHAS.some(c=>c.id===id))id='';
+  if(id===EXPLORE.cozinha)return;
+  EXPLORE.cozinha=id;renderExploreFilters();
+  if(EXPLORE.city)runExplore(EXPLORE.rotulo);
 }
 function setExploreCat(c){
   EXPLORE.cat=c;renderExploreFilters();
@@ -5465,7 +5512,7 @@ async function runExplore(rotulo){
   // A lista antiga sai ANTES da nova chegar: manter os lugares da cidade
   // passada embaixo do nome da nova e a pior forma de errar.
   EXPLORE.items=[];EXPLORE.token='';EXPLORE.fim=false;EXPLORE.carregandoMais=false;
-  EXPLORE.termo={food:'restaurantes',hotel:'hotéis',experience:'pontos turísticos'}[EXPLORE.cat]+' em '+city;
+  EXPLORE.termo=termoDoExplorar(city);
   EXPLORE_ESTADO='buscando';
   const meu=++EXPLORE_REQ;
   const body=document.getElementById('exploreBody');
@@ -5494,7 +5541,7 @@ async function runExplore(rotulo){
   try{
     const pagina=await paginaDoExplorar('');
     if(meu!==EXPLORE_REQ)return;
-    if(!pagina.length){body.innerHTML='<div class="empty-state"><div class="ei" data-ic="pin"></div><h3>Nada encontrado</h3><p>Tenta um nome de cidade diferente.</p></div>';hydrateIcons(body);EXPLORE.items=[];EXPLORE_ESTADO='semResultado';darDadosDeExplorar();return}
+    if(!pagina.length){body.innerHTML='<div class="empty-state"><div class="ei" data-ic="pin"></div><h3>Nada encontrado</h3><p>'+(EXPLORE.cat==='food'&&EXPLORE.cozinha?'Não achei '+esc(cozinhaAtual().rotulo.toLowerCase())+' bem avaliada aqui. Tenta outro tipo.':'Tenta um nome de cidade diferente.')+'</p></div>';hydrateIcons(body);EXPLORE.items=[];EXPLORE_ESTADO='semResultado';darDadosDeExplorar();return}
     EXPLORE.items=pagina;
     EXPLORE_ESTADO='ok';
     renderExploreResults();
@@ -5635,6 +5682,11 @@ function darDadosDeExplorar(){
     cidade:EXPLORE.city||'',
     categoria:EXPLORE.cat||'food',
     chips:[{id:'food',rotulo:'Comer'},{id:'hotel',rotulo:'Ficar'},{id:'experience',rotulo:'Experiências'}],
+    // A segunda linha, só em Comer. Vazia nas outras abas: a tela nativa
+    // esconde a linha quando não vem nada.
+    cozinhas:EXPLORE.cat==='food'?COZINHAS.map(z=>({id:z.id,rotulo:z.rotulo})):[],
+    cozinha:EXPLORE.cozinha||'',
+    semResultadoTexto:EXPLORE.cat==='food'&&EXPLORE.cozinha?'Não achei '+cozinhaAtual().rotulo.toLowerCase()+' bem avaliada aqui. Tenta outro tipo.':'',
     estado:EXPLORE_ESTADO,
     itens:itens,
     amigos:grupos,
@@ -5652,6 +5704,7 @@ function darDadosDeExplorar(){
 window.darDadosDeExplorar=darDadosDeExplorar;
 window.acaoDeExplorar=function(acao,valor){
   if(acao==='categoria'){setExploreCat(valor);darDadosDeExplorar();return}
+  if(acao==='cozinha'){setExploreCozinha(String(valor||''));darDadosDeExplorar();return}
   if(acao==='buscar'){
     const campo=document.getElementById('exploreCitySearch');
     if(campo)campo.value=String(valor||'');

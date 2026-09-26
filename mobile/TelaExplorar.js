@@ -223,6 +223,26 @@ export default function TelaExplorar({ dados, ocupado, acao }) {
           })}
         </View>
 
+        {/* Tipo de comida, só em Comer (o site manda a lista vazia nas outras
+            abas). Um degrau abaixo das abas: menor e sem sublinhado. */}
+        {(d.cozinhas || []).length ? (
+          <ScrollView
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            style={e.cozLinha}
+            contentContainerStyle={e.cozConteudo}
+          >
+            {d.cozinhas.map((c) => {
+              const on = c.id === (d.cozinha || '');
+              return (
+                <Pressable key={c.id || 'todas'} onPress={() => acao('cozinha', c.id)} hitSlop={8}>
+                  <Text style={[e.cozTxt, on && e.cozTxtOn]}>{c.rotulo}</Text>
+                </Pressable>
+              );
+            })}
+          </ScrollView>
+        ) : null}
+
         {/* Cada fim de busca diz uma coisa diferente. Antes existia UM estado
             vazio: quem buscasse e nao achasse nada via a tela de "ainda nao
             busquei", como se o toque nao tivesse feito nada. */}
@@ -236,7 +256,7 @@ export default function TelaExplorar({ dados, ocupado, acao }) {
             <View style={e.vazio}>
               <IconeBusca cor={INK3} />
               <Text style={e.vazioTitulo}>Nada encontrado</Text>
-              <Text style={e.vazioTexto}>Tenta um nome de cidade diferente.</Text>
+              <Text style={e.vazioTexto}>{d.semResultadoTexto || 'Tenta um nome de cidade diferente.'}</Text>
             </View>
           ) : d.estado === 'erro' ? (
             <View style={e.vazio}>
@@ -345,6 +365,12 @@ const e = StyleSheet.create({
   chipOn: { borderBottomWidth: 2, borderBottomColor: INK },
   chipTxt: { fontSize: 15, fontWeight: '600', color: INK3 },
   chipTxtOn: { color: INK },
+  // .coz-filters — a margem negativa deixa a linha rolar até a borda da tela
+  // sem perder o alinhamento de 20 com o resto.
+  cozLinha: { marginHorizontal: -20, marginTop: -8, marginBottom: 16 },
+  cozConteudo: { paddingHorizontal: 20, gap: 16 },
+  cozTxt: { fontSize: 14, fontWeight: '500', color: INK3, paddingVertical: 4 },
+  cozTxtOn: { color: INK, fontWeight: '600' },
 
   // .ex-card — não é mais caixa: sem fundo, sem borda, sem raio próprio. A
   // foto é que tem cantos arredondados.
