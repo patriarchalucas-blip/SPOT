@@ -52,6 +52,7 @@ Not applicable: Spot is not in a regulated industry and does not distribute prot
 
 ## Roteiro do vídeo (Lucas grava no iPhone)
 
+Antes: atualizar o Spot pelo TestFlight e conferir que é a build 11.
 Gravação de tela: Central de Controle → botão de gravar (se não aparecer:
 Ajustes → Central de Controle → adicionar "Gravação de Tela"). Tudo num vídeo
 só, começando com o app FECHADO.
@@ -60,9 +61,11 @@ só, começando com o app FECHADO.
 2. Entrar com a conta demo (demo@meuspot.app) por e-mail e senha.
 3. Viagens: tocar numa viagem → cidade → spot. Mostrar nota, status, texto.
 4. Adicionar spot: buscar um restaurante, dar nota, salvar.
-5. Explorar: buscar uma cidade, tocar em "Japonesa", tocar numa foto.
+5. Explorar: buscar uma cidade, tocar em "Todas ▾", escolher Japonesa na
+   folha de fotos, tocar num resultado.
 6. Amigos: mostrar o feed. Abrir um spot do amigo, escrever um comentário.
 7. Num comentário do amigo: tocar em Denunciar, escolher um motivo, enviar.
+   (Se não houver comentário do amigo: perfil do amigo → menu → Denunciar.)
 8. Perfil do amigo → menu → mostrar a opção Bloquear, abrir e **cancelar**
    (bloquear de verdade desfaz a amizade da conta demo).
 9. Perfil → Configurações → Sair.
