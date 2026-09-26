@@ -231,6 +231,10 @@ body.tem-apple .btn-apple{display:flex}
 /* Botão e campo não herdam a fonte da página por padrão: o placar, as abas
    de continente e os nomes dos cards saíam em Arial. Uma regra só resolve. */
 button,input,textarea,select{font-family:inherit}
+/* O iPhone dá zoom sozinho ao tocar num campo com letra menor que 16 — e não
+   volta: a pessoa tinha que desfazer o zoom com os dedos. Quase todo campo do
+   app era 15. 16 é o mínimo; o !important vence as regras de cada campo. */
+input,textarea,select{font-size:max(16px,1em)!important}
 
 /* O anel abre o mapa-mundi: e la que a mesma informacao esta inteira, com a
    lista de paises. Os tres contadores do lado ja abrem listas — o anel ser o
