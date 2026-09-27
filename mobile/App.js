@@ -48,6 +48,7 @@ import TelaViagens from './TelaViagens';
 import { StatusBar } from 'expo-status-bar';
 import { WebView } from 'react-native-webview';
 import * as WebBrowser from 'expo-web-browser';
+import * as Location from 'expo-location';
 import { useFonts } from 'expo-font';
 // Importar pela RAIZ do pacote arrasta a familia inteira pro aplicativo:
 // 38 arquivos de fonte, quando os usados sao cinco. O caminho com o peso
@@ -348,6 +349,27 @@ function Conteudo() {
     } catch (e) {
       return;
     }
+    // Onde a pessoa está, pro "Perto de você" do Explorar. Pela página, o
+    // WKWebView quase nunca dizia se a localização estava liberada, e o
+    // Explorar abria sempre na cidade de casa, mesmo em viagem. Aqui o iPhone
+    // responde — mas SÓ com permissão já dada: nunca pergunta daqui.
+    if (dados && dados.tipo === 'pedir-local') {
+      (async () => {
+        let pos = null;
+        try {
+          const p = await Location.getForegroundPermissionsAsync();
+          if (p.granted) {
+            pos = await Location.getLastKnownPositionAsync({ maxAge: 10 * 60 * 1000 });
+            if (!pos) pos = await Location.getCurrentPositionAsync({ accuracy: Location.Accuracy.Balanced });
+          }
+        } catch (e) { pos = null; }
+        const v = pos ? { lat: pos.coords.latitude, lng: pos.coords.longitude } : null;
+        webRef.current?.injectJavaScript(
+          'window.__spotLocal=' + JSON.stringify(v) + ';window.dispatchEvent(new Event("spot-local-pronto"));true;'
+        );
+      })();
+      return;
+    }
     if (dados && dados.tipo === 'pedir-push') {
       pegarEnderecoDeEntrega(true).then((e) => {
         if (!e) return;
@@ -545,7 +567,10 @@ function Conteudo() {
             injectedJavaScriptBeforeContentLoaded={
               'window.enderecoDeVoltaDoLogin=' +
               JSON.stringify(VOLTA_DO_LOGIN) + ';' +
-              'window.cascaTemApple=' + (TEM_APPLE ? 'true' : 'false') + ';true;'
+              'window.cascaTemApple=' + (TEM_APPLE ? 'true' : 'false') + ';' +
+              // Casca que responde 'pedir-local' (build 14+). As antigas não
+              // respondem, e o site não pode ficar esperando por elas.
+              'window.cascaTemLocal=true;true;'
             }
             onMessage={aoReceberMensagem}
             // O iOS encerra o processo da página quando falta memória com o app

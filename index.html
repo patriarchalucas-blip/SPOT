@@ -5866,10 +5866,25 @@ async function cidadeOndeEstou(){
     if(g&&Date.now()-g.t<30*60*1000)return g.cidade||'';
   }catch(e){}
   try{
-    if(!navigator.geolocation||!navigator.permissions||!navigator.permissions.query)return'';
-    const st=await navigator.permissions.query({name:'geolocation'});
-    if(!st||st.state!=='granted')return'';
-    const pos=await new Promise((ok,nao)=>navigator.geolocation.getCurrentPosition(ok,nao,{timeout:6000,maximumAge:600000}));
+    // No app do iPhone quem responde é o próprio iPhone (ver 'pedir-local' na
+    // casca): pela página, o WKWebView quase nunca dizia que a localização
+    // estava liberada. Casca antiga não responde — em 4 s segue sem.
+    let coords=null;
+    if(naCasca()&&window.cascaTemLocal){
+      coords=await new Promise(ok=>{
+        const fim=setTimeout(()=>ok(null),4000);
+        window.addEventListener('spot-local-pronto',()=>{clearTimeout(fim);ok(window.__spotLocal||null)},{once:true});
+        falarComACasca({tipo:'pedir-local'});
+      });
+    }
+    if(!coords){
+      if(!navigator.geolocation||!navigator.permissions||!navigator.permissions.query)return'';
+      const st=await navigator.permissions.query({name:'geolocation'});
+      if(!st||st.state!=='granted')return'';
+      const p=await new Promise((ok,nao)=>navigator.geolocation.getCurrentPosition(ok,nao,{timeout:6000,maximumAge:600000}));
+      coords={lat:p.coords.latitude,lng:p.coords.longitude};
+    }
+    const pos={coords:{latitude:coords.lat,longitude:coords.lng}};
     const r=await googlePlaces('searchNearby',{
       headers:{'X-Goog-FieldMask':'places.displayName'},
       body:JSON.stringify({includedTypes:['locality'],maxResultCount:1,languageCode:'pt-BR',
