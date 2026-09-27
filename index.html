@@ -2843,6 +2843,10 @@ async function init(){
         // de propósito — quem chegou por link já entra com um amigo, e a
         // sequência não deve atropelar isso.
         try{await talvezAbrirBoasVindas()}catch(e){console.error('boas-vindas:',e)}
+        // Permissão de notificação: pedida AGORA, depois do login — e, pra quem
+        // está no primeiro acesso, no fim dele (onbTerminar). Na primeira tela,
+        // antes de saber o que é o app, muita gente recusava pra sempre.
+        if(!document.getElementById('ov-onb').classList.contains('show'))falarComACasca({tipo:'pedir-push'});
       }
       if(ev==='SIGNED_OUT'){
         // O Supabase também sai sozinho (sessão revogada, renovação que falhou).
@@ -8134,6 +8138,7 @@ async function marcarCadastroFeito(){
 }
 function onbTerminar(){
   marcarCadastroFeito();
+  falarComACasca({tipo:'pedir-push'});
   closeOv('ov-onb');
   renderTrips();populateTripOpts();
   try{loadDashboard()}catch(e){}

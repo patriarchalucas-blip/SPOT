@@ -105,14 +105,18 @@ Notifications.setNotificationHandler({
 // Devolve null em vez de explodir em três casos normais: simulador (não tem
 // como receber notificação), pessoa que recusou a permissão, e projeto ainda
 // sem id do EAS. Nenhum deles pode impedir o app de abrir.
-async function pegarEnderecoDeEntrega() {
+// perguntar=false: só pega o endereço se a permissão JÁ foi dada. O pedido
+// ao iOS acontece depois do login (o site avisa com 'pedir-push'): pedir na
+// primeira tela, antes de a pessoa saber o que é o app, fazia muita gente
+// recusar — e quem recusa nunca mais é perguntado.
+async function pegarEnderecoDeEntrega(perguntar) {
   if (!Device.isDevice) return null;
   try {
     const atual = await Notifications.getPermissionsAsync();
     let permitido = atual.granted;
     // Só pergunta se ainda dá: quem já recusou não deve ser perguntado de
     // novo a cada abertura — o iOS nem mostra o alerta, e insistir é ruído.
-    if (!permitido && atual.canAskAgain) {
+    if (!permitido && perguntar && atual.canAskAgain) {
       const pedida = await Notifications.requestPermissionsAsync();
       permitido = pedida.granted;
     }
@@ -179,6 +183,9 @@ const TERRA = GREEN;
 
 // Host do próprio app: tudo que for daqui navega dentro da casca. O resto sai
 // pro sistema.
+function caminhoDe(url) {
+  try { return new URL(url).pathname; } catch (e) { return ''; }
+}
 function ehDoApp(url) {
   try {
     const u = new URL(url);
@@ -265,6 +272,19 @@ function Conteudo() {
   const [aviso, setAviso] = useState(null);
   const [semSinal, setSemSinal] = useState(false);
 
+  // Toque em notificação esperando a página ficar pronta (ver aoTocar).
+  const toqueRef = useRef('');
+  const paginaProntaRef = useRef(false);
+  const aplicarToque = useCallback(() => {
+    const tipo = toqueRef.current;
+    if (!tipo || !paginaProntaRef.current || !webRef.current) return;
+    toqueRef.current = '';
+    const aba = tipo === 'pedido' ? "if(window.switchFriendsTab)switchFriendsTab('pedidos');" : '';
+    webRef.current.injectJavaScript(
+      "try{if(window.irParaAba)irParaAba('friends');" + aba + "}catch(e){}true;"
+    );
+  }, []);
+
   // Entrega o endereço pro site, que é quem sabe qual conta está logada.
   const entregarEndereco = useCallback(() => {
     const e = enderecoRef.current;
@@ -277,21 +297,27 @@ function Conteudo() {
 
   useEffect(() => {
     let vivo = true;
-    pegarEnderecoDeEntrega().then((e) => {
+    pegarEnderecoDeEntrega(false).then((e) => {
       if (!vivo || !e) return;
       enderecoRef.current = e;
       entregarEndereco();
     });
-    // Tocar na notificação com o app fechado abre o app; recarregar garante
-    // que a pessoa cai no estado atual e não numa tela de horas atrás.
-    const sub = Notifications.addNotificationResponseReceivedListener(() => {
-      webRef.current?.reload();
-    });
+    // Tocar na notificação leva à aba Amigos (pedido de amizade abre em
+    // Pedidos). Antes recarregava o app inteiro: quem estava escrevendo uma
+    // nota perdia o texto e caía em Viagens. Com o app fechado, o toque fica
+    // guardado e é aplicado quando a página terminar de carregar.
+    const aoTocar = (resp) => {
+      const tipo = resp?.notification?.request?.content?.data?.tipo || '';
+      toqueRef.current = tipo || 'amigos';
+      aplicarToque();
+    };
+    const sub = Notifications.addNotificationResponseReceivedListener(aoTocar);
+    Notifications.getLastNotificationResponseAsync().then((r) => { if (vivo && r) aoTocar(r); }).catch(() => {});
     return () => {
       vivo = false;
       sub.remove();
     };
-  }, [entregarEndereco]);
+  }, [entregarEndereco, aplicarToque]);
 
   // Android: o botão físico de voltar navega no histórico do site antes de
   // fechar o app. Sem isto, voltar fecha tudo e perde o que a pessoa fazia.
@@ -320,6 +346,14 @@ function Conteudo() {
     try {
       dados = JSON.parse(evento.nativeEvent.data);
     } catch (e) {
+      return;
+    }
+    if (dados && dados.tipo === 'pedir-push') {
+      pegarEnderecoDeEntrega(true).then((e) => {
+        if (!e) return;
+        enderecoRef.current = e;
+        entregarEndereco();
+      });
       return;
     }
     if (dados && dados.tipo === 'compartilhar' && typeof dados.texto === 'string') {
@@ -408,7 +442,7 @@ function Conteudo() {
         });
       }
     }
-  }, []);
+  }, [entregarEndereco]);
 
   // Tocar numa aba não navega nada aqui: manda o SITE trocar de tela, que é
   // quem sabe carregar os dados daquela aba. Acender a aba localmente antes
@@ -452,6 +486,13 @@ function Conteudo() {
   const aoNavegar = useCallback((req) => {
     const url = req.url || '';
     if (url.startsWith('about:') || url.startsWith('data:')) return true;
+    // Termos, privacidade, suporte e sobre são páginas do site, mas abrir
+    // dentro da casca trocava o app pela página, sem gesto de voltar. Abrem
+    // numa janela por cima, que fecha e devolve a pessoa onde estava.
+    if (ehDoApp(url) && /^\/(termos|privacidade|suporte|sobre)(\.html)?\/?$/.test(caminhoDe(url))) {
+      WebBrowser.openBrowserAsync(url).catch(() => {});
+      return false;
+    }
     if (ehDoApp(url) || ehFluxoDeLogin(url)) return true;
     Linking.openURL(url).catch(() => {});
     return false;
@@ -512,6 +553,7 @@ function Conteudo() {
             // mas todo toque caía numa página morta.
             onContentProcessDidTerminate={() => webRef.current && webRef.current.reload()}
             onLoadStart={() => {
+              paginaProntaRef.current = false;
               setCarregando(true);
               // Recarregou: até o site dizer onde está, a barra some. Melhor
               // nenhuma barra que uma barra apontando pra tela errada.
@@ -522,6 +564,9 @@ function Conteudo() {
               // Toda vez que o site termina de carregar, inclusive depois de
               // recarregar: o endereço vive no app, não na página.
               entregarEndereco();
+              paginaProntaRef.current = true;
+              // dá um instante pro site montar as abas antes de navegar
+              setTimeout(aplicarToque, 1200);
             }}
             onNavigationStateChange={(s) => setPodeVoltar(!!s.canGoBack)}
             onError={() => {
