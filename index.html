@@ -1870,7 +1870,7 @@ svg.ic path,svg.ic circle,svg.ic line,svg.ic polyline,svg.ic rect{fill:none;stro
   <div class="trip-hero"><div class="trip-hero-img" id="tripHeroImg"></div><div class="foto-credito" id="tripFotoCredito"></div><div class="trip-float" id="tripFloat"></div><div class="trip-hero-content"><button class="back-btn" onclick="goTo('dashboard');loadDashboard()" data-ic="back" aria-label="Voltar"></button><div><div class="trip-hero-label" id="tripLabel"></div><div class="trip-hero-name" id="tripName"></div><div class="trip-hero-meta" id="tripMeta"></div></div></div></div>
   <div class="trip-body" id="tripBody"></div>
   <button class="btn-primario btn-largo btn-solto" onclick="addSpotToCurrentTrip()">Adicionar spot</button>
-  <button class="btn-texto" onclick="deleteTrip()">Excluir viagem</button>
+  <button class="btn-texto" id="tripDeleteBtn" onclick="deleteTrip()">Excluir viagem</button>
   <div class="bottom-nav"><div class="nav-item active" onclick="goTo('dashboard');loadDashboard()"><div class="nav-icon" data-ic="map"></div><div class="nav-label" style="color:var(--ink);font-weight:600">Viagens</div></div><div class="nav-item" onclick="goTo('explore');loadExplore()"><div class="nav-icon" data-ic="search"></div><div class="nav-label">Explorar</div></div><div class="nav-item" onclick="goTo('friends');loadFriends()"><div class="nav-icon" data-ic="users"></div><div class="nav-label">Amigos</div></div><div class="nav-item" onclick="goTo('profile');loadProfile()"><div class="nav-icon" data-ic="user"></div><div class="nav-label">Perfil</div></div></div>
 </div>
 
@@ -3681,8 +3681,14 @@ function resumoDeCasa(){
   return{cidade:(S.profile&&S.profile.home_city)||c,
     meta:n?n+(n===1?' spot':' spots')+(ultimo?' · '+ultimo.name:''):'Os spots daqui aparecem nesta seção'};
 }
+// Abre a MESMA tela dos cards de viagem (pedido do Lucas, 27/09): antes
+// abria a lista filtrada pela cidade, uma tela diferente das outras.
 function abrirCasa(){
   const c=cidadeDeCasa();if(!c)return;
+  const casa=(S.trips||[]).find(ehCasa);
+  if(casa){openTrip(casa.id);return}
+  // Sem linha de casa ainda (os spots da cidade estão em viagens antigas):
+  // a lista da cidade continua sendo o único lugar que junta todos eles.
   drillTo('city',c);goTo('list');
 }
 let FOTO_DE_CASA='';
@@ -4137,6 +4143,7 @@ async function applyTripDates(start,end){
 }
 async function deleteTrip(){
   if(!S.curTrip)return;
+  if(ehCasa(S.curTrip))return;   // a cidade onde mora não se exclui por aqui
   if(!await confirmar('Excluir esta viagem?',
     '"'+S.curTrip.name+'" e todos os spots dela somem. Não tem como desfazer.',
     'Excluir viagem'))return;
@@ -4182,7 +4189,7 @@ async function deleteSpot(){
     // "Excluir viagem" que apagaria todos os spots da cidade.
     const dono=(S.trips||[]).find(t=>t.id===tripId)||S.curTrip;
     if(S.placeOrigin&&S.placeOrigin!=='trip')backFromPlace();
-    else if(!dono||isNonTrip(dono)){goTo('dashboard');loadDashboard()}
+    else if(!dono||(isNonTrip(dono)&&!ehCasa(dono))){goTo('dashboard');loadDashboard()}
     else{S.curTrip=dono;goTo('trip');loadTrip(dono)}
     toast('Spot excluído','','trash');
   }else toast('Erro ao excluir','');
@@ -4193,6 +4200,9 @@ async function openTrip(id){
 }
 async function loadTrip(t){
   if(!t)return;
+  // Na cidade onde a pessoa mora, "Excluir viagem" apagaria todos os spots
+  // da cidade de uma vez — ela não é uma viagem.
+  const del=document.getElementById('tripDeleteBtn');if(del)del.style.display=ehCasa(t)?'none':'';
   document.getElementById('tripFloat').textContent=t.name;
   document.getElementById('tripName').textContent=t.name;
   // Sem data no cabecalho tambem — mesma decisao do card (ver renderTrips).
