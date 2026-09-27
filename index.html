@@ -2961,6 +2961,12 @@ window.voltouDoLoginApple=async function(r){
     // A Apple manda o nome de verdade só no PRIMEIRO login: grava aqui, e só
     // se o perfil ainda estiver com o nome automático.
     const u=data&&data.user,tk=data&&data.session&&data.session.access_token;
+    // Guarda no servidor a chave pra avisar a Apple se a conta for excluída
+    // (functions/api/apple.js). Em segundo plano: nunca atrasa o login.
+    if(r.codigo&&tk){
+      fetch('/api/apple',{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+tk},
+        body:JSON.stringify({op:'guardar',codigo:r.codigo})}).catch(()=>{});
+    }
     const nome=String(r.nome||'').replace(/\s+/g,' ').trim().slice(0,60);
     if(nome&&u&&tk&&u.email){
       const automatico=u.email.split('@')[0];
@@ -3271,6 +3277,15 @@ async function excluirConta(){
     toast('Não deu pra excluir','Não consegui apagar suas fotos. Sua conta continua intacta — tenta de novo.','alert');
     return;
   }
+
+  // Avisa a Apple, pra quem entrou com "Entrar com a Apple" (exigência
+  // 5.1.1(v)). Antes de apagar a conta, enquanto a sessão ainda vale. Falhar
+  // aqui não impede a exclusão: a conta é da pessoa, e ela pediu pra apagar.
+  try{
+    const tk=await ensureToken();
+    if(tk)await fetch('/api/apple',{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+tk},
+      body:JSON.stringify({op:'revogar'})});
+  }catch(e){}
 
   // 3) A conta, a valer.
   const r=await chamarExclusao(false);

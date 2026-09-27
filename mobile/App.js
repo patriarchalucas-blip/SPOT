@@ -415,6 +415,9 @@ function Conteudo() {
           const n = (c && c.fullName) || {};
           devolver({
             token: (c && c.identityToken) || '',
+            // Código de uso único: o servidor troca por uma chave de revogação,
+            // usada se a pessoa excluir a conta (exigência 5.1.1(v) da Apple).
+            codigo: (c && c.authorizationCode) || '',
             nome: [n.givenName, n.familyName].filter(Boolean).join(' '),
           });
         })
