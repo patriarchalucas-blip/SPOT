@@ -418,6 +418,12 @@ input,textarea,select{font-size:max(16px,1em)!important}
    "cidades". Aqui o fundo é opaco, na mesma cor que a versão translúcida
    aparentava ter sobre o fundo escuro (nada muda visualmente fora isso).
    O perfil do amigo usa .stat-block sem mapa atrás, então continua igual. */
+/* Os quatro números do perfil de amigo, lado a lado. O estilo tinha sumido
+   num redesenho e eles saíam empilhados (print do Lucas, 27/09). */
+.stats-strip{display:flex;justify-content:space-between;gap:8px;padding:8px 0 24px}
+.stat-block{flex:1;min-width:0;cursor:pointer}
+.stat-n{font-size:22px;font-weight:700;letter-spacing:-.02em;color:var(--ink);line-height:1.1}
+.stat-l{font-size:13px;color:var(--ink2);margin-top:2px}
 .dash-top .stat-block{background:linear-gradient(160deg,var(--surface),var(--surface))}
 .dash-body{padding:8px 24px calc(104px + env(safe-area-inset-bottom, 0px))}
 .section-head{display:flex;align-items:baseline;gap:8px;margin-bottom:14px;margin-top:32px}
@@ -3567,6 +3573,9 @@ async function loadDashboard(){
   S.trips.forEach(t=>{t._spots=[];t._spotsLoaded=false;byId[t.id]=t});
   (allSpots||[]).forEach(s=>{const t=byId[s.trip_id];if(t)t._spots.push(s)});
   S.trips.forEach(t=>{t._spotsLoaded=true});
+  // Só com os spots carregados de verdade: com a consulta de spots falhando
+  // toda viagem pareceria vazia.
+  if(!falhou(allSpots))limparViagensVaziasRepetidas();
   const visivelAntes=S.trips.filter(t=>!isNonTrip(t)).map(t=>t.id).join(',');
   rebuildCityCanon(); // funde "Split" e "Split-Dalmatia County" antes de contar
   // Conta AQUI: depois da fusao de nomes (senao "Split" conta duas vezes) e
@@ -3614,6 +3623,19 @@ function isQuickVisit(t){return t.dates==='__quickvisit__'&&(!t._spots||!t._spot
 // é o que os 8 call sites abaixo já chamam; se surgir outro tipo de marcador
 // de "não é viagem de fato" no futuro, entra aqui.
 function isNonTrip(t){return isQuickVisit(t)||ehCasa(t)}
+// Viagem VAZIA com o mesmo nome de outra viagem da conta: sobra do bug dos
+// dois toques no + (corrigido em 26/09), que criava "Brasil" duas vezes. Some
+// da lista na hora e é apagada no banco em segundo plano. Nenhum spot se perde
+// — ela não tem nenhum. Viagem vazia de nome ÚNICO fica (pode ser plano).
+function limparViagensVaziasRepetidas(){
+  const visiveis=(S.trips||[]).filter(t=>!isNonTrip(t));
+  const sobra=visiveis.filter(t=>!(t._spots||[]).length&&visiveis.some(o=>o!==t&&normName(o.name)===normName(t.name)
+    &&((o._spots||[]).length||String(o.created_at||'')<String(t.created_at||''))));
+  if(!sobra.length)return;
+  const ids=new Set(sobra.map(t=>t.id));
+  S.trips=S.trips.filter(t=>!ids.has(t.id));
+  sobra.forEach(t=>{dbDelete('trips',t.id).catch(()=>{})});
+}
 // ═══ ONDE VOCÊ MORA ═══
 //
 // Desenho "Spot Primeiro Acesso", rodada 2 (25/09): lugar da sua cidade não
@@ -11713,7 +11735,8 @@ function abrirDetalheAmigo(modo){
   showOv('ov-detalheamigo');
 }
 function renderFriendProfile(){
-  const visiveis=FRIEND.trips.filter(t=>!isNonTrip(t));
+  // Viagem sem nenhum spot não diz nada pra quem visita o perfil.
+  const visiveis=FRIEND.trips.filter(t=>!isNonTrip(t)&&(t._spots||[]).length);
   FRIEND.visiveis=visiveis;
   const cidades=new Set(),paises=new Set();let spots=0;
   FRIEND.trips.forEach(t=>{
