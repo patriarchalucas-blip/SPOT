@@ -1,3 +1,5 @@
+import { lerKV, gravarKV } from './_kv.js';
+import { avisarDono } from './_aviso-dono.js';
 // Cloudflare Pages Function — foto de um estabelecimento, via Google Places.
 //
 // A URL de foto do Places carrega a chave no próprio endereço
@@ -102,6 +104,19 @@ export async function onRequestGet(context) {
       // num teto de trinta mil.
       if (Math.random() < 0.1) {
         await kv.put(contador, String(usado + 10), { expirationTtl: 60 * 60 * 24 * 40 });
+        // Aviso no celular do Lucas ao cruzar 50/80/100% do teto do mês —
+        // o teto de fotos nunca pode ser surpresa.
+        for (const pct of [50, 80, 100]) {
+          const marca = Math.ceil(CAP_MENSAL * pct / 100);
+          if (usado < marca && usado + 10 >= marca) {
+            const k = 'placephoto_aviso_' + mes + '_' + pct;
+            if (await lerKV(env, k)) continue;
+            await gravarKV(env, k, '1', 60 * 60 * 24 * 40);
+            context.waitUntil(avisarDono(env, 'Fotos: ' + pct + '% da cota do mês',
+              (usado + 10) + ' de ' + CAP_MENSAL + ' fotos novas em ' + mes + '. '
+              + (pct >= 100 ? 'Fotos novas pararam — suba CAP_MENSAL em place-photo.js.' : 'Se precisar, suba o teto antes de acabar.'), 'cota'));
+          }
+        }
       }
     } catch (e) {}
   }
@@ -121,8 +136,15 @@ export async function onRequestGet(context) {
 
   const destino = r.headers.get('Location') || '';
   if (!destino || !/^https:\/\/[a-z0-9-]+\.googleusercontent\.com\//i.test(destino)) {
-    if (kv) { try { await kv.put(chave, 'X', { expirationTtl: TTL_FALHA }) } catch (e) {} }
-    return vazio(404);
+    // Só "a foto não existe" (400/404) é guardado como falha. Cota esgotada
+    // (429), chave recusada (403) ou Google fora (5xx) é passageiro: gravar 'X'
+    // fazia uma recusa de cota virar foto sumida (27/09, fotos pararam de
+    // aparecer depois que o teto diário do Google estourou).
+    if (r.status === 400 || r.status === 404) {
+      if (kv) { try { await kv.put(chave, 'X', { expirationTtl: TTL_FALHA }) } catch (e) {} }
+      return vazio(404);
+    }
+    return vazio(503);
   }
 
   const base = semTamanho(destino);
