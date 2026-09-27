@@ -142,3 +142,22 @@ test('corrigido 26/09 — buscar Instagram de um spot salvo grava no banco (ante
     assert.strictEqual(JSON.stringify(gravados[0]), JSON.stringify(['spots', 'sp1', { website_url: 'https://instagram.com/mocoto', insta_checked: true }]));
   } finally { vs.forEach(v => v()) }
 });
+
+test('corrigido 27/09 — spot de amigo sem foto mostra a do lugar, sem gravar nada', async () => {
+  let gravou = false;
+  const vs = [
+    trocar(A, 'googlePlaces', async () => ({ ok: true, json: async () => ({ places: [{ displayName: { text: 'Saikō' }, photos: [{ name: 'places/abc/photos/xyz' }] }] }) })),
+    trocar(A, 'dbUpdate', async () => { gravou = true; return { error: null } }),
+  ];
+  try {
+    const u = await A.fotoParaVer({ name: 'Saikō', city: 'São Paulo' });
+    assert.ok(/\/api\/place-photo\?ref=places%2Fabc/.test(u), u);
+    assert.strictEqual(gravou, false);
+  } finally { vs.forEach((v) => v()) }
+});
+
+test('corrigido 27/09 — foto que falhou e tentada de novo depois de 3 dias', () => {
+  A.avaliar("localStorage.setItem('spot_foto_tentada_v2', JSON.stringify({ velho: Date.now() - 4*24*3600*1000, novo: Date.now() }))");
+  const t = A.avaliar('[...fotosJaTentadas()].join(",")');
+  assert.strictEqual(t, 'novo');
+});

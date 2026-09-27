@@ -6007,6 +6007,10 @@ async function lugaresDosAmigos(area,pontual,cidade){
   });
   lugares.sort((a,b)=>b.foram.length-a.foram.length||b.media-a.media||b.querem.length-a.querem.length
     ||String(a.capa.name).localeCompare(String(b.capa.name),'pt-BR'));
+  // Card sem foto: a do lugar, só pra mostrar, e redesenha quando chegar.
+  lugares.filter(g=>!g.foto).forEach(g=>{
+    fotoParaVer(g.capa).then(u=>{if(u&&!g.foto){g.foto=u;if(EXPLORE.aba==='amigos')renderExploreResults();else darDadosDeExplorar()}});
+  });
   return{estado:'ok',lugares,amigos:ids.length};
 }
 function lugaresDosAmigosNaCategoria(){
@@ -9212,16 +9216,52 @@ async function corrigirPaisesDesconhecidos(){
   }catch(e){}
   if(mudou&&document.getElementById('dashboard').classList.contains('active')){renderTrips();loadProfile()}
 }
-const FOTO_TENTADA='spot_foto_tentada_v1';
+// "Já tentei" era PARA SEMPRE: uma falha passageira (rede, busca recusada)
+// deixava o spot sem foto até o fim dos tempos. Agora guarda QUANDO tentou,
+// e tenta de novo depois de 3 dias. A lista antiga (v1) é descartada de
+// propósito: os spots que ela travou ganham uma nova tentativa.
+const FOTO_TENTADA='spot_foto_tentada_v2';
 const FOTO_TETO=6;
+const FOTO_DE_NOVO=3*24*60*60*1000;
 function fotosJaTentadas(){
-  try{return new Set(JSON.parse(localStorage.getItem(FOTO_TENTADA)||'[]'))}catch(e){return new Set()}
+  let m={};
+  try{m=JSON.parse(localStorage.getItem(FOTO_TENTADA)||'{}')||{}}catch(e){}
+  const agora=Date.now();
+  return new Set(Object.keys(m).filter(id=>agora-Number(m[id])<FOTO_DE_NOVO));
 }
 function marcarFotoTentada(ids){
   try{
-    const s=fotosJaTentadas();ids.forEach(i=>s.add(i));
-    localStorage.setItem(FOTO_TENTADA,JSON.stringify([...s].slice(-4000)));
+    let m={};try{m=JSON.parse(localStorage.getItem(FOTO_TENTADA)||'{}')||{}}catch(e){}
+    const agora=Date.now();ids.forEach(i=>{m[i]=agora});
+    const chaves=Object.keys(m);
+    if(chaves.length>4000)chaves.slice(0,chaves.length-4000).forEach(k=>delete m[k]);
+    localStorage.setItem(FOTO_TENTADA,JSON.stringify(m));
   }catch(e){}
+}
+// ═══ FOTO PRA VER (spot de AMIGO sem foto) ═══
+// Quem vê o spot de um amigo não pode consertar a foto dele (o spot é do
+// amigo, e o banco não deixa). Mas pode MOSTRAR a foto do lugar: busca na
+// hora, pelo nome e cidade, e só exibe — não grava nada. A busca é guardada
+// no servidor (sem página), então o segundo amigo que vê não paga de novo.
+const FOTO_VISTA=new Map();
+function fotoParaVer(s){
+  if(!s||!s.name)return Promise.resolve('');
+  const k=normName(s.name)+'|'+normName(cityOf(s)||'');
+  if(FOTO_VISTA.has(k))return FOTO_VISTA.get(k);
+  const p=(async()=>{
+    try{
+      const r=await googlePlaces('searchText',{
+        method:'POST',
+        headers:{'Content-Type':'application/json','X-Goog-FieldMask':'places.displayName,places.photos'},
+        body:JSON.stringify({textQuery:s.name+(cityOf(s)?' '+cityOf(s):''),languageCode:'pt-BR',maxResultCount:5})
+      });
+      const d=await r.json();
+      const achado=pickBestPlaceMatch((d&&d.places)||[],s.name);
+      return achado?placePhotoUrl(achado,800):'';
+    }catch(e){return''}
+  })();
+  FOTO_VISTA.set(k,p);
+  return p;
 }
 async function buscarFotosQueFaltam(){
   if(!S.user)return;
@@ -11856,6 +11896,9 @@ function abrirSpotDoAmigo(i){
     const probe=new Image();
     probe.onload=()=>{if(FRIEND.spot===s){hero.style.backgroundImage=cssUrl(s.photo_url);pintarCreditoSpot('fpFotoCredito',s)}};
     probe.src=s.photo_url;
+  }else{
+    // Spot do amigo sem foto: a do lugar, só pra mostrar (ver fotoParaVer).
+    fotoParaVer(s).then(u=>{if(u&&FRIEND.spot===s){s._fotoVista=u;hero.style.backgroundImage=cssUrl(safeUrl(u))}});
   }
 
   // a nota pessoal é o coração do app — sem ela, some a seção
@@ -11922,6 +11965,11 @@ function renderFriendCityBody(){
   // guarda a ordem exibida: o clique manda o ÍNDICE, não o id no HTML
   FRIEND_CITY_SPOTS=spots;
   b.innerHTML=spots.map((s,i)=>friendSpotRowHTML(s,i)).join('');
+  // Sem foto: busca a do lugar pra mostrar e redesenha quando chegar.
+  const cidadeAgora=FRIEND.city;
+  spots.filter(s=>!s.photo_url&&!s._fotoVista).forEach(s=>{
+    fotoParaVer(s).then(u=>{if(u){s._fotoVista=u;if(FRIEND.city===cidadeAgora&&document.getElementById('friendCity').classList.contains('active'))renderFriendCityBody()}});
+  });
 }
 let FRIEND_CITY_SPOTS=[];
 // Linha de spot do amigo. Clicável quando vem com índice (tela da cidade);
@@ -11929,8 +11977,9 @@ let FRIEND_CITY_SPOTS=[];
 function friendSpotRowHTML(s,i){
   const bc=s.category==='food'?'bar-food':s.category==='hotel'?'bar-hotel':'bar-experience';
   const dot=s.status==='been'?'dot-been':'dot-want';
-  const thumb=s.photo_url
-    ?'<div class="place-thumb"><img src="'+escUrl(fotoNaLargura(s.photo_url,220))+'" loading="lazy" decoding="async" style="width:100%;height:100%;object-fit:cover;border-radius:inherit" onerror="thumbFallback(this,\''+esc(s.category)+'\')"></div>'
+  const fotoDoAmigo=s.photo_url||s._fotoVista||'';
+  const thumb=fotoDoAmigo
+    ?'<div class="place-thumb"><img src="'+escUrl(fotoNaLargura(fotoDoAmigo,220))+'" loading="lazy" decoding="async" style="width:100%;height:100%;object-fit:cover;border-radius:inherit" onerror="thumbFallback(this,\''+esc(s.category)+'\')"></div>'
     :'<div class="place-thumb">'+catIcon(s.category)+'</div>';
   const nota=s.my_rating?'★ '+fmtRating(s.my_rating):'';
   const tag=spotTag(s);
