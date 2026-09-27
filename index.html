@@ -578,6 +578,44 @@ input,textarea,select{font-size:max(16px,1em)!important}
    texto rolável parecia o mesmo nível das abas e cortava na borda. Virou uma
    linha só — a cozinha escolhida e ▾ — que abre uma folha com fotos de prato. */
 .ex-abas{display:flex;gap:18px;margin:0 0 14px}
+/* ═══ Perfil de amigo (1b) ═══ */
+.am-barra{display:flex;justify-content:space-between;align-items:center;padding:8px 8px 0}
+.am-barra button{width:44px;height:44px;background:none;border:none;padding:0;display:flex;align-items:center;justify-content:center;color:var(--ink);cursor:pointer}
+.am-cab{padding:8px 20px 0}
+.am-nome{margin:0;font-size:40px;font-weight:700;letter-spacing:-.04em;line-height:1;color:var(--ink);overflow-wrap:anywhere}
+.am-linha{margin-top:4px;font-size:15px;color:var(--ink2)}
+.am-comum{margin:24px 20px 0;background:var(--surface);border-radius:14px;padding:14px 16px;cursor:pointer}
+.am-comum b{display:block;font-size:16px;font-weight:600;color:var(--ink)}
+.am-comum span{font-size:14px;color:var(--ink2)}
+.am-cidade{padding:24px 20px 0}
+.am-cidade h2{margin:0 0 12px;font-size:20px;font-weight:700;letter-spacing:-.02em;color:var(--ink)}
+.am-cidade h2 small{margin-left:4px;font-size:15px;font-weight:400;letter-spacing:0;color:var(--ink3)}
+.am-grade{display:grid;grid-template-columns:1fr 1fr;gap:16px 12px}
+.am-tile{min-width:0;cursor:pointer}
+.am-tile:active{opacity:.7}
+.am-tile-foto{aspect-ratio:1;border-radius:18px;overflow:hidden;background:var(--photo-empty);display:flex;align-items:center;justify-content:center;color:var(--on-green)}
+.am-tile-foto img{width:100%;height:100%;object-fit:cover;display:block}
+.am-tile-nome{margin-top:8px;font-size:15px;font-weight:600;letter-spacing:-.02em;line-height:1.25;color:var(--ink);display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.am-tile-aba{margin-top:2px;font-size:13px;color:var(--ink2)}
+.am-vertodos{display:block;margin-top:12px;min-height:44px;padding:0;background:none;border:none;font-size:14px;color:var(--ink2);cursor:pointer}
+.am-lista-nota{padding:24px 20px 0}
+.am-lista-nota h2{margin:0 0 12px;font-size:20px;font-weight:700;letter-spacing:-.02em;color:var(--ink)}
+.am-vazio{padding:32px 20px;font-size:15px;color:var(--ink2)}
+/* ═══ Folha de escolha (Todos / Quero ir / Fui) ═══ */
+.esc-sheet{padding:12px 20px calc(34px + env(safe-area-inset-bottom,0px))}
+.esc-item{display:flex;justify-content:space-between;align-items:baseline;width:100%;height:52px;padding:0;background:none;border:none;cursor:pointer;font-size:20px;letter-spacing:-.02em;color:var(--ink)}
+.esc-item span{font-size:15px;letter-spacing:0;color:var(--ink3)}
+.esc-item.on{font-weight:600;color:var(--green)}
+.esc-item.on span{color:var(--green)}
+/* ═══ Cidade: linha do spot (5a) — status vira a 1ª palavra da linha 2 ═══ */
+.cid-row{display:flex;align-items:center;gap:14px;padding:7px 0;cursor:pointer}
+.cid-row:active{opacity:.7}
+.cid-row .place-thumb{width:60px;height:60px;flex-shrink:0;border-radius:14px}
+.cid-txt{min-width:0;flex:1}
+.cid-nome{font-size:17px;font-weight:600;letter-spacing:-.02em;color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.cid-linha{margin-top:2px;font-size:14px;color:var(--ink2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.st-fui{color:var(--green);font-weight:600}
+.st-quero{color:var(--ink3)}
 .coz-linha{display:flex;justify-content:space-between;align-items:baseline;padding:16px 20px 0}
 .coz-atual{display:flex;align-items:baseline;gap:6px;min-height:44px;padding:0;background:none;border:none;cursor:pointer;
   font-size:20px;font-weight:600;letter-spacing:-.02em;color:var(--ink)}
@@ -1980,23 +2018,24 @@ svg.ic path,svg.ic circle,svg.ic line,svg.ic polyline,svg.ic rect{fill:none;stro
 </div>
 
 <div class="screen" id="friend">
-  <div class="friend-top">
-    <button class="back-btn" onclick="backToFriends()" data-ic="back" aria-label="Voltar"></button>
-    <div class="profile-avatar" id="friendAvatar">?</div>
-    <div class="friend-id"><div class="friend-name" id="friendName">—</div><div class="friend-user" id="friendUser"></div></div>
-    <button class="friend-mais" onclick="abrirAcoesDoAmigo()" data-ic="menu" aria-label="Mais opções"></button>
+  <!-- Perfil de amigo, desenho 1b (27/09): nome grande, números numa linha,
+       o que cruza com a sua lista Quero ir, e os spots dele por cidade. -->
+  <div class="am-barra">
+    <button onclick="backToFriends()" data-ic="back" aria-label="Voltar"></button>
+    <button onclick="abrirAcoesDoAmigo()" data-ic="menu" aria-label="Mais opções"></button>
+  </div>
+  <div class="am-cab">
+    <h1 class="am-nome" id="friendName">—</h1>
+    <div class="am-linha" id="friendUser"></div>
   </div>
   <div class="friend-bio" id="friendBio" style="display:none"></div>
-  <div class="dash-body">
-    <div class="stats-strip">
-      <div class="stat-block" onclick="abrirDetalheAmigo('trips')"><div class="stat-n" id="fStatTrips">0</div><div class="stat-l">viagens</div></div>
-      <div class="stat-block" onclick="abrirDetalheAmigo('spots')"><div class="stat-n" id="fStatSpots">0</div><div class="stat-l">spots</div></div>
-      <div class="stat-block" onclick="abrirDetalheAmigo('cities')"><div class="stat-n" id="fStatCities">0</div><div class="stat-l">cidades</div></div>
-      <div class="stat-block" onclick="abrirDetalheAmigo('countries')"><div class="stat-n" id="fStatCountries">0</div><div class="stat-l">países</div></div>
-    </div>
-    <div class="section-head"><span class="section-title">Viagens</span></div>
-    <div id="friendTripsList"></div>
-  </div>
+  <div class="am-comum" id="friendComum" style="display:none" onclick="abrirEmComum()"></div>
+  <div class="coz-linha" id="friendStatus" style="display:none"></div>
+  <div id="friendTripsList"></div>
+  <div style="height:120px"></div>
+  <!-- o avatar e os números antigos saíram do desenho; ficam escondidos porque
+       ainda são preenchidos por código que abre o perfil -->
+  <div style="display:none"><div id="friendAvatar"></div><span id="fStatTrips"></span><span id="fStatSpots"></span><span id="fStatCities"></span><span id="fStatCountries"></span></div>
 </div>
 
 <div class="screen" id="friendTrip">
@@ -2191,6 +2230,7 @@ svg.ic path,svg.ic circle,svg.ic line,svg.ic polyline,svg.ic rect{fill:none;stro
 
 <div class="overlay" id="ov-novasenha"><div class="sheet"><div class="sheet-handle"></div><div class="sheet-title">Escolha uma senha nova</div><div class="den-sobre">Você chegou pelo link de recuperação. Defina a nova senha para entrar.</div><div class="nt-label" style="padding:0 24px">Nova senha</div><input class="nt-input" id="novaSenha" type="password" autocomplete="new-password" placeholder="8+ caracteres, com letras e números"><div class="auth-error show" id="erroNovaSenha" style="padding:0 24px;min-height:18px;background:none;border:none"></div><button class="sheet-cta" id="btnNovaSenha" onclick="salvarNovaSenha()">Salvar e entrar</button></div></div>
 
+<div class="overlay" id="ov-escolha" onclick="closeOut(event,'ov-escolha')"><div class="sheet esc-sheet"><div class="coz-alca"></div><div id="escolhaItens"></div></div></div>
 <div class="overlay" id="ov-cozinhas" onclick="closeOut(event,'ov-cozinhas')"><div class="sheet coz-sheet"><div class="coz-alca"></div><div class="coz-cab"><h2>O que você quer comer?</h2><span id="cozTipos"></span></div><div class="coz-grade" id="cozGrade"></div></div></div>
 <div class="overlay" id="ov-denuncia" onclick="closeOut(event,'ov-denuncia')"><div class="sheet"><button class="sheet-close" onclick="closeOv('ov-denuncia')" data-ic="close" aria-label="Fechar"></button><div class="sheet-handle"></div><div class="sheet-title">Denunciar</div><div class="den-sobre" id="denunciaSobre"></div><div class="nt-label" style="padding:0 24px">O que houve?</div><div class="den-motivos" id="denunciaMotivos"></div><div class="nt-label" style="padding:0 24px">Quer contar mais? (opcional)</div><textarea class="nt-input" id="denunciaDetalhe" rows="3" maxlength="1000" placeholder="Descreva o problema"></textarea><button class="sheet-cta" id="btnEnviarDenuncia" onclick="enviarDenuncia()">Enviar denúncia</button><div class="conv-dica">Analisamos toda denúncia em até 24 horas. Se quiser parar de ver essa pessoa agora, você também pode bloquear.</div></div></div>
 
@@ -4411,7 +4451,7 @@ function openCityScreen(city){
   document.getElementById('cityLabel').innerHTML=flagsHTML(t.destinations);
   document.getElementById('cityName').textContent=city;
   updateCityHeader();
-  curCitySubcat='';curCityStatus=0;renderCitySubcatFilter();renderCityStatusFilter();
+  curCitySubcat='';curCityStatus=STATUS_POR_CIDADE[chaveDoStatus()]||0;renderCitySubcatFilter();renderCityStatusFilter();
   const heroEl=document.getElementById('cityHeroImg');
   heroEl.style.backgroundImage=destGradient(city);
   limparCredito('cityFotoCredito');
@@ -4504,7 +4544,7 @@ async function mandarTextoPraFora(texto,titulo){
   }
 }
 function switchCityCat(cat,el){
-  curCityCat=cat;curCitySubcat='';curCityStatus=0;
+  curCityCat=cat;curCitySubcat='';curCityStatus=STATUS_POR_CIDADE[chaveDoStatus()]||0;
   document.querySelectorAll('#city .cat-tab').forEach(t=>t.classList.remove('active'));if(el)el.classList.add('active');
   renderCitySubcatFilter();renderCityStatusFilter();renderCityBody();
 }
@@ -4517,11 +4557,24 @@ function switchCityCat(cat,el){
 // 0 = todos, 1 = quero ir, 2 = ja fui. Numero em vez de texto porque o
 // rotulo vai dentro de um onclick, e ali aspas so dao trabalho.
 const SITUACOES = ['', 'want', 'been'];
+const ROTULO_SITUACAO = ['Todos', 'Quero ir', 'Fui'];
 let curCityStatus = 0;
+// O filtro fica guardado POR CIDADE enquanto o app está aberto (desenho 5b)
+// e volta pra "Todos" ao abrir o app de novo.
+const STATUS_POR_CIDADE = {};
+function chaveDoStatus(){ return ((S.curTrip && S.curTrip.id) || '') + '|' + (S.curCity || '') }
 function setCityStatus(i){
-  curCityStatus = (curCityStatus === i ? 0 : i);
+  curCityStatus = i;
+  STATUS_POR_CIDADE[chaveDoStatus()] = i;
   renderCityStatusFilter();
   renderCityBody();
+}
+function abrirStatusDaCidade(){
+  const lista = spotsDaCidade();
+  const quero = lista.filter(sp => sp.status !== 'been').length;
+  const fui = lista.filter(sp => sp.status === 'been').length;
+  abrirFolhaDeEscolha([{id:'0',rotulo:'Todos',n:lista.length},{id:'1',rotulo:'Quero ir',n:quero},{id:'2',rotulo:'Fui',n:fui}],
+    String(curCityStatus), id => setCityStatus(Number(id)));
 }
 function spotsDaCidade(){
   const t = S.curTrip;
@@ -4537,11 +4590,10 @@ function renderCityStatusFilter(){
   // So aparece quando ha os dois tipos: com tudo do mesmo jeito, o filtro
   // seria tres botoes que nao mudam nada.
   if(!quero || !fui){ box.style.display='none'; box.innerHTML=''; curCityStatus=0; return }
-  box.style.display = 'flex';
-  const chip = (i, rotulo, n) =>
-    '<button class="subcat-chip' + (curCityStatus === i ? ' on' : '') +
-    '" onclick="setCityStatus(' + i + ')">' + rotulo + ' ' + n + '</button>';
-  box.innerHTML = chip(0, 'Todos', lista.length) + chip(1, 'Quero ir', quero) + chip(2, 'Já fui', fui);
+  // Uma linha só, igual ao seletor de cozinha do Explorar (desenho 5a):
+  // o filtro ativo e ▾; tocar abre a folha com as três opções.
+  box.className = 'coz-linha'; box.style.cssText = '';
+  box.innerHTML = linhaDeEscolha(ROTULO_SITUACAO[curCityStatus] || 'Todos', 'abrirStatusDaCidade()');
 }
 function renderCityBody(){
   const b=document.getElementById('cityBody');
@@ -4559,7 +4611,11 @@ function renderCityBody(){
     const dot=s.status==='been'?'dot-been':'dot-want';
     const tag=spotTag(s);
     const thumb=s.photo_url?`<div class="place-thumb"><img src="${escUrl(fotoNaLargura(s.photo_url,220))}" loading="lazy" decoding="async" style="width:100%;height:100%;object-fit:cover;border-radius:inherit" onerror="onSpotPhotoError(this,'${esc(s.id)}','${esc(s.category)}')"></div>`:`<div class="place-thumb">${catIcon(s.category)}</div>`;
-    h+=`<div class="place-row" onclick="openPlace('${esc(s.id)}','city')"><div class="place-bar ${bc}"></div><div class="place-row-main">${thumb}<div class="place-row-info"><div class="place-row-name">${esc(s.name)}</div><div class="place-row-note">${esc(s.my_note)}</div></div><div class="place-row-right">${tag?`<span class="place-type-tag">${esc(tag)}</span>`:''}<div class="place-status"><span class="status-dot ${dot}"></span><span class="place-status-label">${s.status==='been'?'Fui':'Quero ir'}</span></div></div></div></div>`;
+    // Desenho 5a: o status sai da direita e vira a 1ª palavra da linha 2,
+    // antes da nota. O nome ganha a largura toda.
+    const nota=(s.status==='been'?(s.my_review||s.my_note):(s.my_note||s.my_review))||'';
+    const st=s.status==='been'?'<span class="st-fui">Fui</span>':'<span class="st-quero">Quero ir</span>';
+    h+=`<div class="cid-row" onclick="openPlace('${esc(s.id)}','city')">${thumb}<div class="cid-txt"><div class="cid-nome">${esc(s.name)}</div><div class="cid-linha">${st}${nota?' · '+esc(nota):''}</div></div></div>`;
   });
   b.innerHTML=h;
 }
@@ -5274,6 +5330,19 @@ function abrirCozinhas(){
   showOv('ov-cozinhas');
 }
 // Tocar aplica e fecha na hora — sem botão de aplicar.
+// Folha de escolha de uma lista curta (Todos / Quero ir / Fui): o mesmo
+// componente do seletor de cozinha, pra o app ter um jeito só de filtrar.
+let ESCOLHA_AO_TOCAR=null;
+function abrirFolhaDeEscolha(itens,ativo,aoTocar){
+  ESCOLHA_AO_TOCAR=aoTocar;
+  document.getElementById('escolhaItens').innerHTML=itens.map(x=>
+    '<button class="esc-item'+(x.id===ativo?' on':'')+'" onclick="tocarEscolha(\''+x.id+'\')">'+esc(x.rotulo)+'<span>'+esc(String(x.n))+'</span></button>').join('');
+  showOv('ov-escolha');
+}
+function tocarEscolha(id){closeOv('ov-escolha');const f=ESCOLHA_AO_TOCAR;ESCOLHA_AO_TOCAR=null;if(f)f(id)}
+function linhaDeEscolha(rotulo,aoTocar){
+  return '<button class="coz-atual" onclick="'+aoTocar+'" aria-haspopup="dialog">'+esc(rotulo)+'<i>▾</i></button>';
+}
 function escolherCozinha(id){closeOv('ov-cozinhas');setExploreCozinha(id)}
 function termoDoExplorar(cidade){
   const frase=EXPLORE.cat==='food'?cozinhaAtual().frase:{hotel:'hotéis',experience:'pontos turísticos'}[EXPLORE.cat];
@@ -11652,7 +11721,9 @@ const FRIEND={id:null,profile:null,trips:[],visiveis:[],trip:null,city:null,spot
 const FRIEND_NOMES={};
 function backToFriends(){goTo('friends');loadFriends()}
 async function openFriend(id){
-  FRIEND.id=id;FRIEND.trips=[];FRIEND.visiveis=[];FRIEND.trip=null;
+  FRIEND.id=id;FRIEND.trips=[];FRIEND.visiveis=[];FRIEND.trip=null;FRIEND.status='been';FRIEND.soComum=false;FRIEND.abertas={};FRIEND.todos=[];
+  const cmm=document.getElementById('friendComum');if(cmm){cmm.style.display='none';cmm.innerHTML=''}
+  const fst=document.getElementById('friendStatus');if(fst)fst.style.display='none';
   // Pinta o que já se sabe antes de ir ao banco: a tela abre na hora e os
   // números entram conforme chegam (mesmo padrão do loadDashboard).
   const nome=FRIEND_NOMES[id]||'Amigo';
@@ -11795,39 +11866,116 @@ function abrirDetalheAmigo(modo){
   showOv('ov-detalheamigo');
 }
 function renderFriendProfile(){
-  // Viagem sem nenhum spot não diz nada pra quem visita o perfil.
   const visiveis=FRIEND.trips.filter(t=>!isNonTrip(t)&&(t._spots||[]).length);
   FRIEND.visiveis=visiveis;
-  const cidades=new Set(),paises=new Set();let spots=0;
-  FRIEND.trips.forEach(t=>{
-    spots+=(t._spots||[]).length;
-    (t._spots||[]).forEach(s=>{const c=cityOf(s);if(c)cidades.add(c)});
-    (t.destinations||[]).forEach(d=>paises.add(d));
-  });
-  document.getElementById('fStatTrips').textContent=visiveis.length;
-  document.getElementById('fStatSpots').textContent=spots;
-  document.getElementById('fStatCities').textContent=cidades.size;
-  document.getElementById('fStatCountries').textContent=paises.size;
-
+  const todos=[];FRIEND.trips.forEach(t=>(t._spots||[]).forEach(s=>todos.push(s)));
+  const cidades=new Set(),paises=new Set();
+  todos.forEach(s=>{const c=cityOf(s);if(c)cidades.add(c)});
+  FRIEND.trips.forEach(t=>(t.destinations||[]).forEach(d=>paises.add(d)));
+  // "@usuario · 1 país · 1 cidade · 4 spots" — itens em 0 somem; "viagens" não entra.
+  const p=FRIEND.profile||{};
+  const plural=(n,um,varios)=>n+' '+(n===1?um:varios);
+  const partes=[p.username?'@'+p.username:''];
+  if(paises.size)partes.push(plural(paises.size,'país','países'));
+  if(cidades.size)partes.push(plural(cidades.size,'cidade','cidades'));
+  if(todos.length)partes.push(plural(todos.length,'spot','spots'));
+  document.getElementById('friendUser').textContent=partes.filter(Boolean).join(' · ');
+  FRIEND.todos=todos;
+  pintarEmComum();
+  pintarSpotsDoAmigo();
+}
+// Os spots onde ele já FOI que estão na SUA lista Quero ir. É o que o perfil
+// do amigo tem de mais útil: ele já testou o que você quer testar.
+function spotsEmComum(){
+  const meus=allSpotsFlat().filter(s=>s.status==='want');
+  return (FRIEND.todos||[]).filter(f=>f.status==='been'&&meus.some(m=>mesmoLugar(m.name,f.name)
+    &&(!cityOf(m)||!cityOf(f)||mesmoLugar(cityOf(m),cityOf(f)))));
+}
+function pintarEmComum(){
+  const box=document.getElementById('friendComum');
+  const lista=spotsEmComum();
+  // N = 0: o card não aparece. Sem estado vazio (desenho 1b).
+  if(!lista.length){box.style.display='none';box.innerHTML='';return}
+  const primeiro=String(friendName(FRIEND.profile)||'Seu amigo').split(' ')[0];
+  box.innerHTML='<b>'+lista.length+(lista.length===1?' lugar da sua lista Quero ir':' lugares da sua lista Quero ir')+'</b>'
+    +'<span>'+esc(primeiro)+' já foi. Veja o que achou ›</span>';
+  box.style.display='';
+}
+// Status do perfil: o desenho mostrava só o Fui dele; o Lucas decidiu mostrar a
+// lista Quero ir também (27/09). Mesmo seletor da cidade — começa em Fui, que
+// é o que serve pra "roubar lugar", e a wishlist dele fica a um toque.
+const ROTULO_STATUS_AMIGO={been:'Fui',want:'Quero ir',todos:'Todos'};
+function abrirStatusDoAmigo(){
+  const t=FRIEND.todos||[];
+  const fui=t.filter(s=>s.status==='been').length,quero=t.filter(s=>s.status!=='been').length;
+  abrirFolhaDeEscolha([{id:'been',rotulo:'Fui',n:fui},{id:'want',rotulo:'Quero ir',n:quero},{id:'todos',rotulo:'Todos',n:t.length}],
+    FRIEND.status||'been',id=>{FRIEND.status=id;FRIEND.soComum=false;pintarSpotsDoAmigo()});
+}
+function abrirEmComum(){FRIEND.soComum=true;pintarSpotsDoAmigo();
+  const el=document.getElementById('friendTripsList');if(el)el.scrollIntoView({behavior:'smooth',block:'start'})}
+const ABA_CURTA={food:'Comer',hotel:'Ficar',experience:'Experiências'};
+function tileDoAmigo(s,i){
+  const foto=s.photo_url||s._fotoVista||'';
+  const img=foto?'<img src="'+escUrl(fotoNaLargura(foto,400))+'" alt="" loading="lazy" decoding="async" onerror="fotoDaGradeFalhou(this,'+i+')">':catIcon(s.category);
+  return '<div class="am-tile" onclick="abrirSpotDaGrade('+i+')"><div class="am-tile-foto">'+img+'</div>'
+    +'<div class="am-tile-nome">'+esc(s.name)+'</div><div class="am-tile-aba">'+esc(ABA_CURTA[s.category]||'')+'</div></div>';
+}
+function pintarSpotsDoAmigo(){
   const box=document.getElementById('friendTripsList');
-  if(!visiveis.length){
-    box.innerHTML='<div class="empty-state" style="padding:30px 0"><div class="ei">'+icon('suitcase')+'</div><p>Esse amigo ainda não tem viagens</p></div>';
+  const linha=document.getElementById('friendStatus');
+  const todos=FRIEND.todos||[];
+  FRIEND.grade=[];
+  if(!todos.length){linha.style.display='none';box.innerHTML='<div class="am-vazio">Seu amigo ainda não salvou nenhum spot.</div>';return}
+  // Lista "em comum": os spots com a nota dele, no lugar da grade.
+  if(FRIEND.soComum){
+    linha.style.display='none';
+    const lista=spotsEmComum();
+    FRIEND.grade=lista;
+    box.innerHTML='<div class="am-lista-nota"><h2>Da sua lista Quero ir</h2>'
+      +lista.map((s,i)=>{
+        const nota=s.my_rating?'★ '+fmtRating(s.my_rating):'';
+        const txt=s.my_review||s.my_note||'';
+        const foto=s.photo_url||s._fotoVista||'';
+        const thumb=foto?'<div class="place-thumb"><img src="'+escUrl(fotoNaLargura(foto,220))+'" loading="lazy" style="width:100%;height:100%;object-fit:cover;border-radius:inherit" onerror="fotoDaGradeFalhou(this,'+i+')"></div>':'<div class="place-thumb">'+catIcon(s.category)+'</div>';
+        return '<div class="cid-row" onclick="abrirSpotDaGrade('+i+')">'+thumb+'<div class="cid-txt"><div class="cid-nome">'+esc(s.name)+'</div><div class="cid-linha">'
+          +(nota?'<span class="st-fui">'+esc(nota)+'</span>':'')+(nota&&txt?' · ':'')+esc(txt||(nota?'':cityOf(s)||''))+'</div></div></div>';
+      }).join('')
+      +'<button class="am-vertodos" onclick="FRIEND.soComum=false;pintarSpotsDoAmigo()">Ver todos os spots ›</button></div>';
     return;
   }
-  // Índice no onclick, não o id: mesma razão dos cards de cidade.
-  box.innerHTML=visiveis.map((t,i)=>{
-    const flag=flagHTML((t.destinations&&t.destinations[0])||t.name);
-    const grad=destGradient((t.destinations&&t.destinations[0])||t.name);
-    return '<div class="trip-card" onclick="openFriendTrip('+i+')"><div class="tc-photo" id="ftcbg-'+i+'" style="background-image:'+grad+'"></div><div class="tc-stub"><div class="tc-stub-top"><span class="tc-flag">'+flag+'</span></div><div class="tc-name">'+esc(t.name)+'</div><div class="tc-meta">'+esc(tripMetaText(t))+'</div></div></div>';
+  const st=FRIEND.status||'been';
+  const temOsDois=todos.some(s=>s.status==='been')&&todos.some(s=>s.status!=='been');
+  linha.style.display=temOsDois?'':'none';
+  linha.innerHTML=temOsDois?linhaDeEscolha(ROTULO_STATUS_AMIGO[st],'abrirStatusDoAmigo()'):'';
+  // Sem os dois tipos, mostra o que houver (o seletor não tem o que trocar).
+  const filtrados=!temOsDois?todos:st==='todos'?todos:todos.filter(s=>st==='been'?s.status==='been':s.status!=='been');
+  const porCidade={};
+  filtrados.forEach(s=>{const c=cityOf(s)||'Outros';(porCidade[c]=porCidade[c]||[]).push(s)});
+  const cidades=Object.keys(porCidade).sort((a,b)=>porCidade[b].length-porCidade[a].length||a.localeCompare(b,'pt-BR'));
+  FRIEND.abertas=FRIEND.abertas||{};
+  box.innerHTML=cidades.map(c=>{
+    const lista=porCidade[c];
+    const aberta=FRIEND.abertas[c]||lista.length<=6;
+    const mostra=aberta?lista:lista.slice(0,6);
+    const tiles=mostra.map(s=>{FRIEND.grade.push(s);return tileDoAmigo(s,FRIEND.grade.length-1)}).join('');
+    return '<div class="am-cidade"><h2>'+esc(c)+'<small>'+lista.length+'</small></h2><div class="am-grade">'+tiles+'</div>'
+      +(aberta?'':'<button class="am-vertodos" onclick="FRIEND.abertas[\''+esc(c).replace(/'/g,'')+'\']=true;pintarSpotsDoAmigo()">Ver todos os '+lista.length+' ›</button>')+'</div>';
   }).join('');
-  // fotos entram depois, sem travar a lista
-  visiveis.forEach((t,i)=>{
-    const dest=(t.destinations&&t.destinations[0])||t.name;
-    fetchCityPhoto(dest).then(url=>{
-      const el=document.getElementById('ftcbg-'+i);
-      if(url&&el)el.style.backgroundImage=cssUrl(url);
-    });
-  });
+  // Sem foto gravada: a do lugar, só pra mostrar.
+  FRIEND.grade.forEach((s,i)=>{if(!s.photo_url&&!s._fotoVista)fotoParaVer(s).then(u=>{if(u&&FRIEND.grade[i]===s){s._fotoVista=u;
+    const el=box.querySelectorAll('.am-tile-foto')[i];if(el)el.innerHTML='<img src="'+escUrl(fotoNaLargura(u,400))+'" alt="" loading="lazy">'}})});
+}
+function fotoDaGradeFalhou(img,i){
+  const s=(FRIEND.grade||[])[i];
+  if(!s||img.dataset.tentou){img.parentElement.innerHTML=catIcon((s&&s.category)||'food');return}
+  img.dataset.tentou='1';
+  fotoParaVer(s).then(u=>{if(u&&img.isConnected){s._fotoVista=u;img.src=safeUrl(fotoNaLargura(u,400))}else if(img.isConnected)img.parentElement.innerHTML=catIcon(s.category)});
+}
+function abrirSpotDaGrade(i){
+  const s=(FRIEND.grade||[])[i];if(!s)return;
+  FRIEND_CITY_SPOTS=[s];
+  abrirSpotDoAmigo(0);
+  telaAntesDaFicha='friend';
 }
 function openFriendTrip(i){
   const t=(FRIEND.visiveis||[])[i];if(!t)return;
