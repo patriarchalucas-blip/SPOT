@@ -5254,16 +5254,26 @@ function termoDoExplorar(cidade){
 // quem buscar o mesmo lugar depois não paga de novo.
 const TIPOS_DE_RUA=['route','street_address','premise','subpremise','intersection','point_of_interest','establishment','transit_station','park'];
 const TIPOS_DE_BAIRRO=['neighborhood','sublocality','sublocality_level_1','sublocality_level_2'];
+const TIPOS_GEOGRAFICOS=['locality','administrative_area_level_1','administrative_area_level_2','administrative_area_level_3',
+  'country','postal_code','route','street_address','intersection','colloquial_area'].concat(TIPOS_DE_BAIRRO);
 async function resolverLugarDoExplorar(texto){
   try{
     const r=await googlePlaces('searchText',{
       method:'POST',
       headers:{'Content-Type':'application/json','X-Goog-FieldMask':'places.displayName,places.location,places.viewport,places.types,places.addressComponents'},
-      body:JSON.stringify({textQuery:texto,languageCode:'pt-BR',maxResultCount:1})
+      body:JSON.stringify({textQuery:texto,languageCode:'pt-BR',maxResultCount:5})
     });
     const d=await r.json();
-    const p=d&&d.places&&d.places[0];
-    if(!p||!p.location)return null;
+    const lista=((d&&d.places)||[]).filter(x=>x&&x.location);
+    // O PRIMEIRO resultado do Google nem sempre é o lugar: "São Paulo" voltou
+    // com um hospital na frente (27/09), e a busca virou "perto do hospital".
+    // Vale o primeiro que seja um lugar no mapa (cidade, bairro, rua, país).
+    // Estabelecimento só vale se o nome bate com o que foi digitado — senão a
+    // busca segue pelo texto, sem área, como antes.
+    const geo=x=>(x.types||[]).some(t=>TIPOS_GEOGRAFICOS.includes(t));
+    const nomeBate=x=>{const a=normName((x.displayName&&x.displayName.text)||''),b=normName(texto);return !!a&&!!b&&(a.includes(b)||b.includes(a))};
+    const p=lista.find(geo)||lista.find(nomeBate);
+    if(!p)return null;
     const tipos=p.types||[];
     const tipo=tipos.some(t=>TIPOS_DE_RUA.includes(t))?'rua':tipos.some(t=>TIPOS_DE_BAIRRO.includes(t))?'bairro':'area';
     return{nome:(p.displayName&&p.displayName.text)||texto,tipo,

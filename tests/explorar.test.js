@@ -150,7 +150,7 @@ test('buscar uma rua procura DENTRO da area dela, em todas as paginas', async ()
   const corpos = [];
   const volta = trocar(A, 'googlePlaces', async (op, o) => {
     const b = JSON.parse(o.body); corpos.push(b);
-    if (b.maxResultCount === 1) {
+    if (b.maxResultCount === 5) {
       return { ok: true, json: async () => ({ places: [{ displayName: { text: 'Rua Fradique Coutinho' },
         location: { latitude: -23.56, longitude: -46.69 }, types: ['route'],
         addressComponents: [{ types: ['administrative_area_level_2'], longText: 'São Paulo' }, { types: ['country'], longText: 'Brasil', shortText: 'BR' }] }] }) };
@@ -222,4 +222,23 @@ test('aba Amigos em cidade: acha pelo nome da cidade e avisa quando a categoria 
     A.avaliar('AMIGOS_AREA=' + JSON.stringify(r));
     assert.ok(/1 experiência em Experiências/.test(A.avisoDosAmigos()), A.avisoDosAmigos());
   } finally { vs.forEach((v) => v()); A.avaliar("AMIGOS_AREA={estado:'inicial',lugares:[],amigos:0}") }
+});
+
+test('"São Paulo" com um hospital na frente: vale a cidade, nao o hospital', async () => {
+  const volta = trocar(A, 'googlePlaces', async () => ({ ok: true, json: async () => ({ places: [
+    { displayName: { text: 'Irmandade da Santa Casa de Misericórdia de São Paulo - Hospital Central' }, location: { latitude: -23.54, longitude: -46.65 }, types: ['hospital', 'point_of_interest', 'establishment'] },
+    { displayName: { text: 'São Paulo' }, location: { latitude: -23.55, longitude: -46.63 }, types: ['locality', 'political'],
+      viewport: { low: { latitude: -24.0, longitude: -46.83 }, high: { latitude: -23.35, longitude: -46.36 } } }
+  ] }) }));
+  try {
+    const l = await A.resolverLugarDoExplorar('São Paulo');
+    assert.strictEqual(l.nome, 'São Paulo');
+    assert.strictEqual(l.tipo, 'area');
+  } finally { volta() }
+});
+
+test('so estabelecimento com outro nome: sem area, segue pelo texto', async () => {
+  const volta = trocar(A, 'googlePlaces', async () => ({ ok: true, json: async () => ({ places: [
+    { displayName: { text: 'Hospital Qualquer' }, location: { latitude: 1, longitude: 1 }, types: ['hospital', 'establishment'] }] }) }));
+  try { assert.strictEqual(await A.resolverLugarDoExplorar('São Paulo'), null) } finally { volta() }
 });
