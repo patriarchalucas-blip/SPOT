@@ -162,9 +162,26 @@ nesta máquina** (Windows, sem simulador de iPhone): a verificação é `npx esl
 mais `npx expo export --platform ios`, que pega import quebrado — o erro que vira
 tela branca no celular. Ver na tela depende do TestFlight no iPhone do Lucas.
 
-## Estado da App Store (24/09/2026)
+## Estado da App Store (27/09/2026)
 
-App registrado (id `6814856044`), build 4 enviada em 23/09. O contexto completo —
+**Em revisão: versão 1.0, build 11** (WAITING_FOR_REVIEW, só Brasil, grátis). A 1ª
+submissão (build 8) voltou em 26/09 com "2.1 Information Needed" — não é defeito,
+é conta nova: pediram vídeo gravado no iPhone + 5 respostas. O Lucas gravou e
+respondeu; o texto está em `mobile/app-store/resposta-revisao-2.1.md` (e nas Notas
+da revisão). **Build 12** (abas Para você/Amigos no Explorar) está no TestFlight e
+NÃO está na revisão — vai na 1ª atualização.
+
+**Mexer na submissão pela API** (`_local/app-store-connect/asc.cjs`): trocar a build
+é `PATCH appStoreVersions/{id}/relationships/build`. Reenviar depois de rejeição dá
+409 "Version is not ready" até marcar o item rejeitado
+`reviewSubmissionItems {resolved:true}`; aí `PATCH reviewSubmissions {submitted:true}`.
+
+**Atualização pelo ar existe:** `runtimeVersion: appVersion` no app.json — mudança
+só de JS nas telas nativas pode ir por EAS Update sem passar pela Apple. Mudança
+de config/permissão/biblioteca nativa pede build.
+
+O resto do histórico (build 4, App Store Connect) está em
+`_local/PASSAGEM-DE-BASTAO.md` (fora do git: tem IDs de conta). O contexto completo —
 o que foi feito no App Store Connect, decisões e pendências — está em
 `_local/PASSAGEM-DE-BASTAO.md` (fora do git: tem IDs de conta). Os textos da loja e
 as respostas dos questionários estão em `mobile/app-store/` (`ficha-da-loja.md`,
@@ -186,6 +203,30 @@ ver `mobile/app-store/login-apple.md`. Pede um build novo que substitui a build 
 - **Amigos:** pedido de amizade por username (não por email — decisão explícita do Lucas), aceitar/recusar/cancelar, feed de atividade dos amigos (viagens marcadas, spots com status "been" — spots "want" não entram no feed, decisão deliberada pra não virar mural de lista de desejos).
 - **Perfil:** mapa-múndi (d3-geo + world-atlas), username editável, "X/243 países" (lista completa ISO 3166-1 em pt-BR, gerada via pycountry — antes só tinha 47 países hardcoded).
 - 243 países com bandeira + região + nome geo (pra bater com o TopoJSON do mapa) — tudo numa fonte única (`COUNTRIES`), não existe mais lista duplicada.
+- **Explorar (26–27/09):** abas **Para você** (Google) e **Amigos** (spots dos amigos
+  DENTRO da área buscada, pela coordenada do spot; ordem: 1º quantos amigos foram,
+  2º nota) acima da busca. Busca aceita **rua, bairro, cidade ou país**: primeiro
+  `resolverLugarDoExplorar` acha o retângulo do lugar (pede 5 resultados e fica com
+  o 1º geográfico — "São Paulo" voltava um HOSPITAL em 1º), depois procura dentro
+  (`locationRestriction.rectangle`, aceito no proxy). Tipo de comida é uma linha
+  "Japonesa ▾" que abre folha com fotos de prato (`fotos-cozinha/`, domínio
+  público, procedência em `creditos.json`); sem contagem por cozinha (decisão do
+  Lucas: contar pediria uma busca paga por cozinha).
+- **Foto de spot de amigo** sem foto ou com foto QUEBRADA (o `photos[].name` do
+  Places expira): `fotoParaVer` busca a foto atual do lugar e só exibe.
+- **Cidade onde mora** (`dates='__casa__'`): o card abre a mesma tela das viagens;
+  lá "Excluir viagem" some.
+
+## Custo e cotas (27/09/2026) — o Lucas disse: "isso não pode falhar"
+
+- **Google Cloud (projeto spot-499219), cotas por dia na Places API (New)**, postas
+  pelo Lucas: SearchTextRequest e GetPhotoMediaRequest. Conferir no painel antes de
+  afirmar valor — em 27/09 os números no painel não eram os que eu tinha sugerido.
+- **Brave (Instagram): pago** desde 26/09, US$ 5 por mil. Teto do mês 20.000 em
+  `find-instagram.js` é só rede contra desastre; o que segura o gasto é a MEMÓRIA
+  por restaurante no KV (`ig_<hash nome|cidade>`, 180 dias achado / 30 não).
+- **Aviso no celular do Lucas** em 50/80/100% das cotas de Instagram e de fotos
+  (`functions/api/_aviso-dono.js`, acha o dono pela tabela `moderadores`).
 
 ## Dívida técnica conhecida (Lucas já está ciente, discutido explicitamente)
 
@@ -276,8 +317,14 @@ anon key devolve **200 + `confirmation_sent_at`** quando o SMTP está de pé, e
 
 ## Estado do banco (migrações aplicadas)
 
-001 a 026 já foram rodadas no Supabase — 001–025 conferidas coluna a coluna em
-23/09/2026, 026 rodada e conferida (`anon = false` nas duas) em 25/09/2026.
+001 a 027 já foram rodadas no Supabase — 001–025 conferidas coluna a coluna em
+23/09/2026, 026 rodada e conferida (`anon = false` nas duas) em 25/09/2026, **027**
+rodada em 27/09/2026 (5/5 "true" na conferência; RPCs novas recusam anon).
+**027** = cadastro não quebra com username repetido (`handle_new_user` com sufixo);
+bloqueio desfaz amizade no banco e `redeem_invite` recusa bloqueado; **e-mail saiu
+de `profiles`** (gatilho zera; o dono do app mora em `moderadores`, lida só pelo
+servidor); spot só em viagem do dono; busca de pessoas sem curinga;
+`registrar_aparelho`; bucket `uploads` 5 MB só imagem.
 **Pegadinha da 026:** função criada sem `revoke ... from public` continua
 executável por `anon` mesmo depois de `revoke ... from anon`, porque o EXECUTE
 padrão do Postgres vai pra PUBLIC. Função nova precisa dos DOIS. Destaques:
