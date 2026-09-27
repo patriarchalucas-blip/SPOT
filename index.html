@@ -616,6 +616,16 @@ input,textarea,select{font-size:max(16px,1em)!important}
 .cid-linha{margin-top:2px;font-size:14px;color:var(--ink2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .st-fui{color:var(--green);font-weight:600}
 .st-quero{color:var(--ink3)}
+/* Sugestões de lugar enquanto digita (27/09): "Itapura" é a cidade ou a rua. */
+#exploreCitySearch{padding-right:40px}
+.ex-limpar{position:absolute;right:6px;top:50%;transform:translateY(-50%);width:36px;height:36px;border:none;background:none;font-size:22px;line-height:1;color:var(--ink3);cursor:pointer}
+#explore .dash-top{position:relative;z-index:40}
+.ex-sugestoes{position:absolute;left:0;right:0;top:calc(100% + 6px);z-index:30;background:var(--surface);border-radius:var(--r-card);padding:6px 0;max-height:60vh;overflow-y:auto}
+.ex-sug{display:block;width:100%;text-align:left;background:none;border:none;padding:10px 16px;cursor:pointer}
+.ex-sug:active{background:var(--base)}
+.ex-sug b{display:block;font-size:16px;font-weight:600;color:var(--ink)}
+.ex-sug span{display:block;font-size:13px;color:var(--ink2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ex-sug-titulo{padding:6px 16px 2px;font-size:13px;color:var(--ink3)}
 .coz-linha{display:flex;justify-content:space-between;align-items:baseline;padding:16px 20px 0}
 .coz-atual{display:flex;align-items:baseline;gap:6px;min-height:44px;padding:0;background:none;border:none;cursor:pointer;
   font-size:20px;font-weight:600;letter-spacing:-.02em;color:var(--ink)}
@@ -1933,7 +1943,7 @@ svg.ic path,svg.ic circle,svg.ic line,svg.ic polyline,svg.ic rect{fill:none;stro
     <div class="dash-top-row"><div><div class="dash-hello">Explorar</div><div class="dash-name" style="font-size:26px">Tendências por lugar</div></div></div>
     <div class="ex-abas" id="exploreAbas"></div>
     <div class="search-wrap" style="padding:0;display:flex;gap:8px;align-items:center">
-      <div class="search-field" style="flex:1"><span class="si" data-ic="search"></span><input class="search-input" id="exploreCitySearch" placeholder="Cidade, bairro ou rua" enterkeyhint="search" onkeydown="if(event.key==='Enter')runExplore()"></div>
+      <div class="search-field" style="flex:1"><span class="si" data-ic="search"></span><input class="search-input" id="exploreCitySearch" placeholder="Cidade, bairro ou rua" enterkeyhint="search" autocomplete="off" onkeydown="if(event.key==='Enter'){fecharSugestoes();runExplore()}" oninput="sugerirLugar(this.value)" onfocus="this.select();sugerirLugar(this.value)" onblur="setTimeout(fecharSugestoes,200)"><button class="ex-limpar" onclick="limparBuscaDoExplorar()" aria-label="Limpar busca">×</button><div class="ex-sugestoes" id="exploreSugestoes" style="display:none"></div></div>
       <button class="req-btn req-accept" style="height:48px;padding:0 16px" onclick="runExplore()">Ir</button>
     </div>
   </div>
@@ -5395,12 +5405,86 @@ async function resolverLugarDoExplorar(texto){
       }catch(e){}
     }
     if(!p)return null;
-    const tipos=p.types||[];
-    const tipo=tipos.some(t=>TIPOS_DE_RUA.includes(t))?'rua':tipos.some(t=>TIPOS_DE_BAIRRO.includes(t))?'bairro':'area';
-    return{nome:(p.displayName&&p.displayName.text)||texto,tipo,
-      cidade:cityFromComponents(p.addressComponents)||'',pais:countryFromComponents(p.addressComponents)||'',
-      area:areaDaBusca(p.location,p.viewport,tipo)};
+    return lugarDoGoogle(p,texto);
   }catch(e){return null}
+}
+function lugarDoGoogle(p,texto){
+  const tipos=p.types||[];
+  const tipo=tipos.some(t=>TIPOS_DE_RUA.includes(t))?'rua':tipos.some(t=>TIPOS_DE_BAIRRO.includes(t))?'bairro':'area';
+  return{nome:(p.displayName&&p.displayName.text)||texto,tipo,
+    cidade:cityFromComponents(p.addressComponents)||'',pais:countryFromComponents(p.addressComponents)||'',
+    area:areaDaBusca(p.location,p.viewport,tipo)};
+}
+// ═══ SUGESTÕES ENQUANTO DIGITA + RECENTES (27/09) ═══
+// A lista traz só lugar no mapa (rua, bairro, cidade, país): a pessoa escolhe
+// qual "Itapura" é, em vez de o app adivinhar. Com o campo vazio (ou menos de 3
+// letras), mostra as últimas buscas. /api/lugar guarda as respostas, então a
+// mesma palavra digitada por duas pessoas é paga uma vez só.
+const SUG={lista:[],modo:'',timer:null,req:0};
+const CHAVE_RECENTES='spot_explorar_recentes_v1';
+function lerRecentes(){try{const l=JSON.parse(localStorage.getItem(CHAVE_RECENTES)||'[]');return Array.isArray(l)?l:[]}catch(e){return[]}}
+function guardarRecente(item){
+  if(!item||!item.titulo)return;
+  try{
+    const l=lerRecentes().filter(x=>!(normName(x.titulo)===normName(item.titulo)&&normName(x.sub||'')===normName(item.sub||'')));
+    l.unshift({titulo:item.titulo,sub:item.sub||'',id:item.id||''});
+    localStorage.setItem(CHAVE_RECENTES,JSON.stringify(l.slice(0,6)));
+  }catch(e){}
+}
+async function pedirLugar(corpo){
+  try{
+    const tk=await ensureToken();
+    const r=await fetch('/api/lugar',{method:'POST',
+      headers:Object.assign({'Content-Type':'application/json'},tk?{'Authorization':'Bearer '+tk}:{}),body:JSON.stringify(corpo)});
+    return r.ok?await r.json():null;
+  }catch(e){return null}
+}
+function sugerirLugar(v){
+  clearTimeout(SUG.timer);
+  const t=String(v||'').trim();
+  if(t.length<3){
+    const rec=lerRecentes();
+    SUG.lista=rec;SUG.modo=rec.length?'recentes':'';
+    pintarSugestoes();return;
+  }
+  SUG.timer=setTimeout(async()=>{
+    const meu=++SUG.req;
+    const d=await pedirLugar({op:'sugerir',texto:t});
+    if(meu!==SUG.req)return;
+    SUG.lista=(d&&d.sugestoes)||[];SUG.modo=SUG.lista.length?'sugestoes':'';
+    pintarSugestoes();
+  },320);
+}
+function fecharSugestoes(){SUG.req++;clearTimeout(SUG.timer);SUG.lista=[];SUG.modo='';pintarSugestoes()}
+function pintarSugestoes(){
+  const box=document.getElementById('exploreSugestoes');
+  if(box){
+    if(!SUG.modo){box.style.display='none';box.innerHTML=''}
+    else{
+      box.innerHTML=(SUG.modo==='recentes'?'<div class="ex-sug-titulo">Buscas recentes</div>':'')
+        +SUG.lista.map((x,i)=>'<button class="ex-sug" onmousedown="event.preventDefault()" onclick="escolherSugestao('+i+')"><b>'+esc(x.titulo)+'</b>'+(x.sub?'<span>'+esc(x.sub)+'</span>':'')+'</button>').join('');
+      box.style.display='';
+    }
+  }
+  darDadosDeExplorar();
+}
+async function escolherSugestao(i){
+  const x=SUG.lista[i];if(!x)return;
+  fecharSugestoes();
+  const campo=document.getElementById('exploreCitySearch');
+  if(campo){campo.value=x.titulo;campo.blur()}
+  guardarRecente(x);
+  let lugar=null;
+  if(x.id){
+    const d=await pedirLugar({op:'detalhe',id:x.id});
+    if(d&&d.lugar&&d.lugar.location)lugar=lugarDoGoogle(d.lugar,x.titulo);
+  }
+  runExplore('',lugar);
+}
+function limparBuscaDoExplorar(){
+  const campo=document.getElementById('exploreCitySearch');
+  if(campo){campo.value='';campo.focus()}
+  sugerirLugar('');
 }
 // O retângulo onde procurar. Rua e ponto têm retângulo minúsculo (ou nenhum):
 // abre pra umas quadras em volta (~700 m pra cada lado), senão viria meia
@@ -5806,7 +5890,7 @@ function lugarDoExplorar(p){
 // restaurante de bairro com 2 mil a 4,8.
 function notaDoExplorar(p){return (Number(p.rating)||0)*Math.log10((Number(p.userRatingCount)||0)+1)}
 
-async function runExplore(rotulo){
+async function runExplore(rotulo,lugarEscolhido){
   const city=document.getElementById('exploreCitySearch').value.trim();
   // Avisa E desliga o girar da tela nativa: sem o segundo, o indicador
   // ficava rodando ate a pessoa trocar de aba e voltar.
@@ -5826,7 +5910,14 @@ async function runExplore(rotulo){
   // Onde é o que foi digitado: rua, bairro, cidade ou país (ver
   // resolverLugarDoExplorar). Sem resposta, segue só pelo texto, como antes.
   EXPLORE.area=null;
-  const lugar=await resolverLugarDoExplorar(city);
+  // Escolhido na lista de sugestões: já se sabe onde é, sem adivinhar.
+  // Mesmo texto da última busca (trocou só a cozinha ou a aba): reaproveita o
+  // lugar já achado — senão "Rua Itapura" escolhida na lista viraria outra
+  // adivinhação. Busca digitada (sem rótulo automático) entra nas recentes.
+  const repetida=!lugarEscolhido&&EXPLORE.lugarTexto===city&&EXPLORE.lugar!==undefined;
+  const lugar=lugarEscolhido||(repetida?EXPLORE.lugar:await resolverLugarDoExplorar(city));
+  if(!lugarEscolhido&&!repetida&&!EXPLORE.rotulo)guardarRecente({titulo:city,sub:'',id:''});
+  EXPLORE.lugar=lugar;EXPLORE.lugarTexto=city;
   if(meu!==EXPLORE_REQ)return;
   EXPLORE.area=lugar?lugar.area:null;
   const pontual=!!(lugar&&lugar.tipo!=='area');
@@ -5997,6 +6088,8 @@ function darDadosDeExplorar(){
     chips:[{id:'food',rotulo:'Comer'},{id:'hotel',rotulo:'Ficar'},{id:'experience',rotulo:'Experiências'}],
     // A segunda linha, só em Comer. Vazia nas outras abas: a tela nativa
     // esconde a linha quando não vem nada.
+    sugestoes:(SUG.modo?SUG.lista:[]).map((x,i)=>({i,titulo:x.titulo,sub:x.sub||''})),
+    sugestoesModo:SUG.modo||'',
     aba:EXPLORE.aba||'voce',
     abas:ABAS_DO_EXPLORAR,
     amigosLugares:lugaresDosAmigosNaCategoria().map((g,i)=>({i,lugar:g.capa.name||'',local:cityOf(g.capa)||'',
@@ -6025,10 +6118,14 @@ function darDadosDeExplorar(){
 window.darDadosDeExplorar=darDadosDeExplorar;
 window.acaoDeExplorar=function(acao,valor){
   if(acao==='categoria'){setExploreCat(valor);darDadosDeExplorar();return}
+  if(acao==='sugerir'){sugerirLugar(String(valor||''));return}
+  if(acao==='escolherSugestao'){escolherSugestao(Number(valor));return}
+  if(acao==='fecharSugestoes'){fecharSugestoes();return}
   if(acao==='aba'){setExploreAba(String(valor||''));return}
   if(acao==='amigoLugar'){abrirLugarDosAmigos(Number(valor));return}
   if(acao==='cozinha'){setExploreCozinha(String(valor||''));darDadosDeExplorar();return}
   if(acao==='buscar'){
+    fecharSugestoes();
     const campo=document.getElementById('exploreCitySearch');
     if(campo)campo.value=String(valor||'');
     runExplore();

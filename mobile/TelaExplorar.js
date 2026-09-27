@@ -163,6 +163,7 @@ export default function TelaExplorar({ dados, ocupado, acao }) {
 
   const buscar = () => {
     Keyboard.dismiss();
+    acao('fecharSugestoes');
     // Manda mesmo vazio: quem avisa "Digite uma cidade" e o site, e desde
     // que os avisos atravessam a ponte esse aviso aparece aqui tambem.
     acao('buscar', texto.trim());
@@ -197,7 +198,13 @@ export default function TelaExplorar({ dados, ocupado, acao }) {
             <TextInput
               style={e.input}
               value={texto}
-              onChangeText={setDigitado}
+              // Sugestões enquanto digita (27/09): o site busca e devolve a
+              // lista em d.sugestoes. Tocar no campo seleciona o texto todo,
+              // e o × nativo do iOS limpa.
+              onChangeText={(t) => { setDigitado(t); acao('sugerir', t); }}
+              onFocus={() => acao('sugerir', texto)}
+              selectTextOnFocus
+              clearButtonMode="while-editing"
               placeholder="Cidade, bairro ou rua"
               placeholderTextColor={INK3}
               returnKeyType="search"
@@ -210,6 +217,21 @@ export default function TelaExplorar({ dados, ocupado, acao }) {
             <Text style={e.irTxt}>Ir</Text>
           </Pressable>
         </View>
+        {(d.sugestoes || []).length ? (
+          <View style={e.sugCaixa}>
+            {d.sugestoesModo === 'recentes' ? <Text style={e.sugTitulo}>Buscas recentes</Text> : null}
+            {d.sugestoes.map((x) => (
+              <Pressable
+                key={x.i + x.titulo}
+                onPress={() => { Keyboard.dismiss(); setDigitado(null); acao('escolherSugestao', x.i); }}
+                style={({ pressed }) => [e.sug, pressed && { backgroundColor: BASE }]}
+              >
+                <Text style={e.sugNome} numberOfLines={1}>{x.titulo}</Text>
+                {x.sub ? <Text style={e.sugSub} numberOfLines={1}>{x.sub}</Text> : null}
+              </Pressable>
+            ))}
+          </View>
+        ) : null}
         {/* "Sua cidade · São Paulo" ou "Perto de você · Lisboa". */}
         {d.rotulo ? <Text style={e.rotulo}>{d.rotulo}</Text> : null}
       </View>
@@ -396,6 +418,12 @@ const e = StyleSheet.create({
   titulo: { fontFamily: FRAUNCES, fontSize: 26, lineHeight: 28, color: INK, letterSpacing: -0.39 },
 
   abas: { flexDirection: 'row', gap: 18, marginTop: 12 },
+  // .ex-sugestoes: superfície, sem borda nem sombra.
+  sugCaixa: { backgroundColor: SURFACE, borderRadius: 14, paddingVertical: 6, marginTop: 8 },
+  sugTitulo: { fontSize: 13, color: INK3, paddingHorizontal: 16, paddingTop: 6, paddingBottom: 2 },
+  sug: { paddingHorizontal: 16, paddingVertical: 10 },
+  sugNome: { fontSize: 16, fontWeight: '600', color: INK },
+  sugSub: { fontSize: 13, color: INK2, marginTop: 1 },
   busca: { flexDirection: 'row', gap: 8, alignItems: 'center', marginTop: 16 },
   // .search-input: superfície, SEM borda. A caixa vazada de 1px era o campo de
   // formulário genérico; aqui o que diz "dá pra digitar" é a superfície.
