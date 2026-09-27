@@ -57,7 +57,13 @@ export async function onRequestGet(context) {
   // Só o próprio site. Chamada sem Origin nem Referer (um <img> de outra aba,
   // por exemplo) passa — recusar isso quebraria caso legítimo.
   const origem = request.headers.get('Origin') || request.headers.get('Referer') || '';
-  if (origem && origem.indexOf(url.origin) !== 0) return vazio(403);
+  // Origem EXATA: "começa com meuspot.app" deixava passar
+  // "https://meuspot.app.site-falso.com".
+  if (origem) {
+    let o = '';
+    try { o = new URL(origem).origin } catch (e) {}
+    if (o !== url.origin) return vazio(403);
+  }
 
   if (!env.GOOGLE_PLACES_KEY) return vazio(404);
 

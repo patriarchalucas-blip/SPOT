@@ -189,27 +189,65 @@ export async function onRequestPost(context) {
 // domínio do site ou com o nome do lugar. O handle da agência não se parece
 // com nenhum dos dois.
 const LIMITE_HTML = 400 * 1024; // rodapé e header cabem de sobra; corta site gigante
+// Só site público de verdade: isto roda no servidor, e um "site" apontando
+// pra endereço interno viraria uma porta pra dentro (a revisão de 26/09 achou
+// 172.16.x, 0.0.0.0, "localhost." e metadata.google.internal passando).
+// Regra simples: nome com ponto e terminação de letras; IP escrito, nunca.
+export function hostPublico(host) {
+  const h = String(host || '').toLowerCase().replace(/\.$/, '');
+  if (!h || !h.includes('.')) return false;
+  if (/^\[|^[\d.]+$|^0x/i.test(h)) return false;
+  if (/(^|\.)(localhost|local|internal|intranet|lan|home|corp)$/.test(h)) return false;
+  return /\.[a-z]{2,}$/.test(h);
+}
+async function lerComeco(resp, limite) {
+  if (!resp.body || !resp.body.getReader) return (await resp.text()).slice(0, limite);
+  const leitor = resp.body.getReader();
+  const pedacos = []; let total = 0;
+  while (total < limite) {
+    const { done, value } = await leitor.read();
+    if (done) break;
+    pedacos.push(value); total += value.length;
+  }
+  try { leitor.cancel() } catch (e) {}
+  const junto = new Uint8Array(Math.min(total, limite));
+  let pos = 0;
+  for (const p of pedacos) { const n = Math.min(p.length, junto.length - pos); junto.set(p.subarray(0, n), pos); pos += n; if (pos >= junto.length) break; }
+  return new TextDecoder().decode(junto);
+}
 export async function instagramDoSite(site, name) {
   if (!site) return '';
   let u;
   try { u = new URL(site) } catch (e) { return '' }
-  // Só http(s), e nada de endereço interno: isto roda no servidor.
   if (u.protocol !== 'http:' && u.protocol !== 'https:') return '';
-  if (/^(localhost$|127\.|10\.|192\.168\.|169\.254\.|\[)/i.test(u.hostname)) return '';
+  if (!hostPublico(u.hostname)) return '';
   // Se o "site" do Google já É o Instagram, quem chama resolve sem vir aqui.
   if (/(^|\.)instagram\.com$/i.test(u.hostname)) return '';
 
   let html;
   try {
-    const resp = await fetch(u.toString(), {
-      redirect: 'follow',
-      headers: { 'User-Agent': 'Mozilla/5.0 (compatible; SpotBot/1.0)', Accept: 'text/html' },
-      signal: AbortSignal.timeout(8000),
-    });
+    // Redirecionamento seguido À MÃO: cada destino passa pela mesma regra.
+    // Com redirect:'follow', um site público podia mandar pra endereço interno.
+    let resp, alvo = u;
+    for (let pulo = 0; ; pulo++) {
+      resp = await fetch(alvo.toString(), {
+        redirect: 'manual',
+        headers: { 'User-Agent': 'Mozilla/5.0 (compatible; SpotBot/1.0)', Accept: 'text/html' },
+        signal: AbortSignal.timeout(8000),
+      });
+      if (resp.status < 300 || resp.status >= 400) break;
+      if (pulo >= 3) return '';
+      const prox = resp.headers.get('Location');
+      if (!prox) return '';
+      try { alvo = new URL(prox, alvo) } catch (e) { return '' }
+      if ((alvo.protocol !== 'http:' && alvo.protocol !== 'https:') || !hostPublico(alvo.hostname)) return '';
+    }
     if (!resp.ok) return '';
     const tipo = resp.headers.get('content-type') || '';
     if (!/text\/html|application\/xhtml/i.test(tipo)) return '';
-    html = (await resp.text()).slice(0, LIMITE_HTML);
+    // Lê só o começo: resp.text() baixava a página inteira antes de cortar.
+    html = await lerComeco(resp, LIMITE_HTML);
+    u = alvo;
   } catch (e) { return '' } // fora do ar, lento, bloqueado: só não usa este passo
 
   // Domínio sem www e sem sufixo: "botanikafe.com" -> "botanikafe"
