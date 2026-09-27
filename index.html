@@ -868,6 +868,8 @@ body.na-casca .bottom-nav{display:none}
   font-size:10px;color:rgba(255,255,255,.45);max-width:60%;text-align:right;line-height:1.3;pointer-events:auto}
 .foto-credito a{color:inherit;text-decoration:none}
 .foto-credito:empty{display:none}
+/* No login fica no topo, à direita, longe dos botões de entrar. */
+.login-credito{top:calc(14px + env(safe-area-inset-top,0px));bottom:auto}
 .hero-overlay{position:absolute;inset:0;background:linear-gradient(to top,rgba(0,0,0,.55),transparent 55%)}
 /* Na ficha ele sai da foto e vira uma linha de dado como as outras. */
 #place .foto-credito{position:static;font-size:10px;color:var(--ink3);max-width:none;text-align:left;
@@ -1826,6 +1828,9 @@ svg.ic path,svg.ic circle,svg.ic line,svg.ic polyline,svg.ic rect{fill:none;stro
     <div class="login-photo active" style="background:linear-gradient(150deg,#0f2027,#203a43,#2c5364)"></div>
   </div>
   <div class="login-scrim"></div>
+  <!-- Crédito do fotógrafo: exigência do Unsplash, e a tela de login é a que
+       mais aparece nas capturas que eles revisam. Estava sem nenhum (27/09). -->
+  <div class="foto-credito login-credito" id="loginFotoCredito"></div>
   <div class="login-inner">
     <div class="login-top">
       <div class="login-place-tag" id="loginPlaceTag"><span class="lpt-dot"></span>Dubrovnik, Croácia</div>
@@ -11152,6 +11157,8 @@ async function startLoginPhotos(){
         img.onload=()=>{
           const el=document.getElementById('lphoto-'+i);
           if(el){el.style.backgroundImage=cssUrl(url);el.style.backgroundSize='cover';el.style.backgroundPosition='center';el.classList.add('has-photo')}
+          c._url=url;
+          if(i===loginPhotoIdx)pintarCreditoCidade('loginFotoCredito',url);
         };
         img.src=url;
       }
@@ -11167,6 +11174,8 @@ function goToLoginPhoto(idx){
   document.querySelectorAll('#photoDots .pd').forEach((d,i)=>d.classList.toggle('active',i===loginPhotoIdx));
   const tag=document.getElementById('loginPlaceTag');
   if(tag){tag.style.opacity='0';setTimeout(()=>{tag.innerHTML='<span class="lpt-dot"></span>'+LOGIN_CITIES[loginPhotoIdx].name;tag.style.opacity='1'},400)}
+  const atual=LOGIN_CITIES[loginPhotoIdx];
+  if(atual&&atual._url)pintarCreditoCidade('loginFotoCredito',atual._url);else limparCredito('loginFotoCredito');
 }
 function rotateLoginPhoto(){goToLoginPhoto(loginPhotoIdx+1)}
 function nextLoginPhoto(){restartLoginTimer();goToLoginPhoto(loginPhotoIdx+1)}

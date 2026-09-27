@@ -123,9 +123,13 @@ export async function onRequestPost(context) {
   //    junto com a URL e vão pro mesmo cache — sem isso o app teria que
   //    reconsultar só pra saber de quem é a foto.
   //
-  // 2. Disparar o endpoint de download quando a foto é EXIBIDA. O endereço
-  //    disso é guardado no cache (campo `baixar`) e o disparo acontece em
-  //    responder(), em toda resposta — inclusive nas que vêm do cache.
+  // 2. Disparar o endpoint de download quando a foto é USADA — aqui, quando
+  //    ela é escolhida como capa da cidade. Uma vez, nesta busca original.
+  //    (Até 27/09 disparava em TODA resposta, inclusive do cache; conferido na
+  //    central de ajuda do Unsplash nesse dia: "something similar to a
+  //    download (like when a user chooses the image to ... set as a header)",
+  //    não visualização. Disparar por visualização inflava as estatísticas e
+  //    podia pesar contra na aprovação de produção.)
   const autor = (foto && foto.user) || {};
   const baixar = foto && foto.links && foto.links.download_location;
   const resultado = {
@@ -137,27 +141,16 @@ export async function onRequestPost(context) {
     baixar: baixar || ''
   };
   await gravarKV(env, cacheKey, JSON.stringify(resultado), url ? TTL_OK : TTL_FALHA);
+  if (baixar && env.UNSPLASH_KEY && typeof context.waitUntil === 'function') {
+    context.waitUntil(fetch(baixar + '&client_id=' + env.UNSPLASH_KEY).catch(() => {}));
+  }
   return responder(context, resultado);
 }
 
-// Os termos do Unsplash mandam disparar o endpoint de download TODA VEZ que a
-// foto é usada — é assim que o fotógrafo recebe o crédito de uso. Como quase
-// toda resposta daqui vem do cache, disparar só na busca original contaria uma
-// vez por cidade, pra sempre. Por isso o endereço fica guardado no cache e o
-// disparo acontece aqui, em toda resposta.
-//
-// Vai em waitUntil: não atrasa a resposta e não a derruba se falhar. E não
-// gasta a cota de 50/hora — o Unsplash não conta esse endpoint no limite.
-//
-// O campo `baixar` NÃO vai pro navegador: ele carrega a chave quando chamado,
-// e a chave não sai do servidor.
+// Resposta pro navegador. O disparo de download NÃO acontece aqui (ver acima:
+// só quando a foto é escolhida pra cidade, uma vez).
 function responder(context, r) {
-  const { env } = context;
-  if (r && r.baixar && env.UNSPLASH_KEY && typeof context.waitUntil === 'function') {
-    context.waitUntil(
-      fetch(r.baixar + '&client_id=' + env.UNSPLASH_KEY).catch(() => {})
-    );
-  }
+  // O campo `baixar` nunca vai pro navegador (carrega a chave quando chamado).
   const { baixar, ...semChave } = r || {};
   return json(semChave);
 }
