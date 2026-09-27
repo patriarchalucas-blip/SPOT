@@ -199,3 +199,27 @@ test('aba Amigos: o lugar onde mais amigos foram vem primeiro, depois a nota', a
     assert.ok(!q.some((x) => /city=ilike/.test(x)), 'rua nao pode buscar pela cidade');
   } finally { vs.forEach((v) => v()) }
 });
+
+test('aba Amigos em cidade: acha pelo nome da cidade e avisa quando a categoria esta vazia', async () => {
+  const consultas = [];
+  const vs = [
+    trocar(A, 'idsDosAmigos', async () => ['a']),
+    trocar(A, 'dbGet', async (t, q) => {
+      consultas.push([t, q]);
+      if (t === 'trips') return [];
+      if (t === 'profiles') return [{ id: 'a', display_name: 'Bruno' }];
+      // spot com coordenada FORA do retângulo, mas com a cidade certa
+      if (/city=ilike/.test(q)) return [{ id: 'm', user_id: 'a', name: 'MASP', city: 'São Paulo', status: 'been', my_rating: 5, lat: -24.5, lng: -47.5, category: 'experience' }];
+      return [];
+    }),
+  ];
+  try {
+    const area = { rectangle: { low: { latitude: -23.8, longitude: -46.8 }, high: { latitude: -23.4, longitude: -46.4 } } };
+    const r = await A.lugaresDosAmigos(area, false, ['São Paulo', 'São Paulo']);
+    assert.strictEqual(r.estado, 'ok');
+    assert.strictEqual(r.lugares.length, 1);
+    A.avaliar("EXPLORE.cat='food'");
+    A.avaliar('AMIGOS_AREA=' + JSON.stringify(r));
+    assert.ok(/1 experiência em Experiências/.test(A.avisoDosAmigos()), A.avisoDosAmigos());
+  } finally { vs.forEach((v) => v()); A.avaliar("AMIGOS_AREA={estado:'inicial',lugares:[],amigos:0}") }
+});

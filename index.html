@@ -5699,7 +5699,9 @@ async function runExplore(rotulo){
   // Aba Amigos: os spots dos amigos DENTRO da área buscada. Corre em paralelo
   // com o Google — são consultas diferentes.
   LUGAR_PESQUISADO=onde;
-  carregarAmigosDaArea(meu,EXPLORE.area,pontual,onde);
+  // Cidade/país: o nome digitado E o nome que o Google devolveu ("Tokyo" e
+  // "Tóquio") — spot salvo com qualquer um dos dois entra.
+  carregarAmigosDaArea(meu,EXPLORE.area,pontual,pontual?onde:[city,lugar&&lugar.nome]);
   try{
     const{lugares:pagina,token}=await paginaDoExplorar('');
     if(meu!==EXPLORE_REQ)return;
@@ -5918,8 +5920,23 @@ async function lugaresDosAmigos(area,pontual,cidade){
     buscas.push(dbGet('spots',base+'&lat=gte.'+r.low.latitude+'&lat=lte.'+r.high.latitude
       +'&lng=gte.'+r.low.longitude+'&lng=lte.'+r.high.longitude));
   }
-  const t=termoSeguro(cidade);
-  if(!pontual&&t)buscas.push(dbGet('spots',base+'&lat=is.null&city=ilike.*'+encodeURIComponent(t)+'*'));
+  // Cidade ou país: vale também o NOME salvo no spot (como no bloco antigo),
+  // com ou sem coordenada — spot com endereço um pouco fora do retângulo que
+  // o Google chama de "São Paulo" ficava de fora. E, pra país, os spots das
+  // viagens daquele destino. Rua e bairro não entram aqui: por nome, "São
+  // Paulo" traria a cidade inteira pra uma busca de rua.
+  const nomes=[...new Set([].concat(cidade||[]).map(termoSeguro).filter(Boolean))];
+  if(!pontual){
+    nomes.forEach(t=>{
+      buscas.push(dbGet('spots',base+'&city=ilike.*'+encodeURIComponent(t)+'*'));
+      buscas.push((async()=>{
+        const viagens=await dbGet('trips','user_id=in.('+lista+')&destinations=cs.'+encodeURIComponent('{"'+t+'"}')+'&select=id');
+        const tripIds=(viagens||[]).map(v=>v.id);
+        if(!tripIds.length)return[];
+        return dbGet('spots','trip_id=in.('+tripIds.join(',')+')&'+base);
+      })());
+    });
+  }
   if(!buscas.length)return{estado:'nada_aqui',lugares:[],amigos:ids.length};
   const partes=await Promise.all(buscas);
   if(partes.every(falhou))return{estado:'erro',lugares:[],amigos:ids.length};
@@ -5968,7 +5985,16 @@ function avisoDosAmigos(){
   if(e==='carregando')return'Procurando entre seus amigos...';
   if(e==='sem_amigos')return'Você ainda não tem amigos no Spot. Quando tiver, os spots que eles salvarem aparecem aqui.';
   if(e==='erro')return'Não consegui consultar seus amigos agora.';
-  if(!lugaresDosAmigosNaCategoria().length)return'Nenhum amigo seu salvou '+({food:'lugar pra comer',hotel:'hotel',experience:'experiência'}[EXPLORE.cat]||'spot')+' por aqui ainda.';
+  if(!lugaresDosAmigosNaCategoria().length){
+    const vazio='Nenhum amigo seu salvou '+({food:'lugar pra comer',hotel:'hotel',experience:'experiência'}[EXPLORE.cat]||'spot')+' por aqui ainda.';
+    // A aba começa em Comer: se o que os amigos salvaram aqui é museu ou
+    // hotel, a tela ficava vazia sem dizer que havia coisa na aba ao lado.
+    const conta={};
+    (AMIGOS_AREA.lugares||[]).forEach(g=>{if(g.categoria&&g.categoria!==EXPLORE.cat)conta[g.categoria]=(conta[g.categoria]||0)+1});
+    const partes=Object.entries(conta).map(([c,n])=>n+' '+({food:n===1?'lugar pra comer':'lugares pra comer',hotel:n===1?'hotel':'hotéis',experience:n===1?'experiência':'experiências'}[c]||'spots')
+      +' em '+({food:'Comer',hotel:'Ficar',experience:'Experiências'}[c]||c));
+    return partes.length?vazio+' Mas eles salvaram '+partes.join(' e ')+'.':vazio;
+  }
   return'';
 }
 function setExploreAba(id){
