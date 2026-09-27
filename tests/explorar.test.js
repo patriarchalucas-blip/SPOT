@@ -242,3 +242,23 @@ test('so estabelecimento com outro nome: sem area, segue pelo texto', async () =
     { displayName: { text: 'Hospital Qualquer' }, location: { latitude: 1, longitude: 1 }, types: ['hospital', 'establishment'] }] }) }));
   try { assert.strictEqual(await A.resolverLugarDoExplorar('São Paulo'), null) } finally { volta() }
 });
+
+test('"São Paulo" so com estabelecimentos (o hospital contem o nome): sem area, busca pelo texto', async () => {
+  const volta = trocar(A, 'googlePlaces', async (op, o) => JSON.parse(o.body).includedType ? ({ ok: true, json: async () => ({ places: [] }) }) : ({ ok: true, json: async () => ({ places: [
+    { displayName: { text: 'Irmandade da Santa Casa de Misericórdia de São Paulo - Hospital Central' }, location: { latitude: -23.54, longitude: -46.65 }, types: ['hospital', 'point_of_interest', 'establishment'] },
+    { displayName: { text: 'Shopping São Paulo' }, location: { latitude: -23.5, longitude: -46.6 }, types: ['shopping_mall', 'establishment'] }] }) }));
+  try { assert.strictEqual(await A.resolverLugarDoExplorar('São Paulo'), null) } finally { volta() }
+});
+
+test('sem cidade nos 5 primeiros: a 2a consulta pede so cidade e acha Sao Paulo', async () => {
+  const volta = trocar(A, 'googlePlaces', async (op, o) => {
+    const b = JSON.parse(o.body);
+    if (b.includedType === 'locality') return { ok: true, json: async () => ({ places: [{ displayName: { text: 'São Paulo' }, location: { latitude: -23.55, longitude: -46.63 }, types: ['locality', 'political'], viewport: { low: { latitude: -24, longitude: -46.8 }, high: { latitude: -23.3, longitude: -46.3 } } }] }) };
+    return { ok: true, json: async () => ({ places: [{ displayName: { text: 'Irmandade da Santa Casa de Misericórdia de São Paulo' }, location: { latitude: -23.54, longitude: -46.65 }, types: ['hospital', 'establishment'] }] }) };
+  });
+  try {
+    const l = await A.resolverLugarDoExplorar('São Paulo');
+    assert.strictEqual(l.nome, 'São Paulo');
+    assert.strictEqual(l.tipo, 'area');
+  } finally { volta() }
+});

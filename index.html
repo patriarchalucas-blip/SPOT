@@ -2057,6 +2057,7 @@ svg.ic path,svg.ic circle,svg.ic line,svg.ic polyline,svg.ic rect{fill:none;stro
 <div class="screen" id="friendCity">
   <div class="trip-hero"><div class="trip-hero-img" id="fcHeroImg"></div><div class="foto-credito" id="fcFotoCredito"></div><div class="trip-float"></div><div class="trip-hero-content"><button class="back-btn" onclick="voltarDaCidade()" data-ic="back" aria-label="Voltar"></button><div><div class="trip-hero-label" id="fcLabel"></div><div class="trip-hero-name" id="fcName"></div><div class="trip-hero-meta" id="fcMeta"></div></div></div></div>
   <div class="cat-tabs-wrap"><div class="cat-tabs"><div class="cat-tab active" onclick="switchFriendCityCat('food',this)"><div class="ct-icon" data-ic="food"></div><div>Comer</div><div class="ct-count" id="fcCnt-food">0</div></div><div class="cat-tab" onclick="switchFriendCityCat('hotel',this)"><div class="ct-icon" data-ic="hotel"></div><div>Ficar</div><div class="ct-count" id="fcCnt-hotel">0</div></div><div class="cat-tab" onclick="switchFriendCityCat('experience',this)"><div class="ct-icon" data-ic="compass"></div><div>Experiências</div><div class="ct-count" id="fcCnt-experience">0</div></div></div></div>
+  <div class="coz-linha" id="fcStatus" style="display:none"></div>
   <div class="trip-body" id="fcBody"></div>
 </div>
 
@@ -5375,8 +5376,24 @@ async function resolverLugarDoExplorar(texto){
     // Estabelecimento só vale se o nome bate com o que foi digitado — senão a
     // busca segue pelo texto, sem área, como antes.
     const geo=x=>(x.types||[]).some(t=>TIPOS_GEOGRAFICOS.includes(t));
-    const nomeBate=x=>{const a=normName((x.displayName&&x.displayName.text)||''),b=normName(texto);return !!a&&!!b&&(a.includes(b)||b.includes(a))};
-    const p=lista.find(geo)||lista.find(nomeBate);
+    // Nome IGUAL, não "contém": "Irmandade da Santa Casa de Misericórdia de
+    // São Paulo" contém "São Paulo" e foi aceito como o lugar buscado (27/09).
+    const nomeBate=x=>{const a=normName((x.displayName&&x.displayName.text)||''),b=normName(texto);return !!a&&a===b};
+    let p=lista.find(geo)||lista.find(nomeBate);
+    if(!p){
+      // Nenhum lugar no mapa entre os 5 ("São Paulo" veio só com hospital e
+      // shopping): pergunta de novo pedindo SÓ cidade. A resposta também fica
+      // guardada no servidor.
+      try{
+        const r2=await googlePlaces('searchText',{
+          method:'POST',
+          headers:{'Content-Type':'application/json','X-Goog-FieldMask':'places.displayName,places.location,places.viewport,places.types,places.addressComponents'},
+          body:JSON.stringify({textQuery:texto,languageCode:'pt-BR',maxResultCount:1,includedType:'locality',strictTypeFiltering:true})
+        });
+        const d2=await r2.json();
+        p=((d2&&d2.places)||[]).find(x=>x&&x.location&&geo(x))||null;
+      }catch(e){}
+    }
     if(!p)return null;
     const tipos=p.types||[];
     const tipo=tipos.some(t=>TIPOS_DE_RUA.includes(t))?'rua':tipos.some(t=>TIPOS_DE_BAIRRO.includes(t))?'bairro':'area';
@@ -12127,10 +12144,26 @@ function spotsDaCidadeDoAmigo(){
   if(!t||!FRIEND.city)return[];
   return (t._spots||[]).filter(s=>cityOf(s)===FRIEND.city);
 }
+// Status da cidade do amigo: o mesmo "Todos ▾" da sua cidade (27/09, pedido
+// do Lucas). Guardado por amigo+cidade enquanto o app está aberto.
+const STATUS_CIDADE_AMIGO={};
+function chaveStatusAmigo(){return (FRIEND.id||'')+'|'+(FRIEND.city||'')}
+function abrirStatusDaCidadeDoAmigo(){
+  const lista=spotsDaCidadeDoAmigo().filter(s=>s.category===fcCat);
+  const fui=lista.filter(s=>s.status==='been').length,quero=lista.length-fui;
+  abrirFolhaDeEscolha([{id:'0',rotulo:'Todos',n:lista.length},{id:'1',rotulo:'Quero ir',n:quero},{id:'2',rotulo:'Fui',n:fui}],
+    String(STATUS_CIDADE_AMIGO[chaveStatusAmigo()]||0),id=>{STATUS_CIDADE_AMIGO[chaveStatusAmigo()]=Number(id);renderFriendCityBody()});
+}
 function renderFriendCityBody(){
   const b=document.getElementById('fcBody');
   if(!FRIEND.city)return;
-  const spots=spotsDaCidadeDoAmigo().filter(s=>s.category===fcCat);
+  const daAba=spotsDaCidadeDoAmigo().filter(s=>s.category===fcCat);
+  const linha=document.getElementById('fcStatus');
+  const temOsDois=daAba.some(s=>s.status==='been')&&daAba.some(s=>s.status!=='been');
+  let st=STATUS_CIDADE_AMIGO[chaveStatusAmigo()]||0;
+  if(!temOsDois)st=0;
+  if(linha){linha.style.display=temOsDois?'':'none';linha.innerHTML=temOsDois?linhaDeEscolha(ROTULO_SITUACAO[st],'abrirStatusDaCidadeDoAmigo()'):''}
+  const spots=st===1?daAba.filter(s=>s.status!=='been'):st===2?daAba.filter(s=>s.status==='been'):daAba;
   if(!spots.length){b.innerHTML=`<div class="empty-state" style="padding:40px 24px"><div class="ei">${catIcon(fcCat)}</div><h3>Nada aqui</h3><p>Seu amigo não salvou nada dessa categoria nesta cidade.</p></div>`;FRIEND_CITY_SPOTS=[];return}
   // guarda a ordem exibida: o clique manda o ÍNDICE, não o id no HTML
   FRIEND_CITY_SPOTS=spots;
@@ -12154,6 +12187,14 @@ function friendSpotRowHTML(s,i){
   const nota=s.my_rating?'★ '+fmtRating(s.my_rating):'';
   const tag=spotTag(s);
   const clique=(i==null)?' style="cursor:default"':' onclick="abrirSpotDoAmigo('+i+')"';
+  // Desenho 5a, igual à sua cidade: sem rótulo à direita; status antes da nota.
+  if(i!=null){
+    const txt=(s.status==='been'?(s.my_review||s.my_note):(s.my_note||s.my_review))||'';
+    const stTxt=s.status==='been'?'<span class="st-fui">Fui</span>':'<span class="st-quero">Quero ir</span>';
+    const notaTxt=s.my_rating?' · ★ '+esc(fmtRating(s.my_rating)):'';
+    return '<div class="cid-row"'+clique+'>'+thumb.replace('class="place-thumb"','class="place-thumb"')
+      +'<div class="cid-txt"><div class="cid-nome">'+esc(s.name)+'</div><div class="cid-linha">'+stTxt+notaTxt+(txt?' · '+esc(txt):'')+'</div></div></div>';
+  }
   return '<div class="place-row"'+clique+'><div class="place-bar '+bc+'"></div><div class="place-row-main">'+thumb
     +'<div class="place-row-info"><div class="place-row-name">'+esc(s.name)+'</div><div class="place-row-note">'+esc(s.my_note)+'</div></div>'
     +'<div class="place-row-right">'+(nota?'<span class="lrating">'+esc(nota)+'</span>':'')
