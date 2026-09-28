@@ -32,6 +32,18 @@ begin
   if amiga is null then raise exception 'a conta de teste % não existe (crie pelo meuspot.app e confirme o e-mail)', EMAIL_DA_AMIGA; end if;
   if amiga = demo then raise exception 'a conta de teste não pode ser a própria demo'; end if;
 
+  -- nome de gente no feed: criada pelo painel do Supabase, a conta nasce com
+  -- o começo do e-mail como nome ("patriarchalucas+amiga")
+  update public.profiles
+     set display_name = 'Ana Lima',
+         username = case when exists (select 1 from public.profiles
+                                       where lower(username) = 'analima' and id <> amiga)
+                         then username else 'analima' end
+   where id = amiga;
+  if not found then
+    insert into public.profiles (id, display_name, username) values (amiga, 'Ana Lima', 'analima');
+  end if;
+
   -- sem bloqueio entre as duas, e amizade aceita (um lado só basta)
   delete from public.bloqueios
    where (bloqueador_id = demo and bloqueado_id = amiga) or (bloqueador_id = amiga and bloqueado_id = demo);
