@@ -113,7 +113,16 @@ Aparece na tela de carregamento, no cabeçalho da tela inicial e no login.
   y=81 e cortaria 3px do topo do S. **Mexeu na fonte ou no espaçamento, remede** —
   dá pra medir no navegador com `measureText` depois de `document.fonts.load`.
 
-**2. O símbolo: uma estrada em "S" com o sol nascendo**, claro sobre azulejo verde.
+**2. O símbolo — desde 28/09/2026: "Travessia"**, um S em fita dando a volta no
+mundo, claro `#F5F5F3` sobre o verde `#0B3D2E` (o Lucas escolheu a versão de fundo
+verde). Original em `ferramentas/marca-travessia-original.webp`; todos os tamanhos
+saem de `node ferramentas/icone-travessia.cjs` (repinta, 88% do quadro, sem alfa).
+Simulado no tamanho real antes da troca: forte na tela inicial, confuso a 29 pt
+(Ajustes) por causa dos continentes — avisado e aceito; uma versão simplificada
+pra ícone (menos continentes, fita mais grossa) ficou como melhoria possível.
+O wordmark "SPOT" em Cinzel NÃO mudou.
+
+**Símbolo anterior (21–28/09): uma estrada em "S" com o sol nascendo**, claro sobre azulejo verde.
 É o ícone do app, e só isso — não entra em tela nenhuma junto do wordmark.
 - Desenho do Lucas (opção "01" de uma folha que ele gerou), entregue em 1024 sem
   cantos arredondados, que é como a Apple pede: ela aplica a máscara dela, e arte
