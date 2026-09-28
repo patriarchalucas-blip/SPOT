@@ -23,6 +23,9 @@ const MEMORIA_ACHOU = 60 * 60 * 24 * 180;
 const MEMORIA_NAO_TEM = 60 * 60 * 24 * 30;
 // Chave da memória: nome + cidade, sem acento nem caixa. "Mocotó, São Paulo"
 // e "mocoto, sao paulo" são o mesmo restaurante; o de outra cidade, não.
+function hostDoSite(site) {
+  try { return new URL(site).hostname.toLowerCase().replace(/^www\./, '') } catch (e) { return '' }
+}
 async function chaveDaMemoria(name, city) {
   const n = (x) => String(x || '').normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase().replace(/\s+/g, ' ').trim();
   const dado = new TextEncoder().encode(n(name) + '|' + n(city));
@@ -72,7 +75,10 @@ export async function onRequestPost(context) {
   // ═══ PASSO 0: alguém já procurou este restaurante? ═══
   // Cinquenta amigos salvando o mesmo lugar eram cinquenta buscas pagas iguais.
   // Agora a primeira resposta fica guardada pra todo mundo.
-  const memoria = await chaveDaMemoria(name, city);
+  // O site entra na chave: ele vem do app, e sem isto qualquer um mandava
+  // "Mocotó, São Paulo" com um site forjado e gravava o Instagram falso na
+  // memória de todo mundo por 180 dias.
+  const memoria = await chaveDaMemoria(name, city + '|' + hostDoSite(site));
   // Toque manual em "buscar" passa por cima: se a pessoa pediu de novo, a
   // resposta guardada não serviu pra ela.
   const guardado = body.forcar === true ? null : await lerKV(env, memoria);

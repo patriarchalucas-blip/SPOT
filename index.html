@@ -2836,6 +2836,7 @@ async function init(){
         // olhando tela parada por todo o tempo das requisições.
         goTo('dashboard');
         try{await loadDashboard()}catch(e){console.error('Dashboard error:',e)}
+        if(ABA_PENDENTE){const a=ABA_PENDENTE;ABA_PENDENTE='';try{window.irParaAba(a)}catch(e){}}
         // depois do dashboard: se a pessoa chegou por um link de convite, a
         // amizade é criada agora que existe sessão
         try{await resgatarConvitePendente()}catch(e){console.error('convite:',e)}
@@ -3433,8 +3434,13 @@ function avisarSeTemJanela(){
 // Chamado PELA casca quando alguém toca numa aba. Precisa fazer o mesmo que o
 // toque na barra web faz — inclusive carregar os dados da aba, senão trocar
 // de aba mostraria a tela certa com o conteúdo da última visita.
+// Pedido de aba antes de a sessão voltar (toque em notificação com o app
+// fechado): fica guardado e é aplicado assim que o login termina — antes, o
+// app ia pra Amigos, quebrava sem usuário e caía em Viagens.
+let ABA_PENDENTE='';
 window.irParaAba=function(id){
   if(!ABAS_DO_APP[id])return;
+  if(!S.user){ABA_PENDENTE=id;return}
   goTo(id);
   if(id==='dashboard')loadDashboard();
   else if(id==='explore')loadExplore();
@@ -5471,13 +5477,15 @@ function sugerirLugar(v){
     SUG.lista=rec;SUG.modo=rec.length?'recentes':'';
     pintarSugestoes();return;
   }
+  // 450 ms entre letras: cada pausa curta era uma consulta (e uma gravação na
+  // memória do servidor), e ninguém lê a lista no meio de uma palavra.
   SUG.timer=setTimeout(async()=>{
     const meu=++SUG.req;
     const d=await pedirLugar({op:'sugerir',texto:t});
     if(meu!==SUG.req)return;
     SUG.lista=(d&&d.sugestoes)||[];SUG.modo=SUG.lista.length?'sugestoes':'';
     pintarSugestoes();
-  },320);
+  },450);
 }
 function fecharSugestoes(){SUG.req++;clearTimeout(SUG.timer);SUG.lista=[];SUG.modo='';pintarSugestoes()}
 function pintarSugestoes(){
@@ -5492,8 +5500,12 @@ function pintarSugestoes(){
   }
   darDadosDeExplorar();
 }
+let ESCOLHA_REQ=0;
 async function escolherSugestao(i){
   const x=SUG.lista[i];if(!x)return;
+  // Tocou em A e logo em B: o detalhe de A chegando depois não pode buscar A
+  // com o nome de B no campo.
+  const meu=++ESCOLHA_REQ;
   fecharSugestoes();
   const campo=document.getElementById('exploreCitySearch');
   if(campo){campo.value=x.titulo;campo.blur()}
@@ -5501,8 +5513,10 @@ async function escolherSugestao(i){
   let lugar=null;
   if(x.id){
     const d=await pedirLugar({op:'detalhe',id:x.id});
+    if(meu!==ESCOLHA_REQ)return;
     if(d&&d.lugar&&d.lugar.location)lugar=lugarDoGoogle(d.lugar,x.titulo);
   }
+  if(meu!==ESCOLHA_REQ)return;
   runExplore('',lugar);
 }
 function limparBuscaDoExplorar(){
@@ -5955,9 +5969,11 @@ async function runExplore(rotulo,lugarEscolhido){
   // adivinhação. Busca digitada (sem rótulo automático) entra nas recentes.
   const repetida=!lugarEscolhido&&EXPLORE.lugarTexto===city&&EXPLORE.lugar!==undefined;
   const lugar=lugarEscolhido||(repetida?EXPLORE.lugar:await resolverLugarDoExplorar(city));
+  // Só grava DEPOIS de conferir que esta ainda é a busca atual: uma busca
+  // digitada que voltasse atrasada sobrescrevia o lugar escolhido na lista.
+  if(meu!==EXPLORE_REQ)return;
   if(!lugarEscolhido&&!repetida&&!EXPLORE.rotulo)guardarRecente({titulo:city,sub:'',id:''});
   EXPLORE.lugar=lugar;EXPLORE.lugarTexto=city;
-  if(meu!==EXPLORE_REQ)return;
   EXPLORE.area=lugar?lugar.area:null;
   const pontual=!!(lugar&&lugar.tipo!=='area');
   if(pontual){
@@ -6149,7 +6165,8 @@ function darDadosDeExplorar(){
     // um mapa do Google — é o caso desta lista inteira.
     creditoGoogle:itens.length>0,
     rotulo:EXPLORE.rotulo||'',
-    temMais:!EXPLORE.fim&&!!EXPLORE.token,
+    // Na aba Amigos a lista é outra: rolar lá não pode pedir página paga do Google.
+    temMais:EXPLORE.aba!=='amigos'&&!EXPLORE.fim&&!!EXPLORE.token,
     carregandoMais:!!EXPLORE.carregandoMais
   }});
 }
@@ -6339,6 +6356,16 @@ function renderExploreResults(){
   pintarAbasDoExplorar();
   if(EXPLORE.aba==='amigos'){renderLugaresDosAmigos(document.getElementById('exploreBody'));return}
   const body=document.getElementById('exploreBody');
+  // Sem resultados pra mostrar, o estado da busca diz o que aparece. Sem isto,
+  // voltar de Amigos pra "Para você" depois de um erro deixava a tela em branco.
+  if(!EXPLORE.items.length){
+    const msg={buscando:['','Buscando tendências...'],semResultado:['pin','Nada encontrado','Tenta outro lugar: uma cidade, um bairro ou uma rua.'],
+      erro:['alert','Erro ao buscar','Tenta de novo em alguns segundos.']}[EXPLORE_ESTADO];
+    if(msg){
+      body.innerHTML=msg[0]?'<div class="empty-state"><div class="ei" data-ic="'+msg[0]+'"></div><h3>'+esc(msg[1])+'</h3><p>'+esc(msg[2])+'</p></div>':'<div class="search-loading">'+esc(msg[1])+'</div>';
+      hydrateIcons(body);return;
+    }
+  }
   body.innerHTML=EXPLORE.items.map((p,i)=>{
     const foto=safeUrl(fotoNaLargura(semChaveDoPlaces(p.photo_url),760));
     const local=[p.city,p.country].filter(Boolean).join(' · ');
@@ -12133,17 +12160,25 @@ function pintarSpotsDoAmigo(){
   filtrados.forEach(s=>{const c=cityOf(s)||'Outros';(porCidade[c]=porCidade[c]||[]).push(s)});
   const cidades=Object.keys(porCidade).sort((a,b)=>porCidade[b].length-porCidade[a].length||a.localeCompare(b,'pt-BR'));
   FRIEND.abertas=FRIEND.abertas||{};
-  box.innerHTML=cidades.map(c=>{
+  // O nome da cidade NUNCA vai dentro do onclick: é texto do amigo, e o esc()
+  // vira entidade HTML que o navegador desfaz antes de rodar o JS (a cidade
+  // "x'];alert(1);//" executava na sessão de quem abria o perfil). Só o índice.
+  FRIEND.cidadesDaTela=cidades;
+  box.innerHTML=cidades.map((c,ci)=>{
     const lista=porCidade[c];
     const aberta=FRIEND.abertas[c]||lista.length<=6;
     const mostra=aberta?lista:lista.slice(0,6);
     const tiles=mostra.map(s=>{FRIEND.grade.push(s);return tileDoAmigo(s,FRIEND.grade.length-1)}).join('');
     return '<div class="am-cidade"><h2>'+esc(c)+'<small>'+lista.length+'</small></h2><div class="am-grade">'+tiles+'</div>'
-      +(aberta?'':'<button class="am-vertodos" onclick="FRIEND.abertas[\''+esc(c).replace(/'/g,'')+'\']=true;pintarSpotsDoAmigo()">Ver todos os '+lista.length+' ›</button>')+'</div>';
+      +(aberta?'':'<button class="am-vertodos" onclick="abrirTodosDaCidadeDoAmigo('+ci+')">Ver todos os '+lista.length+' ›</button>')+'</div>';
   }).join('');
   // Sem foto gravada: a do lugar, só pra mostrar.
   FRIEND.grade.forEach((s,i)=>{if(!s.photo_url&&!s._fotoVista)fotoParaVer(s).then(u=>{if(u&&FRIEND.grade[i]===s){s._fotoVista=u;
     const el=box.querySelectorAll('.am-tile-foto')[i];if(el)el.innerHTML='<img src="'+escUrl(fotoNaLargura(u,400))+'" alt="" loading="lazy">'}})});
+}
+function abrirTodosDaCidadeDoAmigo(ci){
+  const c=(FRIEND.cidadesDaTela||[])[ci];if(c==null)return;
+  FRIEND.abertas[c]=true;pintarSpotsDoAmigo();
 }
 function fotoDaGradeFalhou(img,i){
   const s=(FRIEND.grade||[])[i];
@@ -12333,10 +12368,17 @@ function renderFriendCityBody(){
   b.innerHTML=spots.map((s,i)=>friendSpotRowHTML(s,i)).join('');
   // Sem foto: busca a do lugar pra mostrar e redesenha quando chegar.
   const cidadeAgora=FRIEND.city;
-  spots.filter(s=>!s.photo_url&&!s._fotoVista).forEach(s=>{
-    fotoParaVer(s).then(u=>{if(u){s._fotoVista=u;if(FRIEND.city===cidadeAgora&&document.getElementById('friendCity').classList.contains('active'))renderFriendCityBody()}});
+  // Uma busca por spot (marca _fotoPedida) e UM redesenho quando elas chegam:
+  // cada redesenho pendurava callbacks novos, e 30 spots sem foto viravam
+  // centenas de redesenhos da tela inteira.
+  spots.filter(s=>!s.photo_url&&!s._fotoVista&&!s._fotoPedida).forEach(s=>{
+    s._fotoPedida=true;
+    fotoParaVer(s).then(u=>{if(!u)return;s._fotoVista=u;
+      clearTimeout(REDESENHO_CIDADE_AMIGO);
+      REDESENHO_CIDADE_AMIGO=setTimeout(()=>{if(FRIEND.city===cidadeAgora&&document.getElementById('friendCity').classList.contains('active'))renderFriendCityBody()},300)});
   });
 }
+let REDESENHO_CIDADE_AMIGO=null;
 let FRIEND_CITY_SPOTS=[];
 // Linha de spot do amigo. Clicável quando vem com índice (tela da cidade);
 // sem índice fica estática (a viagem lista por cidade, não por spot).

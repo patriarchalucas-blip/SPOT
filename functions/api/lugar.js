@@ -54,8 +54,12 @@ export async function onRequestPost(context) {
   const contador = 'lugar_count_' + mes;
   const usado = parseInt((await lerKV(env, contador)) || '0', 10);
   if (usado >= TETO_MES) return json({ capped: true });
-  await gravarKV(env, contador, String(usado + 1), 60 * 60 * 24 * 40);
-  await avisarSeCruzou(context, mes, usado, usado + 1);
+  // Por amostragem (1 em 4, somando 4): o contador gravava a cada letra
+  // digitada, e o KV grátis aceita mil gravações por DIA no app inteiro.
+  if (Math.random() < 0.25) {
+    await gravarKV(env, contador, String(usado + 4), 60 * 60 * 24 * 40);
+    await avisarSeCruzou(context, mes, usado, usado + 4);
+  }
 
   let resposta;
   try {
