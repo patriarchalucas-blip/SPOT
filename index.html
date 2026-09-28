@@ -11525,9 +11525,11 @@ function darDadosDeAmigos(){
       tipo:'visita',
       lugar:sp.name||'',
       rotulo:[sp.place_type||catLabel(sp.category),cidade].filter(Boolean).join(' · '),
-      foto:fotoPraCasca(safeUrl(fotoNaLargura(semChaveDoPlaces(sp.photo_url),760))),
+      foto:fotoPraCasca(safeUrl(fotoNaLargura(semChaveDoPlaces(sp.photo_url||fotoVistaDoFeed(sp)),760))),
       cores:coresDoGradiente(sp.name||cidade),
-      nota:String(sp.my_note||'').trim(),
+      // O feed só tem "Fui": o texto de quem foi mora em my_review (my_note é
+      // o "Antes de ir"). Mostrava my_note, e o comentário sumia do feed.
+      nota:String(sp.my_review||sp.my_note||'').trim(),
       // Sem arredondar: a nota vai de meia em meia desde a migração 020, e
       // arredondar aqui fazia o mesmo spot aparecer com 5 no app e 4,5 no site.
       estrelas:Number(sp.my_rating)||0,
@@ -11615,6 +11617,26 @@ function estrelasHTML(n,tam){
   return h+'</div>';
 }
 
+// Spot do amigo no feed sem foto (ou com foto quebrada): a foto atual do
+// lugar, só pra mostrar (fotoParaVer). Pede em segundo plano e redesenha o
+// feed quando chega — nas duas telas, a do site e a nativa.
+let REDESENHO_DO_FEED=null;
+function fotoVistaDoFeed(sp){
+  if(sp.photo_url||sp._fotoVista)return sp._fotoVista||'';
+  if(!sp._fotoPedida){
+    sp._fotoPedida=true;
+    fotoParaVer(sp).then(u=>{if(!u)return;sp._fotoVista=u;
+      clearTimeout(REDESENHO_DO_FEED);
+      REDESENHO_DO_FEED=setTimeout(()=>{try{renderFriendsTab()}catch(e){};try{darDadosDeAmigos()}catch(e){}},300)});
+  }
+  return'';
+}
+function fotoDoFeedFalhou(img,i){
+  const it=itemDoFeed(i),sp=it&&it.spot;
+  if(!sp||img.dataset.tentou){img.remove();return}
+  img.dataset.tentou='1';
+  fotoParaVer(sp).then(u=>{if(u&&img.isConnected){sp._fotoVista=u;img.src=safeUrl(fotoNaLargura(u,760))}else if(img.isConnected)img.remove()});
+}
 function cardDeVisita(it,i,nome){
   const sp=it.spot;
   const cidade=cityOf(sp)||sp.city||'';
@@ -11628,7 +11650,7 @@ function cardDeVisita(it,i,nome){
   //   2. a limpeza de URL recusa esquema fora de http(s) e devolvia vazio,
   //      virando `background-image:none` — pior ainda que o degradê.
   // Com <img>, a falha só descobre o degradê que já estava atrás.
-  const foto=safeUrl(fotoNaLargura(semChaveDoPlaces(sp.photo_url),760));
+  const foto=safeUrl(fotoNaLargura(semChaveDoPlaces(sp.photo_url||fotoVistaDoFeed(sp)),760));
   const fundo='background-image:'+destGradient(sp.name||cidade);
   // O primeiro card é o que a pessoa vê ao abrir a aba: carrega sem espera e
   // com prioridade. Os de baixo continuam preguiçosos, pra não disputar banda
@@ -11638,9 +11660,9 @@ function cardDeVisita(it,i,nome){
   const camadaFoto=foto
     ? '<img class="fd-foto" src="'+escUrl(foto)+'" alt=""'
       +(urgente?' fetchpriority="high"':' loading="lazy"')
-      +' decoding="async" onload="this.style.opacity=1" onerror="this.remove()">'
+      +' decoding="async" onload="this.style.opacity=1" onerror="fotoDoFeedFalhou(this,'+i+')">'
     : '';
-  const nota=String(sp.my_note||'').trim();
+  const nota=String(sp.my_review||sp.my_note||'').trim();
   const estrelas=estrelasHTML(sp.my_rating,14);
   const salvo=jaNaMinhaLista(sp);
   // Corpo só existe se houver nota OU estrelas OU o botão — senão o card fica

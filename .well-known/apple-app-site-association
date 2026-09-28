@@ -1,0 +1,13 @@
+{
+  "applinks": {
+    "details": [
+      {
+        "appIDs": ["JULM2M3YJJ.app.meuspot.spot"],
+        "components": [
+          { "/": "/c/*", "comment": "página do convite" },
+          { "/": "/", "?": { "c": "?*" }, "comment": "link de convite /?c=<codigo>" }
+        ]
+      }
+    ]
+  }
+}
