@@ -233,6 +233,22 @@ const FONTES = {
   Cinzel: Cinzel_500Medium,
 };
 
+// Link de convite que abriu o app (meuspot.app/?c=X ou /c/X). Só funciona
+// quando o app tem "Associated Domains" (applinks:meuspot.app) e o site serve
+// .well-known/apple-app-site-association — os dois já existem; falta ligar a
+// capacidade no cadastro do app. Antes disso, o link abre no Safari, como hoje.
+export function conviteDoLink(url) {
+  try {
+    const u = new URL(url);
+    if (u.host !== new URL(SITE).host) return '';
+    const m = u.pathname.match(/^\/c\/([A-Za-z0-9_-]{4,64})\/?$/);
+    const c = m ? m[1] : (u.searchParams.get('c') || '');
+    return /^[A-Za-z0-9_-]{4,64}$/.test(c) ? new URL('/?c=' + encodeURIComponent(c), SITE).toString() : '';
+  } catch (e) {
+    return '';
+  }
+}
+
 export default function App() {
   return (
     <SafeAreaProvider>
@@ -276,6 +292,26 @@ function Conteudo() {
   // Toque em notificação esperando a página ficar pronta (ver aoTocar).
   const toqueRef = useRef('');
   const paginaProntaRef = useRef(false);
+  // Convite esperando a página ficar pronta, igual ao toque em notificação.
+  const linkRef = useRef('');
+  const aplicarLink = useCallback(() => {
+    const l = linkRef.current;
+    if (!l || !paginaProntaRef.current || !webRef.current) return;
+    linkRef.current = '';
+    webRef.current.injectJavaScript('location.href=' + JSON.stringify(l) + ';true;');
+  }, []);
+  useEffect(() => {
+    const abrir = (url) => {
+      const destino = conviteDoLink(url || '');
+      if (!destino) return;
+      linkRef.current = destino;
+      aplicarLink();
+    };
+    Linking.getInitialURL().then(abrir).catch(() => {});
+    const sub = Linking.addEventListener('url', (e) => abrir(e && e.url));
+    return () => sub.remove();
+  }, [aplicarLink]);
+
   const aplicarToque = useCallback(() => {
     const tipo = toqueRef.current;
     if (!tipo || !paginaProntaRef.current || !webRef.current) return;
@@ -595,6 +631,7 @@ function Conteudo() {
               paginaProntaRef.current = true;
               // dá um instante pro site montar as abas antes de navegar
               setTimeout(aplicarToque, 1200);
+              aplicarLink();
             }}
             onNavigationStateChange={(s) => setPodeVoltar(!!s.canGoBack)}
             onError={() => {
