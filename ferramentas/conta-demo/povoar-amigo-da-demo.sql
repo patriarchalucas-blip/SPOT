@@ -6,8 +6,8 @@
 -- NENHUM AMIGO (um bloqueio durante a gravação do vídeo desfez a amizade, e
 -- desbloquear não a traz de volta), então o feed da aba Amigos vinha vazio.
 --
--- Este script usa uma SEGUNDA CONTA DE TESTE, criada pelo Lucas só pra isso
--- (e-mail abaixo), e nunca a conta de uma pessoa real:
+-- Este script usa a SEGUNDA CONTA DE TESTE (demo2@meuspot.app), nunca a conta
+-- de uma pessoa real:
 --   · torna a conta de teste amiga ACEITA da demo;
 --   · dá a ela uma viagem "Portugal" (Lisboa) com 7 lugares reais marcados
 --     como Fui, com nota, comentário e coordenada, espaçados nos últimos dias;
@@ -19,7 +19,7 @@
 
 do $$
 declare
-  EMAIL_DA_AMIGA constant text := 'patriarchalucas+amiga@gmail.com';   -- a conta de teste
+  EMAIL_DA_AMIGA constant text := 'demo2@meuspot.app';   -- a conta de teste
   demo   uuid;
   amiga  uuid;
   viagem uuid;
@@ -29,7 +29,7 @@ begin
   select id into demo from auth.users where lower(email) = 'demo@meuspot.app';
   if demo is null then raise exception 'conta demo@meuspot.app não encontrada'; end if;
   select id into amiga from auth.users where lower(email) = lower(EMAIL_DA_AMIGA);
-  if amiga is null then raise exception 'a conta de teste % não existe (crie pelo meuspot.app e confirme o e-mail)', EMAIL_DA_AMIGA; end if;
+  if amiga is null then raise exception 'a conta de teste % não existe', EMAIL_DA_AMIGA; end if;
   if amiga = demo then raise exception 'a conta de teste não pode ser a própria demo'; end if;
 
   -- nome de gente no feed: criada pelo painel do Supabase, a conta nasce com
@@ -97,8 +97,8 @@ select 'amizade aceita com a demo' as item, count(*)::text as total
 union all
 select 'spots Fui da amiga', count(*)::text
   from public.spots s, auth.users a
- where lower(a.email) = lower('patriarchalucas+amiga@gmail.com') and s.user_id = a.id and s.status = 'been'
+ where lower(a.email) = lower('demo2@meuspot.app') and s.user_id = a.id and s.status = 'been'
 union all
 select 'comentários da amiga', count(*)::text
   from public.spot_comments c, auth.users a
- where lower(a.email) = lower('patriarchalucas+amiga@gmail.com') and c.user_id = a.id;
+ where lower(a.email) = lower('demo2@meuspot.app') and c.user_id = a.id;
