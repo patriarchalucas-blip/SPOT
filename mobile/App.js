@@ -599,6 +599,8 @@ function Conteudo() {
             pullToRefreshEnabled
             // Sem destaque cinza no toque, que denuncia navegador.
             allowsLinkPreview={false}
+            // Sem a barra ^ v ✓ em cima do teclado: é do navegador, não de app.
+            hideKeyboardAccessoryView
             originWhitelist={['https://*', 'http://*']}
             onShouldStartLoadWithRequest={aoNavegar}
             // O site precisa saber o endereço de volta ANTES de montar o link
