@@ -70,7 +70,9 @@ function Icone({ nome, cor }) {
 // tinha um `paddingBottom: 120` escrito na mão. Num iPhone com o risquinho a
 // barra mede 78 + 34 = 112, então sobravam 8px — a última linha encostava. E
 // o número não acompanhava a barra se ela mudasse de altura.
-export const ALTURA_DA_BARRA = 78;
+// 56 desde 28/09: com 78 + a folga do risquinho a barra passava de 110 pt e
+// o Lucas achou grande. A do iOS tem 49; 56 dá ícone + rótulo com respiro.
+export const ALTURA_DA_BARRA = 56;
 export const folgaDeRolagem = (margemDeBaixo) => ALTURA_DA_BARRA + (margemDeBaixo || 0) + 24;
 
 // A ordem é a mesma da barra do site. `tela` é o id que o goTo() do app usa.

@@ -728,7 +728,7 @@ input,textarea,select{font-size:max(16px,1em)!important}
   position:fixed;
   bottom:0;left:50%;transform:translateX(-50%);
   width:min(430px, 100%);
-  height:calc(78px + env(safe-area-inset-bottom, 0px));
+  height:calc(56px + env(safe-area-inset-bottom, 0px));
   padding-bottom:env(safe-area-inset-bottom, 0px);
   background:rgba(245,245,243,.92);
   -webkit-backdrop-filter:blur(20px);
@@ -3825,7 +3825,8 @@ async function viagemDeCasa(pais){
 function resumoDeCasa(){
   const c=cidadeDeCasa();
   if(!c)return null;
-  const spots=allSpotsFlat().filter(s=>mesmoLugar(cityOf(s),c));
+  const casa=(S.trips||[]).find(ehCasa);
+  const spots=casa?spotsDaViagem(casa):allSpotsFlat().filter(s=>mesmoLugar(cityOf(s),c));
   const ultimo=spots.slice().sort((a,b)=>String(b.created_at||'').localeCompare(String(a.created_at||'')))[0];
   const n=spots.length;
   return{cidade:(S.profile&&S.profile.home_city)||c,
@@ -3833,6 +3834,22 @@ function resumoDeCasa(){
 }
 // Abre a MESMA tela dos cards de viagem (pedido do Lucas, 27/09): antes
 // abria a lista filtrada pela cidade, uma tela diferente das outras.
+// A tela da cidade de casa mostra TODOS os spots dela, inclusive os salvos
+// antes da seção existir, que moram numa viagem antiga ("Brasil"). O card
+// contava 23 e a tela mostrava 8 (28/09). Só na leitura: nada muda de viagem
+// no banco, e a viagem antiga continua com os dela.
+function spotsDaViagem(t){
+  if(!t)return[];
+  if(!ehCasa(t))return t._spots||[];
+  const meu=sp=>!sp.user_id||!S.user||sp.user_id===S.user.id;
+  const outros=[];
+  (S.trips||[]).forEach(x=>{
+    if(x===t||ehCasa(x))return;
+    const pais=(x.destinations&&x.destinations[0])||'';
+    (x._spots||[]).forEach(sp=>{if(meu(sp)&&ehDaCasa(cityOf(sp),pais))outros.push(sp)});
+  });
+  return (t._spots||[]).concat(outros);
+}
 function abrirCasa(){
   const c=cidadeDeCasa();if(!c)return;
   const casa=(S.trips||[]).find(ehCasa);
@@ -4453,9 +4470,9 @@ function pendurarClima(byCity,country,month,prefixoId){
 function renderTripBody(){
   const t=S.curTrip,b=document.getElementById('tripBody');
   if(!t)return;
-  const hasSpots=t._spots&&t._spots.length;
+  const hasSpots=spotsDaViagem(t).length;
   if(!hasSpots&&!t.initial_city){b.innerHTML=`<div class="empty-state" style="padding:40px 24px"><div class="ei">${icon('pin')}</div><h3>Nenhum spot aqui</h3><p>Toca no + para adicionar</p></div>`;return}
-  const byCity=agruparPorCidade(t._spots,t.initial_city);
+  const byCity=agruparPorCidade(spotsDaViagem(t),t.initial_city);
   const country=(t.destinations&&t.destinations[0])||t.name;
   const month=tripClimateMonth(t);
   const{html,ordem}=cityCardsHTML(byCity,country,month,'openCityFromTrip','clima-');
@@ -4472,7 +4489,7 @@ function renderCitySubcatFilter(){
   const box=document.getElementById('citySubcatFilter');
   const t=S.curTrip;
   if(!t||!S.curCity||curCityCat!=='experience'){box.style.display='none';box.innerHTML='';return}
-  const daCidade=(t._spots||[]).filter(s=>cityOf(s)===S.curCity&&s.category==='experience');
+  const daCidade=spotsDaViagem(t).filter(s=>cityOf(s)===S.curCity&&s.category==='experience');
   const presentes=EXP_SUBCATS.filter(sc=>daCidade.some(s=>temSubcat(s.subcategory,sc.key)));
   if(!presentes.length){box.style.display='none';box.innerHTML='';return}
   box.style.display='flex';
@@ -4499,7 +4516,7 @@ async function removerCidadeDaViagem(i,ev){
   const c=TRIP_CITY_ORDER[i];
   const t=S.curTrip;
   if(c==null||!t)return;
-  const temLugar=(t._spots||[]).some(sp=>cityOf(sp)===c);
+  const temLugar=spotsDaViagem(t).some(sp=>cityOf(sp)===c);
   if(temLugar)return;
   if(!await confirmar('Tirar '+c+' desta viagem?','','Tirar da viagem'))return;
   const{error}=await dbUpdate('trips',t.id,{initial_city:null});
@@ -4512,7 +4529,7 @@ async function removerCidadeDaViagem(i,ev){
 }
 function updateCityHeader(){
   const t=S.curTrip;if(!t||!S.curCity)return;
-  const spots=(t._spots||[]).filter(s=>cityOf(s)===S.curCity);
+  const spots=spotsDaViagem(t).filter(s=>cityOf(s)===S.curCity);
   document.getElementById('cityMeta').textContent=spots.length+(spots.length===1?' spot':' spots');
   document.getElementById('cityCnt-food').textContent=spots.filter(s=>s.category==='food').length;
   document.getElementById('cityCnt-hotel').textContent=spots.filter(s=>s.category==='hotel').length;
@@ -4558,7 +4575,7 @@ function openCityScreen(city){
 function textoDaCidadePraCompartilhar(){
   const t=S.curTrip, cidade=S.curCity;
   if(!t||!cidade)return'';
-  const lista=(t._spots||[]).filter(sp=>cityOf(sp)===cidade);
+  const lista=spotsDaViagem(t).filter(sp=>cityOf(sp)===cidade);
   if(!lista.length)return'';
   const fui=lista.filter(sp=>sp.status==='been')
     .sort((a,b)=>(Number(b.my_rating)||0)-(Number(a.my_rating)||0)
@@ -4654,7 +4671,7 @@ function abrirStatusDaCidade(){
 function spotsDaCidade(){
   const t = S.curTrip;
   if(!t || !S.curCity) return [];
-  return (t._spots||[]).filter(sp => cityOf(sp) === S.curCity && sp.category === curCityCat);
+  return spotsDaViagem(t).filter(sp => cityOf(sp) === S.curCity && sp.category === curCityCat);
 }
 function renderCityStatusFilter(){
   const box = document.getElementById('cityStatusFilter');
