@@ -3680,7 +3680,7 @@ async function loadDashboard(){
   S.trips.forEach(t=>{t._spotsLoaded=true});
   // Só com os spots carregados de verdade: com a consulta de spots falhando
   // toda viagem pareceria vazia.
-  if(!falhou(allSpots))limparViagensVaziasRepetidas();
+  if(!falhou(allSpots)){limparViagensVaziasRepetidas();consertarCidadeQueEraEstado()}
   const visivelAntes=S.trips.filter(t=>!isNonTrip(t)).map(t=>t.id).join(',');
   rebuildCityCanon(); // funde "Split" e "Split-Dalmatia County" antes de contar
   // Conta AQUI: depois da fusao de nomes (senao "Split" conta duas vezes) e
@@ -3732,6 +3732,27 @@ function isNonTrip(t){return isQuickVisit(t)||ehCasa(t)}
 // dois toques no + (corrigido em 26/09), que criava "Brasil" duas vezes. Some
 // da lista na hora e é apagada no banco em segundo plano. Nenhum spot se perde
 // — ela não tem nenhum. Viagem vazia de nome ÚNICO fica (pode ser plano).
+// Spot salvo antes do conserto em cityFromComponents (praia sem localidade
+// virava "Catalunha" ao lado de Barcelona). Só move quando é seguro: a cidade
+// gravada NÃO aparece no endereço do spot, e a cidade que o endereço diz JÁ
+// existe na mesma viagem. Badalona continua Badalona: o endereço dela diz
+// Badalona.
+function consertarCidadeQueEraEstado(){
+  (S.trips||[]).forEach(t=>{
+    const spots=t._spots||[];
+    const cidades=[...new Set(spots.map(x=>x.city).filter(Boolean))];
+    if(cidades.length<2)return;
+    spots.forEach(sp=>{
+      if(!sp.city||!sp.address||sp.user_id&&S.user&&sp.user_id!==S.user.id)return;
+      if(normName(sp.address).includes(normName(sp.city)))return;
+      const e=cidadeDoEndereco(sp.address,[{longText:sp.name,types:['point_of_interest']}]);
+      const destino=e&&cidades.find(c=>c!==sp.city&&mesmoLugar(c,e));
+      if(!destino)return;
+      sp.city=destino;
+      dbUpdate('spots',sp.id,{city:destino}).catch(()=>{});
+    });
+  });
+}
 function limparViagensVaziasRepetidas(){
   const visiveis=(S.trips||[]).filter(t=>!isNonTrip(t));
   const sobra=visiveis.filter(t=>!(t._spots||[]).length&&visiveis.some(o=>o!==t&&normName(o.name)===normName(t.name)
@@ -5943,7 +5964,7 @@ function lugarDoExplorar(p){
   const addr=p.formattedAddress||'';
   const loc=p.location||{};
   return{name:p.displayName?.text||'',address:addr,
-    city:cityFromComponents(p.addressComponents)||extractCityFromAddr(addr),
+    city:cityFromComponents(p.addressComponents,addr)||extractCityFromAddr(addr),
     country:countryFromComponents(p.addressComponents),
     rating:String(p.rating),count:p.userRatingCount,subcat:guessSubcat(p.types),
     phone:p.nationalPhoneNumber||'',photo_url:placePhotoUrl(p,400),photo_author:autorDaFoto(p),
@@ -6659,7 +6680,7 @@ function showNearbySuggestions(){
       places.sort((a,b)=>(b.rating*Math.log10(b.userRatingCount+1))-(a.rating*Math.log10(a.userRatingCount+1)));
       S_nearbyResults=places.slice(0,6).map(p=>{
         const addr=p.formattedAddress||'';
-        const city=cityFromComponents(p.addressComponents)||extractCityFromAddr(addr);
+        const city=cityFromComponents(p.addressComponents,addr)||extractCityFromAddr(addr);
         const country=countryFromComponents(p.addressComponents);
         const fotos=placePhotoUrls(p);
         return{name:p.displayName?.text||'',icon:catIcon(S.addCat),city,country,address:addr,subcat:guessSubcat(p.types),phone:p.nationalPhoneNumber||'',photo_url:fotos.full,photo_thumb:fotos.thumb,photo_author:autorDaFoto(p),rating_google:p.rating?String(p.rating):'',website_url:p.websiteUri||'',maps_url:p.googleMapsUri||''};
@@ -6735,7 +6756,7 @@ function maybeShowCheckin(){
       if(!p)return;
       const name=p.displayName.text;
       const addr=p.formattedAddress||'';
-      const city=cityFromComponents(p.addressComponents)||extractCityFromAddr(addr);
+      const city=cityFromComponents(p.addressComponents,addr)||extractCityFromAddr(addr);
       const country=countryFromComponents(p.addressComponents);
       const fotos=placePhotoUrls(p);
       CHECKIN.place={name,meta:addr,icon:catIcon('food'),city,country,address:addr,subcat:'',phone:p.nationalPhoneNumber||'',photo_url:fotos.full,photo_thumb:fotos.thumb,photo_author:autorDaFoto(p),rating_google:p.rating?String(p.rating):'',website_url:p.websiteUri||'',maps_url:p.googleMapsUri||'',category:'food'};
@@ -6904,7 +6925,7 @@ function distritoDeToquio(loc,adm1){
   return [base,base.replace(/city$/,''),base.replace(/ku$/,''),base.replace(/city$/,'').replace(/ku$/,'')]
     .some(v=>TOQUIO_DISTRITOS.has(v));
 }
-function cityFromComponents(comps){
+function cityFromComponents(comps,addr){
   if(!comps||!comps.length)return'';
   const byType=(t)=>comps.find(c=>(c.types||[]).includes(t))?.longText;
   const loc=byType('locality')||byType('postal_town');
@@ -6967,7 +6988,34 @@ function cityFromComponents(comps){
     if(adm2&&!mesmoLugar(adm2,loc)&&!contemComoPalavra(adm2,loc)&&!CITY_ADMIN_TEST.test(adm2))return adm2;
     return loc;
   }
+  // ═══ SEM CIDADE NOS COMPONENTES (praia, parque, mirante) ═══
+  // A Praia da Barceloneta vem do Google SEM localidade e sem adm2 — só
+  // "Catalunha" e "Espanha" — e o spot virava um card "Catalunha" ao lado de
+  // Barcelona (28/09). O endereço escrito ainda diz a cidade ("08003
+  // Barcelona, Espanha"). Só entra quando a alternativa seria o ESTADO: onde
+  // existe adm2 (Brasil, Bragança/Santos) nada muda.
+  if(!municipio&&!adm2&&addr){
+    const e=cidadeDoEndereco(addr,comps);
+    if(e&&!mesmoLugar(e,adm1||''))return e;
+  }
   return municipio||adm2||adm1||'';
+}
+// A cidade dentro do endereço escrito: a última parte antes do país, sem o
+// código postal. Recusa o que for o próprio lugar (praia, rua, ponto) — em
+// "Platja de la Barceloneta, Espanha" não há cidade, e o nome não pode virar uma.
+const TIPOS_QUE_NAO_SAO_CIDADE=['route','street_address','street_number','premise','natural_feature','point_of_interest','establishment','park','tourist_attraction','sublocality','sublocality_level_1','neighborhood','postal_code','country','administrative_area_level_1'];
+function cidadeDoEndereco(addr,comps){
+  const partes=String(addr||'').split(',').map(x=>x.trim()).filter(Boolean);
+  if(partes.length<2)return'';
+  const naoCidade=(comps||[]).filter(c=>(c.types||[]).some(t=>TIPOS_QUE_NAO_SAO_CIDADE.includes(t)))
+    .flatMap(c=>[c.longText,c.shortText]).filter(Boolean);
+  for(let i=partes.length-2;i>=0;i--){
+    const t=partes[i].replace(/\b[A-Z]{0,3}-?\d[\d\s-]{2,}\b/g,'').replace(/\s+-\s+[A-Z]{2}$/,'').replace(/\s+/g,' ').trim();
+    if(!t||/\d/.test(t))continue;
+    if(naoCidade.some(n=>mesmoLugar(n,t)))return'';
+    return t;
+  }
+  return'';
 }
 // "Kotor Municipality" -> "Kotor"; "Município de Kotor" -> "Kotor";
 // "Opština Kotor" -> "Kotor". Sem a palavra, devolve '' (nao e municipio
@@ -7080,7 +7128,7 @@ async function fichaDoLugar(base,cat){
       p={
         name:g.displayName?.text||base.name,
         meta:addr,icon:catIcon(cat),address:addr,
-        city:cityFromComponents(g.addressComponents)||extractCityFromAddr(addr),
+        city:cityFromComponents(g.addressComponents,addr)||extractCityFromAddr(addr),
         country:countryFromComponents(g.addressComponents),
         subcat:guessSubcat(g.types),
         phone:g.nationalPhoneNumber||'',
@@ -7635,7 +7683,7 @@ function filterNewTripCity(v){
         // não cai no fallback de endereço aqui, senão o nome do país vira "cidade" por
         // engano (duplicava "Croácia" dentro da viagem "Croácia"). Cidade fica vazia de
         // propósito; a viagem nasce só com o país, sem card de cidade nenhum.
-        const city=isCountry?'':(cityFromComponents(p.addressComponents)||extractCityFromAddr(addr));
+        const city=isCountry?'':(cityFromComponents(p.addressComponents,addr)||extractCityFromAddr(addr));
         return{city,country};
       }).filter(r=>r.country); // cidade é opcional agora — só o país é obrigatório
       // busca livre repete o mesmo resultado várias vezes — funde por cidade+país
