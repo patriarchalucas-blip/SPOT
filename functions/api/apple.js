@@ -23,6 +23,17 @@ import { lerKV, gravarKV } from './_kv.js';
 const TIME = 'JULM2M3YJJ';
 const APP = 'app.meuspot.spot';
 
+// Conferência sem login: diz só SE a chave está posta e SE ela abre (monta o
+// segredo). Nenhum dado da chave sai daqui. Existe pra que dê pra confirmar a
+// configuração sem precisar de uma conta de teste com "Entrar com a Apple".
+export async function onRequestGet(context) {
+  const { env } = context;
+  const configurado = !!(env.APPLE_SIWA_KEY && env.APPLE_SIWA_KEY_ID);
+  let chaveValida = false;
+  if (configurado) { try { await segredoDoCliente(env); chaveValida = true } catch (e) {} }
+  return json({ configurado, chaveValida });
+}
+
 export async function onRequestPost(context) {
   const { request, env } = context;
   let body;
