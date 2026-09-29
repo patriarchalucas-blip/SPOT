@@ -3682,7 +3682,7 @@ async function loadDashboard(){
   S.trips.forEach(t=>{t._spotsLoaded=true});
   // Só com os spots carregados de verdade: com a consulta de spots falhando
   // toda viagem pareceria vazia.
-  if(!falhou(allSpots)){limparViagensVaziasRepetidas();consertarCidadeQueEraEstado()}
+  if(!falhou(allSpots)){limparViagensVaziasRepetidas();consertarCidadeQueEraEstado();juntarSpotsDeCasa()}
   const visivelAntes=S.trips.filter(t=>!isNonTrip(t)).map(t=>t.id).join(',');
   rebuildCityCanon(); // funde "Split" e "Split-Dalmatia County" antes de contar
   // Conta AQUI: depois da fusao de nomes (senao "Split" conta duas vezes) e
@@ -3753,6 +3753,27 @@ function consertarCidadeQueEraEstado(){
       sp.city=destino;
       dbUpdate('spots',sp.id,{city:destino}).catch(()=>{});
     });
+  });
+}
+// O card "Onde você mora" contava 23 spots de São Paulo e a tela mostrava 8:
+// os outros 15 estavam na viagem "Brasil", salvos antes da seção existir ou
+// adicionados de dentro dela (28/09). Os spots da cidade de casa MUDAM pra
+// linha de casa — só o trip_id, só spot da própria pessoa. Nenhuma viagem é
+// apagada: a que ficar vazia continua lá, e a pessoa decide.
+function juntarSpotsDeCasa(){
+  const casa=(S.trips||[]).find(ehCasa);
+  if(!casa||!cidadeDeCasa()||!S.user)return;
+  casa._spots=casa._spots||[];
+  (S.trips||[]).forEach(t=>{
+    if(t===casa||ehCasa(t)||!(t._spots||[]).length)return;
+    const pais=(t.destinations&&t.destinations[0])||'';
+    const daCasa=t._spots.filter(sp=>sp.user_id===S.user.id&&ehDaCasa(cityOf(sp),pais));
+    if(!daCasa.length)return;
+    daCasa.forEach(sp=>{
+      dbUpdate('spots',sp.id,{trip_id:casa.id}).then(r=>{if(r&&r.error)console.warn('juntarSpotsDeCasa',r.error)}).catch(()=>{});
+      sp.trip_id=casa.id;casa._spots.push(sp);
+    });
+    t._spots=t._spots.filter(sp=>!daCasa.includes(sp));
   });
 }
 function limparViagensVaziasRepetidas(){
@@ -6212,7 +6233,7 @@ function darDadosDeExplorar(){
     sugestoesModo:SUG.modo||'',
     aba:EXPLORE.aba||'voce',
     abas:ABAS_DO_EXPLORAR,
-    amigosLugares:lugaresDosAmigosNaCategoria().map((g,i)=>({i,lugar:g.capa.name||'',local:cityOf(g.capa)||'',
+    amigosLugares:(EXPLORE.aba==='amigos'&&conferirFotosDosAmigos(),lugaresDosAmigosNaCategoria()).map((g,i)=>({i,lugar:g.capa.name||'',local:cityOf(g.capa)||'',
       nota:g.media?fmtRating(g.media):'',foto:fotoPraCasca(safeUrl(fotoNaLargura(semChaveDoPlaces(g.foto),760))),
       cores:coresDoGradiente(g.capa.name||''),linha:textoDosAmigos(g),selo:statusNaMinhaLista({name:g.capa.name,city:cityOf(g.capa)})})),
     avisoAmigosArea:avisoDosAmigos(),
@@ -6399,6 +6420,25 @@ function renderLugaresDosAmigos(body){
       +'</div>'
       +'<div class="ex-corpo-card"><span class="ex-aval">'+esc(textoDosAmigos(g))+'</span></div></div>';
   }).join('');
+}
+// A tela nativa não tem como avisar que a foto quebrou (o endereço de foto do
+// Google expira), e o site só trocava a foto no onerror do <img> dele — que
+// no app nem existe. Resultado: cartão sem foto até tocar no spot (28/09).
+// Aqui a página testa cada foto ela mesma e, se falhar ou faltar, busca a
+// atual do lugar e redesenha as duas telas.
+let REDESENHO_AMIGOS_AREA=null;
+function conferirFotosDosAmigos(){
+  const redesenhar=()=>{clearTimeout(REDESENHO_AMIGOS_AREA);REDESENHO_AMIGOS_AREA=setTimeout(()=>{
+    if(EXPLORE.aba==='amigos'){try{renderExploreResults()}catch(e){}}},300)};
+  const trocar=g=>fotoParaVer(g.capa).then(u=>{if(u&&u!==g.foto){g.foto=u;redesenhar()}});
+  lugaresDosAmigosNaCategoria().forEach(g=>{
+    if(g._fotoConferida)return;
+    g._fotoConferida=true;
+    if(!g.foto){trocar(g);return}
+    const img=new Image();
+    img.onerror=()=>trocar(g);
+    img.src=safeUrl(fotoNaLargura(semChaveDoPlaces(g.foto),760));
+  });
 }
 function fotoDoCardDoAmigoFalhou(img,i){
   const g=lugaresDosAmigosNaCategoria()[i];
@@ -7442,7 +7482,16 @@ async function resolverCidadeDoSpot(p,trip){
   const btn=document.getElementById('saveSpotBtn'),btn2=document.getElementById('saveAndAddBtn');
   btn.disabled=true;btn2.disabled=true;
   (addAnother?btn2:btn).textContent='Salvando...';
-  const t=S.addTrip,p=S.selPlace;
+  const p=S.selPlace;
+  // Lugar da cidade onde mora vai SEMPRE pra "Onde você mora", venha de onde
+  // vier: adicionado de dentro da viagem "Brasil", do Explorar, de um amigo.
+  // Cada entrada decidia a viagem do seu jeito, e São Paulo ficava metade em
+  // cada lugar (28/09).
+  let t=S.addTrip;
+  if(t&&!ehCasa(t)&&ehDaCasa(p.city,p.country||(t.destinations&&t.destinations[0])||'')){
+    const casa=await viagemDeCasa(p.country||'');
+    if(casa){t=casa;S.addTrip=casa}
+  }
   // Canoniza antes de gravar: o banco passa a guardar um nome só por cidade,
   // e todo o resto do app (cards, contagem, foto) enxerga esse nome.
   const cidade=await resolverCidadeDoSpot(p,t);
