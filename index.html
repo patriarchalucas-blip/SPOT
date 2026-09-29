@@ -602,6 +602,8 @@ input,textarea,select{font-size:max(16px,1em)!important}
 .am-lista-nota h2{margin:0 0 12px;font-size:20px;font-weight:700;letter-spacing:-.02em;color:var(--ink)}
 .am-vazio{padding:32px 20px;font-size:15px;color:var(--ink2)}
 .am-busca-spots{padding:24px 20px 0}
+.nota-cat{padding:12px 0 0}
+.nota-cat .coz-atual{font-size:17px}
 .am-continentes{margin:16px 0 0;padding:0 20px}
 /* ═══ Folha de escolha (Todos / Quero ir / Fui) ═══ */
 .esc-sheet{padding:12px 20px calc(34px + env(safe-area-inset-bottom,0px))}
@@ -2193,9 +2195,9 @@ svg.ic path,svg.ic circle,svg.ic line,svg.ic polyline,svg.ic rect{fill:none;stro
 
 <div class="overlay" id="ov-cat" onclick="closeOut(event,'ov-cat')"><div class="sheet"><button class="sheet-close" onclick="closeOv('ov-cat')" data-ic="close" aria-label="Fechar"></button><div class="sheet-handle"></div><div class="sheet-title">Qual categoria?</div><div class="step-dots"><div class="step-dot active"></div><div class="step-dot"></div><div class="step-dot"></div></div><div class="cat-options"><div class="cat-option" id="co-food" onclick="pickCat('food')"><div class="co-icon" data-ic="food"></div><div class="co-name">Comer & Beber</div></div><div class="cat-option" id="co-hotel" onclick="pickCat('hotel')"><div class="co-icon" data-ic="hotel"></div><div class="co-name">Onde Ficar</div></div><div class="cat-option" id="co-experience" onclick="pickCat('experience')"><div class="co-icon" data-ic="compass"></div><div class="co-name">Experiências</div></div></div></div></div>
 
-<div class="overlay" id="ov-search" onclick="closeOut(event,'ov-search')"><div class="sheet sheet-fixa"><button class="sheet-close" onclick="closeOv('ov-search')" data-ic="close" aria-label="Fechar"></button><div class="sheet-handle"></div><div class="sheet-title">Buscar lugar</div><div class="step-dots"><div class="step-dot done"></div><div class="step-dot active"></div><div class="step-dot"></div></div><div class="search-wrap"><div class="search-field"><span class="si" data-ic="search"></span><input class="search-input" autocomplete="off" autocorrect="off" spellcheck="false" id="placeSearch" placeholder="Nome do lugar..." oninput="searchPlaces(this.value)"></div></div><div class="search-powered"><span>Resultados via</span><strong>Google Places</strong></div><div class="lista-rolante" id="searchResults"><div class="search-loading">Digite para buscar...</div></div></div></div>
+<div class="overlay" id="ov-search" onclick="closeOut(event,'ov-search')"><div class="sheet sheet-fixa"><button class="sheet-close" onclick="closeOv('ov-search')" data-ic="close" aria-label="Fechar"></button><div class="sheet-handle"></div><div class="sheet-title">Buscar lugar</div><div class="step-dots"><div class="step-dot active"></div><div class="step-dot"></div></div><div class="search-wrap"><div class="search-field"><span class="si" data-ic="search"></span><input class="search-input" autocomplete="off" autocorrect="off" spellcheck="false" id="placeSearch" placeholder="Nome do lugar..." oninput="searchPlaces(this.value)"></div></div><div class="search-powered"><span>Resultados via</span><strong>Google Places</strong></div><div class="lista-rolante" id="searchResults"><div class="search-loading">Digite para buscar...</div></div></div></div>
 
-<div class="overlay" id="ov-note" onclick="closeOut(event,'ov-note')"><div class="sheet"><button class="sheet-close" onclick="closeOv('ov-note')" data-ic="close" aria-label="Fechar"></button><div class="sheet-handle"></div><div class="sheet-title">Adicionar spot</div><div class="note-place-row"><div class="note-place-icon" id="selIcon" data-ic="food"></div><div><div class="note-place-name" id="selName"></div><div class="note-place-meta" id="selMeta"></div></div></div>
+<div class="overlay" id="ov-note" onclick="closeOut(event,'ov-note')"><div class="sheet"><button class="sheet-close" onclick="closeOv('ov-note')" data-ic="close" aria-label="Fechar"></button><div class="sheet-handle"></div><div class="sheet-title">Adicionar spot</div><div class="note-place-row"><div class="note-place-icon" id="selIcon" data-ic="food"></div><div><div class="note-place-name" id="selName"></div><div class="note-place-meta" id="selMeta"></div></div></div><div class="coz-linha nota-cat" id="noteCat"></div>
 <div class="status-choice"><button class="status-opt active" id="stWant" onclick="setSpotStatus('want')"><div class="so-emoji" data-ic="bookmark"></div><div class="so-label">Quero ir</div></button><button class="status-opt" id="stBeen" onclick="setSpotStatus('been')"><div class="so-emoji" data-ic="check"></div><div class="so-label">Já fui</div></button></div>
 <div id="subcatRow" style="display:none"><div class="note-label">Que tipo de experiência?</div><div class="subcat-row" id="subcatChips"></div></div>
 <div id="ratingRow" style="display:none"><div class="note-label">Sua avaliação</div><div class="stars-row" id="addStars"><button class="star-btn" onclick="setAddRating(1,event)" aria-label="Dar nota 1"><span class="st-base" data-ic="star"></span><span class="st-fill" data-ic="star"></span></button><button class="star-btn" onclick="setAddRating(2,event)" aria-label="Dar nota 2"><span class="st-base" data-ic="star"></span><span class="st-fill" data-ic="star"></span></button><button class="star-btn" onclick="setAddRating(3,event)" aria-label="Dar nota 3"><span class="st-base" data-ic="star"></span><span class="st-fill" data-ic="star"></span></button><button class="star-btn" onclick="setAddRating(4,event)" aria-label="Dar nota 4"><span class="st-base" data-ic="star"></span><span class="st-fill" data-ic="star"></span></button><button class="star-btn" onclick="setAddRating(5,event)" aria-label="Dar nota 5"><span class="st-base" data-ic="star"></span><span class="st-fill" data-ic="star"></span></button></div></div>
@@ -4697,7 +4699,7 @@ function renderCityBody(){
 // Dentro da tela da cidade a categoria já é sabida (a aba ativa) — mesma
 // lógica de antes, só que agora sem ambiguidade (a tela mostra 1 cidade só).
 function addSpotToCurrentCity(){
-  S.addTrip=S.curTrip;S.addCat=curCityCat;
+  S.addTrip=S.curTrip;S.addCat=null;
   resetSearchSheet();
   document.getElementById('ov-search').classList.add('show');avisarSeTemJanela();
 }
@@ -5320,15 +5322,27 @@ function selTripForSpot(id){
     closeOv('ov-trip');
     setTimeout(()=>jumpToNoteSheet(S.addTrip,cat,p,status),220);
   }else{
-    nextOv('ov-trip','ov-cat');
+    S.addCat=null;resetSearchSheet();
+    nextOv('ov-trip','ov-search');
   }
+}
+// ═══ CATEGORIA PELO PRÓPRIO LUGAR (28/09) ═══
+// Pedido do Lucas: a pessoa só busca o lugar, e o app classifica pelo tipo que
+// o Google dá — restaurante/bar/café em Comer, hotel/hostel em Ficar, o resto
+// em Experiências. A pergunta "Qual categoria?" saiu do caminho: era um toque
+// a mais em todo spot, e quem escolhia errado salvava hotel dentro de Comer.
+// A categoria aparece na folha da nota e troca num toque (trocarCatDaNota).
+function abrirBuscaDeSpot(){
+  S.addCat=null;trocandoCategoria=false;
+  resetSearchSheet();
+  showOv('ov-search');
 }
 function addSpotToCurrentTrip(){
   // Viagem já é sabida (o + está dentro dela) — mas categoria não é mais
   // "a aba ativa": agora cada cidade tem a sua própria, e a tela pode
   // mostrar várias cidades ao mesmo tempo. Sem uma categoria óbvia, pergunta.
-  S.addTrip=S.curTrip;trocandoCategoria=false;
-  showOv('ov-cat');
+  S.addTrip=S.curTrip;
+  abrirBuscaDeSpot();
 }
 function pickCat(c){
   // A MESMA folha serve pra duas coisas: escolher a categoria de um spot novo
@@ -6666,12 +6680,13 @@ function showNearbySuggestions(){
     const si=document.getElementById('placeSearch');
     if(si&&si.value.trim())return; // já digitou algo enquanto localizava
     const{latitude,longitude}=pos.coords;
-    const tipo={food:'restaurant',hotel:'lodging',experience:'tourist_attraction'}[S.addCat]||'point_of_interest';
+    const tipos=S.addCat?[{food:'restaurant',hotel:'lodging',experience:'tourist_attraction'}[S.addCat]]
+      :['restaurant','cafe','bar','lodging','tourist_attraction','museum','park'];
     try{
       const resp=await googlePlaces('searchNearby',{
         method:'POST',
         headers:{'Content-Type':'application/json','X-Goog-FieldMask':'places.displayName,places.formattedAddress,places.addressComponents,places.photos,places.rating,places.userRatingCount,places.websiteUri,places.googleMapsUri,places.types,places.nationalPhoneNumber'},
-        body:JSON.stringify({includedTypes:[tipo],maxResultCount:8,languageCode:'pt-BR',locationRestriction:{circle:{center:{latitude,longitude},radius:600}}})
+        body:JSON.stringify({includedTypes:tipos,maxResultCount:8,languageCode:'pt-BR',locationRestriction:{circle:{center:{latitude,longitude},radius:600}}})
       });
       const data=await resp.json();
       if(si&&si.value.trim())return;
@@ -6683,7 +6698,7 @@ function showNearbySuggestions(){
         const city=cityFromComponents(p.addressComponents,addr)||extractCityFromAddr(addr);
         const country=countryFromComponents(p.addressComponents);
         const fotos=placePhotoUrls(p);
-        return{name:p.displayName?.text||'',icon:catIcon(S.addCat),city,country,address:addr,subcat:guessSubcat(p.types),phone:p.nationalPhoneNumber||'',photo_url:fotos.full,photo_thumb:fotos.thumb,photo_author:autorDaFoto(p),rating_google:p.rating?String(p.rating):'',website_url:p.websiteUri||'',maps_url:p.googleMapsUri||''};
+        return{name:p.displayName?.text||'',icon:catIcon(S.addCat||categoriaDoLugar(p.types)),types:p.types||[],city,country,address:addr,subcat:guessSubcat(p.types),phone:p.nationalPhoneNumber||'',photo_url:fotos.full,photo_thumb:fotos.thumb,photo_author:autorDaFoto(p),rating_google:p.rating?String(p.rating):'',website_url:p.websiteUri||'',maps_url:p.googleMapsUri||''};
       });
       r.innerHTML='<div class="search-nearby-label">Perto de você</div>'+S_nearbyResults.map((p,i)=>{
         const thumb=p.photo_thumb?'<div class="sr-icon"><img src="'+escUrl(p.photo_thumb)+'" loading="eager" style="width:100%;height:100%;object-fit:cover;border-radius:12px"></div>':'<div class="sr-icon">'+p.icon+'</div>';
@@ -6692,7 +6707,11 @@ function showNearbySuggestions(){
     }catch(e){console.error('showNearbySuggestions',e)}
   },function(){/* negada ou indisponível: fica no texto padrão, sem drama */},{timeout:6000,maximumAge:5*60*1000});
 }
-function pickNearbyResult(i){pickPlace(S_nearbyResults[i])}
+function pickNearbyResult(i){
+  const p=S_nearbyResults[i];if(!p)return;
+  if(!S.addCat){S.addCat=categoriaDoLugar(p.types);p.icon=catIcon(S.addCat)}
+  pickPlace(p);
+}
 
 // ═══ CHECK-IN POR PROXIMIDADE (estilo Foursquare/Swarm) ═══
 // Ao abrir o Dashboard, se tiver um lugar bem avaliado bem perto (~60m) que
@@ -6826,13 +6845,24 @@ let searchReqId=0;
 // por isso a miniatura sai pequena e só na lista.
 // places.types entrou em 28/09: é da mesma faixa de preço do nome, e é o que
 // deixa a lista de Comer sem hotel (ver lugarCabeNaCategoria).
-const CAMPOS_DA_LISTA='places.id,places.displayName,places.formattedAddress,places.photos,places.types';
+const CAMPOS_DA_LISTA='places.id,places.displayName,places.formattedAddress,places.photos,places.types,places.primaryType';
 // Hotel não entra em Comer e beber, e restaurante não entra em Ficar — dava
 // pra salvar um hotel dentro de Comer (28/09). Pelo tipo que o Google dá.
 // Lugar sem tipo nenhum passa: melhor sobrar um do que sumir o certo.
 // Experiência não filtra: museu, loja, praia, show, tudo cabe.
 const TIPOS_DE_COMIDA=new Set(['restaurant','food','bar','cafe','bakery','meal_takeaway','meal_delivery','night_club','coffee_shop','ice_cream_shop','pub','wine_bar','food_court','dessert_shop','confectionery']);
 const TIPOS_DE_HOSPEDAGEM=new Set(['lodging','hotel','hostel','motel','resort_hotel','bed_and_breakfast','guest_house','inn','extended_stay_hotel','budget_japanese_inn','japanese_inn','private_guest_room','farmstay','cottage','campground']);
+// Primeiro o tipo PRINCIPAL (um hotel com restaurante dentro é hotel), depois
+// qualquer um dos tipos. Sem pista nenhuma, Experiências — é a categoria que
+// aceita de tudo, e a folha da nota deixa trocar.
+function categoriaDoLugar(types,primario){
+  const t=types||[];
+  if(primario&&TIPOS_DE_HOSPEDAGEM.has(primario))return'hotel';
+  if(primario&&TIPOS_DE_COMIDA.has(primario))return'food';
+  if(t.some(x=>TIPOS_DE_HOSPEDAGEM.has(x)))return'hotel';
+  if(t.some(x=>TIPOS_DE_COMIDA.has(x)))return'food';
+  return'experience';
+}
 function lugarCabeNaCategoria(types,cat){
   const t=types||[];
   if(!t.length)return true;
@@ -6841,7 +6871,7 @@ function lugarCabeNaCategoria(types,cat){
   if(cat==='hotel')return hospedagem||!t.some(x=>TIPOS_DE_COMIDA.has(x));
   return true;
 }
-const CAMPOS_DA_FICHA='places.id,places.displayName,places.formattedAddress,places.addressComponents,places.location,places.photos,places.rating,places.websiteUri,places.googleMapsUri,places.types,places.nationalPhoneNumber,places.regularOpeningHours,places.priceLevel';
+const CAMPOS_DA_FICHA='places.id,places.displayName,places.formattedAddress,places.addressComponents,places.location,places.photos,places.rating,places.websiteUri,places.googleMapsUri,places.types,places.nationalPhoneNumber,places.regularOpeningHours,places.priceLevel,places.primaryType';
 function searchPlaces(v){
   clearTimeout(searchTO);const r=document.getElementById('searchResults');
   const termo=String(v||'').trim();
@@ -6867,7 +6897,8 @@ function searchPlaces(v){
       S.searchResults=cabem.map(p=>{
         const name=p.displayName?.text||'';
         const addr=p.formattedAddress||'';
-        return{id:p.id||'',name,meta:addr,icon:catIcon(S.addCat),address:addr,
+        return{id:p.id||'',name,meta:addr,icon:catIcon(S.addCat||categoriaDoLugar(p.types,p.primaryType)),address:addr,
+          types:p.types||[],primaryType:p.primaryType||'',
           city:extractCityFromAddr(addr),photo_thumb:placePhotoUrl(p,160),rating_google:''};
       });
       if(myReqId!==searchReqId)return;
@@ -7103,8 +7134,10 @@ async function pickSearchResult(i){
   if(!base)return;
   const el=document.querySelectorAll('#searchResults .search-result')[i];
   if(el)el.style.opacity='.5';
-  const p=await fichaDoLugar(base,S.addCat);
+  const cat=S.addCat||categoriaDoLugar(base.types,base.primaryType);
+  const p=await fichaDoLugar(base,cat);
   if(el)el.style.opacity='';
+  if(!S.addCat){S.addCat=categoriaDoLugar(p.types,p.primaryType);p.icon=catIcon(S.addCat)}
   pickPlace(p);
 }
 // A ficha inteira de UM lugar escolhido na lista (ver "POR QUE A BUSCA PEDE
@@ -7131,6 +7164,7 @@ async function fichaDoLugar(base,cat){
         city:cityFromComponents(g.addressComponents,addr)||extractCityFromAddr(addr),
         country:countryFromComponents(g.addressComponents),
         subcat:guessSubcat(g.types),
+        types:g.types||base.types||[],primaryType:g.primaryType||base.primaryType||'',
         phone:g.nationalPhoneNumber||'',
         photo_url:fotos.full,photo_thumb:fotos.thumb,photo_author:autorDaFoto(g),
         rating_google:g.rating?String(g.rating):'',
@@ -7161,8 +7195,8 @@ async function fichaDoLugar(base,cat){
 // viagem?", que aparece SO quando nem o endereco diz o pais. Sem isso aquele
 // caso viraria beco sem saida.
 function comecarSpotSemViagem(){
-  S.addTrip=null;trocandoCategoria=false;
-  showOv('ov-cat');
+  S.addTrip=null;
+  abrirBuscaDeSpot();
 }
 // Decide a viagem a partir do proprio lugar. Mesma regra do fluxo de amigo:
 // usa a que cobre o destino, cria quando nao existe, e so pergunta quando nem
@@ -7323,15 +7357,26 @@ function pickAddSubcat(k){
   addSubcat=subcatsPara(atuais.includes(k)?atuais.filter(x=>x!==k):atuais.concat(k));
   renderSubcatChips();
 }
+const ROTULO_CAT={food:'Comer e beber',hotel:'Ficar',experience:'Experiências'};
+function pintarCatDaNota(){
+  const el=document.getElementById('noteCat');
+  if(el)el.innerHTML=linhaDeEscolha(ROTULO_CAT[S.addCat]||'Categoria','trocarCatDaNota()');
+  addSubcat=subcatsPara((S.addCat==='experience'&&S.selPlace&&S.selPlace.subcat)||'');
+  document.getElementById('subcatRow').style.display=S.addCat==='experience'?'block':'none';
+  if(S.addCat==='experience')renderSubcatChips();
+}
+function trocarCatDaNota(){
+  abrirFolhaDeEscolha(['food','hotel','experience'].map(id=>({id,rotulo:ROTULO_CAT[id],n:''})),S.addCat,
+    id=>{S.addCat=id;pintarCatDaNota();
+      const ic=document.getElementById('selIcon');if(ic)ic.innerHTML=catIcon(id)});
+}
 function resetNoteSheet(){
   addStatus='want';addRating=0;
   // A fileira tem que apagar junto: sem isto a nota do spot anterior fica
   // acesa na folha do proximo.
   pintarEstrelas('#addStars',0);
   setTimeout(atualizarBotaoSalvar,0);
-  addSubcat=subcatsPara((S.addCat==='experience'&&S.selPlace&&S.selPlace.subcat)||'');
-  document.getElementById('subcatRow').style.display=S.addCat==='experience'?'block':'none';
-  if(S.addCat==='experience')renderSubcatChips();
+  pintarCatDaNota();
   document.getElementById('stWant').classList.add('active');
   document.getElementById('stBeen').classList.remove('active');
   document.getElementById('ratingRow').style.display='none';
@@ -7442,6 +7487,7 @@ async function resolverCidadeDoSpot(p,trip){
       // caso de colar uma lista de restaurantes e ir adicionando um a um
       // sem ter que refazer o "em qual viagem/categoria" a cada spot.
       closeOv('ov-note');
+      S.addCat=null;
       setTimeout(()=>{
         resetSearchSheet();
         document.getElementById('ov-search').classList.add('show');avisarSeTemJanela();
@@ -7516,7 +7562,7 @@ async function createTrip(){
     }
     setTimeout(()=>{
       toast(cidadeEscolhida?'Agora adiciona um lugar em '+cidadeEscolhida:'Agora adiciona seu primeiro lugar','','pin');
-      showOv('ov-cat');
+      abrirBuscaDeSpot();
     },300);
   }else{
     toast('Erro ao criar',error?.message||'Tente novamente');
