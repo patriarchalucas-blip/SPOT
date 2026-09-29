@@ -5,7 +5,9 @@ Se alguma tela estiver diferente do descrito, mandar print antes de clicar.
 
 ---
 
-## 1. Chave "Sign in with Apple" — exclusão de conta avisa a Apple
+## 1. ✅ FEITO (29/09) — Chave "Sign in with Apple" — exclusão de conta avisa a Apple
+
+Key ID R5F793C672, nas duas variáveis da Cloudflare (projeto **spotted**). Conferido: `GET /api/apple` devolve `{configurado:true, chaveValida:true}`.
 
 **Por quê:** regra 5.1.1(v) da Apple. Quem entrou com "Entrar com a Apple" e
 exclui a conta tem que ter o vínculo revogado. Sem isso, a Apple pode reprovar
@@ -48,7 +50,9 @@ foram conferidas e corrigidas em 27/09.
 
 ---
 
-## 3. Liberar "Associated Domains" — link de convite abrindo no app
+## 3. ✅ LIGADO (29/09) — "Associated Domains" — link de convite abrindo no app
+
+Capacidade ligada pela API; `ios.associatedDomains` no app.json. **Falta o build 17**: a cota grátis de builds iOS da Expo acabou no mês e volta em 01/10.
 
 **Por quê:** hoje o link de convite abre no Safari, e quem instala o app a
 partir dele não vira amigo automaticamente. O arquivo que o site precisa
