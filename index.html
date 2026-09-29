@@ -3784,7 +3784,9 @@ function consertarCidadeQueEraEstado(){
 // apagada: a que ficar vazia continua lá, e a pessoa decide.
 function juntarSpotsDeCasa(){
   const casa=(S.trips||[]).find(ehCasa);
-  if(!casa||!cidadeDeCasa()||!S.user)return;
+  // Sem o país de casa, ehDaCasa não separa Valencia (Espanha) de Valencia
+  // (Venezuela): mover spot às cegas não vale o risco.
+  if(!casa||!cidadeDeCasa()||!S.user||!(S.profile&&S.profile.home_country))return;
   casa._spots=casa._spots||[];
   (S.trips||[]).forEach(t=>{
     if(t===casa||ehCasa(t)||!(t._spots||[]).length)return;
@@ -6159,6 +6161,7 @@ async function maisDoExplorar(){
   if(!EXPLORE.token&&!(EXPLORE.fila||[]).length)return;
   const meu=EXPLORE_REQ;
   EXPLORE.carregandoMais=true;darDadosDeExplorar();
+  {const m=document.getElementById('exploreMais');if(m)m.textContent='Carregando mais...'}
   try{
     // Consulta esgotada: passa pra próxima da fila, da primeira página.
     // Trava de custo: o marcador de "carregar mais" fica visível logo depois
