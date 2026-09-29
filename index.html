@@ -601,6 +601,8 @@ input,textarea,select{font-size:max(16px,1em)!important}
 .am-lista-nota{padding:24px 20px 0}
 .am-lista-nota h2{margin:0 0 12px;font-size:20px;font-weight:700;letter-spacing:-.02em;color:var(--ink)}
 .am-vazio{padding:32px 20px;font-size:15px;color:var(--ink2)}
+.am-busca-spots{padding:24px 20px 0}
+.am-continentes{margin:16px 0 0;padding:0 20px}
 /* ═══ Folha de escolha (Todos / Quero ir / Fui) ═══ */
 .esc-sheet{padding:12px 20px calc(34px + env(safe-area-inset-bottom,0px))}
 .esc-item{display:flex;justify-content:space-between;align-items:baseline;width:100%;height:52px;padding:0;background:none;border:none;cursor:pointer;font-size:20px;letter-spacing:-.02em;color:var(--ink)}
@@ -2052,6 +2054,8 @@ svg.ic path,svg.ic circle,svg.ic line,svg.ic polyline,svg.ic rect{fill:none;stro
   </div>
   <div class="friend-bio" id="friendBio" style="display:none"></div>
   <div class="am-comum" id="friendComum" style="display:none" onclick="abrirEmComum()"></div>
+  <div class="am-busca-spots" id="friendBuscaBox" style="display:none"><div class="af-campo"><span class="af-lupa" data-ic="search"></span><input class="af-input" id="friendBusca" type="search" placeholder="Buscar spot, cidade ou país" autocomplete="off" autocorrect="off" spellcheck="false" oninput="buscarNoAmigo(this.value)"></div></div>
+  <nav class="cont-abas am-continentes" id="friendContinentes" style="display:none"></nav>
   <div class="coz-linha" id="friendStatus" style="display:none"></div>
   <div id="friendTripsList"></div>
   <div style="height:120px"></div>
@@ -11937,7 +11941,8 @@ const FRIEND={id:null,profile:null,trips:[],visiveis:[],trip:null,city:null,spot
 const FRIEND_NOMES={};
 function backToFriends(){goTo('friends');loadFriends()}
 async function openFriend(id){
-  FRIEND.id=id;FRIEND.trips=[];FRIEND.visiveis=[];FRIEND.trip=null;FRIEND.status='been';FRIEND.soComum=false;FRIEND.abertas={};FRIEND.todos=[];
+  FRIEND.id=id;FRIEND.trips=[];FRIEND.visiveis=[];FRIEND.trip=null;FRIEND.status='been';FRIEND.soComum=false;FRIEND.abertas={};FRIEND.todos=[];FRIEND.busca='';FRIEND.regiao=null;
+  {const b=document.getElementById('friendBusca');if(b)b.value=''}
   const cmm=document.getElementById('friendComum');if(cmm){cmm.style.display='none';cmm.innerHTML=''}
   const fst=document.getElementById('friendStatus');if(fst)fst.style.display='none';
   // Pinta o que já se sabe antes de ir ao banco: a tela abre na hora e os
@@ -12084,7 +12089,10 @@ function abrirDetalheAmigo(modo){
 function renderFriendProfile(){
   const visiveis=FRIEND.trips.filter(t=>!isNonTrip(t)&&(t._spots||[]).length);
   FRIEND.visiveis=visiveis;
-  const todos=[];FRIEND.trips.forEach(t=>(t._spots||[]).forEach(s=>todos.push(s)));
+  // Cada spot leva o país e o continente da viagem dele: é por onde a busca e
+  // as abas de continente (as mesmas da aba Viagens) filtram.
+  const todos=[];FRIEND.trips.forEach(t=>{const pais=(t.destinations&&t.destinations[0])||'';
+    (t._spots||[]).forEach(s=>{s._pais=pais;s._regiao=regionFor(pais);todos.push(s)})});
   const cidades=new Set(),paises=new Set();
   todos.forEach(s=>{const c=cityOf(s);if(c)cidades.add(c)});
   FRIEND.trips.forEach(t=>(t.destinations||[]).forEach(d=>paises.add(d)));
@@ -12136,11 +12144,20 @@ function tileDoAmigo(s,i){
   return '<div class="am-tile" onclick="abrirSpotDaGrade('+i+')"><div class="am-tile-foto">'+img+'</div>'
     +'<div class="am-tile-nome">'+esc(s.name)+'</div><div class="am-tile-aba">'+esc(ABA_CURTA[s.category]||'')+'</div></div>';
 }
+// Busca no perfil do amigo: nome do spot, cidade ou país, sem acento. Com
+// texto digitado ela passa por cima do continente — quem busca "Paris" não
+// quer ter que achar antes a aba Europa.
+function buscarNoAmigo(v){FRIEND.busca=String(v||'');FRIEND.soComum=false;pintarSpotsDoAmigo()}
+function trocarContinenteDoAmigo(i){const r=(FRIEND.regioesDaTela||[])[i];if(r==null)return;FRIEND.regiao=r;pintarSpotsDoAmigo()}
 function pintarSpotsDoAmigo(){
   const box=document.getElementById('friendTripsList');
   const linha=document.getElementById('friendStatus');
-  const todos=FRIEND.todos||[];
+  const abas=document.getElementById('friendContinentes');
+  const buscaBox=document.getElementById('friendBuscaBox');
+  let todos=FRIEND.todos||[];
   FRIEND.grade=[];
+  buscaBox.style.display=todos.length?'':'none';
+  abas.style.display='none';
   if(!todos.length){linha.style.display='none';box.innerHTML='<div class="am-vazio">Seu amigo ainda não salvou nenhum spot.</div>';return}
   // Lista "em comum": os spots com a nota dele, no lugar da grade.
   if(FRIEND.soComum){
@@ -12161,10 +12178,26 @@ function pintarSpotsDoAmigo(){
   }
   const st=FRIEND.status||'been';
   const temOsDois=todos.some(s=>s.status==='been')&&todos.some(s=>s.status!=='been');
+  const termo=normName(FRIEND.busca);
+  if(termo)todos=todos.filter(s=>[s.name,cityOf(s),s._pais].some(x=>normName(x).includes(termo)));
   linha.style.display=temOsDois?'':'none';
   linha.innerHTML=temOsDois?linhaDeEscolha(ROTULO_STATUS_AMIGO[st],'abrirStatusDoAmigo()'):'';
   // Sem os dois tipos, mostra o que houver (o seletor não tem o que trocar).
-  const filtrados=!temOsDois?todos:st==='todos'?todos:todos.filter(s=>st==='been'?s.status==='been':s.status!=='been');
+  let filtrados=!temOsDois?todos:st==='todos'?todos:todos.filter(s=>st==='been'?s.status==='been':s.status!=='been');
+  if(termo&&!filtrados.length){box.innerHTML='<div class="am-vazio">Nada com “'+esc(FRIEND.busca.trim())+'” aqui.</div>';return}
+  // Abas de continente, as mesmas da aba Viagens (mesma ordem, mesmo desenho).
+  // Só com dois ou mais: uma aba sozinha não tem o que trocar.
+  if(!termo){
+    const nPor={};filtrados.forEach(s=>{nPor[s._regiao]=(nPor[s._regiao]||0)+1});
+    const regioes=[...REGION_ORDER.filter(r=>nPor[r]),...Object.keys(nPor).filter(r=>!REGION_ORDER.includes(r))];
+    if(regioes.length>1){
+      if(!FRIEND.regiao||!nPor[FRIEND.regiao])FRIEND.regiao=regioes[0];
+      FRIEND.regioesDaTela=regioes;
+      abas.innerHTML=regioes.map((r,i)=>'<button class="cont-aba'+(r===FRIEND.regiao?' on':'')+'" onclick="trocarContinenteDoAmigo('+i+')">'+esc(r)+' · '+nPor[r]+'</button>').join('');
+      abas.style.display='';
+      filtrados=filtrados.filter(s=>s._regiao===FRIEND.regiao);
+    }
+  }
   const porCidade={};
   filtrados.forEach(s=>{const c=cityOf(s)||'Outros';(porCidade[c]=porCidade[c]||[]).push(s)});
   const cidades=Object.keys(porCidade).sort((a,b)=>porCidade[b].length-porCidade[a].length||a.localeCompare(b,'pt-BR'));
