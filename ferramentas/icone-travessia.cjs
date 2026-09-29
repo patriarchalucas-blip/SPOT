@@ -29,6 +29,10 @@ const SAIDAS = [
   [192, 'icon-192.png'],
   [180, 'icon-180.png'],
   [120, 'logo-120.png'],
+  // Android (ícone adaptativo): o sistema recorta a camada da frente em
+  // círculo, gota ou quadrado e só garante o miolo de 66% — com 88% o S
+  // perderia as pontas. 60% cabe em qualquer máscara.
+  [1024, 'mobile/assets/adaptive-icon.png', 0.60],
 ];
 const VERDE = [11, 61, 46], CLARO = [245, 245, 243];
 
@@ -37,14 +41,14 @@ const VERDE = [11, 61, 46], CLARO = [245, 245, 243];
   const b = await puppeteer.launch({ executablePath: 'C:/Program Files/Google/Chrome/Application/chrome.exe', headless: 'new' });
   const p = await b.newPage();
   await p.setContent('<html><body></body></html>');
-  for (const [lado, destino] of SAIDAS) {
-    const px = await p.evaluate(async (src, lado, VERDE, CLARO) => {
+  for (const [lado, destino, escalaDoSimbolo] of SAIDAS) {
+    const px = await p.evaluate(async (src, lado, VERDE, CLARO, escala) => {
       const img = new Image(); img.src = src; await img.decode();
       // repinta em 1024 e só depois reduz: reduzir primeiro misturaria as cores velhas
       const N = 1024, cv = document.createElement('canvas'); cv.width = N; cv.height = N;
       const x = cv.getContext('2d');
       x.fillStyle = 'rgb(' + VERDE + ')'; x.fillRect(0, 0, N, N);
-      const escala = 0.88, l = N * escala, o = (N - l) / 2;
+      const l = N * escala, o = (N - l) / 2;
       const tmp = document.createElement('canvas'); tmp.width = N; tmp.height = N;
       const t = tmp.getContext('2d');
       t.fillStyle = '#F7F3EA'; t.fillRect(0, 0, N, N);   // o creme do original, atrás
@@ -65,7 +69,7 @@ const VERDE = [11, 61, 46], CLARO = [245, 245, 243];
         const fx = final.getContext('2d'); fx.imageSmoothingQuality = 'high'; fx.drawImage(cv, 0, 0, lado, lado);
       }
       return Array.from(final.getContext('2d').getImageData(0, 0, lado, lado).data);
-    }, src, lado, VERDE, CLARO);
+    }, src, lado, VERDE, CLARO, escalaDoSimbolo || 0.88);
     fs.writeFileSync(path.join(RAIZ, destino), pngRGB(Uint8Array.from(px), lado, lado, VERDE));
     console.log(destino, lado);
   }

@@ -360,12 +360,17 @@ function Conteudo() {
   // fechar o app. Sem isto, voltar fecha tudo e perde o que a pessoa fazia.
   React.useEffect(() => {
     if (Platform.OS !== 'android') return undefined;
+    // O site troca de tela sem histórico de navegador, então quem decide o que
+    // o voltar faz é ele (window.voltarDoAndroid): fecha janela, volta de tela,
+    // vai pra aba Viagens — e só responde 'sair' quando não há mais pra onde.
+    // Site antigo, sem a função: cai no histórico, como era.
     const sub = BackHandler.addEventListener('hardwareBackPress', () => {
-      if (podeVoltar && webRef.current) {
-        webRef.current.goBack();
-        return true;
-      }
-      return false;
+      if (!webRef.current) return false;
+      webRef.current.injectJavaScript(
+        'if(window.voltarDoAndroid){window.voltarDoAndroid()}else{window.ReactNativeWebView.postMessage(' +
+          JSON.stringify(JSON.stringify({ tipo: podeVoltar ? 'voltar-historico' : 'sair' })) + ')};true;'
+      );
+      return true;
     });
     return () => sub.remove();
   }, [podeVoltar]);
@@ -475,6 +480,14 @@ function Conteudo() {
             'window.voltouDoLoginGoogle && window.voltouDoLoginGoogle("");true;'
           );
         });
+      return;
+    }
+    if (dados && dados.tipo === 'sair') {
+      BackHandler.exitApp();
+      return;
+    }
+    if (dados && dados.tipo === 'voltar-historico') {
+      webRef.current?.goBack();
       return;
     }
     if (dados && dados.tipo === 'tela') {

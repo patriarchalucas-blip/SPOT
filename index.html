@@ -3453,6 +3453,26 @@ function avisarSeTemJanela(){
 // fechado): fica guardado e é aplicado assim que o login termina — antes, o
 // app ia pra Amigos, quebrava sem usuário e caía em Viagens.
 let ABA_PENDENTE='';
+// ═══ BOTÃO VOLTAR DO ANDROID ═══
+// O site não usa o histórico do navegador (as telas trocam por goTo), então
+// o voltar do Android fecharia o app no meio de qualquer tela. A casca chama
+// isto a cada toque no voltar, e a ordem é a de qualquer app: fecha a janela
+// aberta; senão faz o que a seta de voltar da tela faz; senão volta pra aba
+// Viagens; e só na aba Viagens, sem nada aberto, pede pra sair.
+window.voltarDoAndroid=function(){
+  try{
+    const crop=document.getElementById('cropperOverlay');
+    if(crop&&crop.classList.contains('show')){closeCropper();return}
+    const abertas=[...document.querySelectorAll('.overlay.show')];
+    if(abertas.length){closeOv(abertas[abertas.length-1].id);return}
+    const tela=document.querySelector('.screen.active');
+    const id=tela&&tela.id;
+    const seta=tela&&tela.querySelector('[data-ic="back"]');
+    if(seta&&!ABAS_DO_APP[id]){seta.click();return}
+    if(id&&id!=='dashboard'&&ABAS_DO_APP[id]&&S.user){window.irParaAba('dashboard');return}
+  }catch(e){}
+  if(window.ReactNativeWebView)window.ReactNativeWebView.postMessage(JSON.stringify({tipo:'sair'}));
+};
 window.irParaAba=function(id){
   if(!ABAS_DO_APP[id])return;
   if(!S.user){ABA_PENDENTE=id;return}
