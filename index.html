@@ -6803,7 +6803,23 @@ let searchReqId=0;
 // certo na lista era adivinhar. O campo é da mesma faixa de preço do nome e do
 // endereço; o que custa é cada foto exibida (Place Photo, cobrada por imagem),
 // por isso a miniatura sai pequena e só na lista.
-const CAMPOS_DA_LISTA='places.id,places.displayName,places.formattedAddress,places.photos';
+// places.types entrou em 28/09: é da mesma faixa de preço do nome, e é o que
+// deixa a lista de Comer sem hotel (ver lugarCabeNaCategoria).
+const CAMPOS_DA_LISTA='places.id,places.displayName,places.formattedAddress,places.photos,places.types';
+// Hotel não entra em Comer e beber, e restaurante não entra em Ficar — dava
+// pra salvar um hotel dentro de Comer (28/09). Pelo tipo que o Google dá.
+// Lugar sem tipo nenhum passa: melhor sobrar um do que sumir o certo.
+// Experiência não filtra: museu, loja, praia, show, tudo cabe.
+const TIPOS_DE_COMIDA=new Set(['restaurant','food','bar','cafe','bakery','meal_takeaway','meal_delivery','night_club','coffee_shop','ice_cream_shop','pub','wine_bar','food_court','dessert_shop','confectionery']);
+const TIPOS_DE_HOSPEDAGEM=new Set(['lodging','hotel','hostel','motel','resort_hotel','bed_and_breakfast','guest_house','inn','extended_stay_hotel','budget_japanese_inn','japanese_inn','private_guest_room','farmstay','cottage','campground']);
+function lugarCabeNaCategoria(types,cat){
+  const t=types||[];
+  if(!t.length)return true;
+  const hospedagem=t.some(x=>TIPOS_DE_HOSPEDAGEM.has(x));
+  if(cat==='food')return !hospedagem;
+  if(cat==='hotel')return hospedagem||!t.some(x=>TIPOS_DE_COMIDA.has(x));
+  return true;
+}
 const CAMPOS_DA_FICHA='places.id,places.displayName,places.formattedAddress,places.addressComponents,places.location,places.photos,places.rating,places.websiteUri,places.googleMapsUri,places.types,places.nationalPhoneNumber,places.regularOpeningHours,places.priceLevel';
 function searchPlaces(v){
   clearTimeout(searchTO);const r=document.getElementById('searchResults');
@@ -6823,9 +6839,11 @@ function searchPlaces(v){
       const data=await resp.json();
       if(myReqId!==searchReqId)return;
       if(!data.places||!data.places.length){r.innerHTML='<div class="search-loading">Nenhum resultado</div>';return}
+      const cabem=data.places.filter(p=>lugarCabeNaCategoria(p.types,S.addCat));
+      if(!cabem.length){r.innerHTML='<div class="search-loading">'+(S.addCat==='food'?'Isso é hospedagem: salve em Ficar.':S.addCat==='hotel'?'Isso é lugar de comer: salve em Comer e beber.':'Nenhum resultado')+'</div>';return}
       // A lista só precisa de nome e endereço. O resto chega quando a pessoa
       // escolher — ver pickSearchResult().
-      S.searchResults=data.places.map(p=>{
+      S.searchResults=cabem.map(p=>{
         const name=p.displayName?.text||'';
         const addr=p.formattedAddress||'';
         return{id:p.id||'',name,meta:addr,icon:catIcon(S.addCat),address:addr,
