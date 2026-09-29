@@ -5473,6 +5473,22 @@ function linhaDeEscolha(rotulo,aoTocar){
   return '<button class="coz-atual" onclick="'+aoTocar+'" aria-haspopup="dialog">'+esc(rotulo)+'<i>▾</i></button>';
 }
 function escolherCozinha(id){closeOv('ov-cozinhas');setExploreCozinha(id)}
+// ═══ EXPLORAR SEM FIM (28/09) ═══
+// O Google para em 60 resultados por consulta (3 páginas de 20), e a lista
+// acabava no meio da rolagem — "não deveria ter fim". Quando a consulta
+// principal esgota, a rolagem segue com a PRÓXIMA da fila, na mesma área:
+// em Comer sem cozinha escolhida, uma cozinha de cada vez (pizzarias,
+// japoneses, bares...); em Ficar e Experiências, os outros tipos daquilo.
+// Lugar repetido não entra duas vezes. Com uma cozinha escolhida não há fila:
+// a pessoa pediu só aquilo.
+const CONTINUACAO_DO_EXPLORAR={
+  hotel:['pousadas','hostels','apartamentos para temporada','resorts'],
+  experience:['museus','parques','mirantes','passeios e tours','centros culturais','feiras e mercados','praias']
+};
+function filaDoExplorar(){
+  if(EXPLORE.cat==='food')return EXPLORE.cozinha?[]:COZINHAS.slice(1).map(c=>c.frase);
+  return (CONTINUACAO_DO_EXPLORAR[EXPLORE.cat]||[]).slice();
+}
 function termoDoExplorar(cidade){
   const frase=EXPLORE.cat==='food'?cozinhaAtual().frase:{hotel:'hotéis',experience:'pontos turísticos'}[EXPLORE.cat];
   return frase+' em '+cidade;
@@ -6044,6 +6060,7 @@ async function runExplore(rotulo,lugarEscolhido){
   // passada embaixo do nome da nova e a pior forma de errar.
   EXPLORE.items=[];EXPLORE.token='';EXPLORE.fim=false;EXPLORE.carregandoMais=false;
   EXPLORE.termo=termoDoExplorar(city);
+  EXPLORE.ondeTermo=city;EXPLORE.fila=filaDoExplorar();
   EXPLORE_ESTADO='buscando';
   const meu=++EXPLORE_REQ;
   const body=document.getElementById('exploreBody');
@@ -6067,6 +6084,7 @@ async function runExplore(rotulo,lugarEscolhido){
   if(pontual){
     // "restaurantes em São Paulo" DENTRO do retângulo da Fradique Coutinho.
     EXPLORE.termo=termoDoExplorar(lugar.cidade||lugar.nome);
+    EXPLORE.ondeTermo=lugar.cidade||lugar.nome;
     if(!EXPLORE.rotulo){EXPLORE.rotulo='Perto de '+lugar.nome;pintarRotuloDoExplorar()}
   }
   // Amigos são comparados por cidade: buscando uma rua, vale a cidade dela.
@@ -6114,18 +6132,27 @@ async function paginaDoExplorar(token){
   // atrasada de "Japonesa" apagava o marcador de "Pizza" e a rolagem parava.
   return{lugares:places.map(lugarDoExplorar),token:(data&&data.nextPageToken)||''};
 }
-function guardarMarcadorDoExplorar(token){EXPLORE.token=token||'';EXPLORE.fim=!EXPLORE.token}
+function guardarMarcadorDoExplorar(token){EXPLORE.token=token||'';EXPLORE.fim=!EXPLORE.token&&!(EXPLORE.fila||[]).length}
 async function maisDoExplorar(){
-  if(EXPLORE.fim||EXPLORE.carregandoMais||!EXPLORE.token||EXPLORE_ESTADO!=='ok')return;
+  if(EXPLORE.fim||EXPLORE.carregandoMais||EXPLORE_ESTADO!=='ok')return;
+  if(!EXPLORE.token&&!(EXPLORE.fila||[]).length)return;
   const meu=EXPLORE_REQ;
   EXPLORE.carregandoMais=true;darDadosDeExplorar();
   try{
+    // Consulta esgotada: passa pra próxima da fila, da primeira página.
+    if(!EXPLORE.token)EXPLORE.termo=EXPLORE.fila.shift()+' em '+(EXPLORE.ondeTermo||EXPLORE.city);
     const{lugares:pagina,token}=await paginaDoExplorar(EXPLORE.token);
     if(meu!==EXPLORE_REQ)return;
     guardarMarcadorDoExplorar(token);
     // Página nova que repete lugar da anterior não entra duas vezes.
     const ja=new Set(EXPLORE.items.map(p=>normName(p.name)+'|'+normName(p.city)));
+    const antes=EXPLORE.items.length;
     EXPLORE.items=EXPLORE.items.concat(pagina.filter(p=>!ja.has(normName(p.name)+'|'+normName(p.city))));
+    // Página toda repetida (a fila vizinha devolve muito do mesmo): pede a
+    // seguinte na hora. Sem isto a lista não crescia, a tela não rolava e o
+    // pedido de "mais" não voltava — parecia o fim.
+    EXPLORE._vazias=EXPLORE.items.length===antes?(EXPLORE._vazias||0)+1:0;
+    if(EXPLORE._vazias&&EXPLORE._vazias<4&&!EXPLORE.fim){EXPLORE.carregandoMais=false;return maisDoExplorar()}
   }catch(e){if(meu===EXPLORE_REQ)EXPLORE.fim=true}
   if(meu!==EXPLORE_REQ)return;
   EXPLORE.carregandoMais=false;
@@ -6254,7 +6281,7 @@ function darDadosDeExplorar(){
     creditoGoogle:itens.length>0,
     rotulo:EXPLORE.rotulo||'',
     // Na aba Amigos a lista é outra: rolar lá não pode pedir página paga do Google.
-    temMais:EXPLORE.aba!=='amigos'&&!EXPLORE.fim&&!!EXPLORE.token,
+    temMais:EXPLORE.aba!=='amigos'&&!EXPLORE.fim&&(!!EXPLORE.token||!!(EXPLORE.fila||[]).length),
     carregandoMais:!!EXPLORE.carregandoMais
   }});
 }
@@ -6503,7 +6530,7 @@ function renderExploreResults(){
   // "Powered by Google" é obrigatório quando dados do Places aparecem fora
   // de um mapa do Google — é o caso desta lista inteira.
   // Rolagem contínua: quando o fim da lista aparece, vem a próxima página.
-  if(EXPLORE.items.length&&!EXPLORE.fim&&EXPLORE.token){
+  if(EXPLORE.items.length&&!EXPLORE.fim&&(EXPLORE.token||(EXPLORE.fila||[]).length)){
     body.innerHTML+='<div class="search-loading" id="exploreMais">'+(EXPLORE.carregandoMais?'Carregando mais...':'')+'</div>';
   }
   if(EXPLORE.items.length){
