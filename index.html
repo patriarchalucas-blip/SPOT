@@ -604,6 +604,8 @@ input,textarea,select{font-size:max(16px,1em)!important}
 .am-busca-spots{padding:24px 20px 0}
 .nota-cat{padding:12px 0 0}
 .nota-cat .coz-atual{font-size:17px}
+.nota-foto{display:block;margin:4px 0 0;min-height:44px;padding:0;background:none;border:none;font:inherit;font-size:15px;font-weight:600;color:var(--green);cursor:pointer}
+.note-place-icon img{width:100%;height:100%;object-fit:cover;border-radius:inherit;display:block}
 .am-continentes{margin:16px 0 0;padding:0 20px}
 /* ═══ Folha de escolha (Todos / Quero ir / Fui) ═══ */
 .esc-sheet{padding:12px 20px calc(34px + env(safe-area-inset-bottom,0px))}
@@ -2197,7 +2199,7 @@ svg.ic path,svg.ic circle,svg.ic line,svg.ic polyline,svg.ic rect{fill:none;stro
 
 <div class="overlay" id="ov-search" onclick="closeOut(event,'ov-search')"><div class="sheet sheet-fixa"><button class="sheet-close" onclick="closeOv('ov-search')" data-ic="close" aria-label="Fechar"></button><div class="sheet-handle"></div><div class="sheet-title">Buscar lugar</div><div class="step-dots"><div class="step-dot active"></div><div class="step-dot"></div></div><div class="search-wrap"><div class="search-field"><span class="si" data-ic="search"></span><input class="search-input" autocomplete="off" autocorrect="off" spellcheck="false" id="placeSearch" placeholder="Nome do lugar..." oninput="searchPlaces(this.value)"></div></div><div class="search-powered"><span>Resultados via</span><strong>Google Places</strong></div><div class="lista-rolante" id="searchResults"><div class="search-loading">Digite para buscar...</div></div></div></div>
 
-<div class="overlay" id="ov-note" onclick="closeOut(event,'ov-note')"><div class="sheet"><button class="sheet-close" onclick="closeOv('ov-note')" data-ic="close" aria-label="Fechar"></button><div class="sheet-handle"></div><div class="sheet-title">Adicionar spot</div><div class="note-place-row"><div class="note-place-icon" id="selIcon" data-ic="food"></div><div><div class="note-place-name" id="selName"></div><div class="note-place-meta" id="selMeta"></div></div></div><div class="coz-linha nota-cat" id="noteCat"></div>
+<div class="overlay" id="ov-note" onclick="closeOut(event,'ov-note')"><div class="sheet"><button class="sheet-close" onclick="closeOv('ov-note')" data-ic="close" aria-label="Fechar"></button><div class="sheet-handle"></div><div class="sheet-title">Adicionar spot</div><div class="note-place-row"><div class="note-place-icon" id="selIcon" data-ic="food"></div><div><div class="note-place-name" id="selName"></div><div class="note-place-meta" id="selMeta"></div></div></div><div class="coz-linha nota-cat" id="noteCat"></div><button class="nota-foto" id="noteFotoBtn" onclick="document.getElementById('noteFotoInput').click()">Adicionar sua foto</button><input type="file" id="noteFotoInput" accept="image/*" style="display:none" onchange="onNoteFotoChosen(this)">
 <div class="status-choice"><button class="status-opt active" id="stWant" onclick="setSpotStatus('want')"><div class="so-emoji" data-ic="bookmark"></div><div class="so-label">Quero ir</div></button><button class="status-opt" id="stBeen" onclick="setSpotStatus('been')"><div class="so-emoji" data-ic="check"></div><div class="so-label">Já fui</div></button></div>
 <div id="subcatRow" style="display:none"><div class="note-label">Que tipo de experiência?</div><div class="subcat-row" id="subcatChips"></div></div>
 <div id="ratingRow" style="display:none"><div class="note-label">Sua avaliação</div><div class="stars-row" id="addStars"><button class="star-btn" onclick="setAddRating(1,event)" aria-label="Dar nota 1"><span class="st-base" data-ic="star"></span><span class="st-fill" data-ic="star"></span></button><button class="star-btn" onclick="setAddRating(2,event)" aria-label="Dar nota 2"><span class="st-base" data-ic="star"></span><span class="st-fill" data-ic="star"></span></button><button class="star-btn" onclick="setAddRating(3,event)" aria-label="Dar nota 3"><span class="st-base" data-ic="star"></span><span class="st-fill" data-ic="star"></span></button><button class="star-btn" onclick="setAddRating(4,event)" aria-label="Dar nota 4"><span class="st-base" data-ic="star"></span><span class="st-fill" data-ic="star"></span></button><button class="star-btn" onclick="setAddRating(5,event)" aria-label="Dar nota 5"><span class="st-base" data-ic="star"></span><span class="st-fill" data-ic="star"></span></button></div></div>
@@ -7427,8 +7429,25 @@ function trocarCatDaNota(){
     id=>{S.addCat=id;pintarCatDaNota();
       const ic=document.getElementById('selIcon');if(ic)ic.innerHTML=catIcon(id)});
 }
+// ═══ SUA FOTO NO SPOT (28/09) ═══
+// "Quero colocar a foto do prato." Opcional, na mesma folha da nota — vale
+// pro + e pro check-in, que caem aqui. A foto só sobe quando a pessoa salva:
+// desistir no meio não deixa arquivo órfão no armazenamento.
+let NOTA_FOTO=null;
+function onNoteFotoChosen(input){
+  const file=input.files&&input.files[0];if(!file)return;
+  input.value='';
+  openCropper(file,'spot',cortada=>{
+    NOTA_FOTO=cortada;
+    const ic=document.getElementById('selIcon');
+    if(ic)ic.innerHTML='<img src="'+URL.createObjectURL(cortada)+'" alt="">';
+    document.getElementById('noteFotoBtn').textContent='Trocar sua foto';
+  });
+}
 function resetNoteSheet(){
   addStatus='want';addRating=0;
+  NOTA_FOTO=null;
+  {const b=document.getElementById('noteFotoBtn');if(b)b.textContent='Adicionar sua foto'}
   // A fileira tem que apagar junto: sem isto a nota do spot anterior fica
   // acesa na folha do proximo.
   pintarEstrelas('#addStars',0);
@@ -7511,7 +7530,16 @@ async function resolverCidadeDoSpot(p,trip){
   if(p.opening_hours)rec.opening_hours=p.opening_hours;
   // Credito do autor da foto (exigencia do Google). Vai como coluna
   // opcional: se a migracao 017 ainda nao rodou, o insert retenta sem ele.
-  if(p.photo_author&&p.photo_author.nome){
+  // Foto da própria pessoa passa na frente da do Google, e sem o crédito
+  // do Google (a foto não é de ninguém de lá). Se o envio falhar, o spot
+  // salva com a foto do Google — perder a foto é melhor que perder o spot.
+  let fotoPropria='';
+  if(NOTA_FOTO){
+    fotoPropria=await uploadToStorage(NOTA_FOTO,'spot')||'';
+    if(fotoPropria)rec.photo_url=fotoPropria;
+    else toast('Foto não enviada','O spot foi salvo com a foto do Google.','alert');
+  }
+  if(!fotoPropria&&p.photo_author&&p.photo_author.nome){
     rec.photo_author=p.photo_author.nome;
     if(p.photo_author.url)rec.photo_author_url=p.photo_author.url;
   }
