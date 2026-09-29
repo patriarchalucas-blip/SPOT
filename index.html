@@ -6061,6 +6061,7 @@ async function runExplore(rotulo,lugarEscolhido){
   EXPLORE.items=[];EXPLORE.token='';EXPLORE.fim=false;EXPLORE.carregandoMais=false;
   EXPLORE.termo=termoDoExplorar(city);
   EXPLORE.ondeTermo=city;EXPLORE.fila=filaDoExplorar();
+  EXPLORE._vazias=0;EXPLORE._fracas=0;EXPLORE._inicioDaConsulta=null;
   EXPLORE_ESTADO='buscando';
   const meu=++EXPLORE_REQ;
   const body=document.getElementById('exploreBody');
@@ -6140,7 +6141,20 @@ async function maisDoExplorar(){
   EXPLORE.carregandoMais=true;darDadosDeExplorar();
   try{
     // Consulta esgotada: passa pra próxima da fila, da primeira página.
-    if(!EXPLORE.token)EXPLORE.termo=EXPLORE.fila.shift()+' em '+(EXPLORE.ondeTermo||EXPLORE.city);
+    // Trava de custo: o marcador de "carregar mais" fica visível logo depois
+    // de cada desenho, então numa cidade pequena (lista curta, quase tudo
+    // repetido) a fila inteira corria sozinha — 16 cozinhas × 3 páginas
+    // pagas sem ninguém rolar. Duas consultas seguidas que rendem menos de 5
+    // lugares novos encerram: ali acabou de verdade.
+    if(!EXPLORE.token){
+      if(EXPLORE._inicioDaConsulta!=null){
+        const rendeu=EXPLORE.items.length-EXPLORE._inicioDaConsulta;
+        EXPLORE._fracas=rendeu<5?(EXPLORE._fracas||0)+1:0;
+        if(EXPLORE._fracas>=2){EXPLORE.fila=[];EXPLORE.fim=true;EXPLORE.carregandoMais=false;renderExploreResults();return}
+      }
+      EXPLORE._inicioDaConsulta=EXPLORE.items.length;
+      EXPLORE.termo=EXPLORE.fila.shift()+' em '+(EXPLORE.ondeTermo||EXPLORE.city);
+    }
     const{lugares:pagina,token}=await paginaDoExplorar(EXPLORE.token);
     if(meu!==EXPLORE_REQ)return;
     guardarMarcadorDoExplorar(token);
@@ -6460,7 +6474,9 @@ function conferirFotosDosAmigos(){
   const redesenhar=()=>{clearTimeout(REDESENHO_AMIGOS_AREA);REDESENHO_AMIGOS_AREA=setTimeout(()=>{
     if(EXPLORE.aba==='amigos'){try{renderExploreResults()}catch(e){}}},300)};
   const trocar=g=>fotoParaVer(g.capa).then(u=>{if(u&&u!==g.foto){g.foto=u;redesenhar()}});
-  lugaresDosAmigosNaCategoria().forEach(g=>{
+  // Só as primeiras 12: cada teste é uma foto paga, e ninguém vê o fim da
+  // lista sem rolar — as de baixo seguem pelo caminho de antes.
+  lugaresDosAmigosNaCategoria().slice(0,12).forEach(g=>{
     if(g._fotoConferida)return;
     g._fotoConferida=true;
     if(!g.foto){trocar(g);return}
@@ -7454,7 +7470,7 @@ function pintarCatDaNota(){
 function trocarCatDaNota(){
   abrirFolhaDeEscolha(['food','hotel','experience'].map(id=>({id,rotulo:ROTULO_CAT[id],n:''})),S.addCat,
     id=>{S.addCat=id;pintarCatDaNota();
-      const ic=document.getElementById('selIcon');if(ic)ic.innerHTML=catIcon(id)});
+      const ic=document.getElementById('selIcon');if(ic&&!NOTA_FOTO)ic.innerHTML=catIcon(id)});
 }
 // ═══ SUA FOTO NO SPOT (28/09) ═══
 // "Quero colocar a foto do prato." Opcional, na mesma folha da nota — vale
@@ -7533,10 +7549,16 @@ async function resolverCidadeDoSpot(p,trip){
   // vier: adicionado de dentro da viagem "Brasil", do Explorar, de um amigo.
   // Cada entrada decidia a viagem do seu jeito, e São Paulo ficava metade em
   // cada lugar (28/09).
-  let t=S.addTrip;
+  // E o contrário: da tela de casa (ou de um "adicionar outro" depois dela),
+  // o Rio não entra na linha escondida de São Paulo — vai pra viagem dele.
+  // S.addTrip não muda: o próximo "adicionar outro" decide de novo.
+  let t=S.addTrip,foiPraCasa=false;
   if(t&&!ehCasa(t)&&ehDaCasa(p.city,p.country||(t.destinations&&t.destinations[0])||'')){
     const casa=await viagemDeCasa(p.country||'');
-    if(casa){t=casa;S.addTrip=casa}
+    if(casa){t=casa;foiPraCasa=true}
+  }else if(t&&ehCasa(t)&&p.city&&!ehDaCasa(p.city,p.country||'')){
+    const outra=await garantirViagem(p.city,p.country||'');
+    if(outra&&!ehCasa(outra))t=outra;
   }
   // Canoniza antes de gravar: o banco passa a guardar um nome só por cidade,
   // e todo o resto do app (cards, contagem, foto) enxerga esse nome.
@@ -7562,7 +7584,7 @@ async function resolverCidadeDoSpot(p,trip){
   // salva com a foto do Google — perder a foto é melhor que perder o spot.
   let fotoPropria='';
   if(NOTA_FOTO){
-    fotoPropria=await uploadToStorage(NOTA_FOTO,'spot')||'';
+    try{fotoPropria=await uploadToStorage(NOTA_FOTO,'spot')||''}catch(e){fotoPropria=''}
     if(fotoPropria)rec.photo_url=fotoPropria;
     else toast('Foto não enviada','O spot foi salvo com a foto do Google.','alert');
   }
@@ -7592,7 +7614,7 @@ async function resolverCidadeDoSpot(p,trip){
     // Antes de loadDashboard, que é quem dispara o backfill: assim a busca de
     // Instagram deste spot é a primeira, não a última.
     spotPrioritario=data.id;
-    toast('Spot salvo',note?`"${p.name} · ${note}"`:p.name,'check');
+    toast(foiPraCasa?'Salvo em Onde você mora':(t!==S.addTrip?'Salvo em '+t.name:'Spot salvo'),note?`"${p.name} · ${note}"`:p.name,'check');
     if(S.curTrip?.id===t.id){
       S.curTrip._spots=t._spots;
       // O card de cidade na tela da viagem SEMPRE e redesenhado, mesmo com a
@@ -7603,6 +7625,14 @@ async function resolverCidadeDoSpot(p,trip){
       if(document.getElementById('city').classList.contains('active')){updateCityHeader();renderCityBody()}
     }
     await loadDashboard();
+    // loadDashboard troca S.trips por objetos novos; a tela aberta seguia
+    // desenhando o objeto velho, sem o spot novo e com os que mudaram de viagem.
+    if(S.curTrip){
+      const novo=S.trips.find(x=>x.id===S.curTrip.id);
+      if(novo&&novo!==S.curTrip){S.curTrip=novo;
+        try{renderTripBody()}catch(e){}
+        if(document.getElementById('city').classList.contains('active')){try{updateCityHeader();renderCityBody()}catch(e){}}}
+    }
     if(addAnother){
       // Mesma viagem, mesma categoria — só reabre a busca. É exatamente o
       // caso de colar uma lista de restaurantes e ir adicionando um a um
