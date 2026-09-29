@@ -19,7 +19,11 @@ const puppeteer = require('puppeteer-core');
 
 const CHROME = 'C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe';
 const BASE = 'http://127.0.0.1:8795/';
-const SAIDA = path.join(__dirname, 'capturas');
+// LOJA=android: 360x640 pontos a 3x = 1080x1920, o 9:16 que a Google Play
+// aceita (ela recusa imagem com o lado maior passando de 2x o menor, e as do
+// iPhone têm 2,17x). Sai em JPEG: a Play pede imagem sem canal alfa.
+const ANDROID = process.env.LOJA === 'android';
+const SAIDA = path.join(__dirname, ANDROID ? 'capturas-android' : 'capturas');
 
 const esperar = ms => new Promise(r => setTimeout(r, ms));
 
@@ -32,7 +36,7 @@ const esperar = ms => new Promise(r => setTimeout(r, ms));
     args: ['--hide-scrollbars', '--force-color-profile=srgb', '--font-render-hinting=none']
   });
   const pagina = await navegador.newPage();
-  await pagina.setViewport({ width: 440, height: 956, deviceScaleFactor: 3, isMobile: true });
+  await pagina.setViewport(ANDROID ? { width: 360, height: 640, deviceScaleFactor: 3, isMobile: true } : { width: 440, height: 956, deviceScaleFactor: 3, isMobile: true });
   await pagina.emulateMediaFeatures([{ name: 'prefers-color-scheme', value: 'light' }]);
 
   const erros = [];
@@ -52,10 +56,10 @@ const esperar = ms => new Promise(r => setTimeout(r, ms));
     await esperar(ms || 1500);
     await pagina.evaluate(() => window.scrollTo(0, 0));
     await esperar(500);
-    const arq = path.join(SAIDA, nome);
-    await pagina.screenshot({ path: arq, type: 'png' });
+    const arq = path.join(SAIDA, ANDROID ? nome.replace(/\.png$/, '.jpg') : nome);
+    await pagina.screenshot(ANDROID ? { path: arq, type: 'jpeg', quality: 92 } : { path: arq, type: 'png' });
     const b = fs.readFileSync(arq);
-    console.log(nome, b.readUInt32BE(16) + 'x' + b.readUInt32BE(20), Math.round(b.length / 1024) + 'KB');
+    console.log(path.basename(arq), ANDROID ? '1080x1920' : b.readUInt32BE(16) + 'x' + b.readUInt32BE(20), Math.round(b.length / 1024) + 'KB');
   };
 
   // 1 — Início

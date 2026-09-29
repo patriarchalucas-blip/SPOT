@@ -32,13 +32,17 @@ pra copiar e colar. Os limites de caracteres foram conferidos por script.
 - Perfil `preview` do `eas.json` gera **APK** — instala direto no celular por
   link, sem loja, pra testar antes da conta existir.
 
-## O que falta do meu lado
+## Imagens da loja — prontas
 
-- **Capturas de tela novas.** As do iPhone (1290×2796) não servem: a Play
-  recusa imagem com o lado maior passando de 2× o menor. Precisa de 1080×1920
-  (9:16) — sai da mesma receita de `ferramentas/capturas-loja/`.
-- **Imagem de destaque** 1024×500 (obrigatória na Play, não existe na Apple).
-- **Ícone da loja** 512×512: já existe, é o `icon-512.png` da raiz.
+Em `ferramentas/capturas-loja/capturas-android/`:
+
+- **5 capturas de tela** 1080×1920 (JPEG, sem canal alfa): `01-inicio` a
+  `05-perfil`. Saem de `LOJA=android node ferramentas/capturas-loja/capturar.cjs`
+  (com o `srv.js` rodando), a mesma conta de demonstração das da Apple. As do
+  iPhone não servem: a Play recusa imagem com o lado maior passando de 2× o menor.
+- **Imagem de destaque** 1024×500: `destaque-1024x500.jpg`
+  (`node ferramentas/capturas-loja/destaque-play.cjs`). Wordmark + tagline no verde.
+- **Ícone da loja** 512×512: o `icon-512.png` da raiz.
 
 ---
 
