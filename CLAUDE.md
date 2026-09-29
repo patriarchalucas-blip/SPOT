@@ -171,14 +171,23 @@ nesta máquina** (Windows, sem simulador de iPhone): a verificação é `npx esl
 mais `npx expo export --platform ios`, que pega import quebrado — o erro que vira
 tela branca no celular. Ver na tela depende do TestFlight no iPhone do Lucas.
 
-## Estado da App Store (27/09/2026)
+## Estado da App Store (29/09/2026)
 
-**Em revisão: versão 1.0, build 11** (WAITING_FOR_REVIEW, só Brasil, grátis). A 1ª
-submissão (build 8) voltou em 26/09 com "2.1 Information Needed" — não é defeito,
-é conta nova: pediram vídeo gravado no iPhone + 5 respostas. O Lucas gravou e
-respondeu; o texto está em `mobile/app-store/resposta-revisao-2.1.md` (e nas Notas
-da revisão). **Build 12** (abas Para você/Amigos no Explorar) está no TestFlight e
-NÃO está na revisão — vai na 1ª atualização.
+**Em revisão: versão 1.0, build 11** (WAITING_FOR_REVIEW desde 28/09 17:21 UTC,
+só Brasil, grátis, `releaseType AFTER_APPROVAL` — aprovou, publica sozinho).
+Duas rejeições "2.1" já respondidas: 26/09 pediram vídeo + 5 respostas
+(`mobile/app-store/resposta-revisao-2.1.md`); 28/09 a conta demo estava sem
+conteúdo de amigo (resolvido com `demo2@meuspot.app` como amiga, SQL em
+`ferramentas/conta-demo/`). **Build 16** (tudo de 27–29/09) está no TestFlight e
+vai na 1.0.1, com o texto de `mobile/app-store/novidades-1.0.1.md`.
+
+**Não usar EAS Update enquanto a 1.0 estiver em revisão:** a atualização pelo ar
+alcança o runtime da build que o revisor está testando.
+
+**Android (29/09):** preparado, não publicado — o Lucas pausou. APK de teste pelo
+perfil `preview`; textos, capturas 1080×1920 e destaque 1024×500 em
+`mobile/play-store/` e `ferramentas/capturas-loja/capturas-android/`. Falta dele:
+conta Google Play (US$ 25), 12 testadores por 14 dias, Firebase pras notificações.
 
 **Mexer na submissão pela API** (`_local/app-store-connect/asc.cjs`): trocar a build
 é `PATCH appStoreVersions/{id}/relationships/build`. Reenviar depois de rejeição dá
@@ -224,7 +233,21 @@ ver `mobile/app-store/login-apple.md`. Pede um build novo que substitui a build 
 - **Foto de spot de amigo** sem foto ou com foto QUEBRADA (o `photos[].name` do
   Places expira): `fotoParaVer` busca a foto atual do lugar e só exibe.
 - **Cidade onde mora** (`dates='__casa__'`): o card abre a mesma tela das viagens;
-  lá "Excluir viagem" some.
+  lá "Excluir viagem" some. Desde 29/09 todo spot da cidade de casa vai pra ela:
+  `saveSpot` redireciona na hora de salvar e `juntarSpotsDeCasa` move os antigos
+  (só `trip_id`, nunca apaga viagem). O inverso também: lugar de fora salvo da
+  tela de casa vai pra viagem dele.
+- **Adicionar spot sem "Qual categoria?" (29/09):** `categoriaDoLugar` decide pelo
+  tipo do Google (`primaryType` primeiro); a categoria aparece na folha da nota
+  e troca num toque. A folha de categoria só sobrou pro "Mudar categoria" de spot
+  salvo. **Foto própria** opcional na mesma folha (`NOTA_FOTO`, sobe só ao salvar).
+- **Explorar sem fim (29/09):** esgotadas as 3 páginas da consulta, segue a fila
+  de cozinhas/tipos vizinhos (`filaDoExplorar`); duas consultas seguidas com
+  menos de 5 lugares novos encerram — trava contra rajada de busca paga.
+- **Perfil do amigo:** busca (spot, cidade, país) e abas de continente.
+- **Cidade sem localidade no Google** (praia, parque): `cidadeDoEndereco` tira do
+  endereço escrito — a Barceloneta virava "Catalunha".
+- **Voltar do Android:** `window.voltarDoAndroid` (o site não usa histórico).
 
 ## Custo e cotas (27/09/2026) — o Lucas disse: "isso não pode falhar"
 

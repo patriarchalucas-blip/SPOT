@@ -1,16 +1,18 @@
 # Novidades da versão 1.0.1 (campo "Novidades desta versão" na App Store)
 
-Pra colar quando a 1.0 for aprovada e a 1.0.1 for criada. Limite da Apple:
-4.000 caracteres; o ideal é caber na prévia (as 3 primeiras linhas).
+Pra colar quando a 1.0 for aprovada e a 1.0.1 for criada, com a build 16 ou
+mais nova. Limite da Apple: 4.000 caracteres; o ideal é caber na prévia (as 3
+primeiras linhas). Revisto em 29/09 com o que entrou em 28–29/09.
 
 ```
-Explorar agora busca por rua, bairro, cidade ou país — e sugere o lugar certo enquanto você digita.
+Salvar ficou mais rápido: busque o lugar e o Spot descobre sozinho se é pra comer, ficar ou passear. E agora dá pra pôr a sua foto — a do prato, a da vista.
 
-• Aba Amigos no Explorar: os spots que seus amigos salvaram na área que você buscou, primeiro os que mais amigos visitaram.
-• Filtro por tipo de comida, com fotos: japonesa, italiana, pizza, bar e mais.
-• Perfil do amigo novo: os lugares da sua lista Quero ir onde ele já foi, e os spots dele por cidade.
-• Tela da cidade mais limpa, com filtro Quero ir / Fui.
+• Explorar busca por rua, bairro, cidade ou país, sugere o lugar certo enquanto você digita e não acaba no meio da rolagem.
+• Aba Amigos no Explorar: os spots que seus amigos salvaram na área buscada, primeiro os que mais amigos visitaram.
+• Filtro por tipo de comida, com fotos.
+• Perfil do amigo novo: busca, separação por continente e os lugares da sua lista Quero ir onde ele já foi.
+• "Onde você mora" junta todos os spots da sua cidade.
 • Tocar numa notificação abre direto a aba Amigos.
-• Ícone novo.
+• Ícone novo, barra de abas mais baixa e teclado sem a barra do navegador.
 • Correções e melhorias de desempenho.
 ```
