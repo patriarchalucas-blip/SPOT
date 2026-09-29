@@ -237,16 +237,16 @@ const FONTES = {
 // quando o app tem "Associated Domains" (applinks:meuspot.app) e o site serve
 // .well-known/apple-app-site-association — os dois já existem; falta ligar a
 // capacidade no cadastro do app. Antes disso, o link abre no Safari, como hoje.
+// Por expressão, sem `new URL`: o URL do React Native é incompleto
+// (`searchParams.get` lança "not implemented" em várias versões), e o erro
+// caía no catch — o link de convite abriria o app sem abrir o convite.
 export function conviteDoLink(url) {
-  try {
-    const u = new URL(url);
-    if (u.host !== new URL(SITE).host) return '';
-    const m = u.pathname.match(/^\/c\/([A-Za-z0-9_-]{4,64})\/?$/);
-    const c = m ? m[1] : (u.searchParams.get('c') || '');
-    return /^[A-Za-z0-9_-]{4,64}$/.test(c) ? new URL('/?c=' + encodeURIComponent(c), SITE).toString() : '';
-  } catch (e) {
-    return '';
-  }
+  const m = String(url || '').match(/^https:\/\/(?:www\.)?meuspot\.app(?=[/?#]|$)(\/[^?#]*)?(?:\?([^#]*))?/i);
+  if (!m) return '';
+  const caminho = (m[1] || '/').match(/^\/c\/([A-Za-z0-9_-]{4,64})\/?$/);
+  const doParametro = ((m[2] || '').match(/(?:^|&)c=([A-Za-z0-9_-]{4,64})(?:&|$)/) || [])[1];
+  const c = caminho ? caminho[1] : doParametro || '';
+  return c ? SITE + '/?c=' + c : '';
 }
 
 export default function App() {

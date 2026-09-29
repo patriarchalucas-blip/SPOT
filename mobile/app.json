@@ -30,7 +30,10 @@
         "NSPhotoLibraryUsageDescription": "O Spot acessa suas fotos para você escolher a imagem de um lugar ou do seu perfil.",
         "NSPhotoLibraryAddUsageDescription": "O Spot salva na sua galeria as imagens que você baixar do app.",
         "ITSAppUsesNonExemptEncryption": false
-      }
+      },
+      "associatedDomains": [
+        "applinks:meuspot.app"
+      ]
     },
     "android": {
       "package": "app.meuspot.spot",
