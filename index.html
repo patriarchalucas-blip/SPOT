@@ -6858,6 +6858,7 @@ function exmFraseDoGrupo(g){
   if(!com)return null;
   return{texto:com.my_review||com.my_note,quem:String(friendName(g.perfis[com.user_id])||'').split(' ')[0]};
 }
+function exmMontarTodos(){const m=EXM.modo;EXM.modo='lista';try{return exmMontarItens()}finally{EXM.modo=m}}
 function exmMontarItens(){
   const itens=[];
   const grupos=lugaresDosAmigosNaCategoria();
@@ -6890,6 +6891,12 @@ function exmMontarItens(){
   if(EXM.filtros.amigos)lista=lista.filter(it=>it.tipo==='amigo');
   if(EXM.filtros.aberto)lista=lista.filter(it=>it.aberto===true);
   if(EXM.filtros.quero)lista=lista.filter(it=>it.tipo==='meu'||statusNaMinhaLista({name:it.nome,city:it.cidade})==='Quero ir');
+  // No mapa, a lista é o que está NA TELA (o "Dentro de X km" do TotalPass):
+  // arrastou, a lista acompanha. Na Lista (folha em cima), vale a busca inteira.
+  if(EXM.mapa&&EXM.modo==='mapa'){
+    const bb=EXM.mapa.getBounds();
+    if(bb)lista=lista.filter(it=>it.lat!=null&&bb.contains({lat:it.lat,lng:it.lng}));
+  }
   const o=exmOrigem();
   lista.forEach(it=>{it.dist=exmDistKm(o,it)});
   lista.sort((a,b)=>b.foram-a.foram||b.querem-a.querem||(b.nota||b.notaGoogle||0)-(a.nota||a.notaGoogle||0)
@@ -7011,6 +7018,11 @@ function exmDesenhar(){
   if(!EXM_LIGADO||!EXM.montado)return;
   exmPintarFiltros();
   EXM.itens=exmMontarItens();
+  if(EXM.sel>=0&&EXM.selChave){
+    let j=EXM.itens.findIndex(x=>x.nome+"|"+x.lat===EXM.selChave);
+    if(j<0&&EXM.selIt){EXM.itens.push(EXM.selIt);j=EXM.itens.length-1}
+    EXM.sel=j;
+  }
   exmTitulo();
   const corpo=document.getElementById('exmCorpo');
   if(EXM.sel>=0&&EXM.itens[EXM.sel]){corpo.innerHTML=exmCartao(EXM.itens[EXM.sel],EXM.sel);hydrateIcons(corpo)}
@@ -7058,7 +7070,16 @@ function exmCartao(it,i){
     +(status?'<button class="exm-btn exm-btn2" disabled>'+esc(status)+'</button>':'<button class="exm-btn exm-btn2" onclick="exmQueroIr('+i+')">Quero ir</button>')
     +'</div></div>';
 }
+// Pino tocado: acha o item na lista da tela (pode ter mudado de posição).
+function exmSelecionarItem(it){
+  let i=EXM.itens.findIndex(x=>x.nome===it.nome&&x.lat===it.lat);
+  if(i<0){EXM.itens.push(it);i=EXM.itens.length-1}
+  exmSelecionar(i);
+}
 function exmSelecionar(i){
+  // O escolhido é guardado pelo LUGAR, não pela posição na lista: a lista do
+  // mapa muda a cada arrasto (é o que está na tela), e o índice apontaria pra outro.
+  EXM.selIt=EXM.itens[i];EXM.selChave=EXM.selIt?EXM.selIt.nome+"|"+EXM.selIt.lat:null;
   EXM.sel=i;exmDesenhar();requestAnimationFrame(()=>exmIrPara('cartao'));
   const it=EXM.itens[i];
   if(EXM.mapa&&it&&it.lat!=null)EXM.mapa.panTo({lat:it.lat,lng:it.lng});
@@ -7091,7 +7112,16 @@ function exmTalvezBuscarNaArea(){
     const ne=b.getNorthEast(),sw=b.getSouthWest();
     const r=EXPLORE.area&&EXPLORE.area.rectangle;
     const dentro=r&&sw.lat()>=r.low.latitude-1e-4&&sw.lng()>=r.low.longitude-1e-4&&ne.lat()<=r.high.latitude+1e-4&&ne.lng()<=r.high.longitude+1e-4;
-    if(dentro)return;                       // ainda dentro do que já foi buscado
+    // Dentro da área já buscada só não busca se a tela tem spot que chega. O
+    // caso que o Lucas pegou (30/09): buscou "São Paulo" inteira (os 62 mais
+    // bem avaliados da cidade, o mais perto a 14 km), deu zoom no Tatuapé e a
+    // tela ficou vazia — a vista estava "dentro" da área, então não buscava.
+    if(dentro){
+      const areaTela=(ne.lat()-sw.lat())*(ne.lng()-sw.lng());
+      const areaBusca=(r.high.latitude-r.low.latitude)*(r.high.longitude-r.low.longitude);
+      const naTela=EXM.itens.filter(it=>it.lat!=null&&b.contains({lat:it.lat,lng:it.lng})).length;
+      if(areaTela>areaBusca*0.3||naTela>=8)return;
+    }
     if(EXM_BUSCAS_NO_MAPA>=25)return;
     // Zoom de país inteiro não busca sozinho: o Google devolveria 20 lugares
     // espalhados pelo território. Aí vale a busca digitada.
@@ -7116,7 +7146,7 @@ async function exmPrepararMapa(){
       styles:ESTILO_DO_MAPA,disableDefaultUI:true,gestureHandling:'greedy',clickableIcons:false,
       center:{lat:-23.55,lng:-46.63},zoom:12,backgroundColor:'#E4E8E4'});
     EXM.mapa.addListener('click',()=>{if(EXM.sel>=0){EXM.sel=-1;exmDesenhar();exmIrPara('baixa')}});
-    EXM.mapa.addListener('idle',()=>{exmTitulo();exmTalvezBuscarNaArea()});
+    EXM.mapa.addListener('idle',()=>{exmAgendar();exmTalvezBuscarNaArea()});
     // Só o gesto da pessoa conta: o enquadramento que o próprio app faz
     // (fitBounds, panTo do pino) não pode disparar busca nova.
     EXM.mapa.addListener('dragstart',()=>{EXM.pessoaMexeu=true});
@@ -7137,19 +7167,27 @@ function exmIcone(it,escolhido){
 }
 function exmPinos(){
   const m=EXM.mapa;if(!m)return;
+  // Os pinos saem da busca inteira (não só da tela), pra arrastar mostrar o
+  // que está ao lado. Refaz só quando o conjunto ou o escolhido mudou: cada
+  // "idle" redesenha a lista, e refazer 40 pinos a cada arrasto piscava.
+  const todos=EXM.modo==='mapa'?exmMontarTodos():EXM.itens;
+  const chavePinos=todos.map(it=>it.nome+':'+it.lat+':'+it.foram+':'+it.querem).join('|')+'#'+EXM.sel;
+  if(chavePinos===EXM.chavePinos){exmEuNoMapa();return}
+  EXM.chavePinos=chavePinos;
   EXM.pinos.forEach(p=>p.setMap(null));EXM.pinos=[];
   if(EXM.rotulo){EXM.rotulo.setMap(null);EXM.rotulo=null}
   // No máximo ~40: os de amigo sempre entram, o Google completa.
   let google_=0;
-  EXM.itens.forEach((it,i)=>{
+  const selIt=EXM.itens[EXM.sel];
+  todos.forEach(it=>{
     if(it.lat==null||it.lng==null)return;
     const amigo=it.foram||it.querem;
-    if(!amigo){if(google_>=Math.max(0,40-EXM.itens.filter(x=>x.foram||x.querem).length))return;google_++}
-    const escolhido=i===EXM.sel;
+    if(!amigo){if(google_>=Math.max(0,40-todos.filter(x=>x.foram||x.querem).length))return;google_++}
+    const escolhido=!!selIt&&selIt.nome===it.nome&&selIt.lat===it.lat;
     const ic=exmIcone(it,escolhido);
     const pin=new google.maps.Marker({map:m,position:{lat:it.lat,lng:it.lng},icon:ic.icon,label:ic.label||undefined,
       zIndex:escolhido?1000:amigo?100+it.foram*10+it.querem:1,title:it.nome});
-    pin.addListener('click',()=>exmSelecionar(i));
+    pin.addListener('click',()=>exmSelecionarItem(it));
     EXM.pinos.push(pin);
     if(escolhido)exmRotuloNoMapa(it);
   });
