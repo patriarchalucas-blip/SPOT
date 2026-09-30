@@ -21,6 +21,13 @@ pra "Já compilado".
   cobre a aba com a `TelaExplorar` nativa. O site liga o mapa sozinho nessa
   casca; as builds antigas (inclusive a 11, em revisão) seguem com o nativo.
   Testado simulando as duas cascas no navegador.
+- **"Salvar no meu Spot" da lista pública abre o app** (30/09): hoje o link
+  `meuspot.app/?salvar=<código>.<id>` abre no Safari, e funciona por lá. Pra
+  abrir no app: `conviteDoLink` (App.js) passa a aceitar `salvar=` e repassa
+  `SITE + '/?salvar=' + valor` pro WebView. **Só DEPOIS dessa build** entra
+  `{ "/": "/", "?": { "salvar": "?*" } }` no
+  `.well-known/apple-app-site-association` — antes disso o iPhone abriria o
+  app sem saber o que fazer com o link, e o spot não seria salvo.
 
 ## Já compilado
 
