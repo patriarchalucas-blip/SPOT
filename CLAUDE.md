@@ -246,6 +246,7 @@ ver `mobile/app-store/login-apple.md`. Pede um build novo que substitui a build 
   menos de 5 lugares novos encerram — trava contra rajada de busca paga.
 - **Perfil do amigo (29/09, desenho 2b/3a/3b):** lista de Cidades com 3 fotos, busca por cidade/país (>6 cidades) que sobe pro topo; mostra Fui E Quero ir.
 - **Explorar com mapa (30/09) — ATRÁS DE CHAVE:** só liga com `?mapa=1` (guarda no aparelho; `?mapa=0` desliga) e nunca dentro da casca do iPhone. Código em `EXM`/`exm*` no index.html; handoff em `ferramentas/design/`. Uma lista só (amigos primeiro, Google completa), filtros Amigos/Quero ir/Aberto agora/Comer ▾, folha de 3 paradas, card do pino. Falta: o Lucas validar, e a versão nativa (react-native-maps) no iPhone, que pede build.
+- **Lista pública `/l/<código>` (30/09):** compartilhar cidade OU país inteiro (janela `ov-compartilhar`). Tocar num spot abre folha com "Salvar no meu Spot" (`/?salvar=<código>.<id>` → `SALVAR_GUARDADO` no localStorage → depois do login `salvarSpotPendente` pede o spot a `/api/lista` op `spot` e salva em Quero ir) e "Ver no mapa". O `?salvar=` NÃO abre o app de iPhone (o AASA só tem convite): vai pelo site. Confirmação de cadastro por email aberta em outro navegador perde o pedido.
 - **Cidade sem localidade no Google** (praia, parque): `cidadeDoEndereco` tira do
   endereço escrito — a Barceloneta virava "Catalunha".
 - **Voltar do Android:** `window.voltarDoAndroid` (o site não usa histórico).

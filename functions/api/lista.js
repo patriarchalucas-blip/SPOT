@@ -36,6 +36,7 @@ export async function onRequestPost(context) {
   const { request, env } = context;
   let body;
   try { body = await request.json() } catch (e) { return json({ error: 'bad_request' }, 400) }
+  if (body.op === 'spot') return umSpotDaLista(body, env);
   const cidades = limparCidades(body.cidades);
   const titulo = String(body.titulo || cidades[0] || '').replace(/[\u0000-\u001f]/g, ' ').trim().slice(0, 80);
   const pais = String(body.pais || '').replace(/[\u0000-\u001f]/g, ' ').trim().slice(0, 60);
@@ -72,6 +73,31 @@ export async function onRequestPost(context) {
   await gravarKV(env, 'lista_' + codigo, JSON.stringify({ uid: quem.uid, cidades, titulo, pais, nome, t: Date.now() }), dois_anos);
   await gravarKV(env, indice, codigo, dois_anos);
   return json({ codigo });
+}
+
+// "Salvar no meu Spot" (30/09): quem abriu a lista pública toca num spot, cria
+// a conta e o spot já entra na lista dela. O app pede aqui os dados daquele
+// spot — só se ele ESTÁ na lista (mesma pessoa, cidade da lista, Fui ou Quero
+// ir) e o link não foi desativado. Sem login: a lista já é pública, e isto
+// devolve menos do que a página mostra (nada de nota nem frase de quem fez).
+const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+async function umSpotDaLista(body, env) {
+  const codigo = String(body.codigo || ''), id = String(body.id || '');
+  if (!/^[A-Za-z0-9]{8,24}$/.test(codigo) || !UUID.test(id)) return json({ error: 'bad_request' }, 400);
+  if (!env.SPOT_KV || !env.SUPABASE_SERVICE_KEY) return json({ configured: false });
+  let dado = null;
+  try { dado = JSON.parse((await lerKV(env, 'lista_' + codigo)) || 'null') } catch (e) {}
+  if (!dado || dado.revogado || !dado.uid || !Array.isArray(dado.cidades)) return json({ sumiu: true });
+  const r = await fetch('https://kzidnilsyrvauzgelsqd.supabase.co/rest/v1/spots?select=name,category,subcategory,city,address,photo_url,photo_author,photo_author_url,maps_url,website_url,phone,lat,lng,rating_google,price_level,status'
+    + '&id=eq.' + id + '&user_id=eq.' + dado.uid + '&status=in.(been,want)',
+    { headers: { apikey: env.SUPABASE_SERVICE_KEY, Authorization: 'Bearer ' + env.SUPABASE_SERVICE_KEY } });
+  if (!r.ok) return json({ error: 'banco' }, 502);
+  const s = (await r.json())[0];
+  if (!s || !dado.cidades.includes(String(s.city || '').trim())) return json({ sumiu: true });
+  delete s.status;
+  // O país: o que a lista diz (lista de cidade guarda o país; lista de país
+  // tem o país no título). Quem confere se é país de verdade é o app.
+  return json({ spot: s, pais: dado.pais || dado.titulo || '' });
 }
 
 function json(obj, status) {

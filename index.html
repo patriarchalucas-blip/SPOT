@@ -2933,6 +2933,7 @@ async function dbRpc(fn,params){
 // ═══ INIT ═══
 async function init(){
   capturarConviteDaURL();
+  capturarSalvarDaURL();
   // Quem chegou por link vê a PÁGINA do convite no lugar da tela de entrada.
   // Ela é montada em paralelo e só entra se conseguir: sem rede, sem a 022 ou
   // com código inválido, o app cai no login normal e a faixa antiga aparece.
@@ -2973,6 +2974,7 @@ async function init(){
         // depois do dashboard: se a pessoa chegou por um link de convite, a
         // amizade é criada agora que existe sessão
         try{await resgatarConvitePendente()}catch(e){console.error('convite:',e)}
+        try{await salvarSpotPendente()}catch(e){console.error('salvar da lista:',e)}
         // Por último: as duas perguntas de primeiro acesso. Depois do convite
         // de propósito — quem chegou por link já entra com um amigo, e a
         // sequência não deve atropelar isso.
@@ -13724,6 +13726,65 @@ function capturarConviteDaURL(){
     history.replaceState(null,'',location.pathname);
   }catch(e){}
 }
+// ── "Salvar no meu Spot", vindo da lista pública (/l/<código>) ──
+// Mesma ideia do convite: o pedido vai pro localStorage porque o login com
+// Google/Apple sai do site e volta sem a query string. Depois do login,
+// salvarSpotPendente pede o spot ao servidor (/api/lista, op 'spot', que
+// confere se ele está mesmo naquela lista) e salva em Quero ir.
+const SALVAR_GUARDADO='spot_salvar_pendente';
+function capturarSalvarDaURL(){
+  try{
+    const v=new URLSearchParams(location.search).get('salvar')||'';
+    if(!/^[A-Za-z0-9]{8,24}\.[0-9a-f-]{36}$/i.test(v))return;
+    localStorage.setItem(SALVAR_GUARDADO,v);
+    history.replaceState(null,'',location.pathname);
+  }catch(e){}
+}
+async function spotDaListaPublica(v){
+  const[codigo,id]=v.split('.');
+  try{
+    const r=await comPrazo(fetch('/api/lista',{method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({op:'spot',codigo,id})}),8000,null);
+    if(!r)return null;
+    return await r.json();
+  }catch(e){return null}
+}
+// Na tela de entrada: a faixa do convite diz o que vai acontecer.
+async function mostrarSpotPraSalvar(){
+  let v=null;try{v=localStorage.getItem(SALVAR_GUARDADO)}catch(e){}
+  if(!v||S.user)return;
+  const r=await spotDaListaPublica(v);
+  if(!r||!r.spot||S.user)return;
+  document.getElementById('conviteQuem').innerHTML='Crie sua conta pra salvar <b>'+esc(r.spot.name)+'</b>';
+  const ic=document.querySelector('#conviteFaixa .ei');if(ic)ic.innerHTML=icon('bookmark');
+  document.getElementById('conviteFaixa').style.display='flex';
+}
+async function salvarSpotPendente(){
+  let v=null;try{v=localStorage.getItem(SALVAR_GUARDADO)}catch(e){}
+  if(!v)return;
+  const esquece=()=>{try{localStorage.removeItem(SALVAR_GUARDADO)}catch(e){}};
+  const r=await spotDaListaPublica(v);
+  // Sem resposta (rede): guarda e tenta no próximo login. Lista desativada ou
+  // spot fora dela: a resposta é clara, esquece.
+  if(!r)return;
+  if(!r.spot){esquece();if(r.sumiu)toast('Esse spot não está mais na lista','Quem compartilhou pode ter tirado.','alert');return}
+  const s=r.spot;
+  if(statusNaMinhaLista({name:s.name,city:s.city})){esquece();toast('Já está na sua lista',s.name,'check');return}
+  const daLista=normalizeCountry(r.pais||'');
+  const pais=paisDoEndereco(s.address)||(COUNTRIES.some(c=>c.name===daLista)?daLista:'')||await comPrazo(paisPeloGoogle(s),4000,'');
+  const lugar={name:s.name,meta:s.address||'',address:s.address||'',city:s.city||'',country:pais,
+    subcat:s.subcategory||'',phone:s.phone||'',photo_url:s.photo_url||'',
+    photo_author:{nome:s.photo_author||'',url:s.photo_author_url||''},
+    rating_google:s.rating_google||'',website_url:s.website_url||'',maps_url:s.maps_url||'',
+    lat:s.lat!=null?Number(s.lat):null,lng:s.lng!=null?Number(s.lng):null,
+    price_level:s.price_level!=null?s.price_level:null};
+  const data=await salvarSpotDireto(lugar,s.category||'food','want','');
+  if(!data)return; // falha de gravação: tenta de novo no próximo login
+  esquece();
+  if(data==='sem_pais'){toast('Não deu pra salvar',s.name,'alert');return}
+  toast('Salvo em Quero ir',s.name,'check');
+  loadDashboard();
+}
 // A PÁGINA do convite, que substitui a tela de entrada pra quem chegou por
 // link. Devolve true se conseguiu montar — quem chama usa isso pra decidir
 // entre esta tela e o login comum.
@@ -13769,7 +13830,7 @@ async function montarPaginaDeConvite(){
 async function mostrarQuemConvidou(){
   let c=null;
   try{c=localStorage.getItem(CONVITE_GUARDADO)}catch(e){}
-  if(!c)return;
+  if(!c)return mostrarSpotPraSalvar();
   const faixa=document.getElementById('conviteFaixa');
   const dono=await dbRpc('invite_owner',{invite_code:c});
   // Sem resposta, só não mostra a faixa — NÃO descarta o código. dbRpc devolve

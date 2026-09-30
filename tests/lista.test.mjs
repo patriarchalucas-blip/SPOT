@@ -64,3 +64,34 @@ test('criar lista: com login, guarda o nome que o app mandou (sem ReferenceError
     assert.strictEqual(JSON.parse(kv.get('lista_' + d.codigo)).nome, 'Lucas');
   } finally { globalThis.fetch = orig }
 });
+
+test('salvar da lista: so devolve spot que esta na lista, e nunca a nota de quem fez', async () => {
+  const kv = new Map([['lista_abcdefgh1234', JSON.stringify({ uid: 'u1', cidades: ['Lisboa'], titulo: 'Lisboa', pais: 'Portugal' })],
+    ['lista_revogadaaa12', JSON.stringify({ revogado: true })]]);
+  const env = { SUPABASE_SERVICE_KEY: 'k', SPOT_KV: { get: async (k) => kv.get(k) ?? null, put: async () => {}, delete: async () => {} } };
+  const id = '11111111-2222-3333-4444-555555555555';
+  let pedido = '';
+  const orig = globalThis.fetch;
+  const pede = (corpo) => onRequestPost({ request: new Request('https://x/api/lista', { method: 'POST', body: JSON.stringify(corpo) }), env }).then((r) => r.json());
+  try {
+    globalThis.fetch = async (u) => { pedido = String(u); return new Response(JSON.stringify([{ name: 'Taberna', city: 'Lisboa', status: 'been' }])) };
+    const ok = await pede({ op: 'spot', codigo: 'abcdefgh1234', id });
+    assert.equal(ok.spot.name, 'Taberna');
+    assert.equal(ok.pais, 'Portugal');
+    assert.ok(!/my_note|my_review|my_rating/.test(pedido), 'nao pede nota nem frase');
+    assert.ok(pedido.includes('user_id=eq.u1') && pedido.includes('id=eq.' + id));
+    globalThis.fetch = async () => new Response(JSON.stringify([{ name: 'Outro', city: 'Porto' }]));
+    assert.ok((await pede({ op: 'spot', codigo: 'abcdefgh1234', id })).sumiu, 'cidade fora da lista');
+    assert.ok((await pede({ op: 'spot', codigo: 'revogadaaa12', id })).sumiu, 'lista desativada');
+    const ruim = await onRequestPost({ request: new Request('https://x/api/lista', { method: 'POST', body: JSON.stringify({ op: 'spot', codigo: 'abcdefgh1234', id: "1' or 1=1" }) }), env });
+    assert.equal(ruim.status, 400);
+  } finally { globalThis.fetch = orig }
+});
+
+test('lista publica: a linha leva o id pra folha de salvar', () => {
+  const h = paginaDaLista({ nome: 'Ana', titulo: 'Lisboa', pais: 'Portugal', origem: 'https://meuspot.app', codigo: 'abcdefgh1234',
+    spots: [{ id: '11111111-2222-3333-4444-555555555555', name: 'Taberna', category: 'food', status: 'been', city: 'Lisboa' }] });
+  assert.ok(h.includes('data-id="11111111-2222-3333-4444-555555555555"'));
+  assert.ok(h.includes('Salvar no meu Spot') && h.includes('/?salvar='));
+  assert.ok(h.includes('maps/search/?api=1'), 'sem JavaScript a linha ainda abre o mapa');
+});

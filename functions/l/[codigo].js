@@ -93,7 +93,18 @@ ul{list-style:none;margin:0;padding:0;display:flex;flex-direction:column}
 .convite b{display:block;font-size:17px;font-weight:600;letter-spacing:-.02em}
 .convite p{margin:4px 0 16px;font-size:15px;color:var(--ink2)}
 .btn{display:flex;align-items:center;justify-content:center;height:48px;border-radius:10px;background:var(--green);color:var(--base);font-size:16px;font-weight:600;text-decoration:none}
-.btn2{background:var(--surface);color:var(--ink)}`;
+.btn2{background:var(--surface);color:var(--ink)}
+.fundo{position:fixed;inset:0;background:rgba(0,0,0,.4);opacity:0;pointer-events:none;transition:opacity .2s;z-index:9}
+.fundo.on{opacity:1;pointer-events:auto}
+.folha{position:fixed;left:0;right:0;bottom:0;max-width:480px;margin:0 auto;background:var(--base);border-radius:28px 28px 0 0;padding:12px 20px calc(24px + env(safe-area-inset-bottom,0px));transform:translateY(100%);transition:transform .25s;z-index:10}
+.folha.on{transform:none}
+.folha .alca{width:36px;height:5px;border-radius:3px;background:var(--surface);margin:0 auto 16px}
+.folha .foto{height:180px;border-radius:18px;background:var(--vazio) center/cover;margin-bottom:16px}
+.folha .n{font-size:22px;font-weight:700;letter-spacing:-.03em}
+.folha .r{margin:10px 0 0}
+.folha .de{margin:4px 0 0;font-size:14px;color:var(--ink3)}
+.folha .acoes{display:flex;flex-direction:column;gap:8px;margin-top:20px}
+.folha .obs{margin:0;text-align:center;font-size:13px;color:var(--ink3)}`;
 
 function cabecalho(titulo, desc, ogImg, url, extra) {
   return `<!doctype html><html lang="pt-BR"><head><meta charset="utf-8">
@@ -135,13 +146,13 @@ export function paginaDaLista({ nome, avatar, titulo, pais, spots, origem, codig
   const rotulo = (s) => rotuloDoSpot(s) + (variasCidades && s.city ? ' · ' + String(s.city).trim() : '');
   const linhaFui = (s) => {
     const f = fotoDoSpot(s.photo_url, 240), rev = String(s.my_review || '').trim();
-    return '<li data-cat="' + esc(s.category) + '"><a class="l" href="' + esc(linkDoMapa(s)) + '" target="_blank" rel="noopener"><div class="f">' + (f ? '<img src="' + esc(f) + '" alt="" loading="lazy" onerror="this.remove()">' : '') + '</div>'
+    return '<li data-cat="' + esc(s.category) + '" data-id="' + esc(s.id || '') + '"><a class="l" href="' + esc(linkDoMapa(s)) + '" target="_blank" rel="noopener"><div class="f">' + (f ? '<img src="' + esc(f) + '" alt="" loading="lazy" onerror="this.remove()">' : '') + '</div>'
       + '<div class="t"><div class="n">' + esc(s.name) + '</div><div class="m"><span>' + esc(rotulo(s)) + '</span>' + estrelas(s.my_rating) + '</div>'
       + (rev ? '<p class="r">' + esc(rev) + '</p>' : '') + '</div><span class="seta">›</span></a></li>';
   };
   const linhaQuero = (s) => {
     const f = fotoDoSpot(s.photo_url, 180);
-    return '<li data-cat="' + esc(s.category) + '"><a class="l" href="' + esc(linkDoMapa(s)) + '" target="_blank" rel="noopener"><div class="f">' + (f ? '<img src="' + esc(f) + '" alt="" loading="lazy" onerror="this.remove()">' : '') + '</div>'
+    return '<li data-cat="' + esc(s.category) + '" data-id="' + esc(s.id || '') + '"><a class="l" href="' + esc(linkDoMapa(s)) + '" target="_blank" rel="noopener"><div class="f">' + (f ? '<img src="' + esc(f) + '" alt="" loading="lazy" onerror="this.remove()">' : '') + '</div>'
       + '<div class="t"><div class="n">' + esc(s.name) + '</div><div class="m">' + esc(rotulo(s)) + '</div></div><span class="seta">›</span></a></li>';
   };
   const paisNoSub = pais && pais !== titulo ? pais : '';
@@ -178,7 +189,32 @@ lista.querySelectorAll('li').forEach(function(li){li.style.display=!ligar||li.da
     + corpo
     + '<div class="convite"><b>' + esc(primeiro) + ' guarda os spots no Spot.</b><p>Salve os seus e veja onde seus amigos foram.</p>'
     + '<a class="btn" href="' + esc(LOJA + (LOJA.includes('apple.com') ? '?ct=l_' : '?ref=l_') + codigo) + '">Conhecer o Spot</a></div>'
-    + '</main>' + js + '</body></html>';
+    + '</main>' + folha(codigo, primeiro) + js + '</body></html>';
+}
+
+// Tocar no spot abre uma folha com a nota de quem mandou e dois caminhos:
+// "Salvar no meu Spot" (leva pro app com ?salvar=<código>.<id>; o app guarda,
+// passa pelo cadastro e salva o spot em Quero ir) e "Ver no mapa". Sem
+// JavaScript, a linha continua sendo o link do Maps.
+function folha(codigo, primeiro) {
+  return '<div class="fundo" id="fundo"></div><div class="folha" id="folha" role="dialog" aria-modal="true"><div class="alca"></div>'
+    + '<div class="foto" id="fFoto"></div><div class="n" id="fNome"></div><div class="m" id="fMeta"></div><p class="r" id="fRev"></p>'
+    + '<p class="de">A nota e a frase são de ' + esc(primeiro) + '.</p>'
+    + '<div class="acoes"><a class="btn" id="fSalvar" href="/">Salvar no meu Spot</a><p class="obs">Grátis. Fica na sua lista de Quero ir.</p>'
+    + '<a class="btn btn2" id="fMapa" href="/" target="_blank" rel="noopener">Ver no mapa</a></div></div>'
+    + `<script>(function(){var fundo=document.getElementById('fundo'),fo=document.getElementById('folha'),C=${JSON.stringify(codigo)};
+function fecha(){fundo.classList.remove('on');fo.classList.remove('on')}
+fundo.onclick=fecha;document.addEventListener('keydown',function(e){if(e.key==='Escape')fecha()});
+document.querySelectorAll('li[data-id] a.l').forEach(function(a){a.addEventListener('click',function(e){
+var li=a.parentNode,id=li.dataset.id;if(!id)return;e.preventDefault();
+var img=a.querySelector('img'),rev=a.querySelector('.r'),meta=a.querySelector('.m');
+var ff=document.getElementById('fFoto');ff.style.backgroundImage=img?'url("'+img.src.replace(/&w=\\d+$/,'&w=800')+'")':'';ff.style.display=img?'':'none';
+document.getElementById('fNome').textContent=a.querySelector('.n').textContent;
+document.getElementById('fMeta').innerHTML=meta?meta.innerHTML:'';
+var fr=document.getElementById('fRev');fr.textContent=rev?rev.textContent:'';fr.style.display=rev?'':'none';
+document.getElementById('fSalvar').href='/?salvar='+encodeURIComponent(C+'.'+id);
+document.getElementById('fMapa').href=a.href;
+fundo.classList.add('on');fo.classList.add('on')})})})();</script>`;
 }
 
 export function paginaQueSumiu(origem, status) {
@@ -203,7 +239,7 @@ export async function onRequestGet(context) {
   const sb = (caminho) => fetch(SB_URL + caminho, { headers: { apikey: env.SUPABASE_SERVICE_KEY, Authorization: 'Bearer ' + env.SUPABASE_SERVICE_KEY } });
   const lista = dado.cidades.map((c) => '"' + String(c).replace(/["\\]/g, '') + '"').join(',');
   const [rs, rp] = await Promise.all([
-    sb('/rest/v1/spots?select=name,category,subcategory,place_type,status,my_rating,my_review,photo_url,maps_url,address,city,created_at&user_id=eq.' + dado.uid
+    sb('/rest/v1/spots?select=id,name,category,subcategory,place_type,status,my_rating,my_review,photo_url,maps_url,address,city,created_at&user_id=eq.' + dado.uid
       + '&status=in.(been,want)&city=in.(' + encodeURIComponent(lista) + ')&order=created_at.desc&limit=300'),
     sb('/rest/v1/profiles?select=display_name,username,avatar_url&id=eq.' + dado.uid)
   ]);
