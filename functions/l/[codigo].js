@@ -71,7 +71,9 @@ h2{margin:0 0 14px;font-size:20px;font-weight:700;letter-spacing:-.02em}
 h2 small,.aba small{margin-left:6px;font-size:15px;font-weight:400;color:var(--ink3)}
 ul{list-style:none;margin:0;padding:0;display:flex;flex-direction:column}
 .fui{gap:18px}.quero{gap:14px}
-.l{display:flex;gap:14px;align-items:flex-start}
+.l{display:flex;gap:14px;align-items:flex-start;color:inherit;text-decoration:none}
+.l:active{opacity:.7}
+.seta{flex:none;align-self:center;font-size:18px;color:var(--ink3)}
 .f{flex:none;border-radius:14px;overflow:hidden;background:var(--vazio)}
 .fui .f{width:76px;height:76px}.quero .f{width:56px;height:56px}.quero .l{align-items:center}
 .f img{width:100%;height:100%;object-fit:cover;display:block}
@@ -108,6 +110,14 @@ function cabecalho(titulo, desc, ogImg, url, extra) {
 <style>${ESTILO}${extra || ''}</style></head><body>`;
 }
 
+// Tocar no spot abre ele no mapa (Google Maps): é o que quem recebeu a lista quer
+// fazer — ver onde fica e ir. O endereço do Maps já vem gravado no spot; sem
+// ele, uma busca pelo nome + cidade.
+export function linkDoMapa(s) {
+  const m = String(s.maps_url || '');
+  if (/^https:\/\/(maps\.google\.com|www\.google\.com\/maps|maps\.app\.goo\.gl|goo\.gl\/maps)\//.test(m)) return m;
+  return 'https://www.google.com/maps/search/?api=1&query=' + encodeURIComponent([s.name, s.address || s.city].filter(Boolean).join(', '));
+}
 export function paginaDaLista({ nome, avatar, titulo, pais, spots, origem, codigo }) {
   const fui = spots.filter((s) => s.status === 'been')
     .sort((a, b) => (Number(b.my_rating) || 0) - (Number(a.my_rating) || 0) || String(a.name).localeCompare(String(b.name), 'pt-BR'));
@@ -120,19 +130,23 @@ export function paginaDaLista({ nome, avatar, titulo, pais, spots, origem, codig
   // A imagem da prévia sai de /l/capa/<código>, que entrega os bytes (o
   // WhatsApp não seguia o redirecionamento de /api/place-photo).
   const ogImg = origem + '/l/capa/' + codigo;
+  // Lista de país (várias cidades): a cidade de cada spot entra na linha.
+  const variasCidades = new Set(spots.map((s) => String(s.city || '').trim()).filter(Boolean)).size > 1;
+  const rotulo = (s) => rotuloDoSpot(s) + (variasCidades && s.city ? ' · ' + String(s.city).trim() : '');
   const linhaFui = (s) => {
     const f = fotoDoSpot(s.photo_url, 240), rev = String(s.my_review || '').trim();
-    return '<li class="l" data-cat="' + esc(s.category) + '"><div class="f">' + (f ? '<img src="' + esc(f) + '" alt="" loading="lazy" onerror="this.remove()">' : '') + '</div>'
-      + '<div class="t"><div class="n">' + esc(s.name) + '</div><div class="m"><span>' + esc(rotuloDoSpot(s)) + '</span>' + estrelas(s.my_rating) + '</div>'
-      + (rev ? '<p class="r">' + esc(rev) + '</p>' : '') + '</div></li>';
+    return '<li data-cat="' + esc(s.category) + '"><a class="l" href="' + esc(linkDoMapa(s)) + '" target="_blank" rel="noopener"><div class="f">' + (f ? '<img src="' + esc(f) + '" alt="" loading="lazy" onerror="this.remove()">' : '') + '</div>'
+      + '<div class="t"><div class="n">' + esc(s.name) + '</div><div class="m"><span>' + esc(rotulo(s)) + '</span>' + estrelas(s.my_rating) + '</div>'
+      + (rev ? '<p class="r">' + esc(rev) + '</p>' : '') + '</div><span class="seta">›</span></a></li>';
   };
   const linhaQuero = (s) => {
     const f = fotoDoSpot(s.photo_url, 180);
-    return '<li class="l" data-cat="' + esc(s.category) + '"><div class="f">' + (f ? '<img src="' + esc(f) + '" alt="" loading="lazy" onerror="this.remove()">' : '') + '</div>'
-      + '<div class="t"><div class="n">' + esc(s.name) + '</div><div class="m">' + esc(rotuloDoSpot(s)) + '</div></div></li>';
+    return '<li data-cat="' + esc(s.category) + '"><a class="l" href="' + esc(linkDoMapa(s)) + '" target="_blank" rel="noopener"><div class="f">' + (f ? '<img src="' + esc(f) + '" alt="" loading="lazy" onerror="this.remove()">' : '') + '</div>'
+      + '<div class="t"><div class="n">' + esc(s.name) + '</div><div class="m">' + esc(rotulo(s)) + '</div></div><span class="seta">›</span></a></li>';
   };
-  const sub = soQuero ? [pais, total + (total === 1 ? ' spot que quer conhecer' : ' spots que quer conhecer')]
-    : [pais, total + (total === 1 ? ' spot' : ' spots')];
+  const paisNoSub = pais && pais !== titulo ? pais : '';
+  const sub = soQuero ? [paisNoSub, total + (total === 1 ? ' spot que quer conhecer' : ' spots que quer conhecer')]
+    : [paisNoSub, total + (total === 1 ? ' spot' : ' spots')];
   let corpo = '';
   if (muitos) {
     // Mais de 10: Fui e Quero ir viram abas, e as categorias filtram. Sem
@@ -189,7 +203,7 @@ export async function onRequestGet(context) {
   const sb = (caminho) => fetch(SB_URL + caminho, { headers: { apikey: env.SUPABASE_SERVICE_KEY, Authorization: 'Bearer ' + env.SUPABASE_SERVICE_KEY } });
   const lista = dado.cidades.map((c) => '"' + String(c).replace(/["\\]/g, '') + '"').join(',');
   const [rs, rp] = await Promise.all([
-    sb('/rest/v1/spots?select=name,category,subcategory,place_type,status,my_rating,my_review,photo_url,created_at&user_id=eq.' + dado.uid
+    sb('/rest/v1/spots?select=name,category,subcategory,place_type,status,my_rating,my_review,photo_url,maps_url,address,city,created_at&user_id=eq.' + dado.uid
       + '&status=in.(been,want)&city=in.(' + encodeURIComponent(lista) + ')&order=created_at.desc&limit=300'),
     sb('/rest/v1/profiles?select=display_name,username,avatar_url&id=eq.' + dado.uid)
   ]);

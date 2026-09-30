@@ -637,6 +637,13 @@ input,textarea,select{font-size:max(16px,1em)!important}
 #friend.am-buscando .am-cid-busca{margin-top:0}
 #friend.am-buscando .am-cid-conta{display:block}
 .nota-cat{padding:12px 0 0}
+/* Janela de compartilhar a lista pública (30/09) */
+.ocp-corpo{padding:4px 20px calc(28px + env(safe-area-inset-bottom,0px))}
+.ocp-corpo h3{margin:0 44px 6px 0;font-size:22px;font-weight:700;letter-spacing:-.03em;color:var(--ink)}
+.ocp-corpo p{margin:0 0 16px;font-size:15px;line-height:1.45;color:var(--ink2)}
+.ocp-link{background:var(--surface);border-radius:10px;padding:12px 14px;font-size:14px;color:var(--ink2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-bottom:16px}
+.ocp-botoes{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.ocp-parar{display:block;margin:18px auto 0;min-height:44px;padding:0 12px;border:none;background:none;font:inherit;font-size:15px;color:var(--ink3);cursor:pointer}
 .nota-cat .coz-atual{font-size:17px}
 .nota-foto{display:block;margin:4px 20px 0;min-height:44px;padding:0;background:none;border:none;font:inherit;font-size:15px;font-weight:600;color:var(--green);cursor:pointer}
 .note-place-icon img{width:100%;height:100%;object-fit:cover;border-radius:inherit;display:block}
@@ -2042,7 +2049,7 @@ body.exm .exm-filtros{position:relative;z-index:1}
 </div>
 
 <div class="screen" id="trip">
-  <div class="trip-hero"><div class="trip-hero-img" id="tripHeroImg"></div><div class="foto-credito" id="tripFotoCredito"></div><div class="trip-float" id="tripFloat"></div><div class="trip-hero-content"><button class="back-btn" onclick="goTo('dashboard');loadDashboard()" data-ic="back" aria-label="Voltar"></button><div><div class="trip-hero-label" id="tripLabel"></div><div class="trip-hero-name" id="tripName"></div><div class="trip-hero-meta" id="tripMeta"></div></div></div></div>
+  <div class="trip-hero"><div class="trip-hero-img" id="tripHeroImg"></div><div class="foto-credito" id="tripFotoCredito"></div><div class="trip-float" id="tripFloat"></div><div class="trip-hero-content"><button class="back-btn" onclick="goTo('dashboard');loadDashboard()" data-ic="back" aria-label="Voltar"></button><button class="hero-share" id="tripShareBtn" onclick="compartilharPais()" data-ic="share" aria-label="Compartilhar meus spots deste país"></button><div><div class="trip-hero-label" id="tripLabel"></div><div class="trip-hero-name" id="tripName"></div><div class="trip-hero-meta" id="tripMeta"></div></div></div></div>
   <div class="trip-body" id="tripBody"></div>
   <button class="btn-primario btn-largo btn-solto" onclick="addSpotToCurrentTrip()">Adicionar spot</button>
   <button class="btn-texto" id="tripDeleteBtn" onclick="deleteTrip()">Excluir viagem</button>
@@ -2301,6 +2308,11 @@ body.exm .exm-filtros{position:relative;z-index:1}
 <!-- OVERLAYS -->
 <div class="overlay" id="ov-trip" onclick="closeOut(event,'ov-trip')"><div class="sheet"><button class="sheet-close" onclick="closeOv('ov-trip')" data-ic="close" aria-label="Fechar"></button><div class="sheet-handle"></div><div class="sheet-title">Em qual viagem?</div><div class="step-dots"><div class="step-dot active"></div><div class="step-dot"></div><div class="step-dot"></div><div class="step-dot"></div></div><div id="tripOptions"></div><div class="new-trip-btn" onclick="nextOv('ov-trip','ov-newtrip')"><div class="new-trip-icon" data-ic="plus"></div><div class="new-trip-text">Nova viagem</div></div></div></div>
 
+<div class="overlay" id="ov-compartilhar" onclick="closeOut(event,'ov-compartilhar')"><div class="sheet ocp"><button class="sheet-close" onclick="closeOv('ov-compartilhar')" data-ic="close" aria-label="Fechar"></button><div class="sheet-handle"></div>
+<div class="ocp-corpo"><h3 id="ocpTitulo">Compartilhar</h3><p id="ocpTexto">Quem abrir o link vê os seus spots, com a nota e a frase de cada um — sem precisar de conta.</p>
+<div class="ocp-link" id="ocpLink"></div>
+<div class="ocp-botoes"><button class="exm-btn" id="ocpMandar">Compartilhar</button><button class="exm-btn exm-btn2" id="ocpCopiar">Copiar link</button></div>
+<button class="ocp-parar" id="ocpParar">Parar de compartilhar</button></div></div></div>
 <div class="overlay" id="ov-cat" onclick="closeOut(event,'ov-cat')"><div class="sheet"><button class="sheet-close" onclick="closeOv('ov-cat')" data-ic="close" aria-label="Fechar"></button><div class="sheet-handle"></div><div class="sheet-title">Qual categoria?</div><div class="step-dots"><div class="step-dot active"></div><div class="step-dot"></div><div class="step-dot"></div></div><div class="cat-options"><div class="cat-option" id="co-food" onclick="pickCat('food')"><div class="co-icon" data-ic="food"></div><div class="co-name">Comer & Beber</div></div><div class="cat-option" id="co-hotel" onclick="pickCat('hotel')"><div class="co-icon" data-ic="hotel"></div><div class="co-name">Onde Ficar</div></div><div class="cat-option" id="co-experience" onclick="pickCat('experience')"><div class="co-icon" data-ic="compass"></div><div class="co-name">Experiências</div></div></div></div></div>
 
 <div class="overlay" id="ov-search" onclick="closeOut(event,'ov-search')"><div class="sheet sheet-fixa"><button class="sheet-close" onclick="closeOv('ov-search')" data-ic="close" aria-label="Fechar"></button><div class="sheet-handle"></div><div class="sheet-title">Buscar lugar</div><div class="step-dots"><div class="step-dot active"></div><div class="step-dot"></div></div><div class="search-wrap"><div class="search-field"><span class="si" data-ic="search"></span><input class="search-input" autocomplete="off" autocorrect="off" spellcheck="false" id="placeSearch" placeholder="Nome do lugar..." oninput="searchPlaces(this.value)"></div></div><div class="search-powered"><span>Resultados via</span><strong>Google Places</strong></div><div class="lista-rolante" id="searchResults"><div class="search-loading">Digite para buscar...</div></div></div></div>
@@ -4783,53 +4795,80 @@ function textoDaCidadePraCompartilhar(){
 // cidade sempre gera o mesmo link, e a página lê a lista na hora: spot novo
 // entra sozinho. Sem rede (ou servidor fora), cai no texto de antes.
 const LISTA_PUBLICA_LIGADA=true;
-async function pedirLista(op){
+// O que vai pra lista pública: a CIDADE aberta, ou o PAÍS inteiro (pedido do
+// Lucas, 30/09: "Os spots de Lucas em Portugal", com a cidade em cada linha).
+function alvoDaListaDaCidade(){
   const t=S.curTrip,cidade=S.curCity;if(!t||!cidade)return null;
-  const daCidade=spotsDaViagem(t).filter(sp=>cityOf(sp)===cidade);
+  return{spots:spotsDaViagem(t).filter(sp=>cityOf(sp)===cidade),titulo:cidade,pais:paisDaViagem(t)||'',botao:'cityShareBtn'};
+}
+function alvoDaListaDoPais(){
+  const t=S.curTrip;if(!t)return null;
+  const pais=paisDaViagem(t)||t.name||'';
+  // Na linha de casa o "país" é a cidade onde mora: o título é a cidade.
+  return{spots:spotsDaViagem(t),titulo:ehCasa(t)?t.name:pais,pais:ehCasa(t)?pais:'',botao:'tripShareBtn'};
+}
+async function pedirLista(op,alvo){
+  if(!alvo)return null;
+  const lista=alvo.spots.filter(sp=>sp.status==='been'||sp.status==='want');
   // Os nomes como estão GRAVADOS: a tela junta grafias ('Split' e 'Split-Dalmatia
   // County'), e a página do servidor procura pelo que está no banco.
-  const cidades=[...new Set(daCidade.map(sp=>String(sp.city||'').trim()).filter(Boolean))];
+  const cidades=[...new Set(lista.map(sp=>String(sp.city||'').trim()).filter(Boolean))];
   if(!cidades.length)return null;
   try{
     const tk=await ensureToken();if(!tk)return null;
     return await comPrazo(fetch('/api/lista',{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+tk},
-      body:JSON.stringify({op,cidades,titulo:cidade,pais:paisDaViagem(t)||'',nome:(S.profile&&S.profile.display_name)||nomeDeExibicao()})}).then(x=>x.json()),6000,null);
+      body:JSON.stringify({op,cidades,titulo:alvo.titulo,pais:alvo.pais,nome:(S.profile&&S.profile.display_name)||nomeDeExibicao()})}).then(x=>x.json()),6000,null);
   }catch(e){return null}
 }
-async function mandarLinkDaLista(codigo){
-  const pais=paisDaViagem(S.curTrip);
-  await mandarTextoPraFora('Meus spots em '+S.curCity+(pais?' '+flagFor(pais):'')+', com a minha nota de cada um:\n'+location.origin+'/l/'+codigo,'Meus spots em '+S.curCity);
+async function mandarLinkDaLista(codigo,alvo){
+  const bandeira=alvo.pais?flagFor(alvo.pais):(COUNTRIES.some(c=>c.name===alvo.titulo)?flagFor(alvo.titulo):'');
+  await mandarTextoPraFora('Meus spots em '+alvo.titulo+(bandeira&&bandeira!=='🌍'?' '+bandeira:'')+', com a minha nota de cada um:\n'+location.origin+'/l/'+codigo,'Meus spots em '+alvo.titulo);
 }
-async function compartilharCidade(){
-  const corpo=textoDaCidadePraCompartilhar();
-  if(!corpo){toast('Nada pra compartilhar','Salve um spot nesta cidade primeiro.');return}
-  const btn=document.getElementById('cityShareBtn');if(btn)btn.style.opacity='.5';
-  // Já tem link: pergunta se é pra mandar de novo ou PARAR de compartilhar
-  // (o link velho vira 'Esta lista não está mais aqui').
-  const estado=LISTA_PUBLICA_LIGADA?await pedirLista('estado'):null;
+// NÃO compartilha direto depois de esperar o servidor: o iPhone só abre a folha
+// de compartilhar (com o WhatsApp) logo depois de um TOQUE, e a espera "gasta"
+// o toque — o app caía no plano B e só copiava o link (30/09). Sempre passa
+// por uma folha, e é o toque nela que abre o compartilhar.
+// A janela: link à vista, "Compartilhar" (o toque nela é o que o iPhone exige
+// pra abrir a folha com o WhatsApp), "Copiar link" e, discreto no fim, "Parar".
+function abrirJanelaDeCompartilhar(codigo,alvo){
+  const url=location.origin+'/l/'+codigo;
+  document.getElementById('ocpTitulo').textContent='Compartilhar '+alvo.titulo;
+  document.getElementById('ocpLink').textContent=url.replace(/^https?:\/\//,'');
+  document.getElementById('ocpMandar').onclick=()=>{closeOv('ov-compartilhar');mandarLinkDaLista(codigo,alvo)};
+  document.getElementById('ocpCopiar').onclick=async()=>{
+    try{await navigator.clipboard.writeText(url);toast('Link copiado','Cole na conversa.','check')}catch(e){toast('Não deu pra copiar',url,'alert')}
+  };
+  document.getElementById('ocpParar').onclick=async()=>{
+    if(!await confirmar('Parar de compartilhar?','Quem já tem o link deixa de ver a lista. Se compartilhar de novo, sai um link novo.','Parar de compartilhar'))return;
+    const r=await pedirLista('parar',alvo);
+    closeOv('ov-compartilhar');
+    toast(r&&r.parado?'Link desativado':'Não deu pra desativar',r&&r.parado?'Quem tinha o link não vê mais a lista.':'Tenta de novo em alguns segundos.',r&&r.parado?'check':'alert');
+  };
+  showOv('ov-compartilhar');
+}
+async function compartilharLista(alvo,textoReserva){
+  if(!alvo||!alvo.spots.some(sp=>sp.status==='been'||sp.status==='want')){toast('Nada pra compartilhar','Salve um spot aqui primeiro.');return}
+  const btn=document.getElementById(alvo.botao);if(btn)btn.style.opacity='.5';
+  const estado=LISTA_PUBLICA_LIGADA?await pedirLista('estado',alvo):null;
   if(estado&&estado.codigo){
     if(btn)btn.style.opacity='';
-    abrirFolhaDeEscolha([{id:'mandar',rotulo:'Compartilhar o link',n:''},{id:'parar',rotulo:'Parar de compartilhar',n:''}],'',async id=>{
-      if(id==='mandar')return mandarLinkDaLista(estado.codigo);
-      const r=await pedirLista('parar');
-      toast(r&&r.parado?'Link desativado':'Não deu pra desativar',r&&r.parado?'Quem tinha o link não vê mais a lista.':'Tenta de novo em alguns segundos.',r&&r.parado?'check':'alert');
-    });
+    abrirJanelaDeCompartilhar(estado.codigo,alvo);
     return;
   }
-  const novo=LISTA_PUBLICA_LIGADA?await pedirLista('criar'):null;
+  const novo=LISTA_PUBLICA_LIGADA?await pedirLista('criar',alvo):null;
   if(btn)btn.style.opacity='';
-  // NÃO compartilha direto: o iPhone só abre a folha de compartilhar (com o
-  // WhatsApp) logo depois de um TOQUE, e a espera pelo servidor 'gasta' o toque —
-  // o app caía no plano B e só copiava o link (30/09). A folha pede um toque novo.
   if(novo&&novo.codigo){
-    abrirFolhaDeEscolha([{id:'mandar',rotulo:'Compartilhar o link',n:''}],'',()=>mandarLinkDaLista(novo.codigo));
+    abrirJanelaDeCompartilhar(novo.codigo,alvo);
     return;
   }
-  // Sem rede ou servidor fora: cai no texto de antes.
-  const nome=nomeDeExibicao();
-  const texto=corpo+'\n\n'+(nome?nome+' · ':'')+'salvos no Spot\n'+location.origin;
-  await mandarTextoPraFora(texto,'Meus spots em '+S.curCity);
+  // Sem rede ou servidor fora: o texto de antes (só a cidade tem).
+  if(textoReserva){
+    const nome=nomeDeExibicao();
+    await mandarTextoPraFora(textoReserva+'\n\n'+(nome?nome+' · ':'')+'salvos no Spot\n'+location.origin,'Meus spots em '+alvo.titulo);
+  }else toast('Não deu pra criar o link','Tenta de novo em alguns segundos.','alert');
 }
+async function compartilharCidade(){return compartilharLista(alvoDaListaDaCidade(),textoDaCidadePraCompartilhar())}
+async function compartilharPais(){return compartilharLista(alvoDaListaDoPais(),'')}
 // O MESMO caminho do convite: folha nativa do celular, area de transferencia
 // no desktop, e a folha do proprio app como ultimo recurso. Estava escrito
 // dentro de compartilharConvite(); agora sao dois usos, entao virou funcao.

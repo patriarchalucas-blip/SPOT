@@ -29,7 +29,7 @@ async function hash(s) {
   return [...new Uint8Array(h)].slice(0, 12).map((b) => b.toString(16).padStart(2, '0')).join('');
 }
 export function limparCidades(l) {
-  return [...new Set((Array.isArray(l) ? l : []).map((c) => String(c || '').replace(/[\u0000-\u001f,()"]/g, ' ').replace(/\s+/g, ' ').trim().slice(0, 80)).filter(Boolean))].slice(0, 8);
+  return [...new Set((Array.isArray(l) ? l : []).map((c) => String(c || '').replace(/[\u0000-\u001f,()"]/g, ' ').replace(/\s+/g, ' ').trim().slice(0, 80)).filter(Boolean))].slice(0, 30);
 }
 
 export async function onRequestPost(context) {
