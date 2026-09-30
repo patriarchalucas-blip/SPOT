@@ -117,8 +117,9 @@ export function paginaDaLista({ nome, avatar, titulo, pais, spots, origem, codig
   const total = fui.length + quero.length;
   const soQuero = !fui.length && quero.length;
   const muitos = total > 10;
-  const capa = (fui.find((s) => fotoDoSpot(s.photo_url, 1200)) || quero.find((s) => fotoDoSpot(s.photo_url, 1200)) || {}).photo_url;
-  const ogImg = capa ? origem + fotoDoSpot(capa, 1200) : origem + '/compartilhar.png';
+  // A imagem da prévia sai de /l/capa/<código>, que entrega os bytes (o
+  // WhatsApp não seguia o redirecionamento de /api/place-photo).
+  const ogImg = origem + '/l/capa/' + codigo;
   const linhaFui = (s) => {
     const f = fotoDoSpot(s.photo_url, 240), rev = String(s.my_review || '').trim();
     return '<li class="l" data-cat="' + esc(s.category) + '"><div class="f">' + (f ? '<img src="' + esc(f) + '" alt="" loading="lazy" onerror="this.remove()">' : '') + '</div>'
@@ -195,7 +196,10 @@ export async function onRequestGet(context) {
   const spots = rs.ok ? await rs.json() : [];
   const perfil = rp.ok ? ((await rp.json())[0] || {}) : {};
   const avatar = /^https:\/\/kzidnilsyrvauzgelsqd\.supabase\.co\/storage\//.test(String(perfil.avatar_url || '')) ? perfil.avatar_url : '';
-  const html = paginaDaLista({ nome: perfil.display_name || perfil.username || '', avatar, titulo: dado.titulo || dado.cidades[0],
+  // O nome: o do perfil; senão o que o app mandou ao criar o link (o do login
+  // do Google — o perfil de muita gente só tem o username, e a prévia saía
+  // 'Os spots de patriarchalucas'); o username só em último caso.
+  const html = paginaDaLista({ nome: perfil.display_name || dado.nome || perfil.username || '', avatar, titulo: dado.titulo || dado.cidades[0],
     pais: dado.pais || '', spots, origem, codigo });
   return new Response(html, { headers: { 'Content-Type': 'text/html; charset=utf-8', 'Cache-Control': 'public, max-age=300' } });
 }

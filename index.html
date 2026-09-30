@@ -4793,7 +4793,7 @@ async function pedirLista(op){
   try{
     const tk=await ensureToken();if(!tk)return null;
     return await comPrazo(fetch('/api/lista',{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+tk},
-      body:JSON.stringify({op,cidades,titulo:cidade,pais:paisDaViagem(t)||''})}).then(x=>x.json()),6000,null);
+      body:JSON.stringify({op,cidades,titulo:cidade,pais:paisDaViagem(t)||'',nome:(S.profile&&S.profile.display_name)||nomeDeExibicao()})}).then(x=>x.json()),6000,null);
   }catch(e){return null}
 }
 async function mandarLinkDaLista(codigo){

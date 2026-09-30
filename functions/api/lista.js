@@ -59,12 +59,16 @@ export async function onRequestPost(context) {
     }
     return json({ parado: true });
   }
-  if (ja) return json({ codigo: ja });
+  if (ja) {
+    // Link antigo sem nome (criado antes de o app mandar): completa agora.
+    if (nome) { try { const d = JSON.parse((await lerKV(env, 'lista_' + ja)) || 'null'); if (d && !d.revogado && d.nome !== nome) { d.nome = nome; await gravarKV(env, 'lista_' + ja, JSON.stringify(d), 60 * 60 * 24 * 730) } } catch (e) {} }
+    return json({ codigo: ja });
+  }
 
   if (!await podeGastar(env, 'lista', quem.uid, 1, TETO_PESSOA)) return json({ capped: true });
   const codigo = codigoAleatorio();
   const dois_anos = 60 * 60 * 24 * 730;
-  await gravarKV(env, 'lista_' + codigo, JSON.stringify({ uid: quem.uid, cidades, titulo, pais, t: Date.now() }), dois_anos);
+  await gravarKV(env, 'lista_' + codigo, JSON.stringify({ uid: quem.uid, cidades, titulo, pais, nome, t: Date.now() }), dois_anos);
   await gravarKV(env, indice, codigo, dois_anos);
   return json({ codigo });
 }
