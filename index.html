@@ -5316,6 +5316,12 @@ function abrirTrocaDeCategoria(){
   // diz ao pickCat que ele está editando um spot que já existe, e não
   // escolhendo a categoria de um novo.
   trocandoCategoria=true;
+  // Marca a categoria atual; os tracinhos de etapa sao do fluxo antigo de
+  // adicionar e nao dizem nada aqui.
+  const atual=S.curPlace&&S.curPlace.category;
+  document.querySelectorAll('#ov-cat .cat-option').forEach(o=>o.classList.toggle('sel',o.id==='co-'+atual));
+  const d=document.querySelector('#ov-cat .step-dots');if(d)d.style.display='none';
+  document.querySelector('#ov-cat .sheet-title').textContent='Mudar categoria';
   showOv('ov-cat');
 }
 let trocandoCategoria=false;

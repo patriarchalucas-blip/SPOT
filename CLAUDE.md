@@ -32,7 +32,7 @@ Nenhuma chave da Anthropic está no projeto ainda — e **não pode** ir direto 
 **Como conferir que nenhuma vazou:** `grep -n "const GAPI\|UNSPLASH_KEY" index.html`
 tem que voltar vazio. Os únicos `/api/` que o client chama são `city-photo`,
 `place-photo`, `places`, `climate`, `find-instagram`, `notificar`, `mapa`,
-`mapa-chave` e `denuncia-aviso` (notificação no celular do moderador quando
+`mapa-chave`, `lugar` (sugestões e detalhe do Explorar), `apple` (guardar/revogar o "Entrar com a Apple") e `denuncia-aviso` (notificação no celular do moderador quando
 chega denúncia — sem isso o "respondemos em até 24 h" era promessa no escuro).
 
 ## Banco de dados (Supabase)
