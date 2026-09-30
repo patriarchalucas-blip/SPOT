@@ -2907,6 +2907,13 @@ async function init(){
         // antes de saber o que é o app, muita gente recusava pra sempre.
         if(!document.getElementById('ov-onb').classList.contains('show'))falarComACasca({tipo:'pedir-push'});
       }
+      // Sem sessão nenhuma na abertura: vai pro login NA HORA. Antes nada
+      // tratava esse caso e a pessoa esperava a trava de 3 s abaixo olhando a
+      // tela de carregamento — quem vinha da landing achava que travou (29/09).
+      if(ev==='INITIAL_SESSION'&&!sess?.user&&!S.user){
+        if(document.getElementById('loading').classList.contains('active'))goTo('login');
+        return;
+      }
       if(ev==='SIGNED_OUT'){
         // O Supabase também sai sozinho (sessão revogada, renovação que falhou).
         // Sem limpar, quem entrasse em seguida na mesma página herdava o perfil,
