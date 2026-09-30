@@ -65,13 +65,18 @@ function Anel({ paises }) {
             Sempre inteiro, sem casa decimal: abrir espaço pra vírgula faz o
             número balançar de largura conforme a pessoa viaja. */}
         <SvgText
-          x={38} y={38} fill={INK} fontSize={19} fontWeight="700"
+          x={38} y={35} fill={INK} fontSize={19} fontWeight="700"
           textAnchor="middle" alignmentBaseline="middle"
           // alignmentBaseline não é honrado no Android: o dy de 0,35em é o
           // truque que centra vertical em qualquer um dos dois.
           dy="0.35em"
         >
           {pc ? Math.round(pc) + '%' : '0%'}
+        </SvgText>
+        {/* "de 195" DENTRO do anel, embaixo da porcentagem — igual ao site
+            (29/09). Fora dele sobrava uma linha solta sob o círculo. */}
+        <SvgText x={38} y={51} fill={INK2} fontSize={9.5} textAnchor="middle" dy="0.35em">
+          {'de ' + PAISES_NO_MUNDO}
         </SvgText>
       </Svg>
     </View>
@@ -87,8 +92,9 @@ function LinhaDoPlacar({ n, rotulo, onPress }) {
       accessibilityLabel={n + ' ' + rotulo}
     >
       <Text style={e.pcN}>{n}</Text>
-      <Text style={e.pcR}>{rotulo}</Text>
-      <Text style={e.pcSeta}>›</Text>
+      <Text style={e.pcR}>
+        {rotulo} <Text style={e.pcSeta}>›</Text>
+      </Text>
     </Pressable>
   );
 }
@@ -299,7 +305,6 @@ export default function TelaViagens({ dados, ocupado, acao }) {
           accessibilityLabel="Ver o mapa-múndi"
         >
           <Anel paises={d.paises} />
-          <Text style={e.anelRot}>de {PAISES_NO_MUNDO} países</Text>
         </Pressable>
         <View style={e.placarCol}>
           <LinhaDoPlacar n={d.paises} rotulo="países" onPress={() => acao('mapa')} />
@@ -429,14 +434,13 @@ const e = StyleSheet.create({
   },
   anelBloco: { alignItems: 'center', gap: 6 },
   anel: { width: 76, height: 76 },
-  // Diz PAÍSES, não "do mundo": o anel fica ao lado de três números
-  // diferentes, e sem isto nada amarra a porcentagem a um deles.
-  anelRot: { fontSize: 10, color: INK2 },
-  placarCol: { flex: 1, minWidth: 0 },
-  pcItem: { flexDirection: 'row', alignItems: 'baseline', gap: 8, paddingVertical: 3 },
-  pcN: { fontSize: 23, fontWeight: '700', letterSpacing: -0.9, color: INK, minWidth: 36 },
-  pcR: { flex: 1, fontSize: 14, color: INK2 },
-  pcSeta: { fontSize: 14, color: INK3 },
+  // Os três em FILEIRA, número em cima e rótulo embaixo — o desenho do site
+  // (29/09). Lado a lado eles se comparam; empilhados viravam uma lista.
+  placarCol: { flex: 1, minWidth: 0, flexDirection: 'row', alignItems: 'flex-end', gap: 14 },
+  pcItem: { flex: 1, minWidth: 0, alignItems: 'flex-start' },
+  pcN: { fontSize: 26, fontWeight: '700', letterSpacing: -1, color: INK, lineHeight: 28 },
+  pcR: { fontSize: 13, color: INK2 },
+  pcSeta: { fontSize: 12, color: INK3 },
 
   convite: { fontSize: 12.5, color: INK3, maxWidth: 230, lineHeight: 18, marginTop: 14, marginHorizontal: 20 },
 
