@@ -4818,7 +4818,13 @@ async function compartilharCidade(){
   }
   const novo=LISTA_PUBLICA_LIGADA?await pedirLista('criar'):null;
   if(btn)btn.style.opacity='';
-  if(novo&&novo.codigo)return mandarLinkDaLista(novo.codigo);
+  // NÃO compartilha direto: o iPhone só abre a folha de compartilhar (com o
+  // WhatsApp) logo depois de um TOQUE, e a espera pelo servidor 'gasta' o toque —
+  // o app caía no plano B e só copiava o link (30/09). A folha pede um toque novo.
+  if(novo&&novo.codigo){
+    abrirFolhaDeEscolha([{id:'mandar',rotulo:'Compartilhar o link',n:''}],'',()=>mandarLinkDaLista(novo.codigo));
+    return;
+  }
   // Sem rede ou servidor fora: cai no texto de antes.
   const nome=nomeDeExibicao();
   const texto=corpo+'\n\n'+(nome?nome+' · ':'')+'salvos no Spot\n'+location.origin;
