@@ -4782,34 +4782,44 @@ function textoDaCidadePraCompartilhar(){
 // Spot. É o jeito de quem nunca ouviu falar ver o app funcionando. A mesma
 // cidade sempre gera o mesmo link, e a página lê a lista na hora: spot novo
 // entra sozinho. Sem rede (ou servidor fora), cai no texto de antes.
-const LISTA_PUBLICA_LIGADA=false;
-async function linkDaListaPublica(){
-  const t=S.curTrip,cidade=S.curCity;if(!t||!cidade)return'';
+const LISTA_PUBLICA_LIGADA=true;
+async function pedirLista(op){
+  const t=S.curTrip,cidade=S.curCity;if(!t||!cidade)return null;
   const daCidade=spotsDaViagem(t).filter(sp=>cityOf(sp)===cidade);
-  // Os nomes como estão GRAVADOS: a tela junta grafias ("Split" e "Split-Dalmatia
-  // County"), e a página do servidor procura pelo que está no banco.
+  // Os nomes como estão GRAVADOS: a tela junta grafias ('Split' e 'Split-Dalmatia
+  // County'), e a página do servidor procura pelo que está no banco.
   const cidades=[...new Set(daCidade.map(sp=>String(sp.city||'').trim()).filter(Boolean))];
-  if(!cidades.length)return'';
+  if(!cidades.length)return null;
   try{
-    const tk=await ensureToken();if(!tk)return'';
-    const r=await comPrazo(fetch('/api/lista',{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+tk},
-      body:JSON.stringify({cidades,titulo:cidade,pais:paisDaViagem(t)||''})}).then(x=>x.json()),6000,null);
-    return r&&r.codigo?location.origin+'/l/'+r.codigo:'';
-  }catch(e){return''}
+    const tk=await ensureToken();if(!tk)return null;
+    return await comPrazo(fetch('/api/lista',{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+tk},
+      body:JSON.stringify({op,cidades,titulo:cidade,pais:paisDaViagem(t)||''})}).then(x=>x.json()),6000,null);
+  }catch(e){return null}
+}
+async function mandarLinkDaLista(codigo){
+  const pais=paisDaViagem(S.curTrip);
+  await mandarTextoPraFora('Meus spots em '+S.curCity+(pais?' '+flagFor(pais):'')+', com a minha nota de cada um:\n'+location.origin+'/l/'+codigo,'Meus spots em '+S.curCity);
 }
 async function compartilharCidade(){
   const corpo=textoDaCidadePraCompartilhar();
   if(!corpo){toast('Nada pra compartilhar','Salve um spot nesta cidade primeiro.');return}
-  // DESLIGADO até o desenho da página pública chegar do Claude Design (pedido
-  // do Lucas, 30/09). Pra ligar: LISTA_PUBLICA_LIGADA=true.
-  const btn=document.getElementById('cityShareBtn');if(btn&&LISTA_PUBLICA_LIGADA)btn.style.opacity='.5';
-  const link=LISTA_PUBLICA_LIGADA?await linkDaListaPublica():'';
-  if(btn)btn.style.opacity='';
-  const pais=paisDaViagem(S.curTrip);
-  if(link){
-    await mandarTextoPraFora('Meus spots em '+S.curCity+(pais?' '+flagFor(pais):'')+', com a minha nota de cada um:\n'+link,'Meus spots em '+S.curCity);
+  const btn=document.getElementById('cityShareBtn');if(btn)btn.style.opacity='.5';
+  // Já tem link: pergunta se é pra mandar de novo ou PARAR de compartilhar
+  // (o link velho vira 'Esta lista não está mais aqui').
+  const estado=LISTA_PUBLICA_LIGADA?await pedirLista('estado'):null;
+  if(estado&&estado.codigo){
+    if(btn)btn.style.opacity='';
+    abrirFolhaDeEscolha([{id:'mandar',rotulo:'Compartilhar o link',n:''},{id:'parar',rotulo:'Parar de compartilhar',n:''}],'',async id=>{
+      if(id==='mandar')return mandarLinkDaLista(estado.codigo);
+      const r=await pedirLista('parar');
+      toast(r&&r.parado?'Link desativado':'Não deu pra desativar',r&&r.parado?'Quem tinha o link não vê mais a lista.':'Tenta de novo em alguns segundos.',r&&r.parado?'check':'alert');
+    });
     return;
   }
+  const novo=LISTA_PUBLICA_LIGADA?await pedirLista('criar'):null;
+  if(btn)btn.style.opacity='';
+  if(novo&&novo.codigo)return mandarLinkDaLista(novo.codigo);
+  // Sem rede ou servidor fora: cai no texto de antes.
   const nome=nomeDeExibicao();
   const texto=corpo+'\n\n'+(nome?nome+' · ':'')+'salvos no Spot\n'+location.origin;
   await mandarTextoPraFora(texto,'Meus spots em '+S.curCity);

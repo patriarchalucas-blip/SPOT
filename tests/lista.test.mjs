@@ -1,28 +1,45 @@
 import { test } from 'node:test';
 import assert from 'node:assert';
-import { paginaDaLista, fotoDoSpot, esc } from '../functions/l/[codigo].js';
+import { paginaDaLista, fotoDoSpot, esc, rotuloDoSpot } from '../functions/l/[codigo].js';
 import { limparCidades, onRequestPost } from '../functions/api/lista.js';
 
-const spots = [
-  { name: 'Taberna <b>X</b>', category: 'food', status: 'been', my_rating: 4.5, my_review: 'Vai cedo "sempre"', photo_url: 'https://places.googleapis.com/v1/places/abc/photos/def/media?maxWidthPx=400&key=SEGREDO' },
-  { name: 'Miradouro', category: 'experience', status: 'want', my_rating: null, my_review: 'nao deve aparecer', photo_url: '' },
-];
+const base = { origem: 'https://meuspot.app', codigo: 'abc12345', nome: 'Lucas P', titulo: 'Lisboa', pais: 'Portugal' };
+const fui = (i, extra) => Object.assign({ name: 'Lugar ' + i, category: 'food', status: 'been', my_rating: 4, my_review: 'frase ' + i, photo_url: '' }, extra);
+const quero = (i) => ({ name: 'Quero ' + i, category: 'experience', status: 'want', my_review: 'nao deve aparecer', photo_url: '' });
 
-test('lista publica: escapa texto de usuario e nunca vaza a chave da foto', () => {
-  const h = paginaDaLista({ nome: 'Lucas P', titulo: 'Lisboa', pais: 'Portugal', spots, origem: 'https://meuspot.app', codigo: 'abc12345' });
-  assert.ok(h.includes('Os spots de Lucas em Lisboa'));
-  assert.ok(!h.includes('<b>X</b>'), 'nome do spot virou HTML');
-  assert.ok(!h.includes('SEGREDO'), 'a chave do Google apareceu');
-  assert.ok(h.includes('/api/place-photo?ref=places%2Fabc%2Fphotos%2Fdef&amp;w=200') || h.includes('/api/place-photo?ref=places%2Fabc%2Fphotos%2Fdef&w=200'));
-  assert.ok(h.includes('★ 4,5'));
-  assert.ok(!h.includes('nao deve aparecer'), 'avaliacao de Quero ir apareceu');
+test('lista publica: escapa texto, nunca vaza a chave da foto nem frase de Quero ir', () => {
+  const spots = [fui(1, { name: 'Taberna <b>X</b>', my_rating: 4.5, photo_url: 'https://places.googleapis.com/v1/places/abc/photos/def/media?maxWidthPx=400&key=SEGREDO' }), quero(1)];
+  const h = paginaDaLista(Object.assign({ spots }, base));
+  assert.ok(h.includes('Os spots de Lucas em Lisboa'), 'titulo sem genero');
+  assert.ok(!/Os spots do /.test(h), 'o app nao sabe o genero');
+  assert.ok(!h.includes('<b>X</b>'));
+  assert.ok(!h.includes('SEGREDO'));
+  assert.ok(/\/api\/place-photo\?ref=places%2Fabc%2Fphotos%2Fdef&(amp;)?w=\d+/.test(h));
+  assert.ok(h.includes('aria-label="4,5 de 5"'), 'meia estrela');
+  assert.ok(!h.includes('nao deve aparecer'));
   assert.ok(h.includes('noindex'));
-  assert.ok(h.includes('Spot - seus lugares'));
+  assert.ok(h.includes('2 spots no Spot'), 'og:description sem misturar fui/quero ir');
 });
 
-test('lista publica: foto de fora do Google/Supabase nao entra', () => {
+test('lista publica: so Quero ir tira o titulo da secao e explica no subtitulo', () => {
+  const h = paginaDaLista(Object.assign({ spots: [quero(1), quero(2)] }, base));
+  assert.ok(h.includes('Portugal · 2 spots que quer conhecer'));
+  assert.ok(!h.includes('<h2>Quero ir'));
+});
+
+test('lista publica: mais de 10 spots vira abas com categorias', () => {
+  const spots = Array.from({ length: 8 }, (_, i) => fui(i)).concat(Array.from({ length: 4 }, (_, i) => quero(i)));
+  const h = paginaDaLista(Object.assign({ spots }, base));
+  assert.ok(h.includes('data-aba="fui"') && h.includes('data-aba="quero"'));
+  assert.ok(h.includes('Comer 8'));
+});
+
+test('lista publica: foto de fora e rotulo da linha', () => {
   assert.strictEqual(fotoDoSpot('https://site-malicioso.com/x.jpg', 200), '');
   assert.strictEqual(esc('"><script>'), '&quot;&gt;&lt;script&gt;');
+  assert.strictEqual(rotuloDoSpot({ category: 'experience', subcategory: 'passeio' }), 'Passeio');
+  assert.strictEqual(rotuloDoSpot({ category: 'food', place_type: 'Comer & Beber' }), 'Comer');
+  assert.strictEqual(rotuloDoSpot({ category: 'hotel' }), 'Hospedagem');
 });
 
 test('criar lista: exige login e limpa as cidades', async () => {

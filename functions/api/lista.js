@@ -48,6 +48,17 @@ export async function onRequestPost(context) {
   // A mesma lista (mesma pessoa, mesmas cidades) sempre tem o mesmo link.
   const indice = 'lista_de_' + await hash(quem.uid + '|' + cidades.slice().sort().join('|'));
   const ja = await lerKV(env, indice);
+  // 'estado': o app pergunta se já existe link (pra oferecer "Parar de compartilhar").
+  if (body.op === 'estado') return json({ codigo: ja || '' });
+  // 'parar': o link antigo passa a responder 410 ("Esta lista não está mais aqui"),
+  // e compartilhar de novo gera um código NOVO — quem tinha o velho não volta a ver.
+  if (body.op === 'parar') {
+    if (ja) {
+      await gravarKV(env, 'lista_' + ja, JSON.stringify({ revogado: true, t: Date.now() }), 60 * 60 * 24 * 730);
+      try { await env.SPOT_KV.delete(indice) } catch (e) {}
+    }
+    return json({ parado: true });
+  }
   if (ja) return json({ codigo: ja });
 
   if (!await podeGastar(env, 'lista', quem.uid, 1, TETO_PESSOA)) return json({ capped: true });
