@@ -6251,6 +6251,9 @@ async function runExplore(rotulo,lugarEscolhido){
     // "restaurantes em São Paulo" DENTRO do retângulo da Fradique Coutinho.
     EXPLORE.termo=termoDoExplorar(lugar.cidade||lugar.nome);
     EXPLORE.ondeTermo=lugar.cidade||lugar.nome;
+    // Área escolhida arrastando o mapa: o texto não diz cidade nenhuma (a
+    // pessoa pode ter arrastado pra fora dela) — quem limita é o retângulo.
+    if(lugar.tipo==='mapa'){EXPLORE.termo=termoDoExplorar('').replace(/ em $/,'');EXPLORE.ondeTermo='';EXPLORE.fila=[]}
     if(!EXPLORE.rotulo){EXPLORE.rotulo='Perto de '+lugar.nome;pintarRotuloDoExplorar()}
   }
   // Amigos são comparados por cidade: buscando uma rua, vale a cidade dela.
@@ -6498,6 +6501,18 @@ window.acaoDeExplorar=function(acao,valor){
 // Ordem (decisão do Lucas): 1º quantos amigos já foram, 2º a nota.
 let AMIGOS_AREA={estado:'inicial',lugares:[],amigos:0};
 const ABAS_DO_EXPLORAR=[{id:'voce',rotulo:'Para você'},{id:'amigos',rotulo:'Amigos'}];
+// Pede ao servidor a posição de spots que não têm (ver functions/api/posicao.js).
+// Com prazo: se demorar, a lista segue sem os pinos desses, e da próxima vez
+// eles já têm posição gravada.
+async function posicoesDoServidor(ids){
+  if(!ids.length)return{};
+  try{
+    const tk=await ensureToken();if(!tk)return{};
+    const r=await comPrazo(fetch('/api/posicao',{method:'POST',
+      headers:{'Content-Type':'application/json','Authorization':'Bearer '+tk},body:JSON.stringify({ids})}).then(x=>x.json()),6000,null);
+    return (r&&r.posicoes)||{};
+  }catch(e){return{}}
+}
 async function lugaresDosAmigos(area,pontual,cidade){
   const ids=await idsDosAmigos();
   if(falhou(ids))return{estado:'erro',lugares:[],amigos:0};
@@ -6516,6 +6531,10 @@ async function lugaresDosAmigos(area,pontual,cidade){
   // viagens daquele destino. Rua e bairro não entram aqui: por nome, "São
   // Paulo" traria a cidade inteira pra uma busca de rua.
   const nomes=[...new Set([].concat(cidade||[]).map(termoSeguro).filter(Boolean))];
+  // Rua, bairro ou "perto de você": além dos que têm posição dentro da área,
+  // os da MESMA cidade que ainda não têm posição (spot antigo). O servidor
+  // descobre onde ficam logo abaixo, e só fica quem cair dentro da área.
+  if(pontual)nomes.forEach(t=>buscas.push(dbGet('spots',base+'&lat=is.null&city=ilike.*'+encodeURIComponent(t)+'*')));
   if(!pontual){
     nomes.forEach(t=>{
       buscas.push(dbGet('spots',base+'&city=ilike.*'+encodeURIComponent(t)+'*'));
@@ -6532,7 +6551,21 @@ async function lugaresDosAmigos(area,pontual,cidade){
   if(partes.every(falhou))return{estado:'erro',lugares:[],amigos:ids.length};
   const porId={};
   partes.forEach(l=>(l||[]).forEach(s=>{if(!estaBloqueado(s.user_id))porId[s.id]=s}));
-  const spots=Object.values(porId);
+  let spots=Object.values(porId);
+  // Spot salvo antes de o app gravar lat/lng não tinha pino nem entrava em
+  // busca por área (30/09: "Nenhum spot por aqui" em São Paulo, onde os
+  // amigos do Lucas salvaram vários). O servidor acha a posição e GRAVA no
+  // spot — uma vez só, e dali em diante vale pra todo mundo.
+  const semPos=spots.filter(x=>x.lat==null||x.lng==null).slice(0,20);
+  if(semPos.length){
+    const pos=await posicoesDoServidor(semPos.map(x=>x.id));
+    semPos.forEach(x=>{const p=pos[x.id];if(p){x.lat=p.lat;x.lng=p.lng}});
+  }
+  if(pontual&&area&&area.rectangle){
+    const r=area.rectangle;
+    spots=spots.filter(x=>x.lat!=null&&Number(x.lat)>=r.low.latitude&&Number(x.lat)<=r.high.latitude
+      &&Number(x.lng)>=r.low.longitude&&Number(x.lng)<=r.high.longitude);
+  }
   if(!spots.length)return{estado:'nada_aqui',lugares:[],amigos:ids.length};
   // O mesmo restaurante salvo por vários amigos vira UM card. Mesmo nome e,
   // quando há coordenada, a ~100 m; sem coordenada, a mesma cidade.
@@ -6853,7 +6886,6 @@ function exmMontarItens(){
         foto:s.photo_url,nota:Number(s.rating_google)||0,foram:0,querem:0,cidade:cityOf(s)||'',aberto:exmAberto(s.opening_hours)});
     });
   }
-  itens.filter(it=>it.tipo==='amigo'&&it.lat==null).slice(0,12).forEach(exmPosicaoDoGrupo);
   let lista=itens;
   if(EXM.filtros.amigos)lista=lista.filter(it=>it.tipo==='amigo');
   if(EXM.filtros.aberto)lista=lista.filter(it=>it.aberto===true);
@@ -6943,7 +6975,7 @@ function exmTitulo(){
   const dists=EXM.itens.map(it=>it.dist).filter(d=>d!=null);
   if(dists.length&&raio!=null&&raio<30)raio=Math.max(raio,...dists);
   t.textContent=raio!=null&&raio<30?'Dentro de '+String(raio<10?raio.toFixed(1):Math.round(raio)).replace('.',',')+' km'
-    :(EXPLORE.city?'Em '+((EXPLORE.lugar&&EXPLORE.lugar.nome)||EXPLORE.city):'Explorar');
+    :(EXPLORE.lugar&&EXPLORE.lugar.tipo==='mapa'?'Nesta área':EXPLORE.city?'Em '+((EXPLORE.lugar&&EXPLORE.lugar.nome)||EXPLORE.city):'Explorar');
   c.textContent=EXPLORE_ESTADO==='buscando'?'Buscando…':EXM.itens.length+(EXM.itens.length===1?' spot':' spots');
 }
 function exmDesenhar(){
@@ -7015,6 +7047,35 @@ function exmQueroIr(i){
   if(it.tipo==='amigo')return abrirLugarDosAmigos(it.gi);   // a ficha do amigo tem "Adicionar à minha lista"
 }
 
+// ── arrastou ou tirou zoom: busca na área nova ──
+// Pedido do Lucas (30/09): "se eu for movendo o mapa, tem que aparecer" — no
+// Parque Novo Mundo, a 5 km, o mapa ficava vazio porque só mostrava a busca
+// inicial. Agora, quando a área visível sai da área já buscada, busca de novo
+// nela. Travas de custo: espera a pessoa parar (900 ms), só busca se a área
+// visível escapou da já buscada, e no máximo 25 vezes por sessão.
+let EXM_BUSCA_AREA=null,EXM_BUSCAS_NO_MAPA=0;
+function exmTalvezBuscarNaArea(){
+  if(!EXM.pessoaMexeu||!EXM.mapa)return;
+  clearTimeout(EXM_BUSCA_AREA);
+  EXM_BUSCA_AREA=setTimeout(()=>{
+    const b=EXM.mapa.getBounds();if(!b)return;
+    const ne=b.getNorthEast(),sw=b.getSouthWest();
+    const r=EXPLORE.area&&EXPLORE.area.rectangle;
+    const dentro=r&&sw.lat()>=r.low.latitude-1e-4&&sw.lng()>=r.low.longitude-1e-4&&ne.lat()<=r.high.latitude+1e-4&&ne.lng()<=r.high.longitude+1e-4;
+    if(dentro)return;                       // ainda dentro do que já foi buscado
+    if(EXM_BUSCAS_NO_MAPA>=25)return;
+    // Zoom de país inteiro não busca sozinho: o Google devolveria 20 lugares
+    // espalhados pelo território. Aí vale a busca digitada.
+    if(exmDistKm({lat:sw.lat(),lng:sw.lng()},{lat:ne.lat(),lng:ne.lng()})>60)return;
+    EXM_BUSCAS_NO_MAPA++;EXM.pessoaMexeu=false;
+    const rect={rectangle:{low:{latitude:sw.lat(),longitude:sw.lng()},high:{latitude:ne.lat(),longitude:ne.lng()}}};
+    EXM.areaChave=[sw.lat(),sw.lng(),ne.lat(),ne.lng()].join(',');   // não re-enquadra: a pessoa escolheu a vista
+    EXM.amigosEnquadrados=-1;
+    const cidade=(EXPLORE.lugar&&EXPLORE.lugar.cidade)||EXPLORE.city||'';
+    runExplore('Nesta área',{nome:'Nesta área',tipo:'mapa',cidade,pais:'',area:rect});
+  },900);
+}
+
 // ── mapa ──
 async function exmPrepararMapa(){
   if(EXM.mapa||EXM.preparando)return EXM.mapa;
@@ -7026,7 +7087,12 @@ async function exmPrepararMapa(){
       styles:ESTILO_DO_MAPA,disableDefaultUI:true,gestureHandling:'greedy',clickableIcons:false,
       center:{lat:-23.55,lng:-46.63},zoom:12,backgroundColor:'#E4E8E4'});
     EXM.mapa.addListener('click',()=>{if(EXM.sel>=0){EXM.sel=-1;exmDesenhar();exmIrPara('baixa')}});
-    EXM.mapa.addListener('idle',()=>exmTitulo());
+    EXM.mapa.addListener('idle',()=>{exmTitulo();exmTalvezBuscarNaArea()});
+    // Só o gesto da pessoa conta: o enquadramento que o próprio app faz
+    // (fitBounds, panTo do pino) não pode disparar busca nova.
+    EXM.mapa.addListener('dragstart',()=>{EXM.pessoaMexeu=true});
+    document.getElementById('exmMapa').addEventListener('wheel',()=>{EXM.pessoaMexeu=true},{passive:true});
+    document.getElementById('exmMapa').addEventListener('touchstart',e=>{if(e.touches.length>1)EXM.pessoaMexeu=true},{passive:true});
     exmDesenhar();
     return EXM.mapa;
   }catch(e){return null}finally{EXM.preparando=false}

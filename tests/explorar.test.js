@@ -196,7 +196,9 @@ test('aba Amigos: o lugar onde mais amigos foram vem primeiro, depois a nota', a
     // busca por rua filtra pela coordenada, sem cair no nome da cidade
     const q = consultas.filter((c) => c[0] === 'spots').map((c) => c[1]);
     assert.ok(q.some((x) => /lat=gte\./.test(x) && /lng=lte\./.test(x)));
-    assert.ok(!q.some((x) => /city=ilike/.test(x)), 'rua nao pode buscar pela cidade');
+    // Pela cidade, SÓ os spots sem posição (30/09): o servidor acha onde ficam e
+    // o filtro da área decide quem entra — spot com posição nunca vem pelo nome.
+    assert.ok(q.filter((x) => /city=ilike/.test(x)).every((x) => /lat=is\.null/.test(x)), 'rua so pode buscar pela cidade os spots sem posicao');
   } finally { vs.forEach((v) => v()) }
 });
 
