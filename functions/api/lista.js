@@ -39,6 +39,7 @@ export async function onRequestPost(context) {
   const cidades = limparCidades(body.cidades);
   const titulo = String(body.titulo || cidades[0] || '').replace(/[\u0000-\u001f]/g, ' ').trim().slice(0, 80);
   const pais = String(body.pais || '').replace(/[\u0000-\u001f]/g, ' ').trim().slice(0, 60);
+  const nome = String(body.nome || '').replace(/[\u0000-\u001f<>]/g, ' ').trim().slice(0, 40);
   if (!cidades.length) return json({ error: 'sem_cidade' }, 400);
 
   const quem = await quemEsta(request, env);

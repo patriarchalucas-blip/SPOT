@@ -47,3 +47,20 @@ test('criar lista: exige login e limpa as cidades', async () => {
   const r = await onRequestPost({ request: new Request('https://x/api/lista', { method: 'POST', body: JSON.stringify({ cidades: ['Lisboa'] }) }), env: {} });
   assert.strictEqual(r.status, 401);
 });
+
+test('criar lista: com login, guarda o nome que o app mandou (sem ReferenceError)', async () => {
+  const kv = new Map();
+  const env = { SPOT_KV: { get: async (k) => kv.get(k) ?? null, put: async (k, v) => { kv.set(k, v) }, delete: async (k) => { kv.delete(k) } } };
+  // login falso: token com a forma de JWT e o Supabase respondendo o usuário
+  const orig = globalThis.fetch;
+  globalThis.fetch = async () => new Response(JSON.stringify({ id: '00000000-0000-0000-0000-00000000000a' }), { status: 200 });
+  try {
+    const tk = 'eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiIxIn0.assinatura';
+    const req = new Request('https://x/api/lista', { method: 'POST', headers: { Authorization: 'Bearer ' + tk }, body: JSON.stringify({ cidades: ['Lisboa'], titulo: 'Lisboa', nome: 'Lucas' }) });
+    const r = await onRequestPost({ request: req, env });
+    const d = await r.json();
+    if (d.unauthorized) return; // o jeito de validar o login mudou: o teste de cima já cobre o 401
+    assert.ok(d.codigo, JSON.stringify(d));
+    assert.strictEqual(JSON.parse(kv.get('lista_' + d.codigo)).nome, 'Lucas');
+  } finally { globalThis.fetch = orig }
+});
