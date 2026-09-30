@@ -1,0 +1,122 @@
+// Pente-fino (30/09): percorre as telas principais com banco, Google e IA
+// FALSOS e junta todo erro de JavaScript. Rodar ANTES de publicar:
+//   1) servidor local na porta 8935 servindo a pasta do repo;
+//   2) node ferramentas/pente-fino.mjs  → tem que terminar com ERROS (0).
+// Prints de cada passo em %TEMP%/pente-*.png.
+import { createRequire } from 'module';
+const require = createRequire('C:/Users/lucas.patriarcha_sol/Downloads/Spot-20260923T193028Z-1-001/Spot/ferramentas/capturas-loja/');
+const puppeteer = require('puppeteer-core');
+const OUT = process.env.TEMP + '/pente-';
+
+const EU = '00000000-0000-0000-0000-0000000000e1', ANA = '00000000-0000-0000-0000-0000000000a1', RAFA = '00000000-0000-0000-0000-0000000000b1';
+const DB = {
+  profiles: [{ id: EU, display_name: 'Lucas Patriarcha', username: 'lucas', home_city: 'São Paulo', home_country: 'Brasil' },
+    { id: ANA, display_name: 'Ana Ribeiro', username: 'ana' }, { id: RAFA, display_name: 'Rafa Mendes', username: 'rafa' }],
+  follows: [{ id: 'f1', follower_id: EU, following_id: ANA, status: 'accepted' }, { id: 'f2', follower_id: RAFA, following_id: EU, status: 'accepted' }],
+  trips: [
+    { id: 't1', user_id: EU, name: 'Portugal', destinations: ['Portugal'], dates: '', status: 'planning', initial_city: 'Lisboa', created_at: '2026-09-01' },
+    { id: 't2', user_id: EU, name: 'São Paulo', destinations: ['Brasil'], dates: '__casa__', status: 'planning', initial_city: 'São Paulo', created_at: '2026-09-02' },
+    { id: 'ta', user_id: ANA, name: 'portugal', destinations: ['portugal'], dates: '', status: 'planning', created_at: '2026-08-01' },
+    { id: 'tr', user_id: RAFA, name: 'Portugal', destinations: ['Portugal'], dates: '', status: 'planning', created_at: '2026-08-01' }],
+  spots: [
+    { id: 's1', user_id: EU, trip_id: 't1', name: 'Taberna da Rua das Flores', category: 'food', city: 'Lisboa', status: 'been', my_rating: 4.5, my_review: 'Petiscos', created_at: '2026-09-01' },
+    { id: 's2', user_id: EU, trip_id: 't1', name: 'Majestic Café', category: 'food', city: 'Porto', status: 'want', created_at: '2026-09-01' },
+    { id: 's3', user_id: EU, trip_id: 't2', name: 'Mocotó', category: 'food', city: 'São Paulo', status: 'been', my_rating: 5, created_at: '2026-09-01' },
+    { id: 'a1', user_id: ANA, trip_id: 'ta', name: 'Cervejaria Ramiro', category: 'food', city: 'Lisboa', status: 'been', my_rating: 5, my_review: 'Camarão', created_at: '2026-08-01' },
+    { id: 'r1', user_id: RAFA, trip_id: 'tr', name: 'Taberna da Rua das Flores', category: 'food', city: 'Lisboa', status: 'been', my_rating: 4, created_at: '2026-08-01' }]
+};
+function filtra(tab, qs) {
+  let l = (DB[tab] || []).slice();
+  for (const [k, v] of new URLSearchParams(qs)) {
+    if (['select', 'order', 'limit', 'offset', 'or'].includes(k)) continue;
+    const m = String(v).match(/^(eq|in|cs)\.(.*)$/); if (!m) continue;
+    if (m[1] === 'eq') l = l.filter(r => String(r[k]) === m[2]);
+    if (m[1] === 'in') { const ids = m[2].replace(/[()"]/g, '').split(','); l = l.filter(r => ids.includes(String(r[k]))) }
+    if (m[1] === 'cs') { const x = m[2].replace(/[{}"]/g, ''); l = l.filter(r => (r[k] || []).includes(x)) }
+  }
+  if (tab === 'follows') l = DB.follows;
+  return l;
+}
+const gPlace = (n, c) => ({ id: 'g' + n, displayName: { text: n }, formattedAddress: 'Rua 1, ' + c + ', Portugal', types: ['restaurant'], primaryType: 'restaurant',
+  addressComponents: [{ types: ['locality'], longText: c, shortText: c }, { types: ['country'], longText: 'Portugal', shortText: 'PT' }], location: { latitude: 38.7, longitude: -9.1 } });
+
+const b = await puppeteer.launch({ executablePath: 'C:/Program Files/Google/Chrome/Application/chrome.exe' });
+const pg = await b.newPage(); await pg.setViewport({ width: 390, height: 844, deviceScaleFactor: 1 });
+const erros = [];
+pg.on('pageerror', e => erros.push('[' + passo + '] ' + e.message));
+pg.on('console', m => { if (m.type() === 'error' && !/Failed to load resource/.test(m.text())) erros.push('[' + passo + '] console: ' + m.text().slice(0, 200)) });
+let passo = 'abrir';
+await pg.setRequestInterception(true);
+const CORS={'Access-Control-Allow-Origin':'*','Access-Control-Allow-Headers':'*','Access-Control-Allow-Methods':'*'};
+pg.on('request', r => {
+  const u = r.url();
+  if (r.method()==='OPTIONS') return r.respond({status:204,headers:CORS});
+  const resp0=r.respond.bind(r); r.respond=(o)=>resp0(Object.assign({},o,{headers:Object.assign({},CORS,o.headers||{})}));
+  const rest = u.match(/supabase\.co\/rest\/v1\/([a-z_]+)\??(.*)$/);
+  if (rest) {
+    if (r.method() === 'POST' && rest[1] === 'spots') { const body = JSON.parse(r.postData() || '{}'); const row = Object.assign({ id: 'n' + Math.random().toString(16).slice(2, 8), created_at: new Date().toISOString() }, body); DB.spots.push(row); return r.respond({ status: 201, contentType: 'application/json', body: JSON.stringify([row]) }) }
+    if (r.method() === 'POST' && rest[1] === 'trips') { const body = JSON.parse(r.postData() || '{}'); const row = Object.assign({ id: 'nt' + Math.random().toString(16).slice(2, 8) }, body); DB.trips.push(row); return r.respond({ status: 201, contentType: 'application/json', body: JSON.stringify([row]) }) }
+    if (r.method() === 'POST' && rest[1] === 'rpc') return r.respond({ status: 200, contentType: 'application/json', body: '[]' });
+    return r.respond({ status: 200, contentType: 'application/json', body: JSON.stringify(filtra(rest[1], rest[2])) });
+  }
+  if (/supabase\.co\/(auth|storage)/.test(u)) return r.respond({ status: 200, contentType: 'application/json', body: '{}' });
+  if (u.includes('/api/places')) { let q = ''; try { q = JSON.parse(r.postData() || '{}').textQuery || '' } catch (e) {} return r.respond({ status: 200, contentType: 'application/json', body: JSON.stringify({ places: q ? (/xyzzy/i.test(q)?[gPlace('Farmácia Central','Porto')]:[gPlace(q.split(',')[0], /Porto/.test(q)?'Porto':'Lisboa')]) : [] }) }) }
+  if (u.includes('/api/importar')) { if (r.method()==='GET') return r.respond({status:200,contentType:'application/json',body:JSON.stringify({ligado:true})}); return r.respond({status:200,contentType:'application/json',body:JSON.stringify({lugares:[{texto:'taberna da rua das flores',nome:'Taberna da Rua das Flores',cidade:'Lisboa',pais:'Portugal',status:'been'},{texto:'pasteis de belem (amei)',nome:'Pastéis de Belém',cidade:'Lisboa',pais:'Portugal',status:'been'},{texto:'livraria lello',nome:'Livraria Lello',cidade:'Porto',pais:'Portugal',status:'want'},{texto:'o bar xyzzy do joão',nome:'Bar Xyzzy',cidade:'Porto',pais:'Portugal',status:'want'}]})}) }
+  if (u.includes('/api/lista')) return r.respond({ status: 200, contentType: 'application/json', body: JSON.stringify({ codigo: 'abcdefgh1234' }) });
+  if (u.includes('/api/')) return r.respond({ status: 200, contentType: 'application/json', body: '{}' });
+  r.continue();
+});
+await pg.goto('http://localhost:8935/index.html');
+await new Promise(r => setTimeout(r, 2000));
+const passoDe = async (nome, fn, espera) => {
+  passo = nome;
+  try { await pg.evaluate(fn) } catch (e) { erros.push('[' + nome + '] ' + e.message.split('\n')[0]) }
+  await new Promise(r => setTimeout(r, espera || 900));
+  const ativa = await pg.evaluate(() => { const s = document.querySelector('.screen.active'); const ov = [...document.querySelectorAll('.overlay.show')].map(o => o.id); return (s && s.id) + (ov.length ? ' + ' + ov.join(',') : '') });
+  console.log(nome.padEnd(34), '→', ativa);
+  await pg.screenshot({ path: OUT + nome.replace(/\W+/g, '_') + '.png' });
+};
+await passoDe('login simulado + dashboard', `(async()=>{window.ensureToken=async()=>'tk';S.user={id:'${EU}',email:'l@x.z',user_metadata:{full_name:'Lucas Patriarcha'}};await fetchOwnProfile(true);goTo('dashboard');await loadDashboard()})()`, 2500);
+await passoDe('abrir viagem Portugal', `openTrip('t1')`, 1500);
+await passoDe('compartilhar país', `compartilharPais()`, 1200);
+await passoDe('fechar folha', `closeOv('ov-compartilhar')`);
+await passoDe('abrir cidade Lisboa', `openCityScreen('Lisboa')`, 1200);
+await passoDe('compartilhar cidade', `compartilharCidade()`, 1200);
+await passoDe('fechar folha 2', `closeOv('ov-compartilhar')`);
+await passoDe('planejar pela cidade', `plnDaEntrada(true)`, 1200);
+await passoDe('ver lista juntada', `plnVerLista()`, 1200);
+await passoDe('ficha do lugar', `plnAbrirFicha(0)`);
+await passoDe('salvar Quero ir da ficha', `(async()=>{const i=PLN.vis.findIndex(g=>g.base.name==='Cervejaria Ramiro');plnAbrirFicha(i);await plnSalvar('want',null)})()`, 1500);
+await passoDe('voltar à escolha', `goTo('planejarEscolher')`);
+await passoDe('escolher destino', `plnEscolherDestino()`);
+await passoDe('buscar país', `plnPintarDestinos('ital')`);
+await passoDe('definir Itália', `plnDefinirPais(0)`, 1200);
+await passoDe('lista vazia (Itália)', `plnVerLista()`, 1200);
+await passoDe('casa: abrir viagem SP', `openTrip('t2')`, 1500);
+await passoDe('adicionar spot (busca)', `(()=>{goTo('dashboard');abrirBuscaDeSpot()})()`, 1000);
+await passoDe('digitar na busca', `(()=>{const i=document.getElementById('placeSearch');i.value='Mocotó';searchPlaces('Mocotó')})()`, 1500);
+await passoDe('fechar busca', `closeOv('ov-search')`);
+await passoDe('aba amigos', `(async()=>{goTo('friends');await loadFriends()})()`, 2000);
+await passoDe('perfil da Ana', `openFriend('${ANA}')`, 2000);
+await passoDe('planejar com Ana', `plnDoAmigo()`, 1200);
+await passoDe('voltar ao perfil', `plnVoltar()`);
+await passoDe('perfil próprio', `(async()=>{goTo('profile');await loadProfile()})()`, 2000);
+await passoDe('explorar', `(async()=>{goTo('explore');loadExplore()})()`, 2500);
+await passoDe('salvar da lista pública', `(async()=>{localStorage.setItem('spot_salvar_pendente','abcdefgh1234.11111111-2222-3333-4444-555555555555');await salvarSpotPendente()})()`, 1500);
+if (await pg.evaluate(() => typeof impAbrir === 'function')) {
+  await passoDe('importar: ver se ligado', `impVerSeEstaLigado()`);
+  await passoDe('importar: entrada no Adicionar', `(()=>{goTo('dashboard');abrirBuscaDeSpot()})()`);
+  await passoDe('importar: lista colada na busca', `(()=>{const i=document.getElementById('placeSearch');i.value='taberna, pasteis de belem, lello';searchPlaces(i.value)})()`);
+  await passoDe('importar: abrir (2a)', `impAbrir(IMP.texto)`);
+  await passoDe('importar: encontrar (2b-2c)', `impEncontrar()`, 3000);
+  await passoDe('importar: trocar lugar', `impAbrirTroca(0)`);
+  await passoDe('importar: escolher alternativa', `impEscolherAlt(0)`);
+  await passoDe('importar: buscar nao achado', `impBuscarNaoAchado(0)`, 1200);
+  await passoDe('importar: nenhum desses', `impNenhumDesses()`);
+  await passoDe('importar: status Fui na 2a', `impStatus(1,'been')`);
+  await passoDe('importar: salvar (2d)', `impSalvar()`, 3000);
+  await passoDe('importar: abrir cidade', `impAbrirCidade(0)`, 1200);
+  await passoDe('importar: vazio (2e)', `(()=>{IMP.etapa='vazio';IMP.texto='oi tudo bem';goTo('importar');impPintar()})()`);
+}
+console.log('\nERROS (' + erros.length + '):'); erros.forEach(e => console.log(' -', e));
+await b.close();
