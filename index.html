@@ -6883,7 +6883,7 @@ function exmMontarItens(){
       ||mesmoLugar(cityOf(s),(EXPLORE.lugar&&EXPLORE.lugar.cidade)||EXPLORE.city))).forEach(s=>{
       if(itens.some(it=>mesmoLugar(it.nome,s.name)))return;
       itens.push({tipo:'meu',s,nome:s.name,lat:s.lat!=null?Number(s.lat):null,lng:s.lng!=null?Number(s.lng):null,
-        foto:s.photo_url,nota:Number(s.rating_google)||0,foram:0,querem:0,cidade:cityOf(s)||'',aberto:exmAberto(s.opening_hours)});
+        foto:s.photo_url||s._fotoVista,nota:Number(s.rating_google)||0,foram:0,querem:0,cidade:cityOf(s)||'',aberto:exmAberto(s.opening_hours)});
     });
   }
   let lista=itens;
@@ -6957,9 +6957,38 @@ function exmMeta(it,curta){
   return p.join(' · ');
 }
 function exmNota(it){const n=it.nota||it.notaGoogle;return n?'<span class="exm-nota">'+esc(fmtRating(n))+' <i>★</i></span>':''}
-function exmFotoHTML(it,classe){
-  const f=it.foto?safeUrl(fotoNaLargura(semChaveDoPlaces(it.foto),classe==='exm-cfoto'?760:200)):'';
-  return '<div class="'+classe+'" style="background-image:'+destGradient(it.nome)+'">'+(f?'<img src="'+escUrl(f)+'" alt="" loading="lazy" decoding="async" onerror="this.remove()">':'')+'</div>';
+// Foto de spot de amigo costuma ser um endereço antigo do Google, que expira:
+// sem isto o card ficava com o quadrado vazio (30/09). Quebrou ou não tem →
+// busca a foto ATUAL do lugar (fotoParaVer, guardada) e troca.
+function exmFotoHTML(it,classe,i){
+  const larg=classe==='exm-cfoto'?760:200;
+  const f=it.foto?safeUrl(fotoNaLargura(semChaveDoPlaces(it.foto),larg)):'';
+  if(!f&&i!=null)exmBuscarFoto(it);
+  return '<div class="'+classe+'" style="background-image:'+destGradient(it.nome)+'">'+(f?'<img src="'+escUrl(f)+'" alt="" loading="lazy" decoding="async" onerror="exmFotoFalhou(this,'+(i==null?-1:i)+','+larg+')">':'')+'</div>';
+}
+// A foto achada vai pra FONTE do item (o grupo do amigo, o resultado do
+// Google, o spot): os itens são remontados a cada desenho, e guardar só no
+// item fazia pedir de novo e redesenhar sem parar. Uma vez por lugar na sessão.
+const EXM_FOTO_PEDIDA=new Set();
+function exmGuardarFoto(it,u){
+  it.foto=u;
+  if(it.g)it.g.foto=u;
+  if(it.tipo==='google'&&EXPLORE.items[it.idx])EXPLORE.items[it.idx].photo_url=u;
+  if(it.tipo==='meu'&&it.s)it.s._fotoVista=u;
+}
+function exmBuscarFoto(it){
+  const k=normName(it.nome)+'|'+normName(it.cidade);
+  if(EXM_FOTO_PEDIDA.has(k))return;
+  EXM_FOTO_PEDIDA.add(k);
+  const alvo=it.g?it.g.capa:{name:it.nome,city:it.cidade};
+  fotoParaVer(alvo).then(u=>{if(!u)return;exmGuardarFoto(it,u);exmAgendar()});
+}
+function exmFotoFalhou(img,i,larg){
+  const it=EXM.itens[i];
+  if(!it||img.dataset.tentou){img.remove();return}
+  img.dataset.tentou='1';
+  const alvo=it.g?it.g.capa:{name:it.nome,city:it.cidade};
+  fotoParaVer(alvo).then(u=>{if(u&&img.isConnected&&u!==it.foto){exmGuardarFoto(it,u);img.src=safeUrl(fotoNaLargura(u,larg))}else if(img.isConnected)img.remove()});
 }
 function exmTitulo(){
   const t=document.getElementById('exmTitulo'),c=document.getElementById('exmConta');if(!t)return;
@@ -6993,7 +7022,7 @@ function exmDesenhar(){
         :'Uma rua, um bairro, uma cidade ou um país — perto de você ou pra onde você vai.')+'</p>'
       +(cidade?'<button class="exm-btn" onclick="exmCidadeToda()">Buscar em toda a cidade</button>':'')+'</div>';
   }else{
-    corpo.innerHTML=EXM.itens.map((it,i)=>'<div class="exm-linha" onclick="exmSelecionar('+i+')">'+exmFotoHTML(it,'exm-foto')
+    corpo.innerHTML=EXM.itens.map((it,i)=>'<div class="exm-linha" onclick="exmSelecionar('+i+')">'+exmFotoHTML(it,'exm-foto',i)
       +'<div class="exm-txt"><div class="exm-nome">'+esc(it.nome)+'</div><div class="exm-meta">'+exmMeta(it,true)+'</div></div>'+exmNota(it)+'</div>').join('')
       +(EXPLORE.carregandoMais?'<div class="exm-mais">Carregando mais...</div>':'')
       +((EXPLORE.items||[]).length?'<div class="search-powered" style="justify-content:center;padding:18px 0 8px"><span>Lugares e fotos via</span><strong>Google</strong></div>':'');
@@ -7022,7 +7051,7 @@ function exmCartao(it,i){
   }
   const cat=EXPLORE.cat==='food'&&EXPLORE.cozinha?cozinhaAtual().rotulo:catLabel(EXPLORE.cat);
   const meta=[cat,exmTextoDist(it.dist),it.aberto===true?'aberto':it.aberto===false?'fechado':''].filter(Boolean).join(' · ');
-  return '<div class="exm-cartao">'+exmFotoHTML(it,'exm-cfoto')
+  return '<div class="exm-cartao">'+exmFotoHTML(it,'exm-cfoto',i)
     +'<div class="exm-ctopo"><h3>'+esc(it.nome)+'</h3>'+exmNota(it)+'</div>'
     +'<div class="exm-cmeta">'+esc(meta)+'</div>'+gente
     +'<div class="exm-botoes"><button class="exm-btn" onclick="exmVerSpot('+i+')">Ver spot</button>'
