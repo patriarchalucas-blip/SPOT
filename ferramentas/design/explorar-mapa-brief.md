@@ -27,19 +27,27 @@ Hoje o Explorar é só lista:
 
 1. **Seletor Mapa / Lista** ao lado da busca (segmentado: trilho `--surface`,
    opção escolhida com fundo `--base`).
-2. **Filtros rápidos** embaixo da busca: "Amigos foram", "Quero ir",
-   "Aberto agora" e o tipo de comida ("Comer ▾"). No mesmo estilo de **aba de
-   texto** do app, não pílula preenchida.
+2. **Filtros rápidos** embaixo da busca: **"Amigos"**, "Quero ir" (a minha
+   lista), "Aberto agora" e o tipo de comida ("Comer ▾"). No mesmo estilo de
+   **aba de texto** do app, não pílula preenchida.
+   - **Um filtro só pra amigos**, que junta os lugares onde eles **foram** e os
+     que eles **querem ir** — com distinção visual entre os dois (ver pinos).
+   - **A aba "Amigos" do topo sai**, e "Para você" também: vira **uma lista
+     só**, juntando as duas fontes. Os spots dos amigos na área entram sempre e
+     primeiro; os bem avaliados do Google completam. Sem o filtro, aparece
+     tudo; com "Amigos", só o que algum amigo salvou.
 3. **Mapa** ocupando o meio da tela, com poucos pinos:
-   - spot onde amigos foram: pino verde `#0B3D2E` com o **número de amigos**;
+   - spot onde amigos **foram**: pino verde `#0B3D2E` **cheio**, com o número de amigos;
+   - spot que amigos só **querem ir**: pino com **contorno** verde e miolo claro (mesmo número);
    - spot bem avaliado sem amigo: pino pequeno, claro, discreto;
    - você: ponto azul.
    - Tocar num pino destaca o spot na folha de baixo.
 4. **Folha puxável** embaixo do mapa (raio 28 em cima), com
    "Exibindo dentro de 1,4 km · N spots" e a lista. Ordem: primeiro os lugares
    onde **mais amigos foram**, depois nota. Cada linha tem foto 64 (raio 14),
-   nome 16/600, e "3 amigos foram · 350 m · aberto" 13 `--ink2` (a parte dos
-   amigos em verde), e a nota à direita.
+   nome 16/600, e "3 amigos foram · 1 quer ir · 350 m · aberto" 13 `--ink2`
+   (a parte dos amigos em verde; "quer ir" em `--ink2`), e a nota à direita.
+   Ordem dentro de amigos: primeiro quantos **foram**, depois quantos querem ir.
    - Puxar a folha pra cima vira a lista inteira; pra baixo, sobra só o título.
 
 ## O que NÃO copiar do TotalPass
@@ -53,7 +61,6 @@ Hoje o Explorar é só lista:
 
 - O que abre primeiro: mapa ou lista? (Sugestão: mapa quando o app sabe onde
   você está; lista quando você busca outra cidade.)
-- A aba "Amigos" do topo continua, ou o filtro "Amigos foram" substitui?
 - Estado vazio: área sem nenhum spot.
 - Estado "buscando" e "sem internet".
 
