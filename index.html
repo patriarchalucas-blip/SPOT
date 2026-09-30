@@ -6853,6 +6853,7 @@ function exmMontarItens(){
         foto:s.photo_url,nota:Number(s.rating_google)||0,foram:0,querem:0,cidade:cityOf(s)||'',aberto:exmAberto(s.opening_hours)});
     });
   }
+  itens.filter(it=>it.tipo==='amigo'&&it.lat==null).slice(0,12).forEach(exmPosicaoDoGrupo);
   let lista=itens;
   if(EXM.filtros.amigos)lista=lista.filter(it=>it.tipo==='amigo');
   if(EXM.filtros.aberto)lista=lista.filter(it=>it.aberto===true);
@@ -6862,6 +6863,45 @@ function exmMontarItens(){
   lista.sort((a,b)=>b.foram-a.foram||b.querem-a.querem||(b.nota||b.notaGoogle||0)-(a.nota||a.notaGoogle||0)
     ||((a.dist==null?1e9:a.dist)-(b.dist==null?1e9:b.dist)));
   return lista;
+}
+
+// ── posição de spot de amigo salvo sem coordenada ──
+// Spot antigo (de antes de o app gravar lat/lng) não tinha pino: no Japão do
+// Lucas, os 7 spots dos amigos apareciam na lista e nenhum no mapa (30/09).
+// A posição sai de UMA busca pelo nome + cidade, guardada no aparelho por 90
+// dias — o mesmo restaurante nunca é buscado duas vezes. Só pros que estão na
+// tela, e no máximo 12 por vez.
+const EXM_POS_CHAVE='spot_pos_v1';
+let EXM_POS=null;
+function exmPosGuardadas(){
+  if(EXM_POS)return EXM_POS;
+  try{EXM_POS=JSON.parse(localStorage.getItem(EXM_POS_CHAVE)||'{}')}catch(e){EXM_POS={}}
+  const limite=Date.now()-90*864e5;
+  Object.keys(EXM_POS).forEach(k=>{if(!EXM_POS[k]||EXM_POS[k].t<limite)delete EXM_POS[k]});
+  return EXM_POS;
+}
+function exmChavePos(nome,cidade){return normName(nome)+'|'+normName(cidade||'')}
+const EXM_POS_PEDIDAS=new Set();
+function exmPosicaoDoGrupo(it){
+  const guardadas=exmPosGuardadas(),k=exmChavePos(it.nome,it.cidade);
+  const g=guardadas[k];
+  if(g){if(g.lat!=null){it.lat=g.lat;it.lng=g.lng}return}
+  if(EXM_POS_PEDIDAS.has(k)||EXM_POS_PEDIDAS.size>=200)return;
+  EXM_POS_PEDIDAS.add(k);
+  (async()=>{
+    try{
+      const r=await googlePlaces('searchText',{method:'POST',
+        headers:{'Content-Type':'application/json','X-Goog-FieldMask':'places.displayName,places.location'},
+        body:JSON.stringify({textQuery:it.nome+(it.cidade?' '+it.cidade:''),languageCode:'pt-BR',maxResultCount:3})});
+      const d=await r.json();
+      const p=pickBestPlaceMatch((d&&d.places)||[],it.nome);
+      const loc=p&&p.location;
+      // Sem resultado também fica guardado (lat null): não pergunta de novo.
+      guardadas[k]={lat:loc?Number(loc.latitude):null,lng:loc?Number(loc.longitude):null,t:Date.now()};
+      try{localStorage.setItem(EXM_POS_CHAVE,JSON.stringify(guardadas))}catch(e){}
+      if(loc)exmAgendar();
+    }catch(e){EXM_POS_PEDIDAS.delete(k)}
+  })();
 }
 
 // ── desenho ──
@@ -6897,6 +6937,11 @@ function exmTitulo(){
     raio=exmDistKm({lat:cc.lat(),lng:cc.lng()},{lat:ne.lat(),lng:ne.lng()})}}
   else if(EXPLORE.area&&EXPLORE.lugar&&EXPLORE.lugar.tipo!=='area'){const r=EXPLORE.area.rectangle;
     raio=exmDistKm({lat:(r.low.latitude+r.high.latitude)/2,lng:(r.low.longitude+r.high.longitude)/2},{lat:r.high.latitude,lng:r.high.longitude})}
+  // O raio que o título diz tem que bater com a lista: é a distância do spot
+  // mais longe que ela mostra (a área da busca é um retângulo, e o Google devolve
+  // coisa até a borda dele — 'Dentro de 1 km' com spot a 2 km era mentira).
+  const dists=EXM.itens.map(it=>it.dist).filter(d=>d!=null);
+  if(dists.length&&raio!=null&&raio<30)raio=Math.max(raio,...dists);
   t.textContent=raio!=null&&raio<30?'Dentro de '+String(raio<10?raio.toFixed(1):Math.round(raio)).replace('.',',')+' km'
     :(EXPLORE.city?'Em '+((EXPLORE.lugar&&EXPLORE.lugar.nome)||EXPLORE.city):'Explorar');
   c.textContent=EXPLORE_ESTADO==='buscando'?'Buscando…':EXM.itens.length+(EXM.itens.length===1?' spot':' spots');
@@ -7017,11 +7062,19 @@ function exmPinos(){
   // Enquadra a área da busca UMA vez por busca (arrastar o mapa depois não é desfeito).
   const r=EXPLORE.area&&EXPLORE.area.rectangle;
   const chave=r?[r.low.latitude,r.low.longitude,r.high.latitude,r.high.longitude].join(','):'';
-  if(r&&chave!==EXM.areaChave){
-    EXM.areaChave=chave;
-    const b=new google.maps.LatLngBounds({lat:r.low.latitude,lng:r.low.longitude},{lat:r.high.latitude,lng:r.high.longitude});
+  const comPos=EXM.itens.filter(it=>(it.foram||it.querem)&&it.lat!=null);
+  const chaveAmigos=comPos.length;
+  if(r&&(chave!==EXM.areaChave||(chaveAmigos&&chaveAmigos!==EXM.amigosEnquadrados&&EXPLORE.lugar&&EXPLORE.lugar.tipo==='area'))){
+    EXM.areaChave=chave;EXM.amigosEnquadrados=chaveAmigos;
+    let b=new google.maps.LatLngBounds({lat:r.low.latitude,lng:r.low.longitude},{lat:r.high.latitude,lng:r.high.longitude});
+    // País ou cidade grande: enquadra onde os amigos foram, não o território inteiro.
+    if(comPos.length&&EXPLORE.lugar&&EXPLORE.lugar.tipo==='area'){
+      b=new google.maps.LatLngBounds();comPos.forEach(it=>b.extend({lat:it.lat,lng:it.lng}));
+    }
     const pad=Math.round(exmAlturaDoPalco()-exmTopoDa(EXM.parada==='alta'?'baixa':EXM.parada));
-    m.fitBounds(b,{top:20,left:20,right:20,bottom:Math.min(pad,360)});
+    // Um pino só: fitBounds daria zoom máximo, na calçada. Centraliza a um zoom de bairro.
+    if(comPos.length===1&&EXPLORE.lugar&&EXPLORE.lugar.tipo==='area'){m.setCenter({lat:comPos[0].lat,lng:comPos[0].lng});m.setZoom(14)}
+    else m.fitBounds(b,{top:20,left:20,right:20,bottom:Math.min(pad,360)});
   }
 }
 // O nome embaixo do pino escolhido (rótulo claro, raio 8).
