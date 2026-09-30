@@ -1831,6 +1831,66 @@ svg.ic path,svg.ic circle,svg.ic line,svg.ic polyline,svg.ic rect{fill:none;stro
 .status-opt.active .so-emoji{color:var(--on-green)}
 .star-btn svg.ic path{fill:currentColor;stroke:none}
 .reserve-btn{display:flex;align-items:center;justify-content:center;gap:8px}
+/* ═══ Explorar com mapa (30/09, atrás de ?mapa=1 — ver EXM_LIGADO) ═══ */
+body.exm #explore.active{position:fixed;inset:0;display:flex;flex-direction:column;overflow:hidden}
+body.exm #explore .dash-top{flex:none;padding-bottom:0;background:var(--base);position:relative;z-index:5}
+body.exm #explore .dash-top-row,body.exm #exploreAbas,body.exm #explore .search-wrap>.req-btn,
+body.exm #exploreRotulo,body.exm #exploreFilters,body.exm #exploreCozinhas,body.exm #exploreBody{display:none!important}
+body.exm #explore .search-wrap{margin-top:4px}
+.exm-seg{flex:none;display:flex;height:44px;box-sizing:border-box;padding:3px;border-radius:10px;background:var(--surface)}
+.exm-seg button{border:none;background:none;border-radius:8px;padding:0 12px;font:inherit;font-size:15px;color:var(--ink2);cursor:pointer}
+.exm-seg button.on{background:var(--base);color:var(--ink);font-weight:600}
+.exm-filtros{display:flex;gap:20px;overflow-x:auto;scrollbar-width:none;margin:18px -20px 0;padding:0 20px 12px}
+.exm-filtros::-webkit-scrollbar{display:none}
+.exm-f{flex:none;border:none;background:none;padding:0 0 6px;font:inherit;font-size:15px;font-weight:600;color:var(--ink3);cursor:pointer;white-space:nowrap}
+.exm-f.on{color:var(--ink);box-shadow:inset 0 -2px 0 var(--ink)}
+.exm-f i{font-style:normal;font-size:11px}
+.exm-palco{position:relative;flex:1;min-height:0;margin-bottom:calc(56px + env(safe-area-inset-bottom,0px))}
+.exm-mapa{position:absolute;inset:0;background:var(--map-bg)}
+.exm-centro{position:absolute;right:16px;top:0;z-index:3;width:44px;height:44px;border:none;border-radius:10px;background:var(--base);
+  color:var(--ink);display:flex;align-items:center;justify-content:center;cursor:pointer;transition:transform .25s ease}
+.exm-centro svg{width:18px;height:18px}
+.exm-folha{position:absolute;left:0;right:0;top:0;height:100%;z-index:4;background:var(--base);border-radius:28px 28px 0 0;
+  display:flex;flex-direction:column;will-change:transform}
+.exm-pega{flex:none;cursor:grab;touch-action:none;padding-top:10px}
+.exm-alca{width:36px;height:4px;border-radius:2px;background:#CFCFCB;margin:0 auto}
+.exm-tit{display:flex;justify-content:space-between;align-items:baseline;gap:12px;padding:14px 20px 16px}
+.exm-tit b{font-size:15px;font-weight:600;color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.exm-tit span{flex:none;font-size:14px;color:var(--ink3)}
+.exm-corpo{flex:1;min-height:0;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:0 20px 24px;overscroll-behavior:contain}
+.exm-linha{display:flex;align-items:center;gap:12px;margin-bottom:14px;cursor:pointer}
+.exm-linha:active{opacity:.7}
+.exm-foto{flex:none;width:64px;height:64px;border-radius:14px;overflow:hidden;background-size:cover}
+.exm-foto img,.exm-cfoto img{width:100%;height:100%;object-fit:cover;display:block}
+.exm-txt{flex:1;min-width:0}
+.exm-nome{font-size:16px;font-weight:600;letter-spacing:-.02em;color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.exm-meta{margin-top:2px;font-size:13px;color:var(--ink2);line-height:1.35}
+.exm-meta b{color:var(--green);font-weight:600}
+.exm-nota{flex:none;font-size:14px;font-weight:600;color:var(--ink)}
+.exm-nota i{font-style:normal;font-size:12px;color:var(--green)}
+.exm-mais{padding:8px 0;text-align:center;font-size:14px;color:var(--ink3)}
+.exm-vazio{padding:8px 0 24px}
+.exm-vazio h3{margin:0 0 8px;font-size:20px;font-weight:700;letter-spacing:-.02em;color:var(--ink)}
+.exm-vazio p{margin:0 0 20px;font-size:15px;line-height:1.45;color:var(--ink2)}
+.exm-btn{display:flex;align-items:center;justify-content:center;width:100%;height:48px;border:none;border-radius:10px;
+  background:var(--green);color:var(--on-green);font:inherit;font-size:16px;font-weight:600;cursor:pointer}
+.exm-btn2{background:var(--surface);color:var(--ink)}
+.exm-btn:disabled{cursor:default}
+.exm-cfoto{height:120px;border-radius:18px;overflow:hidden;background-size:cover}
+.exm-ctopo{display:flex;justify-content:space-between;align-items:baseline;gap:12px;margin-top:14px}
+.exm-ctopo h3{margin:0;font-size:22px;font-weight:700;letter-spacing:-.03em;color:var(--ink)}
+.exm-cmeta{margin-top:2px;font-size:14px;color:var(--ink2)}
+.exm-gente{display:flex;align-items:center;gap:10px;margin-top:14px;font-size:14px;color:var(--ink2)}
+.exm-gente b{color:var(--green);font-weight:600}
+.exm-avs{display:flex;flex:none}
+.exm-av{width:28px;height:28px;border-radius:9px;margin-right:-6px;background:var(--surface) center/cover;border:2px solid var(--base);
+  display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;color:var(--green);box-sizing:border-box}
+.exm-avs .exm-av:last-child{margin-right:0}
+.exm-frase{margin:12px 0 0;font-size:15px;line-height:1.4;color:var(--ink)}
+.exm-frase span{color:var(--ink2)}
+.exm-botoes{display:flex;gap:8px;margin-top:16px}
+.exm-pnome{position:absolute;transform:translateX(-50%);background:var(--base);border-radius:8px;padding:4px 8px;
+  font:600 13px 'Inter Tight',sans-serif;color:var(--ink);white-space:nowrap;pointer-events:none}
 </style>
 </head>
 <body>
@@ -6065,14 +6125,16 @@ async function adicionarSpotAbertoDoAmigo(btn){
 //   tela faria o card que a pessoa está olhando pular de lugar.
 // · Lugar que você já salvou ganha o selo Fui / Quero ir.
 // · O ⊕ salva direto como Quero ir, sem perguntar viagem.
-const CAMPOS_DO_EXPLORAR='places.id,places.displayName,places.formattedAddress,places.addressComponents,places.location,places.photos,places.rating,places.userRatingCount,places.websiteUri,places.googleMapsUri,places.types,places.nationalPhoneNumber,nextPageToken';
+const CAMPOS_DO_EXPLORAR='places.id,places.displayName,places.formattedAddress,places.addressComponents,places.location,places.photos,places.rating,places.userRatingCount,places.websiteUri,places.googleMapsUri,places.types,places.nationalPhoneNumber,places.regularOpeningHours,nextPageToken';
 let EXPLORE_ABRIU=false,EXPLORE_REQ=0;
 
 function loadExplore(){
+  if(EXM_LIGADO){exmMontar();exmPrepararMapa();requestAnimationFrame(()=>exmIrPara(EXM.parada,true))}
   renderExploreFilters();
   if(!EXPLORE_ABRIU&&!EXPLORE.city){EXPLORE_ABRIU=true;abrirExploreInicial()}
 }
 async function abrirExploreInicial(){
+  if(EXM_LIGADO)return exmAbrirInicial();
   const casa=(S.profile&&S.profile.home_city)||'';
   const aqui=await cidadeOndeEstou();
   if(aqui&&(!casa||!mesmoLugar(aqui,casa)))return exploreEm(aqui,'Perto de você · '+aqui);
@@ -6089,6 +6151,8 @@ function exploreEm(cidade,rotulo){
 async function cidadeOndeEstou(){
   try{
     const g=JSON.parse(sessionStorage.getItem('spot_cidade_aqui')||'null');
+    const aq=JSON.parse(sessionStorage.getItem('spot_aqui')||'null');
+    if(aq&&Date.now()-aq.t<30*60*1000&&!window.__spotAqui)window.__spotAqui={lat:aq.lat,lng:aq.lng};
     if(g&&Date.now()-g.t<30*60*1000)return g.cidade||'';
   }catch(e){}
   try{
@@ -6110,6 +6174,8 @@ async function cidadeOndeEstou(){
       const p=await new Promise((ok,nao)=>navigator.geolocation.getCurrentPosition(ok,nao,{timeout:6000,maximumAge:600000}));
       coords={lat:p.coords.latitude,lng:p.coords.longitude};
     }
+    window.__spotAqui={lat:coords.lat,lng:coords.lng};
+    try{sessionStorage.setItem('spot_aqui',JSON.stringify({lat:coords.lat,lng:coords.lng,t:Date.now()}))}catch(e){}
     const pos={coords:{latitude:coords.lat,longitude:coords.lng}};
     const r=await googlePlaces('searchNearby',{
       headers:{'X-Goog-FieldMask':'places.displayName'},
@@ -6132,6 +6198,7 @@ function lugarDoExplorar(p){
     rating:String(p.rating),count:p.userRatingCount,subcat:guessSubcat(p.types),
     phone:p.nationalPhoneNumber||'',photo_url:placePhotoUrl(p,400),photo_author:autorDaFoto(p),
     website_url:p.websiteUri||'',maps_url:p.googleMapsUri||'',
+    opening_hours:(p.regularOpeningHours&&p.regularOpeningHours.periods)?{periods:p.regularOpeningHours.periods}:null,
     lat:Number(loc.latitude)||null,lng:Number(loc.longitude)||null};
 }
 // "Bem recomendado" = nota alta E volume de avaliações. O log é o que impede
@@ -6157,6 +6224,7 @@ async function runExplore(rotulo,lugarEscolhido){
   EXPLORE._vazias=0;EXPLORE._fracas=0;EXPLORE._inicioDaConsulta=null;
   EXPLORE_ESTADO='buscando';
   const meu=++EXPLORE_REQ;
+  if(EXM_LIGADO)exmAgendar();
   const body=document.getElementById('exploreBody');
   body.innerHTML='<div class="search-loading">Buscando tendências...</div>';
   // Onde é o que foi digitado: rua, bairro, cidade ou país (ver
@@ -6174,6 +6242,7 @@ async function runExplore(rotulo,lugarEscolhido){
   if(!lugarEscolhido&&!repetida&&!EXPLORE.rotulo)guardarRecente({titulo:city,sub:'',id:''});
   EXPLORE.lugar=lugar;EXPLORE.lugarTexto=city;
   EXPLORE.area=lugar?lugar.area:null;
+  if(EXM_LIGADO)exmDepoisDeBuscar();
   const pontual=!!(lugar&&lugar.tipo!=='area');
   if(pontual){
     // "restaurantes em São Paulo" DENTRO do retângulo da Fradique Coutinho.
@@ -6310,6 +6379,7 @@ async function salvarDoExplorar(i,status){
 let EXPLORE_AMIGOS={estado:'vazio',grupos:[],amigos:0};
 
 function darDadosDeExplorar(){
+  if(EXM_LIGADO)exmAgendar();
   const itens=(EXPLORE.items||[]).map((p,i)=>{
     const local=[p.city,p.country].filter(Boolean).join(' · ');
     return{
@@ -6469,7 +6539,7 @@ async function lugaresDosAmigos(area,pontual,cidade){
   spots.forEach(s=>{(grupos[chave(s)]=grupos[chave(s)]||[]).push(s)});
   const donos=[...new Set(spots.map(s=>s.user_id))];
   const perfis={};
-  ((await dbGet('profiles','select=id,display_name,username&id=in.('+donos.join(',')+')'))||[]).forEach(p=>{perfis[p.id]=p});
+  ((await dbGet('profiles','select=id,display_name,username,avatar_url&id=in.('+donos.join(',')+')'))||[]).forEach(p=>{perfis[p.id]=p});
   const lugares=Object.values(grupos).map(g=>{
     const foram=[...new Set(g.filter(s=>s.status==='been').map(s=>s.user_id))];
     const querem=[...new Set(g.filter(s=>s.status!=='been').map(s=>s.user_id))].filter(u=>!foram.includes(u));
@@ -6594,8 +6664,411 @@ async function carregarAmigosDaArea(meu,area,pontual,cidade){
   AMIGOS_AREA=r;
   if(EXPLORE.aba==='amigos')renderExploreResults();else darDadosDeExplorar();
 }
+// ═══ EXPLORAR COM MAPA (handoff "explorar-mapa", 30/09) ═══
+//
+// Desenho do Lucas no Claude Design, inspirado em parte no TotalPass: seletor
+// Mapa/Lista ao lado da busca, filtros rápidos independentes, mapa claro com
+// poucos pinos e uma folha puxável com a lista. "Para você" e "Amigos" viram
+// UMA lista: os spots dos amigos na área entram sempre e primeiro, o Google
+// completa.
+//
+// ESCONDIDO ATRÁS DE UMA CHAVE até o Lucas validar: só liga com ?mapa=1 no
+// endereço (fica guardado no aparelho; ?mapa=0 desliga). Sem a chave, o
+// Explorar é exatamente o de antes — e a tela nativa do iPhone, que lê
+// darDadosDeExplorar, não muda nada: os dados dela seguem iguais.
+//
+// Serve pros dois usos do Explorar (pedido do Lucas): "o que tem perto de
+// mim agora" (abre no mapa, raio de ~1,4 km em volta de você) e "vou pro
+// Japão" (busca o país, abre na lista, o mapa enquadra o país inteiro).
+const EXM_LIGADO=(function(){
+  try{
+    const q=new URLSearchParams(location.search).get('mapa');
+    if(q==='1')localStorage.setItem('spot_explorar_mapa','1');
+    if(q==='0')localStorage.removeItem('spot_explorar_mapa');
+    return localStorage.getItem('spot_explorar_mapa')==='1'&&!naCasca();
+  }catch(e){return false}
+})();
+const EXM={mapa:null,pinos:[],eu:null,euHalo:null,rotulo:null,filtros:{amigos:false,quero:false,aberto:false},
+  modo:'mapa',parada:'baixa',sel:-1,itens:[],areaChave:'',agendado:false,montado:false,modoEscolhido:false};
+const EXM_ROTULO_CAT={food:'Comer',hotel:'Ficar',experience:'Experiências'};
+
+function exmMontar(){
+  if(EXM.montado)return;EXM.montado=true;
+  document.body.classList.add('exm');
+  const busca=document.querySelector('#explore .search-wrap');
+  const campo=document.getElementById('exploreCitySearch');
+  if(campo)campo.placeholder='Rua, bairro ou cidade';
+  const seg=document.createElement('div');
+  seg.className='exm-seg';seg.id='exmSeg';
+  seg.innerHTML='<button data-m="mapa" onclick="exmModo(\'mapa\')">Mapa</button><button data-m="lista" onclick="exmModo(\'lista\')">Lista</button>';
+  busca.appendChild(seg);
+  const filtros=document.createElement('nav');
+  filtros.className='exm-filtros';filtros.id='exmFiltros';
+  busca.parentNode.appendChild(filtros);
+  const palco=document.createElement('div');
+  palco.className='exm-palco';palco.id='exmPalco';
+  palco.innerHTML='<div class="exm-mapa" id="exmMapa"></div>'
+    +'<button class="exm-centro" id="exmCentro" onclick="exmRecentralizar()" aria-label="Voltar pra minha localização">'+icon('send')+'</button>'
+    +'<div class="exm-folha" id="exmFolha"><div class="exm-pega" id="exmPega"><div class="exm-alca"></div>'
+    +'<div class="exm-tit"><b id="exmTitulo">Explorar</b><span id="exmConta"></span></div></div>'
+    +'<div class="exm-corpo" id="exmCorpo"></div></div>';
+  document.getElementById('explore').insertBefore(palco,document.querySelector('#explore .bottom-nav'));
+  exmArrastar();
+  document.getElementById('exmCorpo').addEventListener('scroll',function(){
+    const c=this;if(c.scrollTop+c.clientHeight>c.scrollHeight-300&&!EXPLORE.fim&&!EXPLORE.carregandoMais)maisDoExplorar();
+  },{passive:true});
+  window.addEventListener('resize',()=>exmIrPara(EXM.parada,true));
+  exmPintarFiltros();exmPintarSeg();
+}
+
+// ── filtros ──
+function exmPintarFiltros(){
+  const f=document.getElementById('exmFiltros');if(!f)return;
+  const cat=EXPLORE.cat==='food'&&EXPLORE.cozinha?cozinhaAtual().rotulo:EXM_ROTULO_CAT[EXPLORE.cat]||'Comer';
+  const aba=(id,txt,on,fn)=>'<button class="exm-f'+(on?' on':'')+'" onclick="'+fn+'">'+esc(txt)+'</button>';
+  f.innerHTML=aba('amigos','Amigos',EXM.filtros.amigos,"exmFiltro('amigos')")
+    +aba('quero','Quero ir',EXM.filtros.quero,"exmFiltro('quero')")
+    +aba('aberto','Aberto agora',EXM.filtros.aberto,"exmFiltro('aberto')")
+    +'<button class="exm-f on" onclick="exmCategoria()">'+esc(cat)+' <i>▾</i></button>';
+}
+function exmFiltro(k){EXM.filtros[k]=!EXM.filtros[k];EXM.sel=-1;exmPintarFiltros();exmDesenhar()}
+function exmCategoria(){
+  abrirFolhaDeEscolha(['food','hotel','experience'].map(id=>({id,rotulo:EXM_ROTULO_CAT[id],n:''})),EXPLORE.cat,id=>{
+    if(id==='food'){if(EXPLORE.cat!=='food')setExploreCat('food');setTimeout(abrirCozinhas,260)}
+    else if(id!==EXPLORE.cat){EXPLORE.cozinha='';setExploreCat(id)}
+    exmPintarFiltros();
+  });
+}
+
+// ── Mapa / Lista ──
+function exmPintarSeg(){
+  document.querySelectorAll('#exmSeg button').forEach(b=>b.classList.toggle('on',b.dataset.m===EXM.modo));
+}
+function exmModo(m){
+  EXM.modo=m;EXM.modoEscolhido=true;EXM.sel=-1;exmPintarSeg();
+  exmIrPara(m==='lista'?'alta':'baixa');exmDesenhar();
+}
+
+// ── folha puxável: três paradas ──
+function exmAlturaDoPalco(){const p=document.getElementById('exmPalco');return p?p.clientHeight:600}
+function exmTopoDa(parada){
+  const H=exmAlturaDoPalco();
+  if(parada==='alta')return 0;
+  // O cartão do pino ocupa o que ele precisa (a foto, o nome, os amigos, os botões), não uma altura fixa.
+  if(parada==='cartao'){const pega=document.getElementById('exmPega'),corpo=document.getElementById('exmCorpo');
+    const conteudo=corpo&&corpo.firstElementChild;
+    const precisa=(pega?pega.offsetHeight:60)+(conteudo?conteudo.offsetHeight:300)+32;return Math.max(0,H-precisa)}
+  if(parada==='meio')return Math.max(0,Math.round(H*0.42));
+  return Math.max(0,H-150);                 // baixa: título + 1 spot
+}
+function exmIrPara(parada,semAnimar){
+  EXM.parada=parada;
+  const f=document.getElementById('exmFolha');if(!f)return;
+  f.style.transition=semAnimar?'none':'transform .25s ease';
+  f.style.transform='translateY('+exmTopoDa(parada)+'px)';
+  const c=document.getElementById('exmCentro');
+  if(c)c.style.transform='translateY('+(exmTopoDa(parada)-60)+'px)';
+  if(c)c.style.visibility=parada==='alta'?'hidden':'';
+  if(parada==='alta'&&EXM.modo!=='lista'){EXM.modo='lista';exmPintarSeg()}
+  if(parada!=='alta'&&EXM.modo!=='mapa'){EXM.modo='mapa';exmPintarSeg()}
+}
+function exmArrastar(){
+  const pega=document.getElementById('exmPega'),f=document.getElementById('exmFolha');
+  let y0=null,t0=0;
+  pega.addEventListener('pointerdown',e=>{y0=e.clientY;t0=exmTopoDa(EXM.parada);f.style.transition='none';pega.setPointerCapture(e.pointerId)});
+  pega.addEventListener('pointermove',e=>{if(y0==null)return;const t=Math.max(0,Math.min(exmAlturaDoPalco()-90,t0+e.clientY-y0));f.style.transform='translateY('+t+'px)'});
+  const soltar=e=>{
+    if(y0==null)return;
+    const d=e.clientY-y0,t=t0+d;y0=null;
+    if(Math.abs(d)<6){exmIrPara(EXM.parada==='baixa'?'meio':EXM.parada==='alta'?'baixa':'alta');return}
+    if(EXM.sel>=0&&d>40){EXM.sel=-1;exmDesenhar();exmIrPara('baixa');return}
+    const paradas=['alta','meio','baixa'].map(p=>[p,Math.abs(exmTopoDa(p)-t)]).sort((a,b)=>a[1]-b[1]);
+    exmIrPara(paradas[0][0]);
+  };
+  pega.addEventListener('pointerup',soltar);pega.addEventListener('pointercancel',soltar);
+}
+
+// ── os itens: amigos primeiro, Google completa ──
+// estaAbertoAgora devolve {aberto,ate} ou null; aqui só interessa o sim/não.
+function exmAberto(oh){const r=estaAbertoAgora(oh);return r?!!r.aberto:null}
+function exmDistKm(a,b){
+  if(!a||!b||a.lat==null||b.lat==null)return null;
+  const R=6371,r=x=>x*Math.PI/180,dLa=r(b.lat-a.lat),dLo=r(b.lng-a.lng);
+  const h=Math.sin(dLa/2)**2+Math.cos(r(a.lat))*Math.cos(r(b.lat))*Math.sin(dLo/2)**2;
+  return 2*R*Math.asin(Math.sqrt(h));
+}
+function exmNaArea(lat,lng){
+  const r=EXPLORE.area&&EXPLORE.area.rectangle;if(!r||lat==null)return false;
+  return lat>=r.low.latitude&&lat<=r.high.latitude&&lng>=r.low.longitude&&lng<=r.high.longitude;
+}
+function exmOrigem(){
+  const aqui=window.__spotAqui;
+  if(aqui&&EXPLORE.area&&exmNaArea(aqui.lat,aqui.lng))return aqui;
+  if(EXM.mapa){const c=EXM.mapa.getCenter();if(c)return{lat:c.lat(),lng:c.lng()}}
+  return null;
+}
+function exmFraseDoGrupo(g){
+  const com=g.spots.filter(s=>(s.my_review||s.my_note)).sort((a,b)=>String(b.created_at||'').localeCompare(String(a.created_at||'')))[0];
+  if(!com)return null;
+  return{texto:com.my_review||com.my_note,quem:String(friendName(g.perfis[com.user_id])||'').split(' ')[0]};
+}
+function exmMontarItens(){
+  const itens=[];
+  const grupos=lugaresDosAmigosNaCategoria();
+  grupos.forEach((g,gi)=>{
+    const c=g.capa;
+    itens.push({tipo:'amigo',g,gi,nome:c.name||'',lat:c.lat!=null?Number(c.lat):null,lng:c.lng!=null?Number(c.lng):null,
+      foto:g.foto,nota:g.media||0,foram:g.foram.length,querem:g.querem.length,cidade:cityOf(c)||'',
+      aberto:exmAberto(c.opening_hours),frase:exmFraseDoGrupo(g),gIdx:null});
+  });
+  (EXPLORE.items||[]).forEach((p,idx)=>{
+    const par=itens.find(it=>it.tipo==='amigo'&&mesmoLugar(it.nome,p.name)&&(
+      (it.lat!=null&&p.lat!=null)?exmDistKm(it,p)<0.25:(!it.cidade||!p.city||mesmoLugar(it.cidade,p.city))));
+    if(par){par.gIdx=idx;if(!par.nota&&Number(p.rating))par.notaGoogle=Number(p.rating);if(!par.foto)par.foto=p.photo_url;
+      if(par.aberto==null)par.aberto=exmAberto(p.opening_hours);if(par.lat==null){par.lat=p.lat;par.lng=p.lng}return}
+    itens.push({tipo:'google',idx,nome:p.name||'',lat:p.lat,lng:p.lng,foto:p.photo_url,nota:Number(p.rating)||0,
+      foram:0,querem:0,cidade:p.city||'',aberto:exmAberto(p.opening_hours)});
+  });
+  // A minha lista Quero ir na área: só com o filtro ligado (é "o que EU já
+  // separei aqui"), e sem repetir o que já veio de amigo ou do Google.
+  if(EXM.filtros.quero){
+    allSpotsFlat().filter(s=>s.status==='want'&&s.category===EXPLORE.cat&&(
+      (s.lat!=null&&exmNaArea(Number(s.lat),Number(s.lng)))||(EXPLORE.area==null&&mesmoLugar(cityOf(s),EXPLORE.city))
+      ||mesmoLugar(cityOf(s),(EXPLORE.lugar&&EXPLORE.lugar.cidade)||EXPLORE.city))).forEach(s=>{
+      if(itens.some(it=>mesmoLugar(it.nome,s.name)))return;
+      itens.push({tipo:'meu',s,nome:s.name,lat:s.lat!=null?Number(s.lat):null,lng:s.lng!=null?Number(s.lng):null,
+        foto:s.photo_url,nota:Number(s.rating_google)||0,foram:0,querem:0,cidade:cityOf(s)||'',aberto:exmAberto(s.opening_hours)});
+    });
+  }
+  let lista=itens;
+  if(EXM.filtros.amigos)lista=lista.filter(it=>it.tipo==='amigo');
+  if(EXM.filtros.aberto)lista=lista.filter(it=>it.aberto===true);
+  if(EXM.filtros.quero)lista=lista.filter(it=>it.tipo==='meu'||statusNaMinhaLista({name:it.nome,city:it.cidade})==='Quero ir');
+  const o=exmOrigem();
+  lista.forEach(it=>{it.dist=exmDistKm(o,it)});
+  lista.sort((a,b)=>b.foram-a.foram||b.querem-a.querem||(b.nota||b.notaGoogle||0)-(a.nota||a.notaGoogle||0)
+    ||((a.dist==null?1e9:a.dist)-(b.dist==null?1e9:b.dist)));
+  return lista;
+}
+
+// ── desenho ──
+function exmAgendar(){
+  if(!EXM_LIGADO||EXM.agendado)return;
+  EXM.agendado=true;
+  requestAnimationFrame(()=>{EXM.agendado=false;try{exmDesenhar()}catch(e){console.error('exm',e)}});
+}
+function exmTextoDist(km){
+  if(km==null||km>60)return'';
+  return km<1?Math.max(50,Math.round(km*1000/50)*50)+' m':String(km.toFixed(1)).replace('.',',')+' km';
+}
+function exmMeta(it,curta){
+  const p=[];
+  if(it.foram)p.push('<b>'+it.foram+(it.foram===1?' amigo foi':' amigos foram')+'</b>');
+  if(it.querem)p.push(it.querem+(it.querem===1?' quer ir':' querem ir'));
+  if(it.tipo==='meu')p.push('na sua lista');
+  const d=exmTextoDist(it.dist);if(d)p.push(esc(d));
+  if(it.aberto===true)p.push('aberto');else if(it.aberto===false&&!curta)p.push('fechado');
+  if(!p.length&&it.cidade)p.push(esc(it.cidade));
+  return p.join(' · ');
+}
+function exmNota(it){const n=it.nota||it.notaGoogle;return n?'<span class="exm-nota">'+esc(fmtRating(n))+' <i>★</i></span>':''}
+function exmFotoHTML(it,classe){
+  const f=it.foto?safeUrl(fotoNaLargura(semChaveDoPlaces(it.foto),classe==='exm-cfoto'?760:200)):'';
+  return '<div class="'+classe+'" style="background-image:'+destGradient(it.nome)+'">'+(f?'<img src="'+escUrl(f)+'" alt="" loading="lazy" decoding="async" onerror="this.remove()">':'')+'</div>';
+}
+function exmTitulo(){
+  const t=document.getElementById('exmTitulo'),c=document.getElementById('exmConta');if(!t)return;
+  if(!navigator.onLine){t.textContent='Sem conexão';c.textContent='mostrando o que já estava salvo';return}
+  let raio=null;
+  if(EXM.mapa&&EXM.modo==='mapa'){const b=EXM.mapa.getBounds();if(b){const ne=b.getNorthEast(),cc=b.getCenter();
+    raio=exmDistKm({lat:cc.lat(),lng:cc.lng()},{lat:ne.lat(),lng:ne.lng()})}}
+  else if(EXPLORE.area&&EXPLORE.lugar&&EXPLORE.lugar.tipo!=='area'){const r=EXPLORE.area.rectangle;
+    raio=exmDistKm({lat:(r.low.latitude+r.high.latitude)/2,lng:(r.low.longitude+r.high.longitude)/2},{lat:r.high.latitude,lng:r.high.longitude})}
+  t.textContent=raio!=null&&raio<30?'Dentro de '+String(raio<10?raio.toFixed(1):Math.round(raio)).replace('.',',')+' km'
+    :(EXPLORE.city?'Em '+((EXPLORE.lugar&&EXPLORE.lugar.nome)||EXPLORE.city):'Explorar');
+  c.textContent=EXPLORE_ESTADO==='buscando'?'Buscando…':EXM.itens.length+(EXM.itens.length===1?' spot':' spots');
+}
+function exmDesenhar(){
+  if(!EXM_LIGADO||!EXM.montado)return;
+  exmPintarFiltros();
+  EXM.itens=exmMontarItens();
+  exmTitulo();
+  const corpo=document.getElementById('exmCorpo');
+  if(EXM.sel>=0&&EXM.itens[EXM.sel]){corpo.innerHTML=exmCartao(EXM.itens[EXM.sel],EXM.sel);hydrateIcons(corpo)}
+  else if(!EXM.itens.length&&EXPLORE_ESTADO!=='buscando'){
+    const lugar=EXPLORE.lugar,cidade=lugar&&lugar.tipo!=='area'&&lugar.cidade;
+    const filtro=EXM.filtros.amigos||EXM.filtros.quero||EXM.filtros.aberto;
+    corpo.innerHTML='<div class="exm-vazio"><h3>'+(EXPLORE.city?'Nenhum spot por aqui':'Busque um lugar')+'</h3><p>'
+      +(EXPLORE.city?(filtro?'Nada com esses filtros nesta área. Tira algum filtro ou busca uma área maior.':'Nenhum amigo salvou nada nesta área, e não achamos lugares bem avaliados perto.')
+        :'Uma rua, um bairro, uma cidade ou um país — perto de você ou pra onde você vai.')+'</p>'
+      +(cidade?'<button class="exm-btn" onclick="exmCidadeToda()">Buscar em toda a cidade</button>':'')+'</div>';
+  }else{
+    corpo.innerHTML=EXM.itens.map((it,i)=>'<div class="exm-linha" onclick="exmSelecionar('+i+')">'+exmFotoHTML(it,'exm-foto')
+      +'<div class="exm-txt"><div class="exm-nome">'+esc(it.nome)+'</div><div class="exm-meta">'+exmMeta(it,true)+'</div></div>'+exmNota(it)+'</div>').join('')
+      +(EXPLORE.carregandoMais?'<div class="exm-mais">Carregando mais...</div>':'')
+      +((EXPLORE.items||[]).length?'<div class="search-powered" style="justify-content:center;padding:18px 0 8px"><span>Lugares e fotos via</span><strong>Google</strong></div>':'');
+  }
+  exmPinos();
+}
+function exmCidadeToda(){
+  const c=EXPLORE.lugar&&EXPLORE.lugar.cidade;if(!c)return;
+  const campo=document.getElementById('exploreCitySearch');if(campo)campo.value=c;
+  runExplore('');
+}
+// Até três nomes por extenso ('Carol, Rafa e Marina'); com mais, 'e mais N'.
+function exmNomes(l){const n=l.map(x=>String(x).split(' ')[0]);return n.length<=3?n.join(', ').replace(/, ([^,]*)$/,' e $1'):n.slice(0,2).join(', ')+' e mais '+(n.length-2)}
+function exmCartao(it,i){
+  const g=it.g;
+  const status=statusNaMinhaLista({name:it.nome,city:it.cidade});
+  let gente='';
+  if(g){
+    const ids=g.foram.concat(g.querem).slice(0,3);
+    const av=ids.map(u=>{const p=g.perfis[u]||{},nome=friendName(p)||'?';
+      return p.avatar_url?'<span class="exm-av" style="background-image:'+cssUrl(safeUrl(p.avatar_url))+'"></span>':'<span class="exm-av">'+esc(nome.charAt(0).toUpperCase())+'</span>'}).join('');
+    const foram=g.nomesForam.length?'<b>'+esc(exmNomes(g.nomesForam))+(g.nomesForam.length===1?' foi':' foram')+'</b>':'';
+    const querem=g.nomesQuerem.length?esc(exmNomes(g.nomesQuerem))+(g.nomesQuerem.length===1?' quer ir':' querem ir'):'';
+    gente='<div class="exm-gente"><span class="exm-avs">'+av+'</span><span>'+[foram,querem].filter(Boolean).join(' · ')+'</span></div>'
+      +(it.frase?'<p class="exm-frase">“'+esc(it.frase.texto)+'”'+(it.frase.quem?' <span>— '+esc(it.frase.quem)+'</span>':'')+'</p>':'');
+  }
+  const cat=EXPLORE.cat==='food'&&EXPLORE.cozinha?cozinhaAtual().rotulo:catLabel(EXPLORE.cat);
+  const meta=[cat,exmTextoDist(it.dist),it.aberto===true?'aberto':it.aberto===false?'fechado':''].filter(Boolean).join(' · ');
+  return '<div class="exm-cartao">'+exmFotoHTML(it,'exm-cfoto')
+    +'<div class="exm-ctopo"><h3>'+esc(it.nome)+'</h3>'+exmNota(it)+'</div>'
+    +'<div class="exm-cmeta">'+esc(meta)+'</div>'+gente
+    +'<div class="exm-botoes"><button class="exm-btn" onclick="exmVerSpot('+i+')">Ver spot</button>'
+    +(status?'<button class="exm-btn exm-btn2" disabled>'+esc(status)+'</button>':'<button class="exm-btn exm-btn2" onclick="exmQueroIr('+i+')">Quero ir</button>')
+    +'</div></div>';
+}
+function exmSelecionar(i){
+  EXM.sel=i;exmDesenhar();requestAnimationFrame(()=>exmIrPara('cartao'));
+  const it=EXM.itens[i];
+  if(EXM.mapa&&it&&it.lat!=null)EXM.mapa.panTo({lat:it.lat,lng:it.lng});
+}
+function exmVerSpot(i){
+  const it=EXM.itens[i];if(!it)return;
+  if(it.tipo==='amigo')return abrirLugarDosAmigos(it.gi);
+  if(it.tipo==='google')return abrirPreviaDoExplorar(it.idx);
+  if(it.tipo==='meu')return openPlace(it.s.id,'explore');
+}
+function exmQueroIr(i){
+  const it=EXM.itens[i];if(!it)return;
+  const idx=it.tipo==='google'?it.idx:it.gIdx;
+  if(idx!=null)return queroIrDoExplorar(idx);
+  if(it.tipo==='amigo')return abrirLugarDosAmigos(it.gi);   // a ficha do amigo tem "Adicionar à minha lista"
+}
+
+// ── mapa ──
+async function exmPrepararMapa(){
+  if(EXM.mapa||EXM.preparando)return EXM.mapa;
+  EXM.preparando=true;
+  try{
+    const chave=await chaveDoMapa();if(!chave)return null;
+    await carregarMapaJS(chave);if(!window.google||!google.maps)return null;
+    EXM.mapa=new google.maps.Map(document.getElementById('exmMapa'),{
+      styles:ESTILO_DO_MAPA,disableDefaultUI:true,gestureHandling:'greedy',clickableIcons:false,
+      center:{lat:-23.55,lng:-46.63},zoom:12,backgroundColor:'#E4E8E4'});
+    EXM.mapa.addListener('click',()=>{if(EXM.sel>=0){EXM.sel=-1;exmDesenhar();exmIrPara('baixa')}});
+    EXM.mapa.addListener('idle',()=>exmTitulo());
+    exmDesenhar();
+    return EXM.mapa;
+  }catch(e){return null}finally{EXM.preparando=false}
+}
+function exmIcone(it,escolhido){
+  if(it.foram||it.querem){
+    const cheio=it.foram>0,esc_=escolhido?1.33:1;
+    return{icon:{path:google.maps.SymbolPath.CIRCLE,scale:15*esc_,fillColor:cheio?'#0B3D2E':'#F5F5F3',fillOpacity:1,
+      strokeColor:cheio?'#F5F5F3':'#0B3D2E',strokeWeight:3},
+      label:{text:String(cheio?it.foram:it.querem),color:cheio?'#F5F5F3':'#0B3D2E',fontSize:(escolhido?16:13)+'px',fontWeight:'700',fontFamily:'Inter Tight'}};
+  }
+  return{icon:{path:google.maps.SymbolPath.CIRCLE,scale:escolhido?9:6,fillColor:'#F5F5F3',fillOpacity:1,strokeColor:'#9A9A96',strokeWeight:3},label:null};
+}
+function exmPinos(){
+  const m=EXM.mapa;if(!m)return;
+  EXM.pinos.forEach(p=>p.setMap(null));EXM.pinos=[];
+  if(EXM.rotulo){EXM.rotulo.setMap(null);EXM.rotulo=null}
+  // No máximo ~40: os de amigo sempre entram, o Google completa.
+  let google_=0;
+  EXM.itens.forEach((it,i)=>{
+    if(it.lat==null||it.lng==null)return;
+    const amigo=it.foram||it.querem;
+    if(!amigo){if(google_>=Math.max(0,40-EXM.itens.filter(x=>x.foram||x.querem).length))return;google_++}
+    const escolhido=i===EXM.sel;
+    const ic=exmIcone(it,escolhido);
+    const pin=new google.maps.Marker({map:m,position:{lat:it.lat,lng:it.lng},icon:ic.icon,label:ic.label||undefined,
+      zIndex:escolhido?1000:amigo?100+it.foram*10+it.querem:1,title:it.nome});
+    pin.addListener('click',()=>exmSelecionar(i));
+    EXM.pinos.push(pin);
+    if(escolhido)exmRotuloNoMapa(it);
+  });
+  exmEuNoMapa();
+  // Enquadra a área da busca UMA vez por busca (arrastar o mapa depois não é desfeito).
+  const r=EXPLORE.area&&EXPLORE.area.rectangle;
+  const chave=r?[r.low.latitude,r.low.longitude,r.high.latitude,r.high.longitude].join(','):'';
+  if(r&&chave!==EXM.areaChave){
+    EXM.areaChave=chave;
+    const b=new google.maps.LatLngBounds({lat:r.low.latitude,lng:r.low.longitude},{lat:r.high.latitude,lng:r.high.longitude});
+    const pad=Math.round(exmAlturaDoPalco()-exmTopoDa(EXM.parada==='alta'?'baixa':EXM.parada));
+    m.fitBounds(b,{top:20,left:20,right:20,bottom:Math.min(pad,360)});
+  }
+}
+// O nome embaixo do pino escolhido (rótulo claro, raio 8).
+function exmRotuloNoMapa(it){
+  class Rotulo extends google.maps.OverlayView{
+    onAdd(){this.el=document.createElement('div');this.el.className='exm-pnome';this.el.textContent=it.nome;this.getPanes().floatPane.appendChild(this.el)}
+    draw(){const p=this.getProjection().fromLatLngToDivPixel(new google.maps.LatLng(it.lat,it.lng));if(p){this.el.style.left=p.x+'px';this.el.style.top=(p.y+26)+'px'}}
+    onRemove(){this.el&&this.el.remove()}
+  }
+  EXM.rotulo=new Rotulo();EXM.rotulo.setMap(EXM.mapa);
+}
+function exmEuNoMapa(){
+  const a=window.__spotAqui,m=EXM.mapa;if(!a||!m)return;
+  const pos={lat:a.lat,lng:a.lng};
+  if(!EXM.eu){
+    EXM.euHalo=new google.maps.Marker({map:m,position:pos,clickable:false,zIndex:0,
+      icon:{path:google.maps.SymbolPath.CIRCLE,scale:22,fillColor:'#2F7BF6',fillOpacity:.16,strokeWeight:0}});
+    EXM.eu=new google.maps.Marker({map:m,position:pos,clickable:false,zIndex:2000,
+      icon:{path:google.maps.SymbolPath.CIRCLE,scale:8,fillColor:'#2F7BF6',fillOpacity:1,strokeColor:'#FFFFFF',strokeWeight:3}});
+  }else{EXM.eu.setPosition(pos);EXM.euHalo.setPosition(pos)}
+}
+async function exmRecentralizar(){
+  let a=window.__spotAqui;
+  if(!a&&navigator.geolocation){
+    a=await new Promise(ok=>navigator.geolocation.getCurrentPosition(p=>ok({lat:p.coords.latitude,lng:p.coords.longitude}),()=>ok(null),{timeout:8000,maximumAge:300000}));
+    if(a)window.__spotAqui=a;
+  }
+  if(!a){toast('Sem localização','Libere a localização pra ver o que tem perto de você.','alert');return}
+  exmEuNoMapa();
+  if(EXM.mapa){EXM.mapa.panTo(a);EXM.mapa.setZoom(15)}
+}
+// Abrir o Explorar no mapa: com a sua localização, busca ~1,4 km em volta de
+// você (a mesma área de "rua" da busca); sem ela, abre na lista da sua cidade.
+async function exmAbrirInicial(){
+  const cidade=await cidadeOndeEstou();
+  const a=window.__spotAqui;
+  if(a&&cidade){
+    const campo=document.getElementById('exploreCitySearch');if(campo)campo.value=cidade;
+    EXM.modo='mapa';exmPintarSeg();exmIrPara('baixa',true);
+    return runExplore('Perto de você',{nome:'Perto de você',tipo:'ponto',cidade,pais:'',area:areaDaBusca({latitude:a.lat,longitude:a.lng},null,'rua')});
+  }
+  EXM.modo='lista';exmPintarSeg();exmIrPara('alta',true);
+  const casa=(S.profile&&S.profile.home_city)||'';
+  if(casa)return exploreEm(casa,'Sua cidade · '+casa);
+}
+// Busca nova: longe de você (ou sem localização) abre na lista; perto, no mapa.
+// Se a pessoa já escolheu Mapa ou Lista nesta sessão, vale a escolha dela.
+function exmDepoisDeBuscar(){
+  if(!EXM_LIGADO)return;
+  EXM.sel=-1;
+  if(!EXM.modoEscolhido){
+    const a=window.__spotAqui,perto=a&&EXPLORE.area&&exmNaArea(a.lat,a.lng);
+    EXM.modo=perto?'mapa':'lista';exmPintarSeg();exmIrPara(perto?'baixa':'alta');
+  }
+  exmPrepararMapa();
+}
+
 function renderExploreResults(){
   darDadosDeExplorar();
+  if(EXM_LIGADO)return;
   pintarLinhaDeCozinha();
   pintarAbasDoExplorar();
   if(EXPLORE.aba==='amigos'){renderLugaresDosAmigos(document.getElementById('exploreBody'));return}

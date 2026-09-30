@@ -244,7 +244,8 @@ ver `mobile/app-store/login-apple.md`. Pede um build novo que substitui a build 
 - **Explorar sem fim (29/09):** esgotadas as 3 páginas da consulta, segue a fila
   de cozinhas/tipos vizinhos (`filaDoExplorar`); duas consultas seguidas com
   menos de 5 lugares novos encerram — trava contra rajada de busca paga.
-- **Perfil do amigo:** busca (spot, cidade, país) e abas de continente.
+- **Perfil do amigo (29/09, desenho 2b/3a/3b):** lista de Cidades com 3 fotos, busca por cidade/país (>6 cidades) que sobe pro topo; mostra Fui E Quero ir.
+- **Explorar com mapa (30/09) — ATRÁS DE CHAVE:** só liga com `?mapa=1` (guarda no aparelho; `?mapa=0` desliga) e nunca dentro da casca do iPhone. Código em `EXM`/`exm*` no index.html; handoff em `ferramentas/design/`. Uma lista só (amigos primeiro, Google completa), filtros Amigos/Quero ir/Aberto agora/Comer ▾, folha de 3 paradas, card do pino. Falta: o Lucas validar, e a versão nativa (react-native-maps) no iPhone, que pede build.
 - **Cidade sem localidade no Google** (praia, parque): `cidadeDoEndereco` tira do
   endereço escrito — a Barceloneta virava "Catalunha".
 - **Voltar do Android:** `window.voltarDoAndroid` (o site não usa histórico).
