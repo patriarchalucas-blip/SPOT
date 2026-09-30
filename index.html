@@ -3171,7 +3171,7 @@ function plnFraseForam(g){
 }
 function plnFraseQuerem(g){
   if(!g.querem.length)return'';
-  return plnJuntar(g.querem.map(s=>plnPrimeiro(s.user_id)))+(g.querem.length===1&&g.querem[0].user_id!==S.user.id?' quer ir':' querem ir');
+  return plnJuntar(g.querem.map(s=>plnPrimeiro(s.user_id)))+(g.querem.length===1?' quer ir':' querem ir');
 }
 function plnTipo(s){
   const t=String(s.place_type||'').trim();

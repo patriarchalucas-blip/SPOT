@@ -27,6 +27,8 @@ test('frase de quem quer ir, com e sem voce', () => {
   const g = A.avaliar(`plnAgrupar([{user_id:'ana',name:'X',city:'Lisboa',status:'want'},{user_id:'eu',name:'X',city:'Lisboa',status:'want'},{user_id:'bia',name:'X',city:'Lisboa',status:'want'}])`);
   assert.strictEqual(A.plnFraseQuerem(g[0]), 'Você, Ana e Bia querem ir');
   assert.strictEqual(A.plnNomesCurtos(['ana', 'bia', 'eu']), 'Ana, Bia e mais 1');
+  const so = A.avaliar("plnAgrupar([{user_id:'eu',name:'Z',city:'Lisboa',status:'want'}])");
+  assert.strictEqual(A.plnFraseQuerem(so[0]), 'Você quer ir');
 });
 
 test('a linha nunca mostra a nota privada', () => {
