@@ -12,7 +12,7 @@ async function getWorld(){
   return world;
 }
 class M extends HTMLElement{
-  connectedCallback(){this.style.display='block';this.draw()}
+  connectedCallback(){Object.assign(this.style,{display:'block',width:'100%',height:'100%'});requestAnimationFrame(()=>this.draw())}
   async draw(){
     const w=await getWorld();
     const W=this.clientWidth||390,H=this.clientHeight||217;
@@ -109,6 +109,7 @@ const CITIES={
 };
 const PHOTO={"Taberna da Rua das Flores":"1504674900247-0877df9cc836","Miradouro da Graça":"1585208798174-6cedd86e019a","Manteigaria":"1567620905732-2d1ec7ab7445","Fuunji":"1546069901-ba9599a7e63c","Omoide Yokocho":"1540959733332-eab4deabeeaf","Trunk Hotel":"1517248135467-4c7edcad34c4","El Huequito":"1555939594-58d7cb561ad1","Contramar":"1565299624946-b28f40a0ae38","Casa Azul":"1518105779142-d975f22f1b0a","Don Julio":"1544025162-d76694265947","Café Tortoni":"1551218808-94e220e084d2","Florería Atlántico":"1470337458703-46ad1756a187","Russ & Daughters":"1540189549336-e6e99c3679fe","Katz’s":"1512058564366-18510be2db19","The High Line":"1559339352-11d035aa65de","Maní":"1544025162-d76694265947","Bar da Dona Onça":"1514933651103-005eec06c04b","Mocotó":"1414235077428-338989a2e8c0"};
 const AVP={"#6A7A5A":"women/44","#9A7050":"men/46","#A04A30":"women/68","#4A5A6A":"men/22","#B8905A":"women/12","#5A6A50":"women/90","#7A5A48":"men/75","#3E6A80":"women/33"};
+const STARS=k=>'<span style="display:inline-flex;gap:2px" aria-label="'+k+' de 5 estrelas">'+[1,2,3,4,5].map(i=>'<svg width="13" height="13" viewBox="0 0 24 24" fill="'+(i<=k?'#0B3D2E':'#D6D6D2')+'"><path d="M12 2.5l2.9 6.1 6.6.8-4.9 4.6 1.3 6.6L12 17.3l-5.9 3.3 1.3-6.6-4.9-4.6 6.6-.8z"/></svg>').join('')+'</span>';
 const norm=s=>s.normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase().trim();
 class Search extends HTMLElement{
   connectedCallback(){this.style.display='block';this.q='';this.city='Lisboa';this.render();}
@@ -125,7 +126,7 @@ class Search extends HTMLElement{
     this.querySelectorAll('[data-c]').forEach(b=>b.onclick=()=>{this.city=b.dataset.c;this.q='';this.querySelector('[data-q]').value='';this.render()});
     this.querySelector('[data-sum]').textContent=summary;
     const R=this.querySelector('[data-res]');
-    R.innerHTML=res.length?res.map(([c,n,t,f,qt,ph,av],i)=>`<div style="display:flex;flex-direction:column;gap:12px;opacity:0;transform:translateY(10px);transition:opacity .35s ${i*60}ms,transform .35s ${i*60}ms"><div style="aspect-ratio:4/3;border-radius:18px;background:${ph} url(https://images.unsplash.com/photo-${PHOTO[n]}?w=700&q=70) center/cover"></div><div><div style="font-size:21px;font-weight:600;letter-spacing:-.025em">${n}</div><div style="font-size:15px;color:#6B6B67;margin-top:2px">${t} · ${c}</div></div><div style="display:flex;gap:10px;align-items:flex-start;font-size:16px;line-height:1.4"><div style="width:26px;height:26px;border-radius:8px;background:${av};color:#F5F5F3;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;flex:none">${f.charAt(0)}</div><div><b style="font-weight:600">${f} foi</b> <span style="color:#6B6B67">· “${qt}”</span></div></div></div>`).join(''):`<div style="font-size:22px;font-weight:600;letter-spacing:-.02em;line-height:1.3;max-width:560px">Ninguém da sua rede foi a “${esc(this.q)}” ainda. <span style="color:#6B6B67">No Spot, você pode ser o primeiro a marcar.</span></div>`;
+    R.innerHTML=res.length?res.map(([c,n,t,f,qt,ph,av],i)=>`<div style="display:flex;flex-direction:column;gap:12px;opacity:0;transform:translateY(10px);transition:opacity .35s ${i*60}ms,transform .35s ${i*60}ms"><div style="aspect-ratio:4/3;border-radius:18px;background:${ph} url(https://images.unsplash.com/photo-${PHOTO[n]}?w=700&q=70) center/cover"></div><div><div style="font-size:21px;font-weight:600;letter-spacing:-.025em">${n}</div><div style="font-size:15px;color:#6B6B67;margin-top:2px">${t} · ${c}</div></div><div style="display:flex;gap:10px;align-items:flex-start;font-size:16px;line-height:1.4"><div style="width:26px;height:26px;border-radius:8px;background:${av};color:#F5F5F3;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;flex:none">${f.charAt(0)}</div><div><div style="display:flex;gap:8px;align-items:center"><b style="font-weight:600">${f} foi</b>${STARS((n.length+f.length)%3===0?4:5)}</div><span style="color:#6B6B67">“${qt}”</span></div></div></div>`).join(''):`<div style="font-size:22px;font-weight:600;letter-spacing:-.02em;line-height:1.3;max-width:560px">Ninguém da sua rede foi a “${esc(this.q)}” ainda. <span style="color:#6B6B67">No Spot, você pode ser o primeiro a marcar.</span></div>`;
     requestAnimationFrame(()=>requestAnimationFrame(()=>R.querySelectorAll(':scope>div').forEach(d=>{d.style.opacity=1;d.style.transform='none'})));
   }
 }
