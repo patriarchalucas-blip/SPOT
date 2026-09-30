@@ -6686,13 +6686,16 @@ async function carregarAmigosDaArea(meu,area,pontual,cidade){
 var EXM_LIGADO=(function(){
   try{
     const q=new URLSearchParams(location.search).get('mapa');
-    if(q==='1')localStorage.setItem('spot_explorar_mapa','1');
-    if(q==='0')localStorage.removeItem('spot_explorar_mapa');
+    if(q==='1')localStorage.removeItem('spot_explorar_mapa');
+    if(q==='0')localStorage.setItem('spot_explorar_mapa','0');
     // Dentro do app: liga na casca que sabe mostrar esta tela (build 17+).
     // As antigas — inclusive a que está na revisão da Apple — seguem com o
     // Explorar nativo, sem mudar nada.
     if(naCasca())return !!window.cascaTemExplorarWeb;
-    return localStorage.getItem('spot_explorar_mapa')==='1';
+    // No site é o padrão desde 30/09 (a chave ?mapa=1 não pegava no atalho da
+    // tela inicial do iPhone, que guarda dados separado do Safari). ?mapa=0
+    // volta pro Explorar antigo neste aparelho.
+    return localStorage.getItem('spot_explorar_mapa')!=='0';
   }catch(e){return false}
 })();
 const EXM={mapa:null,pinos:[],eu:null,euHalo:null,rotulo:null,filtros:{amigos:false,quero:false,aberto:false},
