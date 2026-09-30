@@ -27,7 +27,7 @@ muda em relação ao original:
   `<spot-paint-map>`); o `support.js` não é necessário.
 - Os `<iframe>` com a cópia do app viram **capturas reais** em `landing/*.jpg`.
 - Foto de rosto do randomuser.me (pessoa real) vira a inicial, como o app mostra.
-- Botões da App Store apontam pra `apps.apple.com/br/app/id6814856044`
+- Botões da App Store viram o **selo oficial da Apple em pt-BR** (`landing/app-store-preto.svg` no fundo claro, `-branco.svg` no verde; do pacote de marketing da Apple, sem alteração) e apontam pra `apps.apple.com/br/app/id6814856044`
   (funciona quando o app for aprovado); "ou use no navegador" leva ao app web.
 - Campo de busca de cidade que vazava da tela no celular: corrigido.
 - Mapa de pintar: a altura passou pra seção (o componente se estica a 100%).
@@ -42,8 +42,5 @@ tirar de novo.
 
 ## Falta
 
-- **Selo oficial da Apple** ("Download on the App Store"): baixar em
-  developer.apple.com → App Store Marketing Guidelines e trocar o botão de
-  texto. Esta máquina não abre site da Apple.
 - Os nomes, frases e fotos de exemplo (Marina, Carol, os restaurantes) são
   ilustrativos, do desenho. Trocar por reais quando houver.

@@ -42,6 +42,10 @@ if(/randomuser/.test(body+map))throw new Error('sobrou foto do randomuser');
 // ── links ──
 const LOJA='https://apps.apple.com/br/app/id6814856044';
 body=body.split('<a href="#" style="display:inline-flex;flex-direction:column').join('<a href="'+LOJA+'" style="display:inline-flex;flex-direction:column');
+// Selo OFICIAL da Apple (pt-BR, do pacote de marketing dela, sem alteração):
+// preto no fundo claro, branco no verde. Altura 56 = a do botão do desenho
+// (o mínimo da Apple é 40).
+body=body.replace(/<a href="https:\/\/apps\.apple\.com[^"]*" style="display:inline-flex;flex-direction:column[^"]*background:(#111|#F5F5F3)[^"]*">[\s\S]*?<\/a>/g,(m,fundo)=>'<a href="'+LOJA+'" style="display:inline-block;flex:none;line-height:0" aria-label="Baixar na App Store"><img src="/landing/app-store-'+(fundo==='#111'?'preto':'branco')+'.svg" alt="Baixar na App Store" height="56" style="height:56px;width:auto;display:block"></a>');
 body=body.replace('<a href="#" style="color:#6B6B67;text-decoration:none">Privacidade</a>','<a href="/privacidade" style="color:#6B6B67;text-decoration:none">Privacidade</a>')
   .replace('<a href="#" style="color:#6B6B67;text-decoration:none">Termos</a>','<a href="/termos" style="color:#6B6B67;text-decoration:none">Termos</a>')
   .replace('<a href="#" style="color:#6B6B67;text-decoration:none">Contato</a>','<a href="/suporte" style="color:#6B6B67;text-decoration:none">Contato</a>');
