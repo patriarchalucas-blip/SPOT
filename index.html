@@ -3105,22 +3105,40 @@ function plnSpotsDosAmigos(pais){
     const nome=termoSeguro(pais);
     if(!ids.length||!nome)return[];
     const lista=ids.join(',');
-    const viagens=await dbGet('trips','user_id=in.('+lista+')&destinations=cs.{"'+nome+'"}&select=id');
-    const tids=(viagens||[]).map(v=>v.id);
-    if(!tids.length)return[];
-    const spots=await dbGet('spots','trip_id=in.('+tids.join(',')+')&user_id=in.('+lista+')&status=in.(been,want)'
-      +'&select=id,user_id,trip_id,name,category,subcategory,place_type,city,address,photo_url,photo_author,photo_author_url,maps_url,website_url,phone,lat,lng,rating_google,price_level,status,my_rating,my_review');
-    return (spots||[]).filter(s=>!estaBloqueado(s.user_id));
+    // TODAS as viagens dos amigos, e a comparação é aqui: a busca exata no
+    // banco (destinations contém "Portugal") perdia viagem com o país escrito
+    // de outro jeito — sem acento, em inglês, ou viagem antiga com nome de
+    // cidade. É pouca linha (id, nome, destinos), e comparar aqui ignora isso.
+    const viagens=await dbGet('trips','user_id=in.('+lista+')&select=id,name,destinations');
+    const tids=(viagens||[]).filter(t=>plnViagemCobre(t,pais)).map(v=>v.id);
+    const CAMPOS='&select=id,user_id,trip_id,name,category,subcategory,place_type,city,address,photo_url,photo_author,photo_author_url,maps_url,website_url,phone,lat,lng,rating_google,price_level,status,my_rating,my_review';
+    const buscas=[];
+    if(tids.length)buscas.push(dbGet('spots','trip_id=in.('+tids.join(',')+')&user_id=in.('+lista+')&status=in.(been,want)'+CAMPOS));
+    // Destino que não é país (viagem que se chama "Lisboa"): vale também o
+    // spot dos amigos NAQUELA cidade, em qualquer viagem deles.
+    if(!plnEhPais(pais))buscas.push(dbGet('spots','city=ilike.*'+encodeURIComponent(nome)+'*&user_id=in.('+lista+')&status=in.(been,want)'+CAMPOS));
+    const vistos=new Set();
+    return (await Promise.all(buscas)).flat().filter(s=>{
+      if(!s||vistos.has(s.id)||estaBloqueado(s.user_id))return false;
+      vistos.add(s.id);return true;
+    });
   })();
   PLN_CACHE.set(k,{t:Date.now(),p});
   return p;
+}
+function plnEhPais(x){const n=normalizeCountry(x);return COUNTRIES.some(c=>c.name===n)}
+// A viagem é daquele destino? Pelo nome ou por qualquer destino dela,
+// ignorando acento/caixa e com o nome em inglês traduzido.
+function plnViagemCobre(t,destino){
+  const alvo=normalizeCountry(destino)||destino;
+  return [t&&t.name].concat((t&&t.destinations)||[]).some(d=>d&&(mesmoLugar(normalizeCountry(d)||d,alvo)||mesmoLugar(d,destino)));
 }
 // Os meus, do que já está carregado: viagens daquele país (a de casa entra,
 // o destino dela é o país onde moro).
 function plnMeusSpots(pais){
   const vistos=new Set(),out=[];
   (S.trips||[]).forEach(t=>{
-    if(!mesmoLugar(paisDaViagem(t),pais))return;
+    if(!plnViagemCobre(t,pais))return;
     (t._spots||[]).forEach(s=>{
       if(vistos.has(s.id)||(s.status!=='been'&&s.status!=='want'))return;
       vistos.add(s.id);out.push(Object.assign({},s,{user_id:S.user.id}));

@@ -36,3 +36,12 @@ test('a linha nunca mostra a nota privada', () => {
   const html = A.avaliar(`(()=>{const g=plnAgrupar([{user_id:'rafa',name:'Y',city:'Lisboa',status:'been',my_rating:5,my_note:'SEGREDO',my_review:'frase'}]);return plnLinha(g[0],0)})()`);
   assert.ok(!html.includes('SEGREDO'));
 });
+
+test('viagem do amigo vale com o pais escrito de outro jeito', () => {
+  assert.strictEqual(A.plnViagemCobre({ name: 'Viagem', destinations: ['Italy'] }, 'Itália'), true);
+  assert.strictEqual(A.plnViagemCobre({ name: 'italia', destinations: [] }, 'Itália'), true);
+  assert.strictEqual(A.plnViagemCobre({ name: 'Portugal', destinations: ['portugal'] }, 'Portugal'), true);
+  assert.strictEqual(A.plnViagemCobre({ name: 'Lisboa', destinations: ['Lisboa'] }, 'Portugal'), false);
+  assert.strictEqual(A.plnEhPais('Japan'), true);
+  assert.strictEqual(A.plnEhPais('Lisboa'), false);
+});
