@@ -1836,7 +1836,10 @@ body.exm #explore.active{position:fixed;inset:0;display:flex;flex-direction:colu
 body.exm #explore .dash-top{flex:none;padding-bottom:0;background:var(--base);position:relative;z-index:5}
 body.exm #explore .dash-top-row,body.exm #exploreAbas,body.exm #explore .search-wrap>.req-btn,
 body.exm #exploreRotulo,body.exm #exploreFilters,body.exm #exploreCozinhas,body.exm #exploreBody{display:none!important}
-body.exm #explore .search-wrap{margin-top:4px}
+/* A busca (com a lista de sugestões) fica numa camada ACIMA dos filtros: sem
+   isto as sugestões saíam por baixo de "Amigos · Quero ir", texto sobre texto (30/09). */
+body.exm #explore .search-wrap{margin-top:4px;position:relative;z-index:2}
+body.exm .exm-filtros{position:relative;z-index:1}
 .exm-seg{flex:none;display:flex;height:44px;box-sizing:border-box;padding:3px;border-radius:10px;background:var(--surface)}
 .exm-seg button{border:none;background:none;border-radius:8px;padding:0 12px;font:inherit;font-size:15px;color:var(--ink2);cursor:pointer}
 .exm-seg button.on{background:var(--base);color:var(--ink);font-weight:600}
