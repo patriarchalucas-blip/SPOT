@@ -275,6 +275,10 @@ function Conteudo() {
   // por aqui. A barra reflete o app, nunca o contrário.
   const [abaAtiva, setAbaAtiva] = useState('dashboard');
   const [mostrarAbas, setMostrarAbas] = useState(false);
+  // O site diz se o Explorar dele é o que vale (o Explorar com mapa, 30/09).
+  // Aí a tela nativa não cobre a aba: quem desenha é a página, e a barra de
+  // abas continua sendo a daqui.
+  const [explorarDoSite, setExplorarDoSite] = useState(false);
   // Dados da tela de Amigos, mandados pelo site já prontos pra desenhar.
   // null = ainda não chegou; a tela mostra o indicador de carregando.
   // Dados de cada tela nativa, mandados pelo site ja prontos pra desenhar.
@@ -493,6 +497,7 @@ function Conteudo() {
     if (dados && dados.tipo === 'tela') {
       if (typeof dados.aba === 'string') setAbaAtiva(dados.aba);
       setMostrarAbas(!!dados.comAbas);
+      if ('explorarWeb' in dados) setExplorarDoSite(!!dados.explorarWeb);
       // Saiu de Amigos pra uma tela de detalhe (perfil de amigo, ficha de
       // lugar): quem desenha volta a ser o site, então a tela nativa sai da
       // frente. Ela reaparece com os dados que já tinha.
@@ -624,7 +629,10 @@ function Conteudo() {
               'window.cascaTemApple=' + (TEM_APPLE ? 'true' : 'false') + ';' +
               // Casca que responde 'pedir-local' (build 14+). As antigas não
               // respondem, e o site não pode ficar esperando por elas.
-              'window.cascaTemLocal=true;true;'
+              'window.cascaTemLocal=true;' +
+              // Casca que sabe mostrar o Explorar do SITE na aba (build 17+,
+              // o Explorar com mapa). As antigas seguem com a tela nativa.
+              'window.cascaTemExplorarWeb=true;true;'
             }
             onMessage={aoReceberMensagem}
             // O iOS encerra o processo da página quando falta memória com o app
@@ -668,7 +676,7 @@ function Conteudo() {
           {/* As quatro abas sao nativas: a tela cobre o WebView enquanto a
               aba esta aberta. O site continua carregado por baixo — e ele que
               executa as acoes e desenha as telas de detalhe. */}
-          {mostrarAbas && TELAS[abaAtiva] ? (
+          {mostrarAbas && TELAS[abaAtiva] && !(abaAtiva === 'explore' && explorarDoSite) ? (
             <View style={StyleSheet.absoluteFill}>
               {/* A checagem acusa "acesso a ref durante o desenho" por causa
                   da funcao de acao, que por dentro usa a referencia do

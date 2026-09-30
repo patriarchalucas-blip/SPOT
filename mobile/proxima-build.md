@@ -16,8 +16,11 @@ pra "Já compilado".
   (capacidade já ligada na Apple em 29/09) + leitura do link sem `new URL`.
 - **Placar da aba Viagens igual ao do site** — `TelaViagens.js`.
 - Barra de abas mais baixa e sem a barra do teclado — já foram na 16, conferir.
-- (Se o Lucas aprovar o mapa no site) **Explorar com mapa dentro do app** —
-  decidir: tela do site dentro do app ou mapa da Apple nativo.
+- **Explorar com mapa dentro do app** (pedido do Lucas, 30/09): a casca avisa
+  `window.cascaTemExplorarWeb` e, quando o site responde `explorarWeb`, não
+  cobre a aba com a `TelaExplorar` nativa. O site liga o mapa sozinho nessa
+  casca; as builds antigas (inclusive a 11, em revisão) seguem com o nativo.
+  Testado simulando as duas cascas no navegador.
 
 ## Já compilado
 

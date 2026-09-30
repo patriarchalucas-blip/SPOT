@@ -3535,7 +3535,7 @@ function temJanelaAberta(){
   return !!document.querySelector('.overlay.show,.cropper-overlay.show');
 }
 function avisarTelaAtual(id){
-  falarComACasca({tipo:'tela',aba:id,comAbas:!!ABAS_DO_APP[id]&&!temJanelaAberta()});
+  falarComACasca({tipo:'tela',aba:id,comAbas:!!ABAS_DO_APP[id]&&!temJanelaAberta(),explorarWeb:EXM_LIGADO});
 }
 
 // Janela que abre POR CIMA (configurações, criar viagem, adicionar amigo,
@@ -6674,18 +6674,25 @@ async function carregarAmigosDaArea(meu,area,pontual,cidade){
 //
 // ESCONDIDO ATRÁS DE UMA CHAVE até o Lucas validar: só liga com ?mapa=1 no
 // endereço (fica guardado no aparelho; ?mapa=0 desliga). Sem a chave, o
-// Explorar é exatamente o de antes — e a tela nativa do iPhone, que lê
-// darDadosDeExplorar, não muda nada: os dados dela seguem iguais.
+// Explorar é exatamente o de antes. No app do iPhone, liga sozinho a partir
+// da build 17 (a casca avisa com window.cascaTemExplorarWeb e deixa de cobrir
+// a aba com a tela nativa); as builds antigas não mudam nada.
 //
 // Serve pros dois usos do Explorar (pedido do Lucas): "o que tem perto de
 // mim agora" (abre no mapa, raio de ~1,4 km em volta de você) e "vou pro
 // Japão" (busca o país, abre na lista, o mapa enquadra o país inteiro).
-const EXM_LIGADO=(function(){
+// `var` e não `const`: avisarTelaAtual, lá em cima, lê isto — com const, uma
+// chamada antes desta linha rodar derrubava o script inteiro (TDZ).
+var EXM_LIGADO=(function(){
   try{
     const q=new URLSearchParams(location.search).get('mapa');
     if(q==='1')localStorage.setItem('spot_explorar_mapa','1');
     if(q==='0')localStorage.removeItem('spot_explorar_mapa');
-    return localStorage.getItem('spot_explorar_mapa')==='1'&&!naCasca();
+    // Dentro do app: liga na casca que sabe mostrar esta tela (build 17+).
+    // As antigas — inclusive a que está na revisão da Apple — seguem com o
+    // Explorar nativo, sem mudar nada.
+    if(naCasca())return !!window.cascaTemExplorarWeb;
+    return localStorage.getItem('spot_explorar_mapa')==='1';
   }catch(e){return false}
 })();
 const EXM={mapa:null,pinos:[],eu:null,euHalo:null,rotulo:null,filtros:{amigos:false,quero:false,aberto:false},
