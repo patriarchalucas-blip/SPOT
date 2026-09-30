@@ -312,6 +312,15 @@ input,textarea,select{font-size:max(16px,1em)!important}
    na viagem ainda vem "Excluir viagem" depois dele. */
 .btn-solto:last-child{margin-bottom:110px}
 .btn-texto:last-child{margin-bottom:96px}
+/* Nas telas de viagem e cidade o último filho é a própria barra de baixo, e
+   o :last-child acima nunca casava: "Adicionar spot" e "Excluir viagem"
+   ficavam embaixo dela, sem dar pra tocar (29/09). */
+.btn-solto:has(+ .bottom-nav){margin-bottom:110px}
+#ov-editperfil .nt-input,#ov-editperfil .note-input{display:block;width:calc(100% - 40px);margin-left:20px;margin-right:20px}
+#ov-editperfil #usernameStatus{padding:0 20px}
+.btn-texto:has(+ .bottom-nav){margin-bottom:96px}
+/* Na linha de casa "Excluir viagem" some, e aí a folga volta pro botão. */
+.btn-solto:has(+ .btn-texto[style*="none"]){margin-bottom:110px}
 
 /* Mapa sangrando pela direita, atrás do conteúdo. Entra só depois de carregado
    (a geometria vem de CDN e é pesada), por isso o fade — sem ele o mapa
@@ -383,7 +392,7 @@ input,textarea,select{font-size:max(16px,1em)!important}
 .pl-valor{color:var(--ink2);font-weight:400}
 /* Explorar: rótulo da cidade, selo Fui/Quero ir e o ⊕ de salvar direto. */
 .ex-rotulo{font-size:13px;font-weight:600;color:var(--green);padding:0 20px 8px}
-.ex-selo{position:absolute;top:12px;left:12px;background:var(--base);color:var(--green);font-size:12px;font-weight:600;padding:4px 10px;border-radius:var(--r-btn)}
+.ex-selo{position:absolute;z-index:3;top:12px;left:12px;background:var(--base);color:var(--green);font-size:12px;font-weight:600;padding:4px 10px;border-radius:var(--r-btn)}
 .ex-img .ex-mais{position:absolute;right:12px;bottom:12px;z-index:4}
 .ex-img .ex-mais~.ex-pe,.ex-img .ex-pe{right:64px}
 .ex-mais{width:40px;height:40px;flex:none;border:none;border-radius:50%;background:var(--green);color:var(--on-green);font-size:24px;font-weight:300;line-height:1;cursor:pointer;display:flex;align-items:center;justify-content:center}
@@ -604,7 +613,7 @@ input,textarea,select{font-size:max(16px,1em)!important}
 .am-busca-spots{padding:24px 20px 0}
 .nota-cat{padding:12px 0 0}
 .nota-cat .coz-atual{font-size:17px}
-.nota-foto{display:block;margin:4px 0 0;min-height:44px;padding:0;background:none;border:none;font:inherit;font-size:15px;font-weight:600;color:var(--green);cursor:pointer}
+.nota-foto{display:block;margin:4px 20px 0;min-height:44px;padding:0;background:none;border:none;font:inherit;font-size:15px;font-weight:600;color:var(--green);cursor:pointer}
 .note-place-icon img{width:100%;height:100%;object-fit:cover;border-radius:inherit;display:block}
 .am-continentes{margin:16px 0 0;padding:0 20px}
 /* ═══ Folha de escolha (Todos / Quero ir / Fui) ═══ */
@@ -833,7 +842,7 @@ body.na-casca .bottom-nav{display:none}
 .city-count{margin-left:auto;font-size:13px;color:var(--ink3)}
 
 /* Filtros de tipo e de situacao: aba de texto, nao pilula. */
-.subcat-row{display:flex;gap:18px;overflow-x:auto;scrollbar-width:none;-webkit-overflow-scrolling:touch}
+.subcat-row{display:flex;gap:18px;padding:0 20px;overflow-x:auto;scrollbar-width:none;-webkit-overflow-scrolling:touch}
 .subcat-row::-webkit-scrollbar{display:none}
 .subcat-chip{flex:none;display:flex;align-items:center;gap:6px;background:none;border:none;
   padding:6px 0;cursor:pointer;font-size:14px;font-weight:500;color:var(--ink3);white-space:nowrap}
@@ -950,14 +959,16 @@ body.na-casca .bottom-nav{display:none}
 .stars-row{display:flex;gap:4px}
 /* A estrela e um alvo de toque de 44px com o desenho de 18 no meio: o
    padding e o alvo, nao espaco decorativo. */
-.star-btn{position:relative;width:22px;height:26px;cursor:pointer;background:none;border:none;padding:0;
+.star-btn{position:relative;width:36px;height:40px;cursor:pointer;background:none;border:none;padding:0;
   display:block;color:var(--ink3)}
 .st-base,.st-fill{position:absolute;inset:0;display:flex;align-items:center;justify-content:center}
 /* A verde fica por cima e o corte decide quanto dela aparece. */
 .st-fill{color:var(--green);clip-path:inset(0 100% 0 0)}
 .star-btn.meia .st-fill{clip-path:inset(0 50% 0 0)}
 .star-btn.lit .st-fill{clip-path:inset(0 0 0 0)}
-.star-btn svg{width:18px;height:18px}
+/* svg.ic{width:1em} vem depois no arquivo e tem a mesma força: sem o .ic
+   aqui a estrela saía com 13px e meia estrela era um alvo de 11px (29/09). */
+.star-btn svg,.star-btn svg.ic{width:28px;height:28px}
 .review-area{width:100%;background:var(--surface);border:none;border-radius:var(--r-card);padding:16px;
   font-size:15px;font-family:'Inter Tight',sans-serif;color:var(--ink);resize:none;outline:none;line-height:1.5}
 .review-area::placeholder{color:var(--ink3)}
@@ -1566,6 +1577,10 @@ body.tem-apple #convite .btn-apple{display:flex}
    ocupar exatamente ela remove a suposição. */
 .overlay{position:fixed;left:0;right:0;top:var(--vv-t,0px);height:var(--vv-h,100dvh);background:rgba(0,0,0,0.5);z-index:200;display:none;align-items:flex-end;backdrop-filter:blur(4px);padding-top:28px}
 .overlay.show{display:flex}
+.overlay{overscroll-behavior:contain}
+/* Folha aberta: a página de trás não rola (29/09). A classe entra e sai com
+   a janela, em avisarSeTemJanela. */
+html.tem-janela,html.tem-janela body{overflow:hidden}
 /* O teclado do iPhone (iOS 26) é TRANSPARENTE e a área visível que o iOS
    informa termina uns pixels acima dele: o que ficava por trás era a tela de
    baixo — dava pra ler "Onde você mora" entre a busca e o teclado (28/09).
@@ -1710,13 +1725,13 @@ body.tem-apple #convite .btn-apple{display:flex}
 .note-place-icon svg{width:20px;height:20px}
 .note-place-name{font-size:16px;font-weight:600;letter-spacing:-.02em;color:var(--ink)}
 .note-place-meta{font-size:13px;color:var(--ink2);margin-top:2px}
-.note-wrap{padding:0 24px}
+.note-wrap{padding:0 20px}
 .note-input{width:100%;background:var(--surface);border:none;border-radius:var(--r-card);padding:16px;
   font-size:15px;font-family:'Inter Tight',sans-serif;color:var(--ink);resize:none;outline:none;line-height:1.5}
 .note-input::placeholder{color:var(--ink3)}
 .note-input.error{box-shadow:inset 0 0 0 2px var(--ink3)}
-.note-hint{font-size:12px;color:var(--ink3);padding:8px 24px 0}
-.status-choice{display:flex;gap:10px;padding:4px 24px 0}
+.note-hint{font-size:12px;color:var(--ink3);padding:8px 20px 0}
+.status-choice{display:flex;gap:10px;padding:4px 20px 0}
 .status-opt{flex:1;background:var(--surface);border:none;border-radius:var(--r-card);padding:16px;cursor:pointer;
   display:flex;flex-direction:column;align-items:center;gap:8px;font-family:'Inter Tight',sans-serif}
 .status-opt:active{opacity:.7}
@@ -2216,10 +2231,10 @@ svg.ic path,svg.ic circle,svg.ic line,svg.ic polyline,svg.ic rect{fill:none;stro
 <!-- O ⋯ da ficha. O lápis flutuante e a engrenagem viraram este menu: tudo que
      é raro mora aqui, e a tela fica com o que se usa todo dia. -->
 <div class="overlay" id="ov-menulugar" onclick="closeOut(event,'ov-menulugar')"><div class="sheet"><div class="sheet-handle"></div><div class="fi-menunome" id="fiMenuNome"></div>
-<div class="prof-linha" onclick="closeOv('ov-menulugar');compartilharLugar()"><span class="pl-ic" data-ic="share"></span><span class="pl-txt">Compartilhar lugar</span></div>
+<div class="prof-linha" onclick="closeOv('ov-menulugar');compartilharLugar()"><span class="pl-ic" data-ic="share"></span><span class="pl-txt">Compartilhar spot</span></div>
 <div class="prof-linha" onclick="closeOv('ov-menulugar');document.getElementById('spotPhotoFileInput').click()"><span class="pl-ic" data-ic="edit"></span><span class="pl-txt">Trocar foto</span></div>
 <div class="prof-linha" onclick="closeOv('ov-menulugar');abrirTrocaDeCategoria()"><span class="pl-ic" data-ic="compass"></span><span class="pl-txt">Mudar categoria</span></div>
-<div class="prof-linha" onclick="closeOv('ov-menulugar');deleteSpot()"><span class="pl-ic" data-ic="trash"></span><span class="pl-txt" style="color:var(--ink3)">Excluir lugar</span></div>
+<div class="prof-linha" onclick="closeOv('ov-menulugar');deleteSpot()"><span class="pl-ic" data-ic="trash"></span><span class="pl-txt" style="color:var(--ink3)">Excluir spot</span></div>
 <div style="height:14px"></div></div></div>
 
 <div class="overlay" id="ov-mlcidade" onclick="closeOut(event,'ov-mlcidade')"><div class="sheet"><button class="sheet-close" onclick="closeOv('ov-mlcidade')" data-ic="close" aria-label="Fechar"></button><div class="sheet-handle"></div><div class="sheet-title">Cidade</div><div id="mlCidadeLista" style="padding-bottom:12px"></div></div></div>
@@ -3437,6 +3452,7 @@ function avisarTelaAtual(id){
 // O estado sai do próprio DOM em vez de uma contagem à parte: fechar uma
 // janela com duas abertas não pode devolver a tela nativa pra frente.
 function avisarSeTemJanela(){
+  document.documentElement.classList.toggle('tem-janela',!!document.querySelector('.overlay.show'));
   if(!naCasca())return;
   const atual=document.querySelector('.screen.active');
   if(!atual)return;
@@ -4217,11 +4233,19 @@ function openList(mode){
   LS.mode=mode;LS.sort='rating';LS.cat='';LS.country='';LS.city='';LS.cityQuery='';
   goTo('list');renderList();
 }
-function closeList(){goTo('dashboard')}
+// Entrou na lista de uma cidade A PARTIR da lista de cidades: voltar volta
+// pra lista de cidades, não pro Início.
+function closeList(){
+  const v=LS.voltarPara;
+  if(v){LS.voltarPara=null;Object.assign(LS,v);renderList();return}
+  goTo('dashboard');
+}
 function setListFilter(k,v){LS[k]=(LS[k]===v?'':v);renderList()}
 function setListSort(v){LS.sort=v;renderList()}
 function setListCityQuery(v){LS.cityQuery=v;renderList()}
 function drillTo(kind,value){
+  const naLista=document.getElementById('list').classList.contains('active');
+  LS.voltarPara=naLista&&LS.mode!=='spots'?{mode:LS.mode,sort:LS.sort,cat:LS.cat,country:LS.country,city:LS.city,cityQuery:LS.cityQuery}:null;
   LS.mode='spots';LS.sort='rating';LS.cat='';LS.country='';LS.city='';LS.cityQuery='';
   LS[kind]=value;renderList();
 }
@@ -4389,7 +4413,7 @@ async function deleteTrip(){
 }
 async function deleteSpot(){
   if(!S.curPlace)return;
-  if(!await confirmar('Excluir este lugar?',
+  if(!await confirmar('Excluir este spot?',
     '"'+S.curPlace.name+'" sai da sua lista, com a sua nota e a sua avaliação. Não tem como desfazer.',
     'Excluir spot'))return;
   const id=S.curPlace.id,tripId=S.curPlace.trip_id;
@@ -4429,7 +4453,10 @@ async function loadTrip(t){
   // Abrir a viagem A, voltar e abrir a B rapido fazia a foto — e o CREDITO,
   // que e obrigacao dos termos do Unsplash — de A aparecer na capa de B.
   // Todas as telas irmas ja checavam isso.
-  fetchCityPhoto(dest,dest).then(url=>{if(url&&S.curTrip===t){heroEl.style.backgroundImage=cssUrl(url);pintarCreditoCidade('tripFotoCredito',url)}});
+  // Na linha de casa o destino é o PAÍS; o card "Onde você mora" mostra a
+  // CIDADE. Sem isto o card era São Paulo e a tela era "Brasil" (29/09).
+  const fotoDe=ehCasa(t)&&S.profile&&S.profile.home_city?[S.profile.home_city,S.profile.home_country||dest]:[dest,dest];
+  fetchCityPhoto(fotoDe[0],fotoDe[1]).then(url=>{if(url&&S.curTrip===t){heroEl.style.backgroundImage=cssUrl(url);pintarCreditoCidade('tripFotoCredito',url)}});
   // O Dashboard já busca os spots de TODAS as viagens numa única query em
   // lote (ver loadDashboard). Rebuscar aqui era uma ida a mais ao banco,
   // sempre, só pra pegar o que já estava na mão — por isso abrir uma
@@ -5934,6 +5961,9 @@ async function paisPeloGoogle(s){
 // nova ou nao.
 async function adicionarSpotAbertoDoAmigo(btn){
   const s=FRIEND.spot; if(!s)return;
+  // Mesma trava do "+" do Explorar: sem ela, o spot que você já tinha entrava
+  // de novo, duplicado.
+  if(statusNaMinhaLista({name:s.name,city:cityOf(s)})){toast('Já está na sua lista',s.name,'check');return}
   // paisDoSpotDeAmigo pode ir ate o Google: sem aviso, o toque parece morto.
   const rotulo=btn&&btn.textContent;
   if(btn){btn.textContent='Adicionando...';btn.style.pointerEvents='none'}
@@ -7326,10 +7356,10 @@ function comecarSpotSemViagem(){
 // Decide a viagem a partir do proprio lugar. Mesma regra do fluxo de amigo:
 // usa a que cobre o destino, cria quando nao existe, e so pergunta quando nem
 // o endereco diz o pais.
-async function viagemParaOLugar(p){
+async function viagemParaOLugar(p,semCriar){
   const cidade=p.city||'';
   const pais=p.country||paisDoEndereco(p.address||p.meta||'');
-  return garantirViagem(cidade,pais);
+  return garantirViagem(cidade,pais,semCriar);
 }
 // Devolve a viagem que serve pro lugar, criando SO se nao existir nenhuma.
 //
@@ -7342,9 +7372,18 @@ async function viagemParaOLugar(p){
 //
 // Usado pelo fluxo do + e pelo "adicionar a minha lista" do amigo: os dois
 // criavam viagem por conta propria, cada um do seu jeito.
-async function garantirViagem(cidade,pais){
+// semCriar: só procura. Quando a viagem ainda não existe, devolve uma
+// PENDENTE, que o saveSpot cria de verdade na hora de salvar — escolher o
+// lugar e desistir deixava uma viagem vazia pra trás (29/09).
+function viagemPendente(cidade,pais){return{__pendente:true,cidade,pais,id:'',name:pais,destinations:[pais],_spots:[]}}
+async function garantirViagem(cidade,pais,semCriar){
   // Lugar da cidade onde mora não vira viagem (ver "ONDE VOCÊ MORA").
-  if(ehDaCasa(cidade,pais)){const casa=await viagemDeCasa(pais);if(casa)return casa}
+  if(ehDaCasa(cidade,pais)){
+    const ja=(S.trips||[]).find(ehCasa);
+    if(ja)return ja;
+    if(semCriar)return viagemPendente(cidade,pais);
+    const casa=await viagemDeCasa(pais);if(casa)return casa;
+  }
   let viagem=viagemQueCobre(cidade,pais);
   if(viagem)return viagem;
   if(!pais)return null;
@@ -7353,6 +7392,7 @@ async function garantirViagem(cidade,pais){
     mesmoLugar(t.name,pais)||(t.destinations||[]).some(d=>mesmoLugar(d,pais))));
   const doPais=doPaisAgora();
   if(doPais)return doPais;
+  if(semCriar)return viagemPendente(cidade,pais);
   return criarViagemUmaVez('pais:'+normName(pais),async()=>{
     const ja=doPaisAgora();
     if(ja)return ja;
@@ -7367,7 +7407,7 @@ async function garantirViagem(cidade,pais){
 async function pickPlace(p){
   // Fluxo do + : a viagem ainda nao existe neste ponto e sai do lugar.
   if(!S.addTrip){
-    const viagem=await viagemParaOLugar(p);
+    const viagem=await viagemParaOLugar(p,true);
     if(!viagem){
       // Nem o endereco diz o pais: ai nao da pra decidir sem chutar.
       S.explorePick=p;S.explorePickCat=S.addCat;S.explorePickStatus=null;
@@ -7568,6 +7608,15 @@ async function resolverCidadeDoSpot(p,trip){
   btn.disabled=true;btn2.disabled=true;
   (addAnother?btn2:btn).textContent='Salvando...';
   const p=S.selPlace;
+  if(S.addTrip&&S.addTrip.__pendente){
+    const criada=await garantirViagem(S.addTrip.cidade,S.addTrip.pais);
+    if(!criada){
+      toast('Não salvou','Confere a conexão e tenta de novo.','alert');
+      btn.textContent='Salvar spot';btn2.textContent='Salvar e adicionar outro';btn.disabled=false;btn2.disabled=false;
+      return;
+    }
+    S.addTrip=criada;
+  }
   // Lugar da cidade onde mora vai SEMPRE pra "Onde você mora", venha de onde
   // vier: adicionado de dentro da viagem "Brasil", do Explorar, de um amigo.
   // Cada entrada decidia a viagem do seu jeito, e São Paulo ficava metade em
@@ -11389,6 +11438,9 @@ function goTo(id,manterRolagem){
   if(antes)ROLAGEM[antes.id]=window.scrollY;
   document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
   document.getElementById(id).classList.add('active');
+  // Voltar pra viagem redesenha: mudar categoria ou excluir um spot lá dentro
+  // deixava o card da cidade com a contagem velha (29/09).
+  if(id==='trip'&&S.curTrip){try{renderTripBody()}catch(e){}}
   const y=manterRolagem?(ROLAGEM[id]||0):0;
   window.scrollTo(0,y);
   if(y)requestAnimationFrame(()=>window.scrollTo(0,y));
@@ -12407,7 +12459,7 @@ function pintarEmComum(){
   // N = 0: o card não aparece. Sem estado vazio (desenho 1b).
   if(!lista.length){box.style.display='none';box.innerHTML='';return}
   const primeiro=String(friendName(FRIEND.profile)||'Seu amigo').split(' ')[0];
-  box.innerHTML='<b>'+lista.length+(lista.length===1?' lugar da sua lista Quero ir':' lugares da sua lista Quero ir')+'</b>'
+  box.innerHTML='<b>'+lista.length+(lista.length===1?' spot da sua lista Quero ir':' spots da sua lista Quero ir')+'</b>'
     +'<span>'+esc(primeiro)+' já foi. Veja o que achou ›</span>';
   box.style.display='';
 }

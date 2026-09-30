@@ -141,10 +141,15 @@ test('o + usa a viagem que cobre o lugar, sem perguntar', async () => {
   assert.ok(e.notaAberta, 'nao chegou na ficha de nota');
 });
 
-test('o + cria a viagem quando nao existe nenhuma', async () => {
+test('o + cria a viagem quando nao existe nenhuma — so ao salvar', async () => {
   const e = cenarioFab([]);
   await A.pickPlace(LUGAR);
   assert.strictEqual(e.perguntou, false, 'perguntou em vez de criar');
+  // Escolher o lugar NAO cria: desistir deixava "Brasil · 0 spots" (29/09).
+  assert.strictEqual(e.viagensCriadas.length, 0, 'criou a viagem antes de salvar');
+  assert.strictEqual(A.avaliar('!!(S.addTrip && S.addTrip.__pendente)'), true);
+  // O saveSpot cria a partir da pendente:
+  await A.avaliar('garantirViagem(S.addTrip.cidade, S.addTrip.pais)');
   assert.strictEqual(e.viagensCriadas.length, 1);
   assert.strictEqual(e.viagensCriadas[0].name, 'Brasil');
   assert.strictEqual(e.viagensCriadas[0].initial_city, 'São Paulo');
