@@ -246,7 +246,11 @@ export function conviteDoLink(url) {
   const caminho = (m[1] || '/').match(/^\/c\/([A-Za-z0-9_-]{4,64})\/?$/);
   const doParametro = ((m[2] || '').match(/(?:^|&)c=([A-Za-z0-9_-]{4,64})(?:&|$)/) || [])[1];
   const c = caminho ? caminho[1] : doParametro || '';
-  return c ? SITE + '/?c=' + c : '';
+  if (c) return SITE + '/?c=' + c;
+  // "Salvar no meu Spot" da lista pública (/?salvar=<código>.<id>, 30/09): o
+  // site guarda o pedido e salva depois do login — só repassar o link.
+  const salvar = ((m[2] || '').match(/(?:^|&)salvar=([A-Za-z0-9]{8,24}(?:\.|%2E)[0-9a-fA-F-]{36})(?:&|$)/) || [])[1];
+  return salvar ? SITE + '/?salvar=' + salvar.replace('%2E', '.') : '';
 }
 
 export default function App() {
