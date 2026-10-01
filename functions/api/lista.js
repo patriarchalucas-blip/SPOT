@@ -56,7 +56,8 @@ export async function onRequestPost(context) {
   // e compartilhar de novo gera um código NOVO — quem tinha o velho não volta a ver.
   if (body.op === 'parar') {
     if (ja) {
-      await gravarKV(env, 'lista_' + ja, JSON.stringify({ revogado: true, t: Date.now() }), 60 * 60 * 24 * 730);
+      // Sem gravar a revogação, o link continuaria aberto: aí não é 'parado'.
+      if (!await gravarKV(env, 'lista_' + ja, JSON.stringify({ revogado: true, t: Date.now() }), 60 * 60 * 24 * 730)) return json({ parado: false, erro: 'kv' });
       try { await env.SPOT_KV.delete(indice) } catch (e) {}
     }
     return json({ parado: true });
@@ -70,7 +71,10 @@ export async function onRequestPost(context) {
   if (!await podeGastar(env, 'lista', quem.uid, 1, TETO_PESSOA)) return json({ capped: true });
   const codigo = codigoAleatorio();
   const dois_anos = 60 * 60 * 24 * 730;
-  await gravarKV(env, 'lista_' + codigo, JSON.stringify({ uid: quem.uid, cidades, titulo, pais, nome, t: Date.now() }), dois_anos);
+  // Link só sai se foi GRAVADO (01/10: o KV grátis bateu o teto de mil
+  // gravações do dia, o código voltava mesmo assim e quem abria via 'esta
+  // lista não está mais aqui'). Sem gravar, o app cai no texto de reserva.
+  if (!await gravarKV(env, 'lista_' + codigo, JSON.stringify({ uid: quem.uid, cidades, titulo, pais, nome, t: Date.now() }), dois_anos)) return json({ erro: 'kv' });
   await gravarKV(env, indice, codigo, dois_anos);
   return json({ codigo });
 }
