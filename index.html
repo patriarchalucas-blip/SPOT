@@ -740,6 +740,56 @@ input,textarea,select{font-size:max(16px,1em)!important}
 .pln-botoes{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:24px}
 .pln-meu{margin:24px 0 0;font-size:15px;color:var(--ink2);text-align:center}
 .pln-mapa{display:block;margin-top:14px;text-align:center;font-size:15px;color:var(--ink2);text-decoration:none;min-height:44px;line-height:44px}
+/* Importar notas (handoff "crescimento", fluxo 2, 30/09) */
+.imp-corpo{padding:4px 20px 140px;display:flex;flex-direction:column;min-height:calc(100vh - 60px)}
+.imp-titulo{margin:12px 0 0;font-size:26px;font-weight:700;letter-spacing:-.03em;line-height:1.1}
+.imp-sub{margin:6px 0 0;font-size:15px;line-height:1.45;color:var(--ink2)}
+.imp-campo{flex:1;min-height:280px;margin-top:20px;padding:16px;border:none;border-radius:var(--r-card);background:var(--surface);font:inherit;font-size:16px;line-height:1.5;color:var(--ink);resize:none;outline:none}
+.imp-campo::placeholder{color:var(--ink3)}
+.pln-topo .imp-tudo{width:auto;padding:0 12px;font:inherit;font-size:15px;font-weight:600;color:var(--green)}
+.imp-chegando{display:flex;flex-direction:column;gap:12px;margin-top:24px}
+.imp-chegou{display:flex;justify-content:space-between;align-items:baseline;gap:12px;animation:impEntra .3s ease both}
+.imp-chegou b{font-size:17px;font-weight:600;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.imp-chegou span{flex:none;font-size:14px;color:var(--ink3)}
+.imp-chegou.ultimo{opacity:.45}
+@keyframes impEntra{from{opacity:0}}
+.imp-conta{margin:20px 0 0;font-size:15px;color:var(--ink3)}
+.imp-original{margin-top:20px;padding:16px;border-radius:var(--r-card);background:var(--surface);font-size:15px;line-height:1.5;color:var(--ink2);white-space:pre-wrap;overflow-wrap:anywhere}
+.imp-cidade{display:flex;align-items:baseline;gap:6px;margin:28px 0 12px;font-size:18px;font-weight:700;letter-spacing:-.02em}
+.imp-cidade small{font-size:14px;font-weight:400;color:var(--ink3)}
+.imp-linha{display:flex;align-items:center;gap:12px;min-height:64px;padding:6px 0}
+.imp-linha.off .imp-foto,.imp-linha.off .imp-t,.imp-linha.off .imp-seg{opacity:.45}
+.imp-linha .pln-check{border-color:#CFCFCB;background:none;padding:0;cursor:pointer}
+.imp-linha .pln-check.on{background:var(--green);border-color:var(--green)}
+.imp-foto{flex:none;width:52px;height:52px;border-radius:12px;overflow:hidden;background:var(--photo-empty);display:flex;align-items:center;justify-content:center;color:var(--on-green)}
+.imp-foto.g{width:60px;height:60px}
+.imp-foto img{width:100%;height:100%;object-fit:cover;display:block}
+.imp-foto svg{width:20px;height:20px}
+.imp-t{flex:1;min-width:0;display:flex;flex-direction:column;padding:0;border:none;background:none;font:inherit;text-align:left;color:var(--ink);cursor:pointer}
+.imp-t b{font-size:16px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.imp-t span{font-size:13px;color:var(--ink3);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.imp-seg{flex:none;display:flex;padding:2px;border-radius:8px;background:var(--surface)}
+.imp-seg button{padding:5px 8px;border:none;border-radius:6px;background:none;font:inherit;font-size:13px;color:var(--ink2);cursor:pointer;white-space:nowrap}
+.imp-seg button.on{background:var(--base);color:var(--ink);font-weight:600}
+.imp-nao{margin-top:16px;padding:14px 16px;border-radius:var(--r-card);background:var(--surface);font-size:15px;line-height:1.4;color:var(--ink2)}
+.imp-nao b{color:var(--ink);font-weight:600}
+.imp-nao div{display:flex;gap:20px;margin-top:8px}
+.imp-nao button{padding:0;min-height:32px;border:none;background:none;font:inherit;font-size:15px;cursor:pointer}
+.imp-nao-buscar{color:var(--green);font-weight:600}
+.imp-nao-ignorar{color:var(--ink2)}
+.imp-pronto{margin:auto 0;padding:40px 0}
+.imp-pronto h1{margin:0 0 24px;font-size:38px;font-weight:700;letter-spacing:-.04em;line-height:1.05;color:var(--green)}
+.imp-cid,.imp-alt{display:flex;align-items:center;gap:14px;width:100%;min-height:72px;padding:6px 0;border:none;background:none;font:inherit;text-align:left;color:var(--ink);cursor:pointer}
+.imp-cid .imp-t b{font-size:17px}
+.imp-cid .imp-t span{font-size:14px;color:var(--ink2)}
+.imp-seta{flex:none;font-size:18px;color:var(--ink3)}
+.imp-botoes{display:flex;flex-direction:column;gap:8px}
+.imp-entrada{display:flex;align-items:center;gap:12px;width:calc(100% - 40px);margin:4px 20px 8px;min-height:56px;padding:0;border:none;background:none;font:inherit;text-align:left;color:var(--ink);cursor:pointer}
+.imp-entrada-ic{flex:none;width:44px;height:44px;border-radius:12px;background:var(--surface);display:flex;align-items:center;justify-content:center;color:var(--ink)}
+.imp-entrada-ic svg{width:20px;height:20px}
+.imp-sugestao{width:100%;margin:0}
+.imp-nenhum{display:block;margin:12px auto 0;min-height:44px;padding:0 12px;border:none;background:none;font:inherit;font-size:15px;color:var(--ink3);cursor:pointer}
+.imp-alt .imp-t span{white-space:normal}
 .ocp-parar{display:block;margin:18px auto 0;min-height:44px;padding:0 12px;border:none;background:none;font:inherit;font-size:15px;color:var(--ink3);cursor:pointer}
 .nota-cat .coz-atual{font-size:17px}
 .nota-foto{display:block;margin:4px 20px 0;min-height:44px;padding:0;background:none;border:none;font:inherit;font-size:15px;font-weight:600;color:var(--green);cursor:pointer}
@@ -2322,6 +2372,12 @@ body.exm .exm-filtros{position:relative;z-index:1}
   <div class="pln-rodape" id="plnRodape"></div>
 </div>
 
+<div class="screen" id="importar">
+  <div class="pln-topo"><button onclick="impVoltar()" data-ic="back" aria-label="Voltar"></button><div class="pln-topo-t">Importar notas</div><button class="imp-tudo" id="impTudo" onclick="impTudo()" style="visibility:hidden">Tudo</button></div>
+  <div class="imp-corpo" id="impCorpo"></div>
+  <div class="pln-rodape" id="impRodape"></div>
+</div>
+
 <div class="screen" id="mapaMundi">
   <div class="mapa-topo">
     <button class="back-btn" onclick="fecharMapaMundi()" data-ic="back" aria-label="Voltar"></button>
@@ -2429,6 +2485,8 @@ body.exm .exm-filtros{position:relative;z-index:1}
 <div class="overlay" id="ov-pln-destino" onclick="closeOut(event,'ov-pln-destino')"><div class="sheet pln-folha"><button class="sheet-close" onclick="closeOv('ov-pln-destino')" data-ic="close" aria-label="Fechar"></button><div class="sheet-handle"></div>
 <div class="pln-folha-corpo"><h3>Para onde</h3><label class="am-cid-busca"><span class="am-cid-lupa" data-ic="search"></span><input id="plnDestBusca" type="text" placeholder="Buscar país ou cidade" autocomplete="off" autocorrect="off" spellcheck="false" oninput="plnPintarDestinos(this.value)"></label><div id="plnDestinos"></div></div></div></div>
 <div class="overlay" id="ov-pln-ficha" onclick="closeOut(event,'ov-pln-ficha')"><div class="sheet pln-folha"><button class="sheet-close" onclick="closeOv('ov-pln-ficha')" data-ic="close" aria-label="Fechar"></button><div class="sheet-handle"></div><div class="pln-folha-corpo" id="plnFicha"></div></div></div>
+<div class="overlay" id="ov-imp-troca" onclick="closeOut(event,'ov-imp-troca')"><div class="sheet pln-folha"><button class="sheet-close" onclick="closeOv('ov-imp-troca')" data-ic="close" aria-label="Fechar"></button><div class="sheet-handle"></div>
+<div class="pln-folha-corpo"><h3>Qual é o lugar?</h3><form class="am-cid-busca" onsubmit="event.preventDefault();impTrocaBuscar()"><span class="am-cid-lupa" data-ic="search"></span><input id="impTrocaBusca" type="search" enterkeyhint="search" placeholder="Nome e cidade" autocomplete="off" autocorrect="off" spellcheck="false"></form><div id="impTrocaLista"></div><button class="imp-nenhum" onclick="impNenhumDesses()">Não é nenhum desses</button></div></div></div>
 <div class="overlay" id="ov-compartilhar" onclick="closeOut(event,'ov-compartilhar')"><div class="sheet ocp"><button class="sheet-close" onclick="closeOv('ov-compartilhar')" data-ic="close" aria-label="Fechar"></button><div class="sheet-handle"></div>
 <div class="ocp-corpo"><h3 id="ocpTitulo">Compartilhar</h3><p id="ocpTexto">Quem abrir o link vê os seus spots, com a nota e a frase de cada um — sem precisar de conta.</p>
 <div class="ocp-link" id="ocpLink"></div>
@@ -2436,7 +2494,7 @@ body.exm .exm-filtros{position:relative;z-index:1}
 <button class="ocp-parar" id="ocpParar">Parar de compartilhar</button></div></div></div>
 <div class="overlay" id="ov-cat" onclick="closeOut(event,'ov-cat')"><div class="sheet"><button class="sheet-close" onclick="closeOv('ov-cat')" data-ic="close" aria-label="Fechar"></button><div class="sheet-handle"></div><div class="sheet-title">Qual categoria?</div><div class="step-dots"><div class="step-dot active"></div><div class="step-dot"></div><div class="step-dot"></div></div><div class="cat-options"><div class="cat-option" id="co-food" onclick="pickCat('food')"><div class="co-icon" data-ic="food"></div><div class="co-name">Comer & Beber</div></div><div class="cat-option" id="co-hotel" onclick="pickCat('hotel')"><div class="co-icon" data-ic="hotel"></div><div class="co-name">Onde Ficar</div></div><div class="cat-option" id="co-experience" onclick="pickCat('experience')"><div class="co-icon" data-ic="compass"></div><div class="co-name">Experiências</div></div></div></div></div>
 
-<div class="overlay" id="ov-search" onclick="closeOut(event,'ov-search')"><div class="sheet sheet-fixa"><button class="sheet-close" onclick="closeOv('ov-search')" data-ic="close" aria-label="Fechar"></button><div class="sheet-handle"></div><div class="sheet-title">Buscar lugar</div><div class="step-dots"><div class="step-dot active"></div><div class="step-dot"></div></div><div class="search-wrap"><div class="search-field"><span class="si" data-ic="search"></span><input class="search-input" autocomplete="off" autocorrect="off" spellcheck="false" id="placeSearch" placeholder="Nome do lugar..." oninput="searchPlaces(this.value)"></div></div><div class="search-powered"><span>Resultados via</span><strong>Google Places</strong></div><div class="lista-rolante" id="searchResults"><div class="search-loading">Digite para buscar...</div></div></div></div>
+<div class="overlay" id="ov-search" onclick="closeOut(event,'ov-search')"><div class="sheet sheet-fixa"><button class="sheet-close" onclick="closeOv('ov-search')" data-ic="close" aria-label="Fechar"></button><div class="sheet-handle"></div><div class="sheet-title">Buscar lugar</div><div class="step-dots"><div class="step-dot active"></div><div class="step-dot"></div></div><div class="search-wrap"><div class="search-field"><span class="si" data-ic="search"></span><input class="search-input" autocomplete="off" autocorrect="off" spellcheck="false" id="placeSearch" placeholder="Nome do lugar..." oninput="searchPlaces(this.value)"></div></div><button class="imp-entrada" id="impEntrada" style="display:none" onclick="impAbrir('')"><span class="imp-entrada-ic" data-ic="menu"></span><span class="imp-t"><b>Colar uma lista</b><span>Notas ou conversa com vários lugares</span></span><span class="imp-seta">›</span></button><div class="search-powered"><span>Resultados via</span><strong>Google Places</strong></div><div class="lista-rolante" id="searchResults"><div class="search-loading">Digite para buscar...</div></div></div></div>
 
 <div class="overlay" id="ov-note" onclick="closeOut(event,'ov-note')"><div class="sheet"><button class="sheet-close" onclick="closeOv('ov-note')" data-ic="close" aria-label="Fechar"></button><div class="sheet-handle"></div><div class="sheet-title">Adicionar spot</div><div class="note-place-row"><div class="note-place-icon" id="selIcon" data-ic="food"></div><div><div class="note-place-name" id="selName"></div><div class="note-place-meta" id="selMeta"></div></div></div><div class="coz-linha nota-cat" id="noteCat"></div><button class="nota-foto" id="noteFotoBtn" onclick="document.getElementById('noteFotoInput').click()">Adicionar sua foto</button><input type="file" id="noteFotoInput" accept="image/*" style="display:none" onchange="onNoteFotoChosen(this)">
 <div class="status-choice"><button class="status-opt active" id="stWant" onclick="setSpotStatus('want')"><div class="so-emoji" data-ic="bookmark"></div><div class="so-label">Quero ir</div></button><button class="status-opt" id="stBeen" onclick="setSpotStatus('been')"><div class="so-emoji" data-ic="check"></div><div class="so-label">Já fui</div></button></div>
@@ -3351,7 +3409,8 @@ function plnPintarLista(){
   if(!grupos.length){
     box.innerHTML=cab+'<div class="pln-vazio"><h2>Ninguém salvou nada aqui ainda</h2>'
       +'<p>Quando '+esc(plnJuntar(['você'].concat(amigos.map(plnPrimeiro))).replace(/ e ([^,]+)$/,' ou $1'))+' salvarem spots lá, eles aparecem aqui.</p>'
-      +'<button class="exm-btn" onclick="plnExplorar()">Explorar '+esc(PLN.destinos[0].nome)+'</button></div>';
+      +'<button class="exm-btn" onclick="plnExplorar()">Explorar '+esc(PLN.destinos[0].nome)+'</button>'
+      +(IMP.ligado?'<button class="exm-btn exm-btn2" style="margin-top:8px" onclick="impAbrir(\'\')">Colar uma lista</button>':'')+'</div>';
     rod.innerHTML='';hydrateIcons(box);return;
   }
   const cidades={};grupos.forEach(g=>{const c=cityOf(g.base)||'';if(c){const k=normName(c);cidades[k]=cidades[k]||{nome:c,n:0};cidades[k].n++}});
@@ -3522,6 +3581,282 @@ async function plnSalvar(status,btn){
   plnMontarLista();
 }
 
+// ═══ IMPORTAR NOTAS (handoff "crescimento", fluxo 2, 30/09) ═══
+//
+// Colar → a IA separa os lugares (/api/importar, que esconde a chave da
+// Anthropic) → cada um passa pela busca do Google, a mesma do Adicionar spot
+// → revisar → salvar. A IA só lê o texto; endereço, foto e posição vêm do
+// Google, e a pessoa confere antes de qualquer coisa ser gravada.
+//
+// A busca aqui pede só os campos da faixa MAIS BARATA do Google (sem nota,
+// telefone, site, horário): é o que a revisão mostra, e com 150 lugares a
+// diferença conta. O /api/places guarda cada busca por 7 dias, então o mesmo
+// lugar importado por várias pessoas é pago uma vez.
+//
+// Nada some por falha: erro de rede ou da IA deixa o texto no campo.
+const IMP={ligado:false,etapa:'colar',texto:'',cand:[],itens:[],naoAchou:[],total:0,feitos:0,salvos:[],volta:'dashboard',troca:-1,trocaAlts:[]};
+const CAMPOS_DA_IMPORTACAO='places.id,places.displayName,places.formattedAddress,places.addressComponents,places.location,places.photos,places.types,places.primaryType,places.googleMapsUri';
+const IMP_MAX=15000;
+
+// O botão só existe com a chave no servidor: sem ela, nada aparece.
+async function impVerSeEstaLigado(){
+  try{
+    const r=await comPrazo(fetch('/api/importar'),6000,null);
+    const d=r&&r.ok?await r.json():null;
+    IMP.ligado=!!(d&&d.ligado);
+  }catch(e){IMP.ligado=false}
+  const el=document.getElementById('impEntrada');if(el)el.style.display=IMP.ligado?'':'none';
+}
+function impAbrir(texto){
+  if(!IMP.ligado)return;
+  const tela=document.querySelector('.screen.active');
+  IMP.volta=tela&&tela.id!=='importar'?tela.id:'dashboard';
+  IMP.etapa='colar';IMP.texto=texto||IMP.texto||'';
+  try{closeOv('ov-search')}catch(e){}
+  goTo('importar');impPintar();
+  const t=document.getElementById('impTexto');if(t&&!texto)setTimeout(()=>t.focus(),250);
+}
+function impVoltar(){
+  if(IMP.etapa==='revisar'||IMP.etapa==='vazio'){IMP.etapa='colar';impPintar();return}
+  if(IMP.etapa==='procurando')IMP.cancelado=true;
+  goTo(IMP.volta||'dashboard');
+}
+// Texto colado na busca do Adicionar spot que parece lista (2+ vírgulas):
+// oferece separar em vez de gastar uma busca com a frase inteira.
+function impPareceLista(v){return IMP.ligado&&(/\n/.test(v)||(String(v).match(/,/g)||[]).length>=2)}
+
+// ── a busca de cada lugar ──
+function impParecido(a,b){
+  const n=s=>normName(s).replace(/[^a-z0-9 ]/g,' ').replace(/\s+/g,' ').trim();
+  const x=n(a),y=n(b);if(!x||!y)return false;
+  if(x.includes(y)||y.includes(x))return true;
+  const pal=x.split(' ').filter(w=>w.length>2);if(!pal.length)return false;
+  const deles=new Set(y.split(' '));
+  return pal.filter(w=>deles.has(w)).length/pal.length>=0.5;
+}
+function impParaLugar(g){
+  const addr=g.formattedAddress||'';
+  const fotos=placePhotoUrls(g);
+  const cat=categoriaDoLugar(g.types,g.primaryType);
+  return{name:(g.displayName&&g.displayName.text)||'',address:addr,meta:addr,
+    city:cityFromComponents(g.addressComponents,addr)||extractCityFromAddr(addr),
+    country:countryFromComponents(g.addressComponents),
+    photo_url:fotos.full,photo_thumb:fotos.thumb,photo_author:autorDaFoto(g),
+    maps_url:g.googleMapsUri||'',subcat:guessSubcat(g.types),
+    lat:g.location?g.location.latitude:null,lng:g.location?g.location.longitude:null,
+    _id:g.id||'',_cat:cat};
+}
+async function impBuscar(consulta){
+  const r=await googlePlaces('searchText',{method:'POST',
+    headers:{'Content-Type':'application/json','X-Goog-FieldMask':CAMPOS_DA_IMPORTACAO},
+    body:JSON.stringify({textQuery:consulta,languageCode:'pt-BR',maxResultCount:3})});
+  const d=await r.json().catch(()=>({}));
+  return((d&&d.places)||[]).filter(p=>!isIrrelevantPlace(p)).map(impParaLugar);
+}
+async function impProcurarUm(c){
+  const consulta=[c.nome,c.cidade,c.pais].filter(Boolean).join(', ');
+  let alts=[];
+  try{alts=await impBuscar(consulta)}catch(e){}
+  const achado=alts.find(p=>impParecido(c.nome,p.name));
+  return{c,p:achado||null,alts};
+}
+
+// ── 2a → 2b ──
+async function impEncontrar(){
+  const campo=document.getElementById('impTexto');
+  const texto=String((campo&&campo.value)||IMP.texto||'').trim();
+  IMP.texto=texto;
+  if(!texto)return;
+  if(texto.length>IMP_MAX){toast('Texto grande demais','Cole até '+IMP_MAX.toLocaleString('pt-BR')+' caracteres por vez.','alert');return}
+  IMP.etapa='lendo';IMP.cancelado=false;impPintar();
+  let d=null;
+  try{
+    const tk=await ensureToken();
+    const r=await comPrazo(fetch('/api/importar',{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+tk},body:JSON.stringify({texto})}),90000,null);
+    d=r?await r.json().catch(()=>null):null;
+  }catch(e){d=null}
+  if(IMP.cancelado)return;
+  if(d&&d.capped){IMP.etapa='colar';impPintar();toast('Limite de importações do mês','Tenta de novo no mês que vem, ou adicione um por um.','alert');return}
+  if(!d||!Array.isArray(d.lugares)){IMP.etapa='colar';impPintar();toast('Não deu para ler agora','Tente de novo.','alert');return}
+  if(!d.lugares.length){IMP.etapa='vazio';impPintar();return}
+  IMP.cand=d.lugares;IMP.total=d.lugares.length;IMP.feitos=0;IMP.itens=[];IMP.naoAchou=[];IMP.chegados=[];
+  IMP.etapa='procurando';impPintar();
+  // Três de cada vez: rápido o bastante pra lista andar, sem rajada no Google.
+  let prox=0;const idsVistos=new Set();
+  const trabalhador=async()=>{
+    while(prox<IMP.cand.length&&!IMP.cancelado){
+      const c=IMP.cand[prox++];
+      const res=await impProcurarUm(c);
+      if(IMP.cancelado)return;
+      IMP.feitos++;
+      if(res.p&&!(res.p._id&&idsVistos.has(res.p._id))){
+        if(res.p._id)idsVistos.add(res.p._id);
+        const dup=!!statusNaMinhaLista({name:res.p.name,city:res.p.city});
+        IMP.itens.push({ordem:IMP.cand.indexOf(c),c,p:res.p,alts:res.alts,on:!dup,dup,status:c.status==='been'?'been':'want'});
+        IMP.chegados.push({nome:res.p.name,cidade:res.p.city||c.cidade});
+      }else if(!res.p)IMP.naoAchou.push({ordem:IMP.cand.indexOf(c),c,alts:res.alts});
+      impPintarProcurando();
+    }
+  };
+  await Promise.all([trabalhador(),trabalhador(),trabalhador()]);
+  if(IMP.cancelado)return;
+  IMP.itens.sort((a,b)=>a.ordem-b.ordem);IMP.naoAchou.sort((a,b)=>a.ordem-b.ordem);
+  IMP.etapa=IMP.itens.length||IMP.naoAchou.length?'revisar':'vazio';
+  impPintar();
+}
+
+// ── desenho ──
+function impCidades(){
+  const ordem=[],por={};
+  IMP.itens.forEach((it,i)=>{const c=it.p.city||it.c.cidade||'Sem cidade';const k=normName(c);if(!por[k]){por[k]={nome:c,itens:[]};ordem.push(k)}por[k].itens.push(i)});
+  return ordem.map(k=>por[k]);
+}
+function impPintar(){
+  const corpo=document.getElementById('impCorpo'),rod=document.getElementById('impRodape'),tudo=document.getElementById('impTudo');
+  tudo.style.visibility=IMP.etapa==='revisar'&&IMP.itens.length?'visible':'hidden';
+  if(IMP.etapa==='colar'){
+    corpo.innerHTML='<h1 class="imp-titulo">Cole suas notas</h1><p class="imp-sub">Da nota do celular, de uma conversa, de onde for. O Spot separa os lugares e você confere antes de salvar.</p>'
+      +'<textarea id="impTexto" class="imp-campo" maxlength="'+IMP_MAX+'" placeholder="lisboa: taberna da rua das flores, pasteis de belem (amei!!)&#10;porto - majestic café, livraria lello&#10;sintra quero ir no palácio da pena" oninput="impDigitou(this)"></textarea>';
+    document.getElementById('impTexto').value=IMP.texto||'';
+    rod.innerHTML='<button class="exm-btn" id="impIr" onclick="impEncontrar()"'+(IMP.texto.trim()?'':' disabled')+'>Encontrar spots</button>';
+  }else if(IMP.etapa==='lendo'){
+    corpo.innerHTML='<h1 class="imp-titulo">Lendo suas notas…</h1><p class="imp-sub">Leva alguns segundos. Os lugares aparecem aqui conforme forem encontrados.</p>';
+    rod.innerHTML='';
+  }else if(IMP.etapa==='procurando'){
+    corpo.innerHTML='<h1 class="imp-titulo">Procurando os lugares…</h1><div class="imp-chegando" id="impChegando"></div><p class="imp-conta" id="impConta"></p>';
+    rod.innerHTML='';impPintarProcurando();
+  }else if(IMP.etapa==='vazio'){
+    corpo.innerHTML='<h1 class="imp-titulo">Não achei nenhum lugar nesse texto</h1><p class="imp-sub">Escreva o nome de cada lugar, de preferência com a cidade: “Lisboa: Taberna da Rua das Flores”.</p>'
+      +'<div class="imp-original">'+esc(IMP.texto)+'</div>';
+    rod.innerHTML='<button class="exm-btn" onclick="IMP.etapa=\'colar\';impPintar()">Editar o texto</button>';
+  }else if(IMP.etapa==='revisar')impPintarRevisar();
+  else if(IMP.etapa==='salvando'){impPintarRevisar()}
+  else if(IMP.etapa==='pronto')impPintarPronto();
+  hydrateIcons(corpo);
+}
+function impDigitou(t){IMP.texto=t.value;const b=document.getElementById('impIr');if(b)b.disabled=!t.value.trim()}
+function impPintarProcurando(){
+  const box=document.getElementById('impChegando');if(!box)return;
+  const l=IMP.chegados||[];
+  box.innerHTML=l.map((x,i)=>'<div class="imp-chegou'+(i===l.length-1&&IMP.feitos<IMP.total?' ultimo':'')+'"><b>'+esc(x.nome)+'</b><span>'+esc(x.cidade||'')+'</span></div>').join('');
+  const conta=document.getElementById('impConta');
+  if(conta)conta.textContent=IMP.feitos+' de '+IMP.total+' até agora';
+}
+function impPintarRevisar(){
+  const corpo=document.getElementById('impCorpo'),rod=document.getElementById('impRodape');
+  const grupos=impCidades();
+  const n=IMP.itens.length;
+  let h='<h1 class="imp-titulo">'+(n?'Achei '+n+(n===1?' spot':' spots')+' em '+grupos.length+(grupos.length===1?' cidade':' cidades'):'Não achei os lugares no mapa')+'</h1>'
+    +'<p class="imp-sub">'+(n?'Desmarque o que veio errado. Tocar no nome troca o lugar.':'Busque cada um pelo nome, ou ignore.')+'</p>';
+  grupos.forEach(g=>{
+    h+='<h2 class="imp-cidade">'+esc(g.nome)+'<small>'+g.itens.length+'</small></h2>';
+    g.itens.forEach(i=>{
+      const it=IMP.itens[i],p=it.p;
+      const meta=it.dup?'Já está nos seus spots':[String(p.address||'').split(',')[0],({food:'Comer',hotel:'Ficar',experience:'Experiências'})[p._cat]].filter(Boolean).join(' · ');
+      h+='<div class="imp-linha'+(it.on?'':' off')+'"><button class="pln-check'+(it.on?' on':'')+'" onclick="impMarcar('+i+')" aria-label="'+(it.on?'Desmarcar':'Marcar')+'">'+(it.on?icon('check'):'')+'</button>'
+        +'<span class="imp-foto">'+(p.photo_thumb?'<img src="'+escUrl(p.photo_thumb)+'" alt="" loading="lazy" onerror="this.remove()">':catIcon(p._cat))+'</span>'
+        +'<button class="imp-t" onclick="impAbrirTroca('+i+')"><b>'+esc(p.name)+'</b><span>'+esc(meta)+'</span></button>'
+        +'<span class="imp-seg"><button class="'+(it.status==='want'?'on':'')+'" onclick="impStatus('+i+',\'want\')">Quero ir</button><button class="'+(it.status==='been'?'on':'')+'" onclick="impStatus('+i+',\'been\')">Fui</button></span></div>';
+    });
+  });
+  IMP.naoAchou.forEach((x,j)=>{
+    h+='<div class="imp-nao">Não encontrei <b>“'+esc(x.c.texto||x.c.nome)+'”</b><div><button class="imp-nao-buscar" onclick="impBuscarNaoAchado('+j+')">Buscar</button><button class="imp-nao-ignorar" onclick="impIgnorar('+j+')">Ignorar</button></div></div>';
+  });
+  corpo.innerHTML=h;hydrateIcons(corpo);
+  const marcados=IMP.itens.filter(it=>it.on).length;
+  rod.innerHTML=IMP.etapa==='salvando'
+    ?'<button class="exm-btn" disabled>Salvando '+IMP.salvandoN+' de '+marcados+'…</button>'
+    :'<button class="exm-btn" onclick="impSalvar()"'+(marcados?'':' disabled')+'>'+(marcados?'Salvar '+marcados+(marcados===1?' spot':' spots'):'Nada marcado')+'</button>';
+}
+function impMarcar(i){const it=IMP.itens[i];if(!it||IMP.etapa!=='revisar')return;it.on=!it.on;impPintarRevisar()}
+function impStatus(i,s){const it=IMP.itens[i];if(!it||IMP.etapa!=='revisar')return;it.status=s;impPintarRevisar()}
+function impTudo(){if(IMP.etapa!=='revisar')return;const ligar=IMP.itens.some(it=>!it.on&&!it.dup);IMP.itens.forEach(it=>{if(!it.dup)it.on=ligar});impPintarRevisar()}
+function impIgnorar(j){IMP.naoAchou.splice(j,1);impPintarRevisar()}
+
+// ── trocar o lugar (a IA ou o Google acharam o errado) ──
+// Mostra as outras opções que a busca já tinha trazido (sem custo novo) e
+// um campo pra buscar outro nome.
+function impAbrirTroca(i){
+  const it=IMP.itens[i];if(!it||IMP.etapa!=='revisar')return;
+  IMP.troca=i;IMP.trocaNao=-1;IMP.trocaAlts=it.alts||[];
+  document.getElementById('impTrocaBusca').value=[it.c.nome,it.c.cidade].filter(Boolean).join(', ');
+  impPintarTroca();showOv('ov-imp-troca');
+}
+function impBuscarNaoAchado(j){
+  const x=IMP.naoAchou[j];if(!x)return;
+  IMP.troca=-1;IMP.trocaNao=j;IMP.trocaAlts=x.alts||[];
+  document.getElementById('impTrocaBusca').value=[x.c.nome,x.c.cidade].filter(Boolean).join(', ');
+  impPintarTroca();showOv('ov-imp-troca');
+  if(!IMP.trocaAlts.length)impTrocaBuscar();
+}
+function impPintarTroca(){
+  const box=document.getElementById('impTrocaLista');
+  box.innerHTML=IMP.trocaAlts.map((p,k)=>'<button class="imp-alt" onclick="impEscolherAlt('+k+')"><span class="imp-foto">'+(p.photo_thumb?'<img src="'+escUrl(p.photo_thumb)+'" alt="" loading="lazy" onerror="this.remove()">':catIcon(p._cat))+'</span><span class="imp-t"><b>'+esc(p.name)+'</b><span>'+esc(p.address)+'</span></span></button>').join('')
+    ||'<p class="pln-nada">Nenhum resultado. Tente outro nome.</p>';
+  hydrateIcons(box);
+}
+async function impTrocaBuscar(){
+  const q=document.getElementById('impTrocaBusca').value.trim();if(!q)return;
+  document.getElementById('impTrocaLista').innerHTML='<p class="pln-nada">Buscando…</p>';
+  try{IMP.trocaAlts=await impBuscar(q)}catch(e){IMP.trocaAlts=[]}
+  impPintarTroca();
+}
+function impEscolherAlt(k){
+  const p=IMP.trocaAlts[k];if(!p)return;
+  const dup=!!statusNaMinhaLista({name:p.name,city:p.city});
+  if(IMP.troca>=0){const it=IMP.itens[IMP.troca];it.p=p;it.dup=dup;it.on=!dup}
+  else if(IMP.trocaNao>=0){
+    const x=IMP.naoAchou.splice(IMP.trocaNao,1)[0];
+    IMP.itens.push({ordem:x.ordem,c:x.c,p,alts:IMP.trocaAlts,on:!dup,dup,status:x.c.status==='been'?'been':'want'});
+    IMP.itens.sort((a,b)=>a.ordem-b.ordem);
+  }
+  closeOv('ov-imp-troca');impPintarRevisar();
+}
+function impNenhumDesses(){
+  if(IMP.troca>=0){IMP.itens[IMP.troca].on=false}
+  closeOv('ov-imp-troca');impPintarRevisar();
+}
+
+// ── salvar e pronto ──
+async function impSalvar(){
+  const lista=IMP.itens.filter(it=>it.on);if(!lista.length)return;
+  IMP.etapa='salvando';IMP.salvandoN=0;IMP.salvos=[];impPintarRevisar();
+  let falhou=0;
+  // Um de cada vez: cada spot pode criar a viagem do país, e o segundo spot
+  // do mesmo país tem que encontrar a viagem que o primeiro criou.
+  for(const it of lista){
+    IMP.salvandoN++;impPintarRevisar();
+    if(statusNaMinhaLista({name:it.p.name,city:it.p.city}))continue;
+    const data=await salvarSpotDireto(it.p,it.p._cat||'food',it.status,'');
+    if(data&&data!=='sem_pais')IMP.salvos.push({data,p:it.p});else falhou++;
+  }
+  IMP.etapa=IMP.salvos.length?'pronto':'revisar';
+  if(falhou)toast(falhou===1?'1 spot não salvou':falhou+' spots não salvaram','Confere a conexão e tente de novo com esses.','alert');
+  if(IMP.salvos.length){
+    // Os que salvaram saem da revisão: "tentar de novo" só refaz os que faltaram.
+    const ok=new Set(IMP.salvos.map(s=>s.p));IMP.itens=IMP.itens.filter(it=>!ok.has(it.p));
+    loadDashboard();
+  }
+  impPintar();
+}
+function impPintarPronto(){
+  const corpo=document.getElementById('impCorpo'),rod=document.getElementById('impRodape');
+  const por={},ordem=[];
+  IMP.salvos.forEach(s=>{const c=cityOf(s.data)||s.p.city||'';const k=normName(c);if(!por[k]){por[k]={nome:c,n:0,foto:'',trip:s.data.trip_id};ordem.push(k)}por[k].n++;if(!por[k].foto&&s.p.photo_thumb)por[k].foto=s.p.photo_thumb});
+  IMP.cidadesProntas=ordem.map(k=>por[k]);
+  const n=IMP.salvos.length,nc=ordem.length;
+  corpo.innerHTML='<div class="imp-pronto"><h1>'+n+(n===1?' spot salvo':' spots salvos')+' em '+nc+(nc===1?' cidade':' cidades')+'</h1>'
+    +IMP.cidadesProntas.map((c,i)=>'<button class="imp-cid" onclick="impAbrirCidade('+i+')"><span class="imp-foto g">'+(c.foto?'<img src="'+escUrl(c.foto)+'" alt="" onerror="this.remove()">':icon('pin'))+'</span><span class="imp-t"><b>'+esc(c.nome||'Sem cidade')+'</b><span>'+c.n+(c.n===1?' spot':' spots')+'</span></span><span class="imp-seta">›</span></button>').join('')+'</div>';
+  hydrateIcons(corpo);
+  rod.innerHTML='<div class="imp-botoes"><button class="exm-btn" onclick="impVerViagens()">Ver minhas viagens</button><button class="exm-btn exm-btn2" onclick="IMP.texto=\'\';IMP.etapa=\'colar\';impPintar()">Importar mais</button></div>';
+}
+function impAbrirCidade(i){
+  const c=(IMP.cidadesProntas||[])[i];if(!c)return;
+  const t=(S.trips||[]).find(x=>x.id===c.trip);if(!t){impVerViagens();return}
+  S.curTrip=t;goTo('trip');if(c.nome)openCityScreen(c.nome);
+}
+function impVerViagens(){goTo('dashboard');loadDashboard()}
+
 // ═══ INIT ═══
 async function init(){
   capturarConviteDaURL();
@@ -3566,6 +3901,7 @@ async function init(){
         // depois do dashboard: se a pessoa chegou por um link de convite, a
         // amizade é criada agora que existe sessão
         try{await resgatarConvitePendente()}catch(e){console.error('convite:',e)}
+        impVerSeEstaLigado();
         try{await salvarSpotPendente()}catch(e){console.error('salvar da lista:',e)}
         // Por último: as duas perguntas de primeiro acesso. Depois do convite
         // de propósito — quem chegou por link já entra com um amigo, e a
@@ -8440,6 +8776,9 @@ function searchPlaces(v){
   const termo=String(v||'').trim();
   if(!termo){r.innerHTML='<div class="search-loading">Digite para buscar...</div>';return}
   if(termo.length<3){r.innerHTML='<div class="search-loading">Digite pelo menos 3 letras...</div>';return}
+  // Várias coisas separadas por vírgula: é uma lista, não um nome. Buscar a
+  // frase inteira no Google gastaria uma busca pra achar nada.
+  if(impPareceLista(termo)){IMP.texto=termo;r.innerHTML='<button class="imp-entrada imp-sugestao" onclick="impAbrir(IMP.texto)"><span class="imp-entrada-ic" data-ic="menu"></span><span class="imp-t"><b>Separar em spots</b><span>Parece uma lista. O Spot separa cada lugar.</span></span><span class="imp-seta">›</span></button>';hydrateIcons(r);return}
   r.innerHTML='<div class="search-loading">Buscando...</div>';
   const myReqId=++searchReqId;
   searchTO=setTimeout(async()=>{
