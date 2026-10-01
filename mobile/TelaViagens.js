@@ -338,7 +338,33 @@ export default function TelaViagens({ dados, ocupado, acao }) {
         </View>
       ) : null}
 
-      {d.vazio ? (
+      {d.primeiro ? (
+        // a3 (handoff 01/10): conta sem nenhum spot. 'Colar uma lista' só com a
+        // IA ligada no servidor (o site manda primeiro.ia).
+        <View style={e.corpo}>
+          <Text style={e.primeiroTitulo}>Seu primeiro spot</Text>
+          <Text style={e.vazioTexto}>Salve um lugar que você indicaria pra qualquer amigo.</Text>
+          <Pressable
+            onPress={() => acao('novoLugar')}
+            style={({ pressed }) => [e.adicionar, pressed && { opacity: 0.85 }]}
+            accessibilityRole="button"
+          >
+            <Text style={e.adicionarTxt}>Adicionar spot</Text>
+          </Pressable>
+          {d.primeiro.ia ? (
+            <>
+              <Pressable
+                onPress={() => acao('importar')}
+                style={({ pressed }) => [e.adicionar, e.secundario, pressed && { opacity: 0.85 }]}
+                accessibilityRole="button"
+              >
+                <Text style={[e.adicionarTxt, e.secundarioTxt]}>Colar uma lista do celular</Text>
+              </Pressable>
+              <Text style={e.primeiroNota}>Notas, WhatsApp, Instagram: cole o texto e o Spot encontra os lugares.</Text>
+            </>
+          ) : null}
+        </View>
+      ) : d.vazio ? (
         <View style={e.corpo}>
           <Text style={e.secaoTitulo}>Viagens</Text>
           <Text style={e.vazioTexto}>{d.vazioTexto || 'Salve o primeiro spot e a viagem aparece aqui sozinha.'}</Text>
@@ -514,4 +540,8 @@ const e = StyleSheet.create({
   },
   adicionarSolto: { paddingHorizontal: 24, alignSelf: 'center' },
   adicionarTxt: { color: ON_GREEN, fontSize: 14, fontWeight: '600' },
+  secundario: { marginTop: 8, backgroundColor: SURFACE },
+  secundarioTxt: { color: INK },
+  primeiroTitulo: { fontSize: 26, fontWeight: '700', letterSpacing: -0.8, lineHeight: 30, color: INK, marginBottom: 6 },
+  primeiroNota: { fontSize: 14, lineHeight: 20, color: INK3, marginTop: 10 },
 });
