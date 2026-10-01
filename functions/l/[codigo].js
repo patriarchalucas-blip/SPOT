@@ -18,10 +18,9 @@ import { lerKV } from '../api/_kv.js';
 // A prévia do WhatsApp sai daqui (o robô dele não roda JavaScript).
 
 const SB_URL = 'https://kzidnilsyrvauzgelsqd.supabase.co';
-// O convite leva à LANDING (que tem o selo da App Store e o 'use no navegador')
-// enquanto a 1.0 não sai da revisão da Apple: o link da loja daria erro até lá.
-// Aprovado o app, trocar por 'https://apps.apple.com/br/app/id6814856044'.
-const LOJA = '/sobre';
+// O convite leva direto à App Store (app aprovado e no ar desde 01/10/2026).
+// O ?ct= marca de onde veio o download no painel da Apple.
+const LOJA = 'https://apps.apple.com/br/app/spot-seus-lugares/id6814856044';
 const CATEGORIA = { food: 'Comer', hotel: 'Ficar', experience: 'Experiências' };
 const SUBCAT = { natureza: 'Natureza', nightlife: 'Nightlife', wellness: 'Wellness', cultura: 'Cultura', passeio: 'Passeio', compras: 'Compras' };
 const GENERICOS = ['Comer & Beber', 'Onde Ficar', 'Experiência'];
