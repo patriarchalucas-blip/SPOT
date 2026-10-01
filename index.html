@@ -15077,7 +15077,22 @@ async function pedirAmizade(i){
   const{error}=await dbInsert('follows',{follower_id:S.user.id,following_id:alvo.id,status:'pending'});
   if(error){
     if(btn){btn.textContent='Adicionar';btn.style.pointerEvents=''}
+    // A busca de pessoas existe em TRÊS lugares (folha Adicionar amigo, passo
+    // de amigos do primeiro acesso e Amigos vazia), e o campo de erro só na
+    // folha: nos outros dois a falha era muda — o botão "não fazia nada"
+    // (pedido da namorada do Lucas que não chegou, 01/10). O toast aparece em
+    // qualquer tela.
+    console.error('pedido de amizade:',error);
+    // Já existe vínculo nesse sentido (pedido antigo, ou já são amigos): o
+    // banco recusa a duplicata (unique follower_id+following_id, 001).
+    if(error&&error.code==='23505'){
+      BUSCA_VINCULOS[alvo.id]=BUSCA_VINCULOS[alvo.id]||'pending';
+      if(btn&&btn.parentElement)btn.outerHTML='<span class="busca-estado">pedido enviado</span>';
+      toast('Pedido já enviado','Assim que aceitar, vocês veem a atividade um do outro.','send');
+      loadFriends();return;
+    }
     mostrarErroAmigo('Não deu pra enviar. Tenta de novo.');
+    toast('Pedido não enviado','Confere a conexão e tenta de novo.','alert');
     return;
   }
   avisar('pedido',alvo.id);
