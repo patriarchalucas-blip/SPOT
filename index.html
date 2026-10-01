@@ -2622,6 +2622,62 @@ body.exm .exm-filtros{position:relative;z-index:1}
 </div>
 
 <script>
+/* ═══ O APP CONTA OS PRÓPRIOS ERROS (01/10) ═══
+   Erro de JavaScript, promessa sem tratamento e console.error vão pra
+   /api/erro, que agrupa por dia e avisa o Lucas no celular quando aparece um
+   erro NOVO. Fica no topo do script pra pegar até erro da abertura.
+   · Só o erro técnico, a tela e app/navegador: e-mail, id, token, link com
+     parâmetro e texto longo entre aspas saem ANTES de mandar.
+   · Queda de rede não é bug do app (metrô, rede de empresa): fica de fora.
+   · No máximo 8 por abertura, e o mesmo erro uma vez só.
+   · Em localhost (testes e pente-fino) não manda nada. */
+(function(){
+  if(/^(localhost|127\.0\.0\.1)$/.test(location.hostname)||location.protocol==='file:')return;
+  const vistos=new Set();let mandados=0;
+  const REDE=/Failed to fetch|Load failed|NetworkError|network request failed|rede|AbortError|The operation was aborted|ERR_INTERNET|offline/i;
+  const limpar=t=>String(t==null?'':t)
+    .replace(/[\w.+-]+@[\w-]+\.[\w.]+/g,'<email>')
+    .replace(/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/gi,'<id>')
+    .replace(/eyJ[\w-]{10,}\.[\w-]{10,}\.[\w-]{10,}/g,'<token>')
+    .replace(/https?:\/\/[^\s)'"]+/g,u=>u.split(/[?#]/)[0])
+    .replace(/(["'`])[^"'`]{40,}\1/g,'$1…$1');
+  function texto(x){
+    if(x==null)return'';
+    if(x instanceof Error)return x.name+': '+x.message;
+    if(typeof x==='object'){try{return x.message?String(x.message):JSON.stringify(x).slice(0,200)}catch(e){return String(x)}}
+    return String(x);
+  }
+  window.reportarErro=function(tipo,msg,pilha){
+    try{
+      msg=limpar(msg).slice(0,300);
+      if(!msg||REDE.test(msg)||(navigator.onLine===false))return;
+      if(/^Script error\.?$/.test(msg))return; // erro de outro domínio, sem detalhe nenhum
+      const tela=(document.querySelector('.screen.active')||{}).id||'';
+      const k=msg+'|'+tela;
+      if(vistos.has(k)||mandados>=8)return;
+      vistos.add(k);mandados++;
+      const ua=navigator.userAgent||'';
+      const sistema=(ua.match(/iPhone OS [\d_]+|Android [\d.]+|Mac OS X [\d_]+|Windows NT [\d.]+/)||[''])[0];
+      const corpo=JSON.stringify({tipo,msg,pilha:limpar(pilha).slice(0,900),tela,sistema,
+        onde:(window.ReactNativeWebView&&window.ReactNativeWebView.postMessage)?'app':'navegador'});
+      fetch('/api/erro',{method:'POST',headers:{'Content-Type':'application/json'},body:corpo,keepalive:true}).catch(()=>{});
+    }catch(e){}
+  };
+  window.addEventListener('error',e=>reportarErro('erro',e.message||texto(e.error),e.error&&e.error.stack));
+  window.addEventListener('unhandledrejection',e=>reportarErro('promessa',texto(e.reason),e.reason&&e.reason.stack));
+  // console.error também: é onde o app registra o que deu errado e tratou
+  // (consulta recusada, resposta estranha) — o erro que não quebra a tela mas
+  // deixa a pessoa sem o que pediu, como o pedido de amizade de 01/10.
+  const original=console.error.bind(console);
+  console.error=function(){
+    original.apply(null,arguments);
+    try{
+      const partes=[].slice.call(arguments).map(texto);
+      const comErro=[].slice.call(arguments).find(a=>a instanceof Error);
+      reportarErro('console',partes.join(' '),comErro&&comErro.stack);
+    }catch(e){}
+  };
+})();
 /* ═══ ÍCONES SVG (fonte única — substitui emoji de interface) ═══ */
 const ICONS={
 map:'<path d="M9 4.5 3.5 6.8v12.7l5.5-2.3 6 2.5 5.5-2.3V4.7L15 7 9 4.5Z"/><path d="M9 4.5V17"/><path d="M15 7v12.7"/>',
