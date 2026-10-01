@@ -134,3 +134,20 @@ test('avisa o dono ao cruzar 80% da cota, uma vez so', async () => {
     assert.ok(kv.get('brave_aviso_' + mes + '_80'));
   } finally { globalThis.fetch = antigo }
 });
+
+// Confeitaria Vera Cruz (01/10): o Instagram abria "não encontrado". O site
+// dela aponta pro @ certo, mas o nome salvo ("Confeitaria e Restaurante Vera
+// Cruz") e o domínio ("veracruzconfeitaria") tinham as palavras em outra ordem.
+test('Vera Cruz: o @ do site vale com as palavras em outra ordem', async () => {
+  const { instagramDoSite, escolherPerfil, cobrePalavras } = await import('../functions/api/find-instagram.js');
+  const orig = globalThis.fetch;
+  globalThis.fetch = async () => new Response('<a href="https://www.instagram.com/confeitariaveracruz/">ig</a>', { status: 200, headers: { 'Content-Type': 'text/html' } });
+  try {
+    for (const nome of ['Confeitaria Vera Cruz', 'Confeitaria e Restaurante Vera Cruz', 'Vera Cruz Confeitaria']) {
+      assert.strictEqual(await instagramDoSite('https://www.veracruzconfeitaria.com.br/', nome), 'https://www.instagram.com/confeitariaveracruz/', nome);
+    }
+  } finally { globalThis.fetch = orig }
+  assert.ok(escolherPerfil([{ url: 'https://www.instagram.com/confeitariaveracruz/', title: 'Vera Cruz Confeitaria (@confeitariaveracruz)', description: 'Tatuapé, São Paulo' }], 'Confeitaria e Restaurante Vera Cruz', 'São Paulo'));
+  assert.strictEqual(escolherPerfil([{ url: 'https://www.instagram.com/veracruzpadaria/', title: 'Vera Cruz Padaria de Santos', description: 'Santos' }], 'Confeitaria e Restaurante Vera Cruz', 'São Paulo'), null, 'outra cidade nao entra');
+  assert.strictEqual(cobrePalavras('dinhosjeans', 'Dinhos'), false, 'nome de uma palavra so nao usa a regra de palavras');
+});

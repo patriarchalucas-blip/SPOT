@@ -82,16 +82,19 @@ export async function onRequestPost(context) {
   // Toque manual em "buscar" passa por cima: se a pessoa pediu de novo, a
   // resposta guardada não serviu pra ela.
   const guardado = body.forcar === true ? null : await lerKV(env, memoria);
+  // O SITE OFICIAL vem antes da memória (01/10, Confeitaria Vera Cruz): ler o
+  // site é de graça, e o link que o próprio lugar publica vale mais que um @
+  // que a busca escolheu meses atrás. Se ele diz outra coisa, a memória é
+  // corrigida.
+  const doSite = await instagramDoSite(site, name);
+  if (doSite) {
+    if (guardado !== doSite) await gravarKV(env, memoria, doSite, MEMORIA_ACHOU);
+    return json({ instagram_url: doSite, fonte: 'site' });
+  }
   // A memória passa pela regra de hoje: um @ guardado pela regra velha que
   // hoje não é perfil (ver handleDe) é esquecido e procurado de novo.
   if (guardado !== null && (guardado === '-' || handleDe(guardado))) {
     return json({ instagram_url: guardado === '-' ? null : guardado, fonte: 'memoria' });
-  }
-
-  const doSite = await instagramDoSite(site, name);
-  if (doSite) {
-    await gravarKV(env, memoria, doSite, MEMORIA_ACHOU);
-    return json({ instagram_url: doSite, fonte: 'site' });
   }
 
   // ═══ PASSO 2: busca na web ═══
@@ -269,8 +272,11 @@ export async function instagramDoSite(site, name) {
     vistos.add(handle.toLowerCase());
     const h = soAlnum(handle);
     if (!h) continue;
-    const pareceDominio = dominio && (h === dominio || h.includes(dominio) || dominio.includes(h));
-    const pareceNome = nomeAlnum && (h === nomeAlnum || h.includes(nomeAlnum) || nomeAlnum.includes(h));
+    // Mesmas palavras em outra ordem também vale (01/10, Confeitaria Vera
+    // Cruz): o domínio é "veracruzconfeitaria" e o @ "confeitariaveracruz".
+    const girado = dominio && h.length === dominio.length && (dominio + dominio).includes(h);
+    const pareceDominio = dominio && (h === dominio || h.includes(dominio) || dominio.includes(h) || girado);
+    const pareceNome = nomeAlnum && (h === nomeAlnum || h.includes(nomeAlnum) || nomeAlnum.includes(h) || cobrePalavras(h, name));
     if (pareceDominio || pareceNome) return 'https://www.instagram.com/' + handle + '/';
   }
   return '';
@@ -293,6 +299,19 @@ function norm(x) {
 }
 // só letras e números: "Dinho's Place" e "dinhos_place" viram a mesma coisa
 function soAlnum(x) { return norm(x).replace(/[^a-z0-9]/g, '') }
+
+// O @ contém a maior parte das PALAVRAS do nome, em qualquer ordem?
+// "Confeitaria e Restaurante Vera Cruz" → confeitaria, restaurante, vera,
+// cruz; @confeitariaveracruz tem 3 das 4. Só vale com 2+ palavras de 3+
+// letras: nome de uma palavra só ("Dinhos") continua exigindo o @ parecido
+// por inteiro — foi assim que um restaurante ganhou o Instagram de uma loja
+// de jeans de mesmo nome.
+export function cobrePalavras(handleAlnum, name) {
+  const palavras = norm(name).split(/[^a-z0-9]+/).filter((w) => w.length >= 3);
+  if (palavras.length < 2) return false;
+  const dentro = palavras.filter((w) => handleAlnum.includes(w)).length;
+  return dentro >= 2 && dentro / palavras.length >= 0.6;
+}
 
 // Aceita só URL de PERFIL. /p/, /reel/, /explore/ etc. são post e página
 // interna — nunca servem como "o Instagram do lugar".
@@ -346,6 +365,7 @@ export function escolherPerfil(results, name, city) {
     if (h === nomeAlnum) ponto += 3;                                  // @dinhosplace para "Dinho's Place"
     else if (h.startsWith(nomeAlnum) || nomeAlnum.startsWith(h)) ponto += 2;
     else if (h.includes(nomeAlnum) || nomeAlnum.includes(h)) ponto += 1;
+    else if (cobrePalavras(h, name)) ponto += 1;                       // "Confeitaria e Restaurante Vera Cruz" x @confeitariaveracruz
     else continue;                                                     // nem parecido: fora
 
     // A cidade é a evidência mais forte de que é o MESMO negócio, e não outro

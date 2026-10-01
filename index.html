@@ -11560,12 +11560,18 @@ function ehPerfilDoInstagram(url){
   if(!h||h.length>30||h.startsWith('_')||/\.php$/i.test(m[1])||/\.\./.test(h))return false;
   return !['p','reel','reels','tv','explore','stories','accounts','directory','about','developer','legal','web','help','privacy','terms','direct','ar','tags','locations','share','sharer','challenge','oauth','login','emails','session'].includes(h.toLowerCase());
 }
+// v2 (01/10, Confeitaria Vera Cruz): o leitor do site recusava o @ certo
+// quando as palavras vinham em outra ordem, e a busca escolhia outro. O
+// servidor agora lê o site ANTES da memória — então revisar todos os
+// Instagrams de comer uma vez corrige os errados (o backfill busca o site no
+// Google de novo e o @ do site vence). Os certos voltam iguais.
 async function esquecerInstagramsQueNaoSaoPerfil(){
-  const FLAG='spot_insta_perfil_v1';
+  const FLAG='spot_insta_perfil_v2';
   if(localStorage.getItem(FLAG))return;
   const alvos=[];
   (S.trips||[]).forEach(t=>(t._spots||[]).forEach(s=>{
-    if(/instagram\.com/i.test(s.website_url||'')&&!ehPerfilDoInstagram(s.website_url))alvos.push(s);
+    if(s.user_id&&S.user&&s.user_id!==S.user.id)return;
+    if(/instagram\.com/i.test(s.website_url||'')&&(s.category==='food'||!ehPerfilDoInstagram(s.website_url)))alvos.push(s);
   }));
   for(const s of alvos){
     const{error}=await dbUpdate('spots',s.id,{insta_checked:false,website_url:null});
