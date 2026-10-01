@@ -84,13 +84,15 @@ export async function onRequestPost(context) {
   d.escritas++;
   const novo = !ja && d.avisos < TETO_AVISOS_DIA;
   if (novo) d.avisos++;
-  await gravarKV(env, chave, JSON.stringify(d), UM_MES);
+  // gravarKV nunca levanta erro: devolve false quando o KV recusa (o teto
+  // grátis de mil gravações por dia, no app inteiro). A resposta conta.
+  const gravou = await gravarKV(env, chave, JSON.stringify(d), UM_MES);
   if (novo) {
     const aviso = avisarDono(env, 'Erro novo no Spot' + (tela ? ' (' + tela + ')' : ''),
       msg.slice(0, 140) + (onde === 'app' ? ' · no app' : ' · no navegador'), 'operacao');
     if (typeof context.waitUntil === 'function') context.waitUntil(aviso); else await aviso;
   }
-  return json({ ok: true });
+  return json({ ok: true, gravou });
 }
 
 export async function onRequestGet(context) {
