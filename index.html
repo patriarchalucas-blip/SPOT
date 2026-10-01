@@ -2216,7 +2216,7 @@ body.exm .exm-filtros{position:relative;z-index:1}
     <button class="checkin-x" onclick="checkinIgnore()" data-ic="close" aria-label="Ignorar"></button>
   </div>
   <div class="dash-body" id="tripsContainer"><div class="section-head"><span class="section-title">Minhas viagens</span></div><div class="empty-state"><div class="ei" data-ic="suitcase"></div><h3>Nenhuma viagem ainda</h3><p>Salve o primeiro spot e a viagem nasce sozinha</p></div></div>
-  <div class="bottom-nav"><div class="nav-item active" onclick="goTo('dashboard');loadDashboard()"><div class="nav-icon" data-ic="map"></div><div class="nav-label" style="color:var(--ink);font-weight:600">Viagens</div></div><div class="nav-item" onclick="goTo('explore');loadExplore()"><div class="nav-icon" data-ic="search"></div><div class="nav-label">Explorar</div></div><div class="nav-item" onclick="goTo('friends');loadFriends()"><div class="nav-icon" data-ic="users"></div><div class="nav-label">Amigos</div></div><div class="nav-item" onclick="goTo('profile');loadProfile()"><div class="nav-icon" data-ic="user"></div><div class="nav-label">Perfil</div></div></div>
+  <div class="bottom-nav"><div class="nav-item active" onclick="goTo('dashboard');loadDashboard()"><div class="nav-icon" data-ic="map"></div><div class="nav-label" style="color:var(--ink);font-weight:600">Viagens</div></div><div class="nav-item" onclick="goTo('explore');loadExplore()"><div class="nav-icon" data-ic="search"></div><div class="nav-label">Explorar</div></div><div class="nav-item" onclick="goTo('friends');loadFriends(true)"><div class="nav-icon" data-ic="users"></div><div class="nav-label">Amigos</div></div><div class="nav-item" onclick="goTo('profile');loadProfile()"><div class="nav-icon" data-ic="user"></div><div class="nav-label">Perfil</div></div></div>
 </div>
 
 <div class="screen" id="list">
@@ -2228,7 +2228,7 @@ body.exm .exm-filtros{position:relative;z-index:1}
   <div class="search-wrap" id="listCitySearchWrap" style="display:none;padding:14px 20px 0"><div class="search-field"><span class="si" data-ic="search"></span><input class="search-input" autocomplete="off" autocorrect="off" spellcheck="false" id="listCitySearch" placeholder="Buscar cidade..." oninput="setListCityQuery(this.value)"></div></div>
   <div class="list-filters" id="listFilters"></div>
   <div class="list-body" id="listBody"></div>
-  <div class="bottom-nav"><div class="nav-item active" onclick="goTo('dashboard');loadDashboard()"><div class="nav-icon" data-ic="map"></div><div class="nav-label">Viagens</div></div><div class="nav-item" onclick="goTo('explore');loadExplore()"><div class="nav-icon" data-ic="search"></div><div class="nav-label">Explorar</div></div><div class="nav-item" onclick="goTo('friends');loadFriends()"><div class="nav-icon" data-ic="users"></div><div class="nav-label">Amigos</div></div><div class="nav-item" onclick="goTo('profile');loadProfile()"><div class="nav-icon" data-ic="user"></div><div class="nav-label">Perfil</div></div></div>
+  <div class="bottom-nav"><div class="nav-item active" onclick="goTo('dashboard');loadDashboard()"><div class="nav-icon" data-ic="map"></div><div class="nav-label">Viagens</div></div><div class="nav-item" onclick="goTo('explore');loadExplore()"><div class="nav-icon" data-ic="search"></div><div class="nav-label">Explorar</div></div><div class="nav-item" onclick="goTo('friends');loadFriends(true)"><div class="nav-icon" data-ic="users"></div><div class="nav-label">Amigos</div></div><div class="nav-item" onclick="goTo('profile');loadProfile()"><div class="nav-icon" data-ic="user"></div><div class="nav-label">Perfil</div></div></div>
 </div>
 
 <div class="screen" id="trip">
@@ -2237,7 +2237,7 @@ body.exm .exm-filtros{position:relative;z-index:1}
   <div class="trip-body" id="tripBody"></div>
   <button class="btn-primario btn-largo btn-solto" onclick="addSpotToCurrentTrip()">Adicionar spot</button>
   <button class="btn-texto" id="tripDeleteBtn" onclick="deleteTrip()">Excluir viagem</button>
-  <div class="bottom-nav"><div class="nav-item active" onclick="goTo('dashboard');loadDashboard()"><div class="nav-icon" data-ic="map"></div><div class="nav-label" style="color:var(--ink);font-weight:600">Viagens</div></div><div class="nav-item" onclick="goTo('explore');loadExplore()"><div class="nav-icon" data-ic="search"></div><div class="nav-label">Explorar</div></div><div class="nav-item" onclick="goTo('friends');loadFriends()"><div class="nav-icon" data-ic="users"></div><div class="nav-label">Amigos</div></div><div class="nav-item" onclick="goTo('profile');loadProfile()"><div class="nav-icon" data-ic="user"></div><div class="nav-label">Perfil</div></div></div>
+  <div class="bottom-nav"><div class="nav-item active" onclick="goTo('dashboard');loadDashboard()"><div class="nav-icon" data-ic="map"></div><div class="nav-label" style="color:var(--ink);font-weight:600">Viagens</div></div><div class="nav-item" onclick="goTo('explore');loadExplore()"><div class="nav-icon" data-ic="search"></div><div class="nav-label">Explorar</div></div><div class="nav-item" onclick="goTo('friends');loadFriends(true)"><div class="nav-icon" data-ic="users"></div><div class="nav-label">Amigos</div></div><div class="nav-item" onclick="goTo('profile');loadProfile()"><div class="nav-icon" data-ic="user"></div><div class="nav-label">Perfil</div></div></div>
 </div>
 
 <div class="screen" id="city">
@@ -2248,7 +2248,7 @@ body.exm .exm-filtros{position:relative;z-index:1}
   <div class="subcat-row" id="cityStatusFilter" style="display:none;padding:12px 20px 0;scroll-padding-left:20px"></div>
   <div class="trip-body" id="cityBody"></div>
   <button class="btn-primario btn-largo btn-solto" onclick="addSpotToCurrentCity()">Adicionar spot</button>
-  <div class="bottom-nav"><div class="nav-item active" onclick="goTo('dashboard');loadDashboard()"><div class="nav-icon" data-ic="map"></div><div class="nav-label" style="color:var(--ink);font-weight:600">Viagens</div></div><div class="nav-item" onclick="goTo('explore');loadExplore()"><div class="nav-icon" data-ic="search"></div><div class="nav-label">Explorar</div></div><div class="nav-item" onclick="goTo('friends');loadFriends()"><div class="nav-icon" data-ic="users"></div><div class="nav-label">Amigos</div></div><div class="nav-item" onclick="goTo('profile');loadProfile()"><div class="nav-icon" data-ic="user"></div><div class="nav-label">Perfil</div></div></div>
+  <div class="bottom-nav"><div class="nav-item active" onclick="goTo('dashboard');loadDashboard()"><div class="nav-icon" data-ic="map"></div><div class="nav-label" style="color:var(--ink);font-weight:600">Viagens</div></div><div class="nav-item" onclick="goTo('explore');loadExplore()"><div class="nav-icon" data-ic="search"></div><div class="nav-label">Explorar</div></div><div class="nav-item" onclick="goTo('friends');loadFriends(true)"><div class="nav-icon" data-ic="users"></div><div class="nav-label">Amigos</div></div><div class="nav-item" onclick="goTo('profile');loadProfile()"><div class="nav-icon" data-ic="user"></div><div class="nav-label">Perfil</div></div></div>
 </div>
 
 <div class="screen" id="explore">
@@ -2266,7 +2266,7 @@ body.exm .exm-filtros{position:relative;z-index:1}
   <div class="list-body" id="exploreBody">
     <div class="empty-state"><div class="ei" data-ic="search"></div><h3>Descubra o que está bombando</h3><p>Digite uma cidade pra ver o que está bem avaliado por lá — e o que seus amigos já marcaram.</p></div>
   </div>
-  <div class="bottom-nav"><div class="nav-item" onclick="goTo('dashboard');loadDashboard()"><div class="nav-icon" data-ic="map"></div><div class="nav-label">Viagens</div></div><div class="nav-item active" onclick="goTo('explore');loadExplore()"><div class="nav-icon" data-ic="search"></div><div class="nav-label" style="color:var(--ink);font-weight:600">Explorar</div></div><div class="nav-item" onclick="goTo('friends');loadFriends()"><div class="nav-icon" data-ic="users"></div><div class="nav-label">Amigos</div></div><div class="nav-item" onclick="goTo('profile');loadProfile()"><div class="nav-icon" data-ic="user"></div><div class="nav-label">Perfil</div></div></div>
+  <div class="bottom-nav"><div class="nav-item" onclick="goTo('dashboard');loadDashboard()"><div class="nav-icon" data-ic="map"></div><div class="nav-label">Viagens</div></div><div class="nav-item active" onclick="goTo('explore');loadExplore()"><div class="nav-icon" data-ic="search"></div><div class="nav-label" style="color:var(--ink);font-weight:600">Explorar</div></div><div class="nav-item" onclick="goTo('friends');loadFriends(true)"><div class="nav-icon" data-ic="users"></div><div class="nav-label">Amigos</div></div><div class="nav-item" onclick="goTo('profile');loadProfile()"><div class="nav-icon" data-ic="user"></div><div class="nav-label">Perfil</div></div></div>
 </div>
 
 <div class="screen" id="profile">
@@ -2285,7 +2285,7 @@ body.exm .exm-filtros{position:relative;z-index:1}
       <input type="file" id="avatarFileInput" accept="image/*" style="display:none" onchange="onAvatarFileChosen(this)">
       <div class="pi-txt">
         <div class="profile-name" id="profName">—</div>
-        <div class="profile-sub"><span class="profile-user" id="profUser"></span><span class="pi-amigos" id="profAmigos" style="display:none" onclick="goTo('friends');loadFriends()"></span></div>
+        <div class="profile-sub"><span class="profile-user" id="profUser"></span><span class="pi-amigos" id="profAmigos" style="display:none" onclick="goTo('friends');loadFriends(true)"></span></div>
       </div>
     </div>
     <div class="profile-bio" id="profBio" style="display:none"></div>
@@ -2324,7 +2324,7 @@ body.exm .exm-filtros{position:relative;z-index:1}
          bloco de convite ficava embaixo dela. -->
     <div style="height:110px"></div>
   </div>
-  <div class="bottom-nav"><div class="nav-item" onclick="goTo('dashboard');loadDashboard()"><div class="nav-icon" data-ic="map"></div><div class="nav-label">Viagens</div></div><div class="nav-item" onclick="goTo('explore');loadExplore()"><div class="nav-icon" data-ic="search"></div><div class="nav-label">Explorar</div></div><div class="nav-item" onclick="goTo('friends');loadFriends()"><div class="nav-icon" data-ic="users"></div><div class="nav-label">Amigos</div></div><div class="nav-item active" onclick="goTo('profile');loadProfile()"><div class="nav-icon" data-ic="user"></div><div class="nav-label" style="color:var(--ink);font-weight:600">Perfil</div></div></div>
+  <div class="bottom-nav"><div class="nav-item" onclick="goTo('dashboard');loadDashboard()"><div class="nav-icon" data-ic="map"></div><div class="nav-label">Viagens</div></div><div class="nav-item" onclick="goTo('explore');loadExplore()"><div class="nav-icon" data-ic="search"></div><div class="nav-label">Explorar</div></div><div class="nav-item" onclick="goTo('friends');loadFriends(true)"><div class="nav-icon" data-ic="users"></div><div class="nav-label">Amigos</div></div><div class="nav-item active" onclick="goTo('profile');loadProfile()"><div class="nav-icon" data-ic="user"></div><div class="nav-label" style="color:var(--ink);font-weight:600">Perfil</div></div></div>
 </div>
 
 <div class="screen" id="friends">
@@ -2337,7 +2337,7 @@ body.exm .exm-filtros{position:relative;z-index:1}
   <div class="am-abas" id="amAbas"></div>
   <div class="dash-body" id="friendsContainer" style="padding-top:16px"></div>
   <div id="friendsRequests" style="display:none"></div>
-  <div class="bottom-nav"><div class="nav-item" onclick="goTo('dashboard');loadDashboard()"><div class="nav-icon" data-ic="map"></div><div class="nav-label">Viagens</div></div><div class="nav-item" onclick="goTo('explore');loadExplore()"><div class="nav-icon" data-ic="search"></div><div class="nav-label">Explorar</div></div><div class="nav-item active" onclick="goTo('friends');loadFriends()"><div class="nav-icon" data-ic="users"></div><div class="nav-label" style="color:var(--ink);font-weight:600">Amigos</div></div><div class="nav-item" onclick="goTo('profile');loadProfile()"><div class="nav-icon" data-ic="user"></div><div class="nav-label">Perfil</div></div></div>
+  <div class="bottom-nav"><div class="nav-item" onclick="goTo('dashboard');loadDashboard()"><div class="nav-icon" data-ic="map"></div><div class="nav-label">Viagens</div></div><div class="nav-item" onclick="goTo('explore');loadExplore()"><div class="nav-icon" data-ic="search"></div><div class="nav-label">Explorar</div></div><div class="nav-item active" onclick="goTo('friends');loadFriends(true)"><div class="nav-icon" data-ic="users"></div><div class="nav-label" style="color:var(--ink);font-weight:600">Amigos</div></div><div class="nav-item" onclick="goTo('profile');loadProfile()"><div class="nav-icon" data-ic="user"></div><div class="nav-label">Perfil</div></div></div>
 </div>
 
 <div class="screen" id="friend">
@@ -4629,7 +4629,7 @@ window.irParaAba=function(id){
   goTo(id);
   if(id==='dashboard')loadDashboard();
   else if(id==='explore')loadExplore();
-  else if(id==='friends')loadFriends();
+  else if(id==='friends')loadFriends(true);
   else if(id==='profile')loadProfile();
 };
 
@@ -12100,7 +12100,13 @@ async function loadProfile(){
   applyAvatar('profAvatar',name,p.avatar_url);
   // Load trips + their spots (for city count) if missing
   if(!S.trips.length){const trips=await dbGet('trips','user_id=eq.'+S.user.id);S.trips=trips||[]}
-  for(const t of S.trips){if(!t._spots){const sp=await dbGet('spots','trip_id=eq.'+t.id+'&user_id=eq.'+S.user.id);t._spots=sp||[]}}
+  // Viagem sem spots carregados: UMA consulta por user_id pra todas (01/10).
+  // Era uma por viagem, em fila — 25 viagens, 25 esperas de 0,3–0,9 s.
+  if(S.trips.some(t=>!t._spots)){
+    const sp=await dbGet('spots','user_id=eq.'+S.user.id+'&order=created_at.asc');
+    if(!falhou(sp)){const por={};(sp||[]).forEach(s=>{(por[s.trip_id]=por[s.trip_id]||[]).push(s)});
+      S.trips.forEach(t=>{if(!t._spots)t._spots=por[t.id]||[]})}
+  }
   // Os contadores de países/cidades/continentes saíram daqui: o Dashboard já
   // mostra os mesmos números, e mostrava com denominador diferente ("X/243"
   // contra "de 195"), o que só gerava dúvida sobre qual estava certo.
@@ -12946,7 +12952,7 @@ window.acaoDePerfil=function(acao,valor){
   if(acao==='cidadeMosaico'){abrirCidadeDaEstante(valor);return}
   // "amigos" não é um modo da Lista: ele abre a ABA de amigos. Sem este desvio
   // o openList receberia um modo que não existe e a tela ficaria vazia.
-  if(acao==='lista'&&valor==='amigos'){goTo('friends');loadFriends();return}
+  if(acao==='lista'&&valor==='amigos'){goTo('friends');loadFriends(true);return}
   if(acao==='lista'){openList(valor);return}
   if(acao==='lugar'){openPlace(valor,'profile');return}
   if(acao==='config'){abrirConfig();return}
@@ -13596,19 +13602,35 @@ function switchFriendsTab(aba){
   if(aba==='recente')marcarFeedComoVisto();
   renderFriendsTab();
 }
-async function loadFriends(){
+// LENTIDÃO (01/10, a namorada do Lucas: "o app está lento"). Medido: o código
+// desenha qualquer tela em menos de 0,2 s; quem demora é o banco — cada
+// consulta leva 0,3 a 0,9 s. Esta tela fazia CINCO etapas em fila (vínculos →
+// bloqueios → perfis → pedidos → feed), uns 3 s de "Carregando..." toda vez
+// que a aba era tocada, apagando o que já estava na tela. Agora:
+//   · o que não depende de nada sai junto na 1ª rodada, o resto na 2ª;
+//   · voltar pra aba mostra NA HORA o que já estava carregado, e atualiza
+//     por trás; tocada há menos de 30 s, nem busca de novo.
+let AMIGOS_CARREGADO_EM=0;
+async function loadFriends(daAba){
   const uid=S.user.id;
   const c=document.getElementById('friendsContainer');
-  c.innerHTML='<div class="empty-state"><div class="ei">'+icon('users')+'</div><p>Carregando...</p></div>';
+  if(FRIENDS_DATA&&FRIENDS_DATA.uid===uid){
+    renderFriendsTab();darDadosDeAmigos();
+    if(daAba&&Date.now()-AMIGOS_CARREGADO_EM<30000)return;
+  }else c.innerHTML='<div class="empty-state"><div class="ei">'+icon('users')+'</div><p>Carregando...</p></div>';
 
   // Consulta que FALHOU nao e lista vazia — o mesmo raciocinio que o
   // loadDashboard ja fazia e esta tela nao. Um 500, o projeto pausado ou uma
   // troca de Wi-Fi anunciavam "voce nao tem amigos" e sumiam com o pedido
   // de amizade recebido.
-  const[accepted,incoming,outgoing]=await Promise.all([
+  // 1ª rodada: vínculos, bloqueios e os nomes de quem tem pedido pendente
+  // (a RPC não depende dos vínculos: ela mesma acha os pendentes).
+  const[accepted,incoming,outgoing,,pendRpc]=await Promise.all([
     dbGet('follows',`status=eq.accepted&or=(follower_id.eq.${uid},following_id.eq.${uid})`),
     dbGet('follows',`status=eq.pending&following_id=eq.${uid}`),
-    dbGet('follows',`status=eq.pending&follower_id=eq.${uid}`)
+    dbGet('follows',`status=eq.pending&follower_id=eq.${uid}`),
+    carregarBloqueios(),
+    dbRpc('pending_request_profiles',{})
   ]);
 
   // Sai ANTES de reescrever qualquer coisa. Se apagasse FRIENDS_DATA aqui,
@@ -13628,7 +13650,7 @@ async function loadFriends(){
   // Bloqueado não aparece em lugar nenhum da tela de amigos — nem como amigo,
   // nem como pedido recebido. Bloquear já desfaz a amizade, mas a lista pode
   // estar em memória de antes, e um pedido novo pode chegar depois.
-  await carregarBloqueios();
+  // (Os bloqueios já vieram na 1ª rodada.)
   // Sem duplicata: a amizade pode ter DUAS linhas aceitas quando as duas
   // pessoas mandam pedido uma pra outra antes de qualquer uma aceitar. Sem
   // isto o amigo aparece duas vezes na lista e duas vezes no feed.
@@ -13638,21 +13660,15 @@ async function loadFriends(){
   const incomingIds=incoming.map(r=>r.follower_id).filter(id=>!estaBloqueado(id));
   const outgoingIds=outgoing.map(r=>r.following_id).filter(id=>!estaBloqueado(id));
   const pmap={};
-  // Amigo aceito: linha do profiles direto (é o que a política libera).
-  if(friendIds.length){
-    const profiles=await dbGet('profiles',`id=in.(${friendIds.join(',')})`);
-    (profiles||[]).forEach(p=>pmap[p.id]=p);
-  }
-  // Pedido pendente: nome vem por RPC. A política de profiles só libera
-  // amigo ACEITO — um pedido que você nunca aceitou não dá mais acesso ao
-  // seu e-mail. A RPC devolve id/nome/username/avatar e nada além disso.
-  if(incomingIds.length||outgoingIds.length){
-    const pend=await dbRpc('pending_request_profiles',{});
-    (pend||[]).forEach(p=>{if(!pmap[p.id])pmap[p.id]=p});
-  }
+  // Pedido pendente: nome vem por RPC (1ª rodada). A política de profiles só
+  // libera amigo ACEITO — um pedido que você nunca aceitou não dá mais acesso
+  // ao seu e-mail. A RPC devolve id/nome/username/avatar e nada além disso.
+  (Array.isArray(pendRpc)?pendRpc:[]).forEach(p=>{if(p&&p.id)pmap[p.id]=p});
 
   let feedItems=[];
   if(friendIds.length){
+    // 2ª rodada: os perfis dos amigos E o feed, juntos (o feed só precisa
+    // dos ids, que já chegaram).
     // Comentario entra no feed junto com o resto. Ele vem em DUAS pontas: o
     // que seus amigos comentaram, e o que comentaram nos SEUS spots — que e
     // como voce fica sabendo que responderam voce.
@@ -13660,7 +13676,9 @@ async function loadFriends(){
     // A tabela vem da migracao 012; enquanto ela nao rodar, a consulta falha e
     // o .catch devolve lista vazia. O feed continua inteiro sem ela.
     const meusSpots=allSpotsFlat().map(x=>x.id);
-    const[trips,spots,comentDeAmigos,comentNosMeus]=await Promise.all([
+    const[profiles,trips,spots,comentDeAmigos,comentNosMeus]=await Promise.all([
+      // Amigo aceito: linha do profiles direto (é o que a política libera).
+      dbGet('profiles',`id=in.(${friendIds.join(',')})`),
       dbGet('trips',`user_id=in.(${friendIds.join(',')})&dates=not.in.(__quickvisit__,__home__,__casa__)&order=created_at.desc&limit=15`),
       dbGet('spots',`user_id=in.(${friendIds.join(',')})&status=eq.been&order=created_at.desc&limit=15`),
       dbGet('spot_comments',`user_id=in.(${friendIds.join(',')})&order=created_at.desc&limit=15`).catch(()=>[]),
@@ -13668,6 +13686,7 @@ async function loadFriends(){
         ? dbGet('spot_comments',`spot_id=in.(${meusSpots.join(',')})&user_id=neq.${uid}&order=created_at.desc&limit=15`).catch(()=>[])
         : Promise.resolve([])
     ]);
+    (profiles||[]).forEach(p=>pmap[p.id]=p);
     trips.forEach(t=>{
       const p=pmap[t.user_id];const name=friendName(p);
       const verb=t.status==='done'?'marcou <b>'+esc(t.name)+'</b> como visitado':'está planejando uma viagem para <b>'+esc(t.name)+'</b>';
@@ -13718,7 +13737,8 @@ async function loadFriends(){
   friendIds.forEach(fid=>{FRIEND_NOMES[fid]=friendName(pmap[fid])});
   feedItems.forEach(it=>{FRIEND_NOMES[it.user_id]=friendName(pmap[it.user_id])});
 
-  FRIENDS_DATA={friendIds,incoming,outgoing,pmap,feedItems,lugaresPorAmigo:{},convidou:CONVIDOU};
+  FRIENDS_DATA={uid,friendIds,incoming,outgoing,pmap,feedItems,lugaresPorAmigo:{},convidou:CONVIDOU};
+  AMIGOS_CARREGADO_EM=Date.now();
   // Já gerou um link de convite? Decide o vazio: "Convite enviado" em vez
   // de pedir de novo o que a pessoa já fez. Falhou a consulta, fica o vazio
   // de quem nunca convidou — o pior caso é oferecer o convite outra vez.
@@ -14181,7 +14201,7 @@ const FRIEND={id:null,profile:null,trips:[],visiveis:[],trip:null,city:null,spot
 // só pra tela abrir com o nome certo em vez de "Amigo" enquanto o perfil
 // carrega — evita passar texto de outra pessoa dentro de um atributo onclick.
 const FRIEND_NOMES={};
-function backToFriends(){goTo('friends');loadFriends()}
+function backToFriends(){goTo('friends');loadFriends(true)}
 async function openFriend(id){
   FRIEND.id=id;FRIEND.trips=[];FRIEND.visiveis=[];FRIEND.trip=null;FRIEND.status='been';FRIEND.soComum=false;FRIEND.abertas={};FRIEND.todos=[];FRIEND.busca='';FRIEND.buscando=false;
   {const b=document.getElementById('friendBusca');if(b)b.value='';
@@ -14201,7 +14221,14 @@ async function openFriend(id){
   document.getElementById('friendTripsList').innerHTML='<div class="empty-state" style="padding:30px 0"><p>Carregando...</p></div>';
   goTo('friend');
 
-  const perfis=await dbGet('profiles','id=eq.'+encodeURIComponent(id));
+  // Perfil, viagens e spots AO MESMO TEMPO (01/10): eram três consultas em
+  // fila, ~2 s de tela parada. Os spots vêm por user_id (o RLS só devolve os
+  // de amigo), sem esperar a lista de viagens pra montar o filtro.
+  const[perfis,tripsDele,spotsDele]=await Promise.all([
+    dbGet('profiles','id=eq.'+encodeURIComponent(id)),
+    dbGet('trips','user_id=eq.'+encodeURIComponent(id)+'&order=created_at.desc'),
+    dbGet('spots','user_id=eq.'+encodeURIComponent(id)+'&order=created_at.asc')
+  ]);
   if(FRIEND.id!==id)return; // abriu outro amigo no meio do caminho
   const p=(perfis&&perfis[0])||null;
   FRIEND.profile=p;
@@ -14213,16 +14240,10 @@ async function openFriend(id){
   const bioEl=document.getElementById('friendBio');
   if(p&&p.bio){bioEl.textContent=p.bio;bioEl.style.display='block'}else{bioEl.style.display='none'}
 
-  const trips=await dbGet('trips','user_id=eq.'+encodeURIComponent(id)+'&order=created_at.desc');
-  if(FRIEND.id!==id)return;
-  FRIEND.trips=trips||[];
-  // Uma query só pros spots de todas as viagens dele
+  FRIEND.trips=tripsDele||[];
   if(FRIEND.trips.length){
     const byId={};FRIEND.trips.forEach(t=>{t._spots=[];byId[t.id]=t});
-    const ids=FRIEND.trips.map(t=>t.id).join(',');
-    const spots=await dbGet('spots','trip_id=in.('+ids+')&user_id=eq.'+encodeURIComponent(id)+'&order=created_at.asc');
-    if(FRIEND.id!==id)return;
-    (spots||[]).forEach(s=>{const t=byId[s.trip_id];if(t)t._spots.push(s)});
+    (spotsDele||[]).forEach(s=>{const t=byId[s.trip_id];if(t)t._spots.push(s)});
   }
   FRIEND.trips.forEach(t=>{t._spotsLoaded=true});
   renderFriendProfile();
