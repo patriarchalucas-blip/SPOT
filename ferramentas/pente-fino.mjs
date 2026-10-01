@@ -112,6 +112,10 @@ await passoDe('aba amigos', `(async()=>{goTo('friends');await loadFriends()})()`
 await passoDe('perfil da Ana', `openFriend('${ANA}')`, 2000);
 await passoDe('planejar com Ana', `plnDoAmigo()`, 1200);
 await passoDe('voltar ao perfil', `plnVoltar()`);
+await passoDe('amigos: só pedido enviado', `(()=>{FRIENDS_DATA={friendIds:[],incoming:[],outgoing:[{id:'p1',follower_id:'${EU}',following_id:'${RAFA}',status:'pending'}],pmap:{'${RAFA}':{id:'${RAFA}',display_name:'Rafa Mendes'}},feedItems:[],convidou:false};friendsTab='recente';goTo('friends');renderFriendsTab()})()`);
+console.log('  linha:',await pg.evaluate(()=>(document.querySelector('#friendsContainer .am-pedidos')||{}).textContent||'(nenhuma)'));
+await passoDe('amigos: abre enviados', `switchFriendsTab('pedidos')`);
+console.log('  cancelar:',await pg.evaluate(()=>/Cancelar/.test(document.getElementById('friendsContainer').innerText)));
 await passoDe('perfil próprio', `(async()=>{goTo('profile');await loadProfile()})()`, 2000);
 await passoDe('explorar', `(async()=>{goTo('explore');loadExplore()})()`, 2500);
 await passoDe('salvar da lista pública', `(async()=>{localStorage.setItem('spot_salvar_pendente','abcdefgh1234.11111111-2222-3333-4444-555555555555');await salvarSpotPendente()})()`, 1500);

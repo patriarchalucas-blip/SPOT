@@ -217,7 +217,7 @@ fundo.classList.add('on');fo.classList.add('on')})})})();</script>`;
 }
 
 export function paginaQueSumiu(origem, status) {
-  return new Response(cabecalho('Esta lista não está mais aqui · Spot', 'Quem compartilhou pode ter parado de compartilhar.', origem + '/compartilhar.png', origem + '/sobre',
+  return new Response(cabecalho('Esta lista não está mais aqui · Spot', 'Quem compartilhou pode ter parado de compartilhar.', origem + '/compartilhar-v2.png', origem + '/sobre',
     '.fim{min-height:80vh;justify-content:center}.marca{width:88px;align-self:center}.fim h1{color:var(--ink);font-size:28px}')
     + '<main class="w fim"><svg class="marca" viewBox="3 77 273 76" role="img" aria-label="SPOT"><text x="0" y="150" font-family="Cinzel" font-weight="500" font-size="100" letter-spacing="6" fill="#0B3D2E">SPOT</text></svg>'
     + '<div><h1>Esta lista não está mais aqui</h1><p class="sub">Quem compartilhou pode ter parado de compartilhar. Peça um link novo.</p></div>'

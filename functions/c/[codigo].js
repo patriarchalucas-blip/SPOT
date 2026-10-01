@@ -69,12 +69,12 @@ export async function onRequestGet(context) {
   const nc = p ? Number(p.cidades) || 0 : 0;
   const titulo = nome ? (nome + ' te convidou pro Spot') : 'Convite pro Spot';
   const descricao = n
-    ? (n + (n === 1 ? ' lugar' : ' lugares') + (nc ? (' em ' + nc + (nc === 1 ? ' cidade' : ' cidades')) : '')
+    ? (n + (n === 1 ? ' spot' : ' spots') + (nc ? (' em ' + nc + (nc === 1 ? ' cidade' : ' cidades')) : '')
        + ', cada um com a nota de quem foi.')
     : 'Os lugares favoritos de quem você conhece.';
   // A foto de um lugar da pessoa, quando houver — é o que faz a prévia
   // parecer o convite dela e não um cartaz do app.
-  const foto = (p && Array.isArray(p.fotos) && fotoSegura(p.fotos[0])) || (origem + '/compartilhar.png');
+  const foto = (p && Array.isArray(p.fotos) && fotoSegura(p.fotos[0])) || (origem + '/compartilhar-v2.png');
 
   const html = '<!DOCTYPE html><html lang="pt-BR"><head><meta charset="utf-8">'
     + '<meta name="viewport" content="width=device-width,initial-scale=1">'

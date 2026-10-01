@@ -18,7 +18,7 @@
 <meta property="og:title" content="Spot — seus lugares, sua voz">
 <meta property="og:description" content="Os lugares que seus amigos amaram, com o que eles escreveram sobre cada um.">
 <meta property="og:url" content="https://meuspot.app/">
-<meta property="og:image" content="https://meuspot.app/compartilhar.png">
+<meta property="og:image" content="https://meuspot.app/compartilhar-v2.png">
 <meta property="og:image:width" content="1200">
 <meta property="og:image:height" content="630">
 <meta property="og:locale" content="pt_BR">
@@ -2717,6 +2717,10 @@ function semChaveDoPlaces(u){
 //
 // So toca URL de foto do Places (a direta e a de proxy). Qualquer outra passa
 // intacta — foto de perfil no storage, por exemplo.
+function larguraNaTela(css){
+  const px=Math.ceil((css||window.innerWidth||390)*Math.min(3,window.devicePixelRatio||2)/100)*100;
+  return Math.max(400,Math.min(1600,px));
+}
 function fotoNaLargura(u,w){
   const s=String(u||'');
   if(!s)return s;
@@ -5041,9 +5045,10 @@ function spotsDaViagem(t){
   });
   return (t._spots||[]).concat(outros);
 }
-function abrirCasa(){
+async function abrirCasa(){
   const c=cidadeDeCasa();if(!c)return;
-  const casa=(S.trips||[]).find(ehCasa);
+  let casa=(S.trips||[]).find(ehCasa);
+  if(!casa&&S.user){try{casa=await viagemDeCasa((S.profile&&S.profile.home_country)||'')}catch(e){}}
   if(casa){openTrip(casa.id);return}
   // Sem linha de casa ainda (os spots da cidade estão em viagens antigas):
   // a lista da cidade continua sendo o único lugar que junta todos eles.
@@ -6034,7 +6039,7 @@ async function openPlace(id,origin){
   const cid=cityOf(s)||s.name;
   const aindaNesteSpot=()=>S.curPlace&&S.curPlace.id===s.id;
   if(s.photo_url){
-    phEl.style.backgroundImage=cssUrl(s.photo_url);
+    phEl.style.backgroundImage=cssUrl(fotoNaLargura(s.photo_url,larguraNaTela()));
     pintarCreditoSpot('placeFotoCredito',s);
     buscarCreditoAtrasado(s,'placeFotoCredito',aindaNesteSpot);
     // background-image não dispara erro quando a URL falha. O probe carrega a
@@ -6719,7 +6724,7 @@ function cozinhaAtual(){return COZINHAS.find(c=>c.id===EXPLORE.cozinha)||COZINHA
 function fotoDaCozinha(id){return '/fotos-cozinha/'+(id||'todas')+'.jpg'}
 function contaDoExplorar(){
   const n=(EXPLORE.items||[]).length;
-  return EXPLORE_ESTADO==='ok'&&n?n+(n===1?' lugar':' lugares'):'';
+  return EXPLORE_ESTADO==='ok'&&n?n+(n===1?' spot':' spots'):'';
 }
 function pintarLinhaDeCozinha(){
   const c=document.getElementById('exploreCozinhas');
@@ -7524,7 +7529,7 @@ function darDadosDeExplorar(){
       // exibia "0.0 ★", que parece nota péssima e não ausência de nota.
       nota:Number(p.rating)>0?fmtRating(p.rating):'',
       avaliacoes:Number(p.count)||0,
-      foto:fotoPraCasca(safeUrl(fotoNaLargura(semChaveDoPlaces(p.photo_url),760))),
+      foto:fotoPraCasca(safeUrl(fotoNaLargura(semChaveDoPlaces(p.photo_url),larguraNaTela(window.innerWidth-40)))),
       cores:coresDoGradiente(p.name||local),
       // Exigência dos termos do Google: a autoria aparece junto da foto.
       autor:(p.photo_author&&p.photo_author.nome)||'',
@@ -7575,7 +7580,7 @@ function darDadosDeExplorar(){
     aba:EXPLORE.aba||'voce',
     abas:ABAS_DO_EXPLORAR,
     amigosLugares:(EXPLORE.aba==='amigos'&&conferirFotosDosAmigos(),lugaresDosAmigosNaCategoria()).map((g,i)=>({i,lugar:g.capa.name||'',local:cityOf(g.capa)||'',
-      nota:g.media?fmtRating(g.media):'',foto:fotoPraCasca(safeUrl(fotoNaLargura(semChaveDoPlaces(g.foto),760))),
+      nota:g.media?fmtRating(g.media):'',foto:fotoPraCasca(safeUrl(fotoNaLargura(semChaveDoPlaces(g.foto),larguraNaTela(window.innerWidth-40)))),
       cores:coresDoGradiente(g.capa.name||''),linha:textoDosAmigos(g),selo:statusNaMinhaLista({name:g.capa.name,city:cityOf(g.capa)})})),
     avisoAmigosArea:avisoDosAmigos(),
     cozinhas:EXPLORE.cat==='food'&&EXPLORE.aba!=='amigos'?COZINHAS.map(z=>({id:z.id,rotulo:z.rotulo,foto:location.origin+fotoDaCozinha(z.id)})):[],
@@ -7778,7 +7783,7 @@ function renderLugaresDosAmigos(body){
   if(aviso){body.innerHTML='<div class="empty-state"><div class="ei" data-ic="users"></div><p>'+esc(aviso)+'</p></div>';hydrateIcons(body);return}
   body.innerHTML=lugaresDosAmigosNaCategoria().map((g,i)=>{
     const s=g.capa;
-    const foto=safeUrl(fotoNaLargura(semChaveDoPlaces(g.foto),760));
+    const foto=safeUrl(fotoNaLargura(semChaveDoPlaces(g.foto),larguraNaTela(window.innerWidth-40)));
     const local=cityOf(s)||'';
     // onerror troca pela foto atual do lugar (endereço gravado pode ter quebrado)
     const selo=statusNaMinhaLista({name:s.name,city:cityOf(s)});
@@ -7810,14 +7815,14 @@ function conferirFotosDosAmigos(){
     if(!g.foto){trocar(g);return}
     const img=new Image();
     img.onerror=()=>trocar(g);
-    img.src=safeUrl(fotoNaLargura(semChaveDoPlaces(g.foto),760));
+    img.src=safeUrl(fotoNaLargura(semChaveDoPlaces(g.foto),larguraNaTela(window.innerWidth-40)));
   });
 }
 function fotoDoCardDoAmigoFalhou(img,i){
   const g=lugaresDosAmigosNaCategoria()[i];
   if(!g||img.dataset.tentou){img.remove();return}
   img.dataset.tentou='1';
-  fotoParaVer(g.capa).then(u=>{if(u&&img.isConnected){g.foto=u;img.src=safeUrl(fotoNaLargura(u,760))}else if(img.isConnected)img.remove()});
+  fotoParaVer(g.capa).then(u=>{if(u&&img.isConnected){g.foto=u;img.src=safeUrl(fotoNaLargura(u,larguraNaTela(window.innerWidth-40)))}else if(img.isConnected)img.remove()});
 }
 async function carregarAmigosDaArea(meu,area,pontual,cidade){
   AMIGOS_AREA={estado:'carregando',lugares:[],amigos:0};
@@ -8096,7 +8101,7 @@ function exmNota(it){const n=it.nota||it.notaGoogle;return n?'<span class="exm-n
 // sem isto o card ficava com o quadrado vazio (30/09). Quebrou ou não tem →
 // busca a foto ATUAL do lugar (fotoParaVer, guardada) e troca.
 function exmFotoHTML(it,classe,i){
-  const larg=classe==='exm-cfoto'?760:200;
+  const larg=classe==='exm-cfoto'?larguraNaTela(window.innerWidth-40):200;
   const f=it.foto?safeUrl(fotoNaLargura(semChaveDoPlaces(it.foto),larg)):'';
   if(!f&&i!=null)exmBuscarFoto(it);
   return '<div class="'+classe+'" style="background-image:'+destGradient(it.nome)+'">'+(f?'<img src="'+escUrl(f)+'" alt="" loading="lazy" decoding="async" onerror="exmFotoFalhou(this,'+(i==null?-1:i)+','+larg+')">':'')+'</div>';
@@ -8144,7 +8149,9 @@ function exmTitulo(){
   if(!(EXPLORE.lugar&&EXPLORE.lugar.nome==='Perto de você'))raio=null;
   t.textContent=raio!=null&&raio<30?'Dentro de '+String(raio<10?raio.toFixed(1):Math.round(raio)).replace('.',',')+' km'
     :(EXPLORE.lugar&&EXPLORE.lugar.tipo==='mapa'?'Nesta área':EXPLORE.city?'Em '+((EXPLORE.lugar&&EXPLORE.lugar.nome)||EXPLORE.city):'Explorar');
-  c.textContent=EXPLORE_ESTADO==='buscando'?'Buscando…':EXM.itens.length+(EXM.itens.length===1?' spot':' spots');
+  // Sem contagem (o Lucas, 01/10: "60 spots" no canto não faz sentido pra
+  // quem está escolhendo onde ir). Só o aviso enquanto busca.
+  c.textContent=EXPLORE_ESTADO==='buscando'?'Buscando…':'';
 }
 function exmDesenhar(){
   if(!EXM_LIGADO||!EXM.montado)return;
@@ -8415,7 +8422,7 @@ function renderExploreResults(){
     }
   }
   body.innerHTML=EXPLORE.items.map((p,i)=>{
-    const foto=safeUrl(fotoNaLargura(semChaveDoPlaces(p.photo_url),760));
+    const foto=safeUrl(fotoNaLargura(semChaveDoPlaces(p.photo_url),larguraNaTela(window.innerWidth-40)));
     const local=[p.city,p.country].filter(Boolean).join(' · ');
     // fmtRating(0) devolve "0.0", que é verdadeiro: sem este teste, lugar sem
     // avaliação exibia a etiqueta "0.0 ★", que parece nota péssima e não
@@ -8474,7 +8481,7 @@ function abrirPreviaDoExplorar(i){
   document.getElementById('place').classList.add('previa');
   S.curPlace=s;S.placeOrigin='explore';
   const ph=document.getElementById('placeHeroImg');
-  ph.style.backgroundImage=s.photo_url?cssUrl(s.photo_url):destGradient(s.city||s.name);
+  ph.style.backgroundImage=s.photo_url?cssUrl(fotoNaLargura(s.photo_url,larguraNaTela())):destGradient(s.city||s.name);
   limparCredito('placeFotoCredito');
   if(p.photo_author&&p.photo_author.nome)pintarCreditoSpot('placeFotoCredito',{photo_author:p.photo_author.nome,photo_author_url:p.photo_author.url||''});
   desenharFichaDoLugar(s);
@@ -9643,7 +9650,7 @@ async function createTrip(){
       return;
     }
     setTimeout(()=>{
-      toast(cidadeEscolhida?'Agora adiciona um lugar em '+cidadeEscolhida:'Agora adiciona seu primeiro lugar','','pin');
+      toast(cidadeEscolhida?'Agora adicione um spot em '+cidadeEscolhida:'Agora adicione seu primeiro spot','','pin');
       abrirBuscaDeSpot();
     },300);
   }else{
@@ -12678,7 +12685,7 @@ async function renderMapaDeLugares(lista){
       // juntar duas cidades, então os dois índices não são o mesmo.
       return '<div class="prof-linha" onclick="mlCidadeDaLista('+i+')">'
         +'<span class="pl-txt">'+esc(c.nome)
-        +'<span class="busca-user">'+c.n+(c.n===1?' lugar':' lugares')+'</span></span>'
+        +'<span class="busca-user">'+c.n+(c.n===1?' spot':' spots')+'</span></span>'
         +'<span class="pl-seta">›</span></div>';
     }).join('')
     +(cidades.length>3
@@ -13302,18 +13309,45 @@ function initMapZoom(baseVB,op){
 // Onde cada tela estava rolada quando a pessoa saiu dela. Voltar de uma ficha
 // pro Explorar ou pra cidade jogava pro topo — quem percorria 20 resultados
 // perdia o lugar a cada spot que abria.
+//
+// 01/10: valia só onde o "voltar" pedia (manterRolagem), e só pra rolagem da
+// PÁGINA. O Explorar com mapa rola DENTRO da folha da lista, e várias telas
+// voltavam sem pedir (cidade → viagem, cidade do amigo → amigo...): abrir um
+// spot e voltar jogava pro topo. Agora o app guarda o caminho (NAVEGACAO):
+// ir pra tela de onde se veio é VOLTAR, e voltar restaura a página e cada
+// painel com rolagem própria. Abrir uma tela nova continua começando do topo.
 const ROLAGEM={};
+const NAVEGACAO=[];
+function rolagensDentro(tela){
+  const l=[];
+  if(tela.scrollTop>0)l.push({id:tela.id,top:tela.scrollTop});
+  tela.querySelectorAll('[id]').forEach(el=>{if(el.scrollTop>0)l.push({id:el.id,top:el.scrollTop})});
+  return l;
+}
+function restaurarRolagem(r){
+  if(!r)return;
+  const aplicar=()=>{
+    window.scrollTo(0,r.y||0);
+    (r.dentro||[]).forEach(x=>{const el=document.getElementById(x.id);if(el)el.scrollTop=x.top});
+  };
+  // A tela costuma ser redesenhada logo depois do goTo: aplica agora e de novo
+  // quando o desenho assentar.
+  aplicar();requestAnimationFrame(aplicar);setTimeout(aplicar,150);
+}
 function goTo(id,manterRolagem){
   const antes=document.querySelector('.screen.active');
-  if(antes)ROLAGEM[antes.id]=window.scrollY;
+  if(antes&&antes.id!==id)ROLAGEM[antes.id]={y:window.scrollY,dentro:rolagensDentro(antes)};
+  const voltando=NAVEGACAO.length>1&&NAVEGACAO[NAVEGACAO.length-2]===id;
+  if(voltando)NAVEGACAO.pop();
+  else if(NAVEGACAO[NAVEGACAO.length-1]!==id){NAVEGACAO.push(id);if(NAVEGACAO.length>40)NAVEGACAO.shift()}
+  manterRolagem=manterRolagem||voltando;
   document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
   document.getElementById(id).classList.add('active');
   // Voltar pra viagem redesenha: mudar categoria ou excluir um spot lá dentro
   // deixava o card da cidade com a contagem velha (29/09).
   if(id==='trip'&&S.curTrip){try{renderTripBody()}catch(e){}}
-  const y=manterRolagem?(ROLAGEM[id]||0):0;
-  window.scrollTo(0,y);
-  if(y)requestAnimationFrame(()=>window.scrollTo(0,y));
+  if(manterRolagem&&ROLAGEM[id])restaurarRolagem(ROLAGEM[id]);
+  else window.scrollTo(0,0);
   avisarTelaAtual(id);
 }
 // ═══ PERGUNTA ═══
@@ -13761,7 +13795,7 @@ function darDadosDeAmigos(){
   // permanentemente vazia é ruído.
   const novas=friendsTab==='recente'?0:novidadesNoFeed(feedItems);
   const abas=[{id:'recente',rotulo:'Recente',n:novas},{id:'amigos',rotulo:'Todos',n:0}];
-  if(incoming.length||friendsTab==='pedidos')abas.push({id:'pedidos',rotulo:'Pedidos',n:incoming.length});
+  if(incoming.length||outgoing.length||friendsTab==='pedidos')abas.push({id:'pedidos',rotulo:'Pedidos',n:incoming.length});
 
   const feed=(feedItems||[]).map((it,i)=>{
     const quem=pessoaPraTela(it.user_id,pmap);
@@ -13773,7 +13807,7 @@ function darDadosDeAmigos(){
       tipo:'visita',
       lugar:sp.name||'',
       rotulo:[sp.place_type||catLabel(sp.category),cidade].filter(Boolean).join(' · '),
-      foto:fotoPraCasca(safeUrl(fotoNaLargura(semChaveDoPlaces(sp.photo_url||fotoVistaDoFeed(sp)),760))),
+      foto:fotoPraCasca(safeUrl(fotoNaLargura(semChaveDoPlaces(sp.photo_url||fotoVistaDoFeed(sp)),larguraNaTela(window.innerWidth-40)))),
       cores:coresDoGradiente(sp.name||cidade),
       // O feed só tem "Fui": o texto de quem foi mora em my_review (my_note é
       // o "Antes de ir"). Mostrava my_note, e o comentário sumia do feed.
@@ -13795,7 +13829,7 @@ function darDadosDeAmigos(){
     amigos:(friendIds||[]).map(fid=>pessoaPraTela(fid,pmap)),
     // Sem amigo nenhum a tela é o vazio do desenho, sem abas. convidou
     // escolhe entre "Convite enviado" e o convite do zero.
-    vazio:(friendIds||[]).length?null:{convidou:!!d.convidou,pedidos:incoming.length}
+    vazio:(friendIds||[]).length?null:{convidou:!!d.convidou,pedidos:incoming.length||outgoing.length}
   }});
 }
 
@@ -13883,7 +13917,7 @@ function fotoDoFeedFalhou(img,i){
   const it=itemDoFeed(i),sp=it&&it.spot;
   if(!sp||img.dataset.tentou){img.remove();return}
   img.dataset.tentou='1';
-  fotoParaVer(sp).then(u=>{if(u&&img.isConnected){sp._fotoVista=u;img.src=safeUrl(fotoNaLargura(u,760))}else if(img.isConnected)img.remove()});
+  fotoParaVer(sp).then(u=>{if(u&&img.isConnected){sp._fotoVista=u;img.src=safeUrl(fotoNaLargura(u,larguraNaTela(window.innerWidth-40)))}else if(img.isConnected)img.remove()});
 }
 function cardDeVisita(it,i,nome){
   const sp=it.spot;
@@ -13898,7 +13932,7 @@ function cardDeVisita(it,i,nome){
   //   2. a limpeza de URL recusa esquema fora de http(s) e devolvia vazio,
   //      virando `background-image:none` — pior ainda que o degradê.
   // Com <img>, a falha só descobre o degradê que já estava atrás.
-  const foto=safeUrl(fotoNaLargura(semChaveDoPlaces(sp.photo_url||fotoVistaDoFeed(sp)),760));
+  const foto=safeUrl(fotoNaLargura(semChaveDoPlaces(sp.photo_url||fotoVistaDoFeed(sp)),larguraNaTela(window.innerWidth-40)));
   const fundo='background-image:'+destGradient(sp.name||cidade);
   // O primeiro card é o que a pessoa vê ao abrir a aba: carrega sem espera e
   // com prioridade. Os de baixo continuam preguiçosos, pra não disputar banda
@@ -13991,6 +14025,16 @@ function vazioDeAmigos(convidou){
     +'<label class="onb-campo am-busca">'+icon('search')+'<input id="amVazioBusca" type="text" placeholder="Buscar por @username" autocomplete="off" autocapitalize="off" oninput="buscarPessoas(this.value,\'amVazioRes\',\'amVazioBusca\')"></label>'
     +'<div id="amVazioRes"></div>';
 }
+// Linha de pedidos no topo: os recebidos (ponto verde) ou, sem nenhum
+// recebido, os ENVIADOS. Antes só o recebido abria a lista, e quem mandou
+// pedido pra pessoa errada não tinha onde cancelar (o Lucas, 01/10).
+function linhaDePedidos(recebidos,enviados){
+  if(recebidos)return '<div class="am-pedidos" onclick="switchFriendsTab(\'pedidos\')"><span class="am-ponto"></span>'
+    +'<span class="am-pedidos-txt">'+recebidos+(recebidos===1?' pedido de amizade':' pedidos de amizade')+'</span><span class="friend-row-arrow">›</span></div>';
+  if(enviados)return '<div class="am-pedidos" onclick="switchFriendsTab(\'pedidos\')">'
+    +'<span class="am-pedidos-txt" style="color:var(--ink2)">'+enviados+(enviados===1?' pedido enviado':' pedidos enviados')+'</span><span class="friend-row-arrow">›</span></div>';
+  return '';
+}
 function renderFriendsTab(){
   const d=FRIENDS_DATA;if(!d)return;
   const c=document.getElementById('friendsContainer');
@@ -14019,11 +14063,7 @@ function renderFriendsTab(){
   if(!friendIds.length&&friendsTab!=='pedidos'){
     document.getElementById('amAbas').innerHTML='';
     let v='';
-    if(pendentes){
-      v+='<div class="am-pedidos" onclick="switchFriendsTab(\'pedidos\')"><span class="am-ponto"></span>'
-        +'<span class="am-pedidos-txt">'+pendentes+(pendentes===1?' pedido de amizade':' pedidos de amizade')+'</span>'
-        +'<span class="friend-row-arrow">›</span></div>';
-    }
+    v+=linhaDePedidos(pendentes,outgoing.length);
     c.innerHTML=v+vazioDeAmigos(!!d.convidou);
     hydrateIcons(c);
     // A tela nativa também espera por este desenho: sair sem avisar deixava
@@ -14063,13 +14103,7 @@ function renderFriendsTab(){
   if(friendsTab==='amigos'){
     // PEDIDOS COMO LINHA, no topo da lista. Ponto verde, a contagem e a seta.
     // Some quando não há — e some de verdade, não vira "0 pedidos".
-    if(pendentes){
-      h+='<div class="am-pedidos" onclick="switchFriendsTab(\'pedidos\')">'
-        +'<span class="am-ponto"></span>'
-        +'<span class="am-pedidos-txt">'+pendentes
-        +(pendentes===1?' pedido de amizade':' pedidos de amizade')+'</span>'
-        +'<span class="friend-row-arrow">›</span></div>';
-    }
+    h+=linhaDePedidos(pendentes,outgoing.length);
     if(!friendIds.length){
       h+='<div class="empty-state"><div class="ei">'+icon('users')+'</div><h3>Sem amigos ainda</h3><p>Toca no + pra adicionar um amigo pelo username</p></div>';
     }else{
@@ -14224,7 +14258,7 @@ function abrirDetalheAmigo(modo){
       porPais[b].spots-porPais[a].spots||a.localeCompare(b,'pt-BR'));
     h=lista.map(function(p){
       const g=porPais[p];
-      const meta=g.spots?(g.spots+(g.spots===1?' lugar':' lugares'))
+      const meta=g.spots?(g.spots+(g.spots===1?' spot':' spots'))
         :(g.viagens?'sem lugares salvos':'só marcou que foi');
       return'<div class="country-row" style="cursor:default">'
         +'<span class="cr-flag">'+flagHTML(p)+'</span>'
@@ -14249,7 +14283,7 @@ function abrirDetalheAmigo(modo){
     h=lista.map(c=>'<div class="country-row" style="cursor:default">'
       +'<span class="cr-flag">'+flagHTML(porCidade[c].pais)+'</span>'
       +'<span class="cr-name">'+esc(c)+'</span>'
-      +'<span class="cr-count">'+porCidade[c].n+(porCidade[c].n===1?' lugar':' lugares')+'</span></div>').join('');
+      +'<span class="cr-count">'+porCidade[c].n+(porCidade[c].n===1?' spot':' spots')+'</span></div>').join('');
     if(!lista.length)h='<div class="amg-aviso">'+esc(nome)+' ainda não salvou spots.</div>';
   }
 
@@ -14276,7 +14310,7 @@ function abrirDetalheAmigo(modo){
         }).join('');
       return'<div class="est-cidade aberta"><div class="est-topo" style="cursor:default">'
         +'<span class="est-cnome">'+esc(c)+'</span>'
-        +'<span class="est-meta">'+porCidade[c].length+(porCidade[c].length===1?' lugar':' lugares')+'</span>'
+        +'<span class="est-meta">'+porCidade[c].length+(porCidade[c].length===1?' spot':' spots')+'</span>'
         +'</div><div class="est-lista">'+linhas+'</div></div>';
     }).join('');
     if(!cidades.length)h='<div class="amg-aviso">'+esc(nome)+' ainda não salvou spots.</div>';
@@ -14289,7 +14323,7 @@ function abrirDetalheAmigo(modo){
       return'<div class="country-row" style="cursor:default">'
         +'<span class="cr-flag">'+flagHTML(pais)+'</span>'
         +'<span class="cr-name">'+esc(t.name)+'</span>'
-        +'<span class="cr-count">'+(n?n+(n===1?' lugar':' lugares'):'—')+'</span></div>';
+        +'<span class="cr-count">'+(n?n+(n===1?' spot':' spots'):'—')+'</span></div>';
     }).join('');
     if(!visiveis.length)h='<div class="amg-aviso">'+esc(nome)+' ainda não tem viagens.</div>';
   }
@@ -14891,7 +14925,7 @@ async function montarPaginaDeConvite(){
   // Sem nenhum lugar ainda, a frase de número seria "0 lugares em 0 cidades",
   // que é um convite pra não entrar. Nesse caso o convite fala do vínculo.
   document.getElementById('cvTitulo').textContent = n
-    ? (n+(n===1?' lugar':' lugares')+(nc?(' em '+nc+(nc===1?' cidade':' cidades')):'')
+    ? (n+(n===1?' spot':' spots')+(nc?(' em '+nc+(nc===1?' cidade':' cidades')):'')
        +', cada um com a nota de quem foi.')
     : ('Você foi convidado a ver os lugares de '+nome+'.');
   return true;

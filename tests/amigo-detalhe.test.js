@@ -37,7 +37,7 @@ test('paises inclui os que o amigo so marcou, sem nenhum spot', () => {
   assert.ok(h.includes('Japão'), 'faltou Japão, que ele so marcou');
   assert.ok(h.includes('Peru'), 'faltou Peru, que ele so marcou');
   assert.ok(h.includes('só marcou que foi'), 'nao distingue quem tem spots de quem so marcou');
-  assert.ok(h.includes('3 lugares'), 'nao mostra quantos lugares tem no Brasil');
+  assert.ok(h.includes('3 spots'), 'nao mostra quantos spots tem no Brasil');
 });
 
 test('o titulo usa o primeiro nome do amigo', () => {
@@ -59,8 +59,8 @@ test('cidades conta os lugares de cada uma', () => {
   cenario();
   A.abrirDetalheAmigo('cities');
   const h = textoDaSheet();
-  assert.ok(h.includes('São Paulo') && h.includes('2 lugares'));
-  assert.ok(h.includes('Santos') && h.includes('1 lugar'));
+  assert.ok(h.includes('São Paulo') && h.includes('2 spots'));
+  assert.ok(h.includes('Santos') && h.includes('1 spot'));
 });
 
 test('lugares vem agrupado por cidade, com quem ele foi antes de quem quer ir', () => {
