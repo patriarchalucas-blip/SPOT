@@ -707,6 +707,8 @@ input,textarea,select{font-size:max(16px,1em)!important}
 .cat-seg button{flex:1;min-width:0;border:none;border-radius:8px;background:none;font:inherit;font-size:15px;color:var(--ink2);cursor:pointer;white-space:nowrap}
 .cat-seg button.on{background:var(--base);color:var(--ink);font-weight:600}
 .fi-cat{margin:20px 0 4px}
+.sheet-cta.fp-ja{background:var(--surface);color:var(--green);cursor:default}
+.sr-ja{font-size:13px;font-weight:600;color:var(--green);margin-left:4px}
 #noteCat.cat-bloco{margin:16px 20px 0}
 #place.previa .fi-cat{display:none}
 /* a3: Viagens sem nenhum spot */
@@ -2455,7 +2457,7 @@ body.exm .exm-filtros{position:relative;z-index:1}
     <div class="d-section">
       <div class="sec-label">Informações</div>
       <div class="info-grid" id="fpInfoGrid"></div>
-      <button class="sheet-cta" style="margin-top:4px" onclick="adicionarSpotAbertoDoAmigo(this)">Adicionar à minha lista</button>
+      <button class="sheet-cta" id="fpAdicionar" style="margin-top:4px" onclick="adicionarSpotAbertoDoAmigo(this)">Adicionar à minha lista</button>
       <div id="fpLinksWrap"></div>
       <div class="coment-bloco" id="fpComentarios"></div>
     </div>
@@ -2835,10 +2837,22 @@ async function fetchOwnProfile(force){
   S.profile=(rows&&rows[0])||{};
   return S.profile;
 }
+// A foto aparece primeiro com o perfil guardado no aparelho e é CONFERIDA no
+// banco logo depois (01/10: a foto da Chu apareceu uma vez e sumiu — o perfil
+// guardado era de antes da foto e nunca era conferido de novo).
 async function refreshAvatars(name){
   const p=await fetchOwnProfile();
   applyAvatar('dashAvatar',name,p.avatar_url);
   applyAvatar('profAvatar',name,p.avatar_url);
+  const antes=p.avatar_url||'';
+  // Só troca com resposta de verdade: falha de rede não pode zerar o perfil.
+  const rows=await dbGet('profiles','id=eq.'+S.user.id);
+  if(falhou(rows)||!rows||!rows[0])return;
+  const novo=Object.assign(S.profile||{},rows[0]);S.profile=novo;
+  if((novo.avatar_url||'')!==antes){
+    applyAvatar('dashAvatar',name,novo.avatar_url);applyAvatar('profAvatar',name,novo.avatar_url);
+    try{guardarDadosLocais();darDadosDePerfil();darDadosDeViagens()}catch(e){}
+  }
 }
 function hydrateIcons(root){(root||document).querySelectorAll('[data-ic]:not([data-ic-done])').forEach(function(el){el.innerHTML=icon(el.getAttribute('data-ic'));el.setAttribute('data-ic-done','1');});}
 if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',function(){hydrateIcons();});else hydrateIcons();
@@ -4551,8 +4565,9 @@ function contarPlacar(){
   let ts=0;const ctrs=new Set(),cities=new Set();
   for(const t of S.trips){
     ts+=t._spots.length;
-    t._spots.forEach(sp=>{const c=cityOf(sp);if(c)cities.add(c)});
-    (t.destinations||[]).forEach(d=>ctrs.add(d));
+    // Cidade e país só contam o que foi visitado (ver viagemConta).
+    t._spots.forEach(sp=>{if(sp.status==='want'&&!ehCasa(t))return;const c=cityOf(sp);if(c)cities.add(c)});
+    if(viagemConta(t))(t.destinations||[]).forEach(d=>ctrs.add(d));
   }
   PLACAR={
     viagens:S.trips.filter(t=>!isNonTrip(t)).length,
@@ -5170,7 +5185,7 @@ function tripMetaText(t,curto){
   // das viagens antigas que ainda tem `dates` gravado. O campo continua no
   // banco; so nao e mais mostrado. O card e sobre o lugar, nao sobre quando.
   if(!t._spotsLoaded)return'';
-  return cityTxt+sp.length+(sp.length===1?' spot':' spots');
+  return (viagemPlanejada(t)?'Planejando · ':'')+cityTxt+sp.length+(sp.length===1?' spot':' spots');
 }
 function refreshTripMetas(){
   S.trips.forEach(t=>{
@@ -7537,6 +7552,14 @@ function pintarRotuloDoExplorar(){
   el.style.display=EXPLORE.rotulo?'':'none';
 }
 // O selo: você já salvou esse lugar? Mesmo nome, mesma cidade.
+// O MEU spot desse lugar (o objeto de S.trips, não cópia), por nome + cidade.
+function meuSpotIgual(nome,cidade){
+  for(const t of (S.trips||[]))for(const x of (t._spots||[])){
+    if(x.user_id&&S.user&&x.user_id!==S.user.id)continue;
+    if(mesmoLugar(x.name,nome)&&(!cidade||!cityOf(x)||mesmoLugar(cityOf(x),cidade)))return x;
+  }
+  return null;
+}
 function statusNaMinhaLista(p){
   const s=allSpotsFlat().find(x=>mesmoLugar(x.name,p.name)&&(!p.city||!cityOf(x)||mesmoLugar(cityOf(x),p.city)));
   return s?({been:'Fui',skip:'Não recomendo'}[s.status]||'Quero ir'):'';
@@ -8944,6 +8967,20 @@ function lugarCabeNaCategoria(types,cat){
   return true;
 }
 const CAMPOS_DA_FICHA='places.id,places.displayName,places.formattedAddress,places.addressComponents,places.location,places.photos,places.rating,places.websiteUri,places.googleMapsUri,places.types,places.nationalPhoneNumber,places.regularOpeningHours,places.priceLevel,places.primaryType';
+// Onde a busca do Adicionar spot deve olhar primeiro: o centro da cidade ou
+// da viagem aberta (pelas coordenadas dos spots dela), ou onde a pessoa está,
+// se a localização já foi liberada. Sem isso o Google procurava no mundo
+// todo, e o barzinho do bairro perdia pra dezenas de homônimos (01/10).
+function centroDaBusca(){
+  const media=l=>{const c=l.filter(s=>s.lat!=null&&s.lng!=null);if(!c.length)return null;
+    return{latitude:c.reduce((a,s)=>a+Number(s.lat),0)/c.length,longitude:c.reduce((a,s)=>a+Number(s.lng),0)/c.length}};
+  const t=S.addTrip&&!S.addTrip.__pendente?S.addTrip:S.curTrip;
+  let centro=null,raio=50000;
+  if(t&&S.curCity&&document.getElementById('city').classList.contains('active')){centro=media(spotsDaViagem(t).filter(s=>mesmoLugar(cityOf(s)||'',S.curCity)));raio=30000}
+  if(!centro&&t)centro=media(spotsDaViagem(t));
+  if(!centro&&window.__spotAqui)centro={latitude:window.__spotAqui.lat,longitude:window.__spotAqui.lng};
+  return centro?{locationBias:{circle:{center:centro,radius:raio}}}:{};
+}
 function searchPlaces(v){
   clearTimeout(searchTO);const r=document.getElementById('searchResults');
   const termo=String(v||'').trim();
@@ -8959,7 +8996,7 @@ function searchPlaces(v){
       const resp=await googlePlaces('searchText',{
         method:'POST',
         headers:{'Content-Type':'application/json','X-Goog-FieldMask':CAMPOS_DA_LISTA},
-        body:JSON.stringify({textQuery:termo,languageCode:'pt-BR',maxResultCount:6})
+        body:JSON.stringify(Object.assign({textQuery:termo,languageCode:'pt-BR',maxResultCount:10},centroDaBusca()))
       });
       if(myReqId!==searchReqId)return; // busca mais nova já foi disparada, ignora essa resposta atrasada
       const data=await resp.json();
@@ -8982,7 +9019,9 @@ function searchPlaces(v){
       if(myReqId!==searchReqId)return;
       r.innerHTML=S.searchResults.map((p,i)=>{
         const thumb=p.photo_thumb?'<div class="sr-icon"><img src="'+escUrl(p.photo_thumb)+'" loading="eager" style="width:100%;height:100%;object-fit:cover;border-radius:12px"></div>':'<div class="sr-icon">'+p.icon+'</div>';
-        return '<div class="search-result" onclick="pickSearchResult('+i+')">'+thumb+'<div><div class="sr-name">'+esc(p.name)+'</div><div class="sr-meta">'+esc(p.address.substring(0,50)+(p.rating_google?' · '+p.rating_google:''))+'</div></div></div>';
+        // Já está na lista: o status aparece na hora (Alexanderplatz salvo três vezes, 01/10).
+        const ja=statusNaMinhaLista({name:p.name,city:p.city});
+        return '<div class="search-result" onclick="pickSearchResult('+i+')">'+thumb+'<div><div class="sr-name">'+esc(p.name)+(ja?' <span class="sr-ja">'+esc(ja)+'</span>':'')+'</div><div class="sr-meta">'+esc(p.address.substring(0,50)+(p.rating_google?' · '+p.rating_google:''))+'</div></div></div>';
       }).join('');
     }catch(e){
       if(myReqId!==searchReqId)return;
@@ -9599,7 +9638,21 @@ async function resolverCidadeDoSpot(p,trip){
     if(p.photo_author.url)rec.photo_author_url=p.photo_author.url;
   }
   if(addStatus==='been')rec.my_rating=addRating;
-  let{data,error}=await dbInsert('spots',rec);
+  // UM spot por lugar (feedback da Chu, 01/10): Alexanderplatz salvo três
+  // vezes, e "Quero ir" + "Fui" do mesmo lugar viravam dois registros. Se o
+  // lugar já está na lista, ATUALIZA o que existe — status, nota, frase —
+  // em vez de criar outro.
+  const existente=meuSpotIgual(p.name,cidade);
+  let data=null,error=null,atualizou=false;
+  if(existente){
+    const patch={status:addStatus};
+    if(addStatus==='been'){patch.my_rating=addRating;if(note)patch.my_review=note}
+    else if(note)patch.my_note=note;
+    if(fotoPropria)patch.photo_url=fotoPropria;
+    const r=await dbUpdate('spots',existente.id,patch);
+    if(r&&r.error)error=r.error;
+    else{Object.assign(existente,patch);data=existente;atualizou=true}
+  }else ({data,error}=await dbInsert('spots',rec));
   // A coluna subcategory vem da migração 009. Se ela ainda não foi rodada, o
   // Postgres recusa o insert INTEIRO por causa de uma coluna desconhecida — e
   // o spot não seria salvo. Retenta sem ela: perder a subcategoria é bem
@@ -9607,7 +9660,7 @@ async function resolverCidadeDoSpot(p,trip){
   // Colunas que vêm de migração: se ela ainda não rodou, o Postgres recusa o
   // insert INTEIRO por causa de uma coluna desconhecida e o spot não seria
   // salvo. Retenta sem os opcionais — perder o campo é melhor que perder o spot.
-  if(error&&(rec.subcategory||rec.phone||rec.photo_author||rec.lat!=null
+  if(!atualizou&&!existente&&error&&(rec.subcategory||rec.phone||rec.photo_author||rec.lat!=null
              ||rec.from_user_id||rec.price_level!=null||rec.opening_hours)){
     console.warn('insert sem colunas opcionais (migração 009/010/023/024 ainda não rodou?)');
     delete rec.subcategory;delete rec.phone;delete rec.photo_author;delete rec.photo_author_url;
@@ -9616,11 +9669,12 @@ async function resolverCidadeDoSpot(p,trip){
     ({data,error}=await dbInsert('spots',rec));
   }
   if(!error&&data){
-    if(!t._spots)t._spots=[];t._spots.push(data);
+    if(!atualizou){if(!t._spots)t._spots=[];t._spots.push(data)}
     // Antes de loadDashboard, que é quem dispara o backfill: assim a busca de
     // Instagram deste spot é a primeira, não a última.
     spotPrioritario=data.id;
-    toast(foiPraCasa?'Salvo em Onde você mora':(t!==S.addTrip?'Salvo em '+t.name:'Spot salvo'),note?`"${p.name} · ${note}"`:p.name,'check');
+    if(atualizou)toast('Já estava na sua lista','Agora em '+({been:'Fui',want:'Quero ir',skip:'Não recomendo'}[addStatus]||'Quero ir')+' · '+p.name,'check');
+    else toast(foiPraCasa?'Salvo em Onde você mora':(t!==S.addTrip?'Salvo em '+t.name:'Spot salvo'),note?`"${p.name} · ${note}"`:p.name,'check');
     if(S.curTrip?.id===t.id){
       S.curTrip._spots=t._spots;
       // O card de cidade na tela da viagem SEMPRE e redesenhado, mesmo com a
@@ -10415,6 +10469,13 @@ async function salvarSpotDireto(p,cat,status,avaliacao){
   const viagem=await viagemParaOLugar(p);
   if(!viagem)return 'sem_pais';
   const cidade=await resolverCidadeDoSpot(p,viagem);
+  // Um spot por lugar: já existe, devolve o que existe (e promove Quero ir
+  // pra Fui, se for o caso) em vez de criar outro (01/10).
+  const ja=meuSpotIgual(p.name,cidade);
+  if(ja){
+    if(status==='been'&&ja.status==='want'){const{error}=await dbUpdate('spots',ja.id,{status:'been'});if(!error)ja.status='been'}
+    return ja;
+  }
   const rec={user_id:S.user.id,trip_id:viagem.id,name:p.name,category:cat,my_note:'',
     city:cidade,address:p.address||'',photo_url:p.photo_url||'',
     place_type:catLabel(cat),rating_google:p.rating_google||'',status:status,
@@ -12128,9 +12189,24 @@ function loadScript(urls){
     tryNext();
   });
 }
+// Viagem que CONTA como visitada (01/10). Antes toda viagem pintava o país:
+// montar uma ideia de viagem pro Japão no Planejar (só spots Quero ir)
+// aparecia no mapa e no placar como se já tivesse ido. Agora conta: marcado
+// como visitado, a cidade onde mora, viagem concluída, viagem com algum Fui —
+// e viagem sem spot nenhum (criada à mão), que é o comportamento de antes.
+function viagemConta(t){
+  if(!t)return false;
+  if(t.dates==='__quickvisit__'||ehCasa(t)||t.status==='done')return true;
+  const sp=t._spots;
+  if(!sp||!sp.length)return true;
+  // Só Quero ir é planejamento; Fui, Não recomendo (foi e não gostou) e spot
+  // antigo sem status contam como visitado.
+  return sp.some(x=>x.status!=='want');
+}
+function viagemPlanejada(t){return !!(t&&t._spots&&t._spots.length)&&!viagemConta(t)}
 function visitedCountryNames(){
   const set=new Set();
-  S.trips.forEach(t=>{const n=(t.destinations&&t.destinations[0])||t.name;if(n)set.add(n)});
+  S.trips.forEach(t=>{if(!viagemConta(t))return;const n=(t.destinations&&t.destinations[0])||t.name;if(n)set.add(n)});
   return [...set];
 }
 function homeCountryName(){
@@ -13669,6 +13745,8 @@ function switchFriendsTab(aba){
   // no mesmo toque, sem precisar sair e voltar.
   if(aba==='recente')marcarFeedComoVisto();
   renderFriendsTab();
+  // Pedidos sempre frescos: o status muda do outro lado (aceito, cancelado).
+  if(aba==='pedidos')loadFriends();
 }
 // LENTIDÃO (01/10, a namorada do Lucas: "o app está lento"). Medido: o código
 // desenha qualquer tela em menos de 0,2 s; quem demora é o banco — cada
@@ -13805,7 +13883,14 @@ async function loadFriends(daAba){
   friendIds.forEach(fid=>{FRIEND_NOMES[fid]=friendName(pmap[fid])});
   feedItems.forEach(it=>{FRIEND_NOMES[it.user_id]=friendName(pmap[it.user_id])});
 
-  FRIENDS_DATA={uid,friendIds,incoming,outgoing,pmap,feedItems,lugaresPorAmigo:{},convidou:CONVIDOU};
+  // Pedido pendente com quem JÁ é amigo não é pedido (01/10): aceitar pelo
+  // link de convite cria a amizade numa linha nova e o pedido antigo ficava
+  // 'pendente' pra sempre — o 'Cancelar' continuava em Enviados depois de
+  // aceito. Some dos dois lados.
+  const jaAmigo=new Set(friendIds);
+  const incomingVivos=incoming.filter(r=>!jaAmigo.has(r.follower_id));
+  const outgoingVivos=outgoing.filter(r=>!jaAmigo.has(r.following_id));
+  FRIENDS_DATA={uid,friendIds,incoming:incomingVivos,outgoing:outgoingVivos,pmap,feedItems,lugaresPorAmigo:{},convidou:CONVIDOU};
   AMIGOS_CARREGADO_EM=Date.now();
   // Já gerou um link de convite? Decide o vazio: "Convite enviado" em vez
   // de pedir de novo o que a pessoa já fez. Falhou a consulta, fica o vazio
@@ -14741,6 +14826,14 @@ function abrirSpotDoAmigo(i){
   if(s.maps_url)rh+=`<a class="reserve-btn" href="${escUrl(s.maps_url)}" target="_blank" rel="noopener">${icon('mapPin')} Ver no Google Maps</a>`;
   document.getElementById('fpLinksWrap').innerHTML=rh;
   abrirComentarios(s.id,'fpComentarios',s.user_id);
+  // Já é seu? Cruza com a sua lista (Boteco Belmonte, 01/10: continuava
+  // oferecendo 'Adicionar à minha lista' pra quem já tinha salvo).
+  const meu=statusNaMinhaLista({name:s.name,city:cityOf(s)});
+  const btAdd=document.getElementById('fpAdicionar');
+  if(btAdd){
+    btAdd.textContent=meu?({'Fui':'Você também foi','Quero ir':'Você quer ir','Não recomendo':'Você também foi · não recomenda'}[meu]||'Já está na sua lista'):'Adicionar à minha lista';
+    btAdd.classList.toggle('fp-ja',!!meu);btAdd.disabled=!!meu;
+  }
 
   goTo('friendPlace');
 }
@@ -15282,6 +15375,7 @@ function onAvatarFileChosen(input){
     // As telas nativas nao leem o DOM: sem estes dois avisos o app continuava
     // mostrando a foto antiga (ou a inicial) depois de dizer que deu certo.
     darDadosDePerfil();darDadosDeViagens();
+    try{guardarDadosLocais()}catch(e){} // a cópia do aparelho também (ver refreshAvatars)
     toast('Foto atualizada','','check');
   });
 }

@@ -184,6 +184,17 @@ export function montarTexto(b) {
     if (!lat(la1) || !lng(ln1) || !lat(la2) || !lng(ln2) || la1 > la2) return null;
     p.locationRestriction = { rectangle: { low: { latitude: la1, longitude: ln1 }, high: { latitude: la2, longitude: ln2 } } };
   }
+  // PREFERÊNCIA DE ÁREA (01/10, 'procurei um barzinho e não aparece'): a
+  // busca do Adicionar spot diz onde procurar — o centro da viagem/cidade
+  // aberta. Arredondado a ~0,1° (uns 10 km) aqui também: posição exata de
+  // ninguém entra no cache, e a mesma cidade reaproveita a mesma busca.
+  const bias = b.locationBias && b.locationBias.circle;
+  if (bias && bias.center && !p.locationRestriction) {
+    const la = Math.round(Number(bias.center.latitude) * 10) / 10, ln = Math.round(Number(bias.center.longitude) * 10) / 10;
+    if (Number.isFinite(la) && Number.isFinite(ln) && Math.abs(la) <= 90 && Math.abs(ln) <= 180) {
+      p.locationBias = { circle: { center: { latitude: la, longitude: ln }, radius: limitar(bias.radius, 1000, 50000, 30000) } };
+    }
+  }
   // PAGINAÇÃO (Explorar, 25/09): rolagem contínua de 20 em 20. O Google
   // pagina por pageSize + pageToken, e entrega no máximo 60 por busca.
   // O token é opaco, mas é nosso pra validar: só letras, números, - e _.

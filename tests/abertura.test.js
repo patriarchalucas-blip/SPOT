@@ -36,3 +36,14 @@ test('com o que esta guardado no aparelho, o placar ja sai contado', () => {
     assert.strictEqual(d.emBranco, null, 'mostrou mapa em branco pra quem tem pais');
   } finally { A.avaliar('window.ReactNativeWebView=undefined;localStorage.clear&&localStorage.clear()') }
 });
+
+test('viagem so com Quero ir e planejamento: nao pinta o pais nem conta (01/10)', () => {
+  A.avaliar(`S.trips=[
+    {id:'a',name:'Japão',destinations:['Japão'],dates:'',_spots:[{status:'want',city:'Tóquio'}],_spotsLoaded:true},
+    {id:'b',name:'Itália',destinations:['Itália'],dates:'',_spots:[{status:'want',city:'Roma'},{status:'been',city:'Milão'}],_spotsLoaded:true},
+    {id:'c',name:'Chile',destinations:['Chile'],dates:'',_spots:[],_spotsLoaded:true}]`);
+  const v = A.avaliar('visitedCountryNames()');
+  assert.ok(!v.includes('Japão'), 'Japao so com Quero ir nao e visitado');
+  assert.ok(v.includes('Itália') && v.includes('Chile'));
+  assert.ok(A.avaliar("tripMetaText(S.trips[0],true)").startsWith('Planejando'));
+});
