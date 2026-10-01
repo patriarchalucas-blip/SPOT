@@ -142,6 +142,10 @@ if (await pg.evaluate(() => typeof impAbrir === 'function')) {
   await passoDe('importar: salvar (2d)', `impSalvar()`, 3000);
   await passoDe('importar: abrir cidade', `impAbrirCidade(0)`, 1200);
   await passoDe('a3: viagens sem nenhum spot', `(async()=>{IMP.ligado=true;S.trips=[];window.dbGet=async()=>[];goTo('dashboard');await loadDashboard()})()`, 2000);
+await passoDe('onb: passo 3 colar', `(()=>{IMP.ligado=true;ONB.textoImportar='';showOv('ov-onb');ONB.passo=2;onbIr(3)})()`);
+await passoDe('onb: colou texto', `(()=>{const t=document.getElementById('onbImportar');t.value='lisboa: taberna da rua das flores, pasteis de belem (amei)';t.dispatchEvent(new Event('input'))})()`);
+await passoDe('onb: segue pros amigos', `document.getElementById('onbSeguirImp').click()`);
+await passoDe('onb: terminar abre revisão', `onbTerminar()`, 4000);
 await passoDe('importar: vazio (2e)', `(()=>{IMP.etapa='vazio';IMP.texto='oi tudo bem';goTo('importar');impPintar()})()`);
 }
 console.log('\nERROS (' + erros.length + '):'); erros.forEach(e => console.log(' -', e));

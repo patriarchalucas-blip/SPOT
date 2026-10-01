@@ -781,6 +781,7 @@ input,textarea,select{font-size:max(16px,1em)!important}
 .imp-sub{margin:6px 0 0;font-size:15px;line-height:1.45;color:var(--ink2)}
 .imp-campo{flex:1;min-height:280px;margin-top:20px;padding:16px;border:none;border-radius:var(--r-card);background:var(--surface);font:inherit;font-size:16px;line-height:1.5;color:var(--ink);resize:none;outline:none}
 .imp-campo::placeholder{color:var(--ink3)}
+.onb-importar{min-height:220px;width:100%;display:block}
 .pln-topo .imp-tudo{width:auto;padding:0 12px;font:inherit;font-size:15px;font-weight:600;color:var(--green)}
 .imp-chegando{display:flex;flex-direction:column;gap:12px;margin-top:24px}
 .imp-chegou{display:flex;justify-content:space-between;align-items:baseline;gap:12px;animation:impEntra .3s ease both}
@@ -9925,10 +9926,11 @@ async function talvezAbrirBoasVindas(){
   showOv('ov-onb');
 }
 
-// O passo 3 ('Qual lugar você indicaria pra qualquer amigo?') saiu do caminho
-// (o Lucas, 01/10): quem chega pula dele nos dois sentidos. O código dele fica
-// (onbDesenharLugar), sem uso, até decidirmos o que entra no lugar.
-function onbIr(n){if(n===3)n=ONB.passo>3?2:4;ONB.passo=n;ONB.ocupado=false;onbDesenhar();
+// O passo 3 era "Qual lugar você indicaria pra qualquer amigo?" e saiu (o
+// Lucas, 01/10). No lugar dele entrou "Colar uma lista": cole as notas do
+// celular e, no fim do cadastro, o Spot mostra os lugares encontrados pra
+// conferir. Sem a IA ligada no servidor, o passo é pulado nos dois sentidos.
+function onbIr(n){if(n===3&&!IMP.ligado)n=ONB.passo>3?2:4;ONB.passo=n;ONB.ocupado=false;onbDesenhar();
   const c=document.getElementById('onbCorpo');if(c)c.scrollTop=0}
 
 function onbTopo(){
@@ -9938,7 +9940,7 @@ function onbTopo(){
   const voltar=n<5
     ?'<button class="onb-voltar" onclick="onbIr('+(n-1)+')" aria-label="Voltar">'+icon('back')+'</button>'
     :'<span class="onb-voltar"></span>';
-  const barra='<div class="onb-barra">'+[1,2,4,5].map(i=>'<i'+(i<=n?' class="on"':'')+'></i>').join('')+'</div>';
+  const barra='<div class="onb-barra">'+(IMP.ligado?[1,2,3,4,5]:[1,2,4,5]).map(i=>'<i'+(i<=n?' class="on"':'')+'></i>').join('')+'</div>';
   // A cidade não tem "Pular" (obrigatória) e a última tela não tem o que pular.
   const pular=(n>=2&&n<=4)?'<button class="onb-pular" onclick="onbPular()">Pular</button>':'';
   return voltar+barra+pular;
@@ -9975,7 +9977,11 @@ function onbDesenhar(){
     onbPintarMapa([...ONB.paises]);
     onbPePaises();
   }else if(n===3){
-    onbDesenharLugar();
+    corpo.innerHTML='<h1 class="onb-titulo">Tem lugares anotados no celular?</h1>'
+      +'<p class="onb-sub">Notas, WhatsApp, Instagram: cole o texto e o Spot encontra os lugares. Você confere antes de salvar.</p>'
+      +'<textarea id="onbImportar" class="imp-campo onb-importar" maxlength="'+IMP_MAX+'" placeholder="lisboa: taberna da rua das flores, pasteis de belem (amei!!)&#10;porto - majestic café" oninput="ONB.textoImportar=this.value;document.getElementById(\'onbSeguirImp\').textContent=this.value.trim()?\'Encontrar os lugares\':\'Continuar\'"></textarea>';
+    const t=document.getElementById('onbImportar');if(t&&ONB.textoImportar)t.value=ONB.textoImportar;
+    pe.innerHTML='<button class="onb-btn" id="onbSeguirImp" onclick="onbIr(4)">'+(String(ONB.textoImportar||'').trim()?'Encontrar os lugares':'Continuar')+'</button>';
   }else if(n===4){
     corpo.innerHTML='<h1 class="onb-titulo">O Spot fica melhor com amigos</h1>'
       +'<p class="onb-sub">Você vê os lugares deles, eles veem os seus. Quem entrar pelo seu link já vira seu amigo.</p>'
@@ -10404,6 +10410,8 @@ async function marcarCadastroFeito(){
   }catch(e){}
 }
 function onbTerminar(){
+  const colado=String(ONB.textoImportar||'').trim();ONB.textoImportar='';
+  if(colado&&IMP.ligado)setTimeout(()=>{impAbrir(colado);impEncontrar()},400);
   marcarCadastroFeito();
   falarComACasca({tipo:'pedir-push'});
   closeOv('ov-onb');
