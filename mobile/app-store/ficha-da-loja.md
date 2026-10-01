@@ -1,3 +1,5 @@
+> **Atualizado em 01/10/2026:** a partir da 1.0.1 o nome na loja é **Spot: Been There** e o subtítulo **Onde ir, pelos seus amigos** (escolha do Lucas; gravados pela API e aceitos — o nome estava livre). Embaixo do ícone continua "Spot". A 1.0 saiu como "Spot - seus lugares".
+
 # Ficha da App Store — textos prontos para colar
 
 Escrito em 20/09/2026. É só copiar campo por campo no App Store Connect.

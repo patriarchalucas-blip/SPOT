@@ -1,3 +1,5 @@
+> **Gravado no App Store Connect em 01/10/2026** (versão 1.0.1 criada pela API) com texto atualizado — Planejar com amigos, Explorar com mapa, lista pública. O texto abaixo é a versão de 29/09, superada; a fonte de verdade agora é o App Store Connect.
+
 # Novidades da versão 1.0.1 (campo "Novidades desta versão" na App Store)
 
 Pra colar quando a 1.0 for aprovada e a 1.0.1 for criada, com a build 16 ou
