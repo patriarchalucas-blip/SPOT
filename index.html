@@ -8613,7 +8613,7 @@ let CREDITO_CIDADE={};
 try{CREDITO_CIDADE=JSON.parse(localStorage.getItem('spot_credito_foto')||'{}')||{}}catch(e){CREDITO_CIDADE={}}
 function guardarCreditoCidade(url,c){
   if(!url||!c||!c.nome)return;
-  CREDITO_CIDADE[url]={nome:c.nome,url:c.url||''};
+  CREDITO_CIDADE[url]={nome:c.nome,url:c.url||'',fonte:c.fonte||''};
   try{localStorage.setItem('spot_credito_foto',JSON.stringify(CREDITO_CIDADE))}catch(e){}
 }
 function limparCredito(elId){const el=document.getElementById(elId);if(el)el.innerHTML=''}
@@ -8652,14 +8652,23 @@ function pintarCreditoCidade(elId,url){
   const el=document.getElementById(elId);if(!el)return;
   const c=url&&CREDITO_CIDADE[url];
   if(!c||!c.nome){el.innerHTML='';return}
-  el.innerHTML='Foto de '+linkCredito(c.url||'https://unsplash.com',c.nome)
-    +' no '+linkCredito('https://unsplash.com/?utm_source=spot&utm_medium=referral','Unsplash');
+  el.innerHTML=c.fonte==='google'
+    ?'Foto de '+(c.url?linkCredito(c.url,c.nome):esc(c.nome))+' no Google'
+    :'Foto de '+linkCredito(c.url||'https://unsplash.com',c.nome)
+      +' no '+linkCredito('https://unsplash.com/?utm_source=spot&utm_medium=referral','Unsplash');
 }
 function placePhotoUrls(p){
   return{full:placePhotoUrl(p,800),thumb:placePhotoUrl(p,200)};
 }
 const IRRELEVANT_PLACE_TYPES=new Set(['gas_station','convenience_store','supermarket','grocery_store','car_repair','car_wash','atm','bank','pharmacy','hardware_store']);
-function isIrrelevantPlace(p){return(p.types||[]).some(t=>IRRELEVANT_PLACE_TYPES.has(t))}
+const NAO_E_SPOT=new Set(['locality','administrative_area_level_1','administrative_area_level_2','administrative_area_level_3','country','postal_code','route','street_address','continent']);
+function isIrrelevantPlace(p){
+  const t=p.types||[];
+  if(t.some(x=>IRRELEVANT_PLACE_TYPES.has(x)))return true;
+  // Cidade, estado, país, rua, CEP: não é spot (01/10).
+  return naoEhSpot(p);
+}
+function naoEhSpot(p){return NAO_E_SPOT.has(p.primaryType)||(p.types||[]).some(x=>NAO_E_SPOT.has(x))}
 // Distância real em metros entre duas coordenadas — usado pra conferir de
 // verdade a distância do check-in, já que o raio pedido à Places API é só
 // uma dica de área, não uma garantia exata.
@@ -8900,7 +8909,10 @@ function searchPlaces(v){
       const data=await resp.json();
       if(myReqId!==searchReqId)return;
       if(!data.places||!data.places.length){r.innerHTML='<div class="search-loading">Nenhum resultado</div>';return}
-      const cabem=data.places.filter(p=>lugarCabeNaCategoria(p.types,S.addCat));
+      // Cidade, estado, país, rua: não é spot (Joinville salvo dentro de Joinville, 01/10).
+      const lugares=data.places.filter(p=>!naoEhSpot(p));
+      if(!lugares.length){r.innerHTML='<div class="search-loading">Isso é uma cidade ou região. Busque um lugar dentro dela.</div>';return}
+      const cabem=lugares.filter(p=>lugarCabeNaCategoria(p.types,S.addCat));
       if(!cabem.length){r.innerHTML='<div class="search-loading">'+(S.addCat==='food'?'Isso é hospedagem: salve em Ficar.':S.addCat==='hotel'?'Isso é lugar de comer: salve em Comer e beber.':'Nenhum resultado')+'</div>';return}
       // A lista só precisa de nome e endereço. O resto chega quando a pessoa
       // escolher — ver pickSearchResult().
@@ -11905,12 +11917,12 @@ function onSpotPhotoError(img,id,cat){
 // Limpeza única: versão anterior do cache podia guardar bloqueios de 1h
 // criados enquanto a cota estava esgotada, travando fotos bem depois
 // da cota já ter voltado. Invalida tudo uma vez só.
-if(localStorage.getItem('spot_cache_version')!=='2'){
+if(localStorage.getItem('spot_cache_version')!=='3'){
   localStorage.removeItem('spot_photo_cache');
   localStorage.removeItem('spot_photo_cache2');
   localStorage.removeItem('spot_credito_foto');
   localStorage.removeItem('spot_unsplash_blocked_until');
-  localStorage.setItem('spot_cache_version','2');
+  localStorage.setItem('spot_cache_version','3');
 }
 // In-memory + persistent cache so we don't re-hit Unsplash (50/hr limit)
 let cityPhotoCache={};
@@ -12001,7 +12013,7 @@ async function buscarFotoDe(query){
     const url=d.url||'';
     // Quem tirou a foto vem junto da URL e fica guardado por URL: os termos
     // do Unsplash exigem o crédito toda vez que a foto aparece.
-    if(url&&d.autor)guardarCreditoCidade(url,{nome:d.autor,url:d.autorUrl||''});
+    if(url&&d.autor)guardarCreditoCidade(url,{nome:d.autor,url:d.autorUrl||'',fonte:d.fonte||''});
     if(url){cityPhotoCache[query]=url;savePhotoCache()}
     else{cityPhotoCache[query]={url:'',exp:Date.now()+60*60*1000};savePhotoCache()} // sem resultado: não retenta por 1h
     return url;

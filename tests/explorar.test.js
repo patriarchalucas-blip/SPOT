@@ -264,3 +264,10 @@ test('sem cidade nos 5 primeiros: a 2a consulta pede so cidade e acha Sao Paulo'
     assert.strictEqual(l.tipo, 'area');
   } finally { volta() }
 });
+
+test('cidade, estado e pais nao viram spot (Joinville dentro de Joinville, 01/10)', () => {
+  assert.strictEqual(A.naoEhSpot({ primaryType: 'locality', types: ['locality', 'political'] }), true);
+  assert.strictEqual(A.naoEhSpot({ types: ['country', 'political'] }), true);
+  assert.strictEqual(A.naoEhSpot({ primaryType: 'restaurant', types: ['restaurant', 'food'] }), false);
+  assert.strictEqual(A.naoEhSpot({ types: ['neighborhood', 'political'] }), false, 'bairro (Barceloneta) continua valendo');
+});

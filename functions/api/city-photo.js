@@ -66,7 +66,10 @@ export async function onRequestPost(context) {
 
   // v2: o registro antigo não guardava o autor da foto, e sem autor não dá
   // pra creditar. Trocar o prefixo aposenta os antigos sem apagar nada.
-  const cacheKey = 'cityphoto2_' + normKey(query);
+  // v3 (01/10): a regra de escolha mudou (ver escolherFoto). O cache velho
+  // guardava fotos sem conferir se eram do lugar — Joinville virou um menino
+  // com haltere. Chave nova = toda cidade é escolhida de novo, uma vez.
+  const cacheKey = 'cityphoto3_' + normKey(query);
   const cached = await lerKV(env, cacheKey);
   // Cache liberado sem login, igual à /api/climate: responder daqui não gasta
   // cota nem expõe nada, e é o caminho da maioria das chamadas.
@@ -100,6 +103,9 @@ export async function onRequestPost(context) {
 
   // 403/429 = cota da hora esgotada. Guarda por 10 min só pra não martelar.
   if (r.status === 403 || r.status === 429) {
+    // Cota do Unsplash na hora: a foto do Google do próprio lugar resolve.
+    const g = await fotoDoGoogle(env, query);
+    if (g) { await gravarKV(env, cacheKey, JSON.stringify(g), TTL_OK); return responder(context, g); }
     const espera = { url: '', quotaExceeded: true };
     await gravarKV(env, cacheKey, JSON.stringify(espera), 600);
     return json(espera);
@@ -109,12 +115,19 @@ export async function onRequestPost(context) {
   let d;
   try { d = await r.json() } catch (e) { return json({ url: '' }) }
   const results = (d && d.results) || [];
-  // Mesma escolha de antes: sorteia entre os 6 primeiros pra duas cidades
-  // parecidas não caírem sempre na mesma foto. Sem Math.random no servidor —
-  // deriva do próprio nome, então a escolha é estável (e o cache faz sentido).
-  const pool = results.slice(0, 6);
-  const foto = pool.length ? pool[hashNum(query) % pool.length] : null;
-  const url = foto ? (foto.urls || {}).regular || '' : '';
+  // Só vale foto QUE É DO LUGAR (01/10). Antes sorteava entre as 6 primeiras
+  // sem olhar: o Unsplash devolve qualquer foto marcada com o nome (tirada lá,
+  // de alguém de lá), e "Joinville" virou um retrato. Agora a foto precisa
+  // citar o lugar no texto dela e não pode ser de gente. Entre as que passam,
+  // a escolha continua estável (deriva do nome).
+  const pool = results.filter((f) => fotoServe(f, query)).slice(0, 6);
+  let foto = pool.length ? pool[hashNum(query) % pool.length] : null;
+  let url = foto ? (foto.urls || {}).regular || '' : '';
+  // Nenhuma serve: a foto do Google do próprio lugar (cidade, região, praia).
+  if (!url) {
+    const g = await fotoDoGoogle(env, query);
+    if (g) { await gravarKV(env, cacheKey, JSON.stringify(g), TTL_OK); return responder(context, g); }
+  }
 
   // Duas exigências dos termos do Unsplash, as duas obrigatórias:
   //
@@ -153,6 +166,41 @@ function responder(context, r) {
   // O campo `baixar` nunca vai pro navegador (carrega a chave quando chamado).
   const { baixar, ...semChave } = r || {};
   return json(semChave);
+}
+
+// A foto do Unsplash é do lugar? O texto dela (descrição, alt, tags) tem que
+// citar a primeira palavra do nome buscado ("Joinville", "Rio" de Rio de
+// Janeiro) — e foto de gente não serve de capa de cidade. O alt do Unsplash é
+// em inglês, por isso as palavras de pessoa estão em inglês.
+const DE_GENTE = /\b(man|men|woman|women|boy|boys|girl|girls|child|children|kid|kids|baby|person|people|portrait|selfie|couple|family|face|smiling|bride|groom)\b/i;
+export function fotoServe(f, query) {
+  if (!f) return false;
+  const texto = [f.description, f.alt_description].concat((f.tags || []).map((t) => t && t.title)).filter(Boolean).join(' ');
+  if (DE_GENTE.test(texto)) return false;
+  const palavra = normKey(String(query).trim().split(/[\s,]+/)[0] || '');
+  if (palavra.length < 3) return true;
+  return ('_' + normKey(texto) + '_').includes('_' + palavra + '_') || normKey(texto).includes(palavra);
+}
+// A foto que o Google tem do próprio lugar (o resultado que é cidade, região,
+// país ou ponto natural). Passa pelo /api/place-photo, que esconde a chave.
+// O crédito do autor é exigência do Google, igual à do Unsplash.
+const TIPOS_DE_LUGAR = new Set(['locality', 'administrative_area_level_1', 'administrative_area_level_2', 'administrative_area_level_3', 'country', 'colloquial_area', 'sublocality', 'neighborhood', 'natural_feature', 'archipelago', 'island']);
+async function fotoDoGoogle(env, query) {
+  if (!env.GOOGLE_PLACES_KEY) return null;
+  try {
+    const r = await fetch('https://places.googleapis.com/v1/places:searchText', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'X-Goog-Api-Key': env.GOOGLE_PLACES_KEY, 'X-Goog-FieldMask': 'places.types,places.photos' },
+      body: JSON.stringify({ textQuery: query, languageCode: 'pt-BR', maxResultCount: 3 })
+    });
+    if (!r.ok) return null;
+    const d = await r.json();
+    const p = (d.places || []).find((x) => (x.types || []).some((t) => TIPOS_DE_LUGAR.has(t)) && x.photos && x.photos.length);
+    if (!p) return null;
+    const ph = p.photos[0];
+    const a = (ph.authorAttributions || [])[0] || {};
+    return { url: '/api/place-photo?ref=' + encodeURIComponent(ph.name) + '&w=1200', autor: a.displayName || '', autorUrl: a.uri || '', fonte: 'google' };
+  } catch (e) { return null; }
 }
 
 function hashNum(s) {
