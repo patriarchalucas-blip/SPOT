@@ -677,6 +677,26 @@ input,textarea,select{font-size:max(16px,1em)!important}
 .pln-check.on{background:var(--green);border-color:var(--green)}
 .pln-check svg{width:14px;height:14px}
 .pln-nada{margin:16px 0;font-size:15px;color:var(--ink3)}
+.pln-destinos{border-radius:10px;background:var(--surface);overflow:hidden}
+.pln-dest-linha{display:flex;align-items:center;gap:8px;min-height:48px;padding:0 0 0 14px}
+.pln-dest-n{flex:1;min-width:0;font-size:17px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.pln-dest-tipo{flex:none;font-size:14px;color:var(--ink3)}
+.pln-dest-x{flex:none;width:44px;height:44px;padding:0;border:none;background:none;font-size:14px;color:var(--ink3);cursor:pointer}
+.pln-dest-add{display:block;width:100%;min-height:48px;padding:0 14px;border:none;background:none;font:inherit;font-size:16px;color:var(--ink2);text-align:left;cursor:pointer}
+.pln-dest-linha+.pln-dest-add{color:var(--green);font-weight:600;font-size:15px}
+.pln-dest b{flex:1;min-width:0;font-weight:400;text-align:left}
+.pln-dest small{flex:none;font-size:14px;color:var(--ink3)}
+.pln-dest span svg{width:18px;height:18px;color:var(--ink3)}
+.pln-linha .pln-check{flex:none;margin-top:20px;background:none;padding:0;border-color:#CFCFCB;cursor:pointer}
+.pln-linha .pln-check.on{background:var(--green);border-color:var(--green)}
+.pln-off .pln-foto,.pln-off .pln-t{opacity:.45}
+.pln-pronto{margin-top:32px}
+.pln-pronto h1{margin:0;font-size:38px;font-weight:700;letter-spacing:-.04em;line-height:1.05;color:var(--green)}
+.pln-viagem{display:flex;align-items:center;gap:12px;width:100%;min-height:56px;margin-top:8px;padding:0;border:none;background:none;font:inherit;text-align:left;color:var(--ink);cursor:pointer}
+.pln-viagem b{flex:1;font-size:17px;font-weight:600}
+.pln-viagem span{font-size:14px;color:var(--ink2)}
+.pln-viagem i{font-style:normal;font-size:18px;color:var(--ink3)}
+.imp-botoes{display:flex;flex-direction:column;gap:8px}
 .pln-rodape{position:fixed;left:0;right:0;bottom:0;padding:12px 20px calc(16px + env(safe-area-inset-bottom,0px));background:var(--base);z-index:20}
 .pln-rodape .exm-btn:disabled{opacity:.35}
 .pln-avs-m{margin-top:8px}
@@ -2288,7 +2308,7 @@ body.exm .exm-filtros{position:relative;z-index:1}
   <div class="pln-topo"><button onclick="plnVoltar()" data-ic="back" aria-label="Voltar"></button><div class="pln-topo-t">Planejar com amigos</div><span></span></div>
   <div class="pln-corpo">
     <div class="pln-rot">Para onde</div>
-    <div class="pln-destino"><button class="pln-dest-nome" onclick="plnEscolherDestino()"><b id="plnDestNome">Escolha um país</b></button><button class="pln-escopo" id="plnEscopo" onclick="plnEscolherEscopo()" style="display:none"></button></div>
+    <div class="pln-destinos" id="plnDestinosEscolhidos"></div>
     <div class="pln-rot">Quem vai junto<small id="plnEscolhidos"></small></div>
     <label class="am-cid-busca pln-busca"><span class="am-cid-lupa" data-ic="search"></span><input id="plnBusca" type="text" placeholder="Buscar amigo" autocomplete="off" autocorrect="off" spellcheck="false" oninput="plnBuscar(this.value)"></label>
     <div id="plnAmigos"></div>
@@ -2297,8 +2317,9 @@ body.exm .exm-filtros{position:relative;z-index:1}
 </div>
 
 <div class="screen" id="planejar">
-  <div class="pln-topo"><button onclick="goTo('planejarEscolher')" data-ic="back" aria-label="Voltar"></button></div>
+  <div class="pln-topo"><button onclick="plnVoltarDaLista()" data-ic="back" aria-label="Voltar"></button><span></span><button id="plnMandar" onclick="plnMandarProGrupo(false)" data-ic="share" aria-label="Mandar a lista pro grupo" style="visibility:hidden"></button></div>
   <div class="pln-corpo" id="plnLista"></div>
+  <div class="pln-rodape" id="plnRodape"></div>
 </div>
 
 <div class="screen" id="mapaMundi">
@@ -2406,7 +2427,7 @@ body.exm .exm-filtros{position:relative;z-index:1}
 <div class="overlay" id="ov-trip" onclick="closeOut(event,'ov-trip')"><div class="sheet"><button class="sheet-close" onclick="closeOv('ov-trip')" data-ic="close" aria-label="Fechar"></button><div class="sheet-handle"></div><div class="sheet-title">Em qual viagem?</div><div class="step-dots"><div class="step-dot active"></div><div class="step-dot"></div><div class="step-dot"></div><div class="step-dot"></div></div><div id="tripOptions"></div><div class="new-trip-btn" onclick="nextOv('ov-trip','ov-newtrip')"><div class="new-trip-icon" data-ic="plus"></div><div class="new-trip-text">Nova viagem</div></div></div></div>
 
 <div class="overlay" id="ov-pln-destino" onclick="closeOut(event,'ov-pln-destino')"><div class="sheet pln-folha"><button class="sheet-close" onclick="closeOv('ov-pln-destino')" data-ic="close" aria-label="Fechar"></button><div class="sheet-handle"></div>
-<div class="pln-folha-corpo"><h3>Para onde</h3><label class="am-cid-busca"><span class="am-cid-lupa" data-ic="search"></span><input id="plnDestBusca" type="text" placeholder="Buscar país" autocomplete="off" autocorrect="off" spellcheck="false" oninput="plnPintarDestinos(this.value)"></label><div id="plnDestinos"></div></div></div></div>
+<div class="pln-folha-corpo"><h3>Para onde</h3><label class="am-cid-busca"><span class="am-cid-lupa" data-ic="search"></span><input id="plnDestBusca" type="text" placeholder="Buscar país ou cidade" autocomplete="off" autocorrect="off" spellcheck="false" oninput="plnPintarDestinos(this.value)"></label><div id="plnDestinos"></div></div></div></div>
 <div class="overlay" id="ov-pln-ficha" onclick="closeOut(event,'ov-pln-ficha')"><div class="sheet pln-folha"><button class="sheet-close" onclick="closeOv('ov-pln-ficha')" data-ic="close" aria-label="Fechar"></button><div class="sheet-handle"></div><div class="pln-folha-corpo" id="plnFicha"></div></div></div>
 <div class="overlay" id="ov-compartilhar" onclick="closeOut(event,'ov-compartilhar')"><div class="sheet ocp"><button class="sheet-close" onclick="closeOv('ov-compartilhar')" data-ic="close" aria-label="Fechar"></button><div class="sheet-handle"></div>
 <div class="ocp-corpo"><h3 id="ocpTitulo">Compartilhar</h3><p id="ocpTexto">Quem abrir o link vê os seus spots, com a nota e a frase de cada um — sem precisar de conta.</p>
@@ -3032,28 +3053,25 @@ async function dbRpc(fn,params){
 
 // ═══ PLANEJAR COM AMIGOS (handoff "crescimento", telas 4a–4g, 30/09) ═══
 //
-// É uma VISÃO, não uma entidade: não existe viagem do grupo, membro, convite
-// nem aceite. Entra um destino (país, ou uma cidade dele) e alguns amigos;
-// sai uma lista que junta o que cada um JÁ salvou lá, Fui e Quero ir. Nada é
-// gravado nem copiado — cada pessoa continua salvando na própria lista, e o
-// "Quero ir"/"Já fui" da ficha salva na SUA.
+// Entra um ou mais DESTINOS (países e cidades, misturados — pedido do Lucas,
+// 30/09) e alguns amigos; sai uma lista que junta o que cada um já salvou
+// lá, Fui e Quero ir. Não existe viagem do grupo, membro nem convite: a lista
+// é uma visão. O fim do fluxo é "Montar minha viagem" — marcar o que entra e
+// salvar na SUA lista (cada um monta a sua) — e "Mandar pro grupo", que manda
+// a lista escolhida como texto pra conversa de vocês.
 //
-// Não precisa de viagem criada (a dúvida do Lucas ao mandar o desenho): o
-// destino é qualquer país, e os spots dos amigos vêm pelas viagens DELES.
-// O país não mora no spot, mora em trips.destinations — por isso a consulta
-// vai primeiro nas viagens dos amigos daquele país, depois nos spots delas.
+// De onde vem o país de cada spot: da viagem (destinations/nome) quando ela
+// é de um país; senão do ENDEREÇO do spot. Assim a viagem de casa chamada
+// "São Paulo", ou uma viagem antiga com nome de cidade, ainda conta como
+// Brasil. Por isso os spots dos amigos vêm TODOS de uma vez (Fui e Quero ir)
+// e o filtro por destino é aqui, sem consulta nova a cada troca.
 //
-// Mesmo lugar salvo por duas pessoas vira UMA linha. Não há place id no
-// banco: junta por nome (sem acento/caixa) E posição — a menos de 500 m, ou,
-// sem coordenada nos dois, na mesma cidade. Nome igual em cidades diferentes
-// ("Starbucks") continua separado.
-//
-// "Não recomendo" fica de fora; a nota privada (my_note) nunca aparece — só
-// a nota em estrelas e a frase pública (my_review), como na lista pública.
-// Bloqueado não aparece em lugar nenhum.
-const PLN={pais:'',cidade:'',amigos:new Set(),volta:'dashboard',busca:'',sugestoes:[],destLista:[],cidadesLista:[],grupos:[],vistos:[],abaCidade:'',cat:''};
+// Mesmo lugar salvo por duas pessoas vira UMA linha: nome igual (sem
+// acento/caixa) E posição a menos de 500 m — sem coordenada, mesma cidade.
+// "Não recomendo" fica de fora; a nota privada (my_note) nunca aparece.
+const PLN={destinos:[],amigos:new Set(),volta:'dashboard',busca:'',sugestoes:[],destLista:[],grupos:[],vistos:[],abaCidade:'',cat:'',montando:false,marcados:new Set(),montado:null};
 const PLN_AMIGOS={t:0,p:null,perfis:{}};
-const PLN_CACHE=new Map();
+let PLN_DELES={t:0,p:null};
 const PLN_CORES=['#0B3D2E','#6B5B4B','#4F5B66','#6E7F73','#5B4F66'];
 
 function plnCor(id){let h=0;String(id||'').split('').forEach(c=>{h=(h*31+c.charCodeAt(0))>>>0});return PLN_CORES[h%PLN_CORES.length]}
@@ -3061,7 +3079,7 @@ function plnPerfil(id){return S.user&&id===S.user.id?(S.profile||{}):(PLN_AMIGOS
 function plnPrimeiro(id){
   if(S.user&&id===S.user.id)return 'Você';
   const n=friendName(plnPerfil(id));
-  return n.startsWith('@')?n:n.split(/\s+/)[0];
+  return n.startsWith('@')?n.slice(1):n.split(/\s+/)[0];
 }
 function plnAvatar(id,classe){
   const p=plnPerfil(id)||{};
@@ -3077,10 +3095,26 @@ function plnNomesCurtos(ids){
   const n=ids.map(plnPrimeiro);
   return n.length<=2?plnJuntar(n):n.slice(0,2).join(', ')+' e mais '+(n.length-2);
 }
-function plnDestino(){return PLN.cidade||PLN.pais}
+// "Portugal" · "Lisboa e Porto" · "Portugal, Itália e mais 2"
+function plnRotuloDestinos(){
+  const n=PLN.destinos.map(d=>d.nome);
+  return n.length<=3?plnJuntar(n):n.slice(0,2).join(', ')+' e mais '+(n.length-2);
+}
+function plnEhPais(x){const n=normalizeCountry(x);return COUNTRIES.some(c=>c.name===n)}
+// O país de um spot: o da viagem quando ela é de país; senão o do endereço.
+function plnPaisDoSpot(t,s){
+  const daViagem=[].concat((t&&t.destinations)||[],t&&t.name?[t.name]:[]).map(normalizeCountry).find(plnEhPais);
+  if(daViagem)return daViagem;
+  const doEnd=normalizeCountry(paisDoEndereco((s&&s.address)||''));
+  return plnEhPais(doEnd)?doEnd:'';
+}
+// Mantida pelos testes e pela entrada: a viagem é daquele país/cidade?
+function plnViagemCobre(t,destino){
+  const alvo=normalizeCountry(destino)||destino;
+  return [t&&t.name].concat((t&&t.destinations)||[]).some(d=>d&&(mesmoLugar(normalizeCountry(d)||d,alvo)||mesmoLugar(d,destino)));
+}
 
-// Amigos aceitos, sem bloqueado, com o perfil de cada um. Guardado por 2 min:
-// a linha da tela do país pede isto a cada abertura.
+// Amigos aceitos, sem bloqueado, com o perfil de cada um. Guardado por 2 min.
 function plnCarregarAmigos(){
   if(PLN_AMIGOS.p&&Date.now()-PLN_AMIGOS.t<120000)return PLN_AMIGOS.p;
   PLN_AMIGOS.t=Date.now();
@@ -3094,59 +3128,35 @@ function plnCarregarAmigos(){
   })();
   return PLN_AMIGOS.p;
 }
-// Os spots (Fui e Quero ir) de TODOS os amigos num país. Filtrar por quem foi
-// escolhido é depois, na tela — trocar a seleção não refaz a consulta.
-function plnSpotsDosAmigos(pais){
-  const k=normName(pais);
-  const ja=PLN_CACHE.get(k);
-  if(ja&&Date.now()-ja.t<120000)return ja.p;
-  const p=(async()=>{
+// Todos os spots (Fui e Quero ir) de todos os amigos, cada um com _pais.
+// Duas consultas, guardadas por 2 min: trocar destino ou amigo não refaz.
+function plnSpotsDeles(){
+  if(PLN_DELES.p&&Date.now()-PLN_DELES.t<120000)return PLN_DELES.p;
+  PLN_DELES.t=Date.now();
+  PLN_DELES.p=(async()=>{
     const ids=await plnCarregarAmigos();
-    const nome=termoSeguro(pais);
-    if(!ids.length||!nome)return[];
+    if(!ids.length)return[];
     const lista=ids.join(',');
-    // TODAS as viagens dos amigos, e a comparação é aqui: a busca exata no
-    // banco (destinations contém "Portugal") perdia viagem com o país escrito
-    // de outro jeito — sem acento, em inglês, ou viagem antiga com nome de
-    // cidade. É pouca linha (id, nome, destinos), e comparar aqui ignora isso.
-    const viagens=await dbGet('trips','user_id=in.('+lista+')&select=id,name,destinations');
-    const tids=(viagens||[]).filter(t=>plnViagemCobre(t,pais)).map(v=>v.id);
-    const CAMPOS='&select=id,user_id,trip_id,name,category,subcategory,place_type,city,address,photo_url,photo_author,photo_author_url,maps_url,website_url,phone,lat,lng,rating_google,price_level,status,my_rating,my_review';
-    const buscas=[];
-    if(tids.length)buscas.push(dbGet('spots','trip_id=in.('+tids.join(',')+')&user_id=in.('+lista+')&status=in.(been,want)'+CAMPOS));
-    // Destino que não é país (viagem que se chama "Lisboa"): vale também o
-    // spot dos amigos NAQUELA cidade, em qualquer viagem deles.
-    if(!plnEhPais(pais))buscas.push(dbGet('spots','city=ilike.*'+encodeURIComponent(nome)+'*&user_id=in.('+lista+')&status=in.(been,want)'+CAMPOS));
-    const vistos=new Set();
-    return (await Promise.all(buscas)).flat().filter(s=>{
-      if(!s||vistos.has(s.id)||estaBloqueado(s.user_id))return false;
-      vistos.add(s.id);return true;
-    });
+    const [viagens,spots]=await Promise.all([
+      dbGet('trips','user_id=in.('+lista+')&select=id,name,destinations'),
+      dbGet('spots','user_id=in.('+lista+')&status=in.(been,want)&limit=5000'
+        +'&select=id,user_id,trip_id,name,category,subcategory,place_type,city,address,photo_url,photo_author,photo_author_url,maps_url,website_url,phone,lat,lng,rating_google,price_level,status,my_rating,my_review')]);
+    const porId={};(viagens||[]).forEach(t=>{porId[t.id]=t});
+    return (spots||[]).filter(s=>s&&!estaBloqueado(s.user_id)).map(s=>Object.assign(s,{_pais:plnPaisDoSpot(porId[s.trip_id],s)}));
   })();
-  PLN_CACHE.set(k,{t:Date.now(),p});
-  return p;
+  return PLN_DELES.p;
 }
-function plnEhPais(x){const n=normalizeCountry(x);return COUNTRIES.some(c=>c.name===n)}
-// A viagem é daquele destino? Pelo nome ou por qualquer destino dela,
-// ignorando acento/caixa e com o nome em inglês traduzido.
-function plnViagemCobre(t,destino){
-  const alvo=normalizeCountry(destino)||destino;
-  return [t&&t.name].concat((t&&t.destinations)||[]).some(d=>d&&(mesmoLugar(normalizeCountry(d)||d,alvo)||mesmoLugar(d,destino)));
-}
-// Os meus, do que já está carregado: viagens daquele país (a de casa entra,
-// o destino dela é o país onde moro).
-function plnMeusSpots(pais){
+// Os meus, do que já está carregado (sempre na hora: acabou de salvar, aparece).
+function plnMeusSpots(){
   const vistos=new Set(),out=[];
-  (S.trips||[]).forEach(t=>{
-    if(!plnViagemCobre(t,pais))return;
-    (t._spots||[]).forEach(s=>{
-      if(vistos.has(s.id)||(s.status!=='been'&&s.status!=='want'))return;
-      vistos.add(s.id);out.push(Object.assign({},s,{user_id:S.user.id}));
-    });
-  });
+  (S.trips||[]).forEach(t=>(t._spots||[]).forEach(s=>{
+    if(vistos.has(s.id)||(s.status!=='been'&&s.status!=='want'))return;
+    vistos.add(s.id);out.push(Object.assign({},s,{user_id:S.user.id,_pais:plnPaisDoSpot(t,s),_meu:true}));
+  }));
   return out;
 }
-function plnNaCidade(l){return PLN.cidade?l.filter(s=>mesmoLugar(cityOf(s)||'',PLN.cidade)):l}
+function plnCai(s,d){return d.tipo==='pais'?mesmoLugar(s._pais,d.nome):mesmoLugar(cityOf(s)||'',d.nome)}
+function plnNosDestinos(l,destinos){const ds=destinos||PLN.destinos;return l.filter(s=>ds.some(d=>plnCai(s,d)))}
 
 // ── agrupar: uma linha por lugar ──
 function plnDistKm(a,b){
@@ -3176,8 +3186,9 @@ function plnAgrupar(spots){
   grupos.forEach(g=>{
     g.foram.sort(vocePrimeiro);g.querem.sort(vocePrimeiro);
     g.nota=Math.max(0,...g.foram.map(s=>Number(s.my_rating)||0));
-    // O spot que "representa" a linha: o que tem foto, de preferência o de quem foi.
     g.base=g.foram.concat(g.querem).find(s=>s.photo_url)||g.foram[0]||g.querem[0];
+    g.meu=g.spots.find(s=>s.user_id===eu)||null;
+    g.chave=g.n+'|'+normName(cityOf(g.base)||'');
   });
   grupos.sort((a,b)=>b.foram.length-a.foram.length||b.querem.length-a.querem.length||b.nota-a.nota
     ||String(a.base.name).localeCompare(String(b.base.name),'pt-BR'));
@@ -3201,17 +3212,17 @@ function plnTipo(s){
 // amigo; a linha de avatares, só se algum amigo tem spots ali.
 async function plnPintarEntrada(elId,pais,cidade){
   const el=document.getElementById(elId);if(!el)return;
-  el.innerHTML='';el.dataset.pais=pais||'';el.dataset.cidade=cidade||'';
+  el.innerHTML='';el.dataset.alvo=(pais||'')+'|'+(cidade||'');
   if(!pais||!S.user)return;
+  const alvo=el.dataset.alvo;
   const ids=await plnCarregarAmigos();
-  if(!ids.length||el.dataset.pais!==pais||el.dataset.cidade!==(cidade||''))return;
-  const onde=cidade||pais;
-  const deles=await plnSpotsDosAmigos(pais);
-  if(el.dataset.pais!==pais||el.dataset.cidade!==(cidade||''))return;
-  const comSpots=[...new Set(deles.filter(s=>!cidade||mesmoLugar(cityOf(s)||'',cidade)).map(s=>s.user_id))];
+  if(!ids.length||el.dataset.alvo!==alvo)return;
+  const destinos=[cidade?{tipo:'cidade',nome:cidade,pais}:{tipo:'pais',nome:normalizeCountry(pais)||pais}];
+  const deles=plnNosDestinos(await plnSpotsDeles(),destinos);
+  if(el.dataset.alvo!==alvo)return;
   const conta={};deles.forEach(s=>{conta[s.user_id]=(conta[s.user_id]||0)+1});
-  comSpots.sort((a,b)=>conta[b]-conta[a]);
-  PLN.entrada={pais,cidade:cidade||'',amigos:comSpots};
+  const comSpots=Object.keys(conta).sort((a,b)=>conta[b]-conta[a]);
+  PLN.entrada={destinos,amigos:comSpots};
   el.innerHTML='<button class="pln-btn" onclick="plnDaEntrada(false)">'+icon('users')+'Planejar com amigos</button>'
     +(comSpots.length?'<button class="pln-quem" onclick="plnDaEntrada(true)"><span class="pln-avs">'+comSpots.slice(0,3).map(id=>plnAvatar(id)).join('')+'</span>'
       +'<span>'+esc(plnNomesCurtos(comSpots))+' também '+(comSpots.length===1?'tem':'têm')+' spots aqui</span></button>':'');
@@ -3219,21 +3230,18 @@ async function plnPintarEntrada(elId,pais,cidade){
 function plnDaEntrada(comEles){
   const e=PLN.entrada;if(!e)return;
   const tela=document.querySelector('.screen.active');
-  plnAbrir({pais:e.pais,cidade:e.cidade,amigos:comEles?e.amigos:[],volta:tela?tela.id:'dashboard'});
+  plnAbrir({destinos:e.destinos,amigos:comEles?e.amigos:[],volta:tela?tela.id:'dashboard'});
 }
-// 4b: perfil do amigo. Destino vazio; as sugestões são os países dele.
+// 4b: perfil do amigo. Destino vazio; as sugestões são os lugares dele.
 function plnDoAmigo(){
   if(!FRIEND.id)return;
   if(FRIEND.profile)PLN_AMIGOS.perfis[FRIEND.id]=FRIEND.profile;
-  const conta={};
-  (FRIEND.trips||[]).forEach(t=>{const p=normalizeCountry(paisDaViagem(t));const n=(t._spots||[]).length;if(p&&n)conta[p]=(conta[p]||0)+n});
-  plnAbrir({pais:'',cidade:'',amigos:[FRIEND.id],volta:'friend',
-    sugestoes:Object.keys(conta).sort((a,b)=>conta[b]-conta[a])});
+  plnAbrir({destinos:[],amigos:[FRIEND.id],volta:'friend'});
 }
 function plnPintarBotaoDoAmigo(){
   const b=document.getElementById('friendPlanejar');if(!b)return;
   const nome=FRIEND.profile?friendName(FRIEND.profile):(FRIEND_NOMES[FRIEND.id]||'');
-  const primeiro=nome.startsWith('@')?nome:nome.split(/\s+/)[0];
+  const primeiro=nome.startsWith('@')?nome.slice(1):nome.split(/\s+/)[0];
   b.innerHTML=icon('users')+esc('Planejar uma viagem com '+(primeiro||'essa pessoa'));
   // Só com amizade aceita: perfil aberto com pedido pendente não tem spots
   // pra juntar, e a lista sairia só com os seus.
@@ -3244,38 +3252,35 @@ function plnPintarBotaoDoAmigo(){
 
 // ── 4c escolher ──
 function plnAbrir(o){
-  PLN.pais=o.pais||'';PLN.cidade=o.cidade||'';PLN.amigos=new Set(o.amigos||[]);PLN.volta=o.volta||'dashboard';
-  PLN.sugestoes=o.sugestoes||[];PLN.busca='';
+  PLN.destinos=(o.destinos||[]).slice();PLN.amigos=new Set(o.amigos||[]);PLN.volta=o.volta||'dashboard';
+  PLN.busca='';PLN.montando=false;PLN.montado=null;
   const b=document.getElementById('plnBusca');if(b)b.value='';
   plnPintarEscolha();
   goTo('planejarEscolher');
   plnCarregarAmigos().then(()=>plnPintarEscolha());
+  plnSpotsDeles().then(()=>plnPintarEscolha());
 }
 function plnVoltar(){goTo(PLN.volta||'dashboard')}
 async function plnPintarEscolha(){
-  const nomeEl=document.getElementById('plnDestNome'),esc0=document.getElementById('plnEscopo');
-  nomeEl.textContent=plnDestino()||'Escolha um país';
-  nomeEl.classList.toggle('vazio',!PLN.pais);
-  esc0.style.display=PLN.pais?'':'none';
-  esc0.innerHTML=esc(PLN.cidade?'só '+PLN.cidade:'país inteiro')+' ▾';
+  const box0=document.getElementById('plnDestinosEscolhidos');
+  box0.innerHTML=PLN.destinos.map((d,i)=>'<div class="pln-dest-linha"><span class="pln-dest-n">'+(d.tipo==='pais'?flagFor(d.nome)+' ':'')+esc(d.nome)+'</span><span class="pln-dest-tipo">'+(d.tipo==='pais'?'país':'cidade')+'</span><button class="pln-dest-x" onclick="plnTirarDestino('+i+')" aria-label="Tirar '+esc(d.nome)+'">✕</button></div>').join('')
+    +'<button class="pln-dest-add" onclick="plnEscolherDestino()">'+(PLN.destinos.length?'+ Outro país ou cidade':'Escolha países ou cidades')+'</button>';
   const n=PLN.amigos.size;
   document.getElementById('plnEscolhidos').textContent=n?(n===1?'1 escolhido':n+' escolhidos'):'';
-  document.getElementById('plnVer').disabled=!(PLN.pais&&n);
+  document.getElementById('plnVer').disabled=!(PLN.destinos.length&&n);
   const box=document.getElementById('plnAmigos');
   const ids=PLN_AMIGOS.p?await PLN_AMIGOS.p:[];
   if(!ids.length){box.innerHTML='<p class="pln-nada">'+(PLN_AMIGOS.p?'Você ainda não tem amigos no Spot. Convide alguém pela aba Amigos.':'Carregando...')+'</p>';return}
-  const pais=PLN.pais;
-  const deles=pais?plnNaCidade(await plnSpotsDosAmigos(pais)):[];
-  if(PLN.pais!==pais)return;
+  const deles=PLN.destinos.length&&PLN_DELES.p?plnNosDestinos(await PLN_DELES.p):[];
   const conta={};deles.forEach(s=>{conta[s.user_id]=(conta[s.user_id]||0)+1});
   const busca=normName(PLN.busca);
   const lista=ids.filter(id=>!busca||normName(friendName(PLN_AMIGOS.perfis[id])).includes(busca))
     .sort((a,b)=>(conta[b]||0)-(conta[a]||0)||friendName(PLN_AMIGOS.perfis[a]).localeCompare(friendName(PLN_AMIGOS.perfis[b]),'pt-BR'));
   PLN.vistos=lista;
-  const onde=plnDestino();
+  const comDestino=PLN.destinos.length>0;
   box.innerHTML=lista.map((id,i)=>{
     const c=conta[id]||0,on=PLN.amigos.has(id);
-    const meta=!onde?'':c?c+(c===1?' spot':' spots'):'Nenhum spot ainda';
+    const meta=!comDestino?'':c?c+(c===1?' spot lá':' spots lá'):'Nenhum spot lá ainda';
     return '<button class="pln-amigo" onclick="plnMarcar('+i+')" aria-pressed="'+on+'">'+plnAvatar(id,'g')
       +'<span class="t"><span class="n">'+esc(friendName(PLN_AMIGOS.perfis[id]))+'</span>'+(meta?'<span class="m'+(c?'':' nada')+'">'+esc(meta)+'</span>':'')+'</span>'
       +'<span class="pln-check'+(on?' on':'')+'">'+(on?icon('check'):'')+'</span></button>';
@@ -3283,101 +3288,126 @@ async function plnPintarEscolha(){
 }
 function plnMarcar(i){const id=PLN.vistos[i];if(!id)return;PLN.amigos.has(id)?PLN.amigos.delete(id):PLN.amigos.add(id);plnPintarEscolha()}
 function plnBuscar(v){PLN.busca=v;plnPintarEscolha()}
-// Para onde: qualquer país (a lista inteira do app), com os sugeridos antes.
+function plnTirarDestino(i){PLN.destinos.splice(i,1);plnPintarEscolha()}
+// Para onde: qualquer país (a lista inteira do app) e as cidades onde você
+// ou um amigo têm spots. Sugestões primeiro: as dos amigos escolhidos.
 function plnEscolherDestino(){
   const b=document.getElementById('plnDestBusca');if(b)b.value='';
   plnPintarDestinos('');
   showOv('ov-pln-destino');
 }
-function plnPintarDestinos(v){
+async function plnPintarDestinos(v){
   const q=normName(v);
+  const deles=PLN_DELES.p?await PLN_DELES.p:[];
+  const todos=plnMeusSpots().concat(deles);
+  // Contagem por país e por cidade, dando peso aos amigos escolhidos.
+  const paises={},cidades={};
+  todos.forEach(s=>{
+    const peso=PLN.amigos.has(s.user_id)?3:1;
+    if(s._pais){paises[s._pais]=(paises[s._pais]||0)+peso}
+    const c=cityOf(s)||'';if(c){const k=normName(c);cidades[k]=cidades[k]||{nome:c,pais:s._pais,n:0};cidades[k].n+=peso}
+  });
+  const ja=d=>PLN.destinos.some(x=>x.tipo===d.tipo&&mesmoLugar(x.nome,d.nome));
   let lista;
-  if(q)lista=COUNTRIES.filter(c=>normName(c.name).includes(q)).map(c=>c.name).slice(0,40);
-  else{
-    const meus={};(S.trips||[]).forEach(t=>{const p=normalizeCountry(paisDaViagem(t));const n=(t._spots||[]).length;if(p&&n&&COUNTRIES.some(c=>c.name===p))meus[p]=(meus[p]||0)+n});
-    lista=[...new Set(PLN.sugestoes.concat(Object.keys(meus).sort((a,b)=>meus[b]-meus[a])))].filter(p=>COUNTRIES.some(c=>c.name===p));
+  if(q){
+    const ps=COUNTRIES.filter(c=>normName(c.name).includes(q)).map(c=>({tipo:'pais',nome:c.name}));
+    const cs=Object.values(cidades).filter(c=>normName(c.nome).includes(q)).sort((a,b)=>b.n-a.n).map(c=>({tipo:'cidade',nome:c.nome,pais:c.pais}));
+    lista=cs.concat(ps).slice(0,40);
+  }else{
+    const ps=Object.keys(paises).sort((a,b)=>paises[b]-paises[a]).slice(0,8).map(p=>({tipo:'pais',nome:p}));
+    const cs=Object.values(cidades).sort((a,b)=>b.n-a.n).slice(0,8).map(c=>({tipo:'cidade',nome:c.nome,pais:c.pais}));
+    lista=ps.concat(cs);
   }
+  lista=lista.filter(d=>!ja(d));
   PLN.destLista=lista;
   document.getElementById('plnDestinos').innerHTML=(q||!lista.length?'':'<div class="pln-rot pln-rot-folha">Sugestões</div>')
-    +lista.map((p,i)=>'<button class="pln-dest" onclick="plnDefinirPais('+i+')"><span>'+flagFor(p)+'</span>'+esc(p)+'</button>').join('')
-    +(q&&!lista.length?'<p class="pln-nada">Nenhum país com esse nome.</p>':'')
-    +(!q&&!lista.length?'<p class="pln-nada">Digite o nome de um país.</p>':'');
+    +lista.map((d,i)=>'<button class="pln-dest" onclick="plnDefinirDestino('+i+')"><span>'+(d.tipo==='pais'?flagFor(d.nome):icon('pin'))+'</span><b>'+esc(d.nome)+'</b><small>'+(d.tipo==='pais'?'país':esc(d.pais||'cidade'))+'</small></button>').join('')
+    +(q&&!lista.length?'<p class="pln-nada">Nenhum país ou cidade com esse nome.</p>':'')
+    +(!q&&!lista.length?'<p class="pln-nada">Digite o nome de um país ou cidade.</p>':'');
+  hydrateIcons(document.getElementById('plnDestinos'));
 }
-function plnDefinirPais(i){const p=PLN.destLista[i];if(!p)return;closeOv('ov-pln-destino');PLN.pais=p;PLN.cidade='';plnPintarEscolha()}
-// "país inteiro ▾" troca pra uma cidade do país — as que alguém (você ou um
-// amigo) já tem spots.
-async function plnEscolherEscopo(){
-  if(!PLN.pais)return;
-  const todos=plnMeusSpots(PLN.pais).concat(await plnSpotsDosAmigos(PLN.pais));
-  const conta={},nomes={};
-  todos.forEach(s=>{const c=cityOf(s)||'';if(!c)return;const k=normName(c);conta[k]=(conta[k]||0)+1;nomes[k]=nomes[k]||c});
-  PLN.cidadesLista=Object.keys(conta).sort((a,b)=>conta[b]-conta[a]).map(k=>nomes[k]);
-  const itens=[{id:'p',rotulo:'País inteiro',n:todos.length}].concat(PLN.cidadesLista.map((c,i)=>({id:'c'+i,rotulo:c,n:conta[normName(c)]})));
-  const ativo=PLN.cidade?'c'+PLN.cidadesLista.findIndex(c=>mesmoLugar(c,PLN.cidade)):'p';
-  abrirFolhaDeEscolha(itens,ativo,id=>{PLN.cidade=id==='p'?'':(PLN.cidadesLista[Number(id.slice(1))]||'');plnPintarEscolha()});
+function plnDefinirDestino(i){
+  const d=PLN.destLista[i];if(!d)return;
+  closeOv('ov-pln-destino');PLN.destinos.push(d);plnPintarEscolha();
 }
 
 // ── 4d a lista juntada ──
-function plnVerLista(){if(!PLN.pais||!PLN.amigos.size)return;PLN.abaCidade='';PLN.cat='';goTo('planejar');plnMontarLista()}
+function plnVerLista(){if(!PLN.destinos.length||!PLN.amigos.size)return;PLN.abaCidade='';PLN.cat='';PLN.montando=false;PLN.montado=null;goTo('planejar');plnMontarLista()}
 async function plnMontarLista(){
   const box=document.getElementById('plnLista');
-  const pais=PLN.pais;
   if(!PLN.grupos.length)box.innerHTML='<p class="pln-nada" style="margin-top:40px">Juntando os spots...</p>';
-  const deles=(await plnSpotsDosAmigos(pais)).filter(s=>PLN.amigos.has(s.user_id));
-  if(PLN.pais!==pais)return;
-  const spots=plnNaCidade(plnMeusSpots(pais).concat(deles));
-  PLN.grupos=plnAgrupar(spots);
+  const deles=(await plnSpotsDeles()).filter(s=>PLN.amigos.has(s.user_id));
+  PLN.grupos=plnAgrupar(plnNosDestinos(plnMeusSpots().concat(deles)));
   plnPintarLista();
 }
 function plnPintarLista(){
-  const box=document.getElementById('plnLista');
-  const eu=S.user.id,amigos=[...PLN.amigos],onde=plnDestino();
+  const box=document.getElementById('plnLista'),rod=document.getElementById('plnRodape');
+  const eu=S.user.id,amigos=[...PLN.amigos],onde=plnRotuloDestinos();
+  if(PLN.montado)return plnPintarMontado();
   const grupos=PLN.grupos;
   const cab='<span class="pln-avs pln-avs-m">'+[eu].concat(amigos).slice(0,5).map(id=>plnAvatar(id,'m')).join('')+'</span>'
     +'<h1 class="pln-titulo">'+esc(onde+' com '+plnNomesCurtos(amigos))+'</h1>';
+  document.getElementById('plnMandar').style.visibility=grupos.length&&!PLN.montando?'visible':'hidden';
   if(!grupos.length){
     box.innerHTML=cab+'<div class="pln-vazio"><h2>Ninguém salvou nada aqui ainda</h2>'
-      +'<p>Quando '+esc(plnJuntar(['você'].concat(amigos.map(plnPrimeiro))).replace(/ e ([^,]+)$/,' ou $1'))+' salvarem spots em '+esc(onde)+', eles aparecem aqui.</p>'
-      +'<button class="exm-btn" onclick="plnExplorar()">Explorar '+esc(onde)+'</button></div>';
-    hydrateIcons(box);return;
+      +'<p>Quando '+esc(plnJuntar(['você'].concat(amigos.map(plnPrimeiro))).replace(/ e ([^,]+)$/,' ou $1'))+' salvarem spots lá, eles aparecem aqui.</p>'
+      +'<button class="exm-btn" onclick="plnExplorar()">Explorar '+esc(PLN.destinos[0].nome)+'</button></div>';
+    rod.innerHTML='';hydrateIcons(box);return;
   }
   const cidades={};grupos.forEach(g=>{const c=cityOf(g.base)||'';if(c){const k=normName(c);cidades[k]=cidades[k]||{nome:c,n:0};cidades[k].n++}});
   const listaCid=Object.values(cidades).sort((a,b)=>b.n-a.n);
-  const sub=grupos.length+(grupos.length===1?' spot':' spots')+(!PLN.cidade&&listaCid.length?' · '+listaCid.length+(listaCid.length===1?' cidade':' cidades'):'');
+  const sub=grupos.length+(grupos.length===1?' spot':' spots')+(listaCid.length>1?' · '+listaCid.length+' cidades':'');
   // 4g: só uma pessoa tem spots — a frase explica por que a lista parece "da Ana".
   const quem=[...new Set(grupos.flatMap(g=>g.spots.map(s=>s.user_id)))];
   let aviso='';
-  if(quem.length===1){
+  if(quem.length===1&&!PLN.montando){
     const outros=[eu].concat(amigos).filter(id=>id!==quem[0]).map(plnPrimeiro);
     aviso='<div class="pln-aviso">'+esc(quem[0]===eu?'Só você tem spots aqui.':'Só '+plnPrimeiro(quem[0])+' tem spots aqui.')
       +' <span>'+esc(plnJuntar(outros)+(outros.length===1?' ainda não salvou':' ainda não salvaram')+' nada aqui.')+'</span></div>';
   }
-  // Abas de cidade: destino é o país, 2+ cidades e lista de 10+ (com menos, rolar resolve).
-  const comAbas=!PLN.cidade&&listaCid.length>1&&grupos.length>=10;
-  if(comAbas&&!listaCid.some(c=>c.nome===PLN.abaCidade))PLN.abaCidade=listaCid[0].nome;
-  let vis=comAbas?grupos.filter(g=>mesmoLugar(cityOf(g.base)||'',PLN.abaCidade)):grupos;
-  const abas=comAbas?'<div class="pln-abas">'+listaCid.map((c,i)=>'<div class="cat-tab'+(c.nome===PLN.abaCidade?' active':'')+'" onclick="plnAba('+i+')">'+esc(c.nome)+'<span class="ct-count">'+c.n+'</span></div>').join('')+'</div>':'';
+  // Abas de cidade: 2+ cidades e lista de 10+ (com menos, rolar resolve).
+  const comAbas=listaCid.length>1&&grupos.length>=10;
+  if(comAbas&&PLN.abaCidade&&!listaCid.some(c=>c.nome===PLN.abaCidade))PLN.abaCidade='';
+  let vis=comAbas&&PLN.abaCidade?grupos.filter(g=>mesmoLugar(cityOf(g.base)||'',PLN.abaCidade)):grupos;
+  const abas=comAbas?'<div class="pln-abas"><div class="cat-tab'+(PLN.abaCidade?'':' active')+'" onclick="plnAba(-1)">Todas<span class="ct-count">'+grupos.length+'</span></div>'
+    +listaCid.map((c,i)=>'<div class="cat-tab'+(c.nome===PLN.abaCidade?' active':'')+'" onclick="plnAba('+i+')">'+esc(c.nome)+'<span class="ct-count">'+c.n+'</span></div>').join('')+'</div>':'';
   PLN.abasCid=listaCid.map(c=>c.nome);
   const cats=['food','hotel','experience'].map(c=>({c,n:vis.filter(g=>(g.base.category||'food')===c).length})).filter(x=>x.n);
-  if(cats.length>1&&PLN.cat&&!cats.some(x=>x.c===PLN.cat))PLN.cat='';
+  if(PLN.cat&&!cats.some(x=>x.c===PLN.cat))PLN.cat='';
   if(cats.length>1&&PLN.cat)vis=vis.filter(g=>(g.base.category||'food')===PLN.cat);
   const nomeCat={food:'Comer',hotel:'Ficar',experience:'Experiências'};
   const linhaCats=cats.length>1?'<div class="pln-cats"><button class="pln-cat'+(PLN.cat?'':' on')+'" onclick="plnCat(\'\')">Tudo</button>'
     +cats.map(x=>'<button class="pln-cat'+(PLN.cat===x.c?' on':'')+'" onclick="plnCat(\''+x.c+'\')">'+nomeCat[x.c]+' '+x.n+'</button>').join('')+'</div>':'';
   PLN.vis=vis;
-  box.innerHTML=cab+'<p class="pln-sub">'+esc(sub)+'</p>'+aviso+abas+linhaCats
-    +'<div class="pln-lista">'+vis.map((g,i)=>plnLinha(g,i)).join('')+'</div>';
+  const topo=PLN.montando
+    ?'<h1 class="pln-titulo">Montar minha viagem</h1><p class="pln-sub">Marque o que entra. Vai pra sua lista como Quero ir, na viagem de cada país.</p>'
+    :cab+'<p class="pln-sub">'+esc(sub)+'</p>'+aviso;
+  box.innerHTML=topo+abas+linhaCats+'<div class="pln-lista">'+vis.map((g,i)=>plnLinha(g,i)).join('')+'</div>';
   hydrateIcons(box);
+  const novos=grupos.filter(g=>!g.meu).length;
+  if(PLN.montando){
+    const n=grupos.filter(g=>!g.meu&&PLN.marcados.has(g.chave)).length;
+    rod.innerHTML='<button class="exm-btn" onclick="plnSalvarMontagem(this)"'+(n?'':' disabled')+'>'+(n?'Salvar '+n+(n===1?' spot':' spots')+' na minha viagem':'Nada marcado')+'</button>';
+  }else rod.innerHTML=novos?'<button class="exm-btn" onclick="plnComecarMontagem()">Montar minha viagem</button>':'';
 }
 function plnLinha(g,i){
   const s=g.base,f=safeUrl(fotoNaLargura(s.photo_url||'',200)),tipo=plnTipo(s);
   const soQuerem=!g.foram.length&&g.querem.some(x=>x.user_id===S.user.id);
   const foram=g.foram.length?'<span class="pln-foram">'+esc(plnFraseForam(g))+'</span>':'';
   const querem=g.querem.length?'<span class="'+(soQuerem?'pln-foram':'pln-querem')+'">'+esc(plnFraseQuerem(g))+'</span>':'';
-  return '<button class="pln-linha" onclick="plnAbrirFicha('+i+')"><span class="pln-foto">'
-    +(f?'<img src="'+esc(f)+'" alt="" loading="lazy" onerror="plnFotoFalhou(this,'+i+')">':catIcon(s.category))+'</span>'
-    +'<span class="pln-t"><span class="pln-cab"><span class="pln-n">'+esc(s.name)+'</span>'+(tipo?'<span class="pln-tipo">'+esc(tipo)+'</span>':'')+'</span>'
-    +foram+querem+'</span></button>';
+  // Foto que falha: o meu spot se cura sozinho (onSpotPhotoError grava a nova);
+  // o do amigo só mostra a foto atual do lugar (fotoParaVer), sem gravar.
+  const erro=s.user_id===S.user.id&&s.id?'onSpotPhotoError(this,\''+esc(s.id)+'\',\''+esc(s.category||'food')+'\')':'plnFotoFalhou(this,'+i+')';
+  const foto='<span class="pln-foto">'+(f?'<img src="'+esc(f)+'" alt="" loading="lazy" decoding="async" onerror="'+erro+'">':catIcon(s.category))+'</span>';
+  const corpo='<span class="pln-t"><span class="pln-cab"><span class="pln-n">'+esc(s.name)+'</span>'+(tipo?'<span class="pln-tipo">'+esc(tipo)+'</span>':'')+'</span>'
+    +foram+querem+(PLN.montando&&g.meu?'<span class="pln-querem">Já está na sua lista</span>':'')+'</span>';
+  if(PLN.montando){
+    const on=!g.meu&&PLN.marcados.has(g.chave);
+    return '<div class="pln-linha'+(g.meu?' pln-off':'')+'">'
+      +'<button class="pln-check'+(on?' on':'')+'" onclick="plnMarcarSpot('+i+')"'+(g.meu?' disabled':'')+' aria-label="'+(on?'Desmarcar':'Marcar')+'">'+(on?icon('check'):'')+'</button>'
+      +foto+corpo+'</div>';
+  }
+  return '<button class="pln-linha" onclick="plnAbrirFicha('+i+')">'+foto+corpo+'</button>';
 }
 function plnFotoFalhou(img,i){
   const g=(PLN.vis||[])[i];
@@ -3385,11 +3415,80 @@ function plnFotoFalhou(img,i){
   img.dataset.tentou='1';
   fotoParaVer(g.base).then(u=>{if(u&&img.isConnected)img.src=safeUrl(fotoNaLargura(u,200));else if(img.isConnected)img.parentElement.innerHTML=catIcon(g.base.category)});
 }
-function plnAba(i){const c=(PLN.abasCid||[])[i];if(c==null)return;PLN.abaCidade=c;PLN.cat='';plnPintarLista()}
+function plnAba(i){PLN.abaCidade=i<0?'':((PLN.abasCid||[])[i]||'');PLN.cat='';plnPintarLista()}
 function plnCat(c){PLN.cat=c;plnPintarLista()}
 function plnExplorar(){
-  const onde=plnDestino();
-  EXPLORE_ABRIU=true;goTo('explore');loadExplore();exploreEm(onde,'');
+  const onde=PLN.destinos[0]?PLN.destinos[0].nome:'';
+  EXPLORE_ABRIU=true;goTo('explore');loadExplore();if(onde)exploreEm(onde,'');
+}
+function plnVoltarDaLista(){
+  if(PLN.montado){PLN.montado=null;PLN.montando=false;plnMontarLista();return}
+  if(PLN.montando){PLN.montando=false;plnPintarLista();return}
+  goTo('planejarEscolher');
+}
+
+// ── montar minha viagem ──
+// Começa marcado o que algum amigo já FOI e você ainda não tem: é o que a
+// lista juntada tem de mais valioso. O resto a pessoa marca.
+function plnComecarMontagem(){
+  PLN.montando=true;PLN.marcados=new Set(PLN.grupos.filter(g=>!g.meu&&g.foram.length).map(g=>g.chave));
+  plnPintarLista();window.scrollTo(0,0);
+}
+function plnMarcarSpot(i){const g=(PLN.vis||[])[i];if(!g||g.meu)return;PLN.marcados.has(g.chave)?PLN.marcados.delete(g.chave):PLN.marcados.add(g.chave);plnPintarLista()}
+function plnLugarDoGrupo(g){
+  const s=g.base;
+  const dica=g.foram.concat(g.querem).find(x=>x.user_id!==S.user.id);
+  return{name:s.name,meta:s.address||'',address:s.address||'',city:cityOf(s)||s.city||'',country:s._pais||paisDoEndereco(s.address)||'',
+    subcat:s.subcategory||'',phone:s.phone||'',photo_url:s.photo_url||'',
+    photo_author:{nome:s.photo_author||'',url:s.photo_author_url||''},
+    rating_google:s.rating_google||'',website_url:s.website_url||'',maps_url:s.maps_url||'',
+    lat:s.lat!=null?Number(s.lat):null,lng:s.lng!=null?Number(s.lng):null,
+    price_level:s.price_level!=null?s.price_level:null,
+    from_user_id:dica?dica.user_id:null};
+}
+async function plnSalvarMontagem(btn){
+  const lista=PLN.grupos.filter(g=>!g.meu&&PLN.marcados.has(g.chave));if(!lista.length)return;
+  if(btn)btn.disabled=true;
+  const salvos=[];let falhou=0,i=0;
+  // Um de cada vez: o primeiro spot de um país cria a viagem dele, e o
+  // segundo tem que encontrar essa viagem em vez de criar outra.
+  for(const g of lista){
+    i++;if(btn)btn.textContent='Salvando '+i+' de '+lista.length+'…';
+    if(statusNaMinhaLista({name:g.base.name,city:cityOf(g.base)})){continue}
+    const data=await salvarSpotDireto(plnLugarDoGrupo(g),g.base.category||'food','want','');
+    if(data&&data!=='sem_pais')salvos.push({g,data});else falhou++;
+  }
+  if(falhou)toast(falhou===1?'1 spot não salvou':falhou+' spots não salvaram','Confere a conexão e tente de novo com esses.','alert');
+  if(!salvos.length){PLN.montando=true;plnPintarLista();return}
+  PLN.montado={salvos};PLN.montando=false;
+  loadDashboard();
+  plnPintarMontado();window.scrollTo(0,0);
+}
+function plnPintarMontado(){
+  const box=document.getElementById('plnLista'),rod=document.getElementById('plnRodape');
+  const m=PLN.montado;document.getElementById('plnMandar').style.visibility='hidden';
+  const por={},ordem=[];
+  m.salvos.forEach(x=>{const t=(S.trips||[]).find(v=>v.id===x.data.trip_id);const k=x.data.trip_id||'?';
+    if(!por[k]){por[k]={trip:x.data.trip_id,nome:t?t.name:(x.g.base._pais||''),n:0};ordem.push(k)}por[k].n++});
+  PLN.viagensMontadas=ordem.map(k=>por[k]);
+  const n=m.salvos.length;
+  box.innerHTML='<div class="imp-pronto pln-pronto"><h1>'+n+(n===1?' spot na sua viagem':' spots na sua viagem')+'</h1>'
+    +'<p class="pln-sub">Estão na sua lista como Quero ir, com a dica de quem foi.</p>'
+    +PLN.viagensMontadas.map((v,i)=>'<button class="pln-viagem" onclick="plnAbrirViagemMontada('+i+')"><b>'+(plnEhPais(v.nome)?flagFor(normalizeCountry(v.nome))+' ':'')+esc(v.nome)+'</b><span>'+v.n+(v.n===1?' spot novo':' spots novos')+'</span><i>›</i></button>').join('')+'</div>';
+  rod.innerHTML='<div class="imp-botoes"><button class="exm-btn" onclick="plnMandarProGrupo(true)">Mandar pro grupo</button><button class="exm-btn exm-btn2" onclick="plnVoltarDaLista()">Voltar pra lista</button></div>';
+}
+function plnAbrirViagemMontada(i){const v=(PLN.viagensMontadas||[])[i];if(v&&v.trip)openTrip(v.trip)}
+// Manda a lista pra conversa do grupo, como texto: cidade por cidade, com
+// quem foi e a nota. Depois de montar, só o que entrou na viagem.
+function plnMandarProGrupo(soMontados){
+  const grupos=soMontados&&PLN.montado?PLN.montado.salvos.map(x=>x.g):PLN.grupos;
+  if(!grupos.length)return;
+  const por={},ordem=[];
+  grupos.forEach(g=>{const c=cityOf(g.base)||'Outros';const k=normName(c);if(!por[k]){por[k]={nome:c,l:[]};ordem.push(k)}por[k].l.push(g)});
+  const linhas=ordem.map(k=>por[k].nome+'\n'+por[k].l.map(g=>'• '+g.base.name+(g.foram.length?' — '+plnFraseForam(g):(g.querem.length?' — '+plnFraseQuerem(g):''))).join('\n')).join('\n\n');
+  const amigos=[...PLN.amigos].map(plnPrimeiro);
+  const texto='Planejando '+plnRotuloDestinos()+' com '+plnJuntar(amigos)+':\n\n'+linhas+'\n\nJuntei no Spot: '+location.origin;
+  mandarTextoPraFora(texto,'Planejando '+plnRotuloDestinos());
 }
 
 // ── 4e ficha ──
@@ -3402,7 +3501,7 @@ function plnAbrirFicha(i){
   const pessoas=g.foram.map(x=>'<div class="pln-pessoa">'+plnAvatar(x.user_id,'m')+'<div><b>'+esc(plnPrimeiro(x.user_id)+' foi'+(Number(x.my_rating)>0?' '+fmtRating(x.my_rating)+'★':''))+'</b>'
       +(String(x.my_review||'').trim()?'<p>'+esc(String(x.my_review).trim())+'</p>':'')+'</div></div>').join('')
     +g.querem.map(x=>'<div class="pln-pessoa pln-pessoa-q">'+plnAvatar(x.user_id,'m')+'<div><b>'+esc(plnPrimeiro(x.user_id))+'</b> <span>quer ir</span></div></div>').join('');
-  document.getElementById('plnFicha').innerHTML=(f?'<div class="pln-ficha-foto" id="plnFichaFoto" style="'+esc('background-image:'+cssUrl(f))+'"></div>':'')
+  document.getElementById('plnFicha').innerHTML=(f?'<div class="pln-ficha-foto" style="'+esc('background-image:'+cssUrl(f))+'"></div>':'')
     +'<h3 class="pln-ficha-n">'+esc(s.name)+'</h3><p class="pln-ficha-m">'+esc(meta.join(' · '))+'</p>'
     +pessoas
     +(meu?'<p class="pln-meu">Está na sua lista em '+esc(meu)+'.</p>'
@@ -3415,17 +3514,7 @@ async function plnSalvar(status,btn){
   const s=g.base;
   if(statusNaMinhaLista({name:s.name,city:cityOf(s)})){toast('Já está na sua lista',s.name,'check');return}
   if(btn){btn.disabled=true;btn.style.opacity='.5'}
-  const pais=paisDoEndereco(s.address)||PLN.pais;
-  // De quem veio a dica (024): o primeiro amigo que foi, senão o que quer ir.
-  const dica=g.foram.concat(g.querem).find(x=>x.user_id!==S.user.id);
-  const lugar={name:s.name,meta:s.address||'',address:s.address||'',city:cityOf(s)||s.city||'',country:pais,
-    subcat:s.subcategory||'',phone:s.phone||'',photo_url:s.photo_url||'',
-    photo_author:{nome:s.photo_author||'',url:s.photo_author_url||''},
-    rating_google:s.rating_google||'',website_url:s.website_url||'',maps_url:s.maps_url||'',
-    lat:s.lat!=null?Number(s.lat):null,lng:s.lng!=null?Number(s.lng):null,
-    price_level:s.price_level!=null?s.price_level:null,
-    from_user_id:dica?dica.user_id:null};
-  const data=await salvarSpotDireto(lugar,s.category||'food',status,'');
+  const data=await salvarSpotDireto(plnLugarDoGrupo(g),s.category||'food',status,'');
   if(btn){btn.disabled=false;btn.style.opacity=''}
   if(!data||data==='sem_pais'){toast('Não salvou','Confere a conexão e tenta de novo.','alert');return}
   closeOv('ov-pln-ficha');

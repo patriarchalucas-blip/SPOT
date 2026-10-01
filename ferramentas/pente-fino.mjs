@@ -17,13 +17,15 @@ const DB = {
     { id: 't1', user_id: EU, name: 'Portugal', destinations: ['Portugal'], dates: '', status: 'planning', initial_city: 'Lisboa', created_at: '2026-09-01' },
     { id: 't2', user_id: EU, name: 'São Paulo', destinations: ['Brasil'], dates: '__casa__', status: 'planning', initial_city: 'São Paulo', created_at: '2026-09-02' },
     { id: 'ta', user_id: ANA, name: 'portugal', destinations: ['portugal'], dates: '', status: 'planning', created_at: '2026-08-01' },
-    { id: 'tr', user_id: RAFA, name: 'Portugal', destinations: ['Portugal'], dates: '', status: 'planning', created_at: '2026-08-01' }],
+    { id: 'tr', user_id: RAFA, name: 'Portugal', destinations: ['Portugal'], dates: '', status: 'planning', created_at: '2026-08-01' },
+    { id: 'tac', user_id: ANA, name: 'São Paulo', destinations: ['São Paulo'], dates: '__casa__', status: 'planning', created_at: '2026-08-01' }],
   spots: [
     { id: 's1', user_id: EU, trip_id: 't1', name: 'Taberna da Rua das Flores', category: 'food', city: 'Lisboa', status: 'been', my_rating: 4.5, my_review: 'Petiscos', created_at: '2026-09-01' },
     { id: 's2', user_id: EU, trip_id: 't1', name: 'Majestic Café', category: 'food', city: 'Porto', status: 'want', created_at: '2026-09-01' },
     { id: 's3', user_id: EU, trip_id: 't2', name: 'Mocotó', category: 'food', city: 'São Paulo', status: 'been', my_rating: 5, created_at: '2026-09-01' },
     { id: 'a1', user_id: ANA, trip_id: 'ta', name: 'Cervejaria Ramiro', category: 'food', city: 'Lisboa', status: 'been', my_rating: 5, my_review: 'Camarão', created_at: '2026-08-01' },
-    { id: 'r1', user_id: RAFA, trip_id: 'tr', name: 'Taberna da Rua das Flores', category: 'food', city: 'Lisboa', status: 'been', my_rating: 4, created_at: '2026-08-01' }]
+    { id: 'r1', user_id: RAFA, trip_id: 'tr', name: 'Taberna da Rua das Flores', category: 'food', city: 'Lisboa', status: 'been', my_rating: 4, created_at: '2026-08-01' },
+    { id: 'a2', user_id: ANA, trip_id: 'tac', name: 'Bar da Dona Onça', category: 'food', city: 'São Paulo', address: 'Av. Ipiranga, 200 - República, São Paulo - SP, 01046-010, Brasil', status: 'been', my_rating: 5, created_at: '2026-08-01' }]
 };
 function filtra(tab, qs) {
   let l = (DB[tab] || []).slice();
@@ -90,8 +92,18 @@ await passoDe('salvar Quero ir da ficha', `(async()=>{const i=PLN.vis.findIndex(
 await passoDe('voltar à escolha', `goTo('planejarEscolher')`);
 await passoDe('escolher destino', `plnEscolherDestino()`);
 await passoDe('buscar país', `plnPintarDestinos('ital')`);
-await passoDe('definir Itália', `plnDefinirPais(0)`, 1200);
-await passoDe('lista vazia (Itália)', `plnVerLista()`, 1200);
+await passoDe('definir Itália', `plnDefinirDestino(0)`, 1200);
+await passoDe('lista com Lisboa + Itália', `plnVerLista()`, 1200);
+await passoDe('montar minha viagem', `plnComecarMontagem()`);
+await passoDe('salvar montagem', `plnSalvarMontagem(null)`, 2000);
+await passoDe('mandar pro grupo', `(()=>{window.__texto='';window.mandarTextoPraFora=async(t)=>{window.__texto=t};plnMandarProGrupo(true)})()`);
+await passoDe('voltar pra lista', `plnVoltarDaLista()`, 1200);
+await passoDe('só Itália (vazio)', `(()=>{PLN.destinos=[{tipo:'pais',nome:'Itália'}];plnVerLista()})()`, 1200);
+await passoDe('Brasil com Ana (casa SP dela)', `(()=>{PLN.destinos=[{tipo:'pais',nome:'Brasil'}];PLN.amigos=new Set(['${ANA}']);plnVerLista()})()`, 1500);
+await passoDe('Brasil: montar', `plnComecarMontagem()`);
+await passoDe('Brasil: salvar montagem', `plnSalvarMontagem(null)`, 2500);
+await passoDe('Brasil: mandar pro grupo', `(()=>{window.mandarTextoPraFora=async(t)=>{window.__texto=t};plnMandarProGrupo(true)})()`);
+console.log(await pg.evaluate(()=>window.__texto));
 await passoDe('casa: abrir viagem SP', `openTrip('t2')`, 1500);
 await passoDe('adicionar spot (busca)', `(()=>{goTo('dashboard');abrirBuscaDeSpot()})()`, 1000);
 await passoDe('digitar na busca', `(()=>{const i=document.getElementById('placeSearch');i.value='Mocotó';searchPlaces('Mocotó')})()`, 1500);
