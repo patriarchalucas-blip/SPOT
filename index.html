@@ -3869,6 +3869,14 @@ async function handleAuth(){
     showAuthErr('Não consegui falar com o servidor. Confere a conexão e tenta de novo.');
     destravar();return;
   }
+  // Falha de REDE também chega aqui, e não no catch: o SDK devolve {error}
+  // com a mensagem crua do navegador ("Load failed" no iPhone, "Failed to
+  // fetch" no Chrome), que não diz nada. Visto em 01/10 numa rede de empresa
+  // que bloqueia meuspot.app.
+  if(r.error&&(r.error.name==='AuthRetryableFetchError'||/load failed|failed to fetch|networkerror|network request failed/i.test(r.error.message||''))){
+    showAuthErr('Não consegui falar com o servidor. Confere a conexão: algumas redes de empresa ou de hotel bloqueiam o Spot. Tenta no 4G.');
+    destravar();return;
+  }
   if(r.error){showAuthErr(r.error.message);btn.disabled=false;btn.textContent=authMode==='signup'?'Criar conta':'Entrar';return}
   if(authMode==='signup'&&!r.data.session){
     // Cadastro num email que JÁ TEM conta não devolve erro: o Supabase esconde
