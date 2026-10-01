@@ -173,7 +173,7 @@ tela branca no celular. Ver na tela depende do TestFlight no iPhone do Lucas.
 
 ## Estado da App Store (01/10/2026)
 
-**1.0 APROVADA e no ar desde 01/10** (só Brasil, grátis): https://apps.apple.com/br/app/spot-seus-lugares/id6814856044 — a busca por nome leva até 1–2 dias pra indexar. **1.0.1 criada** no App Store Connect (id ) com o **nome novo "Spot: Been There"**, subtítulo "Onde ir, pelos seus amigos", palavras-chave e novidades já gravadas; **falta**: build com o logo novo (a 18 já saiu com o logo atual), teste do Lucas no TestFlight, escolher a build e mandar pra revisão. **Ainda dizem "Spot - seus lugares" e NÃO podem mudar sem cuidado:** a marca verificada no Google (tela de login — trocar pede nova verificação) e a /sobre, que precisa ter escrito o nome da marca do Google.
+**1.0 APROVADA e no ar desde 01/10** (só Brasil, grátis): https://apps.apple.com/br/app/spot-seus-lugares/id6814856044 — a busca por nome leva até 1–2 dias pra indexar. **1.0.1 criada** no App Store Connect (id `8587766a-0ea8-4ac7-be0b-31ca3d087584`) com o **nome novo "Spot: Been There"**, subtítulo "Onde ir, pelos seus amigos", palavras-chave e novidades já gravadas; **falta**: build com o logo novo (a 18 já saiu com o logo atual), teste do Lucas no TestFlight, escolher a build e mandar pra revisão. **Ainda dizem "Spot - seus lugares" e NÃO podem mudar sem cuidado:** a marca verificada no Google (tela de login — trocar pede nova verificação) e a /sobre, que precisa ter escrito o nome da marca do Google.
 
 ### Histórico (29/09/2026)
 
