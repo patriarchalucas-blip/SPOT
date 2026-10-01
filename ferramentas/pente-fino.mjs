@@ -115,6 +115,19 @@ await passoDe('voltar ao perfil', `plnVoltar()`);
 await passoDe('perfil próprio', `(async()=>{goTo('profile');await loadProfile()})()`, 2000);
 await passoDe('explorar', `(async()=>{goTo('explore');loadExplore()})()`, 2500);
 await passoDe('salvar da lista pública', `(async()=>{localStorage.setItem('spot_salvar_pendente','abcdefgh1234.11111111-2222-3333-4444-555555555555');await salvarSpotPendente()})()`, 1500);
+await passoDe('v2: 5 destinos (recolhe)', `(()=>{plnAbrir({destinos:[{tipo:'pais',nome:'Portugal'},{tipo:'cidade',nome:'Lisboa'},{tipo:'pais',nome:'Itália'},{tipo:'pais',nome:'Espanha'},{tipo:'pais',nome:'Marrocos'}],amigos:['${ANA}','${RAFA}'],volta:'dashboard'})})()`, 1500);
+await passoDe('v2: lista Todas (cidade à direita)', `plnVerLista()`, 1500);
+await passoDe('v2: montar (header Cancelar/Todos)', `plnComecarMontagem()`);
+await passoDe('v2: Todos/Nenhum', `plnTodosOuNenhum()`);
+await passoDe('v2: cancelar', `plnVoltarDaLista()`);
+await passoDe('v2: prévia pro grupo', `plnMandarProGrupo(false)`);
+await passoDe('v2: fechar prévia', `closeOv('ov-pln-mandar')`);
+await passoDe('v2: vazio com 3 destinos', `(()=>{PLN.destinos=[{tipo:'pais',nome:'Japão'},{tipo:'pais',nome:'Chile'},{tipo:'cidade',nome:'Quioto',pais:'Japão'}];plnVerLista()})()`, 1200);
+await passoDe('a2: ficha com categoria', `openPlace('s1','city')`, 1500);
+await passoDe('a2: trocar pra Ficar', `trocarCategoriaDoLugar('hotel')`, 1200);
+await passoDe('a1: nota com segmentado', `(()=>{S.addCat='food';S.addTrip=S.trips[0];S.selPlace={name:'Teste',city:'Lisboa',country:'Portugal'};resetNoteSheet();showOv('ov-note')})()`);
+await passoDe('a1: escolher Experiências', `escolherCatDaNota('experience')`);
+await passoDe('a1: fechar', `closeOv('ov-note')`);
 if (await pg.evaluate(() => typeof impAbrir === 'function')) {
   await passoDe('importar: ver se ligado', `impVerSeEstaLigado()`);
   await passoDe('importar: entrada no Adicionar', `(()=>{goTo('dashboard');abrirBuscaDeSpot()})()`);
@@ -128,7 +141,8 @@ if (await pg.evaluate(() => typeof impAbrir === 'function')) {
   await passoDe('importar: status Fui na 2a', `impStatus(1,'been')`);
   await passoDe('importar: salvar (2d)', `impSalvar()`, 3000);
   await passoDe('importar: abrir cidade', `impAbrirCidade(0)`, 1200);
-  await passoDe('importar: vazio (2e)', `(()=>{IMP.etapa='vazio';IMP.texto='oi tudo bem';goTo('importar');impPintar()})()`);
+  await passoDe('a3: viagens sem nenhum spot', `(async()=>{IMP.ligado=true;S.trips=[];window.dbGet=async()=>[];goTo('dashboard');await loadDashboard()})()`, 2000);
+await passoDe('importar: vazio (2e)', `(()=>{IMP.etapa='vazio';IMP.texto='oi tudo bem';goTo('importar');impPintar()})()`);
 }
 console.log('\nERROS (' + erros.length + '):'); erros.forEach(e => console.log(' -', e));
 await b.close();

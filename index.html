@@ -697,7 +697,42 @@ input,textarea,select{font-size:max(16px,1em)!important}
 .pln-viagem span{font-size:14px;color:var(--ink2)}
 .pln-viagem i{font-style:normal;font-size:18px;color:var(--ink3)}
 .imp-botoes{display:flex;flex-direction:column;gap:8px}
-.pln-rodape{position:fixed;left:0;right:0;bottom:0;padding:12px 20px calc(16px + env(safe-area-inset-bottom,0px));background:var(--base);z-index:20}
+/* a1/a2: categoria como segmentado (handoff 01/10) */
+.cat-bloco{display:flex;flex-direction:column;gap:8px;margin-top:16px}
+.cat-bloco:empty{display:none}
+.cat-rot{display:flex;justify-content:space-between;align-items:baseline}
+.cat-rot b{font-size:15px;font-weight:600;color:var(--ink)}
+.cat-rot span{font-size:14px;color:var(--ink3)}
+.cat-seg{display:flex;gap:3px;height:40px;padding:3px;border-radius:10px;background:var(--surface)}
+.cat-seg button{flex:1;min-width:0;border:none;border-radius:8px;background:none;font:inherit;font-size:15px;color:var(--ink2);cursor:pointer;white-space:nowrap}
+.cat-seg button.on{background:var(--base);color:var(--ink);font-weight:600}
+.fi-cat{margin:20px 0 4px}
+#noteCat.cat-bloco{margin:16px 20px 0}
+#place.previa .fi-cat{display:none}
+/* a3: Viagens sem nenhum spot */
+.vg-primeiro{padding:8px 0 24px}
+.vg-primeiro h2{margin:0;font-size:26px;font-weight:700;letter-spacing:-.03em}
+.vg-primeiro p{margin:6px 0 0;font-size:15px;line-height:1.45;color:var(--ink2)}
+.vg-primeiro .vg-nota{margin-top:10px;font-size:14px;color:var(--ink3)}
+/* Planejar v2 */
+.pln-dest-linha{min-height:44px}
+.pln-dest-resumo{display:flex;align-items:center;gap:8px;width:100%;min-height:44px;padding:0 14px;border:none;background:none;font:inherit;font-size:15px;color:var(--ink2);text-align:left;cursor:pointer}
+.pln-dest-resumo span{flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.pln-dest-resumo i{flex:none;font-style:normal;color:var(--ink3)}
+.pln-topo-montar{grid-template-columns:auto 1fr auto}
+.pln-topo .pln-txt-btn{width:auto;padding:0 12px;font:inherit;font-size:16px;color:var(--ink2)}
+.pln-sub-montar{margin-top:4px}
+.pln-check-vazio{flex:none;width:24px;height:24px;margin-top:20px}
+.pln-explorar{display:flex;align-items:center;gap:12px;width:100%;min-height:56px;padding:0;border:none;background:none;font:inherit;text-align:left;color:var(--ink);cursor:pointer}
+.pln-explorar-ic{flex:none;width:24px;font-size:20px;display:flex;justify-content:center;color:var(--ink3)}
+.pln-explorar-ic svg{width:18px;height:18px}
+.pln-explorar b{flex:1;font-size:17px;font-weight:600}
+.pln-explorar i{font-style:normal;font-size:18px;color:var(--ink3)}
+.pln-previa{margin-top:4px;padding:16px;border-radius:var(--r-card);background:var(--surface);font-size:15px;line-height:1.5;white-space:pre-wrap;overflow-wrap:anywhere;max-height:50vh;overflow:auto}
+.pln-pronto .pln-avs{margin-bottom:12px}
+#planejar .pln-corpo{padding-bottom:110px}
+.pln-rodape{position:fixed;left:0;right:0;bottom:0;padding:12px 20px max(34px,env(safe-area-inset-bottom,0px));background:var(--base);z-index:20}
+.pln-rodape:empty{display:none}
 .pln-rodape .exm-btn:disabled{opacity:.35}
 .pln-avs-m{margin-top:8px}
 .pln-titulo{margin:12px 0 0;font-size:30px;font-weight:700;letter-spacing:-.04em;line-height:1.05;color:var(--green);overflow-wrap:anywhere}
@@ -2357,7 +2392,7 @@ body.exm .exm-filtros{position:relative;z-index:1}
 <div class="screen" id="planejarEscolher">
   <div class="pln-topo"><button onclick="plnVoltar()" data-ic="back" aria-label="Voltar"></button><div class="pln-topo-t">Planejar com amigos</div><span></span></div>
   <div class="pln-corpo">
-    <div class="pln-rot">Para onde</div>
+    <div class="pln-rot">Para onde<small id="plnNDest"></small></div>
     <div class="pln-destinos" id="plnDestinosEscolhidos"></div>
     <div class="pln-rot">Quem vai junto<small id="plnEscolhidos"></small></div>
     <label class="am-cid-busca pln-busca"><span class="am-cid-lupa" data-ic="search"></span><input id="plnBusca" type="text" placeholder="Buscar amigo" autocomplete="off" autocorrect="off" spellcheck="false" oninput="plnBuscar(this.value)"></label>
@@ -2367,7 +2402,8 @@ body.exm .exm-filtros{position:relative;z-index:1}
 </div>
 
 <div class="screen" id="planejar">
-  <div class="pln-topo"><button onclick="plnVoltarDaLista()" data-ic="back" aria-label="Voltar"></button><span></span><button id="plnMandar" onclick="plnMandarProGrupo(false)" data-ic="share" aria-label="Mandar a lista pro grupo" style="visibility:hidden"></button></div>
+  <div class="pln-topo" id="plnTopoLista"><button onclick="plnVoltarDaLista()" data-ic="back" aria-label="Voltar"></button><span></span><button id="plnMandar" onclick="plnMandarProGrupo(false)" data-ic="share" aria-label="Mandar a lista pro grupo" style="visibility:hidden"></button></div>
+  <div class="pln-topo pln-topo-montar" id="plnTopoMontar" style="display:none"><button class="pln-txt-btn" onclick="plnVoltarDaLista()">Cancelar</button><div class="pln-topo-t">Montar minha viagem</div><button class="pln-txt-btn" id="plnTodos" onclick="plnTodosOuNenhum()">Todos</button></div>
   <div class="pln-corpo" id="plnLista"></div>
   <div class="pln-rodape" id="plnRodape"></div>
 </div>
@@ -2466,6 +2502,8 @@ body.exm .exm-filtros{position:relative;z-index:1}
 
     <div class="fi-acoes" id="placeReserveWrap"></div>
 
+    <div class="cat-bloco fi-cat" id="placeCat"></div>
+
     <div class="fi-endereco" id="placeInfoGrid"></div>
 
     <div class="fi-amigos">
@@ -2487,6 +2525,8 @@ body.exm .exm-filtros{position:relative;z-index:1}
 <div class="overlay" id="ov-pln-ficha" onclick="closeOut(event,'ov-pln-ficha')"><div class="sheet pln-folha"><button class="sheet-close" onclick="closeOv('ov-pln-ficha')" data-ic="close" aria-label="Fechar"></button><div class="sheet-handle"></div><div class="pln-folha-corpo" id="plnFicha"></div></div></div>
 <div class="overlay" id="ov-imp-troca" onclick="closeOut(event,'ov-imp-troca')"><div class="sheet pln-folha"><button class="sheet-close" onclick="closeOv('ov-imp-troca')" data-ic="close" aria-label="Fechar"></button><div class="sheet-handle"></div>
 <div class="pln-folha-corpo"><h3>Qual é o lugar?</h3><form class="am-cid-busca" onsubmit="event.preventDefault();impTrocaBuscar()"><span class="am-cid-lupa" data-ic="search"></span><input id="impTrocaBusca" type="search" enterkeyhint="search" placeholder="Nome e cidade" autocomplete="off" autocorrect="off" spellcheck="false"></form><div id="impTrocaLista"></div><button class="imp-nenhum" onclick="impNenhumDesses()">Não é nenhum desses</button></div></div></div>
+<div class="overlay" id="ov-pln-mandar" onclick="closeOut(event,'ov-pln-mandar')"><div class="sheet pln-folha"><button class="sheet-close" onclick="closeOv('ov-pln-mandar')" data-ic="close" aria-label="Fechar"></button><div class="sheet-handle"></div>
+<div class="pln-folha-corpo"><h3>Mandar pro grupo</h3><div class="pln-previa" id="plnPrevia"></div><p class="pln-sub" id="plnPreviaNota">Vão até 3 spots por cidade e as 4 primeiras cidades.</p><button class="exm-btn" style="margin-top:16px" id="plnPreviaMandar">Compartilhar</button></div></div></div>
 <div class="overlay" id="ov-compartilhar" onclick="closeOut(event,'ov-compartilhar')"><div class="sheet ocp"><button class="sheet-close" onclick="closeOv('ov-compartilhar')" data-ic="close" aria-label="Fechar"></button><div class="sheet-handle"></div>
 <div class="ocp-corpo"><h3 id="ocpTitulo">Compartilhar</h3><p id="ocpTexto">Quem abrir o link vê os seus spots, com a nota e a frase de cada um — sem precisar de conta.</p>
 <div class="ocp-link" id="ocpLink"></div>
@@ -2496,8 +2536,9 @@ body.exm .exm-filtros{position:relative;z-index:1}
 
 <div class="overlay" id="ov-search" onclick="closeOut(event,'ov-search')"><div class="sheet sheet-fixa"><button class="sheet-close" onclick="closeOv('ov-search')" data-ic="close" aria-label="Fechar"></button><div class="sheet-handle"></div><div class="sheet-title">Buscar lugar</div><div class="step-dots"><div class="step-dot active"></div><div class="step-dot"></div></div><div class="search-wrap"><div class="search-field"><span class="si" data-ic="search"></span><input class="search-input" autocomplete="off" autocorrect="off" spellcheck="false" id="placeSearch" placeholder="Nome do lugar..." oninput="searchPlaces(this.value)"></div></div><button class="imp-entrada" id="impEntrada" style="display:none" onclick="impAbrir('')"><span class="imp-entrada-ic" data-ic="menu"></span><span class="imp-t"><b>Colar uma lista</b><span>Notas ou conversa com vários lugares</span></span><span class="imp-seta">›</span></button><div class="search-powered"><span>Resultados via</span><strong>Google Places</strong></div><div class="lista-rolante" id="searchResults"><div class="search-loading">Digite para buscar...</div></div></div></div>
 
-<div class="overlay" id="ov-note" onclick="closeOut(event,'ov-note')"><div class="sheet"><button class="sheet-close" onclick="closeOv('ov-note')" data-ic="close" aria-label="Fechar"></button><div class="sheet-handle"></div><div class="sheet-title">Adicionar spot</div><div class="note-place-row"><div class="note-place-icon" id="selIcon" data-ic="food"></div><div><div class="note-place-name" id="selName"></div><div class="note-place-meta" id="selMeta"></div></div></div><div class="coz-linha nota-cat" id="noteCat"></div><button class="nota-foto" id="noteFotoBtn" onclick="document.getElementById('noteFotoInput').click()">Adicionar sua foto</button><input type="file" id="noteFotoInput" accept="image/*" style="display:none" onchange="onNoteFotoChosen(this)">
+<div class="overlay" id="ov-note" onclick="closeOut(event,'ov-note')"><div class="sheet"><button class="sheet-close" onclick="closeOv('ov-note')" data-ic="close" aria-label="Fechar"></button><div class="sheet-handle"></div><div class="sheet-title">Adicionar spot</div><div class="note-place-row"><div class="note-place-icon" id="selIcon" data-ic="food"></div><div><div class="note-place-name" id="selName"></div><div class="note-place-meta" id="selMeta"></div></div></div><button class="nota-foto" id="noteFotoBtn" onclick="document.getElementById('noteFotoInput').click()">Adicionar sua foto</button><input type="file" id="noteFotoInput" accept="image/*" style="display:none" onchange="onNoteFotoChosen(this)">
 <div class="status-choice"><button class="status-opt active" id="stWant" onclick="setSpotStatus('want')"><div class="so-emoji" data-ic="bookmark"></div><div class="so-label">Quero ir</div></button><button class="status-opt" id="stBeen" onclick="setSpotStatus('been')"><div class="so-emoji" data-ic="check"></div><div class="so-label">Já fui</div></button></div>
+<div class="cat-bloco" id="noteCat"></div>
 <div id="subcatRow" style="display:none"><div class="note-label">Que tipo de experiência?</div><div class="subcat-row" id="subcatChips"></div></div>
 <div id="ratingRow" style="display:none"><div class="note-label">Sua avaliação</div><div class="stars-row" id="addStars"><button class="star-btn" onclick="setAddRating(1,event)" aria-label="Dar nota 1"><span class="st-base" data-ic="star"></span><span class="st-fill" data-ic="star"></span></button><button class="star-btn" onclick="setAddRating(2,event)" aria-label="Dar nota 2"><span class="st-base" data-ic="star"></span><span class="st-fill" data-ic="star"></span></button><button class="star-btn" onclick="setAddRating(3,event)" aria-label="Dar nota 3"><span class="st-base" data-ic="star"></span><span class="st-fill" data-ic="star"></span></button><button class="star-btn" onclick="setAddRating(4,event)" aria-label="Dar nota 4"><span class="st-base" data-ic="star"></span><span class="st-fill" data-ic="star"></span></button><button class="star-btn" onclick="setAddRating(5,event)" aria-label="Dar nota 5"><span class="st-base" data-ic="star"></span><span class="st-fill" data-ic="star"></span></button></div></div>
 <div class="note-label">Sua nota <span style="color:var(--ink3);font-weight:400">(opcional)</span></div><div class="note-wrap"><textarea class="note-input" id="noteField" rows="2" placeholder="Por que esse lugar te chamou atenção?"></textarea></div>
@@ -2515,7 +2556,7 @@ body.exm .exm-filtros{position:relative;z-index:1}
 <div class="overlay" id="ov-menulugar" onclick="closeOut(event,'ov-menulugar')"><div class="sheet"><div class="sheet-handle"></div><div class="fi-menunome" id="fiMenuNome"></div>
 <div class="prof-linha" onclick="closeOv('ov-menulugar');compartilharLugar()"><span class="pl-ic" data-ic="share"></span><span class="pl-txt">Compartilhar spot</span></div>
 <div class="prof-linha" onclick="closeOv('ov-menulugar');document.getElementById('spotPhotoFileInput').click()"><span class="pl-ic" data-ic="edit"></span><span class="pl-txt">Trocar foto</span></div>
-<div class="prof-linha" onclick="closeOv('ov-menulugar');abrirTrocaDeCategoria()"><span class="pl-ic" data-ic="compass"></span><span class="pl-txt">Mudar categoria</span></div>
+
 <div class="prof-linha" onclick="closeOv('ov-menulugar');deleteSpot()"><span class="pl-ic" data-ic="trash"></span><span class="pl-txt" style="color:var(--ink3)">Excluir spot</span></div>
 <div style="height:14px"></div></div></div>
 
@@ -3321,8 +3362,14 @@ function plnAbrir(o){
 function plnVoltar(){goTo(PLN.volta||'dashboard')}
 async function plnPintarEscolha(){
   const box0=document.getElementById('plnDestinosEscolhidos');
-  box0.innerHTML=PLN.destinos.map((d,i)=>'<div class="pln-dest-linha"><span class="pln-dest-n">'+(d.tipo==='pais'?flagFor(d.nome)+' ':'')+esc(d.nome)+'</span><span class="pln-dest-tipo">'+(d.tipo==='pais'?'país':'cidade')+'</span><button class="pln-dest-x" onclick="plnTirarDestino('+i+')" aria-label="Tirar '+esc(d.nome)+'">✕</button></div>').join('')
-    +'<button class="pln-dest-add" onclick="plnEscolherDestino()">'+(PLN.destinos.length?'+ Outro país ou cidade':'Escolha países ou cidades')+'</button>';
+  const ds=PLN.destinos,recolher=ds.length>=5&&!PLN.destExpandido;
+  const linha=(d,i)=>'<div class="pln-dest-linha"><span class="pln-dest-n">'+(d.tipo==='pais'?flagFor(d.nome)+' ':'')+esc(d.nome)+'</span><span class="pln-dest-tipo">'+(d.tipo==='pais'?'país':'cidade')+'</span><button class="pln-dest-x" onclick="plnTirarDestino('+i+')" aria-label="Tirar '+esc(d.nome)+'">✕</button></div>';
+  const resto=ds.slice(3).map(d=>d.nome);
+  box0.innerHTML=(recolher?ds.slice(0,3).map(linha).join('')
+      +'<button class="pln-dest-resumo" onclick="PLN.destExpandido=true;plnPintarEscolha()"><span>'+esc(resto.length<=2?plnJuntar(resto):resto.slice(0,2).join(', ')+' e mais '+(resto.length-2))+'</span><i>ver todos</i></button>'
+    :ds.map(linha).join(''))
+    +'<button class="pln-dest-add" onclick="plnEscolherDestino()">'+(ds.length?'+ Outro país ou cidade':'Escolha países ou cidades')+'</button>';
+  document.getElementById('plnNDest').textContent=ds.length>1?ds.length+' destinos':'';
   const n=PLN.amigos.size;
   document.getElementById('plnEscolhidos').textContent=n?(n===1?'1 escolhido':n+' escolhidos'):'';
   document.getElementById('plnVer').disabled=!(PLN.destinos.length&&n);
@@ -3401,17 +3448,24 @@ async function plnMontarLista(){
 function plnPintarLista(){
   const box=document.getElementById('plnLista'),rod=document.getElementById('plnRodape');
   const eu=S.user.id,amigos=[...PLN.amigos],onde=plnRotuloDestinos();
+  // v2c: no modo Montar o cabeçalho vira Cancelar · título · Todos/Nenhum.
+  document.getElementById('plnTopoLista').style.display=PLN.montando?'none':'';
+  document.getElementById('plnTopoMontar').style.display=PLN.montando?'':'none';
   if(PLN.montado)return plnPintarMontado();
   const grupos=PLN.grupos;
-  const cab='<span class="pln-avs pln-avs-m">'+[eu].concat(amigos).slice(0,5).map(id=>plnAvatar(id,'m')).join('')+'</span>'
-    +'<h1 class="pln-titulo">'+esc(onde+' com '+plnNomesCurtos(amigos))+'</h1>';
+  const avs='<span class="pln-avs pln-avs-m">'+[eu].concat(amigos).slice(0,5).map(id=>plnAvatar(id,'m')).join('')+'</span>';
+  const cab=avs+'<h1 class="pln-titulo">'+esc(onde+' com '+plnNomesCurtos(amigos))+'</h1>';
   document.getElementById('plnMandar').style.visibility=grupos.length&&!PLN.montando?'visible':'hidden';
   if(!grupos.length){
-    box.innerHTML=cab+'<div class="pln-vazio"><h2>Ninguém salvou nada aqui ainda</h2>'
-      +'<p>Quando '+esc(plnJuntar(['você'].concat(amigos.map(plnPrimeiro))).replace(/ e ([^,]+)$/,' ou $1'))+' salvarem spots lá, eles aparecem aqui.</p>'
-      +'<button class="exm-btn" onclick="plnExplorar()">Explorar '+esc(PLN.destinos[0].nome)+'</button>'
-      +(IMP.ligado?'<button class="exm-btn exm-btn2" style="margin-top:8px" onclick="impAbrir(\'\')">Colar uma lista</button>':'')+'</div>';
-    rod.innerHTML='';hydrateIcons(box);return;
+    // v2f: com vários destinos, uma linha "Explorar {destino}" por destino.
+    const ds=PLN.destinos;
+    const corpoVazio=ds.length===1
+      ?'<button class="exm-btn" onclick="plnExplorar(0)">Explorar '+esc(ds[0].nome)+'</button>'
+      :ds.slice(0,4).map((d,i)=>'<button class="pln-explorar" onclick="plnExplorar('+i+')"><span class="pln-explorar-ic">'+(d.tipo==='pais'?flagFor(d.nome):icon('pin'))+'</span><b>Explorar '+esc(d.nome)+'</b><i>›</i></button>').join('')
+        +(ds.length>4?'<p class="pln-sub">e mais '+(ds.length-4)+'</p>':'');
+    box.innerHTML=cab+'<div class="pln-vazio"><h2>Ninguém salvou nada lá ainda</h2><p>Comece explorando um dos destinos.</p>'+corpoVazio+'</div>';
+    rod.innerHTML=IMP.ligado?'<button class="exm-btn exm-btn2" onclick="impAbrir(\'\')">Colar uma lista</button>':'';
+    hydrateIcons(box);return;
   }
   const cidades={};grupos.forEach(g=>{const c=cityOf(g.base)||'';if(c){const k=normName(c);cidades[k]=cidades[k]||{nome:c,n:0};cidades[k].n++}});
   const listaCid=Object.values(cidades).sort((a,b)=>b.n-a.n);
@@ -3428,6 +3482,9 @@ function plnPintarLista(){
   const comAbas=listaCid.length>1&&grupos.length>=10;
   if(comAbas&&PLN.abaCidade&&!listaCid.some(c=>c.nome===PLN.abaCidade))PLN.abaCidade='';
   let vis=comAbas&&PLN.abaCidade?grupos.filter(g=>mesmoLugar(cityOf(g.base)||'',PLN.abaCidade)):grupos;
+  // v2b: em "Todas" (várias cidades misturadas), a cidade vai à direita no
+  // lugar da categoria; com uma cidade só, volta a categoria.
+  PLN.mostrarCidade=listaCid.length>1&&!PLN.abaCidade;
   const abas=comAbas?'<div class="pln-abas"><div class="cat-tab'+(PLN.abaCidade?'':' active')+'" onclick="plnAba(-1)">Todas<span class="ct-count">'+grupos.length+'</span></div>'
     +listaCid.map((c,i)=>'<div class="cat-tab'+(c.nome===PLN.abaCidade?' active':'')+'" onclick="plnAba('+i+')">'+esc(c.nome)+'<span class="ct-count">'+c.n+'</span></div>').join('')+'</div>':'';
   PLN.abasCid=listaCid.map(c=>c.nome);
@@ -3439,18 +3496,25 @@ function plnPintarLista(){
     +cats.map(x=>'<button class="pln-cat'+(PLN.cat===x.c?' on':'')+'" onclick="plnCat(\''+x.c+'\')">'+nomeCat[x.c]+' '+x.n+'</button>').join('')+'</div>':'';
   PLN.vis=vis;
   const topo=PLN.montando
-    ?'<h1 class="pln-titulo">Montar minha viagem</h1><p class="pln-sub">Marque o que entra. Vai pra sua lista como Quero ir, na viagem de cada país.</p>'
+    ?'<p class="pln-sub pln-sub-montar">Marque o que entra. Vai pra sua lista como Quero ir, na viagem de cada país.</p>'
     :cab+'<p class="pln-sub">'+esc(sub)+'</p>'+aviso;
   box.innerHTML=topo+abas+linhaCats+'<div class="pln-lista">'+vis.map((g,i)=>plnLinha(g,i)).join('')+'</div>';
   hydrateIcons(box);
-  const novos=grupos.filter(g=>!g.meu).length;
+  const novos=grupos.filter(g=>!g.meu);
   if(PLN.montando){
-    const n=grupos.filter(g=>!g.meu&&PLN.marcados.has(g.chave)).length;
+    const n=novos.filter(g=>PLN.marcados.has(g.chave)).length;
+    document.getElementById('plnTodos').textContent=n===novos.length&&n?'Nenhum':'Todos';
     rod.innerHTML='<button class="exm-btn" onclick="plnSalvarMontagem(this)"'+(n?'':' disabled')+'>'+(n?'Salvar '+n+(n===1?' spot':' spots')+' na minha viagem':'Nada marcado')+'</button>';
-  }else rod.innerHTML=novos?'<button class="exm-btn" onclick="plnComecarMontagem()">Montar minha viagem</button>':'';
+  }else rod.innerHTML=novos.length?'<button class="exm-btn" onclick="plnComecarMontagem()">Montar minha viagem</button>':'';
+}
+function plnTodosOuNenhum(){
+  const novos=PLN.grupos.filter(g=>!g.meu);
+  const todos=novos.length&&novos.every(g=>PLN.marcados.has(g.chave));
+  PLN.marcados=new Set(todos?[]:novos.map(g=>g.chave));
+  plnPintarLista();
 }
 function plnLinha(g,i){
-  const s=g.base,f=safeUrl(fotoNaLargura(s.photo_url||'',200)),tipo=plnTipo(s);
+  const s=g.base,f=safeUrl(fotoNaLargura(s.photo_url||'',200)),tipo=PLN.mostrarCidade?(cityOf(s)||''):plnTipo(s);
   const soQuerem=!g.foram.length&&g.querem.some(x=>x.user_id===S.user.id);
   const foram=g.foram.length?'<span class="pln-foram">'+esc(plnFraseForam(g))+'</span>':'';
   const querem=g.querem.length?'<span class="'+(soQuerem?'pln-foram':'pln-querem')+'">'+esc(plnFraseQuerem(g))+'</span>':'';
@@ -3463,7 +3527,7 @@ function plnLinha(g,i){
   if(PLN.montando){
     const on=!g.meu&&PLN.marcados.has(g.chave);
     return '<div class="pln-linha'+(g.meu?' pln-off':'')+'">'
-      +'<button class="pln-check'+(on?' on':'')+'" onclick="plnMarcarSpot('+i+')"'+(g.meu?' disabled':'')+' aria-label="'+(on?'Desmarcar':'Marcar')+'">'+(on?icon('check'):'')+'</button>'
+      +(g.meu?'<span class="pln-check-vazio"></span>':'<button class="pln-check'+(on?' on':'')+'" onclick="plnMarcarSpot('+i+')" aria-label="'+(on?'Desmarcar':'Marcar')+'">'+(on?icon('check'):'')+'</button>')
       +foto+corpo+'</div>';
   }
   return '<button class="pln-linha" onclick="plnAbrirFicha('+i+')">'+foto+corpo+'</button>';
@@ -3476,8 +3540,8 @@ function plnFotoFalhou(img,i){
 }
 function plnAba(i){PLN.abaCidade=i<0?'':((PLN.abasCid||[])[i]||'');PLN.cat='';plnPintarLista()}
 function plnCat(c){PLN.cat=c;plnPintarLista()}
-function plnExplorar(){
-  const onde=PLN.destinos[0]?PLN.destinos[0].nome:'';
+function plnExplorar(i){
+  const d=PLN.destinos[i||0];const onde=d?d.nome:'';
   EXPLORE_ABRIU=true;goTo('explore');loadExplore();if(onde)exploreEm(onde,'');
 }
 function plnVoltarDaLista(){
@@ -3531,7 +3595,7 @@ function plnPintarMontado(){
     if(!por[k]){por[k]={trip:x.data.trip_id,nome:t?t.name:(x.g.base._pais||''),n:0};ordem.push(k)}por[k].n++});
   PLN.viagensMontadas=ordem.map(k=>por[k]);
   const n=m.salvos.length;
-  box.innerHTML='<div class="imp-pronto pln-pronto"><h1>'+n+(n===1?' spot na sua viagem':' spots na sua viagem')+'</h1>'
+  box.innerHTML='<div class="imp-pronto pln-pronto"><span class="pln-avs pln-avs-m">'+[S.user.id].concat([...PLN.amigos]).slice(0,5).map(id=>plnAvatar(id,'m')).join('')+'</span><h1>'+n+(n===1?' spot na sua viagem':' spots na sua viagem')+'</h1>'
     +'<p class="pln-sub">Estão na sua lista como Quero ir, com a dica de quem foi.</p>'
     +PLN.viagensMontadas.map((v,i)=>'<button class="pln-viagem" onclick="plnAbrirViagemMontada('+i+')"><b>'+(plnEhPais(v.nome)?flagFor(normalizeCountry(v.nome))+' ':'')+esc(v.nome)+'</b><span>'+v.n+(v.n===1?' spot novo':' spots novos')+'</span><i>›</i></button>').join('')+'</div>';
   rod.innerHTML='<div class="imp-botoes"><button class="exm-btn" onclick="plnMandarProGrupo(true)">Mandar pro grupo</button><button class="exm-btn exm-btn2" onclick="plnVoltarDaLista()">Voltar pra lista</button></div>';
@@ -3539,17 +3603,33 @@ function plnPintarMontado(){
 function plnAbrirViagemMontada(i){const v=(PLN.viagensMontadas||[])[i];if(v&&v.trip)openTrip(v.trip)}
 // Manda a lista pra conversa do grupo, como texto: cidade por cidade, com
 // quem foi e a nota. Depois de montar, só o que entrou na viagem.
+function plnTextoProGrupo(grupos){
+  const por={},ordem=[];
+  grupos.forEach(g=>{const c=cityOf(g.base)||'Outros';const k=normName(c);if(!por[k]){por[k]={nome:c,l:[]};ordem.push(k)}por[k].l.push(g)});
+  const POR_CIDADE=3,CIDADES=4;
+  let cabem=0;
+  const blocos=ordem.slice(0,CIDADES).map(k=>{const l=por[k].l.slice(0,POR_CIDADE);cabem+=l.length;
+    return por[k].nome+'\n'+l.map(g=>'• '+g.base.name+': '+plnFraseCurta(g)).join('\n')});
+  const sobra=grupos.length-cabem;
+  const amigos=[...PLN.amigos].map(plnPrimeiro);
+  const fim=(sobra>0?'+ '+sobra+(sobra===1?' spot':' spots')+' no Spot: ':'No Spot: ')+location.host;
+  return{texto:'Planejando '+plnRotuloDestinos()+' com '+plnJuntar(amigos)+':\n\n'+blocos.join('\n\n')+'\n\n'+fim,cortou:sobra>0};
+}
+// "Rafa foi, 5★" · "Rafa foi, 5★ · Ana foi" · "Ana quer ir"
+function plnFraseCurta(g){
+  if(g.foram.length)return g.foram.map(s=>plnPrimeiro(s.user_id)+' foi'+(Number(s.my_rating)>0?', '+fmtRating(s.my_rating)+'★':'')).join(' · ');
+  return plnFraseQuerem(g);
+}
 function plnMandarProGrupo(soMontados){
   const grupos=soMontados&&PLN.montado?PLN.montado.salvos.map(x=>x.g):PLN.grupos;
   if(!grupos.length)return;
-  const por={},ordem=[];
-  grupos.forEach(g=>{const c=cityOf(g.base)||'Outros';const k=normName(c);if(!por[k]){por[k]={nome:c,l:[]};ordem.push(k)}por[k].l.push(g)});
-  const linhas=ordem.map(k=>por[k].nome+'\n'+por[k].l.map(g=>'• '+g.base.name+(g.foram.length?' — '+plnFraseForam(g):(g.querem.length?' — '+plnFraseQuerem(g):''))).join('\n')).join('\n\n');
-  const amigos=[...PLN.amigos].map(plnPrimeiro);
-  const texto='Planejando '+plnRotuloDestinos()+' com '+plnJuntar(amigos)+':\n\n'+linhas+'\n\nJuntei no Spot: '+location.origin;
-  mandarTextoPraFora(texto,'Planejando '+plnRotuloDestinos());
+  const{texto,cortou}=plnTextoProGrupo(grupos);
+  document.getElementById('plnPrevia').textContent=texto;
+  document.getElementById('plnPreviaNota').style.display=cortou?'':'none';
+  // O toque em "Compartilhar" é o que o iPhone exige pra abrir a folha nativa.
+  document.getElementById('plnPreviaMandar').onclick=()=>{closeOv('ov-pln-mandar');mandarTextoPraFora(texto,'Planejando '+plnRotuloDestinos())};
+  showOv('ov-pln-mandar');
 }
-
 // ── 4e ficha ──
 function plnAbrirFicha(i){
   const g=(PLN.vis||[])[i];if(!g)return;
@@ -3606,6 +3686,7 @@ async function impVerSeEstaLigado(){
     IMP.ligado=!!(d&&d.ligado);
   }catch(e){IMP.ligado=false}
   const el=document.getElementById('impEntrada');if(el)el.style.display=IMP.ligado?'':'none';
+  if(IMP.ligado&&S.user&&!allSpotsFlat().length){try{loadDashboard()}catch(e){}}
 }
 function impAbrir(texto){
   if(!IMP.ligado)return;
@@ -5095,6 +5176,15 @@ function renderTrips(){
   const casa=cardDeCasa();
   if(casa)pintarFotoDeCasa();
   const titulo='<div class="section-head"><span class="section-title">Viagens</span></div>';
+  if(!visibleTrips.length&&!allSpotsFlat().length){
+    // a3 (handoff 01/10): conta sem nenhum spot. O "Colar uma lista" só
+    // aparece com a IA ligada no servidor.
+    c.innerHTML=casa+'<div class="vg-primeiro"><h2>Seu primeiro spot</h2><p>Salve um lugar que você indicaria pra qualquer amigo.</p>'
+      +'<button class="btn-primario btn-largo" onclick="comecarSpotSemViagem()">Adicionar spot</button>'
+      +(IMP.ligado?'<button class="exm-btn exm-btn2" style="margin-top:8px" onclick="impAbrir(\'\')">Colar uma lista do celular</button>'
+        +'<p class="vg-nota">Notas, WhatsApp, Instagram: cole o texto e o Spot encontra os lugares.</p>':'')+'</div>';
+    darDadosDeViagens();return;
+  }
   if(!visibleTrips.length){
     const cidade=(S.profile&&S.profile.home_city)||'';
     c.innerHTML=casa+titulo+'<p class="vg-vazio">'+(cidade?'Salve um lugar fora de '+esc(cidade)+' e a viagem aparece aqui sozinha.':'Salve o primeiro spot e a viagem aparece aqui sozinha.')+'</p>'
@@ -5186,6 +5276,7 @@ function darDadosDeViagens(){
     casa:(function(){const r=resumoDeCasa();if(!r)return null;
       return{cidade:r.cidade,meta:r.meta,foto:FOTO_DE_CASA?fotoPraCasca(safeUrl(FOTO_DE_CASA)):'',
         cores:coresDoGradiente((S.profile&&S.profile.home_country)||'')}})(),
+    primeiro:!allSpotsFlat().length?{ia:!!(typeof IMP!=='undefined'&&IMP.ligado)}:null,
     vazioTexto:(S.profile&&S.profile.home_city)
       ?'Salve um lugar fora de '+S.profile.home_city+' e a viagem aparece aqui sozinha.'
       :'Salve o primeiro spot e a viagem aparece aqui sozinha.',
@@ -5232,6 +5323,7 @@ window.acaoDeViagens=function(acao,valor){
   // O mesmo que o botao + do site faz: escolher categoria e cair no fluxo
   // normal de adicionar lugar, que cria a viagem sozinho se precisar.
   if(acao==='novoLugar'){comecarSpotSemViagem();return}
+  if(acao==='importar'){impAbrir('');return}
   if(acao==='checkinAdd'){checkinAdd();return}
   if(acao==='checkinIgnorar'){checkinIgnore();return}
   if(acao==='mapa'){abrirMapaMundi('dashboard');return}
@@ -6085,6 +6177,8 @@ function desenharFichaDoLugar(s){
   pintarEstrelas('#placeStars',notaDaFicha);
   setStatus(s.status||'want',false);
   renderPlaceLinks(s);
+  const pc=document.getElementById('placeCat');
+  if(pc)pc.innerHTML=blocoDeCategoria(s.category||'food','aba da cidade','trocarCategoriaDoLugar');
   desenharEnderecoDoLugar(s);
 }
 
@@ -6450,18 +6544,24 @@ function abrirTrocaDeCategoria(){
   showOv('ov-cat');
 }
 let trocandoCategoria=false;
+// Otimista (a2): pinta na hora e grava depois; se o banco recusar, volta.
 async function trocarCategoriaDoLugar(cat){
   const s=S.curPlace;if(!s)return;
-  const anterior=s.category;
+  const anterior=s.category,tipoAntes=s.place_type;
   if(cat===anterior){closeOv('ov-cat');return}
-  const{error}=await dbUpdate('spots',s.id,{category:cat,place_type:catLabel(cat)});
-  if(error){toast('Não salvou','Confere a conexão e tenta de novo.','alert');return}
   s.category=cat;s.place_type=catLabel(cat);
   closeOv('ov-cat');
   desenharFichaDoLugar(s);
-  if(document.getElementById('city').classList.contains('active')){renderCitySubcatFilter();renderCityBody()}
+  const naCidade=()=>{if(document.getElementById('city').classList.contains('active')){renderCitySubcatFilter();renderCityBody()}};
+  naCidade();
+  const{error}=await dbUpdate('spots',s.id,{category:cat,place_type:catLabel(cat)});
+  if(error){
+    s.category=anterior;s.place_type=tipoAntes;
+    if(S.curPlace===s)desenharFichaDoLugar(s);
+    naCidade();
+    toast('Não salvou','Confere a conexão e tenta de novo.','alert');
+  }
 }
-
 // ═══ ADD SPOT FLOW ═══
 // Abre "Em qual viagem?" sabendo o que ja veio pronto.
 //
@@ -9270,18 +9370,28 @@ function pickAddSubcat(k){
   renderSubcatChips();
 }
 const ROTULO_CAT={food:'Comer e beber',hotel:'Ficar',experience:'Experiências'};
+// a1 (handoff 01/10): a categoria virou um segmentado logo abaixo do status,
+// com "Aparece em" — a linha "Comer ▾" parecia rótulo, e ninguém tocava.
+// O valor inicial continua sendo o do Google ("escolhido pelo Google" some
+// quando a pessoa troca); não voltamos a perguntar "Qual categoria?".
+function blocoDeCategoria(atual,dica,aoTocar){
+  return '<div class="cat-rot"><b>Aparece em</b>'+(dica?'<span>'+esc(dica)+'</span>':'')+'</div>'
+    +'<div class="cat-seg" role="radiogroup">'+['food','hotel','experience'].map(c=>
+      '<button role="radio" aria-checked="'+(c===atual)+'" class="'+(c===atual?'on':'')+'" onclick="'+aoTocar+'(\''+c+'\')">'+{food:'Comer',hotel:'Ficar',experience:'Experiências'}[c]+'</button>').join('')+'</div>';
+}
 function pintarCatDaNota(){
   const el=document.getElementById('noteCat');
-  if(el)el.innerHTML=linhaDeEscolha(ROTULO_CAT[S.addCat]||'Categoria','trocarCatDaNota()');
+  if(el)el.innerHTML=blocoDeCategoria(S.addCat,S.addCatTrocada?'':'escolhido pelo Google','escolherCatDaNota');
   addSubcat=subcatsPara((S.addCat==='experience'&&S.selPlace&&S.selPlace.subcat)||'');
   document.getElementById('subcatRow').style.display=S.addCat==='experience'?'block':'none';
   if(S.addCat==='experience')renderSubcatChips();
 }
-function trocarCatDaNota(){
-  abrirFolhaDeEscolha(['food','hotel','experience'].map(id=>({id,rotulo:ROTULO_CAT[id],n:''})),S.addCat,
-    id=>{S.addCat=id;pintarCatDaNota();
-      const ic=document.getElementById('selIcon');if(ic&&!NOTA_FOTO)ic.innerHTML=catIcon(id)});
+function escolherCatDaNota(id){
+  if(!id||id===S.addCat)return;
+  S.addCat=id;S.addCatTrocada=true;pintarCatDaNota();
+  const ic=document.getElementById('selIcon');if(ic&&!NOTA_FOTO)ic.innerHTML=catIcon(id);
 }
+function trocarCatDaNota(){escolherCatDaNota(S.addCat==='food'?'hotel':'food')}
 // ═══ SUA FOTO NO SPOT (28/09) ═══
 // "Quero colocar a foto do prato." Opcional, na mesma folha da nota — vale
 // pro + e pro check-in, que caem aqui. A foto só sobe quando a pessoa salva:
@@ -9298,6 +9408,7 @@ function onNoteFotoChosen(input){
   });
 }
 function resetNoteSheet(){
+  S.addCatTrocada=false;
   addStatus='want';addRating=0;
   NOTA_FOTO=null;
   {const b=document.getElementById('noteFotoBtn');if(b)b.textContent='Adicionar sua foto'}
