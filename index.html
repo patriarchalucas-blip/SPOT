@@ -3420,8 +3420,9 @@ function plnPintarBotaoDoAmigo(){
   // Só com amizade aceita: perfil aberto com pedido pendente não tem spots
   // pra juntar, e a lista sairia só com os seus.
   const id=FRIEND.id;
-  b.parentNode.style.display='none';
-  plnCarregarAmigos().then(ids=>{if(FRIEND.id===id&&ids.includes(id))b.parentNode.style.display=''});
+  const caixa=b.parentNode;if(!caixa||!caixa.style)return;
+  caixa.style.display='none';
+  plnCarregarAmigos().then(ids=>{if(FRIEND.id===id&&ids.includes(id))caixa.style.display=''}).catch(()=>{});
 }
 
 // ── 4c escolher ──
@@ -11545,7 +11546,33 @@ async function revalidarInstagramsAntigos(){
       localStorage.setItem(INSTA_RECHECK_FLAG,'1');
     }
     await destravarInstagramsNuncaProcurados();
+    await esquecerInstagramsQueNaoSaoPerfil();
   }catch(e){/* nunca trava o app por causa disso */}
+}
+// 01/10 (Instagram "não encontrado"): o leitor de link pegava "_u" de
+// "instagram.com/_u/nomedobar" e "sharer.php" como se fossem o @. Mesma regra
+// do servidor (handleDe em functions/api/find-instagram.js). Só os spots com
+// um @ que hoje não é perfil voltam a ser procurados — os certos ficam.
+function ehPerfilDoInstagram(url){
+  const m=String(url||'').match(/instagram\.com\/(?:_u\/|_n\/)?([a-zA-Z0-9._]+)/i);
+  if(!m)return false;
+  const h=m[1].replace(/\.+$/,'');
+  if(!h||h.length>30||h.startsWith('_')||/\.php$/i.test(m[1])||/\.\./.test(h))return false;
+  return !['p','reel','reels','tv','explore','stories','accounts','directory','about','developer','legal','web','help','privacy','terms','direct','ar','tags','locations','share','sharer','challenge','oauth','login','emails','session'].includes(h.toLowerCase());
+}
+async function esquecerInstagramsQueNaoSaoPerfil(){
+  const FLAG='spot_insta_perfil_v1';
+  if(localStorage.getItem(FLAG))return;
+  const alvos=[];
+  (S.trips||[]).forEach(t=>(t._spots||[]).forEach(s=>{
+    if(/instagram\.com/i.test(s.website_url||'')&&!ehPerfilDoInstagram(s.website_url))alvos.push(s);
+  }));
+  for(const s of alvos){
+    const{error}=await dbUpdate('spots',s.id,{insta_checked:false,website_url:null});
+    if(error)return; // tenta de novo na próxima abertura
+    s.insta_checked=false;s.website_url=null;
+  }
+  localStorage.setItem(FLAG,'1');
 }
 // Restaurante marcado como "já procurei" quando na verdade a procura nunca
 // aconteceu (teto do mês, sessão caída, Brave fora do ar). Antes do conserto
@@ -15161,7 +15188,8 @@ async function resgatarConvitePendente(){
 // a 10 resultados, exige 3 letras e nunca devolve email — o afrouxamento é
 // deliberado e tem teto, não é a tabela de perfis aberta.
 let BUSCA_PESSOAS=[];      // resultados da última busca, por índice
-let BUSCA_VINCULOS={};     // id da pessoa -> 'accepted' | 'pending'
+let BUSCA_VINCULOS={};     // id da pessoa -> 'accepted' | 'pending' (eu enviei) | 'recebido' (ela me enviou)
+let BUSCA_PEDIDO_ID={};    // id da pessoa -> id do pedido recebido (pra aceitar daqui)
 let BUSCA_COMUM={};        // id da pessoa -> nome de UM amigo em comum (025)
 let buscaPessoaTO=null;
 
@@ -15214,13 +15242,19 @@ async function rodarBuscaPessoas(t,cxId,campoId){
   }
   // Um pedido só pra saber quem já é amigo e pra quem já mandei pedido — o
   // RLS só devolve os meus vínculos, então isso não revela nada de terceiros.
-  BUSCA_VINCULOS={};
+  BUSCA_VINCULOS={};BUSCA_PEDIDO_ID={};
   const meus=await dbGet('follows','or=(follower_id.eq.'+S.user.id+',following_id.eq.'+S.user.id+')');
   if(!falhou(meus)){
     meus.forEach(f=>{
       const outro=f.follower_id===S.user.id?f.following_id:f.follower_id;
       // 'accepted' vence 'pending' se houver os dois sentidos
-      if(BUSCA_VINCULOS[outro]!=='accepted')BUSCA_VINCULOS[outro]=f.status;
+      // O SENTIDO importa (01/10): pedido que a pessoa ME mandou aparecia como
+      // 'Pedido enviado', sem botão — quem buscava achava que já tinha pedido
+      // e o pedido dela nunca saía. Recebido vira 'Aceitar'.
+      if(BUSCA_VINCULOS[outro]==='accepted')return;
+      if(f.status==='accepted')BUSCA_VINCULOS[outro]='accepted';
+      else if(f.following_id===S.user.id){BUSCA_VINCULOS[outro]='recebido';BUSCA_PEDIDO_ID[outro]=f.id}
+      else BUSCA_VINCULOS[outro]='pending';
     });
   }
   cx.innerHTML=achados.map((p,i)=>linhaDePessoa(p,i)).join('');
@@ -15239,6 +15273,7 @@ function linhaDePessoa(p,i){
   let acao;
   if(vinculo==='accepted')acao='<span class="busca-estado">Já são amigos</span>';
   else if(vinculo==='pending')acao='<span class="busca-estado">Pedido enviado</span>';
+  else if(vinculo==='recebido')acao='<button class="req-btn req-accept" id="bp-'+i+'" onclick="aceitarDaBusca('+i+')">Aceitar</button>';
   else acao='<button class="req-btn req-accept" id="bp-'+i+'" onclick="pedirAmizade('+i+')">Adicionar</button>';
   // "@fulano · amigo da Isabella" — o amigo em comum é o que transforma um
   // username estranho em alguém que dá pra reconhecer. Vem da 025, que
@@ -15251,6 +15286,14 @@ function linhaDePessoa(p,i){
     +'</div>'+acao+'</div>';
 }
 
+async function aceitarDaBusca(i){
+  const alvo=BUSCA_PESSOAS[i];if(!alvo)return;
+  const id=BUSCA_PEDIDO_ID[alvo.id];if(!id)return;
+  const btn=document.getElementById('bp-'+i);if(btn){btn.textContent='Aceitando...';btn.style.pointerEvents='none'}
+  await respondRequest(id,true);
+  BUSCA_VINCULOS[alvo.id]='accepted';
+  if(btn&&btn.parentElement)btn.outerHTML='<span class="busca-estado">Já são amigos</span>';
+}
 async function pedirAmizade(i){
   const alvo=BUSCA_PESSOAS[i];
   if(!alvo)return;
@@ -15285,7 +15328,7 @@ async function pedirAmizade(i){
 }
 
 function limparBuscaDePessoas(){
-  BUSCA_PESSOAS=[];BUSCA_VINCULOS={};
+  BUSCA_PESSOAS=[];BUSCA_VINCULOS={};BUSCA_PEDIDO_ID={};
   clearTimeout(buscaPessoaTO);
   const c=document.getElementById('friendUsernameInput');if(c)c.value='';
   const r=document.getElementById('buscaPessoasRes');if(r)r.innerHTML='';

@@ -82,7 +82,9 @@ export async function onRequestPost(context) {
   // Toque manual em "buscar" passa por cima: se a pessoa pediu de novo, a
   // resposta guardada não serviu pra ela.
   const guardado = body.forcar === true ? null : await lerKV(env, memoria);
-  if (guardado !== null) {
+  // A memória passa pela regra de hoje: um @ guardado pela regra velha que
+  // hoje não é perfil (ver handleDe) é esquecido e procurado de novo.
+  if (guardado !== null && (guardado === '-' || handleDe(guardado))) {
     return json({ instagram_url: guardado === '-' ? null : guardado, fonte: 'memoria' });
   }
 
@@ -294,11 +296,17 @@ function soAlnum(x) { return norm(x).replace(/[^a-z0-9]/g, '') }
 
 // Aceita só URL de PERFIL. /p/, /reel/, /explore/ etc. são post e página
 // interna — nunca servem como "o Instagram do lugar".
-const NAO_E_PERFIL = new Set(['p', 'reel', 'reels', 'tv', 'explore', 'stories', 'accounts', 'directory', 'about', 'developer', 'legal']);
+const NAO_E_PERFIL = new Set(['p', 'reel', 'reels', 'tv', 'explore', 'stories', 'accounts', 'directory', 'about', 'developer', 'legal',
+  'web', 'help', 'privacy', 'terms', 'direct', 'ar', 'tags', 'locations', 'share', 'sharer', 'challenge', 'oauth', 'login', 'emails', 'session']);
+// 01/10 (Instagram "não encontrado"): site de restaurante usa link de app
+// ("instagram.com/_u/nomedobar") e de compartilhar ("sharer.php"), e os dois
+// viravam "perfil". O _u é pulado e vale o @ que vem depois; ".php" e nome
+// começando com "_" não são perfil. @ do Instagram: até 30 caracteres.
 export function handleDe(url) {
-  const m = String(url || '').match(/instagram\.com\/([a-zA-Z0-9._]+)/i);
+  const m = String(url || '').match(/instagram\.com\/(?:_u\/|_n\/)?([a-zA-Z0-9._]+)/i);
   if (!m) return '';
-  const h = m[1].replace(/\.$/, '');
+  const h = m[1].replace(/\.+$/, '');
+  if (!h || h.length > 30 || h.startsWith('_') || /\.php$/i.test(m[1]) || /\.\./.test(h)) return '';
   return NAO_E_PERFIL.has(h.toLowerCase()) ? '' : h;
 }
 
