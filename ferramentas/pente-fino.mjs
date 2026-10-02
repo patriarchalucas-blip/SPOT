@@ -40,7 +40,7 @@ function filtra(tab, qs) {
   return l;
 }
 const gPlace = (n, c) => ({ id: 'g' + n, displayName: { text: n }, formattedAddress: 'Rua 1, ' + c + ', Portugal', types: ['restaurant'], primaryType: 'restaurant',
-  addressComponents: [{ types: ['locality'], longText: c, shortText: c }, { types: ['country'], longText: 'Portugal', shortText: 'PT' }], location: { latitude: 38.7, longitude: -9.1 } });
+  addressComponents: [{ types: ['locality'], longText: c, shortText: c }, { types: ['country'], longText: 'Portugal', shortText: 'PT' }], location: { latitude: 38.7, longitude: -9.1 }, photos: [1,2,3,4].map(k => ({ name: 'places/g' + n.replace(/W/g,'') + '/photos/f' + k, authorAttributions: [{ displayName: 'Autor ' + k, uri: 'https://maps.google.com/' }] })) });
 
 const b = await puppeteer.launch({ executablePath: 'C:/Program Files/Google/Chrome/Application/chrome.exe' });
 const pg = await b.newPage(); await pg.setViewport({ width: 390, height: 844, deviceScaleFactor: 1 });
@@ -128,6 +128,10 @@ await passoDe('v2: prévia pro grupo', `plnMandarProGrupo(false)`);
 await passoDe('v2: fechar prévia', `closeOv('ov-pln-mandar')`);
 await passoDe('v2: vazio com 3 destinos', `(()=>{PLN.destinos=[{tipo:'pais',nome:'Japão'},{tipo:'pais',nome:'Chile'},{tipo:'cidade',nome:'Quioto',pais:'Japão'}];plnVerLista()})()`, 1200);
 await passoDe('a2: ficha com categoria', `openPlace('s1','city')`, 1500);
+await passoDe('fotos: carrossel montado', `(async()=>{await new Promise(r=>setTimeout(r,800))})()`);
+console.log('  fotos no carrossel:',await pg.evaluate(()=>document.querySelectorAll('#place .fi-slide').length),'| pontos:',await pg.evaluate(()=>document.querySelectorAll('#place .fi-pontos i').length));
+await passoDe('fotos: arrastar pra 3a', `(()=>{const f=document.querySelector('#place .fi-faixa');f.scrollLeft=f.clientWidth*2;f.dispatchEvent(new Event('scroll'))})()`, 600);
+console.log('  ponto ativo:',await pg.evaluate(()=>[...document.querySelectorAll('#place .fi-pontos i')].findIndex(i=>i.classList.contains('on'))),'| credito:',await pg.evaluate(()=>document.getElementById('placeFotoCredito').textContent),'| foto carregada:',await pg.evaluate(()=>!!document.querySelectorAll('#place .fi-slide')[2].style.backgroundImage));
 await passoDe('a2: trocar pra Ficar', `trocarCategoriaDoLugar('hotel')`, 1200);
 await passoDe('a1: nota com segmentado', `(()=>{S.addCat='food';S.addTrip=S.trips[0];S.selPlace={name:'Teste',city:'Lisboa',country:'Portugal'};resetNoteSheet();showOv('ov-note')})()`);
 await passoDe('a1: escolher Experiências', `escolherCatDaNota('experience')`);

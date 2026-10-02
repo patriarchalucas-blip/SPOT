@@ -707,6 +707,16 @@ input,textarea,select{font-size:max(16px,1em)!important}
 .cat-seg button{flex:1;min-width:0;border:none;border-radius:8px;background:none;font:inherit;font-size:15px;color:var(--ink2);cursor:pointer;white-space:nowrap}
 .cat-seg button.on{background:var(--base);color:var(--ink);font-weight:600}
 .fi-cat{margin:20px 0 4px}
+/* Várias fotos na ficha (01/10): passa com o dedo, uma por vez */
+.fi-carrossel{position:absolute;inset:0}
+.fi-faixa{position:absolute;inset:0;display:flex;overflow-x:auto;overflow-y:hidden;scroll-snap-type:x mandatory;scrollbar-width:none;-webkit-overflow-scrolling:touch;overscroll-behavior-x:contain}
+.fi-faixa::-webkit-scrollbar{display:none}
+.fi-slide{flex:0 0 100%;height:100%;scroll-snap-align:start;scroll-snap-stop:always;background:var(--photo-empty) center/cover no-repeat}
+.fi-slide:first-child{background:transparent}
+.fi-pontos{position:absolute;left:50%;bottom:12px;transform:translateX(-50%);display:flex;gap:6px;padding:6px 8px;border-radius:10px;background:rgba(17,17,17,.35);pointer-events:none;max-width:80%;flex-wrap:wrap;justify-content:center}
+.fi-pontos.topo{top:68px;bottom:auto}
+.fi-pontos i{width:6px;height:6px;border-radius:50%;background:rgba(245,245,243,.45)}
+.fi-pontos i.on{background:var(--base)}
 .sheet-cta.fp-ja{background:var(--surface);color:var(--green);cursor:default}
 .sr-ja{font-size:13px;font-weight:600;color:var(--green);margin-left:4px}
 #noteCat.cat-bloco{margin:16px 20px 0}
@@ -4014,6 +4024,99 @@ function impAbrirCidade(i){
 }
 function impVerViagens(){goTo('dashboard');loadDashboard()}
 
+
+// ═══ VÁRIAS FOTOS NA FICHA (01/10) ═══
+// A Chu arrastava a foto do topo pro lado esperando a próxima. Agora vem:
+//   1. a foto de hoje (nada muda pra quem não arrasta);
+//   2. as fotos que VOCÊ e seus AMIGOS subiram desse lugar — uma consulta
+//      só, e o RLS já devolve só o que você pode ver;
+//   3. as do Google: no máximo 10 por lugar (limite deles, pra qualquer app).
+// Cada foto do Google mostrada é cobrada (~US$ 0,007): só baixa a foto em que
+// a pessoa está e a seguinte. A lista de fotos do lugar vem de uma busca que o
+// /api/places guarda por 7 dias, dividida entre todo mundo.
+const FOTOS_DO_LUGAR=new Map();
+function chaveDaFoto(u){
+  const s=String(u||'');
+  const m=s.match(/places(?:%2F|\/)[^&?/%]+(?:%2F|\/)photos(?:%2F|\/)[^&?/%]+/i);
+  return m?m[0].replace(/%2F/gi,'/'):s.split('?')[0];
+}
+function fotosDoLugar(sp){
+  const k=normName(sp.name)+'|'+normName(cityOf(sp)||'');
+  if(FOTOS_DO_LUGAR.has(k))return FOTOS_DO_LUGAR.get(k);
+  const p=(async()=>{
+    const out=[];
+    const W=larguraNaTela();
+    // Fotos de gente do Spot (a sua e as dos amigos) desse mesmo lugar.
+    try{
+      if(S.user&&sp.name){
+        const nome=termoSeguro(sp.name);
+        const l=await dbGet('spots','name=ilike.'+encodeURIComponent(nome)+'&photo_url=like.*%2Fstorage%2F*&select=photo_url,user_id,city&limit=20');
+        if(!falhou(l))(l||[]).forEach(x=>{
+          if(cityOf(sp)&&x.city&&!mesmoLugar(cityOf(x)||x.city,cityOf(sp)))return;
+          const quem=x.user_id===S.user.id?'você':plnPrimeiro(x.user_id);
+          out.push({url:x.photo_url,autor:quem==='você'?'você':quem,fonte:'spot'});
+        });
+      }
+    }catch(e){}
+    // As do Google (até 10).
+    try{
+      const r=await googlePlaces('searchText',{method:'POST',
+        headers:{'Content-Type':'application/json','X-Goog-FieldMask':'places.displayName,places.photos'},
+        body:JSON.stringify({textQuery:sp.name+(cityOf(sp)?' '+cityOf(sp):''),languageCode:'pt-BR',maxResultCount:3})});
+      const d=await r.json();
+      const best=pickBestPlaceMatch((d&&d.places)||[],sp.name);
+      ((best&&best.photos)||[]).slice(0,10).forEach(ph=>{
+        const a=(ph.authorAttributions||[])[0]||{};
+        out.push({url:placePhotoUrl({photos:[ph]},W),autor:a.displayName||'',autorUrl:a.uri||'',fonte:'google'});
+      });
+    }catch(e){}
+    return out;
+  })();
+  FOTOS_DO_LUGAR.set(k,p);
+  return p;
+}
+// Nunca derruba a ficha: qualquer falha deixa a tela com a foto única de antes.
+async function montarCarrossel(heroEl,creditoId,sp,aindaAqui,pontosNoTopo){
+  try{await montarCarrosselDeVerdade(heroEl,creditoId,sp,aindaAqui,pontosNoTopo)}catch(e){console.warn('carrossel:',e&&e.message)}
+}
+async function montarCarrosselDeVerdade(heroEl,creditoId,sp,aindaAqui,pontosNoTopo){
+  if(!heroEl||!sp)return;
+  const pai=heroEl.parentNode;
+  if(!pai||!pai.querySelectorAll||!heroEl.after)return;
+  pai.querySelectorAll(':scope > .fi-carrossel').forEach(x=>x.remove());
+  const lista=await fotosDoLugar(sp);
+  if(!aindaAqui())return;
+  pai.querySelectorAll(':scope > .fi-carrossel').forEach(x=>x.remove());
+  const atual=chaveDaFoto(sp.photo_url||sp._fotoVista||'');
+  const vistos=new Set([atual]);
+  const extras=lista.filter(f=>{const k=chaveDaFoto(f.url);if(!k||vistos.has(k))return false;vistos.add(k);return true}).slice(0,24);
+  if(!extras.length)return;
+  const cred=document.getElementById(creditoId);
+  const credOriginal=cred?cred.innerHTML:'';
+  const fotos=[null].concat(extras); // a 1ª é a foto que já está no topo
+  const wrap=document.createElement('div');wrap.className='fi-carrossel';
+  wrap.innerHTML='<div class="fi-faixa">'+fotos.map((f,i)=>'<div class="fi-slide" data-i="'+i+'"></div>').join('')+'</div>'
+    +'<div class="fi-pontos'+(pontosNoTopo?' topo':'')+'">'+fotos.map((f,i)=>'<i'+(i?'':' class="on"')+'></i>').join('')+'</div>';
+  heroEl.after(wrap);
+  const faixa=wrap.querySelector('.fi-faixa'),slides=[...wrap.querySelectorAll('.fi-slide')],pontos=[...wrap.querySelectorAll('.fi-pontos i')];
+  const carregar=i=>{const f=fotos[i],el=slides[i];if(!f||!el||el.dataset.ok)return;el.dataset.ok='1';el.style.backgroundImage=cssUrl(safeUrl(f.url))};
+  let ultimo=-1;
+  const aoRolar=()=>{
+    const i=Math.round(faixa.scrollLeft/Math.max(1,faixa.clientWidth));
+    if(i===ultimo)return;ultimo=i;
+    carregar(i);carregar(i+1);
+    pontos.forEach((p,j)=>p.classList.toggle('on',j===i));
+    if(!cred)return;
+    const f=fotos[i];
+    if(!f){cred.innerHTML=credOriginal;return}
+    cred.innerHTML=f.fonte==='google'
+      ?(f.autor?'Foto de '+(f.autorUrl?linkCredito(f.autorUrl,f.autor):esc(f.autor))+' no Google':'Foto do Google')
+      :(f.autor==='você'?'Sua foto':'Foto de '+esc(f.autor));
+  };
+  faixa.addEventListener('scroll',aoRolar,{passive:true});
+  carregar(1);
+}
+
 // ═══ INIT ═══
 async function init(){
   capturarConviteDaURL();
@@ -6110,6 +6213,7 @@ async function openPlace(id,origin){
   const phEl=document.getElementById('placeHeroImg');
   const cid=cityOf(s)||s.name;
   const aindaNesteSpot=()=>S.curPlace&&S.curPlace.id===s.id;
+  montarCarrossel(phEl,'placeFotoCredito',s,aindaNesteSpot,false);
   if(s.photo_url){
     phEl.style.backgroundImage=cssUrl(fotoNaLargura(s.photo_url,larguraNaTela()));
     pintarCreditoSpot('placeFotoCredito',s);
@@ -8562,6 +8666,7 @@ function abrirPreviaDoExplorar(i){
   S.curPlace=s;S.placeOrigin='explore';
   const ph=document.getElementById('placeHeroImg');
   ph.style.backgroundImage=s.photo_url?cssUrl(fotoNaLargura(s.photo_url,larguraNaTela())):destGradient(s.city||s.name);
+  montarCarrossel(ph,'placeFotoCredito',s,()=>S.curPlace===s,false);
   limparCredito('placeFotoCredito');
   if(p.photo_author&&p.photo_author.nome)pintarCreditoSpot('placeFotoCredito',{photo_author:p.photo_author.nome,photo_author_url:p.photo_author.url||''});
   desenharFichaDoLugar(s);
@@ -14803,6 +14908,7 @@ function abrirSpotDoAmigo(i){
 
   const hero=document.getElementById('fpHeroImg');
   hero.style.backgroundImage=destGradient(cityOf(s)||s.name);
+  montarCarrossel(hero,'fpFotoCredito',s,()=>FRIEND.spot===s,true);
   limparCredito('fpFotoCredito');
   if(s.photo_url){
     const probe=new Image();
