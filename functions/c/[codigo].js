@@ -74,7 +74,7 @@ export async function onRequestGet(context) {
     : 'Os lugares favoritos de quem você conhece.';
   // A foto de um lugar da pessoa, quando houver — é o que faz a prévia
   // parecer o convite dela e não um cartaz do app.
-  const foto = (p && Array.isArray(p.fotos) && fotoSegura(p.fotos[0])) || (origem + '/compartilhar-v2.png');
+  const foto = (p && Array.isArray(p.fotos) && fotoSegura(p.fotos[0])) || (origem + '/compartilhar-v3.png');
 
   const html = '<!DOCTYPE html><html lang="pt-BR"><head><meta charset="utf-8">'
     + '<meta name="viewport" content="width=device-width,initial-scale=1">'

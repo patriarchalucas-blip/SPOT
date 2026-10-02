@@ -1,5 +1,5 @@
 // Gera a imagem de prévia dos links do Spot (WhatsApp, iMessage, Instagram):
-// compartilhar-v2.png, 1200×630, no sistema F.
+// compartilhar-v3.png, 1200×630, no sistema F.
 //
 //   node ferramentas/imagem-compartilhar/gerar.mjs
 //
@@ -25,7 +25,7 @@ await pg.goto(url.pathToFileURL(path.join(aqui, 'imagem.html')).href, { waitUnti
 await pg.evaluate(() => document.fonts.ready);
 const ok = await pg.evaluate(() => [document.fonts.check('500 20px Cinzel'), document.fonts.check('700 20px "Inter Tight"')]);
 if (!ok.every(Boolean)) { console.log('fonte não carregou — sem internet pro Google Fonts?', ok); process.exit(1); }
-const saida = path.join(aqui, '../../compartilhar-v2.png');
+const saida = path.join(aqui, '../../compartilhar-v3.png');
 await pg.screenshot({ path: saida, type: 'png' });
 await b.close();
 console.log('ok:', saida);

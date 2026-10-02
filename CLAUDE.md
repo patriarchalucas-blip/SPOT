@@ -113,7 +113,9 @@ Aparece na tela de carregamento, no cabeçalho da tela inicial e no login.
   y=81 e cortaria 3px do topo do S. **Mexeu na fonte ou no espaçamento, remede** —
   dá pra medir no navegador com `measureText` depois de `document.fonts.load`.
 
-**2. O símbolo — desde 28/09/2026: "Travessia"**, um S em fita dando a volta no
+**2. O símbolo — desde 02/10/2026: "Trilha"**, um S feito de pedras de trilha que termina numa pilha de pedras, claro `#F5F5F3` sobre o verde `#0B3D2E` (escolha do Lucas, "por enquanto"). Original em `ferramentas/marca-trilha-original.webp`; todos os tamanhos saem de `node ferramentas/icone-trilha.cjs` (o original já é claro sobre verde: repinta pela luminância, limiares medidos 0,27–0,92; desenho com margem própria, escala 1; Android 70%). Prévia de link: `compartilhar-v3.png`.
+
+**Símbolo anterior (28/09–02/10): "Travessia"**, um S em fita dando a volta no
 mundo, claro `#F5F5F3` sobre o verde `#0B3D2E` (o Lucas escolheu a versão de fundo
 verde). Original em `ferramentas/marca-travessia-original.webp`; todos os tamanhos
 saem de `node ferramentas/icone-travessia.cjs` (repinta, 88% do quadro, sem alfa).

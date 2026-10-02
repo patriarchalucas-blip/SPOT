@@ -19,7 +19,7 @@ export async function onRequestGet(context) {
   const { params, request, env } = context;
   const codigo = String(params.codigo || '');
   const origem = new URL(request.url).origin;
-  const padrao = () => fetch(origem + '/compartilhar-v2.png');
+  const padrao = () => fetch(origem + '/compartilhar-v3.png');
   if (!/^[A-Za-z0-9]{8,24}$/.test(codigo) || !env.SUPABASE_SERVICE_KEY) return padrao();
 
   const borda = caches.default;
