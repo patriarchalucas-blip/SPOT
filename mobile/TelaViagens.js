@@ -136,7 +136,7 @@ function MapaEmBranco({ nome, acao }) {
   const passos = [
     ['marcarPaises', 'Marcar países que já visitei', 'o mapa pinta na hora'],
     ['novoLugar', 'Salvar seu primeiro spot', 'um lugar que você amou ou quer ir'],
-    ['convidar', 'Chamar um amigo', 'pra ver os lugares dele'],
+    ['convidar', 'Chamar um amigo', 'e vejam os spots um do outro'],
   ];
   return (
     <View style={e.branco}>

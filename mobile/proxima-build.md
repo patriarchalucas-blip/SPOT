@@ -10,10 +10,15 @@ Antes de compilar: `npx eslint .` e `npx expo export --platform ios` em
 `mobile/`, e conferir esta lista inteira. Depois de compilar, mover os itens
 pra "Já compilado".
 
-## Na fila (build 19 — a 18 saiu em 01/10 com tudo de baixo e o logo antigo)
+## Na fila
 
-- **Logo novo** (decisão do Lucas em andamento, 01/10): todos os tamanhos saem de um script como `ferramentas/icone-travessia.cjs`; PNG sem alfa.
-- **Viagens sem nenhum spot** (handoff 01/10, a3): `TelaViagens.js` mostra "Seu primeiro spot" + "Colar uma lista do celular" (só com `primeiro.ia`), que manda `acao('importar')` pro site.
+(vazio)
+
+## Já foi na build 19 (02/10, 1.0.1)
+
+- **Logo novo "Trilha"** — `ferramentas/icone-trilha.cjs`.
+- **Viagens sem nenhum spot**: "Seu primeiro spot" + "Colar uma lista do celular" (`TelaViagens.js`).
+- Textos: "spots" no lugar de "lugares" no vazio de Amigos; convite sem "dele".
 
 ## Já foi na build 18 (01/10, 1.0.1)
 

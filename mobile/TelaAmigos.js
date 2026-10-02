@@ -150,7 +150,7 @@ function VazioDeAmigos({ convidou, acao }) {
   return (
     <View style={e.vz}>
       <ExemploDeFeed />
-      <Text style={e.vzTitulo}>Aqui aparecem os lugares{'\n'}que seus amigos salvam.</Text>
+      <Text style={e.vzTitulo}>Aqui aparecem os spots{'\n'}que seus amigos salvam.</Text>
       <Text style={e.vzSub}>Quem entrar pelo seu link já vira seu amigo.</Text>
       <Pressable
         onPress={() => acao('convidar')}
@@ -395,7 +395,7 @@ export default function TelaAmigos({ dados, ocupado, acao }) {
         ) : !amigos.length ? (
           <Vazio titulo="Sem amigos ainda" texto="Adiciona alguém pelo username pra ver a atividade aqui" />
         ) : !feed.length ? (
-          <Vazio titulo="Nada por aqui ainda" texto="Seus amigos ainda não marcaram viagens nem lugares" />
+          <Vazio titulo="Nada por aqui ainda" texto="Seus amigos ainda não marcaram viagens nem spots" />
         ) : (
           feed.map((it) =>
             it.tipo === 'visita' ? (
