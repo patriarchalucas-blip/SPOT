@@ -21,9 +21,9 @@ const SB_URL = 'https://kzidnilsyrvauzgelsqd.supabase.co';
 // O convite leva direto à App Store (app aprovado e no ar desde 01/10/2026).
 // O ?ct= marca de onde veio o download no painel da Apple.
 const LOJA = 'https://apps.apple.com/br/app/spot-seus-lugares/id6814856044';
-const CATEGORIA = { food: 'Comer', hotel: 'Ficar', experience: 'Experiências' };
+const CATEGORIA = { food: 'Gastronomia', hotel: 'Hospedagem', experience: 'Experiências' };
 const SUBCAT = { natureza: 'Natureza', nightlife: 'Nightlife', wellness: 'Wellness', cultura: 'Cultura', passeio: 'Passeio', compras: 'Compras' };
-const GENERICOS = ['Comer & Beber', 'Onde Ficar', 'Experiência'];
+const GENERICOS = ['Comer & Beber', 'Onde Ficar', 'Experiência', 'Gastronomia', 'Hospedagem'];
 
 export function esc(t) {
   return String(t == null ? '' : t).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;');

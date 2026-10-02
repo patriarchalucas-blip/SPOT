@@ -31,14 +31,14 @@ test('lista publica: mais de 10 spots vira abas com categorias', () => {
   const spots = Array.from({ length: 8 }, (_, i) => fui(i)).concat(Array.from({ length: 4 }, (_, i) => quero(i)));
   const h = paginaDaLista(Object.assign({ spots }, base));
   assert.ok(h.includes('data-aba="fui"') && h.includes('data-aba="quero"'));
-  assert.ok(h.includes('Comer 8'));
+  assert.ok(h.includes('Gastronomia 8'));
 });
 
 test('lista publica: foto de fora e rotulo da linha', () => {
   assert.strictEqual(fotoDoSpot('https://site-malicioso.com/x.jpg', 200), '');
   assert.strictEqual(esc('"><script>'), '&quot;&gt;&lt;script&gt;');
   assert.strictEqual(rotuloDoSpot({ category: 'experience', subcategory: 'passeio' }), 'Passeio');
-  assert.strictEqual(rotuloDoSpot({ category: 'food', place_type: 'Comer & Beber' }), 'Comer');
+  assert.strictEqual(rotuloDoSpot({ category: 'food', place_type: 'Comer & Beber' }), 'Gastronomia');
   assert.strictEqual(rotuloDoSpot({ category: 'hotel' }), 'Hospedagem');
 });
 
