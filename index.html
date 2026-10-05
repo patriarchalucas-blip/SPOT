@@ -1944,6 +1944,10 @@ body.tem-apple #convite .btn-apple{display:flex}
 .pf-row-txt .vg-chegou{font-weight:600;color:var(--green)}
 /* Adicionar viagem (c3) */
 .nt-dest{padding:6px 20px}
+.nt-escolhidos{display:flex;flex-wrap:wrap;gap:8px;padding:0 20px 10px}
+.nt-escolhidos:empty{display:none}
+.nt-esc{border:none;border-radius:var(--r-btn);background:var(--surface);padding:8px 12px;font:inherit;font-size:15px;font-weight:600;color:var(--ink);cursor:pointer}
+.nt-esc span{color:var(--ink3);font-weight:400}
 .nt-check{flex:none;width:24px;height:24px;border-radius:50%;background:var(--green);color:var(--on-green);display:flex;align-items:center;justify-content:center}
 .nt-check svg{width:15px;height:15px}
 .nt-rodape{padding:12px 20px 0;font-size:14px;line-height:1.45;color:var(--ink2)}
@@ -2718,7 +2722,7 @@ body.exm .exm-filtros{position:relative;z-index:1}
 <button class="sheet-cta" id="saveSpotBtn" onclick="saveSpot(false)">Salvar spot</button><button class="secondary-link" id="saveAndAddBtn" onclick="saveSpot(true)">Salvar e adicionar outro</button></div></div>
 
 <div class="overlay" id="ov-mismatch" onclick="closeOut(event,'ov-mismatch')"><div class="sheet"><button class="sheet-close" onclick="closeOv('ov-mismatch')" data-ic="close" aria-label="Fechar"></button><div class="sheet-handle"></div><div class="sheet-title">País diferente</div><div class="cm-text" id="cmText"></div><button class="sheet-cta" id="cmMoveBtn">Mover</button><button class="delete-link" style="color:var(--ink3)" onclick="keepInThisTripAnyway()">Adicionar nesta viagem mesmo assim</button></div></div>
-<div class="overlay" id="ov-newtrip" onclick="closeOut(event,'ov-newtrip')"><div class="sheet sheet-fixa"><button class="sheet-close" onclick="closeOv('ov-newtrip')" data-ic="close" aria-label="Fechar"></button><div class="sheet-handle"></div><div class="sheet-title" id="ntTitulo">Para qual cidade?</div><div class="nt-label" id="ntLabel">Cidade da viagem — o país é identificado sozinho</div><div class="dest-search-wrap"><span class="dsi" data-ic="search"></span><input class="nt-input" autocomplete="off" autocorrect="off" spellcheck="false" style="padding-left:44px" id="countrySearch" placeholder="Buscar cidade..." oninput="filterNewTripCity(this.value)"></div><div class="lista-rolante" id="countryList"></div><div class="nt-rodape" id="ntRodape"></div><div id="ntQuemVe"></div><button class="sheet-cta" id="createTripBtn" onclick="createTrip()" style="opacity:.4;pointer-events:none">Selecione uma cidade</button></div></div>
+<div class="overlay" id="ov-newtrip" onclick="closeOut(event,'ov-newtrip')"><div class="sheet sheet-fixa"><button class="sheet-close" onclick="closeOv('ov-newtrip')" data-ic="close" aria-label="Fechar"></button><div class="sheet-handle"></div><div class="sheet-title" id="ntTitulo">Para qual cidade?</div><div class="nt-label" id="ntLabel">Cidade da viagem — o país é identificado sozinho</div><div class="nt-escolhidos" id="ntEscolhidos"></div><div class="dest-search-wrap"><span class="dsi" data-ic="search"></span><input class="nt-input" autocomplete="off" autocorrect="off" spellcheck="false" style="padding-left:44px" id="countrySearch" placeholder="Buscar cidade..." oninput="filterNewTripCity(this.value)"></div><div class="lista-rolante" id="countryList"></div><div class="nt-rodape" id="ntRodape"></div><div id="ntQuemVe"></div><button class="sheet-cta" id="createTripBtn" onclick="createTrip()" style="opacity:.4;pointer-events:none">Selecione uma cidade</button></div></div>
 <div class="overlay" id="ov-virou" onclick="closeOut(event,'ov-virou')"><div class="sheet"><div class="sheet-handle"></div><div class="pv-virou"><div class="pv-virou-topo"><span class="pv-virou-foto" id="virouFoto"></span><div><div class="pv-virou-sub" id="virouSub"></div><h2 id="virouTit"></h2></div></div><p id="virouTxt"></p><button class="pf-bt pf-largo" onclick="closeOv('ov-virou');goTo('dashboard');loadDashboard()">Ver em Viagens</button><button class="pf-bt pf-bt2 pf-largo" onclick="closeOv('ov-virou')">Continuar aqui</button></div></div></div>
 <div class="overlay" id="ov-quickvisit" onclick="closeOut(event,'ov-quickvisit')"><div class="sheet sheet-fixa"><button class="sheet-close" onclick="closeOv('ov-quickvisit')" data-ic="close" aria-label="Fechar"></button><div class="sheet-handle"></div><div class="sheet-title" id="quickVisitTitle">Quais países você já visitou?</div><div class="dest-search-wrap"><span class="dsi" data-ic="search"></span><input class="nt-input" autocomplete="off" autocorrect="off" spellcheck="false" style="padding-left:44px" id="countrySearch2" placeholder="Buscar país..." oninput="filterCountries2(this.value)"></div><div class="lista-rolante" id="countryList2"></div><button class="sheet-cta" id="createVisitBtn" onclick="markVisited()" style="opacity:.4;pointer-events:none">Selecione um país</button></div></div>
 <!-- PRIMEIRO ACESSO (ver "PRIMEIRO ACESSO" no JS). Tela cheia, sem fechar tocando fora:
@@ -4255,7 +4259,12 @@ function renderProximas(){
 
 // ── Nova viagem (modo próxima): a mesma folha de criar viagem, com "Quem vê" ──
 let NOVA_PROXIMA=false,NOVA_PRIVADA=true;
-function abrirNovaViagem(){NOVA_PROXIMA=true;NOVA_PRIVADA=true;showOv('ov-newtrip')}
+// Próxima viagem pode ter VÁRIOS destinos — países e cidades misturados
+// ("Itália e França"), como no Planejar com amigos. O Lucas pediu isso mais
+// de uma vez; a 1ª versão da Nova viagem (05/10) aceitava um só.
+let NOVA_DESTINOS=[];
+function chaveDoDestino(r){return normName(r.city||'')+'|'+normName(r.country||'')}
+function abrirNovaViagem(){NOVA_PROXIMA=true;NOVA_PRIVADA=true;NOVA_DESTINOS=[];showOv('ov-newtrip')}
 // Pela aba Viagens (c3): entra como viagem feita, pinta o mapa, sem spot.
 function abrirAdicionarViagem(){NOVA_PROXIMA=false;showOv('ov-newtrip')}
 function pintarFolhaDeNovaViagem(){
@@ -4263,8 +4272,9 @@ function pintarFolhaDeNovaViagem(){
 if(tit)tit.textContent=NOVA_PROXIMA?'Nova viagem':'Adicionar viagem';
   // O texto que explica vai embaixo da lista (desenho c3); o de cima sai.
   if(lab)lab.style.display='none';
+  if(NOVA_PROXIMA)setTimeout(pintarDestinosEscolhidos,0);
   const rod=document.getElementById('ntRodape');
-  if(rod)rod.textContent=NOVA_PROXIMA?'Entra em Próximas viagens.':'Entra como viagem feita e pinta o mapa. Os spots você adiciona depois.';
+  if(rod)rod.textContent=NOVA_PROXIMA?'Escolha quantos destinos quiser: países e cidades. Entra em Próximas viagens.':'Entra como viagem feita e pinta o mapa. Os spots você adiciona depois.';
   const campo=document.getElementById('countrySearch');if(campo)campo.placeholder=NOVA_PROXIMA?'Buscar cidade ou país...':'Buscar cidade...';
   if(qv)qv.innerHTML=NOVA_PROXIMA?'<div class="pv-bloco pv-bloco-folha"><div class="pv-rotulo">Quem vê</div>'+segmentadoQuemVe(NOVA_PRIVADA,'novaQuemVe')+'</div>':'';
 }
@@ -10600,12 +10610,15 @@ async function resolverCidadeDoSpot(p,trip){
 // ═══ NEW TRIP ═══
 async function createTrip(){
   if(!selectedNewTripCity){return}
-  const name=selectedNewTripCity.country;
-  // Nova viagem pelo Perfil (05/10): entra em Próximas viagens, com "Quem vê".
+  // Nova viagem pelo Perfil (05/10): entra em Próximas viagens, com "Quem vê",
+  // e pode ter vários destinos (os países, sem repetir, na ordem escolhida).
   const proxima=NOVA_PROXIMA,privada=NOVA_PRIVADA;
+  const paises=proxima?[...new Set(NOVA_DESTINOS.map(d=>d.country).filter(Boolean))]:[selectedNewTripCity.country];
+  if(!paises.length)return;
+  const name=proxima?plnJuntar(paises):selectedNewTripCity.country;
   // Uma viagem por país: se ela já existe, abre a que existe (com um destino
   // pendente do Explorar ou de amigo, segue o fluxo antigo, que escolhe ali).
-  const ja=!S.explorePick&&(S.trips||[]).find(t=>!isNonTrip(t)&&(mesmoLugar(t.name,name)||(t.destinations||[]).some(d=>mesmoLugar(d,name))));
+  const ja=!S.explorePick&&paises.length===1&&(S.trips||[]).find(t=>!isNonTrip(t)&&(mesmoLugar(t.name,name)||(t.destinations||[]).some(d=>mesmoLugar(d,name))));
   if(ja){
     closeOv('ov-newtrip');
     toast(viagemPlanejada(ja)?name+' já está nas suas próximas viagens':'Você já tem '+name+' nas suas viagens','', 'suitcase');
@@ -10634,7 +10647,7 @@ async function createTrip(){
   if(cidadeEscolhida)cidadeEscolhida=await comPrazo(canonizarCidade(cidadeEscolhida,name),3000,cidadeEscolhida);
   let data=null,error=null;
   if(proxima){
-    ({data,error}=await dbInsert('trips',{user_id:S.user.id,name,destinations:[name],dates,status:'planning',initial_city:cidadeEscolhida||null,proxima:true,privada:!!privada}));
+    ({data,error}=await dbInsert('trips',{user_id:S.user.id,name,destinations:paises,dates,status:'planning',initial_city:cidadeEscolhida||null,proxima:true,privada:!!privada}));
     if(error||!data){
       toast('Erro ao criar',error?.message||'Tente novamente');
       btn.textContent='Criar viagem';btn.style.pointerEvents='auto';return;
@@ -10873,17 +10886,41 @@ function filterNewTripCity(v){
 function linhaDeDestino(r,i){
   const nome=r.city||r.country;
   const sub=r.city?'Cidade · '+r.country:'País';
-  const on=selectedNewTripCity===r;
+  const on=NOVA_PROXIMA?NOVA_DESTINOS.some(d=>chaveDoDestino(d)===chaveDoDestino(r)):selectedNewTripCity===r;
   return '<button class="ex-sg nt-dest" onclick="selectNewTripCity('+i+')"><span class="ex-sg-foto ex-sg-ic">'+icon('pin')+'</span>'
     +'<span class="ex-sg-txt"><b>'+esc(nome)+'</b><span>'+esc(sub)+'</span></span>'
     +(on?'<span class="nt-check">'+icon('check')+'</span>':'')+'</button>';
 }
 function selectNewTripCity(i){
   const r=newTripCityResults[i];if(!r)return;
+  if(NOVA_PROXIMA){
+    // Tocar marca ou desmarca; dá pra buscar outro país e somar.
+    const k=chaveDoDestino(r);
+    NOVA_DESTINOS=NOVA_DESTINOS.some(d=>chaveDoDestino(d)===k)?NOVA_DESTINOS.filter(d=>chaveDoDestino(d)!==k):NOVA_DESTINOS.concat([r]);
+    selectedNewTripCity=NOVA_DESTINOS[0]||null;
+    document.getElementById('countryList').innerHTML=newTripCityResults.map(linhaDeDestino).join('');
+    pintarDestinosEscolhidos();
+    return;
+  }
   selectedNewTripCity=r;
   document.getElementById('countryList').innerHTML=newTripCityResults.map(linhaDeDestino).join('');
   const btn=document.getElementById('createTripBtn');
   btn.textContent='Adicionar '+(r.city||r.country);btn.style.opacity='1';btn.style.pointerEvents='auto';
+}
+// Os destinos já escolhidos, em cima da busca (tocar no × tira).
+function pintarDestinosEscolhidos(){
+  const box=document.getElementById('ntEscolhidos');
+  const btn=document.getElementById('createTripBtn');
+  if(box)box.innerHTML=NOVA_PROXIMA&&NOVA_DESTINOS.length?NOVA_DESTINOS.map((d,i)=>'<button class="nt-esc" onclick="tirarDestinoEscolhido('+i+')">'+esc(d.city||d.country)+' <span>×</span></button>').join(''):'';
+  if(!btn||!NOVA_PROXIMA)return;
+  const n=NOVA_DESTINOS.length;
+  btn.textContent=n?'Criar viagem · '+n+(n===1?' destino':' destinos'):'Escolha um ou mais destinos';
+  btn.style.opacity=n?'1':'.4';btn.style.pointerEvents=n?'auto':'none';
+}
+function tirarDestinoEscolhido(i){
+  NOVA_DESTINOS.splice(i,1);selectedNewTripCity=NOVA_DESTINOS[0]||null;
+  document.getElementById('countryList').innerHTML=newTripCityResults.map(linhaDeDestino).join('');
+  pintarDestinosEscolhidos();
 }
 // ── Quick "mark as already visited" flow (no dates, no spots needed) ──
 
@@ -13183,7 +13220,9 @@ function naAbaViagens(t){return !isNonTrip(t)&&!viagemPlanejada(t)}
 function proximasViagens(){return (S.trips||[]).filter(viagemPlanejada)}
 function visitedCountryNames(){
   const set=new Set();
-  S.trips.forEach(t=>{if(!viagemConta(t))return;const n=(t.destinations&&t.destinations[0])||t.name;if(n)set.add(n)});
+  // Todos os países da viagem: viagem de vários destinos ("Itália e França")
+  // pinta os dois.
+  S.trips.forEach(t=>{if(!viagemConta(t))return;const ds=(t.destinations&&t.destinations.length)?t.destinations:[t.name];ds.forEach(n=>{if(n)set.add(n)})});
   return [...set];
 }
 function homeCountryName(){
@@ -14547,6 +14586,7 @@ function closeOut(e,id){if(e.target===document.getElementById(id))closeOv(id)}
 function nextOv(a,b){closeOv(a);if(b==='ov-newtrip')prepNewTrip();if(b==='ov-trip'){populateTripOpts();S.explorePick=null;S.explorePickCat=null;S.explorePickStatus=null}if(b==='ov-search')resetSearchSheet();setTimeout(()=>{document.getElementById(b).classList.add('show');avisarSeTemJanela()},220)}
 function prepNewTrip(){
   pintarFolhaDeNovaViagem();
+  {const b=document.getElementById('ntEscolhidos');if(b)b.innerHTML=''}
   selectedNewTripCity=null;
   const cs=document.getElementById('countrySearch');if(cs)cs.value='';
   document.getElementById('countryList').innerHTML='';
