@@ -2,10 +2,28 @@
   "applinks": {
     "details": [
       {
-        "appIDs": ["JULM2M3YJJ.app.meuspot.spot"],
+        "appIDs": [
+          "JULM2M3YJJ.app.meuspot.spot"
+        ],
         "components": [
-          { "/": "/c/*", "comment": "página do convite" },
-          { "/": "/", "?": { "c": "?*" }, "comment": "link de convite /?c=<codigo>" }
+          {
+            "/": "/c/*",
+            "comment": "página do convite"
+          },
+          {
+            "/": "/",
+            "?": {
+              "c": "?*"
+            },
+            "comment": "link de convite /?c=<codigo>"
+          },
+          {
+            "/": "/",
+            "?": {
+              "salvar": "?*"
+            },
+            "comment": "Salvar no meu Spot, da lista publica (a 1.0.1 sabe abrir; ligado em 05/10 depois da aprovacao)"
+          }
         ]
       }
     ]
