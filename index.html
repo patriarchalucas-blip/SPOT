@@ -1907,7 +1907,12 @@ body.tem-apple #convite .btn-apple{display:flex}
 #place.previa .fi-previa-dica{font-size:15px;color:var(--ink)}
 .fi-deles{display:flex;flex-direction:column;gap:12px;margin:16px 0 4px}
 .fi-deles:empty{display:none}
-.fi-dele{display:flex;gap:12px;align-items:flex-start}
+.fi-dele{display:flex;gap:12px;align-items:flex-start;width:100%;border:none;background:none;padding:0;text-align:left;font:inherit;cursor:pointer}
+.fi-dele:active{opacity:.6}
+.fi-dele-seta{margin-left:auto;padding-top:8px;color:var(--ink3)}
+.coment-link{cursor:pointer}
+#place.so-dele .fi-previa-dica,#place.so-dele .fi-status{display:none}
+#place.so-dele .fi-lista-rot{display:flex}
 .fi-dele .pln-av.g{width:36px;height:36px;font-size:14px}
 .fi-dele-txt{display:flex;flex-direction:column;gap:2px;min-width:0;padding-top:7px}
 .fi-dele-txt b{font-size:15px;font-weight:600;color:var(--ink)}
@@ -4399,16 +4404,29 @@ async function pintarDelesNaFicha(s){
   });
   const l=Object.values(por).sort((a,b)=>((a.status==='been'?0:1)-(b.status==='been'?0:1))||((Number(b.my_rating)||0)-(Number(a.my_rating)||0)));
   s._deles=l;
-  box.innerHTML=l.map(o=>{
+  // Tocar abre o spot DELA: a nota, a frase e a conversa de lá (05/10).
+  box.innerHTML=l.map((o,i)=>{
     const quem=plnPrimeiro(o.user_id);
     if(o.status==='been'){
       const n=Number(o.my_rating)>0?' '+fmtRating(o.my_rating)+'★':'';
-      return '<div class="fi-dele">'+plnAvatar(o.user_id,'g')+'<div class="fi-dele-txt"><b>'+esc(quem+' foi'+n)+'</b>'
-        +(o.my_review?'<span>'+esc(o.my_review)+'</span>':'')+'</div></div>';
+      return '<button class="fi-dele" onclick="abrirSpotDeleDaFicha('+i+')">'+plnAvatar(o.user_id,'g')+'<span class="fi-dele-txt"><b>'+esc(quem+' foi'+n)+'</b>'
+        +(o.my_review?'<span>'+esc(o.my_review)+'</span>':'')+'</span><span class="fi-dele-seta">›</span></button>';
     }
-    return '<div class="fi-dele">'+plnAvatar(o.user_id,'g')+'<div class="fi-dele-txt"><b>'+esc(quem)+' <em>quer ir</em></b></div></div>';
+    return '<button class="fi-dele" onclick="abrirSpotDeleDaFicha('+i+')">'+plnAvatar(o.user_id,'g')+'<span class="fi-dele-txt"><b>'+esc(quem)+' <em>quer ir</em></b></span><span class="fi-dele-seta">›</span></button>';
   }).join('');
   atualizarConversa(s);
+}
+function abrirSpotDeleDaFicha(i){
+  const o=(S.curPlace&&S.curPlace._deles||[])[i];if(!o)return;
+  // Já está no spot dele: não abre de novo.
+  if(S.curPlace._comentId===o.id)return;
+  S.placeOriginAntes=S.placeOrigin;
+  telaAntesDaFicha='place';
+  abrirFichaDoSpotDeAmigo(o,true);
+}
+function abrirPerfilDoComentario(id){
+  if(!id||(S.user&&id===S.user.id))return;
+  openFriend(id);
 }
 // "Conversa N" (desenho C13): aparece quando algum amigo tem o spot ou quando
 // já há mensagem. Sem nenhum dos dois, a seção some.
@@ -6249,6 +6267,8 @@ function openSpotFromList(i){const s=LS.items[i];if(!s)return;const t=S.trips.fi
 function backFromPlace(){
   if(S.placeOrigin==='list'){goTo('list',true);renderList();return}
   if(S.placeOrigin==='dashboard'){goTo('dashboard',true);renderTrips();return}
+  // Spot de amigo aberto da SUA ficha ("Ana foi"): volta pra sua ficha.
+  if(S.curPlace&&S.curPlace._voltarPara){openPlace(S.curPlace._voltarPara,S.placeOriginAntes||'trip');return}
   // Aberto de um amigo (perfil, cidade, Explorar, Atividade): volta pra lá.
   if(S.placeOrigin==='amigo'){goTo(telaAntesDaFicha||'friends',true);return}
   // Aberto pela estante: voltar tem que devolver pro Perfil, nao jogar
@@ -6803,7 +6823,7 @@ async function openPlace(id,origin){
     }
   }
   if(!s)return;
-  document.getElementById('place').classList.remove('previa','com-amigo');
+  document.getElementById('place').classList.remove('previa','com-amigo','so-dele');
   S.curPlace=s;
   S.placeOrigin=origin||'trip'; // pra saber pra onde o "voltar" deve levar
   const phEl=document.getElementById('placeHeroImg');
@@ -9356,13 +9376,14 @@ function itemDoExplorar(i){return i==='avulso'?EXPLORE.avulso:EXPLORE.items[i]}
 function abrirPreviaDoExplorar(i){
   const p=itemDoExplorar(i);if(!p)return;
   const meu=allSpotsFlat().find(x=>mesmoLugar(x.name,p.name)&&(!p.city||!cityOf(x)||mesmoLugar(cityOf(x),p.city)));
-  if(meu){openPlace(meu.id,'explore');return}
+  // _doAmigo: o spot DELA, aberto da sua ficha — mostra o dela mesmo sendo seu.
+  if(meu&&!p._doAmigo){openPlace(meu.id,'explore');return}
   const s={id:'previa',_previa:true,_i:i,name:p.name,category:p._cat||EXPLORE.cat,city:p.city,
     address:p.address,phone:p.phone||'',website_url:p.website_url||'',maps_url:p.maps_url||'',
     rating_google:p.rating?fmtRating(p.rating):'',photo_url:p.photo_url||'',lat:p.lat,lng:p.lng,
     status:null,my_rating:null,subcategory:null,opening_hours:null,price_level:p.price_level!=null?p.price_level:null};
   document.getElementById('place').classList.add('previa');
-  document.getElementById('place').classList.remove('com-amigo');
+  document.getElementById('place').classList.remove('com-amigo','so-dele');
   {const d=document.getElementById('fiDeles');if(d)d.innerHTML=''}
   S.curPlace=s;S.placeOrigin='explore';
   const ph=document.getElementById('placeHeroImg');
@@ -11989,10 +12010,13 @@ function renderComentarios(spotId,alvo,donoDoSpot){
     const den=(c.user_id&&c.user_id!==meu)
       ?'<button class="coment-den" onclick="abrirDenuncia(\'comentario\',\''+esc(c.id)+'\',\''+esc(c.user_id)+'\')" aria-label="Denunciar comentário">Denunciar</button>'
       :'';
+    // Nome e foto de quem comentou abrem o perfil da pessoa (05/10). O seu
+    // não abre nada. Só uuid no onclick.
+    const abre=(c.user_id&&c.user_id!==meu)?' onclick="abrirPerfilDoComentario(\''+esc(c.user_id)+'\')" role="button"':'';
     return'<div class="coment-item">'
-      +'<div class="coment-av">'+esc(initials(nome))+'</div>'
+      +'<div class="coment-av'+(abre?' coment-link':'')+'"'+abre+'>'+esc(initials(nome))+'</div>'
       +'<div class="coment-corpo">'
-      +'<div class="coment-topo"><span class="coment-nome">'+esc(nome)+'</span>'
+      +'<div class="coment-topo"><span class="coment-nome'+(abre?' coment-link':'')+'"'+abre+'>'+esc(nome)+'</span>'
       +'<span class="coment-quando">'+esc(timeAgo(c.created_at))+'</span>'+den+x+'</div>'
       +'<div class="coment-txt">'+esc(c.body)+'</div></div></div>';
   }).join('');
@@ -13809,11 +13833,15 @@ function mlVerTodos(){ML_TUDO=true;renderEstante()}
 function abrirFolhaDeCidades(){
   const box=document.getElementById('mlCidadeLista');
   const spots=allSpotsFlat();
+  // Só as cidades que têm spot no que está escolhido (Fui ou Quero ir, e a
+  // categoria): em "Quero ir", cidade sem nenhum Quero ir não aparece (o
+  // Lucas, 05/10: "tem que interagir com o filtro").
   box.innerHTML='<div class="prof-linha" onclick="mlEscolherCidade(-1)"><span class="pl-txt">Todas as cidades</span>'
     +(mlCidade?'':'<span class="pl-seta" style="color:var(--green)">✓</span>')+'</div>'
     +ML_CIDADES.map(function(c,i){
-      const nq=mlFiltrar(spots,'want',c,'').length, nf=mlFiltrar(spots,'been',c,'').length;
-      const meta=[nq?nq+' quero ir':'',nf?nf+' fui':''].filter(Boolean).join(' · ');
+      const n=mlFiltrar(spots,mlStatus,c,mlCat).length;
+      if(!n&&mlCidade!==c)return '';
+      const meta=n+(n===1?' spot':' spots');
       return '<div class="prof-linha" onclick="mlEscolherCidade('+i+')">'
         +'<span class="pl-txt">'+esc(c)+(meta?'<span class="busca-user">'+esc(meta)+'</span>':'')+'</span>'
         +(mlCidade===c?'<span class="pl-seta" style="color:var(--green)">✓</span>':'')+'</div>';
@@ -15716,21 +15744,32 @@ function abrirSpotDoAmigo(i){
   FRIEND.spot=s;
   abrirFichaDoSpotDeAmigo(s);
 }
-function abrirFichaDoSpotDeAmigo(s){
+// `doAmigo`: abre o spot DELE mesmo quando o lugar também é seu (veio do
+// "Ana foi" da sua ficha) — aí a ficha mostra o dele, sem "Salvar como".
+function abrirFichaDoSpotDeAmigo(s,doAmigo){
   const meu=meuSpotIgual(s.name,cityOf(s));
-  if(meu){openPlace(meu.id,'amigo');return}
+  if(meu&&!doAmigo){openPlace(meu.id,'amigo');return}
+  const anterior=S.curPlace;
   EXPLORE.avulso={name:s.name||'',address:s.address||'',city:cityOf(s)||s.city||'',
     country:s._pais||paisDoEndereco(s.address||'')||'',subcat:s.subcategory||'',phone:s.phone||'',
     photo_url:s._fotoVista||s.photo_url||'',photo_author:{nome:s.photo_author||'',url:s.photo_author_url||''},
     rating:Number(s.rating_google)>0?String(s.rating_google):'',website_url:s.website_url||'',maps_url:s.maps_url||'',
     lat:s.lat!=null?Number(s.lat):null,lng:s.lng!=null?Number(s.lng):null,
-    price_level:s.price_level!=null?s.price_level:null,from_user_id:s.user_id||null,_cat:s.category||'food',_amigo:s};
+    price_level:s.price_level!=null?s.price_level:null,from_user_id:s.user_id||null,_cat:s.category||'food',_amigo:s,_doAmigo:!!doAmigo};
   abrirPreviaDoExplorar('avulso');
   S.placeOrigin='amigo';
   const p=S.curPlace;
   if(!p||!p._previa)return;
   p._comentId=s.id;p.from_user_id=s.user_id||null;
   document.getElementById('place').classList.add('com-amigo');
+  // O lugar já é seu: a ficha é a "do post dela" — sem salvar de novo, e o
+  // voltar devolve pra sua ficha.
+  document.getElementById('place').classList.toggle('so-dele',!!meu);
+  if(meu){
+    p._voltarPara=anterior&&!anterior._previa?anterior.id:meu.id;
+    const rot=document.getElementById('fiListaRot');
+    if(rot)rot.innerHTML='<span>Spot de '+esc(plnPrimeiro(s.user_id))+'</span><span class="fi-lista-cid">'+esc(cityOf(s)||'')+'</span>';
+  }
   abrirComentarios(s.id,'placeComentarios',s.user_id);
   pintarDelesNaFicha(p);
 }
