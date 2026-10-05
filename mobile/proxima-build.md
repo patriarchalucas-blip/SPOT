@@ -10,7 +10,12 @@ Antes de compilar: `npx eslint .` e `npx expo export --platform ios` em
 `mobile/`, e conferir esta lista inteira. Depois de compilar, mover os itens
 pra "Já compilado".
 
-## Na fila (build 20)
+## Na fila
+
+- **Abas Viagens e Amigos nativas no desenho novo** (lista em linhas, + Adicionar, busca de amigo): pendente de decisão do Lucas — reescrever no app ou deixar o site desenhar.
+- Depois da 1.0.2 aprovada: tirar o modo "spots" da tela Lista (lista geral).
+
+## Já foi na build 20 (05/10, 1.0.2)
 
 - **Foto do amigo no feed de Amigos** (`TelaAmigos.js`): o Avatar nativo só desenhava iniciais; agora recebe `foto` (o site já manda em `pessoaPraTela`).
 - **Botão "Atividade" no topo da aba Amigos** (`TelaAmigos.js`, `acao('atividade')` → `abrirAtividade`), com o ponto verde de `dados.atividadeNova` — feito no código.
