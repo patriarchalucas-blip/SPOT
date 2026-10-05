@@ -30,6 +30,14 @@ const DB = {
     { id: 'a4', user_id: ANA, trip_id: 'ta', name: 'Livraria Lello', category: 'experience', city: 'Porto', status: 'been', my_rating: 4, my_review: 'Chega antes das 10h.', created_at: '2026-08-04' },
     { id: 'r3', user_id: RAFA, trip_id: 'tr', name: 'A Cevicheria', category: 'food', city: 'Lisboa', status: 'want', created_at: '2026-08-03' },
     { id: 'aj', user_id: ANA, trip_id: 'ta', name: 'Sushi Saito', category: 'food', city: 'Tóquio', status: 'been', my_rating: 5, created_at: '2026-08-01' },
+    // Seus melhores (Perfil v5): notas em São Paulo, com empate e tipos.
+    { id: 'm4', user_id: EU, trip_id: 't2', name: 'Maní', category: 'food', city: 'São Paulo', status: 'been', my_rating: 5, my_review: 'Mil-folhas de mandioquinha', tipo: 'brazilian_restaurant', created_at: '2026-09-20' },
+    { id: 'm5', user_id: EU, trip_id: 't2', name: 'Bráz Pizzaria', category: 'food', city: 'São Paulo', status: 'been', my_rating: 4.5, my_review: 'A de abobrinha', tipo: 'pizza_restaurant', created_at: '2026-09-18' },
+    { id: 'm6', user_id: EU, trip_id: 't2', name: 'Shin-Zushi', category: 'food', city: 'São Paulo', status: 'been', my_rating: 5, tipo: 'japanese_restaurant', created_at: '2026-09-15' },
+    { id: 'm7', user_id: EU, trip_id: 't2', name: 'Bar Astor', category: 'food', city: 'São Paulo', status: 'been', my_rating: 4, tipo: 'bar', created_at: '2026-09-10' },
+    { id: 'm8', user_id: EU, trip_id: 't2', name: 'Pizzaria Camelo', category: 'food', city: 'São Paulo', status: 'been', my_rating: 4, tipo: 'pizza_restaurant', created_at: '2026-09-09' },
+    { id: 'm9', user_id: EU, trip_id: 't2', name: 'Bar sem nota', category: 'food', city: 'São Paulo', status: 'been', tipo: 'bar', created_at: '2026-09-08' },
+    { id: 'm10', user_id: EU, trip_id: 't1', name: 'Sushi Lisboa', category: 'food', city: 'Lisboa', status: 'been', my_rating: 4, tipo: 'japanese_restaurant', created_at: '2026-09-07' },
     { id: 's3', user_id: EU, trip_id: 't2', name: 'Mocotó', category: 'food', city: 'São Paulo', status: 'been', my_rating: 5, created_at: '2026-09-01' },
     { id: 'a1', user_id: ANA, trip_id: 'ta', name: 'Cervejaria Ramiro', category: 'food', city: 'Lisboa', status: 'been', my_rating: 5, my_review: 'Camarão', created_at: '2026-08-01' },
     { id: 'r1', user_id: RAFA, trip_id: 'tr', name: 'Taberna da Rua das Flores', category: 'food', city: 'Lisboa', status: 'been', my_rating: 4, created_at: '2026-08-01' },
@@ -161,6 +169,27 @@ await passoDe('amigos: lista real (c7)', `(async()=>{FRIENDS_DATA=null;await loa
 await passoDe('atividade com eventos', `abrirAtividade()`, 2500);
 await passoDe('atividade: voltar 2', `goTo('friends')`);
 await passoDe('perfil próprio', `(async()=>{document.querySelectorAll('.overlay.show').forEach(o=>closeOv(o.id));goTo('profile');await loadProfile()})()`, 2000);
+await passoDe('v5: perfil (topo)', `(async()=>{goTo('profile');await loadProfile();window.scrollTo(0,0)})()`, 1500);
+await passoDe('v5: rolar até os melhores', `document.getElementById('smLista').scrollIntoView({block:'start'})`);
+await passoDe('v5: rolar até os tipos', `document.getElementById('smTipos').scrollIntoView({block:'center'})`);
+console.log('  top:', await pg.evaluate(() => (TOP.ordem||[]).map(x=>x.name+' '+x.my_rating).join(' / ')), '| empates:', await pg.evaluate(() => (TOP.empates||[]).length));
+await passoDe('v5: trocar cidade (7b)', `abrirCidadesDoTop()`);
+await passoDe('v5: Lisboa (poucas notas, 7c)', `(()=>{const i=TOP.cidadesDaFolha.findIndex(c=>c==='Lisboa');escolherCidadeDoTop(i);document.getElementById('smLista').scrollIntoView({block:'start'})})()`);
+await passoDe('v5: Todas as cidades', `(()=>{abrirCidadesDoTop();escolherCidadeDoTop(-1)})()`);
+await passoDe('v5: volta São Paulo', `(()=>{abrirCidadesDoTop();escolherCidadeDoTop(TOP.cidadesDaFolha.indexOf('São Paulo'))})()`);
+await passoDe('v5: desempate (6c)', `abrirDesempate()`);
+await passoDe('v5: escolher no desempate', `escolherNoDesempate(1)`);
+console.log('  depois:', await pg.evaluate(() => { renderTop(); return (TOP.ordem||[]).map(x=>x.name).join(' / ') }));
+await passoDe('v5: ver em ordem', `(()=>{goTo('profile');renderTop();abrirTopEmOrdem()})()`);
+await passoDe('v5: um tipo (7d)', `(()=>{goTo('profile');renderTop();abrirTipoDoTop(0)})()`);
+await passoDe('v5: mandar (7e)', `(()=>{goTo('profile');renderTop();abrirMandarTop()})()`);
+console.log('  texto:', JSON.stringify(await pg.evaluate(() => textoDoTop())));
+await passoDe('v5: fechar mandar', `closeOv('ov-mandartop')`);
+await passoDe('v5: todos os seus spots', `abrirTodosOsSpots()`);
+await passoDe('v5: buscar "bar"', `(()=>{const i=document.getElementById('msBusca');i.value='bar';msBuscar('bar')})()`);
+await passoDe('v5: planejar sem amigos', `(()=>{goTo('profile');abrirPlanejarDoPerfil();PLN.destinos=[{tipo:'pais',nome:'Itália'},{tipo:'cidade',nome:'Paris',pais:'França'}];plnPintarEscolha()})()`, 1200);
+await passoDe('v5: seguir sem amigos', `plnSeguirSemAmigos()`, 1500);
+console.log('  viagem:', await pg.evaluate(() => { const t = S.trips.find(x => x.name === 'Itália e França'); return t ? JSON.stringify(t.destinations) + ' proxima=' + t.proxima : 'NAO CRIOU' }));
 await passoDe('perfil: meus spots', `document.querySelector('#profile .pf-cab:nth-of-type(2)')?.scrollIntoView()`);
 await passoDe('perfil: quero ir', `mlTrocarStatus('want')`);
 await passoDe('perfil: cidades em Quero ir', `(()=>{mlTrocarStatus('want');abrirFolhaDeCidades()})()`);
