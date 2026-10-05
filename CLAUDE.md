@@ -367,7 +367,7 @@ anon key devolve **200 + `confirmation_sent_at`** quando o SMTP está de pé, e
 
 ## Estado do banco (migrações aplicadas)
 
-001 a 027 já foram rodadas no Supabase — 001–025 conferidas coluna a coluna em
+001 a 028 já foram rodadas no Supabase (**028** = próximas viagens: trips.privada/proxima + RLS que esconde de amigo os Quero ir de viagem privada; rodada em 05/10/2026, 4/4 true. Efeito colateral esperado: consulta SEM login a trips/spots agora dá 401 "permission denied for function" em vez de []; o servidor usa a service key e não é afetado) — 001–025 conferidas coluna a coluna em
 23/09/2026, 026 rodada e conferida (`anon = false` nas duas) em 25/09/2026, **027**
 rodada em 27/09/2026 (5/5 "true" na conferência; RPCs novas recusam anon).
 **027** = cadastro não quebra com username repetido (`handle_new_user` com sufixo);
