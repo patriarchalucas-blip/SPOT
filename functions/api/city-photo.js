@@ -71,7 +71,10 @@ export async function onRequestPost(context) {
   // com haltere. Chave nova = toda cidade é escolhida de novo, uma vez.
   // v4 (05/10): a foto passa a vir primeiro do Google (ver abaixo). Chave nova
   // = toda cidade é escolhida de novo, uma vez, conforme alguém abre.
-  const cacheKey = 'cityphoto4_' + normKey(query);
+  // As fotos da TELA DE LOGIN foram escolhidas a dedo (são o anúncio do app):
+  // ficam com a chave e a regra antigas, do Unsplash.
+  const daEntradaCedo = CIDADES_DA_ENTRADA.has(normKey(query));
+  const cacheKey = (daEntradaCedo ? 'cityphoto3_' : 'cityphoto4_') + normKey(query);
   const cached = await lerKV(env, cacheKey);
   // Cache liberado sem login, igual à /api/climate: responder daqui não gasta
   // cota nem expõe nada, e é o caminho da maioria das chamadas.
@@ -97,7 +100,7 @@ export async function onRequestPost(context) {
   const mesG = new Date().toISOString().slice(0, 7);
   const contadorG = 'places_count_' + mesG;
   const usadoG = parseInt((await lerKV(env, contadorG)) || '0', 10);
-  if (usadoG < 5000) {
+  if (!daEntradaCedo && usadoG < 5000) {
     await contarUso(env, contadorG, usadoG, 1, 60 * 60 * 24 * 40);
     const g = await fotoDoGoogle(env, query);
     if (g) { await gravarKV(env, cacheKey, JSON.stringify(g), TTL_OK); return responder(context, g); }
