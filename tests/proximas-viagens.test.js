@@ -51,7 +51,8 @@ test('sem proxima viagem, o vazio oferece Nova viagem e Com amigos', () => {
   A.avaliar("S.trips=S.trips.filter(t=>t.id==='pt')");
   A.renderProximas();
   const h = A.avaliar("document.getElementById('pxLista').innerHTML");
-  assert.ok(h.includes('Para onde é a próxima?') && h.includes('Nova viagem') && h.includes('Com amigos'));
+  // Perfil v5: sem próxima viagem, só o card "+ Planejar viagem".
+  assert.ok(h.includes('Planejar viagem') && h.includes('Junte o que seus amigos'));
 });
 
 test('primeiro Fui: a viagem vira viagem, a folha aparece uma vez e a aba diz "Acabou de chegar"', () => {
@@ -131,7 +132,7 @@ test('sem a migracao 028 (linha sem privada), nada e gravado e nao ha proxima vi
   await A.avaliar('fecharViagensNovas()');
   assert.strictEqual(A.avaliar('window.__upd.length'), 0);
   A.renderProximas();
-  assert.ok(A.avaliar("document.getElementById('pxLista').innerHTML").includes('Para onde é a próxima?'));
+  assert.ok(A.avaliar("document.getElementById('pxLista').innerHTML").includes('Planejar viagem'));
 });
 
 test('Meus spots: Fui inclui Nao recomendo; agrupado por cidade, ate 8 linhas', () => {
