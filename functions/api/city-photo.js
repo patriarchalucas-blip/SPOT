@@ -69,7 +69,9 @@ export async function onRequestPost(context) {
   // v3 (01/10): a regra de escolha mudou (ver escolherFoto). O cache velho
   // guardava fotos sem conferir se eram do lugar — Joinville virou um menino
   // com haltere. Chave nova = toda cidade é escolhida de novo, uma vez.
-  const cacheKey = 'cityphoto3_' + normKey(query);
+  // v4 (05/10): a foto passa a vir primeiro do Google (ver abaixo). Chave nova
+  // = toda cidade é escolhida de novo, uma vez, conforme alguém abre.
+  const cacheKey = 'cityphoto4_' + normKey(query);
   const cached = await lerKV(env, cacheKey);
   // Cache liberado sem login, igual à /api/climate: responder daqui não gasta
   // cota nem expõe nada, e é o caminho da maioria das chamadas.
@@ -84,6 +86,21 @@ export async function onRequestPost(context) {
     if (!await podeGastar(env, 'unsplash', quem.uid, 1, USER_CAP)) {
       return json({ url: '', capped: true, scope: 'user' });
     }
+  }
+
+  // PRIMEIRO O GOOGLE, DO PRÓPRIO LUGAR (05/10). O Unsplash acha foto pelo
+  // TEXTO, e texto engana: "São Paulo" é cidade e estado, e uma praia do
+  // litoral marcada "São Paulo, Brasil" virou a capa de quem mora na capital
+  // (o Lucas). O resultado do Google é o lugar do tipo cidade/região/país —
+  // é o lugar certo por construção. Uma busca por cidade nova, guardada 6
+  // meses e dividida entre todo mundo; conta no mesmo teto do /api/places.
+  const mesG = new Date().toISOString().slice(0, 7);
+  const contadorG = 'places_count_' + mesG;
+  const usadoG = parseInt((await lerKV(env, contadorG)) || '0', 10);
+  if (usadoG < 5000) {
+    await contarUso(env, contadorG, usadoG, 1, 60 * 60 * 24 * 40);
+    const g = await fotoDoGoogle(env, query);
+    if (g) { await gravarKV(env, cacheKey, JSON.stringify(g), TTL_OK); return responder(context, g); }
   }
 
   const mes = new Date().toISOString().slice(0, 7);
@@ -173,13 +190,20 @@ function responder(context, r) {
 // Janeiro) — e foto de gente não serve de capa de cidade. O alt do Unsplash é
 // em inglês, por isso as palavras de pessoa estão em inglês.
 const DE_GENTE = /\b(man|men|woman|women|boy|boys|girl|girls|child|children|kid|kids|baby|person|people|portrait|selfie|couple|family|face|smiling|bride|groom)\b/i;
+// A foto tem que citar o NOME INTEIRO do lugar. Conferia só a 1ª palavra —
+// em "São Paulo" bastava "São", e passava São Sebastião (05/10). A busca às
+// vezes vem com o país no fim ("São Paulo Brasil"): aí vale o nome sem a
+// última palavra, desde que sobrem duas ou mais.
 export function fotoServe(f, query) {
   if (!f) return false;
   const texto = [f.description, f.alt_description].concat((f.tags || []).map((t) => t && t.title)).filter(Boolean).join(' ');
   if (DE_GENTE.test(texto)) return false;
-  const palavra = normKey(String(query).trim().split(/[\s,]+/)[0] || '');
-  if (palavra.length < 3) return true;
-  return ('_' + normKey(texto) + '_').includes('_' + palavra + '_') || normKey(texto).includes(palavra);
+  const palavras = String(query).trim().split(/[\s,]+/).map(normKey).filter(Boolean);
+  if (!palavras.length || palavras.join('').length < 3) return true;
+  const t = '_' + normKey(texto) + '_';
+  const cita = (ws) => t.includes('_' + ws.join('_') + '_');
+  if (cita(palavras)) return true;
+  return palavras.length >= 3 && cita(palavras.slice(0, -1));
 }
 // A foto que o Google tem do próprio lugar (o resultado que é cidade, região,
 // país ou ponto natural). Passa pelo /api/place-photo, que esconde a chave.
