@@ -44,9 +44,15 @@ import { folgaDeRolagem } from './BarraDeAbas';
 
 // ── peças pequenas ────────────────────────────────────────────────────────
 
-function Avatar({ iniciais, tamanho = 38 }) {
+// Com foto, a foto; sem, as iniciais (05/10: o feed mostrava só as iniciais).
+function Avatar({ iniciais, foto, tamanho = 38 }) {
+  const [falhou, setFalhou] = React.useState(false);
+  const forma = { width: tamanho, height: tamanho, borderRadius: tamanho / 2 };
+  if (foto && !falhou) {
+    return <Image source={{ uri: foto }} style={[e.avatar, forma]} onError={() => setFalhou(true)} />;
+  }
   return (
-    <View style={[e.avatar, { width: tamanho, height: tamanho, borderRadius: tamanho / 2 }]}>
+    <View style={[e.avatar, forma]}>
       <Text style={[e.avatarTxt, { fontSize: tamanho * 0.37 }]}>{iniciais}</Text>
     </View>
   );
@@ -352,7 +358,7 @@ export default function TelaAmigos({ dados, ocupado, acao }) {
             {recebidos.length ? <Text style={e.secao}>Recebidos</Text> : null}
             {recebidos.map((p) => (
               <View key={p.pedido} style={e.reqCard}>
-                <Avatar iniciais={p.iniciais} />
+                <Avatar iniciais={p.iniciais} foto={p.foto} />
                 <Text style={e.reqNome} numberOfLines={1}>{p.nome}</Text>
                 <Pressable onPress={() => acao('recusar', p.pedido)} style={[e.reqBotao, e.reqRecusar]}>
                   <Text style={e.reqRecusarTxt}>Recusar</Text>
@@ -367,7 +373,7 @@ export default function TelaAmigos({ dados, ocupado, acao }) {
             ) : null}
             {enviados.map((p) => (
               <View key={p.pedido} style={e.reqCard}>
-                <Avatar iniciais={p.iniciais} />
+                <Avatar iniciais={p.iniciais} foto={p.foto} />
                 <Text style={e.reqNome} numberOfLines={1}>{p.nome}</Text>
                 <Pressable onPress={() => acao('cancelar', p.pedido)} style={[e.reqBotao, e.reqRecusar]}>
                   <Text style={e.reqRecusarTxt}>Cancelar</Text>
@@ -385,7 +391,7 @@ export default function TelaAmigos({ dados, ocupado, acao }) {
                 onPress={() => acao('perfil', p.id)}
                 style={({ pressed }) => [e.linhaAmigo, pressed && { opacity: 0.7 }]}
               >
-                <Avatar iniciais={p.iniciais} />
+                <Avatar iniciais={p.iniciais} foto={p.foto} />
                 <Text style={e.linhaNome} numberOfLines={1}>{p.nome}</Text>
                 {p.username ? <Text style={e.linhaUser}>@{p.username}</Text> : null}
                 <Text style={e.seta}>{'›'}</Text>
@@ -413,7 +419,7 @@ export default function TelaAmigos({ dados, ocupado, acao }) {
                 onPress={() => acao('perfil', it.quem.id)}
                 style={({ pressed }) => [e.feedItem, pressed && { opacity: 0.7 }]}
               >
-                <Avatar iniciais={it.quem.iniciais} />
+                <Avatar iniciais={it.quem.iniciais} foto={it.quem.foto} />
                 <View style={{ flex: 1 }}>
                   <Text style={e.feedTexto}>
                     {(it.partes || []).map((p, k) => (

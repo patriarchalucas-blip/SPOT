@@ -548,6 +548,7 @@ input,textarea,select{font-size:max(16px,1em)!important}
 .coment-bloco{margin-top:8px}
 .coment-titulo{font-size:20px;font-weight:700;letter-spacing:-.03em;color:var(--ink);margin-bottom:14px}
 .coment-item{display:flex;gap:12px;padding:0 0 18px;border-top:none}
+.av-foto{background-size:cover!important;background-position:center!important;color:transparent!important}
 .coment-av{width:30px;height:30px;border-radius:50%;flex-shrink:0;background:var(--green);color:#fff;
   display:flex;align-items:center;justify-content:center;font-family:var(--mono);font-size:11px}
 .coment-corpo{flex:1;min-width:0}
@@ -2585,11 +2586,6 @@ body.exm .exm-filtros{position:relative;z-index:1}
     <nav class="pv5-abas" id="smAbas"></nav>
     <div id="smLista"></div>
 
-    <div id="smTiposBloco">
-      <div class="pv5-cab2"><h2 class="pv5-tit2">O melhor de cada tipo</h2><div class="pv5-sub">Em todas as cidades</div></div>
-      <div id="smTipos"></div>
-    </div>
-
     <div class="pf-rodape">
       <button class="pf-linha" onclick="abrirTodosOsSpots()"><span>Todos os seus spots</span><span class="pf-val" id="pfTodos"></span></button>
       <!-- Importar à mão depois do primeiro acesso (o Lucas, 05/10): não só no
@@ -2623,12 +2619,6 @@ body.exm .exm-filtros{position:relative;z-index:1}
 <div class="screen" id="topordem">
   <div class="at-topo"><button class="at-voltar" onclick="goTo('profile');renderTop()" data-ic="back" aria-label="Voltar"></button><h1 id="toTitulo">Seus melhores</h1><span></span></div>
   <div class="profile-body"><p class="to-dica">Segure o ≡ e arraste pra mudar a ordem.</p><div id="toLista"></div><div style="height:80px"></div></div>
-</div>
-
-<!-- UM TIPO (7d) -->
-<div class="screen" id="toptipo">
-  <div class="at-topo tt-topo"><button class="at-voltar" onclick="goTo('profile');renderTop()" data-ic="back" aria-label="Voltar"></button><span></span><button class="pv5-mandar" onclick="abrirMandarTop('tipo')"><span data-ic="share"></span>Mandar</button></div>
-  <div class="profile-body"><h1 class="tt-tit" id="ttTitulo"></h1><div class="tt-sub" id="ttSub"></div><div id="ttLista"></div><div id="ttPonte"></div><div style="height:80px"></div></div>
 </div>
 
 <!-- DESEMPATE (6c): só abre pelo aviso, nunca sozinho. -->
@@ -3553,7 +3543,8 @@ function plnPrimeiro(id){
   return n.startsWith('@')?n.slice(1):n.split(/\s+/)[0];
 }
 function plnAvatar(id,classe){
-  const p=plnPerfil(id)||{};
+  const p=Object.assign({},plnPerfil(id)||{});
+  if(!p.avatar_url)p.avatar_url=fotoDaPessoa(id);
   const nome=S.user&&id===S.user.id?((S.profile&&S.profile.display_name)||nomeDeExibicao()||'?'):friendName(p);
   const foto=p.avatar_url?';background-image:'+cssUrl(p.avatar_url):'';
   return '<span class="pln-av'+(classe?' '+classe:'')+'" style="'+esc('background-color:'+plnCor(id)+foto)+'">'
@@ -4631,7 +4622,6 @@ function renderTop(){
     if(emp.length)h+='<button class="tp-empate" onclick="abrirDesempate()"><span><b>'+emp.length+(emp.length===1?' empate':' empates')+' no seu top</b><span>Escolha qual você prefere. Leva 10 segundos.</span></span><i>›</i></button>';
   }
   lista0.innerHTML=h;
-  renderTiposDoTop();
 }
 function trocarAbaDoTop(c){TOP.cat=c;renderTop()}
 // 7c: menos de 3 notas na cidade + aba — o próprio pedido, com as estrelas.
@@ -4747,9 +4737,10 @@ async function escolherNoDesempate(lado){
 function pularDesempate(){TOP.dePos++;pintarDesempate()}
 function fecharDesempate(){goTo('profile');renderTop()}
 
-// ── O melhor de cada tipo (v5) ──
-// O tipo vem do Google (spots.tipo, 029) — japanese_restaurant vira
-// "Japonês". Experiência sem tipo do Google usa a subcategoria do app.
+// ── O tipo do lugar (spots.tipo, 029) ──
+// "O melhor de cada tipo" saiu do Perfil (o Lucas não gostou, 05/10). O tipo
+// do Google continua sendo gravado no spot ao salvar: é dado de graça (vem na
+// mesma busca) e serve a filtros futuros. Nada mais busca o tipo sozinho.
 const TIPO_ROTULO={japanese_restaurant:'Japonês',sushi_restaurant:'Japonês',ramen_restaurant:'Japonês',pizza_restaurant:'Pizza',
   italian_restaurant:'Italiano',brazilian_restaurant:'Brasileiro',hamburger_restaurant:'Hambúrguer',steak_house:'Carnes',barbecue_restaurant:'Carnes',
   seafood_restaurant:'Frutos do mar',mexican_restaurant:'Mexicano',chinese_restaurant:'Chinês',thai_restaurant:'Tailandês',korean_restaurant:'Coreano',
@@ -4769,44 +4760,6 @@ function tipoDoGoogle(primario,tipos){
   if(primario&&TIPO_ROTULO[primario])return primario;
   return (tipos||[]).find(t=>TIPO_ROTULO[t])||primario||'';
 }
-let TOP_TIPOS_TODOS=false;
-function gruposDeTipo(){
-  const g={};allSpotsFlat().forEach(x=>{if(!comNota(x))return;const r=rotuloDoTipo(x);if(!r)return;(g[r]=g[r]||[]).push(x)});
-  return Object.keys(g).filter(k=>g[k].length>=2).sort((a,b)=>g[b].length-g[a].length||a.localeCompare(b,'pt-BR')).map(k=>({tipo:k,spots:g[k]}));
-}
-function renderTiposDoTop(){
-  const box=document.getElementById('smTipos'),bloco=document.getElementById('smTiposBloco');if(!box)return;
-  const gs=gruposDeTipo();TOP.grupos=gs;
-  if(bloco)bloco.style.display=gs.length?'':'none';
-  const vis=TOP_TIPOS_TODOS?gs:gs.slice(0,6);
-  box.innerHTML=vis.map((g,i)=>{const m=ordenarTop(g.spots,'tipo|'+g.tipo)[0];
-    return '<button class="ti-linha" onclick="abrirTipoDoTop('+i+')"><span class="ti-tipo">'+esc(g.tipo)+'</span><span class="ti-melhor"><b>'+esc(m.name||'')+'</b><span>'+esc(cityOf(m)||'')+'</span></span><i>›</i></button>'}).join('')
-    +(!TOP_TIPOS_TODOS&&gs.length>6?'<button class="pf-ver" onclick="TOP_TIPOS_TODOS=true;renderTiposDoTop()">Ver todos os tipos</button>':'');
-}
-function abrirTipoDoTop(i){
-  const g=(TOP.grupos||[])[i];if(!g)return;
-  TOP.tipo=g.tipo;
-  const lista=ordenarTop(g.spots,'tipo|'+g.tipo);TOP.tipoLista=lista;
-  const cidades=new Set(lista.map(x=>cityOf(x)||'').filter(Boolean));
-  document.getElementById('ttTitulo').textContent=g.tipo;
-  document.getElementById('ttSub').textContent=lista.length+' com nota · '+cidades.size+(cidades.size===1?' cidade':' cidades');
-  document.getElementById('ttLista').innerHTML=lista.map((x,k)=>linhaDoTop(x,k,true)).join('');
-  // Ponte com o Planejar: próxima viagem com Quero ir desse tipo.
-  let ponte='';
-  for(const t of proximasViagens()){
-    const q=(t._spots||[]).filter(x=>x.status==='want'&&rotuloDoTipo(x)===g.tipo);
-    if(!q.length)continue;
-    const porCidade={};lista.forEach(x=>{const c=cityOf(x)||'';porCidade[c]=(porCidade[c]||0)+1});
-    const melhorCid=Object.keys(porCidade).sort((a,b)=>porCidade[b]-porCidade[a])[0]||'';
-    const amigo=q.map(x=>x.from_user_id).find(Boolean);
-    TOP.ponteViagem=t.id;
-    ponte='<button class="tp-empate tt-ponte" onclick="openTrip(TOP.ponteViagem)"><span><b>Vai pro '+esc(t.name)+'?</b><span>Seus '+Math.min(lista.length,porCidade[melhorCid]||0)+' melhores '+esc(g.tipo.toLowerCase())+(melhorCid?' ficam em '+esc(melhorCid):'')+'. A viagem planejada tem '+q.length+' '+esc(g.tipo.toLowerCase())+(amigo?' com a dica de '+esc(plnPrimeiro(amigo)):'')+'.</span></span><i>›</i></button>';
-    break;
-  }
-  document.getElementById('ttPonte').innerHTML=ponte;
-  goTo('toptipo');
-}
-
 // ── 7e: Mandar seu top ──
 function textoDoTop(){
   const m=TOP.mandar;if(!m)return '';
@@ -4819,9 +4772,7 @@ function textoDoTop(){
   return m.titulo+':\n\n'+linhas.join('\n')+'\n\nOs '+m.lista.length+' no Spot: meuspot.app';
 }
 function abrirMandarTop(origem){
-  if(origem==='tipo'){
-    TOP.mandar={titulo:'Meu top de '+TOP.tipo.toLowerCase(),lista:TOP.tipoLista||[],comCidade:true,onde:TOP.tipo.toLowerCase()};
-  }else{
+  {
     const onde=TOP.cidade==='*'?'todas as cidades':TOP.cidade;
     const cat=TOP.cat==='food'?'':' · '+TOP_ROTULO_CAT[TOP.cat].toLowerCase();
     TOP.mandar={titulo:'Meu top de '+onde+cat,lista:TOP.ordem||[],comCidade:TOP.cidade==='*',onde:onde};
@@ -4848,37 +4799,6 @@ async function copiarTop(){
   const t=textoDoTop();if(!t)return;
   try{await navigator.clipboard.writeText(t);closeOv('ov-mandartop');toast('Copiado','Cole onde quiser.','check')}
   catch(e){closeOv('ov-mandartop');mandarTextoPraFora(t,'Seu top')}
-}
-
-// ── O tipo dos spots antigos (029): preenchido aos poucos, em segundo plano ──
-// Só os Fui com nota (é o que o "melhor de cada tipo" usa), 6 por vez, uma
-// tentativa por spot na sessão, pelo mesmo orçamento do preenchimento de
-// coordenada. Sem a coluna, para no primeiro erro.
-const TIPO_TENTADO=new Set();let tipoRodando=false;
-async function preencherTiposQueFaltam(limite){
-  if(tipoRodando||!S.user)return;
-  const faltam=allSpotsFlat().filter(x=>comNota(x)&&x.category!=='hotel'&&x.tipo==null&&!TIPO_TENTADO.has(x.id)).slice(0,limite||6);
-  if(!faltam.length)return;
-  // Linha sem a coluna "tipo" = 029 não rodou: nem tenta.
-  const algum=allSpotsFlat()[0];if(algum&&!Object.prototype.hasOwnProperty.call(algum,'tipo'))return;
-  tipoRodando=true;
-  try{
-    for(const x of faltam){
-      TIPO_TENTADO.add(x.id);
-      let d=null;
-      try{
-        const r=await googlePlaces('searchText',{headers:{'Content-Type':'application/json','X-Goog-FieldMask':'places.displayName,places.types,places.primaryType'},
-          body:JSON.stringify({textQuery:x.name+(cityOf(x)?' '+cityOf(x):''),languageCode:'pt-BR',maxResultCount:3,uso:'coordenada'})});
-        d=await r.json();
-      }catch(e){continue}
-      const p=pickBestPlaceMatch((d&&d.places)||[],x.name);
-      const tipo=p?tipoDoGoogle(p.primaryType,p.types):'';
-      const{error}=await dbUpdate('spots',x.id,{tipo:tipo||''});
-      if(error)return;
-      const real=findSpotById(x.id);if(real)real.tipo=tipo||'';
-    }
-    if(document.getElementById('profile').classList.contains('active'))renderTiposDoTop();
-  }finally{tipoRodando=false}
 }
 
 // ═══ FICHA: QUEM DO SEU CÍRCULO TEM ESTE SPOT (desenho e5) ═══
@@ -8502,7 +8422,7 @@ function renderAmigosNoLugar(r,lugar){
     // texto secundário pra não ser lido como recomendação.
     const selo=g.foram?'<span class="amg-varios">já foi</span>':'<span class="amg-quer-selo">quer ir</span>';
     return'<div class="amg-linha" onclick="abrirAmigoNoLugar('+i+')">'
-      +'<div class="amg-avatar">'+esc(initials(nome))+'</div>'
+      +avatarDe(g.perfil&&g.perfil.id,nome,'amg-avatar')
       +'<div class="amg-main"><div class="amg-nome">'+esc(nome)+'</div>'
       +'<div class="amg-onde">'+partes.join(' · ')+(partes.length?' · ':'')+selo+'</div></div>'
       +'<span class="amg-seta">›</span></div>';
@@ -12586,7 +12506,7 @@ function renderComentarios(spotId,alvo,donoDoSpot){
     // não abre nada. Só uuid no onclick.
     const abre=(c.user_id&&c.user_id!==meu)?' onclick="abrirPerfilDoComentario(\''+esc(c.user_id)+'\')" role="button"':'';
     return'<div class="coment-item">'
-      +'<div class="coment-av'+(abre?' coment-link':'')+'"'+abre+'>'+esc(initials(nome))+'</div>'
+      +avatarDe(c.user_id,nome,'coment-av'+(abre?' coment-link':'')).replace('<div class=','<div'+abre+' class=')
       +'<div class="coment-corpo">'
       +'<div class="coment-topo"><span class="coment-nome'+(abre?' coment-link':'')+'"'+abre+'>'+esc(nome)+'</span>'
       +'<span class="coment-quando">'+esc(timeAgo(c.created_at))+'</span>'+den+x+'</div>'
@@ -12642,7 +12562,7 @@ function renderSocialDoSpot(spotId,spot){
   lista.forEach(c=>{if(c.user_id&&!vistos.includes(c.user_id))vistos.push(c.user_id)});
   const nomes=vistos.map(id=>String(friendName(COMENT_PERFIS[id])||'Alguém').split(' ')[0]);
   const pilha=vistos.slice(0,3).map((id,i)=>
-    '<b class="sp-av" style="z-index:'+(3-i)+'">'+esc(initials(friendName(COMENT_PERFIS[id])))+'</b>').join('');
+    avatarDe(id,friendName(COMENT_PERFIS[id]),'sp-av').replace(/^<div/,'<b style="z-index:'+(3-i)+'"').replace(/<\/div>$/,'</b>')).join('');
 
   let texto='';
   if(nomes.length===1)texto='<i>'+esc(nomes[0])+'</i> comentou';
@@ -13969,7 +13889,6 @@ function renderPerfil(){
   const nome=String(nomeDeExibicao()||'').trim().split(/\s+/)[0]||'';
   const el=document.getElementById('profName');if(el)el.textContent=nome;
   renderProximas();renderTop();pintarRodapeDoPerfil();
-  preencherTiposQueFaltam(6).catch(()=>{});
 }
 function abrirTodosOsSpots(){ML_TUDO=true;goTo('meusspots');renderEstante()}
 let MS_BUSCA='';
@@ -15500,7 +15419,25 @@ function coresDoGradiente(nome){
 function pessoaPraTela(id,pmap){
   const p=pmap&&pmap[id];
   const nome=friendName(p);
-  return{id:id,nome:nome,iniciais:initials(nome),username:(p&&p.username)||''};
+  // A foto vai junto (05/10): o nativo desenhava só as iniciais.
+  return{id:id,nome:nome,iniciais:initials(nome),username:(p&&p.username)||'',foto:fotoPraCasca(safeUrl(fotoDaPessoa(id)))};
+}
+// A FOTO DE QUALQUER PESSOA, de onde ela já estiver carregada: amigos,
+// Planejar, comentários, perfil aberto, você mesmo. Cada tela tinha a sua
+// fonte e várias desenhavam só as iniciais (o Lucas, 05/10).
+function fotoDaPessoa(id){
+  if(!id)return '';
+  if(S.user&&id===S.user.id)return (S.profile&&S.profile.avatar_url)||'';
+  const fontes=[FRIENDS_DATA&&FRIENDS_DATA.pmap,PLN_AMIGOS&&PLN_AMIGOS.perfis,typeof COMENT_PERFIS!=='undefined'?COMENT_PERFIS:null];
+  for(const f of fontes){const p=f&&f[id];if(p&&p.avatar_url)return p.avatar_url}
+  if(FRIEND&&FRIEND.id===id&&FRIEND.profile&&FRIEND.profile.avatar_url)return FRIEND.profile.avatar_url;
+  return '';
+}
+// O círculo com a foto (ou as iniciais, sem foto). `classe` decide o tamanho.
+function avatarDe(id,nome,classe){
+  const f=safeUrl(fotoDaPessoa(id));
+  return f?'<div class="'+classe+' av-foto" style="background-image:'+cssUrl(f)+'"></div>'
+    :'<div class="'+classe+'">'+esc(initials(nome||'?'))+'</div>';
 }
 
 let SALVANDO_NO_FEED=-1;
@@ -15675,7 +15612,7 @@ function cardDeVisita(it,i,nome){
   // tocar na pessoa leva à pessoa, tocar no lugar leva ao lugar.
   return '<div class="fd-card">'
     +'<div class="fd-quem" onclick="openFriend(\''+esc(it.user_id)+'\')">'
-      +'<span class="fd-av">'+esc(initials(nome))+'</span>'
+      +avatarDe(it.user_id,nome,'fd-av').replace(/^<div/,'<span').replace(/<\/div>$/,'</span>')
       +'<span class="fd-quem-t"><b>'+esc(nome)+'</b> salvou <b>'+esc(sp.name)+'</b></span>'
       +'<span class="fd-quando">'+esc(timeAgo(it.created_at))+'</span></div>'
     +'<div class="fd-img" style="'+fundo+'" onclick="abrirVisitaDoFeed('+i+')">'
@@ -15810,7 +15747,7 @@ function renderFriendsTab(){
       h+='<div class="section-head"><span class="section-title">Recebidos</span></div>';
       h+=incoming.map(r=>{
         const p=pmap[r.follower_id];const name=friendName(p);
-        return '<div class="req-card"><div class="feed-avatar">'+esc(initials(name))+'</div>'
+        return '<div class="req-card">'+avatarDe(r.follower_id,name,'feed-avatar')
           +'<div style="flex:1;min-width:0"><div class="req-name">'+esc(name)+'</div></div>'
           +'<button class="req-btn req-decline" onclick="respondRequest(\''+esc(r.id)+'\',false)">Recusar</button>'
           +'<button class="req-btn req-accept" onclick="respondRequest(\''+esc(r.id)+'\',true)">Aceitar</button></div>';
@@ -15820,7 +15757,7 @@ function renderFriendsTab(){
       h+='<div class="section-head"'+(incoming.length?' style="margin-top:24px"':'')+'><span class="section-title">Enviados</span></div>';
       h+=outgoing.map(r=>{
         const p=pmap[r.following_id];const name=friendName(p);
-        return '<div class="req-card"><div class="feed-avatar">'+esc(initials(name))+'</div>'
+        return '<div class="req-card">'+avatarDe(r.following_id,name,'feed-avatar')
           +'<div style="flex:1;min-width:0"><div class="req-name">'+esc(name)+'</div></div>'
           +'<button class="req-btn req-decline" onclick="cancelRequest(\''+esc(r.id)+'\')">Cancelar</button></div>';
       }).join('');
@@ -15885,7 +15822,7 @@ function renderFriendsTab(){
         if(it.tipo!=='visita'){
           // Viagem marcada e comentário continuam sendo uma linha: não têm
           // foto nem nota pra sustentar um card.
-          return `<div class="feed-item" style="cursor:pointer" onclick="openFriend('${esc(it.user_id)}')"><div class="feed-avatar">${esc(initials(name))}</div><div><div class="feed-text">${it.html}</div><div class="feed-time">${esc(timeAgo(it.created_at))}</div></div></div>`;
+          return `<div class="feed-item" style="cursor:pointer" onclick="openFriend('${esc(it.user_id)}')">${avatarDe(it.user_id,name,'feed-avatar')}<div><div class="feed-text">${it.html}</div><div class="feed-time">${esc(timeAgo(it.created_at))}</div></div></div>`;
         }
         return cardDeVisita(it,i,name);
       }).join('');

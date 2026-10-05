@@ -12,6 +12,8 @@ pra "Já compilado".
 
 ## Na fila (build 20)
 
+- **Foto do amigo no feed de Amigos** (`TelaAmigos.js`): o Avatar nativo só desenhava iniciais; agora recebe `foto` (o site já manda em `pessoaPraTela`).
+- **Entrada da Atividade na aba Amigos** do app: a tela Atividade existe no site, mas a aba Amigos do iPhone é nativa e ainda não tem o botão. Depende da decisão sobre as abas nativas.
 - **Anel do placar** (`TelaViagens.js`): o "12%" descia em cima do "de 195" no iPhone (print do Lucas, 05/10). Linha de base fixa pra cada texto, sem alignmentBaseline/dy — conferido desenhando o mesmo SVG.
 - ~~Placar com continentes~~ — reprovado pelo Lucas (05/10); o placar continua países · cidades · spots.
 - **Pendente de decisão do Lucas:** a aba Viagens e a aba Amigos nativas ainda têm o desenho antigo (sem "Onde você mora" em card, sem lista em linhas, sem busca de amigo, sem Atividade). Ou reescrever as duas em React Native, ou deixar o site desenhar essas abas como já faz com o Explorar (`cascaTemExplorarWeb`).

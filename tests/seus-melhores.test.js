@@ -47,10 +47,7 @@ test('Mandar: frase com minuscula, sem nota numerica e sem a nota privada', () =
   assert.ok(!t.includes('segredo') && !t.includes('★'));
 });
 
-test('o melhor de cada tipo: so tipos com 2+ spots com nota', () => {
-  cenario();
-  const g = A.avaliar('JSON.stringify(gruposDeTipo().map(x=>[x.tipo,x.spots.length]))');
-  assert.strictEqual(g, '[["Pizza",2]]');
+test('o tipo gravado no spot e o mais especifico do Google', () => {
   assert.strictEqual(A.tipoDoGoogle('restaurant', ['restaurant', 'japanese_restaurant', 'food']), 'japanese_restaurant');
 });
 
