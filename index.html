@@ -622,6 +622,10 @@ input,textarea,select{font-size:max(16px,1em)!important}
 .am-cid-row:active{opacity:.7}
 .am-cid-fotos{display:flex;gap:2px;flex:none}
 .am-cid-fotos span{width:44px;height:56px;background:var(--surface);overflow:hidden;display:block}
+.am-cid-fotos.n1 span{width:136px}
+.am-cid-fotos.n2 span{width:67px}
+.am-cid-fotos span:only-child{border-radius:14px}
+.am-cid-sem{cursor:default}
 .am-cid-fotos span:first-child{border-radius:14px 0 0 14px}
 .am-cid-fotos span:last-child{border-radius:0 14px 14px 0}
 .am-cid-fotos img{width:100%;height:100%;object-fit:cover;display:block}
@@ -3479,7 +3483,9 @@ function plnSpotsDeles(){
       dbGet('spots','user_id=in.('+lista+')&status=in.(been,want)&limit=5000'
         +'&select=id,user_id,trip_id,name,category,subcategory,place_type,city,address,photo_url,photo_author,photo_author_url,maps_url,website_url,phone,lat,lng,rating_google,price_level,status,my_rating,my_review')]);
     const porId={};(viagens||[]).forEach(t=>{porId[t.id]=t});
-    return (spots||[]).filter(s=>s&&!estaBloqueado(s.user_id)).map(s=>Object.assign(s,{_pais:plnPaisDoSpot(porId[s.trip_id],s)}));
+    return (spots||[]).filter(s=>s&&!estaBloqueado(s.user_id)).map(s=>Object.assign(s,{_pais:plnPaisDoSpot(porId[s.trip_id],s)}))
+      // "Spot" que é a própria cidade/país (dado antigo) não é recomendação.
+      .filter(s=>!ehSoACidade(s));
   })();
   return PLN_DELES.p;
 }
@@ -4491,7 +4497,12 @@ async function montarCarrossel(sp){
   // são as do Google que ainda não apareceram.
   const atual=chaveDaFoto(sp.photo_url||sp._fotoVista||'');
   const vistas=new Set([atual]);
-  const extras=lista.filter(f=>{const k=chaveDaFoto(f.url);if(!k||vistas.has(k))return false;vistas.add(k);return true});
+  // A capa, quando veio do Google, é quase sempre a 1ª foto do lugar — e o
+  // Google muda o nome da foto a cada consulta, então comparar o nome não
+  // pega a repetida (o Lucas viu a mesma foto duas vezes, 05/10). Capa do
+  // Google: pula a 1ª. Capa sua (foto que você subiu): todas entram.
+  const capaDoGoogle=!!(sp.photo_url||sp._fotoVista)&&!/\/storage\//.test(String(sp.photo_url||''));
+  const extras=lista.slice(capaDoGoogle?1:0).filter(f=>{const k=chaveDaFoto(f.url);if(!k||vistas.has(k))return false;vistas.add(k);return true});
   const fotos=[null].concat(extras).slice(0,MAX_FOTOS);
   if(fotos.length<2)return;
   const el=document.createElement('div');
@@ -6770,6 +6781,21 @@ function renderCityStatusFilter(){
     +'<button class="pf-op'+(curCityStatus==='been'?' on':'')+'" onclick="setCityStatus(\'been\')">Fui'+(fui?'<i>'+fui+'</i>':'')+'</button>'
     +'<button class="pf-op'+(curCityStatus==='want'?' on':'')+'" onclick="setCityStatus(\'want\')">Quero ir'+(quero?'<i>'+quero+'</i>':'')+'</button></div>';
 }
+// Spot sem foto na tela da cidade: busca a foto atual do lugar na hora e
+// grava (healSpotPhoto). Antes só um preenchimento em segundo plano tentava,
+// 6 por vez e de novo só depois de 3 dias — o Lucas via ícone no lugar da
+// foto (05/10). Até 8 por tela, uma vez por spot nesta sessão.
+const FOTO_NA_CIDADE_TENTADA=new Set();
+function buscarFotosDaCidade(spots){
+  const faltam=(spots||[]).filter(x=>x&&!x.photo_url&&!FOTO_NA_CIDADE_TENTADA.has(x.id)).slice(0,8);
+  if(!faltam.length)return;
+  faltam.forEach(x=>FOTO_NA_CIDADE_TENTADA.add(x.id));
+  (async()=>{
+    let achou=false;
+    for(const x of faltam){try{if(await healSpotPhoto(x.id))achou=true}catch(e){}}
+    if(achou&&document.getElementById('city').classList.contains('active'))renderCityBody();
+  })();
+}
 function renderCityBody(){
   const b=document.getElementById('cityBody');
   const t=S.curTrip;if(!t||!S.curCity)return;
@@ -6798,6 +6824,7 @@ function renderCityBody(){
     h+=`<div class="cid-row" onclick="openPlace('${esc(s.id)}','city')">${thumb}<div class="cid-txt"><div class="cid-nome">${esc(s.name)}</div><div class="cid-linha">${st}${estrelas}${nota?(st?' · ':'')+esc(nota):''}</div></div></div>`;
   });
   b.innerHTML=h;
+  buscarFotosDaCidade(spots);
 }
 // Dentro da tela da cidade a categoria já é sabida (a aba ativa) — mesma
 // lógica de antes, só que agora sem ambiguidade (a tela mostra 1 cidade só).
@@ -15528,6 +15555,14 @@ function pintarTopoDoAmigo(p,nome){
   const de=document.getElementById('friendDe');
   if(de){const c=p&&p.home_city;de.textContent=c?'De '+c+(p.home_country?', '+p.home_country:''):'';de.style.display=c?'':'none'}
 }
+// "Spot" que é a própria cidade ou país ("Bonito" em Bonito, "Chile" no
+// Chile): dado antigo, de antes da trava naoEhSpot. Não é recomendação — no
+// perfil do amigo a cidade continua (ela esteve lá), mas não conta como spot.
+function ehSoACidade(x){
+  if(!x||!x.name)return false;
+  const c=cityOf(x)||x.city||'';
+  return (!!c&&mesmoLugar(x.name,c))||(!!x._pais&&mesmoLugar(x.name,x._pais))||plnEhPais(x.name);
+}
 function cidadesDoAmigo(){
   const grupos={};
   (FRIEND.todos||[]).forEach(s=>{
@@ -15541,7 +15576,12 @@ function cidadesDoAmigo(){
   // A cidade onde ele mora vem primeiro, marcada "onde mora" (desenho c8): é
   // a lista de quem conhece o lugar.
   const casa=FRIEND.profile&&FRIEND.profile.home_city;
-  Object.values(grupos).forEach(g=>{g.casa=!!casa&&mesmoLugar(g.cidade,casa)});
+  Object.values(grupos).forEach(g=>{
+    g.casa=!!casa&&mesmoLugar(g.cidade,casa);
+    // Os spots de verdade (sem o "spot" que é a cidade); as fotos e a
+    // contagem saem deles.
+    g.reais=g.spots.filter(x=>!ehSoACidade(x));
+  });
   return Object.values(grupos).sort((a,b)=>(b.casa-a.casa)||b.spots.length-a.spots.length||a.cidade.localeCompare(b.cidade,'pt-BR'));
 }
 function buscarNoAmigo(v){
@@ -15585,16 +15625,21 @@ function fotoDaCidadeDoAmigoFalhou(img,ci,k){
   fotoParaVer(sp).then(u=>{if(u&&img.isConnected){sp._fotoVista=u;img.src=safeUrl(fotoNaLargura(u,160))}else if(img.isConnected)img.remove()});
 }
 function linhaDeCidadeDoAmigo(g,ci){
-  const fotos=[0,1,2].map(k=>{
-    const sp=g.spots[k]||g.spots[k%g.spots.length];
+  // Uma foto por spot, até três — nunca a mesma repetida pra encher (o Lucas,
+  // 05/10). Com 1 spot a foto ocupa o espaço todo; com 2, metade cada.
+  const base=(g.reais&&g.reais.length?g.reais:g.spots);
+  const fotos=base.slice(0,3).map(sp=>{
+    const k=g.spots.indexOf(sp);
     const f=sp&&(sp.photo_url||sp._fotoVista);
-    const kk=g.spots[k]?k:k%g.spots.length;
-    return '<span>'+(f?'<img src="'+escUrl(fotoNaLargura(f,160))+'" alt="" loading="lazy" decoding="async" onerror="fotoDaCidadeDoAmigoFalhou(this,'+ci+','+kk+')">':'')+'</span>';
+    return '<span>'+(f?'<img src="'+escUrl(fotoNaLargura(f,320))+'" alt="" loading="lazy" decoding="async" onerror="fotoDaCidadeDoAmigoFalhou(this,'+ci+','+k+')">':'')+'</span>';
   }).join('');
-  const n=g.spots.length;
-  return '<div class="am-cid-row" onclick="abrirCidadeDoPerfilDoAmigo('+ci+')"><div class="am-cid-fotos">'+fotos+'</div>'
-    +'<div class="am-cid-txt"><div class="am-cid-nome">'+esc(g.cidade)+'</div><div class="am-cid-sub">'+esc([g.pais,n+(n===1?' spot':' spots')].filter(Boolean).join(' · '))+(g.casa?' · <em class="am-casa">onde mora</em>':'')+'</div></div>'
-    +'<span class="am-cid-seta">›</span></div>';
+  const n=(g.reais||g.spots).length;
+  const sub=[g.pais,n?n+(n===1?' spot':' spots'):'esteve aqui'].filter(Boolean).join(' · ');
+  // Cidade só com o "spot" que é ela mesma não abre nada: não há o que listar.
+  const abre=n?' onclick="abrirCidadeDoPerfilDoAmigo('+ci+')"':'';
+  return '<div class="am-cid-row'+(n?'':' am-cid-sem')+'"'+abre+'><div class="am-cid-fotos n'+Math.max(1,Math.min(3,base.length))+'">'+fotos+'</div>'
+    +'<div class="am-cid-txt"><div class="am-cid-nome">'+esc(g.cidade)+'</div><div class="am-cid-sub">'+esc(sub)+(g.casa?' · <em class="am-casa">onde mora</em>':'')+'</div></div>'
+    +(n?'<span class="am-cid-seta">›</span>':'')+'</div>';
 }
 function pintarSpotsDoAmigo(){
   const box=document.getElementById('friendTripsList');
@@ -15640,7 +15685,7 @@ function pintarSpotsDoAmigo(){
 function abrirCidadeDoPerfilDoAmigo(ci){
   const g=(FRIEND.cidadesDaTela||[])[ci];if(!g)return;
   FRIEND.trip=null;
-  FRIEND.listaPronta=g.spots;
+  FRIEND.listaPronta=g.reais&&g.reais.length?g.reais:g.spots;
   FRIEND.city=g.cidade;
   const ordem=['food','hotel','experience'];
   fcCat=ordem.find(c=>g.spots.some(s=>s.category===c))||'food';

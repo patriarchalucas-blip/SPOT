@@ -152,3 +152,17 @@ test('bairro do endereco brasileiro', () => {
   assert.strictEqual(A.bairroDoEndereco('R. Joaquim Antunes, 210 - Jardins, São Paulo - SP, 05415-010, Brasil'), 'Jardins');
   assert.strictEqual(A.bairroDoEndereco('Rua das Flores 103, 1200-194 Lisboa, Portugal'), '');
 });
+
+// Teste do Lucas (05/10): perfil da namorada com "Chile", "Bonito" salvos como
+// experiência e a mesma foto repetida três vezes na linha da cidade.
+test('cidade salva como spot nao conta como spot, e a linha nao repete foto', () => {
+  assert.strictEqual(A.ehSoACidade({ name: 'Bonito', city: 'Bonito' }), true);
+  assert.strictEqual(A.ehSoACidade({ name: 'Chile', city: 'Santiago' }), true);
+  assert.strictEqual(A.ehSoACidade({ name: 'Mocotó', city: 'São Paulo' }), false);
+  A.avaliar("FRIEND.profile={};FRIEND.todos=[{id:'b',name:'Bonito',city:'Bonito',_pais:'Brasil',status:'been',photo_url:'/f/b.jpg'},{id:'m',name:'Mocotó',city:'São Paulo',_pais:'Brasil',status:'been',photo_url:'/f/m.jpg'}]");
+  const g = A.avaliar('JSON.stringify(cidadesDoAmigo().map(x=>[x.cidade,x.reais.length]))');
+  assert.ok(g.includes('["Bonito",0]') && g.includes('["São Paulo",1]'), g);
+  const linha = A.avaliar("linhaDeCidadeDoAmigo(cidadesDoAmigo().find(x=>x.cidade==='São Paulo'),0)");
+  assert.strictEqual((linha.match(/<img /g) || []).length, 1, 'uma foto, nao a mesma tres vezes');
+  assert.ok(A.avaliar("linhaDeCidadeDoAmigo(cidadesDoAmigo().find(x=>x.cidade==='Bonito'),0)").includes('esteve aqui'));
+});
