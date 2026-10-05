@@ -1981,6 +1981,9 @@ body.tem-apple #convite .btn-apple{display:flex}
 .at-vazio{margin:24px 0;font-size:15px;line-height:1.5;color:var(--ink2)}
 /* Várias fotos (C11/e7) */
 .fi-carro{position:absolute;inset:0;z-index:1}
+/* No alto, ao lado do ⋯: embaixo ficam o contador e o crédito do Google. */
+.fi-maisfotos{right:68px}
+#place.previa .fi-maisfotos{display:none}
 .fi-faixa{position:absolute;inset:0;display:flex;overflow-x:auto;overflow-y:hidden;scroll-snap-type:x mandatory;scrollbar-width:none;overscroll-behavior-x:none;-webkit-overflow-scrolling:touch}
 .fi-faixa::-webkit-scrollbar{display:none}
 .fi-slide{flex:0 0 100%;height:100%;scroll-snap-align:start;scroll-snap-stop:always;background:var(--photo-empty) center/cover no-repeat}
@@ -2747,7 +2750,7 @@ body.exm .exm-filtros{position:relative;z-index:1}
   <!-- A foto perdeu o título, a pastilha de status e o véu de baixo. Sobrou o
        degradê do TOPO, que existe só pra barra de status do telefone
        continuar legível sobre foto clara. -->
-  <div class="fi-foto"><div class="place-hero-img" id="placeHeroImg"></div><div class="fi-topo-veu"></div><button class="fi-redondo fi-voltar" onclick="backFromPlace()" data-ic="back" aria-label="Voltar"></button><button class="fi-redondo fi-mais" onclick="abrirMenuDoLugar()" data-ic="mais" aria-label="Mais"></button><input type="file" id="spotPhotoFileInput" accept="image/*" style="display:none" onchange="onSpotPhotoFileChosen(this)"></div>
+  <div class="fi-foto"><div class="place-hero-img" id="placeHeroImg"></div><div class="fi-topo-veu"></div><button class="fi-redondo fi-voltar" onclick="backFromPlace()" data-ic="back" aria-label="Voltar"></button><button class="fi-redondo fi-mais" onclick="abrirMenuDoLugar()" data-ic="mais" aria-label="Mais"></button><input type="file" id="spotPhotoFileInput" accept="image/*" style="display:none" onchange="onSpotPhotoFileChosen(this)"><button class="fi-redondo fi-maisfotos" onclick="document.getElementById('spotFotosInput').click()" aria-label="Adicionar fotos"><span data-ic="plus"></span></button><input type="file" id="spotFotosInput" accept="image/*" multiple style="display:none" onchange="adicionarFotosAoSpot(this)"></div>
   <div class="fi-corpo">
     <!-- CABEÇALHO. O nome saiu de cima da foto: ali ele era cortado em nome
          comprido e obrigava a escurecer a imagem inteira pra continuar
@@ -2844,6 +2847,7 @@ body.exm .exm-filtros{position:relative;z-index:1}
      é raro mora aqui, e a tela fica com o que se usa todo dia. -->
 <div class="overlay" id="ov-menulugar" onclick="closeOut(event,'ov-menulugar')"><div class="sheet"><div class="sheet-handle"></div><div class="fi-menunome" id="fiMenuNome"></div>
 <div class="prof-linha" onclick="closeOv('ov-menulugar');compartilharLugar()"><span class="pl-ic" data-ic="share"></span><span class="pl-txt">Compartilhar spot</span></div>
+<div class="prof-linha" onclick="closeOv('ov-menulugar');document.getElementById('spotFotosInput').click()"><span class="pl-ic" data-ic="plus"></span><span class="pl-txt">Adicionar fotos</span></div>
 <div class="prof-linha" onclick="closeOv('ov-menulugar');document.getElementById('spotPhotoFileInput').click()"><span class="pl-ic" data-ic="edit"></span><span class="pl-txt">Trocar foto</span></div>
 
 <div class="prof-linha" onclick="closeOv('ov-menulugar');deleteSpot()"><span class="pl-ic" data-ic="trash"></span><span class="pl-txt" style="color:var(--ink3)">Excluir spot</span></div>
@@ -4904,11 +4908,77 @@ function fotosDoLugar(sp){
   FOTOS_DO_LUGAR.set(k,pr);
   return pr;
 }
+// ═══ FOTOS SUAS NO SPOT (05/10, migração 030) ═══
+// Várias por spot (até 10), escolhidas de uma vez na galeria. Entram primeiro
+// no carrossel; quem vê o spot vê as fotos (viagem "Só eu vejo" esconde).
+// Cada foto é reduzida no aparelho antes de subir (lado maior 1600, JPEG).
+const MAX_FOTOS_SUAS=10;
+const FOTOS_SUAS=new Map();
+function fotosSuasDoSpot(id,recarregar){
+  if(!id||id==='previa')return Promise.resolve([]);
+  if(!recarregar&&FOTOS_SUAS.has(id))return FOTOS_SUAS.get(id);
+  const p=dbGet('spot_fotos','spot_id=eq.'+encodeURIComponent(id)+'&order=created_at.asc&select=id,url,user_id')
+    .then(l=>falhou(l)?[]:(l||[])).catch(()=>[]);
+  FOTOS_SUAS.set(id,p);return p;
+}
+function encolherFoto(file){
+  return new Promise(ok=>{
+    const url=URL.createObjectURL(file);const img=new Image();
+    img.onload=()=>{
+      const k=Math.min(1,1600/Math.max(img.naturalWidth,img.naturalHeight));
+      const c=document.createElement('canvas');c.width=Math.round(img.naturalWidth*k);c.height=Math.round(img.naturalHeight*k);
+      c.getContext('2d').drawImage(img,0,0,c.width,c.height);URL.revokeObjectURL(url);
+      c.toBlob(b=>ok(b?new File([b],'foto.jpg',{type:'image/jpeg'}):file),'image/jpeg',0.85);
+    };
+    img.onerror=()=>{URL.revokeObjectURL(url);ok(file)};
+    img.src=url;
+  });
+}
+async function adicionarFotosAoSpot(input){
+  const sp=S.curPlace;const arqs=[...(input.files||[])];input.value='';
+  if(!sp||sp._previa||!arqs.length)return;
+  const ja=await fotosSuasDoSpot(sp.id,true);
+  const cabe=MAX_FOTOS_SUAS-ja.length;
+  if(cabe<=0){toast('Já tem 10 fotos','Tire uma pra pôr outra.','alert');return}
+  const lote=arqs.slice(0,cabe);
+  toast(lote.length===1?'Enviando a foto…':'Enviando '+lote.length+' fotos…','','check');
+  let foram=0,primeira='';
+  for(const f of lote){
+    try{
+      const url=await uploadToStorage(await encolherFoto(f),'spot');
+      if(!url)continue;
+      const{error}=await dbInsert('spot_fotos',{spot_id:sp.id,url});
+      if(error){if(!foram)toast('Não salvou','Falta uma atualização do Spot pra guardar várias fotos.','alert');break}
+      foram++;if(!primeira)primeira=url;
+    }catch(e){}
+  }
+  if(!foram)return;
+  // Sem foto sua na capa, a primeira que você subiu vira a capa.
+  if(primeira&&!/\/storage\//.test(String(sp.photo_url||''))){
+    const{error}=await dbUpdate('spots',sp.id,{photo_url:primeira});
+    if(!error){sp.photo_url=primeira;const h=document.getElementById('placeHeroImg');if(h&&S.curPlace===sp)h.style.backgroundImage=cssUrl(primeira)}
+  }
+  await fotosSuasDoSpot(sp.id,true);
+  if(S.curPlace===sp)montarCarrossel(sp);
+  toast(foram===1?'Foto adicionada':foram+' fotos adicionadas',lote.length<arqs.length?'Cabem 10 por spot.':'','check');
+}
+// Segurar uma foto SUA no carrossel: "Tirar esta foto".
+async function tirarFotoDoSpot(fotoId,url){
+  const sp=S.curPlace;if(!sp)return;
+  if(!await confirmar('Tirar esta foto?','','Tirar foto'))return;
+  const{error}=await dbDelete('spot_fotos',fotoId);
+  if(error){toast('Não tirou','Confere a conexão e tenta de novo.','alert');return}
+  const resto=(await fotosSuasDoSpot(sp.id,true)).filter(f=>f.id!==fotoId);
+  // Era a capa: a próxima sua vira capa (sem nenhuma, a capa fica como está).
+  if(sp.photo_url===url&&resto.length){const{error:e2}=await dbUpdate('spots',sp.id,{photo_url:resto[0].url});if(!e2){sp.photo_url=resto[0].url;const h=document.getElementById('placeHeroImg');if(h)h.style.backgroundImage=cssUrl(resto[0].url)}}
+  if(S.curPlace===sp)montarCarrossel(sp);
+  toast('Foto tirada','','trash');
+}
 async function montarCarrossel(sp){
   const caixa=document.querySelector('#place .fi-foto');if(!caixa||!sp)return;
   caixa.querySelectorAll('.fi-carro').forEach(x=>x.remove());
   if(!S.user)return;
-  const lista=await fotosDoLugar(sp);
+  const [lista,suas]=await Promise.all([fotosDoLugar(sp),fotosSuasDoSpot(sp._comentId||sp.id)]);
   if(S.curPlace!==sp)return;
   caixa.querySelectorAll('.fi-carro').forEach(x=>x.remove());
   // A 1ª é a que já está no topo (a sua foto, se você subiu uma); as outras
@@ -4920,8 +4990,12 @@ async function montarCarrossel(sp){
   // pega a repetida (o Lucas viu a mesma foto duas vezes, 05/10). Capa do
   // Google: pula a 1ª. Capa sua (foto que você subiu): todas entram.
   const capaDoGoogle=!!(sp.photo_url||sp._fotoVista)&&!/\/storage\//.test(String(sp.photo_url||''));
-  const extras=lista.slice(capaDoGoogle?1:0).filter(f=>{const k=chaveDaFoto(f.url);if(!k||vistas.has(k))return false;vistas.add(k);return true});
-  const fotos=[null].concat(extras).slice(0,MAX_FOTOS);
+  // As suas (spot_fotos) vêm antes das do Google; a que já é a capa não repete.
+  const minhas=(suas||[]).filter(f=>f.url&&f.url!==sp.photo_url).map(f=>({url:f.url,id:f.id,dono:f.user_id}));
+  const extras=minhas.concat(lista.slice(capaDoGoogle?1:0)).filter(f=>{const k=chaveDaFoto(f.url);if(!k||vistas.has(k))return false;vistas.add(k);return true});
+  // A capa também pode ser uma foto sua guardada: guarda o id pra poder tirar.
+  const capaSua=(suas||[]).find(f=>f.url===sp.photo_url);
+  const fotos=[capaSua?{url:capaSua.url,id:capaSua.id,dono:capaSua.user_id,capa:true}:null].concat(extras).slice(0,MAX_FOTOS+MAX_FOTOS_SUAS);
   if(fotos.length<2)return;
   const el=document.createElement('div');
   el.className='fi-carro';
@@ -4939,11 +5013,18 @@ async function montarCarrossel(sp){
     cont.textContent=(i+1)+' de '+fotos.length;
     google.classList.toggle('on',i===fotos.length-1);
   },{passive:true});
-  faixa.addEventListener('click',()=>abrirVisualizador(fotos.map((f,i)=>i===0?(sp.photo_url||sp._fotoVista||''):f.url),ultimo));
+  faixa.addEventListener('click',()=>{if(SEGUROU){SEGUROU=false;return}abrirVisualizador(fotos.map((f,i)=>i===0?(sp.photo_url||sp._fotoVista||''):f.url),ultimo)});
+  // Segurar uma foto SUA: tirar.
+  let segura=null;
+  faixa.addEventListener('pointerdown',()=>{const f=fotos[ultimo];clearTimeout(segura);
+    if(!f||!f.id||!S.user||f.dono!==S.user.id)return;
+    segura=setTimeout(()=>{SEGUROU=true;tirarFotoDoSpot(f.id,f.url)},600)});
+  ['pointerup','pointercancel','pointerleave','scroll'].forEach(ev=>faixa.addEventListener(ev,()=>clearTimeout(segura),{passive:true}));
   carregar(1);
 }
 // Tela cheia (fundo #111, a mesma rolagem, contador em cima, ✕; arrastar pra
 // baixo fecha). Usa as MESMAS URLs: o navegador já tem em cache as baixadas.
+let SEGUROU=false;
 function abrirVisualizador(urls,inicio){
   const l=urls.filter(Boolean);if(!l.length)return;
   let v=document.getElementById('fiVer');

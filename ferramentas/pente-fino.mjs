@@ -150,6 +150,9 @@ await passoDe('ficha: tocar em "Rafa foi"', `(async()=>{await new Promise(r=>set
 console.log('  rótulo:', await pg.evaluate(() => document.getElementById('fiListaRot').innerText.replace(/\n/g,' | ')));
 await passoDe('ficha do Rafa: voltar pra minha', `backFromPlace()`, 1500);
 console.log('  voltou pra:', await pg.evaluate(() => S.curPlace && S.curPlace.name + ' / prévia=' + !!S.curPlace._previa));
+await passoDe('fotos suas: abrir meu spot', `(async()=>{goTo('profile');await new Promise(r=>setTimeout(r,300));openPlace('s1','profile')})()`, 1500);
+console.log('  botao +:', await pg.evaluate(() => getComputedStyle(document.querySelector('#place .fi-maisfotos')).display));
+await passoDe('fotos suas: voltar', `backFromPlace()`);
 await passoDe('carrossel: 2a foto', `(()=>{const f=document.querySelector('#place .fi-faixa');f.scrollLeft=f.clientWidth;f.dispatchEvent(new Event('scroll'))})()`);
 console.log('  contador:', await pg.evaluate(() => (document.querySelector('#place .fi-cont')||{}).textContent));
 await passoDe('carrossel: tela cheia', `document.querySelector('#place .fi-faixa').click()`);
