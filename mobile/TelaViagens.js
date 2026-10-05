@@ -64,18 +64,14 @@ function Anel({ paises }) {
             possa errar: x=38 y=38 é o centro, e ponto.
             Sempre inteiro, sem casa decimal: abrir espaço pra vírgula faz o
             número balançar de largura conforme a pessoa viaja. */}
-        <SvgText
-          x={38} y={35} fill={INK} fontSize={19} fontWeight="700"
-          textAnchor="middle" alignmentBaseline="middle"
-          // alignmentBaseline não é honrado no Android: o dy de 0,35em é o
-          // truque que centra vertical em qualquer um dos dois.
-          dy="0.35em"
-        >
+        {/* Linha de base FIXA pra cada texto, sem alignmentBaseline nem dy (05/10):
+            no iPhone os dois somavam e o "12%" descia em cima do "de 195" (print
+            do Lucas). Medido no anel de 76: o miolo vai de y=12 a y=64; a
+            porcentagem (19 px) assenta em 40 e o "de 195" (9,5 px) em 53. */}
+        <SvgText x={38} y={40} fill={INK} fontSize={19} fontWeight="700" textAnchor="middle">
           {pc ? Math.round(pc) + '%' : '0%'}
         </SvgText>
-        {/* "de 195" DENTRO do anel, embaixo da porcentagem — igual ao site
-            (29/09). Fora dele sobrava uma linha solta sob o círculo. */}
-        <SvgText x={38} y={51} fill={INK2} fontSize={9.5} textAnchor="middle" dy="0.35em">
+        <SvgText x={38} y={53} fill={INK2} fontSize={9.5} textAnchor="middle">
           {'de ' + PAISES_NO_MUNDO}
         </SvgText>
       </Svg>

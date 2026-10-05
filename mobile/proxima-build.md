@@ -12,7 +12,8 @@ pra "Já compilado".
 
 ## Na fila (build 20)
 
-- **Placar com continentes** no lugar de spots (`TelaViagens.js`, `d.continentes`) — feito no código.
+- **Anel do placar** (`TelaViagens.js`): o "12%" descia em cima do "de 195" no iPhone (print do Lucas, 05/10). Linha de base fixa pra cada texto, sem alignmentBaseline/dy — conferido desenhando o mesmo SVG.
+- ~~Placar com continentes~~ — reprovado pelo Lucas (05/10); o placar continua países · cidades · spots.
 - **Pendente de decisão do Lucas:** a aba Viagens e a aba Amigos nativas ainda têm o desenho antigo (sem "Onde você mora" em card, sem lista em linhas, sem busca de amigo, sem Atividade). Ou reescrever as duas em React Native, ou deixar o site desenhar essas abas como já faz com o Explorar (`cascaTemExplorarWeb`).
 - Depois desta build: tirar o modo "spots" da tela Lista (lista geral).
 
