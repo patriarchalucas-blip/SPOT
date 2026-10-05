@@ -15,6 +15,8 @@ const DB = {
   follows: [{ id: 'f1', follower_id: EU, following_id: ANA, status: 'accepted' }, { id: 'f2', follower_id: RAFA, following_id: EU, status: 'accepted' }],
   trips: [
     { id: 't1', user_id: EU, name: 'Portugal', destinations: ['Portugal'], dates: '', status: 'planning', initial_city: 'Lisboa', created_at: '2026-09-01' },
+    // Próxima viagem (05/10): só Quero ir, privada, montada com a dica da Ana.
+    { id: 'tj', user_id: EU, name: 'Japão', destinations: ['Japão'], dates: '', status: 'planning', initial_city: 'Tóquio', privada: true, proxima: true, created_at: '2026-10-01' },
     { id: 't2', user_id: EU, name: 'São Paulo', destinations: ['Brasil'], dates: '__casa__', status: 'planning', initial_city: 'São Paulo', created_at: '2026-09-02' },
     { id: 'ta', user_id: ANA, name: 'portugal', destinations: ['portugal'], dates: '', status: 'planning', created_at: '2026-08-01' },
     { id: 'tr', user_id: RAFA, name: 'Portugal', destinations: ['Portugal'], dates: '', status: 'planning', created_at: '2026-08-01' },
@@ -22,6 +24,9 @@ const DB = {
   spots: [
     { id: 's1', user_id: EU, trip_id: 't1', name: 'Taberna da Rua das Flores', category: 'food', city: 'Lisboa', status: 'been', my_rating: 4.5, my_review: 'Petiscos', created_at: '2026-09-01' },
     { id: 's2', user_id: EU, trip_id: 't1', name: 'Majestic Café', category: 'food', city: 'Porto', status: 'want', created_at: '2026-09-01' },
+    { id: 'j1', user_id: EU, trip_id: 'tj', name: 'Sushi Saito', category: 'food', city: 'Tóquio', status: 'want', from_user_id: ANA, created_at: '2026-10-02' },
+    { id: 'j2', user_id: EU, trip_id: 'tj', name: 'Fushimi Inari', category: 'experience', city: 'Kyoto', status: 'want', created_at: '2026-10-02' },
+    { id: 'aj', user_id: ANA, trip_id: 'ta', name: 'Sushi Saito', category: 'food', city: 'Tóquio', status: 'been', my_rating: 5, created_at: '2026-08-01' },
     { id: 's3', user_id: EU, trip_id: 't2', name: 'Mocotó', category: 'food', city: 'São Paulo', status: 'been', my_rating: 5, created_at: '2026-09-01' },
     { id: 'a1', user_id: ANA, trip_id: 'ta', name: 'Cervejaria Ramiro', category: 'food', city: 'Lisboa', status: 'been', my_rating: 5, my_review: 'Camarão', created_at: '2026-08-01' },
     { id: 'r1', user_id: RAFA, trip_id: 'tr', name: 'Taberna da Rua das Flores', category: 'food', city: 'Lisboa', status: 'been', my_rating: 4, created_at: '2026-08-01' },
@@ -116,7 +121,19 @@ await passoDe('amigos: só pedido enviado', `(()=>{FRIENDS_DATA={friendIds:[],in
 console.log('  linha:',await pg.evaluate(()=>(document.querySelector('#friendsContainer .am-pedidos')||{}).textContent||'(nenhuma)'));
 await passoDe('amigos: abre enviados', `switchFriendsTab('pedidos')`);
 console.log('  cancelar:',await pg.evaluate(()=>/Cancelar/.test(document.getElementById('friendsContainer').innerText)));
-await passoDe('perfil próprio', `(async()=>{goTo('profile');await loadProfile()})()`, 2000);
+await passoDe('perfil próprio', `(async()=>{document.querySelectorAll('.overlay.show').forEach(o=>closeOv(o.id));goTo('profile');await loadProfile()})()`, 2000);
+await passoDe('perfil: meus spots', `document.querySelector('#profile .pf-cab:nth-of-type(2)')?.scrollIntoView()`);
+await passoDe('perfil: quero ir', `mlTrocarStatus('want')`);
+await passoDe('perfil: rodapé', `document.querySelector('#profile .pf-rodape').scrollIntoView()`);
+await passoDe('próxima viagem: tela', `openTrip('tj')`, 1500);
+await passoDe('próxima viagem: Kyoto', `pvCidade(1)`);
+await passoDe('próxima viagem: amigos veem', `trocarQuemVe(false)`, 1200);
+await passoDe('nova viagem (folha)', `(()=>{goTo('profile');abrirNovaViagem()})()`);
+await passoDe('nova viagem: amigos veem', `novaQuemVe(false)`);
+await passoDe('nova viagem: fechar', `closeOv('ov-newtrip')`);
+await passoDe('primeiro Fui (folha)', `(()=>{localStorage.removeItem('spot_virou_tj');conferirViagensQueViraram();const t=S.trips.find(x=>x.id==='tj');t._spots[0].status='been';conferirViagensQueViraram()})()`);
+await passoDe('primeiro Fui: ver em Viagens', `(async()=>{closeOv('ov-virou');goTo('dashboard');renderTrips()})()`, 1500);
+await passoDe('perfil sem próxima (vazio)', `(async()=>{goTo('profile');renderProximas()})()`);
 await passoDe('explorar', `(async()=>{goTo('explore');loadExplore()})()`, 2500);
 await passoDe('salvar da lista pública', `(async()=>{localStorage.setItem('spot_salvar_pendente','abcdefgh1234.11111111-2222-3333-4444-555555555555');await salvarSpotPendente()})()`, 1500);
 await passoDe('v2: 5 destinos (recolhe)', `(()=>{plnAbrir({destinos:[{tipo:'pais',nome:'Portugal'},{tipo:'cidade',nome:'Lisboa'},{tipo:'pais',nome:'Itália'},{tipo:'pais',nome:'Espanha'},{tipo:'pais',nome:'Marrocos'}],amigos:['${ANA}','${RAFA}'],volta:'dashboard'})})()`, 1500);

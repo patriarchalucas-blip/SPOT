@@ -1754,6 +1754,77 @@ body.tem-apple #convite .btn-apple{display:flex}
 .mapa-topo .back-btn{position:static;flex-shrink:0}
 .mapa-titulo{font-size:20px;font-weight:700;letter-spacing:-.03em;color:var(--ink)}
 .profile-body{padding:0 20px 24px;background:var(--base)}
+/* ═══ Perfil (05/10, desenho p1–p4) ═══ */
+#profile .profile-ident{padding-top:24px}
+#profile .profile-avatar-wrap{width:64px}
+#profile .profile-avatar{width:64px;height:64px;border-radius:20px}
+#profile .profile-name{font-size:26px;letter-spacing:-.035em}
+#profile .profile-sub{font-size:15px}
+.pf-cab{display:flex;align-items:baseline;justify-content:space-between;margin:32px 0 12px}
+.pf-tit{margin:0;font-size:20px;font-weight:700;letter-spacing:-.03em;color:var(--ink)}
+.pf-n{margin-left:6px;font-size:15px;font-weight:400;letter-spacing:0;color:var(--ink3)}
+.pf-nova{border:none;background:none;padding:0;font:inherit;font-size:15px;font-weight:600;color:var(--green);cursor:pointer}
+.pf-filme{display:flex;gap:12px;overflow-x:auto;scrollbar-width:none;margin:0 -20px;padding:0 20px;scroll-padding-left:20px;scroll-snap-type:x mandatory}
+.pf-filme::-webkit-scrollbar{display:none}
+.pf-card{flex:0 0 250px;display:block;scroll-snap-align:start;border:none;background:none;padding:0;text-align:left;font:inherit;cursor:pointer}
+.pf-foto{position:relative;display:block;height:150px;border-radius:var(--r-photo);background:var(--photo-empty) center/cover no-repeat;overflow:hidden}
+.pf-foto::after{content:"";position:absolute;inset:0;background:linear-gradient(to top,rgba(0,0,0,.55),transparent 55%)}
+.pf-pe{position:absolute;left:14px;right:14px;bottom:12px;z-index:1;display:flex;flex-direction:column;gap:2px;color:#fff}
+.pf-pe b{font-size:22px;font-weight:700;letter-spacing:-.03em;line-height:1.1}
+.pf-pe span{font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.pf-avs,.pv-avs{display:flex}
+.pf-avs{position:absolute;top:10px;left:10px;z-index:1}
+.pf-avs .pln-av+.pln-av,.pv-avs .pln-av+.pln-av{margin-left:-8px}
+.pf-quem{display:flex;align-items:center;gap:6px;margin-top:8px;font-size:14px;color:var(--ink2)}
+.pf-quem svg{width:15px;height:15px}
+.pf-vazio{background:var(--surface);border-radius:var(--r-card);padding:16px}
+.pf-vazio h3{margin:0 0 6px;font-size:17px;font-weight:600;letter-spacing:-.02em;color:var(--ink)}
+.pf-vazio p{margin:0 0 14px;font-size:15px;line-height:1.45;color:var(--ink2)}
+.pf-vazio-bt{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.pf-bt{height:44px;border:none;border-radius:var(--r-btn);background:var(--green);color:var(--on-green);font:inherit;font-size:15px;font-weight:600;display:flex;align-items:center;justify-content:center;gap:6px;cursor:pointer}
+.pf-bt2{background:var(--base);color:var(--ink)}
+.pf-bt svg{width:18px;height:18px}
+.pf-largo{width:100%;margin-top:8px}
+.pf-seg{display:flex;gap:3px;height:40px;padding:3px;border-radius:10px;background:var(--surface);box-sizing:border-box}
+.pf-op{flex:1;min-width:0;border:none;background:none;border-radius:8px;font:inherit;font-size:15px;color:var(--ink2);display:flex;align-items:center;justify-content:center;gap:6px;cursor:pointer}
+.pf-op.on{background:var(--base);color:var(--ink);font-weight:600}
+.pf-op i{font-style:normal;font-size:14px;font-weight:400;color:var(--ink3)}
+.pf-op svg{width:16px;height:16px}
+.pf-filtros{display:flex;gap:20px;margin:14px 0 4px}
+.pf-filtro{flex:none;border:none;background:none;padding:0;font:inherit;font-size:15px;font-weight:600;color:var(--ink);display:flex;align-items:center;gap:5px;cursor:pointer}
+.pf-chev{font-size:13px;color:var(--ink2)}
+.pf-grupo{margin:18px 0 4px;font-size:14px;font-weight:600;color:var(--ink2)}
+.pf-row{display:flex;align-items:center;gap:12px;width:100%;padding:6px 0;border:none;background:none;text-align:left;font:inherit;cursor:pointer}
+.pf-row-foto{flex:none;width:56px;height:56px;border-radius:var(--r-card);background:var(--photo-empty) center/cover no-repeat}
+.pf-row-txt{flex:1;min-width:0;display:flex;flex-direction:column;gap:2px}
+.pf-row-txt b{font-size:17px;font-weight:600;letter-spacing:-.02em;color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.pf-row-txt>span{font-size:14px;color:var(--ink2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.pf-row-txt em{font-style:normal;color:var(--green)}
+.pf-row-val{flex:none;font-size:14px;font-weight:600;color:var(--green)}
+.pf-row-val.cinza{font-weight:400;color:var(--ink3)}
+.pf-ver{display:block;border:none;background:none;padding:14px 0 0;font:inherit;font-size:15px;font-weight:600;color:var(--green);cursor:pointer}
+.pf-rodape{margin-top:36px}
+.pf-linha{display:flex;align-items:center;justify-content:space-between;width:100%;height:52px;border:none;background:none;padding:0;font:inherit;font-size:16px;color:var(--ink2);cursor:pointer}
+.pf-val{color:var(--ink3)}
+.pf-val::after{content:" ›"}
+.pf-row:active,.pf-card:active,.pf-linha:active,.pf-nova:active,.pf-ver:active{opacity:.6}
+/* Tela da próxima viagem (p3) */
+.pv-rot{font-size:15px;font-weight:600;color:#fff}
+.pv-bloco{margin:8px 0 16px}
+.pv-bloco-folha{margin:12px 0 4px;padding:0 20px}
+.pv-rotulo{margin-bottom:8px;font-size:15px;font-weight:600;color:var(--ink)}
+.pv-montada{display:flex;align-items:center;gap:8px;margin:0 0 16px;font-size:14px;color:var(--ink2)}
+.pv-abas{margin-bottom:6px}
+.pv-vazio{margin:8px 0;font-size:15px;color:var(--ink2)}
+/* Primeiro Fui (p4) */
+.pv-virou{padding:4px 20px 8px}
+.pv-virou-topo{display:flex;align-items:center;gap:14px;margin-bottom:12px}
+.pv-virou-foto{flex:none;width:64px;height:64px;border-radius:var(--r-card);background:var(--photo-empty) center/cover no-repeat}
+.pv-virou-sub{font-size:15px;color:var(--ink2)}
+.pv-virou h2{margin:2px 0 0;font-size:26px;font-weight:700;letter-spacing:-.035em;line-height:1.1;color:var(--green)}
+.pv-virou p{margin:0 0 10px;font-size:15px;line-height:1.5;color:var(--ink2)}
+.pv-virou .pf-bt2{background:var(--surface)}
+.vg-meta.vg-chegou{font-weight:600}
 /* Lista em linhas, não chips. Chip de largura variável quebrando linha deixa
    a borda direita serrilhada, e o selo "mora aqui" inchava um chip no meio da
    fila. Linha é o mesmo padrão que a tela de lista e a de amigos já usam, a
@@ -2272,12 +2343,10 @@ body.exm .exm-filtros{position:relative;z-index:1}
 </div>
 
 <div class="screen" id="profile">
-  <div class="prof-topo-linha">
-    <div class="prof-marca">Perfil</div>
-    <button class="prof-config-btn" onclick="abrirConfig()" data-ic="gear" aria-label="Configurações"></button>
-  </div>
-  <!-- Avatar AO LADO do nome, não em cima: empilhado, o nome saía em 34 e o
-       bloco de identidade comia meia tela antes de mostrar um lugar sequer. -->
+  <!-- PERFIL (05/10, desenho p1–p4): "o que eu levo comigo". Cabeçalho,
+       Próximas viagens, Meus spots e, no fim, o cadastro. O título "Perfil" e
+       a engrenagem saíram: Ajustes virou a última linha do rodapé, e o convite
+       mora na aba Amigos. -->
   <div class="profile-ident">
     <div class="pi-linha">
       <div class="profile-avatar-wrap" onclick="document.getElementById('avatarFileInput').click()">
@@ -2294,36 +2363,24 @@ body.exm .exm-filtros{position:relative;z-index:1}
   </div>
 
   <div class="profile-body">
-    <!-- MEUS LUGARES. Substituiu os números, o "Onde já estive" e a estante
-         por cidade: os três diziam quanto a pessoa viajou, e isso a tela
-         inicial já diz inteiro. Aqui fica só o que é dela. -->
-    <div class="ml-cab"><span class="section-title">Meus spots</span><span class="ml-segmento" id="mlSegmento"></span></div>
-    <div class="ml-status" id="mlStatus"></div>
-    <div class="ml-filtros">
-      <button class="ml-filtro" id="mlFiltroCidade" onclick="abrirFolhaDeCidades()"><span class="mf-pino" data-ic="pin"></span><span id="mlCidadeTxt">Todas as cidades</span><span class="mf-chev">⌄</span></button>
-      <button class="ml-filtro" id="mlFiltroCat" onclick="abrirFolhaDeCategorias()"><span id="mlCatTxt">Todas as categorias</span><span class="mf-chev">⌄</span></button>
+    <div class="pf-cab"><h2 class="pf-tit">Próximas viagens<span class="pf-n" id="pxN"></span></h2><button class="pf-nova" id="pxNova" onclick="abrirNovaViagem()" style="display:none">+ Nova</button></div>
+    <div id="pxLista"></div>
+
+    <div class="pf-cab"><h2 class="pf-tit">Meus spots</h2></div>
+    <div class="pf-seg" id="mlStatus"></div>
+    <div class="ml-filtros pf-filtros">
+      <button class="pf-filtro" id="mlFiltroCidade" onclick="abrirFolhaDeCidades()"><span id="mlCidadeTxt">Todas as cidades</span><span class="pf-chev">▾</span></button>
+      <button class="pf-filtro" id="mlFiltroCat" onclick="abrirFolhaDeCategorias()"><span id="mlCatTxt">Todas as categorias</span><span class="pf-chev">▾</span></button>
     </div>
-    <div class="ml-trilho" id="mlTrilho"></div>
+    <div id="mlTrilho"></div>
     <div id="mlVerTodos"></div>
 
-    <!-- CONVITE. Único bloco verde da tela, e o único lugar do app onde o
-         convite nasce: ele cria amizade JÁ ACEITA, então não pode estar
-         pendurado em nada que circule sozinho. -->
-    <div class="conv-bloco">
-      <div class="conv-tit">Traga seus amigos pro Spot</div>
-      <div class="conv-txt">Quem entrar pelo seu link vira seu amigo aqui e vê seus lugares.</div>
-      <button class="conv-btn" onclick="compartilharConvite()">Compartilhar convite</button>
+    <div class="pf-rodape">
+      <button class="pf-linha" onclick="openVisitedCountryPicker()"><span>Países que visitei</span><span class="pf-val" id="pfPaises"></span></button>
+      <button class="pf-linha" onclick="abrirCidadeDeCasa()"><span>Onde moro</span><span class="pf-val" id="pfCasa"></span></button>
+      <button class="pf-linha" onclick="abrirConfig()"><span>Ajustes</span><span class="pf-val"></span></button>
     </div>
-
-    <!-- Só pra quem ainda não marcou país nenhum (rodada 1 do desenho de
-         25/09). Depois do primeiro país, as duas coisas vivem em
-         Configurações: já foram respondidas e não precisam ocupar o topo. -->
-    <div class="prof-acoes" id="profMarcar" style="display:none">
-      <div class="prof-linha" onclick="openVisitedCountryPicker()"><span class="pl-ic" data-ic="globe"></span><span class="pl-txt">Marcar países que já visitei</span><span class="pl-seta">›</span></div>
-      <div class="prof-linha" onclick="abrirCidadeDeCasa()"><span class="pl-ic" data-ic="pin"></span><span class="pl-txt">Marcar onde moro</span><span class="pl-seta">›</span></div>
-    </div>
-    <!-- A barra de baixo mede 78 mais a faixa do aparelho. Com 40 aqui, o
-         bloco de convite ficava embaixo dela. -->
+    <!-- A barra de baixo mede 78 mais a faixa do aparelho. -->
     <div style="height:110px"></div>
   </div>
   <div class="bottom-nav"><div class="nav-item" onclick="goTo('dashboard');loadDashboard()"><div class="nav-icon" data-ic="map"></div><div class="nav-label">Viagens</div></div><div class="nav-item" onclick="goTo('explore');loadExplore()"><div class="nav-icon" data-ic="search"></div><div class="nav-label">Explorar</div></div><div class="nav-item" onclick="goTo('friends');loadFriends(true)"><div class="nav-icon" data-ic="users"></div><div class="nav-label">Amigos</div></div><div class="nav-item active" onclick="goTo('profile');loadProfile()"><div class="nav-icon" data-ic="user"></div><div class="nav-label" style="color:var(--ink);font-weight:600">Perfil</div></div></div>
@@ -2548,7 +2605,8 @@ body.exm .exm-filtros{position:relative;z-index:1}
 <button class="sheet-cta" id="saveSpotBtn" onclick="saveSpot(false)">Salvar spot</button><button class="secondary-link" id="saveAndAddBtn" onclick="saveSpot(true)">Salvar e adicionar outro</button></div></div>
 
 <div class="overlay" id="ov-mismatch" onclick="closeOut(event,'ov-mismatch')"><div class="sheet"><button class="sheet-close" onclick="closeOv('ov-mismatch')" data-ic="close" aria-label="Fechar"></button><div class="sheet-handle"></div><div class="sheet-title">País diferente</div><div class="cm-text" id="cmText"></div><button class="sheet-cta" id="cmMoveBtn">Mover</button><button class="delete-link" style="color:var(--ink3)" onclick="keepInThisTripAnyway()">Adicionar nesta viagem mesmo assim</button></div></div>
-<div class="overlay" id="ov-newtrip" onclick="closeOut(event,'ov-newtrip')"><div class="sheet sheet-fixa"><button class="sheet-close" onclick="closeOv('ov-newtrip')" data-ic="close" aria-label="Fechar"></button><div class="sheet-handle"></div><div class="sheet-title">Para qual cidade?</div><div class="nt-label">Cidade da viagem — o país é identificado sozinho</div><div class="dest-search-wrap"><span class="dsi" data-ic="search"></span><input class="nt-input" autocomplete="off" autocorrect="off" spellcheck="false" style="padding-left:44px" id="countrySearch" placeholder="Buscar cidade..." oninput="filterNewTripCity(this.value)"></div><div class="lista-rolante" id="countryList"></div><button class="sheet-cta" id="createTripBtn" onclick="createTrip()" style="opacity:.4;pointer-events:none">Selecione uma cidade</button></div></div>
+<div class="overlay" id="ov-newtrip" onclick="closeOut(event,'ov-newtrip')"><div class="sheet sheet-fixa"><button class="sheet-close" onclick="closeOv('ov-newtrip')" data-ic="close" aria-label="Fechar"></button><div class="sheet-handle"></div><div class="sheet-title" id="ntTitulo">Para qual cidade?</div><div class="nt-label" id="ntLabel">Cidade da viagem — o país é identificado sozinho</div><div class="dest-search-wrap"><span class="dsi" data-ic="search"></span><input class="nt-input" autocomplete="off" autocorrect="off" spellcheck="false" style="padding-left:44px" id="countrySearch" placeholder="Buscar cidade..." oninput="filterNewTripCity(this.value)"></div><div class="lista-rolante" id="countryList"></div><div id="ntQuemVe"></div><button class="sheet-cta" id="createTripBtn" onclick="createTrip()" style="opacity:.4;pointer-events:none">Selecione uma cidade</button></div></div>
+<div class="overlay" id="ov-virou" onclick="closeOut(event,'ov-virou')"><div class="sheet"><div class="sheet-handle"></div><div class="pv-virou"><div class="pv-virou-topo"><span class="pv-virou-foto" id="virouFoto"></span><div><div class="pv-virou-sub" id="virouSub"></div><h2 id="virouTit"></h2></div></div><p id="virouTxt"></p><button class="pf-bt pf-largo" onclick="closeOv('ov-virou');goTo('dashboard');loadDashboard()">Ver em Viagens</button><button class="pf-bt pf-bt2 pf-largo" onclick="closeOv('ov-virou')">Continuar aqui</button></div></div></div>
 <div class="overlay" id="ov-quickvisit" onclick="closeOut(event,'ov-quickvisit')"><div class="sheet sheet-fixa"><button class="sheet-close" onclick="closeOv('ov-quickvisit')" data-ic="close" aria-label="Fechar"></button><div class="sheet-handle"></div><div class="sheet-title" id="quickVisitTitle">Quais países você já visitou?</div><div class="dest-search-wrap"><span class="dsi" data-ic="search"></span><input class="nt-input" autocomplete="off" autocorrect="off" spellcheck="false" style="padding-left:44px" id="countrySearch2" placeholder="Buscar país..." oninput="filterCountries2(this.value)"></div><div class="lista-rolante" id="countryList2"></div><button class="sheet-cta" id="createVisitBtn" onclick="markVisited()" style="opacity:.4;pointer-events:none">Selecione um país</button></div></div>
 <!-- PRIMEIRO ACESSO (ver "PRIMEIRO ACESSO" no JS). Tela cheia, sem fechar tocando fora:
      a cidade é obrigatória, e cada tela tem a própria saída. -->
@@ -2684,6 +2742,7 @@ body.exm .exm-filtros{position:relative;z-index:1}
 const ICONS={
 map:'<path d="M9 4.5 3.5 6.8v12.7l5.5-2.3 6 2.5 5.5-2.3V4.7L15 7 9 4.5Z"/><path d="M9 4.5V17"/><path d="M15 7v12.7"/>',
 search:'<circle cx="11" cy="11" r="6.5"/><path d="M16 16l4 4"/>',
+lock:'<rect x="5" y="10.5" width="14" height="10" rx="2.5"/><path d="M8.5 10.5V7.8a3.5 3.5 0 0 1 7 0v2.7"/>',
 users:'<circle cx="9" cy="8.5" r="3"/><path d="M3.8 19a5.2 5.2 0 0 1 10.4 0"/><path d="M16 6.2a3 3 0 0 1 0 5.6"/><path d="M17.2 14.4a5.2 5.2 0 0 1 3 4.6"/>',
 user:'<circle cx="12" cy="8" r="3.6"/><path d="M5.5 20a6.5 6.5 0 0 1 13 0"/>',
 food:'<path d="M7 3v5a2 2 0 0 0 4 0V3"/><path d="M9 8v13"/><path d="M16.5 3c-1.4 1-2 3.2-2 6.5h2V3Z"/><path d="M16.5 9.5V21"/>',
@@ -4014,6 +4073,188 @@ function impAbrirCidade(i){
 }
 function impVerViagens(){goTo('dashboard');loadDashboard()}
 
+
+// ═══ PRÓXIMAS VIAGENS (05/10, desenho p1–p4) ═══
+// Viagem com 0 Fui. Mora só no Perfil (ver viagemPlanejada). Cada uma tem
+// "Quem vê": Só eu vejo (padrão) ou Amigos veem — quem garante é o banco
+// (migração 028); o app só mostra e grava a escolha.
+//
+// Sem a 028 a coluna não existe: as linhas de trips chegam sem `privada`, e
+// o app diz a verdade ("Amigos veem") em vez de prometer o que o banco não faz.
+function bancoTemPrivacidade(){
+  const ts=S.trips||[];
+  if(ts.some(t=>t&&Object.prototype.hasOwnProperty.call(t,'privada')))return true;
+  return ts.length?false:null;
+}
+// Quem indicou os spots da viagem (from_user_id), sem repetir e sem você.
+function dicasDaViagem(t){
+  const ids=[];
+  (t&&t._spots||[]).forEach(x=>{const id=x.from_user_id;if(id&&S.user&&id!==S.user.id&&!ids.includes(id)&&!estaBloqueado(id))ids.push(id)});
+  return ids;
+}
+function ultimaMexida(t){let m=String(t.created_at||'');(t._spots||[]).forEach(x=>{const c=String(x.updated_at||x.created_at||'');if(c>m)m=c});return m}
+let PX_AMIGOS_PEDIDOS=false;
+function renderProximas(){
+  const box=document.getElementById('pxLista');if(!box)return;
+  // A editada por último primeiro.
+  const lista=proximasViagens().slice().sort((a,b)=>ultimaMexida(b).localeCompare(ultimaMexida(a)));
+  const n=document.getElementById('pxN');if(n)n.textContent=lista.length?String(lista.length):'';
+  const nova=document.getElementById('pxNova');if(nova)nova.style.display=lista.length?'':'none';
+  if(!lista.length){
+    box.innerHTML='<div class="pf-vazio"><h3>Para onde é a próxima?</h3><p>Comece por um destino e junte o que seus amigos já salvaram lá.</p>'
+      +'<div class="pf-vazio-bt"><button class="pf-bt" onclick="abrirNovaViagem()">Nova viagem</button>'
+      +'<button class="pf-bt pf-bt2" onclick="plnAbrir({volta:\'profile\'})">'+icon('users')+'Com amigos</button></div></div>';
+    return;
+  }
+  box.innerHTML='<div class="pf-filme">'+lista.map(t=>{
+    const destino=(t.destinations&&t.destinations[0])||t.name;
+    const sp=t._spots||[];
+    const cids=Object.keys(agruparPorCidade(sp,t.initial_city)).filter(c=>c!=='Outros');
+    const onde=cids.length>2?cids.slice(0,2).join(', ')+' e mais '+(cids.length-2):cids.join(', ');
+    const meta=[onde,sp.length+(sp.length===1?' spot':' spots')].filter(Boolean).join(' · ');
+    const avs=dicasDaViagem(t).slice(0,3);
+    return '<button class="pf-card" onclick="openTrip(\''+esc(t.id)+'\')">'
+      +'<span class="pf-foto" id="pxbg-'+esc(t.id)+'" style="background-image:'+destGradient(destino)+'">'
+      +(avs.length?'<span class="pf-avs">'+avs.map(id=>plnAvatar(id)).join('')+'</span>':'')
+      +'<span class="pf-pe"><b>'+esc(t.name)+'</b><span>'+esc(meta)+'</span></span></span>'
+      +'<span class="pf-quem">'+icon(t.privada?'lock':'users')+(t.privada?'Só eu vejo':'Amigos veem')+'</span></button>';
+  }).join('')+'</div>';
+  lista.forEach(t=>{
+    const d=(t.destinations&&t.destinations[0])||t.name;
+    fetchCityPhoto(t.initial_city||d,d).then(url=>{const el=document.getElementById('pxbg-'+t.id);if(url&&el)el.style.backgroundImage=cssUrl(url)}).catch(()=>{});
+  });
+  // Os avatares precisam do perfil de cada amigo: pede uma vez e redesenha.
+  if(!PX_AMIGOS_PEDIDOS&&lista.some(t=>dicasDaViagem(t).length)){
+    PX_AMIGOS_PEDIDOS=true;
+    plnCarregarAmigos().then(()=>{if(document.getElementById('profile').classList.contains('active'))renderProximas()}).catch(()=>{});
+  }
+}
+
+// ── Nova viagem (modo próxima): a mesma folha de criar viagem, com "Quem vê" ──
+let NOVA_PROXIMA=false,NOVA_PRIVADA=true;
+function abrirNovaViagem(){NOVA_PROXIMA=true;NOVA_PRIVADA=true;showOv('ov-newtrip')}
+function pintarFolhaDeNovaViagem(){
+  const tit=document.getElementById('ntTitulo'),lab=document.getElementById('ntLabel'),qv=document.getElementById('ntQuemVe');
+  if(tit)tit.textContent=NOVA_PROXIMA?'Nova viagem':'Para qual cidade?';
+  if(lab)lab.textContent=NOVA_PROXIMA?'Cidade ou país. Entra em Próximas viagens.':'Cidade da viagem — o país é identificado sozinho';
+  const campo=document.getElementById('countrySearch');if(campo)campo.placeholder=NOVA_PROXIMA?'Buscar cidade ou país...':'Buscar cidade...';
+  if(qv)qv.innerHTML=NOVA_PROXIMA?'<div class="pv-bloco pv-bloco-folha"><div class="pv-rotulo">Quem vê</div>'+segmentadoQuemVe(NOVA_PRIVADA,'novaQuemVe')+'</div>':'';
+}
+function novaQuemVe(privada){NOVA_PRIVADA=privada;pintarFolhaDeNovaViagem()}
+function segmentadoQuemVe(privada,fn){
+  return '<div class="pf-seg"><button class="pf-op'+(privada?' on':'')+'" onclick="'+fn+'(true)">'+icon('lock')+'Só eu vejo</button>'
+    +'<button class="pf-op'+(privada?'':' on')+'" onclick="'+fn+'(false)">'+icon('users')+'Amigos veem</button></div>';
+}
+
+// ── Tela da próxima viagem (p3) ──
+let PV_CIDADE='';
+let PV_DELES=null; // spots dos amigos, pra "Ana foi 5★"
+function pvCidade(i){const c=TRIP_CITY_ORDER[i];if(c!=null){PV_CIDADE=c;renderTripBody()}}
+function dicaDoAmigo(x){
+  const id=x.from_user_id;if(!id||!S.user||id===S.user.id)return '';
+  const quem=plnPrimeiro(id);if(!quem)return '';
+  const dele=(PV_DELES||[]).find(o=>o.user_id===id&&mesmoLugar(o.name,x.name)&&(!cityOf(x)||!cityOf(o)||mesmoLugar(cityOf(o),cityOf(x))));
+  if(dele&&dele.status==='been')return quem+' foi'+(Number(dele.my_rating)>0?' '+fmtRating(dele.my_rating)+'★':'');
+  return 'dica de '+quem;
+}
+function renderProximaViagem(t,b){
+  const sp=spotsDaViagem(t);
+  const byCity=agruparPorCidade(sp,t.initial_city);
+  const cidades=Object.keys(byCity);
+  if(!cidades.includes(PV_CIDADE))PV_CIDADE=cidades[0]||'';
+  TRIP_CITY_ORDER=cidades;
+  let h='<div class="pv-bloco"><div class="pv-rotulo">Quem vê</div>'+segmentadoQuemVe(!!t.privada,'trocarQuemVe')+'</div>';
+  const avs=dicasDaViagem(t);
+  if(avs.length)h+='<div class="pv-montada"><span class="pv-avs">'+avs.slice(0,3).map(id=>plnAvatar(id)).join('')+'</span><span>Montada com '+esc(plnNomesCurtos(avs))+'</span></div>';
+  if(cidades.length>1)h+='<nav class="cont-abas pv-abas">'+cidades.map((c,i)=>'<button class="cont-aba'+(c===PV_CIDADE?' on':'')+'" onclick="pvCidade('+i+')">'+esc(c)+' · '+byCity[c].length+'</button>').join('')+'</nav>';
+  const doLugar=(byCity[PV_CIDADE]||[]).slice().sort((a,c)=>String(c.created_at||'').localeCompare(String(a.created_at||'')));
+  if(!doLugar.length)h+='<p class="pv-vazio">'+(PV_CIDADE?'Nenhum spot em '+esc(PV_CIDADE)+' ainda.':'Nenhum spot aqui ainda.')+'</p>';
+  h+=doLugar.map(x=>{
+    const foto=x.photo_url?' style="background-image:'+cssUrl(fotoNaLargura(x.photo_url,200))+'"':'';
+    const dica=dicaDoAmigo(x);
+    return '<button class="pf-row" onclick="openPlace(\''+esc(x.id)+'\',\'trip\')"><span class="pf-row-foto"'+foto+'></span>'
+      +'<span class="pf-row-txt"><b>'+esc(x.name||'')+'</b><span>'+esc(mlNomeDaCategoria(x.category))+(dica?' · <em>'+esc(dica)+'</em>':'')+'</span></span></button>';
+  }).join('');
+  b.innerHTML=h;
+  plnPintarEntrada('tripPlanejar',paisDaViagem(t),'');
+  // "Ana foi 5★" pede os spots dos amigos (guardados 2 min, os mesmos do
+  // Planejar). Chegando, redesenha uma vez.
+  if(avs.length&&!PV_DELES){
+    Promise.all([plnCarregarAmigos(),plnSpotsDeles()]).then(([,l])=>{PV_DELES=l||[];if(S.curTrip===t&&viagemPlanejada(t))renderTripBody()}).catch(()=>{PV_DELES=[]});
+  }
+}
+async function trocarQuemVe(privada){
+  const t=S.curTrip;if(!t||!!t.privada===privada)return;
+  if(bancoTemPrivacidade()===false){toast('Ainda não dá pra esconder','Falta uma atualização do Spot. Por enquanto seus amigos veem esta viagem.','alert');return}
+  const antes=!!t.privada;
+  t.privada=privada;renderTripBody();
+  const{error}=await dbUpdate('trips',t.id,{privada:privada});
+  if(error){t.privada=antes;renderTripBody();toast('Não salvou','Confere a conexão e tenta de novo.','alert');return}
+  toast(privada?'Só você vê esta viagem':'Seus amigos veem esta viagem','','check');
+}
+
+// ── Viagem criada sozinha pra receber um spot ──
+// Se ela ficar só com Quero ir, nasceu como PRÓXIMA viagem, e próxima viagem
+// nasce "Só eu vejo" (desenho, item 2 do Explorar). Quem decide é o primeiro
+// loadDashboard depois do save, que já tem os spots dela na mão.
+const VIAGENS_NOVAS=new Set();
+function marcarViagemNova(t){if(t&&t.id)VIAGENS_NOVAS.add(t.id)}
+async function fecharViagensNovas(){
+  if(bancoTemPrivacidade()!==true)return;
+  for(const id of [...VIAGENS_NOVAS]){
+    const t=(S.trips||[]).find(x=>x.id===id);
+    if(!t){VIAGENS_NOVAS.delete(id);continue}
+    if(!(t._spots||[]).length)continue;
+    VIAGENS_NOVAS.delete(id);
+    if(!viagemPlanejada(t))continue;
+    const r=await dbUpdate('trips',t.id,{privada:true,proxima:true});
+    if(!r||!r.error){t.privada=true;t.proxima=true}
+  }
+  // Próxima viagem de antes da 028 (só Quero ir, sem a marca): ganha a marca,
+  // pra não virar "viagem feita" se o último spot dela sair. A privacidade
+  // não muda: ela era visível e continua — quem decide esconder é a pessoa.
+  for(const t of proximasViagens()){
+    if(t.proxima!==false)continue;
+    const r=await dbUpdate('trips',t.id,{proxima:true});
+    if(!r||!r.error)t.proxima=true;
+  }
+}
+
+// ── Primeiro Fui (p4): a viagem muda de aba ──
+// Uma folha, uma vez por viagem, e "Acabou de chegar" na aba Viagens até a
+// próxima abertura do app.
+let PLANEJADAS=null;
+const CHEGOU=new Set();
+function conferirViagensQueViraram(){
+  const agora=new Set(proximasViagens().map(t=>t.id));
+  if(PLANEJADAS){
+    let mostrou=false;
+    for(const id of PLANEJADAS){
+      if(agora.has(id))continue;
+      const t=(S.trips||[]).find(x=>x.id===id);
+      if(!t||!naAbaViagens(t)||!(t._spots||[]).some(x=>x.status!=='want'))continue;
+      CHEGOU.add(id);
+      if(!mostrou)mostrou=mostrarViagemQueVirou(t);
+    }
+  }
+  PLANEJADAS=agora;
+}
+function mostrarViagemQueVirou(t){
+  const k='spot_virou_'+t.id;
+  try{if(localStorage.getItem(k))return false;localStorage.setItem(k,'1')}catch(e){}
+  const fui=(t._spots||[]).filter(x=>x.status!=='want')
+    .sort((a,b)=>String(b.updated_at||b.created_at||'').localeCompare(String(a.updated_at||a.created_at||'')))[0];
+  const pais=(t.destinations&&t.destinations[0])||t.name;
+  const foto=document.getElementById('virouFoto');
+  if(foto)foto.style.backgroundImage=fui&&fui.photo_url?cssUrl(fotoNaLargura(fui.photo_url,200)):destGradient(pais);
+  document.getElementById('virouSub').textContent=fui?fui.name+' · Fui':'';
+  document.getElementById('virouTit').textContent=t.name+' agora é uma viagem';
+  document.getElementById('virouTxt').textContent='Ela sai de Próximas viagens e vai pra aba Viagens. '+t.name
+    +' ganha cor no seu mapa, e seus amigos passam a ver o que você marcou como Fui.';
+  showOv('ov-virou');
+  return true;
+}
+
 // ═══ INIT ═══
 async function init(){
   capturarConviteDaURL();
@@ -4571,7 +4812,7 @@ function contarPlacar(){
     if(viagemConta(t))(t.destinations||[]).forEach(d=>ctrs.add(d));
   }
   PLACAR={
-    viagens:S.trips.filter(t=>!isNonTrip(t)).length,
+    viagens:S.trips.filter(naAbaViagens).length,
     spots:ts,
     cidades:cities.size,
     paises:ctrs.size
@@ -4927,7 +5168,7 @@ async function loadDashboard(){
   // Só com os spots carregados de verdade: com a consulta de spots falhando
   // toda viagem pareceria vazia.
   if(!falhou(allSpots)){limparViagensVaziasRepetidas();consertarCidadeQueEraEstado();juntarSpotsDeCasa()}
-  const visivelAntes=S.trips.filter(t=>!isNonTrip(t)).map(t=>t.id).join(',');
+  const visivelAntes=S.trips.filter(naAbaViagens).map(t=>t.id).join(',');
   rebuildCityCanon(); // funde "Split" e "Split-Dalmatia County" antes de contar
   // Conta AQUI: depois da fusao de nomes (senao "Split" conta duas vezes) e
   // ANTES de desenhar, porque renderTrips avisa a tela nativa e ela precisa
@@ -4957,7 +5198,9 @@ async function loadDashboard(){
   geoPronta.then(()=>renderMiniMapa());
   // Só redesenha tudo se a lista visível mudou (ex.: migração __quickvisit__).
   // Caso normal: atualiza só o texto — sem piscada e sem rebuscar as fotos.
-  const visivelAgora=S.trips.filter(t=>!isNonTrip(t)).map(t=>t.id).join(',');
+  fecharViagensNovas().catch(()=>{});
+  conferirViagensQueViraram();
+  const visivelAgora=S.trips.filter(naAbaViagens).map(t=>t.id).join(',');
   if(visivelAgora!==visivelAntes){renderTrips()}
   else{refreshTripMetas()}
   populateTripOpts();
@@ -5024,7 +5267,8 @@ function juntarSpotsDeCasa(){
 }
 function limparViagensVaziasRepetidas(){
   const visiveis=(S.trips||[]).filter(t=>!isNonTrip(t));
-  const sobra=visiveis.filter(t=>!(t._spots||[]).length&&visiveis.some(o=>o!==t&&normName(o.name)===normName(t.name)
+  // Próxima viagem nasce vazia de propósito (Perfil > Nova): nunca é sobra.
+  const sobra=visiveis.filter(t=>!t.proxima&&!(t._spots||[]).length&&visiveis.some(o=>o!==t&&normName(o.name)===normName(t.name)
     &&((o._spots||[]).length||String(o.created_at||'')<String(t.created_at||''))));
   if(!sobra.length)return;
   const ids=new Set(sobra.map(t=>t.id));
@@ -5186,7 +5430,8 @@ function tripMetaText(t,curto){
   // das viagens antigas que ainda tem `dates` gravado. O campo continua no
   // banco; so nao e mais mostrado. O card e sobre o lugar, nao sobre quando.
   if(!t._spotsLoaded)return'';
-  return (viagemPlanejada(t)?'Planejando · ':'')+cityTxt+sp.length+(sp.length===1?' spot':' spots');
+  if(CHEGOU.has(t.id))return 'Acabou de chegar';
+  return cityTxt+sp.length+(sp.length===1?' spot':' spots');
 }
 function refreshTripMetas(){
   S.trips.forEach(t=>{
@@ -5222,7 +5467,7 @@ let REGIAO_ATIVA=null;
 
 function regioesComViagem(){
   const groups={};
-  S.trips.filter(t=>!isNonTrip(t)).forEach(t=>{
+  S.trips.filter(naAbaViagens).forEach(t=>{
     const r=regionFor((t.destinations&&t.destinations[0])||t.name);
     (groups[r]=groups[r]||[]).push(t);
   });
@@ -5246,7 +5491,7 @@ function aoRolarFilme(){
 
 function renderTrips(){
   const c=document.getElementById('tripsContainer');
-  const visibleTrips=S.trips.filter(t=>!isNonTrip(t));
+  const visibleTrips=S.trips.filter(naAbaViagens);
   // Conta sem viagem: a saida antecipada daqui era a unica no caminho de quem
   // acabou de criar conta, e deixava a tela nativa girando pra sempre — a
   // pessoa nao chegava nem no botao de criar a primeira viagem.
@@ -5319,7 +5564,7 @@ function renderTrips(){
 // pra resolver um problema que ele não tem.
 function darDadosDeViagens(){
   if(!S.user||!DADOS_DA_CONTA){falarComACasca({tipo:'viagens',pronto:false});return}
-  const visiveis=S.trips.filter(t=>!isNonTrip(t));
+  const visiveis=S.trips.filter(naAbaViagens);
   const{groups,ordem}=regioesComViagem();
   const regiao=(REGIAO_ATIVA&&groups[REGIAO_ATIVA])?REGIAO_ATIVA:ordem[0];
   // Mesma ordem do mosaico do site: o destaque (card do dobro do tamanho) vai
@@ -5419,7 +5664,7 @@ function cardDeViagem(t,grande){
     +'<div class="vg-foto" id="tcbg-'+esc(t.id)+'" style="background-image:'+destGradient(destino)+'"></div>'
     +'<div class="vg-scrim"></div>'
     +'<div class="vg-pe"><h3 class="vg-nome">'+esc(t.name)+'</h3>'
-    +'<p class="vg-meta" id="tcmeta-'+esc(t.id)+'">'+esc(tripMetaText(t,!grande))+'</p></div>'
+    +'<p class="vg-meta'+(CHEGOU.has(t.id)?' vg-chegou':'')+'" id="tcmeta-'+esc(t.id)+'">'+esc(tripMetaText(t,!grande))+'</p></div>'
     +'</button>';
 }
 
@@ -5540,7 +5785,7 @@ function renderList(){
   // exatamente a mesma lista com o mapa por cima. Ver openList().
 
   else if(LS.mode==='trips'){
-    const list=S.trips.filter(t=>!isNonTrip(t));
+    const list=S.trips.filter(naAbaViagens);
     LS.items=list;
     title.textContent=list.length+(list.length===1?' viagem':' viagens');
     const nP=new Set(list.map(t=>(t.destinations&&t.destinations[0])||t.name).filter(Boolean)).size;
@@ -5660,8 +5905,10 @@ async function loadTrip(t){
   document.getElementById('tripFloat').textContent=t.name;
   document.getElementById('tripName').textContent=t.name;
   // Sem data no cabecalho tambem — mesma decisao do card (ver renderTrips).
-  document.getElementById('tripLabel').innerHTML=flagsHTML(t.destinations);
-  document.getElementById('tripMeta').textContent='';
+  const planejada=viagemPlanejada(t);
+  document.getElementById('tripLabel').innerHTML=planejada?'<span class="pv-rot">Próxima viagem</span>':flagsHTML(t.destinations);
+  {const n=(t._spots||[]).length,c=tripCityCount(t);
+   document.getElementById('tripMeta').textContent=planejada?[c?c+(c===1?' cidade':' cidades'):'',n+(n===1?' spot':' spots')].filter(Boolean).join(' · '):'';}
   const heroEl=document.getElementById('tripHeroImg');
   const dest=(t.destinations&&t.destinations[0])||t.name;
   // usa backgroundImage, nunca o atalho `background` — o atalho reseta
@@ -5760,6 +6007,7 @@ function pendurarClima(byCity,country,month,prefixoId){
 function renderTripBody(){
   const t=S.curTrip,b=document.getElementById('tripBody');
   if(!t)return;
+  if(viagemPlanejada(t)){renderProximaViagem(t,b);return}
   const hasSpots=spotsDaViagem(t).length;
   if(!hasSpots&&!t.initial_city){b.innerHTML=`<div class="empty-state" style="padding:40px 24px"><div class="ei">${icon('pin')}</div><h3>Nenhum spot aqui</h3><p>Toca no + para adicionar</p></div>`;return}
   const byCity=agruparPorCidade(spotsDaViagem(t),t.initial_city);
@@ -6534,6 +6782,7 @@ async function setStatus(s,save=true){
   }
   spot.status=s;
   if(document.getElementById('city').classList.contains('active'))renderCityBody();
+  conferirViagensQueViraram();
 }
 // ═══ EDITAR A NOTA ═══
 // A my_note era gravada UMA vez, no saveSpot, e depois so exibida — nao havia
@@ -7305,7 +7554,7 @@ async function adicionarSpotAbertoDoAmigo(btn){
     if(nome){
       const{data,error}=await dbInsert('trips',{user_id:S.user.id,name:nome,
         destinations:[nome],dates:'',status:'planning',initial_city:cidade||null});
-      if(!error&&data){data._spots=[];data._spotsLoaded=true;S.trips.unshift(data);viagem=data}
+      if(!error&&data){data._spots=[];data._spotsLoaded=true;S.trips.unshift(data);viagem=data;marcarViagemNova(data)}
     }
   }
   restaura();
@@ -9362,7 +9611,7 @@ async function garantirViagem(cidade,pais,semCriar){
     const{data,error}=await dbInsert('trips',{user_id:S.user.id,name:pais,
       destinations:[pais],dates:'',status:'planning',initial_city:cidade||null});
     if(error||!data)return null;
-    data._spots=[];data._spotsLoaded=true;
+    data._spots=[];data._spotsLoaded=true;marcarViagemNova(data);
     S.trips.unshift(data);
     return data;
   });
@@ -9422,7 +9671,7 @@ async function moveToCorrectCountry(existingTrip,createNew){
     const country=p.country;
     const{data,error}=await dbInsert('trips',{user_id:S.user.id,name:country,destinations:[country],dates:'',status:'planning'});
     if(error||!data){toast('Erro ao criar viagem','');return}
-    data._spots=[];S.trips.unshift(data);trip=data;
+    data._spots=[];S.trips.unshift(data);trip=data;marcarViagemNova(data);
   }
   // Set the add target to the correct trip and proceed to note
   S.addTrip=trip;S.selPlace=p;S.pendingPlace=null;
@@ -9715,6 +9964,20 @@ async function resolverCidadeDoSpot(p,trip){
 async function createTrip(){
   if(!selectedNewTripCity){return}
   const name=selectedNewTripCity.country;
+  // Nova viagem pelo Perfil (05/10): entra em Próximas viagens, com "Quem vê".
+  const proxima=NOVA_PROXIMA,privada=NOVA_PRIVADA;
+  if(proxima){
+    // Uma viagem por país: se ela já existe, abre a que existe.
+    const ja=(S.trips||[]).find(t=>!isNonTrip(t)&&(mesmoLugar(t.name,name)||(t.destinations||[]).some(d=>mesmoLugar(d,name))));
+    if(ja){
+      closeOv('ov-newtrip');
+      toast(viagemPlanejada(ja)?name+' já está nas suas próximas viagens':'Você já tem '+name+' nas suas viagens','', 'suitcase');
+      openTrip(ja.id);return;
+    }
+    // Sem a 028, viagem vazia não tem como ser "próxima": ela viraria viagem
+    // feita e pintaria o mapa. Melhor dizer do que fazer errado.
+    if(bancoTemPrivacidade()===false){toast('Ainda não dá','Falta uma atualização do Spot pra criar uma próxima viagem vazia. Salve um spot como Quero ir e ela aparece sozinha.','alert');return}
+  }
   // let, nao const: a linha que canoniza o nome logo abaixo reatribui isso.
   // Com const, criar viagem lancava "Assignment to constant variable" TODA vez
   // que uma cidade era escolhida — a funcao morria antes do insert, o botao
@@ -9731,7 +9994,15 @@ async function createTrip(){
   // Google mudo atrasam no maximo 3 segundos e a viagem e criada com o nome
   // que a pessoa escolheu.
   if(cidadeEscolhida)cidadeEscolhida=await comPrazo(canonizarCidade(cidadeEscolhida,name),3000,cidadeEscolhida);
-  let{data,error}=await dbInsert('trips',{user_id:S.user.id,name,destinations:[name],dates,date_start:s||null,date_end:e||null,status:'planning',initial_city:cidadeEscolhida||null});
+  let data=null,error=null;
+  if(proxima){
+    ({data,error}=await dbInsert('trips',{user_id:S.user.id,name,destinations:[name],dates,status:'planning',initial_city:cidadeEscolhida||null,proxima:true,privada:!!privada}));
+    if(error||!data){
+      toast('Erro ao criar',error?.message||'Tente novamente');
+      btn.textContent='Criar viagem';btn.style.pointerEvents='auto';return;
+    }
+  }
+  if(!data)({data,error}=await dbInsert('trips',{user_id:S.user.id,name,destinations:[name],dates,date_start:s||null,date_end:e||null,status:'planning',initial_city:cidadeEscolhida||null}));
   // Degrada aos poucos se colunas novas ainda não existirem (migração não rodada):
   // 1) sem colunas de data, com initial_city  2) com colunas de data, sem initial_city  3) nenhuma das duas
   if(error&&!data){
@@ -9754,6 +10025,13 @@ async function createTrip(){
     document.getElementById('countryList').innerHTML='';
 
     renderTrips();populateTripOpts();
+    if(proxima){
+      toast('Em Próximas viagens','"'+name+'"','suitcase');
+      if(document.getElementById('profile').classList.contains('active'))renderProximas();
+      S.curTrip=data;S.addTrip=data;
+      goTo('trip');await loadTrip(data);
+      return;
+    }
     toast('Viagem criada','"'+name+'"','suitcase');
     // Se veio de busca por cidade, o card dela já existe vazio (initial_city) —
     // leva direto pra adicionar o primeiro spot ali. Se veio de busca só por
@@ -12231,16 +12509,24 @@ function loadScript(urls){
 // aparecia no mapa e no placar como se já tivesse ido. Agora conta: marcado
 // como visitado, a cidade onde mora, viagem concluída, viagem com algum Fui —
 // e viagem sem spot nenhum (criada à mão), que é o comportamento de antes.
-function viagemConta(t){
-  if(!t)return false;
-  if(t.dates==='__quickvisit__'||ehCasa(t)||t.status==='done')return true;
+function viagemConta(t){return !!t&&!viagemPlanejada(t)}
+// PRÓXIMA VIAGEM (05/10, desenho p1–p4): nenhum Fui ainda. Mora só no Perfil,
+// nunca na aba Viagens nem no mapa. Duas origens:
+//   · viagem com spots e todos Quero ir (a regra de 01/10);
+//   · viagem criada como próxima (Perfil > Nova, coluna `proxima` da 028)
+//     ainda sem spot. Sem a marca, viagem vazia criada à mão é viagem feita,
+//     como sempre foi.
+// Só Quero ir é planejamento; Fui, Não recomendo (foi e não gostou) e spot
+// antigo sem status contam como visitado.
+function viagemPlanejada(t){
+  if(!t||t.dates==='__quickvisit__'||ehCasa(t)||t.status==='done')return false;
   const sp=t._spots;
-  if(!sp||!sp.length)return true;
-  // Só Quero ir é planejamento; Fui, Não recomendo (foi e não gostou) e spot
-  // antigo sem status contam como visitado.
-  return sp.some(x=>x.status!=='want');
+  if(!sp||!sp.length)return !!t.proxima;
+  return !sp.some(x=>x.status!=='want');
 }
-function viagemPlanejada(t){return !!(t&&t._spots&&t._spots.length)&&!viagemConta(t)}
+// O que entra na aba Viagens (lista, placar, continentes, tela nativa).
+function naAbaViagens(t){return !isNonTrip(t)&&!viagemPlanejada(t)}
+function proximasViagens(){return (S.trips||[]).filter(viagemPlanejada)}
 function visitedCountryNames(){
   const set=new Set();
   S.trips.forEach(t=>{if(!viagemConta(t))return;const n=(t.destinations&&t.destinations[0])||t.name;if(n)set.add(n)});
@@ -12269,10 +12555,9 @@ async function loadProfile(){
   document.getElementById('profAvatar').textContent=name.charAt(0).toUpperCase();
   const p=await fetchOwnProfile(true);
   // A cidade onde mora vai ao lado do @ (desenho de 25/09).
-  document.getElementById('profUser').textContent=[p.username?'@'+p.username:'',p.home_city||''].filter(Boolean).join(' · ');
+  // Desenho de 05/10: "@lucas · 14 amigos". A cidade onde mora desceu pro rodapé.
+  document.getElementById('profUser').textContent=p.username?'@'+p.username:'';
   const cfg=document.getElementById('cfgCidade');if(cfg)cfg.textContent=p.home_city?' · '+p.home_city:'';
-  const marcar=document.getElementById('profMarcar');
-  if(marcar)marcar.style.display=visitedCountryNames().length?'none':'';
   const bio=document.getElementById('profBio');
   if(p.bio){bio.textContent=p.bio;bio.style.display='block'}else{bio.style.display='none'}
   document.getElementById('usernameInput').value=p.username||'';
@@ -12304,7 +12589,7 @@ async function loadProfile(){
     am.style.display=AMIGOS_TOTAL?'inline':'none';
     const u=document.getElementById('profUser');if(u)u.classList.toggle('com-amigos',!!AMIGOS_TOTAL);
   }
-  renderEstante();
+  renderPerfil();
   // Em segundo plano, sem segurar a tela: o Perfil é onde o mapa vai morar,
   // então é aqui que vale começar a preencher o que falta.
   preencherCoordenadasQueFaltam(6).catch(function(){});
@@ -12429,10 +12714,11 @@ async function preencherCoordenadasQueFaltam(limite){
 //
 // O nome dos três status vem do produto, não do banco: `skip` sempre foi
 // "Pular" no código e agora se chama NÃO RECOMENDO na tela. É o mesmo dado.
+// Desde 05/10 são dois (desenho p1b): "Não recomendo" é um jeito de ter ido,
+// e entra em Fui, com o rótulo no lugar da nota.
 const ML_STATUS = [
   {chave:'been', rotulo:'Fui'},
-  {chave:'want', rotulo:'Quero ir'},
-  {chave:'skip', rotulo:'Não recomendo'}
+  {chave:'want', rotulo:'Quero ir'}
 ];
 // "Compras" NÃO é categoria de cima: é um dos tipos de experiência, ao lado de
 // Natureza, Nightlife, Wellness, Cultura e Passeio (ver EXP_SUBCATS). O
@@ -12457,7 +12743,8 @@ function mlRotuloDaCategoria(c){
 // O filtro de status é aplicado SEMPRE; cidade e categoria só quando escolhidos.
 function mlFiltrar(spots,comStatus,comCidade,comCat){
   return spots.filter(function(s){
-    if(comStatus&&(s.status||'want')!==comStatus)return false;
+    const st=s.status||'want';
+    if(comStatus&&!(st===comStatus||(comStatus==='been'&&st==='skip')))return false;
     if(comCidade&&cityOf(s)!==comCidade)return false;
     if(comCat){
       // "experience:compras" = categoria de cima MAIS tipo de experiência. Um
@@ -12470,83 +12757,94 @@ function mlFiltrar(spots,comStatus,comCidade,comCat){
   });
 }
 
+// Quantas linhas o Perfil mostra antes do "Ver os N" (desenho p1b).
+const ML_NO_PERFIL=8;
+let ML_TUDO=false;
+function mlNomeDaCategoria(c){return{food:'Gastronomia',hotel:'Hospedagem',experience:'Experiência'}[c]||''}
+// O bairro, quando o endereço diz (formato brasileiro "Rua X, 12 - Jardins,
+// São Paulo - SP"). Endereço de fora não tem um padrão confiável: fica vazio.
+function bairroDoEndereco(a){
+  const partes=String(a||'').split(',').map(x=>x.trim());
+  for(const p of partes){const m=p.match(/^\d+[A-Za-z]?\s+-\s+(.+)$/);if(m)return m[1]}
+  return '';
+}
+function mlMaisRecente(l){let m='';l.forEach(s=>{const c=String(s.updated_at||s.created_at||'');if(c>m)m=c});return m}
+function mlLinha(s){
+  const foto=s.photo_url?' style="background-image:'+cssUrl(fotoNaLargura(s.photo_url,200))+'"':'';
+  const st=s.status||'want';
+  const sub=[mlCat?'':mlNomeDaCategoria(s.category),bairroDoEndereco(s.address)].filter(Boolean);
+  let dica='';
+  if(st==='want'){const quem=nomeDeQuemIndicou(s);if(quem)dica='dica de '+quem}
+  const val=st==='skip'?'<span class="pf-row-val cinza">Não recomendo</span>'
+    :(st==='been'&&Number(s.my_rating)>0?'<span class="pf-row-val">'+esc(fmtRating(s.my_rating))+'★</span>':'');
+  return '<button class="pf-row" onclick="openPlace(\''+esc(s.id)+'\',\'profile\')">'
+    +'<span class="pf-row-foto"'+foto+'></span>'
+    +'<span class="pf-row-txt"><b>'+esc(s.name||'')+'</b><span>'+esc(sub.join(' · '))
+    +(dica?(sub.length?' · ':'')+'<em>'+esc(dica)+'</em>':'')+'</span></span>'+val+'</button>';
+}
+function renderPerfil(){renderProximas();renderEstante();pintarRodapeDoPerfil()}
+function pintarRodapeDoPerfil(){
+  const p=S.profile||{};
+  const n=visitedCountryNames().length;
+  const a=document.getElementById('pfPaises');if(a)a.textContent=n?String(n):'';
+  const b=document.getElementById('pfCasa');if(b)b.textContent=p.home_city||'';
+}
 function renderEstante(){
   const trilho=document.getElementById('mlTrilho');
   if(!trilho)return;
   const spots=allSpotsFlat();
-  // Antes do primeiro spot, abas, filtros e Lista/Mapa não têm o que
-  // filtrar: some tudo, e fica uma frase e o botão (rodada 1).
+  // Antes do primeiro spot, o segmentado e os filtros não têm o que filtrar:
+  // some tudo, e fica uma frase e o botão.
   const nada=!spots.length;
-  ['mlStatus','mlSegmento'].forEach(function(id){const el=document.getElementById(id);if(el)el.style.display=nada?'none':''});
+  const seg=document.getElementById('mlStatus');if(seg)seg.style.display=nada?'none':'';
   const filtros=document.querySelector('#profile .ml-filtros');if(filtros)filtros.style.display=nada?'none':'';
+  const ver=document.getElementById('mlVerTodos');
   if(nada){
-    trilho.style.display='';
-    trilho.innerHTML='<div class="ml-vazio ml-vazio-solto">Os spots que você salvar aparecem aqui, separados em Fui, Quero ir e Não recomendo.</div>'
+    trilho.innerHTML='<div class="ml-vazio ml-vazio-solto">Os spots que você salvar aparecem aqui, separados em Fui e Quero ir.</div>'
       +'<button class="btn-primario btn-largo" onclick="comecarSpotSemViagem()">Adicionar spot</button>';
-    document.getElementById('mlVerTodos').innerHTML='';
+    ver.innerHTML='';
     darDadosDePerfil();
     return;
   }
-
-  // As abas mostram a contagem DENTRO dos filtros de cidade e categoria: com
-  // "São Paulo" escolhido, "Fui · 28" tem que ser 28 em São Paulo, senão o
-  // número promete uma lista que a tela não mostra.
-  const abas=document.getElementById('mlStatus');
-  abas.innerHTML=ML_STATUS.map(function(st){
+  // As contagens valem DENTRO dos filtros de cidade e categoria: com "São
+  // Paulo" escolhido, "Fui 28" tem que ser 28 em São Paulo.
+  seg.innerHTML=ML_STATUS.map(function(st){
     const n=mlFiltrar(spots,st.chave,mlCidade,mlCat).length;
-    return '<button class="ml-aba'+(mlStatus===st.chave?' on':'')+'" onclick="mlTrocarStatus(\''+st.chave+'\')">'
-      // Vazia mostra só o nome: "Quero ir", nunca "Quero ir · 0".
-      +esc(st.rotulo)+(n?' · '+n:'')+'</button>';
+    return '<button class="pf-op'+(mlStatus===st.chave?' on':'')+'" onclick="mlTrocarStatus(\''+st.chave+'\')">'
+      +esc(st.rotulo)+(n?'<i>'+n+'</i>':'')+'</button>';
   }).join('');
 
-  ML_CIDADES=Object.keys(agruparPorCidade(spots)).sort(function(a,b){
-    return mlFiltrar(spots,mlStatus,b,'').length-mlFiltrar(spots,mlStatus,a,'').length
-      ||a.localeCompare(b,'pt-BR');
-  });
+  // Cidades na ordem do spot mais recente (desenho p1b).
+  const porCidade=agruparPorCidade(spots);
+  ML_CIDADES=Object.keys(porCidade).sort((a,b)=>mlMaisRecente(porCidade[b]).localeCompare(mlMaisRecente(porCidade[a]))||a.localeCompare(b,'pt-BR'));
   document.getElementById('mlCidadeTxt').textContent=mlCidade||'Todas as cidades';
   document.getElementById('mlCatTxt').textContent=mlRotuloDaCategoria(mlCat);
 
-  // O segmentado Lista | Mapa. Fica no cabeçalho, à direita do título.
-  const seg=document.getElementById('mlSegmento');
-  if(seg){
-    seg.innerHTML=['lista','mapa'].map(function(m){
-      return '<button class="ml-seg'+(mlModo===m?' on':'')+'" onclick="mlTrocarModo(\''+m+'\')">'
-        +(m==='lista'?'Lista':'Mapa')+'</button>';
-    }).join('');
-  }
-
   const lista=mlFiltrar(spots,mlStatus,mlCidade,mlCat);
-  const ver=document.getElementById('mlVerTodos');
   if(!lista.length){
     trilho.innerHTML='<div class="ml-vazio">'+esc(mlTextoDeVazio())+'</div>';
     ver.innerHTML='';
     darDadosDePerfil();
     return;
   }
-  trilho.style.display='';
-  if(mlModo==='mapa'){
-    ver.innerHTML='<button class="ml-vertodos" onclick="mlVerTodos()">'
-      +esc(mlCidade?('Ver os '+lista.length+' em '+mlCidade):('Ver todos os '+lista.length))+'</button>';
-    renderMapaDeLugares(lista).catch(function(){});
-    darDadosDePerfil();
-    return;
+  const recente=(a,b)=>String(b.updated_at||b.created_at||'').localeCompare(String(a.updated_at||a.created_at||''));
+  let resta=ML_TUDO?Infinity:ML_NO_PERFIL;
+  let h='';
+  if(mlCidade){
+    h=lista.slice().sort(recente).slice(0,resta).map(mlLinha).join('');
+  }else{
+    // Sem cidade escolhida, agrupado por cidade: "São Paulo · 24".
+    const grupos=agruparPorCidade(lista);
+    const ordem=Object.keys(grupos).sort((a,b)=>mlMaisRecente(grupos[b]).localeCompare(mlMaisRecente(grupos[a])));
+    for(const c of ordem){
+      if(resta<=0)break;
+      const doGrupo=grupos[c].slice().sort(recente);
+      h+='<div class="pf-grupo">'+esc(c)+' · '+doGrupo.length+'</div>'+doGrupo.slice(0,resta).map(mlLinha).join('');
+      resta-=doGrupo.length;
+    }
   }
-  // Os mais recentes primeiro: o trilho mostra quatro ou cinco, e o que a
-  // pessoa salvou ontem é o que ela procura.
-  const ordenada=lista.slice().sort(function(a,b){
-    return String(b.created_at||'').localeCompare(String(a.created_at||''));
-  });
-  trilho.innerHTML=ordenada.slice(0,12).map(function(s){
-    const foto=s.photo_url?' style="background-image:'+cssUrl(fotoNaLargura(s.photo_url,400))+'"':'';
-    return '<div class="ml-card" onclick="openPlace(\''+s.id+'\',\'profile\')">'
-      +'<div class="ml-foto"'+foto+'></div>'
-      +'<div class="ml-nome">'+esc(s.name||'')+'</div>'
-      +'<div class="ml-meta">'+esc(mlLegenda(s))+'</div></div>';
-  }).join('')
-    // O fim do trilho é o convite pro próximo spot.
-    +'<button class="ml-card ml-add" onclick="comecarSpotSemViagem()"><div class="ml-foto ml-add-foto">+</div><div class="ml-nome">Adicionar spot</div></button>';
-  ver.innerHTML='<button class="ml-vertodos" onclick="mlVerTodos()">'
-    +esc(mlCidade?('Ver os '+lista.length+' em '+mlCidade):('Ver todos os '+lista.length))+'</button>';
+  trilho.innerHTML=h;
+  ver.innerHTML=(!ML_TUDO&&lista.length>ML_NO_PERFIL)?'<button class="pf-ver" onclick="mlVerTodos()">Ver os '+lista.length+'</button>':'';
   darDadosDePerfil();
 }
 
@@ -12567,9 +12865,8 @@ function mlLegenda(s){
   return quem?(onde?onde+' · dica de '+quem:'dica de '+quem):onde;
 }
 function mlTextoDeVazio(){
-  if(mlStatus==='been')return 'Nada marcado como "já fui" por aqui ainda.';
-  if(mlStatus==='skip')return 'Você ainda não marcou nenhum lugar como não recomendado.';
-  return 'Nenhum lugar na sua lista de "quero ir" com estes filtros.';
+  if(mlStatus==='been')return 'Nenhum spot em Fui com estes filtros.';
+  return 'Nenhum spot em Quero ir com estes filtros.';
 }
 // ═══ MEUS LUGARES: O MAPA ═══
 //
@@ -12915,17 +13212,16 @@ function mlCidadeDoMapa(i){
   renderEstante();
 }
 
-function mlTrocarStatus(st){mlStatus=st;renderEstante()}
-function mlEscolherCidade(i){mlCidade=(i<0?'':(ML_CIDADES[i]||''));closeOv('ov-mlcidade');renderEstante()}
-function mlEscolherCat(c){mlCat=c;closeOv('ov-mlcat');renderEstante()}
+function mlTrocarStatus(st){mlStatus=st;ML_TUDO=false;renderEstante()}
+function mlEscolherCidade(i){mlCidade=(i<0?'':(ML_CIDADES[i]||''));ML_TUDO=false;closeOv('ov-mlcidade');renderEstante()}
+function mlEscolherCat(c){mlCat=c;ML_TUDO=false;closeOv('ov-mlcat');renderEstante()}
 
 // "Ver os N" abre a tela Lista que já existe, com os mesmos filtros. A Lista
 // não tem modo por status+cidade+categoria, então o caminho é o drill que ela
 // já entende: por cidade quando há uma, senão a lista de spots inteira.
-function mlVerTodos(){
-  if(mlCidade){drillTo('city',mlCidade);goTo('list');return}
-  openList('spots');
-}
+// "Ver os N" abre a lista inteira AQUI, com os mesmos filtros (05/10). Ia pra
+// tela Lista geral, que sai do app na etapa 2 do desenho.
+function mlVerTodos(){ML_TUDO=true;renderEstante()}
 
 function abrirFolhaDeCidades(){
   const box=document.getElementById('mlCidadeLista');
@@ -13583,11 +13879,14 @@ function closeOv(id){
   // Fechar a folha de categoria sem escolher encerra o "Mudar categoria": a
   // trava ficava ligada, e o próximo + trocava a categoria do spot antigo.
   if(id==='ov-cat')trocandoCategoria=false;
+  // A folha de criar viagem é a mesma nos dois modos: fechou, volta pro normal.
+  if(id==='ov-newtrip')NOVA_PROXIMA=false;
   document.getElementById(id).classList.remove('show');avisarSeTemJanela();
 }
 function closeOut(e,id){if(e.target===document.getElementById(id))closeOv(id)}
 function nextOv(a,b){closeOv(a);if(b==='ov-newtrip')prepNewTrip();if(b==='ov-trip'){populateTripOpts();S.explorePick=null;S.explorePickCat=null;S.explorePickStatus=null}if(b==='ov-search')resetSearchSheet();setTimeout(()=>{document.getElementById(b).classList.add('show');avisarSeTemJanela()},220)}
 function prepNewTrip(){
+  pintarFolhaDeNovaViagem();
   selectedNewTripCity=null;
   const cs=document.getElementById('countrySearch');if(cs)cs.value='';
   document.getElementById('countryList').innerHTML='';
