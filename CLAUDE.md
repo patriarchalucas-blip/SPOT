@@ -10,6 +10,16 @@ Este arquivo é lido automaticamente pelo Claude Code ao abrir esta pasta. Ele e
 
 App pessoal de viagem — "Letterboxd para viagem". Salva lugares (restaurante/hotel/experiência) com nota pessoal, marca "quero ir"/"já fui", avalia. Tagline: "seus lugares · sua voz". Caso de uso: viagem aos Bálcãs (Croácia + Montenegro + Bósnia) com grupo de 6 amigos. Lucas está pensando em profissionalizar isso como produto de verdade (não é urgente, é intenção de médio prazo).
 
+## O Spot é SÓ o app (05/10/2026)
+
+Decisão do Lucas: ninguém usa pelo navegador. Aberto fora do app, `index.html`
+mostra "O Spot é um app — Baixar na App Store" (bloco `soNoApp` no começo do
+script; reconhece o app por `window.enderecoDeVoltaDoLogin` ou
+`ReactNativeWebView`). Seguem abrindo: links de confirmação de cadastro/troca de
+senha, `/l/`, `/c/`, `/sobre`, `/privacidade`, e localhost (testes). Mudança
+nas telas do site chega em TODOS os apps (App Store e TestFlight) na hora: não
+há área de teste — ver Dívida técnica 4.
+
 ## Arquitetura atual
 
 - **Frontend:** `index.html` — single file, HTML+CSS+JS inline, sem framework, sem build step. ~10.500 linhas em 24/09/2026 (este número envelhece rápido; ver Dívida técnica 3).
