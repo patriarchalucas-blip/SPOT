@@ -55,3 +55,16 @@ test('cidade de abertura: onde mora com 3+ notas', () => {
   cenario();
   assert.strictEqual(A.avaliar('cidadePadraoDoTop()'), 'São Paulo');
 });
+
+// Seus spots (8a–8d): a busca acha sem acento, nome antes do resto.
+test('seus spots: busca sem acento, nome que comeca vem primeiro', () => {
+  cenario();
+  A.avaliar("SS.buscando=true;SS.busca='bra'");
+  A.renderBuscaDosSpots();
+  const h = A.avaliar("document.getElementById('ssLista').innerHTML");
+  assert.ok(h.indexOf('Br') >= 0 && h.indexOf('<mark>Br') >= 0, 'marca o trecho');
+  A.avaliar("SS.busca='mani'");
+  A.renderBuscaDosSpots();
+  assert.ok(A.avaliar("document.getElementById('ssLista').innerHTML").includes('<mark>Maní</mark>'), 'Mani acha Maní');
+  A.avaliar("SS.buscando=false");
+});

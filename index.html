@@ -1864,6 +1864,51 @@ body.tem-apple #convite .btn-apple{display:flex}
 .pv-virou p{margin:0 0 10px;font-size:15px;line-height:1.5;color:var(--ink2)}
 .pv-virou .pf-bt2{background:var(--surface)}
 .vg-meta.vg-chegou{font-weight:600}
+/* Seus spots (8a–8d) */
+.ss-topo{padding:12px 20px 0}
+.ss-tit{margin:6px 0 2px;font-size:38px;font-weight:700;letter-spacing:-.045em;color:var(--green)}
+.ss-sub{margin-bottom:16px;font-size:15px;color:var(--ink2)}
+.ss-busca{display:flex;align-items:center;gap:12px;margin-bottom:12px}
+.ss-busca label{flex:1;height:44px}
+.ss-cancelar{display:none;border:none;background:none;padding:0;font:inherit;font-size:16px;color:var(--ink2);cursor:pointer}
+.ss-buscando .ss-cancelar{display:block}
+.ss-buscando #ssCab,.ss-buscando #ssFiltros,.ss-com-lugar #ssCab{display:none}
+.ss-buscando .ss-topo{display:none}
+.ss-buscando .profile-body{padding-top:16px}
+.ss-abas{gap:16px;margin:14px 0 4px}
+.ss-linha{display:flex;align-items:center;justify-content:space-between;margin:10px 0 6px}
+.ss-lugar{display:flex;align-items:center;gap:6px;border:none;background:none;padding:0;font:inherit;font-size:16px;font-weight:600;color:var(--ink);cursor:pointer}
+.ss-lugar i{font-style:normal;font-size:13px;color:var(--ink2)}
+.ss-lugar.on{color:var(--green)}
+.ss-lugar.on button{border:none;background:none;padding:0 0 0 4px;font:inherit;font-size:13px;color:var(--ink2);cursor:pointer}
+.ss-ordem{border:none;background:none;padding:0;font:inherit;font-size:14px;color:var(--ink2);cursor:pointer}
+.ss-ordem i{font-style:normal;font-size:12px}
+.ss-grupo{margin-top:18px}
+.ss-gcab{display:flex;align-items:baseline;gap:6px;margin-bottom:6px}
+.ss-gcab b{font-size:20px;font-weight:700;letter-spacing:-.025em;color:var(--ink)}
+.ss-gcab span{font-size:14px;color:var(--ink2)}
+.ss-gcab i{margin-left:auto;font-style:normal;font-size:14px;color:var(--ink3)}
+.ss-row{padding:7px 0}
+.ss-vern{padding:8px 0 0 68px}
+.ss-st{flex:none;font-size:14px;color:var(--ink2)}
+.ss-st.fui{font-weight:600;color:var(--green)}
+.ss-row mark{background:#DCE6DF;color:inherit;border-radius:3px}
+.ss-conta{margin:4px 0 6px;font-size:14px;color:var(--ink3)}
+.ss-vazio{display:flex;flex-direction:column;gap:6px;margin:28px 0;font-size:15px;color:var(--ink2)}
+.ss-vazio b{font-size:17px;font-weight:600;color:var(--ink)}
+.ss-vazio .pf-ver{padding-top:4px;text-align:left}
+.ss-onde-busca{padding:0 20px 8px}
+.ss-onde{padding:0 20px}
+.ss-ol{display:flex;align-items:center;gap:10px;width:100%;min-height:52px;border:none;background:none;padding:6px 0;text-align:left;font:inherit;cursor:pointer}
+.ss-ol>span{flex:1;display:flex;flex-direction:column}
+.ss-ol b{font-size:17px;font-weight:600;color:var(--ink)}
+.ss-ol>b{flex:1}
+.ss-ol>span>span{font-size:14px;color:var(--ink2)}
+.ss-ol i,.ss-oc i{font-style:normal;font-size:15px;color:var(--ink3)}
+.ss-ol em{font-style:normal;font-size:12px;color:var(--ink3);width:12px}
+.ss-ol.on b{color:var(--green)}
+.ss-oc{display:flex;align-items:center;justify-content:space-between;width:100%;height:44px;border:none;background:none;padding:0 22px 0 36px;font:inherit;font-size:16px;color:var(--ink);cursor:pointer;box-sizing:border-box}
+.ss-oc.on{font-weight:600;color:var(--green)}
 /* Perfil v5 (05/10) */
 .pv5-topo{display:flex;align-items:center;justify-content:space-between;padding:18px 20px 4px}
 .pv5-eu{display:flex;align-items:center;gap:10px;border:none;background:none;padding:0;font:inherit;cursor:pointer}
@@ -2602,21 +2647,25 @@ body.exm .exm-filtros{position:relative;z-index:1}
   <div class="bottom-nav"><div class="nav-item" onclick="goTo('dashboard');loadDashboard()"><div class="nav-icon" data-ic="map"></div><div class="nav-label">Viagens</div></div><div class="nav-item" onclick="goTo('explore');loadExplore()"><div class="nav-icon" data-ic="search"></div><div class="nav-label">Explorar</div></div><div class="nav-item" onclick="goTo('friends');loadFriends(true)"><div class="nav-icon" data-ic="users"></div><div class="nav-label">Amigos</div></div><div class="nav-item active" onclick="goTo('profile');loadProfile()"><div class="nav-icon" data-ic="user"></div><div class="nav-label" style="color:var(--ink);font-weight:600">Perfil</div></div></div>
 </div>
 
-<!-- TODOS OS SEUS SPOTS (Perfil v5): a antiga "Meus spots", com busca. -->
-<div class="screen" id="meusspots">
-  <div class="at-topo"><button class="at-voltar" onclick="voltarDosMeusSpots()" data-ic="back" aria-label="Voltar"></button><h1>Todos os seus spots</h1><span></span></div>
+<!-- SEUS SPOTS (05/10, desenho 8a–8d): o destino do "N spots" do placar e do
+     "Todos os seus spots" do Perfil. Achar qualquer spot em dois toques: pelo
+     nome (a busca) ou pelo lugar (Fui/Quero ir → tipo → por onde). -->
+<div class="screen" id="seusspots">
+  <div class="ss-topo" id="ssTopo"><button class="at-voltar" onclick="voltarDosSeusSpots()" data-ic="back" aria-label="Voltar"></button></div>
   <div class="profile-body">
-    <label class="am-cid-busca ms-busca"><span class="am-cid-lupa" data-ic="search"></span><input id="msBusca" type="text" placeholder="Qual era aquele lugar?" autocomplete="off" autocorrect="off" spellcheck="false" oninput="msBuscar(this.value)"></label>
-    <div class="pf-seg" id="mlStatus"></div>
-    <div class="ml-filtros pf-filtros">
-      <button class="pf-filtro" id="mlFiltroCidade" onclick="abrirFolhaDeCidades()"><span id="mlCidadeTxt">Todas as cidades</span><span class="pf-chev">▾</span></button>
-      <button class="pf-filtro" id="mlFiltroCat" onclick="abrirFolhaDeCategorias()"><span id="mlCatTxt">Todas as categorias</span><span class="pf-chev">▾</span></button>
+    <div id="ssCab"><h1 class="ss-tit" id="ssTit"></h1><div class="ss-sub" id="ssSub"></div></div>
+    <div class="ss-busca"><label class="am-cid-busca"><span class="am-cid-lupa" data-ic="search"></span><input id="ssBusca" type="text" placeholder="Nome, bairro ou cidade" autocomplete="off" autocorrect="off" spellcheck="false" onfocus="ssFocarBusca()" oninput="ssBuscar(this.value)"></label><button class="ss-cancelar" id="ssCancelar" onclick="ssCancelarBusca()">Cancelar</button></div>
+    <div id="ssFiltros">
+      <div class="pf-seg" id="ssSeg"></div>
+      <nav class="pv5-abas ss-abas" id="ssAbas"></nav>
+      <div class="ss-linha" id="ssLinha"></div>
     </div>
-    <div id="mlTrilho"></div>
-    <div id="mlVerTodos"></div>
+    <div id="ssLista"></div>
+    <div id="ssMais"></div>
     <div style="height:110px"></div>
   </div>
 </div>
+<div class="overlay" id="ov-ssonde" onclick="closeOut(event,'ov-ssonde')"><div class="sheet sheet-fixa"><div class="sheet-handle"></div><div class="sheet-title">Por onde</div><div class="ss-onde-busca"><label class="am-cid-busca"><span class="am-cid-lupa" data-ic="search"></span><input id="ssOndeBusca" type="text" placeholder="Cidade ou país" autocomplete="off" oninput="ssOndeFiltrar(this.value)"></label></div><div class="lista-rolante ss-onde" id="ssOnde"></div></div></div>
 
 <!-- VER OS N, EM ORDEM (7a2): o ranking inteiro, arrastável. -->
 <div class="screen" id="topordem">
@@ -4565,6 +4614,162 @@ function mostrarViagemQueVirou(t){
     +' ganha cor no seu mapa, e seus amigos passam a ver o que você marcou como Fui.';
   showOv('ov-virou');
   return true;
+}
+
+// ═══ SEUS SPOTS (05/10, desenho 8a–8d) ═══
+// Uma página só pra achar qualquer spot seu. Tudo local: os spots já estão no
+// aparelho. Centenas de spots: agrupado por cidade, 3 por grupo, e os grupos
+// entram em lotes de 10 ao rolar.
+const SS={volta:'dashboard',status:'been',cat:'',lugar:null,ordem:'',busca:'',buscando:false,lotes:10,aberto:'',ondeBusca:'',timer:null,itens:[]};
+try{SS.status=localStorage.getItem('spot_ss_status')==='want'?'want':'been'}catch(e){}
+const SS_CAT={food:'Gastronomia',hotel:'Hospedagem',experience:'Experiências'};
+const SS_CAT1={food:'Gastronomia',hotel:'Hospedagem',experience:'Experiência'};
+function ssFoi(x){return x.status==='been'||x.status==='skip'}
+function ssTodos(){
+  return allSpotsFlat().map(x=>Object.assign(x,{_cid:cityOf(x)||x.city||'',_pais:normalizeCountry(x._country||'')||x._country||''}));
+}
+function ssNoLugar(x){
+  const l=SS.lugar;if(!l)return true;
+  return l.tipo==='pais'?mesmoLugar(x._pais,l.nome):mesmoLugar(x._cid,l.nome);
+}
+function ssBase(semCat){
+  return ssTodos().filter(x=>(SS.status==='been'?ssFoi(x):!ssFoi(x))&&ssNoLugar(x)&&(semCat||!SS.cat||x.category===SS.cat));
+}
+function ssOrdemAtual(){
+  if(SS.ordem)return SS.ordem==='nota'&&SS.status!=='been'?'recentes':SS.ordem;
+  return SS.lugar&&SS.status==='been'?'nota':'recentes';
+}
+function ssOrdenar(l){
+  const o=ssOrdemAtual();
+  return l.slice().sort((a,b)=>o==='az'?String(a.name||'').localeCompare(String(b.name||''),'pt-BR')
+    :o==='nota'?((Number(b.my_rating)||0)-(Number(a.my_rating)||0))||recente(a,b):recente(a,b));
+}
+function ssLinhaHTML(x,marcar){
+  const foto=x.photo_url?' style="background-image:'+cssUrl(fotoNaLargura(x.photo_url,200))+'"':'';
+  const bairro=bairroDoEndereco(x.address);
+  const sub=marcar?[SS_CAT1[x.category],[bairro,x._cid].filter(Boolean).join(', ')].filter(Boolean).join(' · ')
+    :[SS_CAT1[x.category],bairro].filter(Boolean).join(' · ');
+  let nome=esc(x.name||'');
+  if(marcar){const n=String(x.name||''),i=normName(n).indexOf(marcar);if(i>=0)nome=esc(n.slice(0,i))+'<mark>'+esc(n.slice(i,i+marcar.length))+'</mark>'+esc(n.slice(i+marcar.length))}
+  const dir=marcar?(ssFoi(x)?'<span class="ss-st fui">Fui</span>':'<span class="ss-st">Quero ir</span>')
+    :(x.status==='been'&&Number(x.my_rating)>0?'<span class="pf-row-val">'+esc(fmtRating(x.my_rating))+'★</span>':'');
+  return '<button class="pf-row ss-row" onclick="openPlace(\''+esc(x.id)+'\',\'seusspots\')"><span class="pf-row-foto"'+foto+'></span><span class="pf-row-txt"><b>'+nome+'</b><span>'+esc(sub)+'</span></span>'+dir+'</button>';
+}
+function abrirSeusSpots(volta){
+  SS.volta=volta||'dashboard';SS.lugar=null;SS.cat='';SS.ordem='';SS.lotes=10;SS.busca='';SS.buscando=false;
+  const b=document.getElementById('ssBusca');if(b)b.value='';
+  goTo('seusspots');renderSeusSpots();
+}
+function voltarDosSeusSpots(){
+  if(SS.buscando){ssCancelarBusca();return}
+  if(SS.volta==='profile'){goTo('profile');loadProfile()}else{goTo('dashboard');loadDashboard()}
+}
+function renderSeusSpots(){
+  const tela=document.getElementById('seusspots');if(!tela)return;
+  tela.classList.toggle('ss-buscando',SS.buscando);
+  tela.classList.toggle('ss-com-lugar',!!SS.lugar);
+  if(SS.buscando){renderBuscaDosSpots();return}
+  const todos=ssTodos();
+  const cids=new Set(todos.map(x=>x._cid).filter(Boolean)),paises=new Set(todos.map(x=>x._pais).filter(Boolean));
+  document.getElementById('ssTit').textContent=todos.length+(todos.length===1?' spot':' spots');
+  document.getElementById('ssSub').textContent='em '+cids.size+(cids.size===1?' cidade':' cidades')+' de '+paises.size+(paises.size===1?' país':' países');
+  // segmentado (contagens dentro do lugar escolhido)
+  const noLugar=todos.filter(ssNoLugar);
+  const nf=noLugar.filter(ssFoi).length,nq=noLugar.length-nf;
+  document.getElementById('ssSeg').innerHTML='<button class="pf-op'+(SS.status==='been'?' on':'')+'" onclick="ssStatus(\'been\')">Fui<i>'+nf+'</i></button>'
+    +'<button class="pf-op'+(SS.status==='want'?' on':'')+'" onclick="ssStatus(\'want\')">Quero ir<i>'+nq+'</i></button>';
+  // abas: só a ativa mostra a contagem; aba com 0 some
+  const base=ssBase(true);
+  const conta={'':base.length};['food','hotel','experience'].forEach(c=>{conta[c]=base.filter(x=>x.category===c).length});
+  if(SS.cat&&!conta[SS.cat])SS.cat='';
+  document.getElementById('ssAbas').innerHTML=['','food','hotel','experience'].filter(c=>c===''||conta[c]).map(c=>
+    '<button class="'+(SS.cat===c?'on':'')+'" onclick="ssCat(\''+c+'\')">'+(c?SS_CAT[c]:'Tudo')+(SS.cat===c?'<i>'+conta[c]+'</i>':'')+'</button>').join('');
+  // lugar + ordem
+  const o=ssOrdemAtual();
+  document.getElementById('ssLinha').innerHTML=(SS.lugar
+      ?'<span class="ss-lugar on">'+esc(SS.lugar.nome)+'<button onclick="ssLimparLugar()" aria-label="Tirar o filtro">✕</button></span>'
+      :'<button class="ss-lugar" onclick="abrirPorOnde()">Todos os lugares <i>▾</i></button>')
+    +'<button class="ss-ordem" onclick="abrirOrdemDosSpots()">'+({recentes:'Recentes',az:'A–Z',nota:'Nota'}[o])+' <i>▾</i></button>';
+  const lista=ssBase();
+  const box=document.getElementById('ssLista'),mais=document.getElementById('ssMais');
+  if(!lista.length){
+    mais.innerHTML='';
+    if(SS.status==='want'&&!ssTodos().some(x=>!ssFoi(x)))box.innerHTML='<div class="ss-vazio"><b>Nada na sua lista Quero ir ainda</b><span>Salve pelo Explorar ou na ficha de um amigo.</span><button class="pf-ver" onclick="goTo(\'explore\');loadExplore()">Abrir o Explorar ›</button></div>';
+    else box.innerHTML='<div class="ss-vazio"><span>Nenhum spot'+(SS.cat?' de '+esc(SS_CAT[SS.cat]):'')+(SS.lugar?' em '+esc(SS.lugar.nome):'')+'.</span><button class="pf-ver" onclick="ssLimparFiltros()">Limpar filtros</button></div>';
+    return;
+  }
+  if(SS.lugar){box.innerHTML=ssOrdenar(lista).map(x=>ssLinhaHTML(x)).join('');mais.innerHTML='';return}
+  // agrupado por cidade: a cidade onde mora primeiro, depois por quantidade
+  const casa=(S.profile&&S.profile.home_city)||'';
+  const g={};lista.forEach(x=>{const k=x._cid||'Outros';(g[k]=g[k]||[]).push(x)});
+  const ordem=Object.keys(g).sort((a,b)=>(mesmoLugar(b,casa)-mesmoLugar(a,casa))||g[b].length-g[a].length||a.localeCompare(b,'pt-BR'));
+  SS.grupos=ordem;
+  const vis=ordem.slice(0,SS.lotes);
+  box.innerHTML=vis.map((c,ci)=>{const l=ssOrdenar(g[c]);const pais=l[0]._pais||'';
+    return '<div class="ss-grupo"><div class="ss-gcab"><b>'+esc(c)+'</b><span>'+esc(pais)+'</span><i>'+l.length+'</i></div>'
+      +l.slice(0,3).map(x=>ssLinhaHTML(x)).join('')
+      +(l.length>3?'<button class="pf-ver ss-vern" onclick="ssVerCidade('+ci+')">Ver os '+l.length+' de '+esc(c)+'</button>':'')+'</div>'}).join('');
+  // os próximos 10 grupos entram quando o fim aparece
+  mais.innerHTML=ordem.length>SS.lotes?'<div class="search-loading" id="ssMaisAlvo"></div>':'';
+  const alvo=document.getElementById('ssMaisAlvo');
+  if(alvo&&'IntersectionObserver' in window){const ob=new IntersectionObserver(es=>{if(es.some(e=>e.isIntersecting)){ob.disconnect();SS.lotes+=10;renderSeusSpots()}},{rootMargin:'400px'});ob.observe(alvo)}
+}
+function ssStatus(st){SS.status=st;SS.ordem='';try{localStorage.setItem('spot_ss_status',st)}catch(e){}renderSeusSpots()}
+function ssCat(c){SS.cat=c;renderSeusSpots()}
+function ssVerCidade(i){const c=(SS.grupos||[])[i];if(!c)return;SS.lugar={tipo:'cidade',nome:c};SS.ordem='';window.scrollTo(0,0);renderSeusSpots()}
+function ssLimparLugar(){SS.lugar=null;SS.ordem='';SS.lotes=10;renderSeusSpots()}
+function ssLimparFiltros(){SS.lugar=null;SS.cat='';SS.ordem='';renderSeusSpots()}
+function abrirOrdemDosSpots(){
+  const ops=[{id:'recentes',rotulo:'Recentes',n:''},{id:'az',rotulo:'A–Z',n:''}];
+  if(SS.status==='been')ops.push({id:'nota',rotulo:'Nota',n:''});
+  abrirFolhaDeEscolha(ops,ssOrdemAtual(),id=>{SS.ordem=id;renderSeusSpots()});
+}
+// ── 8b: a busca (Fui + Quero ir, tudo) ──
+function ssFocarBusca(){if(SS.buscando)return;SS.buscando=true;window.scrollTo(0,0);renderSeusSpots()}
+function ssCancelarBusca(){SS.buscando=false;SS.busca='';const b=document.getElementById('ssBusca');if(b){b.value='';b.blur()}renderSeusSpots()}
+function ssBuscar(v){clearTimeout(SS.timer);SS.timer=setTimeout(()=>{SS.busca=String(v||'');renderBuscaDosSpots()},150)}
+function renderBuscaDosSpots(){
+  const box=document.getElementById('ssLista'),mais=document.getElementById('ssMais');mais.innerHTML='';
+  const q=normName(SS.busca.trim());
+  if(!q){box.innerHTML='';return}
+  const nota=x=>{const n=normName(x.name);if(n.startsWith(q))return 3;if(n.includes(q))return 2;
+    return [bairroDoEndereco(x.address),x._cid,x._pais,x.my_review,x.my_note].some(c=>normName(c||'').includes(q))?1:0};
+  const l=ssTodos().map(x=>({x,n:nota(x)})).filter(o=>o.n).sort((a,b)=>b.n-a.n||recente(a.x,b.x)).map(o=>o.x);
+  if(!l.length){box.innerHTML='<div class="ss-vazio"><span>Nenhum spot seu com esse nome</span><button class="pf-ver" onclick="ssBuscarNoExplorar()">Buscar no Explorar ›</button></div>';return}
+  box.innerHTML='<div class="ss-conta">'+l.length+(l.length===1?' spot':' spots')+'</div>'+l.slice(0,80).map(x=>ssLinhaHTML(x,q)).join('');
+}
+function ssBuscarNoExplorar(){
+  const t=SS.busca.trim();ssCancelarBusca();goTo('explore');loadExplore();
+  setTimeout(()=>{const c=document.getElementById('exploreCitySearch');if(c){c.value=t;c.focus();sugerirLugar(t)}},300);
+}
+// ── 8c: por onde ──
+function abrirPorOnde(){SS.ondeBusca='';SS.aberto='';const i=document.getElementById('ssOndeBusca');if(i)i.value='';pintarPorOnde();showOv('ov-ssonde')}
+function ssOndeFiltrar(v){SS.ondeBusca=String(v||'');pintarPorOnde()}
+function pintarPorOnde(){
+  const base=ssTodos().filter(x=>(SS.status==='been'?ssFoi(x):!ssFoi(x))&&(!SS.cat||x.category===SS.cat));
+  const pais={};base.forEach(x=>{const p=x._pais||'Outros';(pais[p]=pais[p]||{n:0,c:{}});pais[p].n++;if(x._cid)pais[p].c[x._cid]=(pais[p].c[x._cid]||0)+1});
+  const casa=normalizeCountry((S.profile&&S.profile.home_country)||'')||'';
+  const q=normName(SS.ondeBusca.trim());
+  let ps=Object.keys(pais).sort((a,b)=>(mesmoLugar(b,casa)-mesmoLugar(a,casa))||pais[b].n-pais[a].n);
+  if(q)ps=ps.filter(p=>normName(p).includes(q)||Object.keys(pais[p].c).some(c=>normName(c).includes(q)));
+  SS.ondePaises=ps;SS.ondeCidades={};
+  const on=(t,n)=>SS.lugar&&SS.lugar.tipo===t&&mesmoLugar(SS.lugar.nome,n);
+  let h='<button class="ss-ol'+(!SS.lugar?' on':'')+'" onclick="ssEscolherLugar(-1)"><b>Todos os lugares</b><i>'+base.length+'</i></button>';
+  h+=ps.map((p,i)=>{const cs=Object.keys(pais[p].c).sort((a,b)=>pais[p].c[b]-pais[p].c[a]);SS.ondeCidades[i]=cs;
+    const aberto=SS.aberto===p||(!!q&&cs.some(c=>normName(c).includes(q)));
+    let r='<button class="ss-ol" onclick="ssAbrirPais('+i+')"><span><b>'+esc(p)+'</b><span>'+esc(cs.slice(0,3).join(', '))+'</span></span><i>'+pais[p].n+'</i><em>'+(aberto?'▴':'▾')+'</em></button>';
+    if(aberto){
+      r+='<button class="ss-oc'+(on('pais',p)?' on':'')+'" onclick="ssEscolherLugar('+i+',-1)">'+esc(p)+' inteiro<i>'+pais[p].n+'</i></button>'
+        +cs.map((c,k)=>'<button class="ss-oc'+(on('cidade',c)?' on':'')+'" onclick="ssEscolherLugar('+i+','+k+')">'+esc(c)+'<i>'+pais[p].c[c]+'</i></button>').join('');
+    }
+    return r}).join('');
+  document.getElementById('ssOnde').innerHTML=h;
+}
+function ssAbrirPais(i){const p=(SS.ondePaises||[])[i];SS.aberto=SS.aberto===p?'':p;pintarPorOnde()}
+function ssEscolherLugar(i,k){
+  if(i<0)SS.lugar=null;
+  else{const p=SS.ondePaises[i];SS.lugar=k<0?{tipo:'pais',nome:p}:{tipo:'cidade',nome:SS.ondeCidades[i][k]}}
+  SS.ordem='';SS.lotes=10;closeOv('ov-ssonde');window.scrollTo(0,0);renderSeusSpots();
 }
 
 // ═══ SEUS MELHORES (Perfil v5, 05/10) ═══
@@ -6633,7 +6838,7 @@ window.darDadosDeViagens=darDadosDeViagens;
 // O "spots" do placar (site e app) abre os Meus spots do Perfil.
 // Abre a lista "Todos os seus spots" direto (o Lucas, 05/10: levar pro Perfil
 // era ruim). Página própria de spots: pedida ao Claude Design.
-function abrirMeusSpots(){MS_VOLTA='dashboard';abrirTodosOsSpots()}
+function abrirMeusSpots(){abrirSeusSpots('dashboard')}
 window.acaoDeViagens=function(acao,valor){
   if(acao==='lista'&&valor==='spots'){abrirMeusSpots();return}
   if(acao==='regiao'){trocarRegiao(valor);darDadosDeViagens();return}
@@ -6818,6 +7023,7 @@ function openSpotFromList(i){const s=LS.items[i];if(!s)return;const t=S.trips.fi
 function backFromPlace(){
   if(S.placeOrigin==='list'){goTo('list',true);renderList();return}
   if(S.placeOrigin==='dashboard'){goTo('dashboard',true);renderTrips();return}
+  if(S.placeOrigin==='seusspots'){goTo('seusspots',true);renderSeusSpots();return}
   // Spot de amigo aberto da SUA ficha ("Ana foi"): volta pra sua ficha.
   if(S.curPlace&&S.curPlace._voltarPara){openPlace(S.curPlace._voltarPara,S.placeOriginAntes||'trip');return}
   // Aberto de um amigo (perfil, cidade, Explorar, Atividade): volta pra lá.
@@ -14012,10 +14218,8 @@ function renderPerfil(){
 }
 // Pra onde o voltar da lista leva: a tela de onde ela foi aberta.
 let MS_VOLTA='profile';
-function abrirTodosOsSpots(){ML_TUDO=true;goTo('meusspots');renderEstante()}
-function voltarDosMeusSpots(){const v=MS_VOLTA;MS_VOLTA='profile';if(v==='dashboard'){goTo('dashboard');loadDashboard()}else{goTo('profile');loadProfile()}}
-let MS_BUSCA='';
-function msBuscar(v){MS_BUSCA=String(v||'');renderEstante()}
+function abrirTodosOsSpots(){abrirSeusSpots('profile')}
+
 function pintarRodapeDoPerfil(){
   const p=S.profile||{};
   const n=visitedCountryNames().length;
@@ -14055,7 +14259,7 @@ function renderEstante(){
   document.getElementById('mlCidadeTxt').textContent=mlCidade||'Todas as cidades';
   document.getElementById('mlCatTxt').textContent=mlRotuloDaCategoria(mlCat);
 
-  const busca=normName(MS_BUSCA.trim());
+  const busca='';
   const lista=mlFiltrar(spots,mlStatus,mlCidade,mlCat).filter(x=>!busca||normName(x.name).includes(busca)||normName(cityOf(x)||'').includes(busca));
   if(!lista.length){
     trilho.innerHTML='<div class="ml-vazio">'+esc(busca?'Nenhum spot com esse nome.':mlTextoDeVazio())+'</div>';

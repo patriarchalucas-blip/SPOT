@@ -190,8 +190,16 @@ await passoDe('v5: rodapé com Colar uma lista', `(async()=>{IMP.ligado=true;goT
 console.log('  importar visível:', await pg.evaluate(() => getComputedStyle(document.getElementById('pfImportar')).display));
 await passoDe('v5: abrir importar do perfil', `document.getElementById('pfImportar').click()`);
 await passoDe('v5: voltar do importar', `(()=>{goTo('profile')})()`);
-await passoDe('v5: todos os seus spots', `abrirTodosOsSpots()`);
-await passoDe('v5: buscar "bar"', `(()=>{const i=document.getElementById('msBusca');i.value='bar';msBuscar('bar')})()`);
+await passoDe('seus spots (8a)', `abrirSeusSpots('dashboard')`, 1200);
+await passoDe('seus spots: Quero ir', `ssStatus('want')`);
+await passoDe('seus spots: Fui + Gastronomia', `(()=>{ssStatus('been');ssCat('food')})()`);
+await passoDe('seus spots: por onde (8c)', `abrirPorOnde()`);
+await passoDe('seus spots: abrir Brasil', `ssAbrirPais(SS.ondePaises.indexOf('Brasil'))`);
+await passoDe('seus spots: São Paulo (8d)', `(()=>{const i=SS.ondePaises.indexOf('Brasil');ssEscolherLugar(i,SS.ondeCidades[i].indexOf('São Paulo'))})()`);
+await passoDe('seus spots: busca (8b)', `(()=>{const b=document.getElementById('ssBusca');b.focus();b.value='piz';SS.busca='piz';renderBuscaDosSpots()})()`, 600);
+await passoDe('seus spots: busca sem nada', `(()=>{SS.busca='xyzw';renderBuscaDosSpots()})()`);
+await passoDe('seus spots: cancelar', `ssCancelarBusca()`);
+await passoDe('seus spots: abrir um spot e voltar', `(async()=>{ssLimparFiltros();const b=document.querySelector('#ssLista .ss-row');if(b)b.click();await new Promise(r=>setTimeout(r,800));backFromPlace()})()`, 1500);
 await passoDe('v5: planejar sem amigos', `(()=>{goTo('profile');abrirPlanejarDoPerfil();PLN.destinos=[{tipo:'pais',nome:'Itália'},{tipo:'cidade',nome:'Paris',pais:'França'}];plnPintarEscolha()})()`, 1200);
 await passoDe('v5: seguir sem amigos', `plnSeguirSemAmigos()`, 1500);
 console.log('  viagem:', await pg.evaluate(() => { const t = S.trips.find(x => x.name === 'Itália e França'); return t ? JSON.stringify(t.destinations) + ' proxima=' + t.proxima : 'NAO CRIOU' }));
