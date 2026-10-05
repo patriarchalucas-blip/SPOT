@@ -67,17 +67,33 @@ test('bugs 7 e 8: o mesmo lugar nao entra duas vezes; Quero ir -> Fui atualiza o
   } finally { v1(); v2() }
 });
 
-test('bug 9: spot do amigo que ja e meu nao oferece "Adicionar a minha lista"', () => {
+test('bug 9: spot do amigo que ja e meu abre a MINHA ficha (ficha unica, 05/10)', () => {
   A.avaliar(`S.user={id:'${EU}'};S.trips=[{id:'t',name:'Brasil',destinations:['Brasil'],_spots:[{id:'m',user_id:'${EU}',name:'Boteco Belmonte',city:'Rio de Janeiro',status:'been'}]}];
     FRIEND.profile={display_name:'Lucas'};FRIEND_CITY_SPOTS=[{id:'a',user_id:'amigo',name:'Boteco Belmonte',city:'Rio de Janeiro',status:'been',my_rating:4,category:'food'}]`);
-  const v = trocar(A, 'abrirComentarios', () => {});
+  A.avaliar("window.__aberto=[];const _op9=openPlace;openPlace=function(id,o){window.__aberto.push(id+'|'+o)}");
   try {
     A.abrirSpotDoAmigo(0);
-    // o DOM de teste devolve o mesmo elemento pra todo id: o último texto
-    // escrito no botão é o que a tela mostraria
-    const botao = A.avaliar("document.getElementById('fpAdicionar').textContent");
-    assert.strictEqual(botao, 'Você também foi', 'continuava oferecendo Adicionar a minha lista');
-  } finally { v() }
+    assert.strictEqual(A.avaliar('window.__aberto.join()'), 'm|amigo', 'oferecia salvar de novo um spot que ja era meu');
+  } finally { A.avaliar('openPlace=_op9') }
+});
+
+test('ficha unica: spot do amigo que nao e meu abre a previa com Salvar como e a dica dele', () => {
+  A.avaliar(`S.user={id:'${EU}'};S.trips=[];FRIEND_CITY_SPOTS=[{id:'a',user_id:'amigo',name:'Bar da Dona Onça',city:'São Paulo',status:'been',my_rating:5,category:'food',price_level:2}]`);
+  const v = trocar(A, 'abrirComentarios', () => {});
+  const v2 = trocar(A, 'pintarDelesNaFicha', () => {});
+  try {
+    A.abrirSpotDoAmigo(0);
+    assert.strictEqual(A.avaliar('S.curPlace._previa'), true);
+    assert.strictEqual(A.avaliar('S.curPlace._comentId'), 'a', 'a conversa e a do spot dele');
+    assert.strictEqual(A.avaliar('S.curPlace.from_user_id'), 'amigo');
+    assert.strictEqual(A.avaliar('S.placeOrigin'), 'amigo');
+    assert.strictEqual(A.avaliar('EXPLORE.avulso.from_user_id'), 'amigo', 'salvar guarda de quem veio a dica');
+  } finally { v(); v2() }
+});
+
+test('preco em quatro niveis', () => {
+  assert.strictEqual(A.precoEmQuatro(3), '<span class="fi-preco"><b>$$$</b><i>$</i></span>');
+  assert.strictEqual(A.precoEmQuatro(null), '');
 });
 
 test('bug 10: cidade nao vira spot', () => {

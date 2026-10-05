@@ -26,12 +26,16 @@ const DB = {
     { id: 's2', user_id: EU, trip_id: 't1', name: 'Majestic Café', category: 'food', city: 'Porto', status: 'want', created_at: '2026-09-01' },
     { id: 'j1', user_id: EU, trip_id: 'tj', name: 'Sushi Saito', category: 'food', city: 'Tóquio', status: 'want', from_user_id: ANA, created_at: '2026-10-02' },
     { id: 'j2', user_id: EU, trip_id: 'tj', name: 'Fushimi Inari', category: 'experience', city: 'Kyoto', status: 'want', created_at: '2026-10-02' },
+    { id: 'a3', user_id: ANA, trip_id: 'ta', name: 'A Cevicheria', category: 'food', city: 'Lisboa', status: 'been', my_rating: 4.5, my_review: 'Pisco sour no balcão.', price_level: 2, rating_google: '4.6', created_at: '2026-08-02' },
+    { id: 'a4', user_id: ANA, trip_id: 'ta', name: 'Livraria Lello', category: 'experience', city: 'Porto', status: 'been', my_rating: 4, my_review: 'Chega antes das 10h.', created_at: '2026-08-04' },
+    { id: 'r3', user_id: RAFA, trip_id: 'tr', name: 'A Cevicheria', category: 'food', city: 'Lisboa', status: 'want', created_at: '2026-08-03' },
     { id: 'aj', user_id: ANA, trip_id: 'ta', name: 'Sushi Saito', category: 'food', city: 'Tóquio', status: 'been', my_rating: 5, created_at: '2026-08-01' },
     { id: 's3', user_id: EU, trip_id: 't2', name: 'Mocotó', category: 'food', city: 'São Paulo', status: 'been', my_rating: 5, created_at: '2026-09-01' },
     { id: 'a1', user_id: ANA, trip_id: 'ta', name: 'Cervejaria Ramiro', category: 'food', city: 'Lisboa', status: 'been', my_rating: 5, my_review: 'Camarão', created_at: '2026-08-01' },
     { id: 'r1', user_id: RAFA, trip_id: 'tr', name: 'Taberna da Rua das Flores', category: 'food', city: 'Lisboa', status: 'been', my_rating: 4, created_at: '2026-08-01' },
     { id: 'a2', user_id: ANA, trip_id: 'tac', name: 'Bar da Dona Onça', category: 'food', city: 'São Paulo', address: 'Av. Ipiranga, 200 - República, São Paulo - SP, 01046-010, Brasil', status: 'been', my_rating: 5, created_at: '2026-08-01' }]
 };
+DB.spot_comments = [{ id: 'c1', spot_id: 'a4', user_id: RAFA, body: 'Reserva ou chega cedo?', created_at: '2026-10-01' }, { id: 'c2', spot_id: 'a4', user_id: ANA, body: 'Balcão sem reserva, às 19h.', created_at: '2026-10-02' }];
 function filtra(tab, qs) {
   let l = (DB[tab] || []).slice();
   for (const [k, v] of new URLSearchParams(qs)) {
@@ -128,6 +132,10 @@ await passoDe('fechar busca', `closeOv('ov-search')`);
 await passoDe('salvar spot abre a ficha (B7)', `(async()=>{S.addCat='food';S.addTrip=S.trips.find(t=>t.id==='t1');S.selPlace={name:'Pastéis de Belém',city:'Lisboa',country:'Portugal',address:'R. de Belém 84, Lisboa'};resetNoteSheet();showOv('ov-note');setTimeout(()=>{addStatus='want';saveSpot(false)},300)})()`, 3000);
 await passoDe('aba amigos', `(async()=>{goTo('friends');await loadFriends()})()`, 2000);
 await passoDe('perfil da Ana', `openFriend('${ANA}')`, 2000);
+await passoDe('ficha única: spot da Ana (e5)', `(async()=>{document.querySelectorAll('.overlay.show').forEach(o=>closeOv(o.id));const l=await plnSpotsDeles();FRIEND_CITY_SPOTS=l.filter(x=>x.id==='a4');abrirSpotDoAmigo(0)})()`, 2000);
+await passoDe('ficha única: voltar', `backFromPlace()`);
+await passoDe('ficha única: spot que é meu (e4)', `(async()=>{const l=await plnSpotsDeles();FRIEND_CITY_SPOTS=l.filter(x=>x.id==='r1');abrirSpotDoAmigo(0)})()`, 2000);
+await passoDe('ficha única: voltar 2', `backFromPlace()`);
 await passoDe('planejar com Ana', `plnDoAmigo()`, 1200);
 await passoDe('voltar ao perfil', `plnVoltar()`);
 await passoDe('amigos: só pedido enviado', `(()=>{FRIENDS_DATA={friendIds:[],incoming:[],outgoing:[{id:'p1',follower_id:'${EU}',following_id:'${RAFA}',status:'pending'}],pmap:{'${RAFA}':{id:'${RAFA}',display_name:'Rafa Mendes'}},feedItems:[],convidou:false};friendsTab='recente';goTo('friends');renderFriendsTab()})()`);

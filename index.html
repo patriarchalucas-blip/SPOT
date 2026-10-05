@@ -1855,6 +1855,22 @@ body.tem-apple #convite .btn-apple{display:flex}
 .pv-virou p{margin:0 0 10px;font-size:15px;line-height:1.5;color:var(--ink2)}
 .pv-virou .pf-bt2{background:var(--surface)}
 .vg-meta.vg-chegou{font-weight:600}
+/* Ficha única (e3–e5, C10, C12) */
+.fi-lista-rot{display:none;align-items:baseline;justify-content:space-between;margin:16px 0 8px;font-size:15px;font-weight:600;color:var(--ink)}
+.fi-lista-rot:not(:empty){display:flex}
+.fi-lista-cid{font-size:14px;font-weight:400;color:var(--ink3)}
+#place.previa .fi-previa-dica{font-size:15px;color:var(--ink)}
+.fi-deles{display:flex;flex-direction:column;gap:12px;margin:16px 0 4px}
+.fi-deles:empty{display:none}
+.fi-dele{display:flex;gap:12px;align-items:flex-start}
+.fi-dele .pln-av.g{width:36px;height:36px;font-size:14px}
+.fi-dele-txt{display:flex;flex-direction:column;gap:2px;min-width:0;padding-top:7px}
+.fi-dele-txt b{font-size:15px;font-weight:600;color:var(--ink)}
+.fi-dele-txt b em{font-style:normal;font-weight:400;color:var(--ink2)}
+.fi-dele-txt span{font-size:15px;line-height:1.45;color:var(--ink)}
+.fi-preco b{font-weight:inherit;color:var(--ink)}
+.fi-preco i{font-style:normal;color:#C4C4C0}
+#place.previa.com-amigo .fi-amigos{display:block!important}
 /* Aba Viagens (c1, 05/10) */
 .pc-fixo{cursor:default}
 .vg-rot{margin:24px 0 8px;font-size:14px;font-weight:600;color:var(--ink2)}
@@ -2543,38 +2559,6 @@ body.exm .exm-filtros{position:relative;z-index:1}
   <div class="dash-body" id="mapaPaises"></div>
 </div>
 
-<div class="screen" id="friendPlace">
-  <div class="place-hero">
-    <div class="place-hero-img" id="fpHeroImg"></div><div class="foto-credito" id="fpFotoCredito"></div>
-    <div class="hero-overlay"></div>
-    <button class="hero-back" onclick="voltarDaFichaDoAmigo()" data-ic="back" aria-label="Voltar"></button>
-    <div class="hero-chip" id="fpChip"></div>
-    <div class="hero-bottom">
-      <div class="hero-type" id="fpType"></div>
-      <div class="hero-name" id="fpName"></div>
-    </div>
-  </div>
-  <div class="place-body">
-    <div class="d-section" id="fpNoteSection">
-      <div class="sec-label" id="fpNoteLabel">A nota</div>
-      <div class="note-card"><div class="note-glow"></div><div class="note-quote" id="fpNote"></div></div>
-    </div>
-    <div class="d-section" id="fpRatingSection" style="display:none">
-      <div class="sec-label" id="fpRatingLabel">A avaliação</div>
-      <div class="stars-row" id="fpStars" style="pointer-events:none"></div>
-      <div class="note-quote" id="fpReview" style="margin-top:10px;display:none"></div>
-    </div>
-    <div class="d-section">
-      <div class="sec-label">Informações</div>
-      <div class="info-grid" id="fpInfoGrid"></div>
-      <button class="sheet-cta" id="fpAdicionar" style="margin-top:4px" onclick="adicionarSpotAbertoDoAmigo(this)">Adicionar à minha lista</button>
-      <div id="fpLinksWrap"></div>
-      <div class="coment-bloco" id="fpComentarios"></div>
-    </div>
-    <div style="height:40px"></div>
-  </div>
-</div>
-
 <div class="screen" id="place">
   <!-- A foto perdeu o título, a pastilha de status e o véu de baixo. Sobrou o
        degradê do TOPO, que existe só pra barra de status do telefone
@@ -2592,6 +2576,7 @@ body.exm .exm-filtros{position:relative;z-index:1}
          depende dele. Era uma pastilha na foto e um segmentado lá embaixo,
          os dois mexendo na mesma coisa. -->
     <div class="fi-previa-dica">Salvar como</div>
+    <div class="fi-lista-rot" id="fiListaRot"></div>
     <div class="fi-status">
       <button class="fi-st" id="t-want" onclick="setStatus('want')">Quero ir</button>
       <button class="fi-st" id="t-been" onclick="setStatus('been')">Fui</button>
@@ -2613,6 +2598,10 @@ body.exm .exm-filtros{position:relative;z-index:1}
       <div class="fi-antes" id="fiAntes" style="display:none"></div>
     </div>
 
+    <!-- Quem do seu círculo tem este spot (desenho e5): entre o status e as
+         ações. "Ana foi 5★" com a frase dela; "Rafa quer ir". -->
+    <div class="fi-deles" id="fiDeles"></div>
+
     <div class="fi-acoes" id="placeReserveWrap"></div>
 
     <div class="cat-bloco fi-cat" id="placeCat"></div>
@@ -2620,7 +2609,7 @@ body.exm .exm-filtros{position:relative;z-index:1}
     <div class="fi-endereco" id="placeInfoGrid"></div>
 
     <div class="fi-amigos">
-      <div class="fi-amcab"><span class="section-title">Amigos</span><span class="fi-amsub" id="fiAmigosSub"></span></div>
+      <div class="fi-amcab"><span class="section-title">Conversa<span class="pf-n" id="fiConversaN"></span></span><span class="fi-amsub" id="fiAmigosSub"></span></div>
       <div class="coment-bloco" id="placeComentarios"></div>
     </div>
 
@@ -4316,6 +4305,51 @@ function mostrarViagemQueVirou(t){
   return true;
 }
 
+// ═══ FICHA: QUEM DO SEU CÍRCULO TEM ESTE SPOT (desenho e5) ═══
+// Os spots dos amigos vêm da mesma lista do Planejar (guardada 2 min, já
+// respeitando o RLS — viagem "Só eu vejo" não chega aqui). Um por amigo: Fui
+// antes de Quero ir, nota maior primeiro.
+async function pintarDelesNaFicha(s){
+  const box=document.getElementById('fiDeles');if(!box||!s)return;
+  if(S.curPlace===s)box.innerHTML='';
+  if(!S.user)return;
+  let deles=[];
+  try{deles=await plnSpotsDeles()}catch(e){}
+  try{await plnCarregarAmigos()}catch(e){}
+  if(S.curPlace!==s)return;
+  const cid=cityOf(s);
+  const por={};
+  (deles||[]).forEach(o=>{
+    if(!o||o.user_id===S.user.id||!mesmoLugar(o.name,s.name))return;
+    if(cid&&cityOf(o)&&!mesmoLugar(cityOf(o),cid))return;
+    const a=por[o.user_id];
+    if(!a||(a.status!=='been'&&o.status==='been'))por[o.user_id]=o;
+  });
+  const l=Object.values(por).sort((a,b)=>((a.status==='been'?0:1)-(b.status==='been'?0:1))||((Number(b.my_rating)||0)-(Number(a.my_rating)||0)));
+  s._deles=l;
+  box.innerHTML=l.map(o=>{
+    const quem=plnPrimeiro(o.user_id);
+    if(o.status==='been'){
+      const n=Number(o.my_rating)>0?' '+fmtRating(o.my_rating)+'★':'';
+      return '<div class="fi-dele">'+plnAvatar(o.user_id,'g')+'<div class="fi-dele-txt"><b>'+esc(quem+' foi'+n)+'</b>'
+        +(o.my_review?'<span>'+esc(o.my_review)+'</span>':'')+'</div></div>';
+    }
+    return '<div class="fi-dele">'+plnAvatar(o.user_id,'g')+'<div class="fi-dele-txt"><b>'+esc(quem)+' <em>quer ir</em></b></div></div>';
+  }).join('');
+  atualizarConversa(s);
+}
+// "Conversa N" (desenho C13): aparece quando algum amigo tem o spot ou quando
+// já há mensagem. Sem nenhum dos dois, a seção some.
+function atualizarConversa(s){
+  if(!s||S.curPlace!==s)return;
+  const id=s._comentId||s.id;
+  const n=(COMENTARIOS[id]||[]).filter(c=>!estaBloqueado(c.user_id)).length;
+  const temAmigo=!!(s._deles&&s._deles.length);
+  const sec=document.querySelector('#place .fi-amigos');
+  if(sec)sec.style.display=(n||temAmigo)?'':'none';
+  const el=document.getElementById('fiConversaN');if(el)el.textContent=n?String(n):'';
+}
+
 // ═══ FAIXA "SALVO" (05/10, desenho e6) ═══
 // Substitui o aviso de 3 segundos, que a Chu não via. Fica até a pessoa sair
 // da tela, rolar mais de 80px ou tocar nela. "Ver" abre onde o spot foi parar:
@@ -5926,6 +5960,8 @@ function openSpotFromList(i){const s=LS.items[i];if(!s)return;const t=S.trips.fi
 function backFromPlace(){
   if(S.placeOrigin==='list'){goTo('list',true);renderList();return}
   if(S.placeOrigin==='dashboard'){goTo('dashboard',true);renderTrips();return}
+  // Aberto de um amigo (perfil, cidade, Explorar, Atividade): volta pra lá.
+  if(S.placeOrigin==='amigo'){goTo(telaAntesDaFicha||'friends',true);return}
   // Aberto pela estante: voltar tem que devolver pro Perfil, nao jogar
   // numa viagem que a pessoa nem sabia que estava aberta.
   if(S.placeOrigin==='profile'){goTo('profile');loadProfile();return}
@@ -6478,7 +6514,7 @@ async function openPlace(id,origin){
     }
   }
   if(!s)return;
-  document.getElementById('place').classList.remove('previa');
+  document.getElementById('place').classList.remove('previa','com-amigo');
   S.curPlace=s;
   S.placeOrigin=origin||'trip'; // pra saber pra onde o "voltar" deve levar
   const phEl=document.getElementById('placeHeroImg');
@@ -6525,6 +6561,7 @@ async function openPlace(id,origin){
   // meia tela. Sobrou UMA linha, que e o endereco e abre o mapa ao tocar.
   desenharFichaDoLugar(s);
   abrirComentarios(s.id,'placeComentarios',s.user_id||(S.user&&S.user.id));
+  pintarDelesNaFicha(s);
   renderPlaceSubcat();
   goTo('place');
   // DEPOIS de a tela existir na medida certa: textarea escondida tem
@@ -6544,6 +6581,16 @@ function nivelDePreco(v){
   return (v&&tabela[v]!=null)?tabela[v]:null;
 }
 // Zero é "de graça", e mostrar nenhum cifrão pra isso seria igual a não saber.
+// O preço em quatro níveis (desenho C12): os usados em --ink, o resto apagado.
+// Sem preço do Google, a parte some.
+function precoEmQuatro(n){
+  if(n==null||n==='')return '';
+  const v=Number(n);
+  if(!isFinite(v)||v<0)return '';
+  if(v===0)return '<span>Grátis</span>';
+  const k=Math.min(4,Math.max(1,Math.round(v)));
+  return '<span class="fi-preco"><b>'+'$'.repeat(k)+'</b>'+(k<4?'<i>'+'$'.repeat(4-k)+'</i>':'')+'</span>';
+}
 function cifraoDoPreco(n){
   if(n==null||n==='')return '';
   const v=Number(n);
@@ -6616,8 +6663,8 @@ function desenharFichaDoLugar(s){
     if(ab.ate)partes.push('<span>fecha às '+esc(ab.ate)+'</span>');
     else if(ab.abre)partes.push('<span>abre às '+esc(ab.abre)+'</span>');
   }
-  const cifroes=cifraoDoPreco(s.price_level);
-  if(cifroes)partes.push('<span>'+cifroes+'</span>');
+  const cifroes=precoEmQuatro(s.price_level);
+  if(cifroes)partes.push(cifroes);
   const ng=String(s.rating_google||'').trim();
   // "4,5 Google" não se lia como nota — parecia um código. Com a estrela e o
   // "no", vira frase: é a nota DO GOOGLE, não a sua, que fica logo abaixo.
@@ -6625,6 +6672,10 @@ function desenharFichaDoLugar(s){
   serv.innerHTML=partes.join('');
   serv.style.display=partes.length?'flex':'none';
 
+  // "Na sua lista" + a cidade, quando o spot é seu (desenho e4). Na prévia, o
+  // rótulo é o "Salvar como" de cima.
+  const rot=document.getElementById('fiListaRot');
+  if(rot)rot.innerHTML=s._previa?'':'<span>Na sua lista</span><span class="fi-lista-cid">'+esc(cityOf(s)||'')+'</span>';
   notaDaFicha=Number(s.my_rating)||0;
   pintarEstrelas('#placeStars',notaDaFicha);
   setStatus(s.status||'want',false);
@@ -7422,7 +7473,7 @@ async function escolherSpotSugerido(i){
   let p=null;
   try{
     const r=await googlePlaces('searchText',{method:'POST',
-      headers:{'Content-Type':'application/json','X-Goog-FieldMask':CAMPOS_DO_EXPLORAR.replace(',nextPageToken','')+',places.primaryType'},
+      headers:{'Content-Type':'application/json','X-Goog-FieldMask':CAMPOS_DO_EXPLORAR.replace(',nextPageToken','')+',places.primaryType,places.priceLevel'},
       body:JSON.stringify({textQuery:x.titulo+(x.sub?', '+x.sub:''),languageCode:'pt-BR',maxResultCount:1})});
     const d=await r.json();
     p=d&&d.places&&d.places[0];
@@ -7434,6 +7485,7 @@ async function escolherSpotSugerido(i){
   // Explorar só traz lugar avaliado, a busca por nome não).
   if(!(Number(p.rating)>0))item.rating='';
   item._cat=categoriaDoLugar(p.types,p.primaryType);
+  item.price_level=nivelDePreco(p.priceLevel);
   EXPLORE.avulso=item;
   abrirPreviaDoExplorar('avulso');
 }
@@ -8033,7 +8085,8 @@ async function salvarDoExplorar(i,status){
   const prev=S.curPlace&&S.curPlace._previa&&S.curPlace._i===i&&mesmoLugar(S.curPlace.name,p.name)?S.curPlace:null;
   const lugar={name:p.name,meta:p.address,address:p.address,city:p.city,country:p.country,
     subcat:p.subcat||'',phone:p.phone||'',photo_url:p.photo_url,photo_author:p.photo_author,
-    rating_google:p.rating,website_url:(prev&&prev.website_url)||p.website_url,maps_url:p.maps_url,lat:p.lat,lng:p.lng};
+    rating_google:p.rating,website_url:(prev&&prev.website_url)||p.website_url,maps_url:p.maps_url,lat:p.lat,lng:p.lng,
+    price_level:p.price_level!=null?p.price_level:null,from_user_id:p.from_user_id||null};
   const data=await salvarSpotDireto(lugar,p._cat||EXPLORE.cat,status,'');
   p._salvando=false;
   if(!data||data==='sem_pais'){renderExploreResults();toast('Não salvou','Confere a conexão e tenta de novo.','alert');return null}
@@ -9017,8 +9070,10 @@ function abrirPreviaDoExplorar(i){
   const s={id:'previa',_previa:true,_i:i,name:p.name,category:p._cat||EXPLORE.cat,city:p.city,
     address:p.address,phone:p.phone||'',website_url:p.website_url||'',maps_url:p.maps_url||'',
     rating_google:p.rating?fmtRating(p.rating):'',photo_url:p.photo_url||'',lat:p.lat,lng:p.lng,
-    status:null,my_rating:null,subcategory:null,opening_hours:null,price_level:null};
+    status:null,my_rating:null,subcategory:null,opening_hours:null,price_level:p.price_level!=null?p.price_level:null};
   document.getElementById('place').classList.add('previa');
+  document.getElementById('place').classList.remove('com-amigo');
+  {const d=document.getElementById('fiDeles');if(d)d.innerHTML=''}
   S.curPlace=s;S.placeOrigin='explore';
   const ph=document.getElementById('placeHeroImg');
   ph.style.backgroundImage=s.photo_url?cssUrl(fotoNaLargura(s.photo_url,larguraNaTela())):destGradient(s.city||s.name);
@@ -9031,8 +9086,9 @@ function abrirPreviaDoExplorar(i){
 }
 async function salvarPreviaDoExplorar(status){
   const s=S.curPlace;if(!s||!s._previa)return;
+  const origem=S.placeOrigin==='amigo'?'amigo':'explore';
   const data=await salvarDoExplorar(s._i,status);
-  if(data&&S.curPlace===s){openPlace(data.id,'explore');mostrarFaixaSalvo(status,data)}
+  if(data&&S.curPlace===s){openPlace(data.id,origem);mostrarFaixaSalvo(status,data)}
 }
 // A FOTO do card: pergunta só o que importa — quero ir ou já fui — e salva.
 // Perguntar a viagem aqui não fazia sentido (a viagem sai do próprio lugar),
@@ -11725,8 +11781,9 @@ async function abrirComentarios(spotId,alvo,donoDoSpot){
     // resposta de A chegar. Sem esta checagem, a ficha de B mostrava os
     // comentarios de A — e o botao Enviar gravava no spot A. As telas
     // irmas (cidade, perfil de amigo) todas tem guarda; esta nao tinha.
-    if(alvo==='placeComentarios'&&S.curPlace&&S.curPlace.id!==spotId)return;
+    if(alvo==='placeComentarios'&&S.curPlace&&(S.curPlace._comentId||S.curPlace.id)!==spotId)return;
     renderComentarios(spotId,alvo,donoDoSpot);
+    if(alvo==='placeComentarios')atualizarConversa(S.curPlace);
   }catch(e){
     // A tabela vem da migracao 012. Enquanto ela nao rodar, a secao some em
     // vez de mostrar erro — o resto da ficha continua inteiro.
@@ -15317,90 +15374,34 @@ function switchFriendCityCat(cat,el){
 // justamente o que interessa ver de quem você conhece.
 let telaAntesDaFicha='friendCity';
 function voltarDaFichaDoAmigo(){goTo(telaAntesDaFicha)}
+// FICHA ÚNICA (desenho C10, 05/10): o spot de amigo abre a MESMA ficha do
+// resto do app — a sua, se o lugar também é seu; senão a prévia, com "Salvar
+// como", o bloco do amigo e a conversa do spot dele. A tela própria do spot
+// de amigo (friendPlace) saiu.
 function abrirSpotDoAmigo(i){
   const s=(FRIEND_CITY_SPOTS||[])[i];
   if(!s)return;
   telaAntesDaFicha='friendCity';
   FRIEND.spot=s;
-  const nome=(FRIEND.profile&&friendName(FRIEND.profile))||'seu amigo';
-  const primeiro=String(nome).split(' ')[0];
-
-  document.getElementById('fpName').textContent=s.name||'';
-  document.getElementById('fpType').textContent=(subcatLabel(s.subcategory)||catLabel(s.category))+(cityOf(s)?' · '+cityOf(s):'');
-
-  const chip=document.getElementById('fpChip');
-  const m={want:['chip-want','Quer ir'],been:['chip-been','Já foi'],skip:['','Pulou']};
-  const est=m[s.status]||m.want;
-  chip.className='hero-chip '+est[0];chip.textContent=est[1];
-
-  const hero=document.getElementById('fpHeroImg');
-  hero.style.backgroundImage=destGradient(cityOf(s)||s.name);
-  limparCredito('fpFotoCredito');
-  if(s.photo_url){
-    const probe=new Image();
-    probe.onload=()=>{if(FRIEND.spot===s){hero.style.backgroundImage=cssUrl(s.photo_url);pintarCreditoSpot('fpFotoCredito',s)}};
-    // Endereço gravado quebrado: a foto atual do lugar, só pra mostrar.
-    probe.onerror=()=>{fotoParaVer(s).then(u=>{if(u&&FRIEND.spot===s){s._fotoVista=u;hero.style.backgroundImage=cssUrl(safeUrl(u))}})};
-    probe.src=s.photo_url;
-  }else{
-    // Spot do amigo sem foto: a do lugar, só pra mostrar (ver fotoParaVer).
-    fotoParaVer(s).then(u=>{if(u&&FRIEND.spot===s){s._fotoVista=u;hero.style.backgroundImage=cssUrl(safeUrl(u))}});
-  }
-
-  // a nota pessoal é o coração do app — sem ela, some a seção
-  const secNota=document.getElementById('fpNoteSection');
-  if(s.my_note){
-    document.getElementById('fpNoteLabel').textContent='A nota de '+primeiro;
-    document.getElementById('fpNote').textContent='"'+s.my_note+'"';
-    secNota.style.display='';
-  }else{secNota.style.display='none'}
-
-  const secNota2=document.getElementById('fpRatingSection');
-  // parseFloat: a nota tem meia estrela desde a 020, e parseInt fazia 4,5 virar 4.
-  const nota=parseFloat(s.my_rating)||0;
-  if(nota||s.my_review){
-    document.getElementById('fpRatingLabel').textContent='A avaliação de '+primeiro;
-    // As duas camadas do componente de estrela: sem a de cima (.st-fill), a
-    // classe .lit não tinha o que pintar e as cinco saíam cinza.
-    const fp=document.getElementById('fpStars');
-    fp.setAttribute('role','img');fp.setAttribute('aria-label',nota?fmtRating(nota)+' de 5':'Sem nota');
-    fp.innerHTML=Array.from({length:5},(_,k)=>{
-      const cls=nota>=k+1?' lit':(nota>=k+0.5?' meia':'');
-      return '<span class="star-btn'+cls+'" aria-hidden="true"><span class="st-base">'+icon('star')+'</span><span class="st-fill">'+icon('star')+'</span></span>';
-    }).join('');
-    const rev=document.getElementById('fpReview');
-    if(s.my_review){rev.textContent='"'+s.my_review+'"';rev.style.display=''}else{rev.style.display='none'}
-    secNota2.style.display='';
-  }else{secNota2.style.display='none'}
-
-  let ig='';
-  if(s.address)ig+=`<div class="info-cell wide"><div class="info-cell-icon">${icon('pin')}</div><div class="info-cell-label">Endereço</div><div class="info-cell-value">${esc(s.address)}</div></div>`;
-  if(cityOf(s))ig+=`<div class="info-cell"><div class="info-cell-icon">${icon('city')}</div><div class="info-cell-label">Cidade</div><div class="info-cell-value">${esc(cityOf(s))}</div></div>`;
-  if(s.rating_google)ig+=`<div class="info-cell"><div class="info-cell-icon">${icon('star')}</div><div class="info-cell-label">Google</div><div class="info-cell-value">${fmtRating(s.rating_google)}</div></div>`;
-  if(!ig)ig=`<div class="info-cell wide"><div class="info-cell-icon">${icon('pin')}</div><div class="info-cell-label">Local</div><div class="info-cell-value">${esc(cityOf(s)||'—')}</div></div>`;
-  document.getElementById('fpInfoGrid').innerHTML=ig;
-
-  // mesmos links da tela própria: Ligar, Instagram/cardápio, Maps
-  let rh='';
-  const tel=telHref(s.phone);
-  if(s.category==='food'&&tel)rh+=`<a class="reserve-btn" href="${esc(tel)}">${icon('food')} Ligar · ${esc(s.phone)}</a>`;
-  if(s.website_url){
-    const insta=/instagram\.com/i.test(s.website_url);
-    rh+=`<a class="reserve-btn" href="${escUrl(s.website_url)}" target="_blank" rel="noopener">${icon(insta?'instagram':'menu')} ${insta?'Abrir Instagram':'Ver site'}</a>`;
-  }
-  if(s.maps_url)rh+=`<a class="reserve-btn" href="${escUrl(s.maps_url)}" target="_blank" rel="noopener">${icon('mapPin')} Ver no Google Maps</a>`;
-  document.getElementById('fpLinksWrap').innerHTML=rh;
-  abrirComentarios(s.id,'fpComentarios',s.user_id);
-  // Já é seu? Cruza com a sua lista (Boteco Belmonte, 01/10: continuava
-  // oferecendo 'Adicionar à minha lista' pra quem já tinha salvo).
-  const meu=statusNaMinhaLista({name:s.name,city:cityOf(s)});
-  const btAdd=document.getElementById('fpAdicionar');
-  if(btAdd){
-    btAdd.textContent=meu?({'Fui':'Você também foi','Quero ir':'Você quer ir','Não recomendo':'Você também foi · não recomenda'}[meu]||'Já está na sua lista'):'Adicionar à minha lista';
-    btAdd.classList.toggle('fp-ja',!!meu);btAdd.disabled=!!meu;
-  }
-
-  goTo('friendPlace');
+  abrirFichaDoSpotDeAmigo(s);
+}
+function abrirFichaDoSpotDeAmigo(s){
+  const meu=meuSpotIgual(s.name,cityOf(s));
+  if(meu){openPlace(meu.id,'amigo');return}
+  EXPLORE.avulso={name:s.name||'',address:s.address||'',city:cityOf(s)||s.city||'',
+    country:s._pais||paisDoEndereco(s.address||'')||'',subcat:s.subcategory||'',phone:s.phone||'',
+    photo_url:s._fotoVista||s.photo_url||'',photo_author:{nome:s.photo_author||'',url:s.photo_author_url||''},
+    rating:Number(s.rating_google)>0?String(s.rating_google):'',website_url:s.website_url||'',maps_url:s.maps_url||'',
+    lat:s.lat!=null?Number(s.lat):null,lng:s.lng!=null?Number(s.lng):null,
+    price_level:s.price_level!=null?s.price_level:null,from_user_id:s.user_id||null,_cat:s.category||'food',_amigo:s};
+  abrirPreviaDoExplorar('avulso');
+  S.placeOrigin='amigo';
+  const p=S.curPlace;
+  if(!p||!p._previa)return;
+  p._comentId=s.id;p.from_user_id=s.user_id||null;
+  document.getElementById('place').classList.add('com-amigo');
+  abrirComentarios(s.id,'placeComentarios',s.user_id);
+  pintarDelesNaFicha(p);
 }
 // Base da tela: normalmente os spots da viagem filtrados pela cidade, mas a
 // busca do Explorar entrega a lista JÁ pronta — lá o filtro pode ter sido por
