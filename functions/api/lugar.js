@@ -43,22 +43,25 @@ export async function onRequestPost(context) {
   if (!quem.permitir) return json({ unauthorized: true }, 401);
   if (!env.GOOGLE_PLACES_KEY) return json({ configured: false });
 
+  // sug2 (05/10): a resposta ganhou o grupo de spots; a memória antiga não tem.
   const chave = op === 'sugerir'
-    ? 'lugar_sug_' + (await hash(texto.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '')))
+    ? 'lugar_sug2_' + (await hash(texto.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '')))
     : 'lugar_det_' + (await hash(id));
   const guardado = await lerKV(env, chave);
   if (guardado) { try { return json(JSON.parse(guardado)) } catch (e) {} }
 
-  if (!await podeGastar(env, 'lugar', quem.uid, 1, TETO_PESSOA)) return json({ capped: true, scope: 'user' });
+  // Sugerir são dois pedidos ao Google (lugares + spots): conta dois.
+  const custo = op === 'sugerir' ? 2 : 1;
+  if (!await podeGastar(env, 'lugar', quem.uid, custo, TETO_PESSOA)) return json({ capped: true, scope: 'user' });
   const mes = new Date().toISOString().slice(0, 7);
   const contador = 'lugar_count_' + mes;
   const usado = parseInt((await lerKV(env, contador)) || '0', 10);
   if (usado >= TETO_MES) return json({ capped: true });
-  // Por amostragem (1 em 4, somando 4): o contador gravava a cada letra
-  // digitada, e o KV grátis aceita mil gravações por DIA no app inteiro.
+  // Por amostragem (1 em 4, somando 4 vezes o custo): o contador gravava a
+  // cada letra digitada, e gravação no KV tem teto.
   if (Math.random() < 0.25) {
-    await gravarKV(env, contador, String(usado + 4), 60 * 60 * 24 * 40);
-    await avisarSeCruzou(context, mes, usado, usado + 4);
+    await gravarKV(env, contador, String(usado + 4 * custo), 60 * 60 * 24 * 40);
+    await avisarSeCruzou(context, mes, usado, usado + 4 * custo);
   }
 
   let resposta;
@@ -72,22 +75,31 @@ export async function onRequestPost(context) {
   return json(resposta);
 }
 
-// Só lugar no mapa (rua, bairro, cidade, país) — nada de restaurante ou
-// hospital na lista. Se o Google recusar o filtro de tipo, pede sem ele e
-// filtra aqui pelos tipos que cada sugestão traz.
+// Dois grupos desde 05/10 (desenho e1): LUGARES (rua, bairro, cidade, país)
+// e SPOTS (restaurante, hotel, passeio) — a Chu digitou o nome de um
+// restaurante no Explorar e a busca devolvia "o que tem perto dele". São dois
+// pedidos em paralelo, cada um com o filtro de tipo dele. Se o Google recusar
+// o filtro, pede sem ele e separa aqui pelos tipos que cada sugestão traz.
 async function sugerir(env, texto) {
-  const pedir = (comFiltro) => fetch('https://places.googleapis.com/v1/places:autocomplete', {
+  const pedir = (tipo) => fetch('https://places.googleapis.com/v1/places:autocomplete', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json', 'X-Goog-Api-Key': env.GOOGLE_PLACES_KEY },
-    body: JSON.stringify(Object.assign({ input: texto, languageCode: 'pt-BR' }, comFiltro ? { includedPrimaryTypes: ['geocode'] } : {}))
+    body: JSON.stringify(Object.assign({ input: texto, languageCode: 'pt-BR' }, tipo ? { includedPrimaryTypes: [tipo] } : {}))
   });
-  let r = await pedir(true);
-  let filtrarAqui = false;
-  if (r.status === 400) { r = await pedir(false); filtrarAqui = true; }
-  if (!r.ok) return null;
-  const d = await r.json().catch(() => null);
-  if (!d) return null;
-  return { sugestoes: organizarSugestoes(d.suggestions, filtrarAqui) };
+  const umGrupo = async (tipo) => {
+    let r = await pedir(tipo);
+    let filtrarAqui = false;
+    if (r.status === 400) { r = await pedir(null); filtrarAqui = true; }
+    if (!r.ok) return null;
+    const d = await r.json().catch(() => null);
+    return d ? { lista: d.suggestions, filtrarAqui } : null;
+  };
+  const [lug, spt] = await Promise.all([umGrupo('geocode'), umGrupo('establishment')]);
+  if (!lug && !spt) return null;
+  return {
+    sugestoes: lug ? organizarSugestoes(lug.lista, lug.filtrarAqui) : [],
+    spots: spt ? organizarSpots(spt.lista, spt.filtrarAqui) : []
+  };
 }
 
 const TIPOS_DE_LUGAR = new Set(['route', 'street_address', 'intersection', 'neighborhood', 'sublocality',
@@ -103,6 +115,28 @@ export function organizarSugestoes(lista, filtrarAqui) {
         id: p.placeId || '',
         titulo: String((f.mainText && f.mainText.text) || (p.text && p.text.text) || '').slice(0, 120),
         sub: String((f.secondaryText && f.secondaryText.text) || '').slice(0, 160)
+      };
+    })
+    .filter((x) => idValido(x.id) && x.titulo);
+}
+
+// O grupo SPOTS: estabelecimento, nunca lugar no mapa. Os tipos vão junto —
+// o app escolhe a categoria (Gastronomia/Hospedagem/Experiência) por eles.
+export function organizarSpots(lista, filtrarAqui) {
+  return (lista || []).map((s) => s && s.placePrediction).filter(Boolean)
+    .filter((p) => {
+      const t = p.types || [];
+      if (!filtrarAqui) return true;
+      return t.includes('establishment') || !t.some((x) => TIPOS_DE_LUGAR.has(x));
+    })
+    .slice(0, 5)
+    .map((p) => {
+      const f = p.structuredFormat || {};
+      return {
+        id: p.placeId || '',
+        titulo: String((f.mainText && f.mainText.text) || (p.text && p.text.text) || '').slice(0, 120),
+        sub: String((f.secondaryText && f.secondaryText.text) || '').slice(0, 160),
+        tipos: (p.types || []).filter((t) => /^[a-z_]{2,40}$/.test(t)).slice(0, 8)
       };
     })
     .filter((x) => idValido(x.id) && x.titulo);

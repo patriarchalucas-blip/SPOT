@@ -15,6 +15,8 @@ const DB = {
   follows: [{ id: 'f1', follower_id: EU, following_id: ANA, status: 'accepted' }, { id: 'f2', follower_id: RAFA, following_id: EU, status: 'accepted' }],
   trips: [
     { id: 't1', user_id: EU, name: 'Portugal', destinations: ['Portugal'], dates: '', status: 'planning', initial_city: 'Lisboa', created_at: '2026-09-01' },
+    // Próxima viagem (05/10): só Quero ir, privada, montada com a dica da Ana.
+    { id: 'tj', user_id: EU, name: 'Japão', destinations: ['Japão'], dates: '', status: 'planning', initial_city: 'Tóquio', privada: true, proxima: true, created_at: '2026-10-01' },
     { id: 't2', user_id: EU, name: 'São Paulo', destinations: ['Brasil'], dates: '__casa__', status: 'planning', initial_city: 'São Paulo', created_at: '2026-09-02' },
     { id: 'ta', user_id: ANA, name: 'portugal', destinations: ['portugal'], dates: '', status: 'planning', created_at: '2026-08-01' },
     { id: 'tr', user_id: RAFA, name: 'Portugal', destinations: ['Portugal'], dates: '', status: 'planning', created_at: '2026-08-01' },
@@ -22,11 +24,18 @@ const DB = {
   spots: [
     { id: 's1', user_id: EU, trip_id: 't1', name: 'Taberna da Rua das Flores', category: 'food', city: 'Lisboa', status: 'been', my_rating: 4.5, my_review: 'Petiscos', created_at: '2026-09-01' },
     { id: 's2', user_id: EU, trip_id: 't1', name: 'Majestic Café', category: 'food', city: 'Porto', status: 'want', created_at: '2026-09-01' },
+    { id: 'j1', user_id: EU, trip_id: 'tj', name: 'Sushi Saito', category: 'food', city: 'Tóquio', status: 'want', from_user_id: ANA, created_at: '2026-10-02' },
+    { id: 'j2', user_id: EU, trip_id: 'tj', name: 'Fushimi Inari', category: 'experience', city: 'Kyoto', status: 'want', created_at: '2026-10-02' },
+    { id: 'a3', user_id: ANA, trip_id: 'ta', name: 'A Cevicheria', category: 'food', city: 'Lisboa', status: 'been', my_rating: 4.5, my_review: 'Pisco sour no balcão.', price_level: 2, rating_google: '4.6', created_at: '2026-08-02' },
+    { id: 'a4', user_id: ANA, trip_id: 'ta', name: 'Livraria Lello', category: 'experience', city: 'Porto', status: 'been', my_rating: 4, my_review: 'Chega antes das 10h.', created_at: '2026-08-04' },
+    { id: 'r3', user_id: RAFA, trip_id: 'tr', name: 'A Cevicheria', category: 'food', city: 'Lisboa', status: 'want', created_at: '2026-08-03' },
+    { id: 'aj', user_id: ANA, trip_id: 'ta', name: 'Sushi Saito', category: 'food', city: 'Tóquio', status: 'been', my_rating: 5, created_at: '2026-08-01' },
     { id: 's3', user_id: EU, trip_id: 't2', name: 'Mocotó', category: 'food', city: 'São Paulo', status: 'been', my_rating: 5, created_at: '2026-09-01' },
     { id: 'a1', user_id: ANA, trip_id: 'ta', name: 'Cervejaria Ramiro', category: 'food', city: 'Lisboa', status: 'been', my_rating: 5, my_review: 'Camarão', created_at: '2026-08-01' },
     { id: 'r1', user_id: RAFA, trip_id: 'tr', name: 'Taberna da Rua das Flores', category: 'food', city: 'Lisboa', status: 'been', my_rating: 4, created_at: '2026-08-01' },
     { id: 'a2', user_id: ANA, trip_id: 'tac', name: 'Bar da Dona Onça', category: 'food', city: 'São Paulo', address: 'Av. Ipiranga, 200 - República, São Paulo - SP, 01046-010, Brasil', status: 'been', my_rating: 5, created_at: '2026-08-01' }]
 };
+DB.spot_comments = [{ id: 'c1', spot_id: 'a4', user_id: RAFA, body: 'Reserva ou chega cedo?', created_at: '2026-10-01' }, { id: 'c2', spot_id: 'a4', user_id: ANA, body: 'Balcão sem reserva, às 19h.', created_at: '2026-10-02' }];
 function filtra(tab, qs) {
   let l = (DB[tab] || []).slice();
   for (const [k, v] of new URLSearchParams(qs)) {
@@ -40,7 +49,9 @@ function filtra(tab, qs) {
   return l;
 }
 const gPlace = (n, c) => ({ id: 'g' + n, displayName: { text: n }, formattedAddress: 'Rua 1, ' + c + ', Portugal', types: ['restaurant'], primaryType: 'restaurant',
-  addressComponents: [{ types: ['locality'], longText: c, shortText: c }, { types: ['country'], longText: 'Portugal', shortText: 'PT' }], location: { latitude: 38.7, longitude: -9.1 } });
+  addressComponents: [{ types: ['locality'], longText: c, shortText: c }, { types: ['country'], longText: 'Portugal', shortText: 'PT' }], location: { latitude: 38.7, longitude: -9.1 },
+  // 3 fotos por lugar: o carrossel da ficha (05/10) precisa delas pra montar.
+  photos: [1, 2, 3].map(k => ({ name: 'places/g' + n.replace(/W/g, '') + '/photos/p' + k, authorAttributions: [{ displayName: 'Autor ' + k }] })) });
 
 const b = await puppeteer.launch({ executablePath: 'C:/Program Files/Google/Chrome/Application/chrome.exe' });
 const pg = await b.newPage(); await pg.setViewport({ width: 390, height: 844, deviceScaleFactor: 1 });
@@ -64,6 +75,11 @@ pg.on('request', r => {
   if (/supabase\.co\/(auth|storage)/.test(u)) return r.respond({ status: 200, contentType: 'application/json', body: '{}' });
   if (u.includes('/api/places')) { let q = ''; try { q = JSON.parse(r.postData() || '{}').textQuery || '' } catch (e) {} return r.respond({ status: 200, contentType: 'application/json', body: JSON.stringify({ places: q ? (/xyzzy/i.test(q)?[gPlace('Farmácia Central','Porto')]:[gPlace(q.split(',')[0], /Porto/.test(q)?'Porto':'Lisboa')]) : [] }) }) }
   if (u.includes('/api/importar')) { if (r.method()==='GET') return r.respond({status:200,contentType:'application/json',body:JSON.stringify({ligado:true})}); return r.respond({status:200,contentType:'application/json',body:JSON.stringify({lugares:[{texto:'taberna da rua das flores',nome:'Taberna da Rua das Flores',cidade:'Lisboa',pais:'Portugal',status:'been'},{texto:'pasteis de belem (amei)',nome:'Pastéis de Belém',cidade:'Lisboa',pais:'Portugal',status:'been'},{texto:'livraria lello',nome:'Livraria Lello',cidade:'Porto',pais:'Portugal',status:'want'},{texto:'o bar xyzzy do joão',nome:'Bar Xyzzy',cidade:'Porto',pais:'Portugal',status:'want'}]})}) }
+  // Sugestões do Explorar em dois grupos (05/10): "Mani" acha o restaurante e a cidade.
+  if (u.includes('/api/lugar')) return r.respond({ status: 200, contentType: 'application/json', body: JSON.stringify({
+    sugestoes: [{ id: 'ChIJmanila_cidade_001', titulo: 'Manila', sub: 'Filipinas' }],
+    spots: [{ id: 'ChIJmani_restaurante1', titulo: 'Maní', sub: 'Rua Joaquim Antunes, Jardins, São Paulo', tipos: ['restaurant', 'food', 'establishment'] },
+      { id: 'ChIJtaberna_flores01', titulo: 'Taberna da Rua das Flores', sub: 'Rua da Misericórdia, Lisboa', tipos: ['restaurant'] }] }) });
   if (u.includes('/api/lista')) return r.respond({ status: 200, contentType: 'application/json', body: JSON.stringify({ codigo: 'abcdefgh1234' }) });
   if (u.includes('/api/')) return r.respond({ status: 200, contentType: 'application/json', body: '{}' });
   r.continue();
@@ -79,10 +95,17 @@ const passoDe = async (nome, fn, espera) => {
   await pg.screenshot({ path: OUT + nome.replace(/\W+/g, '_') + '.png' });
 };
 await passoDe('login simulado + dashboard', `(async()=>{window.ensureToken=async()=>'tk';S.user={id:'${EU}',email:'l@x.z',user_metadata:{full_name:'Lucas Patriarcha'}};await fetchOwnProfile(true);goTo('dashboard');await loadDashboard()})()`, 2500);
+await passoDe('viagens: casa + lista (c1)', `(()=>{goTo('dashboard');renderTrips()})()`, 1200);
+await passoDe('adicionar viagem (c3)', `abrirAdicionarViagem()`);
+await passoDe('adicionar viagem: buscar', `(()=>{const i=document.getElementById('countrySearch');i.value='Kyoto';filterNewTripCity('Kyoto')})()`, 1500);
+await passoDe('adicionar viagem: escolher', `selectNewTripCity(0)`);
+await passoDe('adicionar viagem: fechar', `closeOv('ov-newtrip')`);
 await passoDe('abrir viagem Portugal', `openTrip('t1')`, 1500);
 await passoDe('compartilhar país', `compartilharPais()`, 1200);
 await passoDe('fechar folha', `closeOv('ov-compartilhar')`);
 await passoDe('abrir cidade Lisboa', `openCityScreen('Lisboa')`, 1200);
+await passoDe('cidade: Quero ir (c2)', `setCityStatus('want')`);
+await passoDe('cidade: Fui (c2)', `setCityStatus('been')`);
 await passoDe('compartilhar cidade', `compartilharCidade()`, 1200);
 await passoDe('fechar folha 2', `closeOv('ov-compartilhar')`);
 await passoDe('planejar pela cidade', `plnDaEntrada(true)`, 1200);
@@ -108,16 +131,50 @@ await passoDe('casa: abrir viagem SP', `openTrip('t2')`, 1500);
 await passoDe('adicionar spot (busca)', `(()=>{goTo('dashboard');abrirBuscaDeSpot()})()`, 1000);
 await passoDe('digitar na busca', `(()=>{const i=document.getElementById('placeSearch');i.value='Mocotó';searchPlaces('Mocotó')})()`, 1500);
 await passoDe('fechar busca', `closeOv('ov-search')`);
+await passoDe('salvar spot abre a ficha (B7)', `(async()=>{S.addCat='food';S.addTrip=S.trips.find(t=>t.id==='t1');S.selPlace={name:'Pastéis de Belém',city:'Lisboa',country:'Portugal',address:'R. de Belém 84, Lisboa'};resetNoteSheet();showOv('ov-note');setTimeout(()=>{addStatus='want';saveSpot(false)},300)})()`, 3000);
 await passoDe('aba amigos', `(async()=>{goTo('friends');await loadFriends()})()`, 2000);
 await passoDe('perfil da Ana', `openFriend('${ANA}')`, 2000);
+await passoDe('ficha única: spot da Ana (e5)', `(async()=>{document.querySelectorAll('.overlay.show').forEach(o=>closeOv(o.id));const l=await plnSpotsDeles();FRIEND_CITY_SPOTS=l.filter(x=>x.id==='a4');abrirSpotDoAmigo(0)})()`, 2000);
+await passoDe('ficha única: voltar', `backFromPlace()`);
+await passoDe('ficha única: spot que é meu (e4)', `(async()=>{const l=await plnSpotsDeles();FRIEND_CITY_SPOTS=l.filter(x=>x.id==='r1');abrirSpotDoAmigo(0)})()`, 2000);
+console.log('  slides:', await pg.evaluate(() => document.querySelectorAll('#place .fi-slide').length));
+await passoDe('carrossel: 2a foto', `(()=>{const f=document.querySelector('#place .fi-faixa');f.scrollLeft=f.clientWidth;f.dispatchEvent(new Event('scroll'))})()`);
+console.log('  contador:', await pg.evaluate(() => (document.querySelector('#place .fi-cont')||{}).textContent));
+await passoDe('carrossel: tela cheia', `document.querySelector('#place .fi-faixa').click()`);
+await passoDe('carrossel: fechar', `fecharVisualizador()`);
+await passoDe('ficha única: voltar 2', `backFromPlace()`);
 await passoDe('planejar com Ana', `plnDoAmigo()`, 1200);
 await passoDe('voltar ao perfil', `plnVoltar()`);
 await passoDe('amigos: só pedido enviado', `(()=>{FRIENDS_DATA={friendIds:[],incoming:[],outgoing:[{id:'p1',follower_id:'${EU}',following_id:'${RAFA}',status:'pending'}],pmap:{'${RAFA}':{id:'${RAFA}',display_name:'Rafa Mendes'}},feedItems:[],convidou:false};friendsTab='recente';goTo('friends');renderFriendsTab()})()`);
 console.log('  linha:',await pg.evaluate(()=>(document.querySelector('#friendsContainer .am-pedidos')||{}).textContent||'(nenhuma)'));
-await passoDe('amigos: abre enviados', `switchFriendsTab('pedidos')`);
-console.log('  cancelar:',await pg.evaluate(()=>/Cancelar/.test(document.getElementById('friendsContainer').innerText)));
-await passoDe('perfil próprio', `(async()=>{goTo('profile');await loadProfile()})()`, 2000);
+await passoDe('amigos: busca (c7)', `(()=>{const i=document.getElementById('amBusca2');i.value='ana';amBuscar('ana')})()`);
+await passoDe('amigos: busca sem amigo', `(()=>{const i=document.getElementById('amBusca2');i.value='zezinho';amBuscar('zezinho')})()`, 1200);
+await passoDe('amigos: limpar busca', `(()=>{const i=document.getElementById('amBusca2');i.value='';amBuscar('')})()`);
+await passoDe('atividade (c6)', `abrirAtividade()`, 2000);
+console.log('  cancelar:',await pg.evaluate(()=>/Cancelar/.test(document.getElementById('atCorpo').innerText)));
+await passoDe('atividade: voltar', `goTo('friends')`);
+await passoDe('amigos: lista real (c7)', `(async()=>{FRIENDS_DATA=null;await loadFriends()})()`, 2500);
+await passoDe('atividade com eventos', `abrirAtividade()`, 2500);
+await passoDe('atividade: voltar 2', `goTo('friends')`);
+await passoDe('perfil próprio', `(async()=>{document.querySelectorAll('.overlay.show').forEach(o=>closeOv(o.id));goTo('profile');await loadProfile()})()`, 2000);
+await passoDe('perfil: meus spots', `document.querySelector('#profile .pf-cab:nth-of-type(2)')?.scrollIntoView()`);
+await passoDe('perfil: quero ir', `mlTrocarStatus('want')`);
+await passoDe('perfil: rodapé', `document.querySelector('#profile .pf-rodape').scrollIntoView()`);
+await passoDe('próxima viagem: tela', `openTrip('tj')`, 1500);
+await passoDe('próxima viagem: Kyoto', `pvCidade(1)`);
+await passoDe('próxima viagem: amigos veem', `trocarQuemVe(false)`, 1200);
+await passoDe('nova viagem (folha)', `(()=>{goTo('profile');abrirNovaViagem()})()`);
+await passoDe('nova viagem: amigos veem', `novaQuemVe(false)`);
+await passoDe('nova viagem: fechar', `closeOv('ov-newtrip')`);
+await passoDe('primeiro Fui (folha)', `(()=>{localStorage.removeItem('spot_virou_tj');conferirViagensQueViraram();const t=S.trips.find(x=>x.id==='tj');t._spots[0].status='been';conferirViagensQueViraram()})()`);
+await passoDe('primeiro Fui: ver em Viagens', `(async()=>{closeOv('ov-virou');goTo('dashboard');renderTrips()})()`, 1500);
+await passoDe('perfil sem próxima (vazio)', `(async()=>{goTo('profile');renderProximas()})()`);
 await passoDe('explorar', `(async()=>{goTo('explore');loadExplore()})()`, 2500);
+await passoDe('explorar: digitar Mani', `(()=>{const c=document.getElementById('exploreCitySearch');c.value='Mani';c.focus();sugerirLugar('Mani')})()`, 1500);
+await passoDe('explorar: abrir spot sugerido', `escolherSpotSugerido(0)`, 1500);
+await passoDe('explorar: salvar como Quero ir', `setStatus('want')`, 2500);
+await passoDe('explorar: faixa some ao sair', `(()=>{goTo('explore')})()`, 800);
+console.log('  faixa:', await pg.evaluate(() => (document.getElementById('faixaSalvo') || {}).className));
 await passoDe('salvar da lista pública', `(async()=>{localStorage.setItem('spot_salvar_pendente','abcdefgh1234.11111111-2222-3333-4444-555555555555');await salvarSpotPendente()})()`, 1500);
 await passoDe('v2: 5 destinos (recolhe)', `(()=>{plnAbrir({destinos:[{tipo:'pais',nome:'Portugal'},{tipo:'cidade',nome:'Lisboa'},{tipo:'pais',nome:'Itália'},{tipo:'pais',nome:'Espanha'},{tipo:'pais',nome:'Marrocos'}],amigos:['${ANA}','${RAFA}'],volta:'dashboard'})})()`, 1500);
 await passoDe('v2: lista Todas (cidade à direita)', `plnVerLista()`, 1500);

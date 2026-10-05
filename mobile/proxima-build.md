@@ -10,9 +10,11 @@ Antes de compilar: `npx eslint .` e `npx expo export --platform ios` em
 `mobile/`, e conferir esta lista inteira. Depois de compilar, mover os itens
 pra "Já compilado".
 
-## Na fila
+## Na fila (build 20)
 
-(vazio)
+- **Placar com continentes** no lugar de spots (`TelaViagens.js`, `d.continentes`) — feito no código.
+- **Pendente de decisão do Lucas:** a aba Viagens e a aba Amigos nativas ainda têm o desenho antigo (sem "Onde você mora" em card, sem lista em linhas, sem busca de amigo, sem Atividade). Ou reescrever as duas em React Native, ou deixar o site desenhar essas abas como já faz com o Explorar (`cascaTemExplorarWeb`).
+- Depois desta build: tirar o modo "spots" da tela Lista (lista geral).
 
 ## Já foi na build 19 (02/10, 1.0.1)
 
