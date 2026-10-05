@@ -29,7 +29,7 @@ O app mistura "Fui" e "Quero ir" em quase toda lista, e a pessoa tem que caçar.
 ## B. Viagens: onde moro, o que já fiz e o que estou planejando
 
 4. **Separar "Onde você mora" de "Viagens"** de forma mais clara.
-5. **Planejamento de viagens:** rascunhos privados de viagens futuras (ex.:
+5. **Planejamento de viagens** (ver pedido "Perfil e busca do Explorar", 05/10): rascunhos privados de viagens futuras (ex.:
    "Japão", com as dicas de quem acabou de ir). Quando a viagem acontece, o
    rascunho vira uma viagem visível pros amigos.
    - *Contexto técnico:* hoje uma viagem só com spots "Quero ir" já aparece
@@ -50,16 +50,8 @@ O app mistura "Fui" e "Quero ir" em quase toda lista, e a pessoa tem que caçar.
    "Spot salvo" de 3 s, que ela não percebeu.)
 8. **Perfil:** ela achou repetitivo. Simplificar, talvez deixando só o mapa, e
    trazer o "Planejar com amigos / planejamento" pra cá.
-   - **Decidido pelo Lucas (02/10):**
-     - As **viagens planejadas moram no Perfil**, separadas da lista de
-       viagens da tela inicial (que fica só com onde moro + viagens feitas).
-     - **Privacidade por viagem, escolha da pessoa:** cada viagem planejada
-       pode ser privada ou visível pros amigos. Desenhar onde fica essa
-       escolha e como ela aparece no card.
-     - **"Quero ir de novo" foi descartado** — não desenhar.
-     - A aba **continua se chamando "Perfil"**. Não se resume às viagens
-       planejadas: entram mais utilidades, ainda em discussão. Deixar espaço
-       no desenho pra isso, sem inventar o conteúdo.
+   - **Substituído pelo pedido "Perfil e busca do Explorar" (05/10)** — os
+     itens 5 e 8 estão desenhados lá; não desenhar aqui.
 9. **"Fulano também tem spots aqui" dentro da cidade:** com 400 amigos em São
    Paulo vira uma lista gigante. Proposta dela: não mostrar na cidade onde a
    pessoa mora, só nas de viagem.
