@@ -318,7 +318,15 @@ export default function TelaAmigos({ dados, ocupado, acao }) {
     <View style={e.fundo}>
       <View style={[e.topo, { paddingTop: 26 /* a casca já desconta o topo (SafeAreaView) */ }]}>
         <Text style={e.titulo}>Amigos</Text>
-        <BotaoAdicionar onPress={() => acao('adicionar')} />
+        <View style={e.topoDireita}>
+          {/* Atividade (05/10): pedidos e o que aconteceu com os seus spots.
+              Abre a tela do site; o ponto verde é novidade não vista. */}
+          <Pressable onPress={() => acao('atividade')} hitSlop={8} style={e.ativ} accessibilityRole="button" accessibilityLabel="Atividade">
+            <Text style={e.ativTxt}>Atividade</Text>
+            {dados.atividadeNova ? <View style={e.ativPonto} /> : null}
+          </Pressable>
+          <BotaoAdicionar onPress={() => acao('adicionar')} />
+        </View>
       </View>
 
       <View style={e.abas}>
@@ -510,6 +518,10 @@ const e = StyleSheet.create({
   corpo: { flex: 1, paddingHorizontal: 20 },
 
   avatar: { backgroundColor: VERDE, alignItems: 'center', justifyContent: 'center' },
+  topoDireita: { flexDirection: 'row', alignItems: 'center', gap: 16 },
+  ativ: { flexDirection: 'row', alignItems: 'center', gap: 6 },
+  ativTxt: { fontSize: 16, color: INK, fontFamily: FRAUNCES },
+  ativPonto: { width: 8, height: 8, borderRadius: 4, backgroundColor: VERDE },
   avatarTxt: { color: ON_GREEN, fontWeight: '600' },
   forte: { fontWeight: '600', color: INK },
 

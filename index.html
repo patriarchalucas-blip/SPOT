@@ -5014,7 +5014,15 @@ async function carregarAtividade(forcar){
   })();
   return ATIV.p;
 }
+function temNovidadeNaAtividade(){
+  const d=FRIENDS_DATA;
+  const pedidos=d?(d.incoming||[]).filter(r=>!estaBloqueado(r.follower_id)).length:0;
+  const vista=atividadeVistaEm();
+  return !!pedidos||(ATIV.itens||[]).some(i=>String(i.quando||'')>vista);
+}
 function pintarPontoDaAtividade(){
+  // A aba nativa recebe o ponto pelos dados dela.
+  if(naCasca())try{darDadosDeAmigos()}catch(e){}
   const el=document.getElementById('amAtivPonto');if(!el)return;
   const d=FRIENDS_DATA;
   const pedidos=d?(d.incoming||[]).filter(r=>!estaBloqueado(r.follower_id)).length:0;
@@ -15476,7 +15484,7 @@ function darDadosDeAmigos(){
     });
   });
 
-  falarComACasca({tipo:'amigos',pronto:true,dados:{
+  falarComACasca({tipo:'amigos',pronto:true,dados:{atividadeNova:temNovidadeNaAtividade(),
     aba:friendsTab,
     salvando:SALVANDO_NO_FEED,
     abas:abas,
@@ -15496,6 +15504,8 @@ window.acaoDeAmigos=function(acao,valor){
   if(acao==='aba'){switchFriendsTab(valor);darDadosDeAmigos();return}
   if(acao==='recarregar'){loadFriends();return}
   if(acao==='adicionar'){abrirAddFriend();return}
+  // O botão "Atividade" do topo da aba nativa (build 20).
+  if(acao==='atividade'){abrirAtividade();return}
   if(acao==='convidar'){convidarAmigo();return}
   if(acao==='perfil'){openFriend(valor);return}
   if(acao==='abrirVisita'){abrirVisitaDoFeed(Number(valor));return}
