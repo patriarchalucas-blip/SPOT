@@ -2592,6 +2592,9 @@ body.exm .exm-filtros{position:relative;z-index:1}
 
     <div class="pf-rodape">
       <button class="pf-linha" onclick="abrirTodosOsSpots()"><span>Todos os seus spots</span><span class="pf-val" id="pfTodos"></span></button>
+      <!-- Importar à mão depois do primeiro acesso (o Lucas, 05/10): não só no
+           onboarding e na conta vazia. Aparece com a IA ligada no servidor. -->
+      <button class="pf-linha" id="pfImportar" onclick="impAbrir('')" style="display:none"><span>Colar uma lista de lugares</span><span class="pf-val"></span></button>
       <button class="pf-linha" onclick="openVisitedCountryPicker()"><span>Países que visitei</span><span class="pf-val" id="pfPaises"></span></button>
       <button class="pf-linha" onclick="abrirCidadeDeCasa()"><span>Onde moro</span><span class="pf-val" id="pfCasa"></span></button>
     </div>
@@ -4083,6 +4086,7 @@ async function impVerSeEstaLigado(){
     IMP.ligado=!!(d&&d.ligado);
   }catch(e){IMP.ligado=false}
   const el=document.getElementById('impEntrada');if(el)el.style.display=IMP.ligado?'':'none';
+  const pf=document.getElementById('pfImportar');if(pf)pf.style.display=IMP.ligado?'':'none';
   if(IMP.ligado&&S.user&&!allSpotsFlat().length){try{loadDashboard()}catch(e){}}
 }
 function impAbrir(texto){
@@ -6493,6 +6497,8 @@ function renderTrips(){
   // mosaico mostrava 4 viagens por tela; a linha mostra o dobro.
   h+='<div class="vg-lista">'+ordenadas.map(linhaDeViagem).join('')+'</div>';
   h+='<button class="btn-primario btn-largo" onclick="comecarSpotSemViagem()">Adicionar spot</button>';
+  // Colar uma lista continua à mão depois do primeiro acesso (05/10).
+  if(IMP.ligado)h+='<button class="exm-btn exm-btn2" style="margin-top:8px" onclick="impAbrir(\'\')">Colar uma lista de lugares</button>';
   c.innerHTML=h;
   fillTripPhotos();
   darDadosDeViagens();
@@ -13971,6 +13977,7 @@ function pintarRodapeDoPerfil(){
   const a=document.getElementById('pfPaises');if(a)a.textContent=n?String(n):'';
   const b=document.getElementById('pfCasa');if(b)b.textContent=p.home_city||'';
   const t=document.getElementById('pfTodos');if(t){const n=allSpotsFlat().length;t.textContent=n?String(n):''}
+  const pi=document.getElementById('pfImportar');if(pi)pi.style.display=IMP.ligado?'':'none';
 }
 function renderEstante(){
   const trilho=document.getElementById('mlTrilho');

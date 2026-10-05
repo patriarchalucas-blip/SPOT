@@ -185,6 +185,10 @@ await passoDe('v5: um tipo (7d)', `(()=>{goTo('profile');renderTop();abrirTipoDo
 await passoDe('v5: mandar (7e)', `(()=>{goTo('profile');renderTop();abrirMandarTop()})()`);
 console.log('  texto:', JSON.stringify(await pg.evaluate(() => textoDoTop())));
 await passoDe('v5: fechar mandar', `closeOv('ov-mandartop')`);
+await passoDe('v5: rodapé com Colar uma lista', `(async()=>{IMP.ligado=true;goTo('profile');renderPerfil();document.querySelector('#profile .pf-rodape').scrollIntoView({block:'center'})})()`);
+console.log('  importar visível:', await pg.evaluate(() => getComputedStyle(document.getElementById('pfImportar')).display));
+await passoDe('v5: abrir importar do perfil', `document.getElementById('pfImportar').click()`);
+await passoDe('v5: voltar do importar', `(()=>{goTo('profile')})()`);
 await passoDe('v5: todos os seus spots', `abrirTodosOsSpots()`);
 await passoDe('v5: buscar "bar"', `(()=>{const i=document.getElementById('msBusca');i.value='bar';msBuscar('bar')})()`);
 await passoDe('v5: planejar sem amigos', `(()=>{goTo('profile');abrirPlanejarDoPerfil();PLN.destinos=[{tipo:'pais',nome:'Itália'},{tipo:'cidade',nome:'Paris',pais:'França'}];plnPintarEscolha()})()`, 1200);
