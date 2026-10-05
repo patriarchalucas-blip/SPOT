@@ -83,7 +83,17 @@ function Anel({ paises }) {
   );
 }
 
+// Sem onPress (continentes, desenho c1 de 05/10), a linha não é botão e
+// não leva a seta.
 function LinhaDoPlacar({ n, rotulo, onPress }) {
+  if (!onPress) {
+    return (
+      <View style={e.pcItem} accessibilityLabel={n + ' ' + rotulo}>
+        <Text style={e.pcN}>{n}</Text>
+        <Text style={e.pcR}>{rotulo}</Text>
+      </View>
+    );
+  }
   return (
     <Pressable
       onPress={onPress}
@@ -309,7 +319,8 @@ export default function TelaViagens({ dados, ocupado, acao }) {
         <View style={e.placarCol}>
           <LinhaDoPlacar n={d.paises} rotulo="países" onPress={() => acao('mapa')} />
           <LinhaDoPlacar n={d.cidades} rotulo="cidades" onPress={() => acao('lista', 'cities')} />
-          <LinhaDoPlacar n={d.spots} rotulo="spots" onPress={() => acao('lista', 'spots')} />
+          {/* "Spots" saiu do placar (desenho c1, 05/10): a lista geral saiu do app. */}
+          <LinhaDoPlacar n={d.continentes || 0} rotulo="continentes" />
         </View>
       </View>
       ) : null}
