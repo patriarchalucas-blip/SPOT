@@ -67,14 +67,18 @@ test('bugs 7 e 8: o mesmo lugar nao entra duas vezes; Quero ir -> Fui atualiza o
   } finally { v1(); v2() }
 });
 
-test('bug 9: spot do amigo que ja e meu abre a MINHA ficha (ficha unica, 05/10)', () => {
+test('bug 9 + feed (05/10): spot do amigo que ja e meu abre o POST DELE, com a conversa dele e atalho pro meu', () => {
   A.avaliar(`S.user={id:'${EU}'};S.trips=[{id:'t',name:'Brasil',destinations:['Brasil'],_spots:[{id:'m',user_id:'${EU}',name:'Boteco Belmonte',city:'Rio de Janeiro',status:'been'}]}];
     FRIEND.profile={display_name:'Lucas'};FRIEND_CITY_SPOTS=[{id:'a',user_id:'amigo',name:'Boteco Belmonte',city:'Rio de Janeiro',status:'been',my_rating:4,category:'food'}]`);
-  A.avaliar("window.__aberto=[];const _op9=openPlace;openPlace=function(id,o){window.__aberto.push(id+'|'+o)}");
+  const v = trocar(A, 'abrirComentarios', () => {});
+  const v2 = trocar(A, 'pintarDelesNaFicha', () => {});
+  A.avaliar("window.__classes=[];const _el=document.getElementById;");
   try {
     A.abrirSpotDoAmigo(0);
-    assert.strictEqual(A.avaliar('window.__aberto.join()'), 'm|amigo', 'oferecia salvar de novo um spot que ja era meu');
-  } finally { A.avaliar('openPlace=_op9') }
+    assert.strictEqual(A.avaliar('S.curPlace._comentId'), 'a', 'a conversa e a do post dele (dava pra comentar so em spot que eu nunca fui)');
+    assert.strictEqual(A.avaliar('S.curPlace._meuId'), 'm', 'atalho pro meu spot');
+    assert.ok(A.avaliar("document.getElementById('fiListaRot').innerHTML").includes('Na sua lista: Fui'), 'nao oferece salvar de novo');
+  } finally { v(); v2() }
 });
 
 test('ficha unica: spot do amigo que nao e meu abre a previa com Salvar como e a dica dele', () => {

@@ -33,7 +33,10 @@ import { avisarDono } from './_aviso-dono.js';
 // uma ida ao Google inteira — medido entre 1,3 e 2,9 SEGUNDOS, enquanto uma
 // foto já conhecida sai em 0,08. Era isso que fazia a lista parecer travada.
 const CAP_MENSAL = 30000;
-const TTL_OK = 60 * 60 * 24 * 7;   // o link do CDN não é eterno; 7 dias é conservador
+// 30 dias (era 7, 05/10): cada vez que a memória vence, a 1ª abertura da
+// foto volta a esperar 1,3–2,9 s pelo Google. Se um link morrer antes, o app
+// percebe o erro da imagem e busca a foto de novo (onSpotPhotoError).
+const TTL_OK = 60 * 60 * 24 * 30;
 const TTL_FALHA = 60 * 10;
 
 // O id da foto que o Google devolve hoje tem ~436 caracteres (medido no

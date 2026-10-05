@@ -2,6 +2,10 @@
 <html lang="pt-BR">
 <head>
 <meta charset="UTF-8">
+<!-- As fotos de lugar vêm do CDN do Google (o /api/place-photo redireciona
+     pra lá): abrir a conexão já na carga tira o aperto de mão da 1ª foto. -->
+<link rel="preconnect" href="https://lh3.googleusercontent.com" crossorigin>
+<link rel="dns-prefetch" href="https://lh3.googleusercontent.com">
 <!-- Sem zoom da página: dentro do app do iPhone, um toque duplo ou uma pinça
      sem querer deixava a tela ampliada e a pessoa tinha que desfazer com os
      dedos. App nativo não amplia a tela inteira. O mapa-múndi tem a própria
@@ -1915,6 +1919,7 @@ body.tem-apple #convite .btn-apple{display:flex}
 .fi-dele:active{opacity:.6}
 .fi-dele-seta{margin-left:auto;padding-top:8px;color:var(--ink3)}
 .coment-link{cursor:pointer}
+.fi-lista-meu{border:none;background:none;padding:0;font:inherit;font-size:14px;font-weight:600;color:var(--green);cursor:pointer}
 #place.so-dele .fi-previa-dica,#place.so-dele .fi-status{display:none}
 #place.so-dele .fi-lista-rot{display:flex}
 .fi-dele .pln-av.g{width:36px;height:36px;font-size:14px}
@@ -4428,7 +4433,12 @@ function abrirSpotDeleDaFicha(i){
   if(S.curPlace._comentId===o.id)return;
   S.placeOriginAntes=S.placeOrigin;
   telaAntesDaFicha='place';
-  abrirFichaDoSpotDeAmigo(o,true);
+  abrirFichaDoSpotDeAmigo(o,true,true);
+}
+// O atalho "Na sua lista: Fui ›" no post do amigo abre o SEU spot.
+function abrirMeuDaFichaDele(){
+  const p=S.curPlace;if(!p||!p._meuId)return;
+  openPlace(p._meuId,S.placeOrigin==='amigo'?'amigo':'trip');
 }
 function abrirPerfilDoComentario(id){
   if(!id||(S.user&&id===S.user.id))return;
@@ -6786,15 +6796,25 @@ function renderCityStatusFilter(){
 // 6 por vez e de novo só depois de 3 dias — o Lucas via ícone no lugar da
 // foto (05/10). Até 8 por tela, uma vez por spot nesta sessão.
 const FOTO_NA_CIDADE_TENTADA=new Set();
+// Quatro ao mesmo tempo, e cada foto entra na SUA linha assim que chega — sem
+// esperar as outras nem redesenhar a lista (um de cada vez, com o redesenho
+// no fim, eram 8 a 15 s de ícone na tela; o Lucas, 05/10).
 function buscarFotosDaCidade(spots){
   const faltam=(spots||[]).filter(x=>x&&!x.photo_url&&!FOTO_NA_CIDADE_TENTADA.has(x.id)).slice(0,8);
   if(!faltam.length)return;
   faltam.forEach(x=>FOTO_NA_CIDADE_TENTADA.add(x.id));
-  (async()=>{
-    let achou=false;
-    for(const x of faltam){try{if(await healSpotPhoto(x.id))achou=true}catch(e){}}
-    if(achou&&document.getElementById('city').classList.contains('active'))renderCityBody();
-  })();
+  const fila=faltam.slice();
+  const uma=async()=>{
+    while(fila.length){
+      const x=fila.shift();
+      let url=null;
+      try{url=await healSpotPhoto(x.id)}catch(e){}
+      if(!url)continue;
+      const box=document.querySelector('#cityBody [data-foto="'+x.id+'"]');
+      if(box)box.innerHTML='<img src="'+escUrl(fotoNaLargura(url,220))+'" alt="" decoding="async" style="width:100%;height:100%;object-fit:cover;border-radius:inherit">';
+    }
+  };
+  for(let k=0;k<4;k++)uma();
 }
 function renderCityBody(){
   const b=document.getElementById('cityBody');
@@ -6811,7 +6831,7 @@ function renderCityBody(){
     const bc=s.category==='food'?'bar-food':s.category==='hotel'?'bar-hotel':'bar-experience';
     const dot=s.status==='been'?'dot-been':'dot-want';
     const tag=spotTag(s);
-    const thumb=s.photo_url?`<div class="place-thumb"><img src="${escUrl(fotoNaLargura(s.photo_url,220))}" loading="lazy" decoding="async" style="width:100%;height:100%;object-fit:cover;border-radius:inherit" onerror="onSpotPhotoError(this,'${esc(s.id)}','${esc(s.category)}')"></div>`:`<div class="place-thumb">${catIcon(s.category)}</div>`;
+    const thumb=s.photo_url?`<div class="place-thumb"><img src="${escUrl(fotoNaLargura(s.photo_url,220))}" loading="lazy" decoding="async" style="width:100%;height:100%;object-fit:cover;border-radius:inherit" onerror="onSpotPhotoError(this,'${esc(s.id)}','${esc(s.category)}')"></div>`:`<div class="place-thumb" data-foto="${esc(s.id)}">${catIcon(s.category)}</div>`;
     // Desenho 5a: o status sai da direita e vira a 1ª palavra da linha 2,
     // antes da nota. O nome ganha a largura toda.
     const nota=(s.status==='been'?(s.my_review||s.my_note):(s.my_note||s.my_review))||'';
@@ -15787,11 +15807,14 @@ function abrirSpotDoAmigo(i){
   if(!s)return;
   telaAntesDaFicha='friendCity';
   FRIEND.spot=s;
-  abrirFichaDoSpotDeAmigo(s);
+  // Vindo do amigo (feed, cidade dele, Explorar, Atividade), abre SEMPRE o
+  // post dele — mesmo que o lugar também seja seu. Abrir a sua ficha tirava a
+  // conversa dele da frente: não dava pra comentar em spot em comum (05/10).
+  abrirFichaDoSpotDeAmigo(s,true);
 }
 // `doAmigo`: abre o spot DELE mesmo quando o lugar também é seu (veio do
 // "Ana foi" da sua ficha) — aí a ficha mostra o dele, sem "Salvar como".
-function abrirFichaDoSpotDeAmigo(s,doAmigo){
+function abrirFichaDoSpotDeAmigo(s,doAmigo,voltarPraMinha){
   const meu=meuSpotIgual(s.name,cityOf(s));
   if(meu&&!doAmigo){openPlace(meu.id,'amigo');return}
   const anterior=S.curPlace;
@@ -15811,9 +15834,14 @@ function abrirFichaDoSpotDeAmigo(s,doAmigo){
   // voltar devolve pra sua ficha.
   document.getElementById('place').classList.toggle('so-dele',!!meu);
   if(meu){
-    p._voltarPara=anterior&&!anterior._previa?anterior.id:meu.id;
+    // Só volta pra sua ficha quando veio dela ("Ana foi"); do feed, o voltar
+    // devolve pro feed.
+    if(voltarPraMinha)p._voltarPara=anterior&&!anterior._previa?anterior.id:meu.id;
+    p._meuId=meu.id;
     const rot=document.getElementById('fiListaRot');
-    if(rot)rot.innerHTML='<span>Spot de '+esc(plnPrimeiro(s.user_id))+'</span><span class="fi-lista-cid">'+esc(cityOf(s)||'')+'</span>';
+    const st={been:'Fui',skip:'Não recomendo'}[meu.status]||'Quero ir';
+    if(rot)rot.innerHTML='<span>Spot de '+esc(plnPrimeiro(s.user_id))+'</span>'
+      +'<button class="fi-lista-meu" onclick="abrirMeuDaFichaDele()">Na sua lista: '+esc(st)+' ›</button>';
   }
   abrirComentarios(s.id,'placeComentarios',s.user_id);
   pintarDelesNaFicha(p);
