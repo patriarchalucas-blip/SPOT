@@ -64,3 +64,14 @@ test('tocar num spot que ja e seu abre a sua ficha, sem buscar no Google', async
     assert.strictEqual(A.avaliar('window.__g'), 0);
   } finally { A.avaliar('openPlace=_op;googlePlaces=_gp') }
 });
+
+// Várias fotos (C11): a mesma foto do Google por dois caminhos tem a mesma
+// chave, e ids com caractere codificado não colam todas numa só (era o
+// motivo do carrossel montar zero fotos).
+test('chave da foto: proxy e Google direto batem, e fotos diferentes nao colidem', () => {
+  const p1 = A.chaveDaFoto('/api/place-photo?ref=places%2FChIJ%20x%2Fphotos%2FAbc&w=800');
+  const p2 = A.chaveDaFoto('/api/place-photo?ref=places%2FChIJ%20x%2Fphotos%2FDef&w=400');
+  assert.notStrictEqual(p1, p2);
+  assert.strictEqual(A.chaveDaFoto('https://places.googleapis.com/v1/places/ChIJabc/photos/Xyz/media?maxWidthPx=400'),
+    A.chaveDaFoto('/api/place-photo?ref=places%2FChIJabc%2Fphotos%2FXyz&w=1200'));
+});

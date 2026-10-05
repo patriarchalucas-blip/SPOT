@@ -1855,6 +1855,26 @@ body.tem-apple #convite .btn-apple{display:flex}
 .pv-virou p{margin:0 0 10px;font-size:15px;line-height:1.5;color:var(--ink2)}
 .pv-virou .pf-bt2{background:var(--surface)}
 .vg-meta.vg-chegou{font-weight:600}
+/* Várias fotos (C11/e7) */
+.fi-carro{position:absolute;inset:0;z-index:1}
+.fi-faixa{position:absolute;inset:0;display:flex;overflow-x:auto;overflow-y:hidden;scroll-snap-type:x mandatory;scrollbar-width:none;overscroll-behavior-x:none;-webkit-overflow-scrolling:touch}
+.fi-faixa::-webkit-scrollbar{display:none}
+.fi-slide{flex:0 0 100%;height:100%;scroll-snap-align:start;scroll-snap-stop:always;background:var(--photo-empty) center/cover no-repeat}
+.fi-slide:first-child{background:transparent}
+.fi-carro::after{content:"";position:absolute;inset:0;pointer-events:none;background:linear-gradient(to top,rgba(0,0,0,.55),transparent 40%)}
+.fi-cont,.fi-google{position:absolute;bottom:14px;z-index:1;font-size:13px;color:var(--base);pointer-events:none}
+.fi-cont{right:20px;font-weight:600}
+.fi-google{left:20px;opacity:0;transition:opacity .2s}
+.fi-google.on{opacity:1}
+.fi-foto .fi-topo-veu{z-index:1;pointer-events:none}
+.fi-ver{position:fixed;inset:0;z-index:1000;background:#111;display:none}
+.fi-ver.on{display:block}
+.fi-ver-faixa{position:absolute;inset:0;display:flex;overflow-x:auto;scroll-snap-type:x mandatory;scrollbar-width:none;overscroll-behavior-x:none}
+.fi-ver-faixa::-webkit-scrollbar{display:none}
+.fi-ver-slide{flex:0 0 100%;height:100%;scroll-snap-align:start;scroll-snap-stop:always;background:center/contain no-repeat}
+.fi-ver-cont{position:absolute;top:calc(22px + env(safe-area-inset-top));left:0;right:0;z-index:1;text-align:center;font-size:13px;font-weight:600;color:var(--base);pointer-events:none}
+.fi-ver-x{position:absolute;top:calc(12px + env(safe-area-inset-top));right:16px;z-index:2;width:40px;height:40px;border:none;border-radius:50%;background:rgba(245,245,243,.16);color:var(--base);display:flex;align-items:center;justify-content:center;cursor:pointer}
+.fi-ver-x svg{width:20px;height:20px}
 /* Ficha única (e3–e5, C10, C12) */
 .fi-lista-rot{display:none;align-items:baseline;justify-content:space-between;margin:16px 0 8px;font-size:15px;font-weight:600;color:var(--ink)}
 .fi-lista-rot:not(:empty){display:flex}
@@ -4350,6 +4370,102 @@ function atualizarConversa(s){
   const el=document.getElementById('fiConversaN');if(el)el.textContent=n?String(n):'';
 }
 
+// ═══ VÁRIAS FOTOS NA FICHA (desenho C11/e7, 05/10) ═══
+// A Chu arrastava a foto pro lado esperando a próxima. Agora a foto do topo é
+// um carrossel de até 5: a que já está lá (a sua, se você subiu uma) e as do
+// Google. Cada foto do Google mostrada é cobrada, então só se baixa a que
+// está na tela e a seguinte — nunca as 5 de uma vez. A lista de fotos de cada
+// lugar vem de uma busca que o /api/places guarda por 7 dias, dividida entre
+// todo mundo, e fica na memória da sessão.
+const FOTOS_DO_LUGAR=new Map();
+const MAX_FOTOS=5;
+// A mesma foto chega por dois caminhos: o endereço do nosso proxy
+// (/api/place-photo?ref=places/X/photos/Y&w=800, com o ref codificado) e o do
+// Google direto. A chave é o "places/X/photos/Y" — a largura não conta.
+function chaveDaFoto(u){
+  const t=String(u||'');
+  if(!t)return '';
+  const q=t.indexOf('?');
+  if(q>=0){
+    try{const ref=new URLSearchParams(t.slice(q+1)).get('ref');if(ref)return ref}catch(e){}
+  }
+  let d=t;try{d=decodeURIComponent(t)}catch(e){}
+  const m=d.match(/places\/[^/?&]+\/photos\/[^/?&]+/);
+  return m?m[0]:t.split('?')[0];
+}
+function fotosDoLugar(sp){
+  const k=normName(sp.name)+'|'+normName(cityOf(sp)||sp.city||'');
+  if(FOTOS_DO_LUGAR.has(k))return FOTOS_DO_LUGAR.get(k);
+  const pr=(async()=>{
+    try{
+      const r=await googlePlaces('searchText',{method:'POST',
+        headers:{'Content-Type':'application/json','X-Goog-FieldMask':'places.displayName,places.photos'},
+        body:JSON.stringify({textQuery:sp.name+((cityOf(sp)||sp.city)?' '+(cityOf(sp)||sp.city):''),languageCode:'pt-BR',maxResultCount:3})});
+      const d=await r.json();
+      const best=pickBestPlaceMatch((d&&d.places)||[],sp.name);
+      const W=larguraNaTela();
+      return ((best&&best.photos)||[]).slice(0,MAX_FOTOS).map(ph=>({url:placePhotoUrl({photos:[ph]},W),chave:ph.name||''}));
+    }catch(e){return []}
+  })();
+  FOTOS_DO_LUGAR.set(k,pr);
+  return pr;
+}
+async function montarCarrossel(sp){
+  const caixa=document.querySelector('#place .fi-foto');if(!caixa||!sp)return;
+  caixa.querySelectorAll('.fi-carro').forEach(x=>x.remove());
+  if(!S.user)return;
+  const lista=await fotosDoLugar(sp);
+  if(S.curPlace!==sp)return;
+  caixa.querySelectorAll('.fi-carro').forEach(x=>x.remove());
+  // A 1ª é a que já está no topo (a sua foto, se você subiu uma); as outras
+  // são as do Google que ainda não apareceram.
+  const atual=chaveDaFoto(sp.photo_url||sp._fotoVista||'');
+  const vistas=new Set([atual]);
+  const extras=lista.filter(f=>{const k=chaveDaFoto(f.url);if(!k||vistas.has(k))return false;vistas.add(k);return true});
+  const fotos=[null].concat(extras).slice(0,MAX_FOTOS);
+  if(fotos.length<2)return;
+  const el=document.createElement('div');
+  el.className='fi-carro';
+  el.innerHTML='<div class="fi-faixa">'+fotos.map((f,i)=>'<div class="fi-slide" data-i="'+i+'"></div>').join('')+'</div>'
+    +'<span class="fi-google">Fotos do Google</span><span class="fi-cont">1 de '+fotos.length+'</span>';
+  caixa.querySelector('.place-hero-img').after(el);
+  const faixa=el.querySelector('.fi-faixa'),slides=[...el.querySelectorAll('.fi-slide')];
+  const cont=el.querySelector('.fi-cont'),google=el.querySelector('.fi-google');
+  const carregar=i=>{const f=fotos[i],d=slides[i];if(!f||!d||d.dataset.ok)return;d.dataset.ok='1';d.style.backgroundImage=cssUrl(safeUrl(f.url))};
+  let ultimo=0;
+  faixa.addEventListener('scroll',()=>{
+    const i=Math.round(faixa.scrollLeft/Math.max(1,faixa.clientWidth));
+    if(i===ultimo)return;ultimo=i;
+    carregar(i);carregar(i+1);
+    cont.textContent=(i+1)+' de '+fotos.length;
+    google.classList.toggle('on',i===fotos.length-1);
+  },{passive:true});
+  faixa.addEventListener('click',()=>abrirVisualizador(fotos.map((f,i)=>i===0?(sp.photo_url||sp._fotoVista||''):f.url),ultimo));
+  carregar(1);
+}
+// Tela cheia (fundo #111, a mesma rolagem, contador em cima, ✕; arrastar pra
+// baixo fecha). Usa as MESMAS URLs: o navegador já tem em cache as baixadas.
+function abrirVisualizador(urls,inicio){
+  const l=urls.filter(Boolean);if(!l.length)return;
+  let v=document.getElementById('fiVer');
+  if(!v){
+    v=document.createElement('div');v.id='fiVer';v.className='fi-ver';
+    v.innerHTML='<button class="fi-ver-x" aria-label="Fechar">'+icon('close')+'</button><span class="fi-ver-cont"></span><div class="fi-ver-faixa"></div>';
+    document.body.appendChild(v);
+    v.querySelector('.fi-ver-x').onclick=fecharVisualizador;
+    let y0=null;
+    v.addEventListener('touchstart',e=>{y0=e.touches[0].clientY},{passive:true});
+    v.addEventListener('touchend',e=>{if(y0!=null&&e.changedTouches[0].clientY-y0>80)fecharVisualizador();y0=null},{passive:true});
+  }
+  const faixa=v.querySelector('.fi-ver-faixa'),cont=v.querySelector('.fi-ver-cont');
+  faixa.innerHTML=l.map(u=>'<div class="fi-ver-slide" style="background-image:'+cssUrl(safeUrl(u))+'"></div>').join('');
+  const pinta=()=>{const i=Math.round(faixa.scrollLeft/Math.max(1,faixa.clientWidth));cont.textContent=(i+1)+' de '+l.length};
+  faixa.onscroll=pinta;
+  v.classList.add('on');
+  requestAnimationFrame(()=>{faixa.scrollLeft=(inicio||0)*faixa.clientWidth;pinta()});
+}
+function fecharVisualizador(){const v=document.getElementById('fiVer');if(v)v.classList.remove('on')}
+
 // ═══ FAIXA "SALVO" (05/10, desenho e6) ═══
 // Substitui o aviso de 3 segundos, que a Chu não via. Fica até a pessoa sair
 // da tela, rolar mais de 80px ou tocar nela. "Ver" abre onde o spot foi parar:
@@ -6562,6 +6678,7 @@ async function openPlace(id,origin){
   desenharFichaDoLugar(s);
   abrirComentarios(s.id,'placeComentarios',s.user_id||(S.user&&S.user.id));
   pintarDelesNaFicha(s);
+  montarCarrossel(s);
   renderPlaceSubcat();
   goTo('place');
   // DEPOIS de a tela existir na medida certa: textarea escondida tem
@@ -9080,6 +9197,7 @@ function abrirPreviaDoExplorar(i){
   limparCredito('placeFotoCredito');
   if(p.photo_author&&p.photo_author.nome)pintarCreditoSpot('placeFotoCredito',{photo_author:p.photo_author.nome,photo_author_url:p.photo_author.url||''});
   desenharFichaDoLugar(s);
+  montarCarrossel(s);
   // Nenhum status marcado: ainda não é seu.
   document.querySelectorAll('#place .fi-st').forEach(b=>b.classList.remove('on'));
   goTo('place');
@@ -14104,6 +14222,7 @@ function restaurarRolagem(r){
 }
 function goTo(id,manterRolagem){
   if(FAIXA.el&&FAIXA.tela!==id)esconderFaixaSalvo();
+  if(id!=='place')fecharVisualizador();
   const antes=document.querySelector('.screen.active');
   if(antes&&antes.id!==id)ROLAGEM[antes.id]={y:window.scrollY,dentro:rolagensDentro(antes)};
   const voltando=NAVEGACAO.length>1&&NAVEGACAO[NAVEGACAO.length-2]===id;

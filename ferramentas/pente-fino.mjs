@@ -49,7 +49,9 @@ function filtra(tab, qs) {
   return l;
 }
 const gPlace = (n, c) => ({ id: 'g' + n, displayName: { text: n }, formattedAddress: 'Rua 1, ' + c + ', Portugal', types: ['restaurant'], primaryType: 'restaurant',
-  addressComponents: [{ types: ['locality'], longText: c, shortText: c }, { types: ['country'], longText: 'Portugal', shortText: 'PT' }], location: { latitude: 38.7, longitude: -9.1 } });
+  addressComponents: [{ types: ['locality'], longText: c, shortText: c }, { types: ['country'], longText: 'Portugal', shortText: 'PT' }], location: { latitude: 38.7, longitude: -9.1 },
+  // 3 fotos por lugar: o carrossel da ficha (05/10) precisa delas pra montar.
+  photos: [1, 2, 3].map(k => ({ name: 'places/g' + n.replace(/W/g, '') + '/photos/p' + k, authorAttributions: [{ displayName: 'Autor ' + k }] })) });
 
 const b = await puppeteer.launch({ executablePath: 'C:/Program Files/Google/Chrome/Application/chrome.exe' });
 const pg = await b.newPage(); await pg.setViewport({ width: 390, height: 844, deviceScaleFactor: 1 });
@@ -135,6 +137,11 @@ await passoDe('perfil da Ana', `openFriend('${ANA}')`, 2000);
 await passoDe('ficha única: spot da Ana (e5)', `(async()=>{document.querySelectorAll('.overlay.show').forEach(o=>closeOv(o.id));const l=await plnSpotsDeles();FRIEND_CITY_SPOTS=l.filter(x=>x.id==='a4');abrirSpotDoAmigo(0)})()`, 2000);
 await passoDe('ficha única: voltar', `backFromPlace()`);
 await passoDe('ficha única: spot que é meu (e4)', `(async()=>{const l=await plnSpotsDeles();FRIEND_CITY_SPOTS=l.filter(x=>x.id==='r1');abrirSpotDoAmigo(0)})()`, 2000);
+console.log('  slides:', await pg.evaluate(() => document.querySelectorAll('#place .fi-slide').length));
+await passoDe('carrossel: 2a foto', `(()=>{const f=document.querySelector('#place .fi-faixa');f.scrollLeft=f.clientWidth;f.dispatchEvent(new Event('scroll'))})()`);
+console.log('  contador:', await pg.evaluate(() => (document.querySelector('#place .fi-cont')||{}).textContent));
+await passoDe('carrossel: tela cheia', `document.querySelector('#place .fi-faixa').click()`);
+await passoDe('carrossel: fechar', `fecharVisualizador()`);
 await passoDe('ficha única: voltar 2', `backFromPlace()`);
 await passoDe('planejar com Ana', `plnDoAmigo()`, 1200);
 await passoDe('voltar ao perfil', `plnVoltar()`);
