@@ -2604,7 +2604,7 @@ body.exm .exm-filtros{position:relative;z-index:1}
 
 <!-- TODOS OS SEUS SPOTS (Perfil v5): a antiga "Meus spots", com busca. -->
 <div class="screen" id="meusspots">
-  <div class="at-topo"><button class="at-voltar" onclick="goTo('profile');loadProfile()" data-ic="back" aria-label="Voltar"></button><h1>Todos os seus spots</h1><span></span></div>
+  <div class="at-topo"><button class="at-voltar" onclick="voltarDosMeusSpots()" data-ic="back" aria-label="Voltar"></button><h1>Todos os seus spots</h1><span></span></div>
   <div class="profile-body">
     <label class="am-cid-busca ms-busca"><span class="am-cid-lupa" data-ic="search"></span><input id="msBusca" type="text" placeholder="Qual era aquele lugar?" autocomplete="off" autocorrect="off" spellcheck="false" oninput="msBuscar(this.value)"></label>
     <div class="pf-seg" id="mlStatus"></div>
@@ -2914,6 +2914,38 @@ body.exm .exm-filtros{position:relative;z-index:1}
 </div>
 
 <script>
+/* ═══ O SPOT É SÓ O APP (05/10) ═══
+   Decisão do Lucas: ninguém usa o Spot pelo navegador. Aberto FORA do app
+   (Safari, atalho na tela de início, computador), esta página vira um aviso
+   com o link da App Store, e o resto do script nem roda.
+
+   Como se sabe que está dentro do app: a casca injeta
+   window.enderecoDeVoltaDoLogin ANTES da página carregar (todas as builds
+   desde 27/09) e o próprio WebView expõe window.ReactNativeWebView.
+
+   Continuam abrindo no navegador:
+   · confirmação de cadastro e troca de senha — o link chega por e-mail e abre
+     no Safari, e sem isto ninguém confirmaria a conta nem trocaria a senha;
+   · outros endereços do site (lista /l/, convite /c/, /sobre, /privacidade)
+     — não passam por este arquivo;
+   · teste local (localhost) e os testes automáticos (sem endereço). */
+(function soNoApp(){
+  try{
+    const host=String((location&&location.hostname)||'');
+    if(!/(^|\.)meuspot\.app$|\.pages\.dev$/.test(host))return;
+    if(window.ReactNativeWebView||window.enderecoDeVoltaDoLogin)return;
+    const h=String(location.hash||''),q=String(location.search||'');
+    if(/type=(recovery|signup|invite|magiclink|email_change)|access_token=|error_description=/.test(h+q))return;
+    window.__soNoApp=true;
+    document.documentElement.innerHTML='<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Spot</title>'
+      +'<style>body{margin:0;min-height:100vh;display:grid;place-items:center;background:#F5F5F3;color:#111;font-family:"Inter Tight",system-ui,-apple-system,sans-serif;text-align:center;padding:24px;box-sizing:border-box}'
+      +'img{width:88px;height:88px;border-radius:20px}h1{margin:20px 0 8px;font-size:26px;letter-spacing:-.03em}p{margin:0 0 24px;color:#6B6B67;font-size:16px;line-height:1.45}'
+      +'a{display:inline-block;padding:14px 22px;border-radius:10px;background:#0B3D2E;color:#F5F5F3;font-weight:600;text-decoration:none}</style></head>'
+      +'<body><div><img src="/icon-192.png" alt=""><h1>O Spot é um app</h1><p>Seus lugares e os dos seus amigos ficam no app.<br>Baixe na App Store pra entrar.</p>'
+      +'<a href="https://apps.apple.com/br/app/id6814856044">Baixar na App Store</a></div></body>';
+    throw new Error('__so_no_app__');
+  }catch(e){if(e&&e.message==='__so_no_app__')throw e}
+})();
 /* ═══ O APP CONTA OS PRÓPRIOS ERROS (01/10) ═══
    Erro de JavaScript, promessa sem tratamento e console.error vão pra
    /api/erro, que agrupa por dia e avisa o Lucas no celular quando aparece um
@@ -6599,10 +6631,9 @@ function darDadosDeViagens(){
 
 window.darDadosDeViagens=darDadosDeViagens;
 // O "spots" do placar (site e app) abre os Meus spots do Perfil.
-function abrirMeusSpots(){
-  goTo('profile');loadProfile();
-  requestAnimationFrame(()=>{const el=document.getElementById('mlStatus');if(el)el.scrollIntoView({block:'start'})});
-}
+// Abre a lista "Todos os seus spots" direto (o Lucas, 05/10: levar pro Perfil
+// era ruim). Página própria de spots: pedida ao Claude Design.
+function abrirMeusSpots(){MS_VOLTA='dashboard';abrirTodosOsSpots()}
 window.acaoDeViagens=function(acao,valor){
   if(acao==='lista'&&valor==='spots'){abrirMeusSpots();return}
   if(acao==='regiao'){trocarRegiao(valor);darDadosDeViagens();return}
@@ -13979,7 +14010,10 @@ function renderPerfil(){
   const el=document.getElementById('profName');if(el)el.textContent=nome;
   renderProximas();renderTop();pintarRodapeDoPerfil();
 }
+// Pra onde o voltar da lista leva: a tela de onde ela foi aberta.
+let MS_VOLTA='profile';
 function abrirTodosOsSpots(){ML_TUDO=true;goTo('meusspots');renderEstante()}
+function voltarDosMeusSpots(){const v=MS_VOLTA;MS_VOLTA='profile';if(v==='dashboard'){goTo('dashboard');loadDashboard()}else{goTo('profile');loadProfile()}}
 let MS_BUSCA='';
 function msBuscar(v){MS_BUSCA=String(v||'');renderEstante()}
 function pintarRodapeDoPerfil(){
