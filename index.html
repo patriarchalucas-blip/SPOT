@@ -858,6 +858,34 @@ input,textarea,select{font-size:max(16px,1em)!important}
 .ex-sug b{display:block;font-size:16px;font-weight:600;color:var(--ink)}
 .ex-sug span{display:block;font-size:13px;color:var(--ink2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .ex-sug-titulo{padding:6px 16px 2px;font-size:13px;color:var(--ink3)}
+/* Sugestões em dois grupos (05/10, desenho e1–e2) */
+/* Com o mapa ligado, o campo divide a linha com Mapa | Lista: a lista de
+   sugestões ocupa a largura toda da tela, não só a do campo. */
+.exm #explore .ex-sugestoes{right:auto;width:calc(100vw - 40px)}
+.ex-sg-grupo{padding:10px 16px 4px;font-size:14px;font-weight:600;color:var(--ink2)}
+.ex-sg{display:flex;align-items:center;gap:12px;width:100%;min-height:56px;padding:6px 16px;border:none;background:none;text-align:left;font:inherit;cursor:pointer}
+.ex-sg:active{background:var(--base)}
+.ex-sg-foto{flex:none;width:44px;height:44px;border-radius:10px;background:var(--photo-empty) center/cover no-repeat}
+.ex-sg-ic{background:var(--base);display:flex;align-items:center;justify-content:center;color:var(--ink2)}
+.ex-sg-ic svg{width:20px;height:20px}
+.ex-sg-txt{flex:1;min-width:0;display:flex;flex-direction:column;gap:2px}
+.ex-sg-txt b{font-size:16px;font-weight:600;color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ex-sg-txt span{font-size:14px;color:var(--ink2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ex-sg-st{flex:none;font-size:14px;color:var(--ink2)}
+.ex-sg-st.meu{font-weight:600;color:var(--green)}
+.ex-sg-nada{padding:12px 16px;font-size:15px;color:var(--ink2)}
+/* Faixa "Salvo" (e6) */
+.faixa-salvo{position:fixed;left:12px;right:12px;bottom:calc(90px + env(safe-area-inset-bottom));z-index:900;min-height:60px;box-sizing:border-box;
+  display:flex;align-items:center;gap:12px;padding:10px 16px;border-radius:14px;background:var(--green);color:var(--base);
+  transform:translateY(16px);opacity:0;pointer-events:none;transition:transform .2s,opacity .2s}
+.faixa-salvo.on{transform:none;opacity:1;pointer-events:auto}
+.faixa-salvo.sem-barra{bottom:calc(34px + env(safe-area-inset-bottom))}
+.fx-check{flex:none;width:24px;height:24px;border-radius:50%;background:var(--base);color:var(--green);display:flex;align-items:center;justify-content:center}
+.fx-check svg{width:15px;height:15px}
+.fx-txt{flex:1;min-width:0;display:flex;flex-direction:column;gap:1px}
+.fx-txt b{font-size:16px;font-weight:600}
+.fx-txt span{font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.fx-ver{flex:none;border:none;background:none;padding:6px 0 6px 8px;font:inherit;font-size:15px;font-weight:600;color:var(--base);cursor:pointer}
 .coz-linha{display:flex;justify-content:space-between;align-items:baseline;padding:16px 20px 0}
 .coz-atual{display:flex;align-items:baseline;gap:6px;min-height:44px;padding:0;background:none;border:none;cursor:pointer;
   font-size:20px;font-weight:600;letter-spacing:-.02em;color:var(--ink)}
@@ -2329,7 +2357,7 @@ body.exm .exm-filtros{position:relative;z-index:1}
     <div class="dash-top-row"><div><div class="dash-hello">Explorar</div><div class="dash-name" style="font-size:26px">Tendências por lugar</div></div></div>
     <div class="ex-abas" id="exploreAbas"></div>
     <div class="search-wrap" style="padding:0;display:flex;gap:8px;align-items:center">
-      <div class="search-field" style="flex:1"><span class="si" data-ic="search"></span><input class="search-input" autocomplete="off" autocorrect="off" spellcheck="false" id="exploreCitySearch" placeholder="Cidade, bairro ou rua" enterkeyhint="search" autocomplete="off" onkeydown="if(event.key==='Enter'){fecharSugestoes();runExplore()}" oninput="sugerirLugar(this.value)" onfocus="this.select();sugerirLugar(this.value)" onblur="setTimeout(fecharSugestoes,200)"><button class="ex-limpar" onclick="limparBuscaDoExplorar()" aria-label="Limpar busca">×</button><div class="ex-sugestoes" id="exploreSugestoes" style="display:none"></div></div>
+      <div class="search-field" style="flex:1"><span class="si" data-ic="search"></span><input class="search-input" autocomplete="off" autocorrect="off" spellcheck="false" id="exploreCitySearch" placeholder="Spot, cidade, bairro ou rua" enterkeyhint="search" autocomplete="off" onkeydown="if(event.key==='Enter'){fecharSugestoes();runExplore()}" oninput="sugerirLugar(this.value)" onfocus="this.select();sugerirLugar(this.value)" onblur="setTimeout(fecharSugestoes,200)"><button class="ex-limpar" onclick="limparBuscaDoExplorar()" aria-label="Limpar busca">×</button><div class="ex-sugestoes" id="exploreSugestoes" style="display:none"></div></div>
       <button class="req-btn req-accept" style="height:48px;padding:0 16px" onclick="runExplore()">Ir</button>
     </div>
   </div>
@@ -2538,7 +2566,7 @@ body.exm .exm-filtros{position:relative;z-index:1}
     <!-- O STATUS é a primeira decisão da tela, então vem antes de tudo que
          depende dele. Era uma pastilha na foto e um segmentado lá embaixo,
          os dois mexendo na mesma coisa. -->
-    <div class="fi-previa-dica">Salvar na sua lista</div>
+    <div class="fi-previa-dica">Salvar como</div>
     <div class="fi-status">
       <button class="fi-st" id="t-want" onclick="setStatus('want')">Quero ir</button>
       <button class="fi-st" id="t-been" onclick="setStatus('been')">Fui</button>
@@ -4253,6 +4281,45 @@ function mostrarViagemQueVirou(t){
     +' ganha cor no seu mapa, e seus amigos passam a ver o que você marcou como Fui.';
   showOv('ov-virou');
   return true;
+}
+
+// ═══ FAIXA "SALVO" (05/10, desenho e6) ═══
+// Substitui o aviso de 3 segundos, que a Chu não via. Fica até a pessoa sair
+// da tela, rolar mais de 80px ou tocar nela. "Ver" abre onde o spot foi parar:
+// a cidade, ou a próxima viagem.
+let FAIXA={el:null,y:0,spot:null,tela:''};
+function mostrarFaixaSalvo(status,spot){
+  if(!spot||!spot.id)return;
+  const t=(S.trips||[]).find(x=>x.id===spot.trip_id)||null;
+  // O objeto que vale é o de S.trips (o loadDashboard troca tudo).
+  const meu=t&&(t._spots||[]).find(x=>x.id===spot.id)||spot;
+  const cidade=cityOf(meu)||meu.city||'';
+  const proxima=t&&viagemPlanejada(t);
+  const n=t?(t._spots||[]).filter(x=>!cidade||cityOf(x)===cidade).length:0;
+  const sub=proxima?'Em Próximas viagens · '+t.name:(cidade?'Em '+cidade+(n?' · '+n+(n===1?' spot':' spots'):''):(t?'Em '+t.name:''));
+  if(!FAIXA.el){
+    const el=document.createElement('div');
+    el.className='faixa-salvo';el.id='faixaSalvo';
+    el.innerHTML='<span class="fx-check">'+icon('check')+'</span><span class="fx-txt"><b id="fxTit"></b><span id="fxSub"></span></span><button class="fx-ver" id="fxVer">Ver</button>';
+    el.addEventListener('click',e=>{if(e.target&&e.target.id==='fxVer'){const sp=FAIXA.spot;esconderFaixaSalvo();verOndeFoiSalvo(sp)}else esconderFaixaSalvo()});
+    document.body.appendChild(el);FAIXA.el=el;
+    window.addEventListener('scroll',()=>{if(FAIXA.el&&FAIXA.el.classList.contains('on')&&Math.abs(window.scrollY-FAIXA.y)>80)esconderFaixaSalvo()},{passive:true});
+  }
+  document.getElementById('fxTit').textContent={been:'Salvo como Fui',skip:'Salvo como Não recomendo'}[status]||'Salvo como Quero ir';
+  document.getElementById('fxSub').textContent=sub;
+  FAIXA.spot=meu;FAIXA.y=window.scrollY;
+  const ativa=document.querySelector('.screen.active');FAIXA.tela=ativa?ativa.id:'';
+  FAIXA.el.classList.toggle('sem-barra',FAIXA.tela==='place');
+  FAIXA.el.classList.add('on');
+}
+function esconderFaixaSalvo(){if(FAIXA.el)FAIXA.el.classList.remove('on')}
+function verOndeFoiSalvo(sp){
+  if(!sp)return;
+  const t=(S.trips||[]).find(x=>x.id===sp.trip_id);if(!t)return;
+  S.curTrip=t;S.addTrip=t;
+  if(viagemPlanejada(t)){openTrip(t.id);return}
+  const c=cityOf(sp);
+  loadTrip(t).then(()=>{if(c)openCityScreen(c);else goTo('trip')});
 }
 
 // ═══ INIT ═══
@@ -7161,7 +7228,10 @@ function lugarDoGoogle(p,texto){
 // qual "Itapura" é, em vez de o app adivinhar. Com o campo vazio (ou menos de 3
 // letras), mostra as últimas buscas. /api/lugar guarda as respostas, então a
 // mesma palavra digitada por duas pessoas é paga uma vez só.
-const SUG={lista:[],modo:'',timer:null,req:0};
+const SUG={lista:[],spots:[],modo:'',timer:null,req:0};
+// Spots dos amigos pra "Ana foi" na linha da sugestão (os mesmos do Planejar,
+// guardados 2 min). Pedidos na primeira letra digitada, nunca antes.
+let SUG_DELES=null,SUG_DELES_PEDIDO=false;
 const CHAVE_RECENTES='spot_explorar_recentes_v1';
 function lerRecentes(){try{const l=JSON.parse(localStorage.getItem(CHAVE_RECENTES)||'[]');return Array.isArray(l)?l:[]}catch(e){return[]}}
 function guardarRecente(item){
@@ -7185,26 +7255,76 @@ function sugerirLugar(v){
   const t=String(v||'').trim();
   if(t.length<3){
     const rec=lerRecentes();
-    SUG.lista=rec;SUG.modo=rec.length?'recentes':'';
+    SUG.lista=rec;SUG.spots=[];SUG.modo=rec.length?'recentes':'';
     pintarSugestoes();return;
   }
-  // 450 ms entre letras: cada pausa curta era uma consulta (e uma gravação na
+  if(!SUG_DELES_PEDIDO&&S.user){SUG_DELES_PEDIDO=true;plnSpotsDeles().then(l=>{SUG_DELES=l||[];if(SUG.modo==='sugestoes')pintarSugestoes()}).catch(()=>{SUG_DELES=[]})}
+  // 300 ms entre letras: cada pausa curta é uma consulta (e uma gravação na
   // memória do servidor), e ninguém lê a lista no meio de uma palavra.
   SUG.timer=setTimeout(async()=>{
     const meu=++SUG.req;
     const d=await pedirLugar({op:'sugerir',texto:t});
     if(meu!==SUG.req)return;
-    SUG.lista=(d&&d.sugestoes)||[];SUG.modo=SUG.lista.length?'sugestoes':'';
+    SUG.lista=(d&&d.sugestoes)||[];SUG.spots=(d&&d.spots)||[];SUG.texto=t;
+    // Resposta sem nada nos dois grupos diz isso; erro de rede não diz nada.
+    SUG.modo=(SUG.lista.length||SUG.spots.length)?'sugestoes':(d&&(d.sugestoes||d.spots)?'nada':'');
     pintarSugestoes();
-  },450);
+  },300);
 }
-function fecharSugestoes(){SUG.req++;clearTimeout(SUG.timer);SUG.lista=[];SUG.modo='';pintarSugestoes()}
+function fecharSugestoes(){SUG.req++;clearTimeout(SUG.timer);SUG.lista=[];SUG.spots=[];SUG.modo='';pintarSugestoes()}
+// O quanto o título bate com o que foi digitado: igual 3, começa com 2, contém 1.
+function notaDoTexto(titulo,texto){
+  const a=normName(titulo),b=normName(texto);
+  if(!a||!b)return 0;
+  return a===b?3:a.startsWith(b)?2:a.includes(b)?1:0;
+}
+const TIPO_EM_PT={restaurant:'Restaurante',cafe:'Café',coffee_shop:'Café',bar:'Bar',bakery:'Padaria',
+  ice_cream_shop:'Sorveteria',pizza_restaurant:'Pizzaria',brazilian_restaurant:'Restaurante',japanese_restaurant:'Restaurante japonês',
+  italian_restaurant:'Restaurante italiano',hotel:'Hotel',lodging:'Hospedagem',hostel:'Hostel',museum:'Museu',park:'Parque',
+  tourist_attraction:'Atração turística',shopping_mall:'Shopping',night_club:'Balada',art_gallery:'Galeria',
+  beach:'Praia',church:'Igreja',book_store:'Livraria',store:'Loja',food:'Gastronomia'};
+function tipoDaSugestao(x){for(const t of (x.tipos||[]))if(TIPO_EM_PT[t])return TIPO_EM_PT[t];return ''}
+// "Você quer ir" / "Você foi" / "Ana foi", quando o spot já existe pra você
+// ou pra um amigo. Mesmo nome e a cidade do spot dentro do endereço sugerido.
+function statusDaSugestao(x){
+  const sub=normName(x.sub||'');
+  const cabe=sp=>mesmoLugar(sp.name,x.titulo)&&(!cityOf(sp)||sub.includes(normName(cityOf(sp))));
+  const meu=allSpotsFlat().find(cabe);
+  if(meu)return{txt:meu.status==='want'?'Você quer ir':'Você foi',meu:true,spot:meu};
+  const dele=(SUG_DELES||[]).find(sp=>sp.status==='been'&&cabe(sp));
+  if(dele)return{txt:plnPrimeiro(dele.user_id)+' foi',meu:false,spot:dele};
+  return null;
+}
+function linhaDeSpotSugerido(x,i){
+  const st=statusDaSugestao(x);
+  const foto=st&&st.spot&&st.spot.photo_url?' style="background-image:'+cssUrl(fotoNaLargura(st.spot.photo_url,120))+'"':'';
+  const tipo=tipoDaSugestao(x);
+  return '<button class="ex-sg" onmousedown="event.preventDefault()" onclick="escolherSpotSugerido('+i+')">'
+    +'<span class="ex-sg-foto'+(foto?'':' ex-sg-ic')+'"'+foto+'>'+(foto?'':icon(categoriaDoLugar(x.tipos)==='hotel'?'hotel':categoriaDoLugar(x.tipos)==='food'?'food':'compass'))+'</span>'
+    +'<span class="ex-sg-txt"><b>'+esc(x.titulo)+'</b><span>'+esc([tipo,x.sub].filter(Boolean).join(' · '))+'</span></span>'
+    +(st?'<span class="ex-sg-st'+(st.meu?' meu':'')+'">'+esc(st.txt)+'</span>':'')+'</button>';
+}
+function linhaDeLugarSugerido(x,i){
+  return '<button class="ex-sg" onmousedown="event.preventDefault()" onclick="escolherSugestao('+i+')">'
+    +'<span class="ex-sg-foto ex-sg-ic">'+icon('pin')+'</span>'
+    +'<span class="ex-sg-txt"><b>'+esc(x.titulo)+'</b>'+(x.sub?'<span>'+esc(x.sub)+'</span>':'')+'</span></button>';
+}
 function pintarSugestoes(){
   const box=document.getElementById('exploreSugestoes');
   if(box){
     if(!SUG.modo){box.style.display='none';box.innerHTML=''}
     else{
-      box.innerHTML=(SUG.modo==='recentes'?'<div class="ex-sug-titulo">Buscas recentes</div>':'')
+      if(SUG.modo==='nada')box.innerHTML='<div class="ex-sg-nada">Nada com esse nome</div>';
+      else if(SUG.modo==='sugestoes'){
+        // Até 3 de cada. Vem primeiro o grupo do resultado que mais bate com o
+        // texto; no empate, Spots — é o que a pessoa costuma digitar (e1).
+        const sp=(SUG.spots||[]).slice(0,3),lu=SUG.lista.slice(0,3);
+        const melhor=l=>Math.max(0,...l.map(x=>notaDoTexto(x.titulo,SUG.texto)));
+        const gS=sp.length?'<div class="ex-sg-grupo">Spots</div>'+sp.map(linhaDeSpotSugerido).join(''):'';
+        const gL=lu.length?'<div class="ex-sg-grupo">Lugares</div>'+lu.map(linhaDeLugarSugerido).join(''):'';
+        box.innerHTML=(sp.length&&melhor(sp)>=melhor(lu))?gS+gL:gL+gS;
+      }
+      else box.innerHTML='<div class="ex-sug-titulo">Buscas recentes</div>'
         +SUG.lista.map((x,i)=>'<button class="ex-sug" onmousedown="event.preventDefault()" onclick="escolherSugestao('+i+')"><b>'+esc(x.titulo)+'</b>'+(x.sub?'<span>'+esc(x.sub)+'</span>':'')+'</button>').join('');
       box.style.display='';
     }
@@ -7229,6 +7349,34 @@ async function escolherSugestao(i){
   }
   if(meu!==ESCOLHA_REQ)return;
   runExplore('',lugar);
+}
+// Tocar num SPOT da lista abre a ficha dele (e3–e5). Seu: a sua ficha. Novo:
+// a prévia, com "Salvar como" — uma busca de 1 lugar, guardada pelo
+// /api/places como as outras.
+async function escolherSpotSugerido(i){
+  const x=(SUG.spots||[])[i];if(!x)return;
+  const meu=++ESCOLHA_REQ;
+  fecharSugestoes();
+  const campo=document.getElementById('exploreCitySearch');if(campo)campo.blur();
+  const st=statusDaSugestao(x);
+  if(st&&st.meu){openPlace(st.spot.id,'explore');return}
+  let p=null;
+  try{
+    const r=await googlePlaces('searchText',{method:'POST',
+      headers:{'Content-Type':'application/json','X-Goog-FieldMask':CAMPOS_DO_EXPLORAR.replace(',nextPageToken','')+',places.primaryType'},
+      body:JSON.stringify({textQuery:x.titulo+(x.sub?', '+x.sub:''),languageCode:'pt-BR',maxResultCount:1})});
+    const d=await r.json();
+    p=d&&d.places&&d.places[0];
+  }catch(e){}
+  if(meu!==ESCOLHA_REQ)return;
+  if(!p){toast('Não abriu','Confere a conexão e tenta de novo.','alert');return}
+  const item=lugarDoExplorar(p);
+  // Lugar sem avaliação: lugarDoExplorar faz String(undefined) (a lista do
+  // Explorar só traz lugar avaliado, a busca por nome não).
+  if(!(Number(p.rating)>0))item.rating='';
+  item._cat=categoriaDoLugar(p.types,p.primaryType);
+  EXPLORE.avulso=item;
+  abrirPreviaDoExplorar('avulso');
 }
 function limparBuscaDoExplorar(){
   const campo=document.getElementById('exploreCitySearch');
@@ -7817,7 +7965,7 @@ function statusNaMinhaLista(p){
 // O ⊕: direto pra Quero ir, sem folha nenhuma.
 function queroIrDoExplorar(i){return salvarDoExplorar(i,'want')}
 async function salvarDoExplorar(i,status){
-  const p=EXPLORE.items[i];if(!p||p._salvando)return null;
+  const p=itemDoExplorar(i);if(!p||p._salvando)return null;
   if(statusNaMinhaLista(p)){toast('Já está na sua lista',p.name,'check');return null}
   p._salvando=true;renderExploreResults();
   // Instagram achado na prévia vai junto.
@@ -7827,12 +7975,13 @@ async function salvarDoExplorar(i,status){
   const lugar={name:p.name,meta:p.address,address:p.address,city:p.city,country:p.country,
     subcat:p.subcat||'',phone:p.phone||'',photo_url:p.photo_url,photo_author:p.photo_author,
     rating_google:p.rating,website_url:(prev&&prev.website_url)||p.website_url,maps_url:p.maps_url,lat:p.lat,lng:p.lng};
-  const data=await salvarSpotDireto(lugar,EXPLORE.cat,status,'');
+  const data=await salvarSpotDireto(lugar,p._cat||EXPLORE.cat,status,'');
   p._salvando=false;
   if(!data||data==='sem_pais'){renderExploreResults();toast('Não salvou','Confere a conexão e tenta de novo.','alert');return null}
   renderExploreResults();
-  toast({been:'Salvo em Fui',skip:'Salvo em Não recomendo'}[status]||'Salvo em Quero ir',p.name,'check');
-  loadDashboard();
+  // A faixa verde no lugar do aviso de 3 s (e6): fica até a pessoa sair.
+  await loadDashboard();
+  mostrarFaixaSalvo(status,data);
   return data;
 }
 // Resultado do Explorar vira card com foto, na mesma linguagem do feed.
@@ -8205,7 +8354,7 @@ function exmMontar(){
   document.body.classList.add('exm');
   const busca=document.querySelector('#explore .search-wrap');
   const campo=document.getElementById('exploreCitySearch');
-  if(campo)campo.placeholder='Rua, bairro ou cidade';
+  if(campo)campo.placeholder='Spot, rua, bairro ou cidade';
   const seg=document.createElement('div');
   seg.className='exm-seg';seg.id='exmSeg';
   seg.innerHTML='<button data-m="mapa" onclick="exmModo(\'mapa\')">Mapa</button><button data-m="lista" onclick="exmModo(\'lista\')">Lista</button>';
@@ -8799,11 +8948,14 @@ function renderExploreResults(){
 // antes de salvar (pedido do Lucas, 25/09). É a mesma ficha dos seus spots, em
 // modo prévia: sem nota, sem comentários e sem menu, e os três status viram os
 // botões de salvar. Salvou, a ficha vira a do seu spot de verdade.
+// O spot aberto pela busca (EXPLORE.avulso) não está na lista: o índice dele é
+// 'avulso', e a categoria vem dele, não da aba do Explorar.
+function itemDoExplorar(i){return i==='avulso'?EXPLORE.avulso:EXPLORE.items[i]}
 function abrirPreviaDoExplorar(i){
-  const p=EXPLORE.items[i];if(!p)return;
+  const p=itemDoExplorar(i);if(!p)return;
   const meu=allSpotsFlat().find(x=>mesmoLugar(x.name,p.name)&&(!p.city||!cityOf(x)||mesmoLugar(cityOf(x),p.city)));
   if(meu){openPlace(meu.id,'explore');return}
-  const s={id:'previa',_previa:true,_i:i,name:p.name,category:EXPLORE.cat,city:p.city,
+  const s={id:'previa',_previa:true,_i:i,name:p.name,category:p._cat||EXPLORE.cat,city:p.city,
     address:p.address,phone:p.phone||'',website_url:p.website_url||'',maps_url:p.maps_url||'',
     rating_google:p.rating?fmtRating(p.rating):'',photo_url:p.photo_url||'',lat:p.lat,lng:p.lng,
     status:null,my_rating:null,subcategory:null,opening_hours:null,price_level:null};
@@ -8821,7 +8973,7 @@ function abrirPreviaDoExplorar(i){
 async function salvarPreviaDoExplorar(status){
   const s=S.curPlace;if(!s||!s._previa)return;
   const data=await salvarDoExplorar(s._i,status);
-  if(data&&S.curPlace===s)openPlace(data.id,'explore');
+  if(data&&S.curPlace===s){openPlace(data.id,'explore');mostrarFaixaSalvo(status,data)}
 }
 // A FOTO do card: pergunta só o que importa — quero ir ou já fui — e salva.
 // Perguntar a viagem aqui não fazia sentido (a viagem sai do próprio lugar),
@@ -13818,6 +13970,7 @@ function restaurarRolagem(r){
   aplicar();requestAnimationFrame(aplicar);setTimeout(aplicar,150);
 }
 function goTo(id,manterRolagem){
+  if(FAIXA.el&&FAIXA.tela!==id)esconderFaixaSalvo();
   const antes=document.querySelector('.screen.active');
   if(antes&&antes.id!==id)ROLAGEM[antes.id]={y:window.scrollY,dentro:rolagensDentro(antes)};
   const voltando=NAVEGACAO.length>1&&NAVEGACAO[NAVEGACAO.length-2]===id;

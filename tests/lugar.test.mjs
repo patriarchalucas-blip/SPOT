@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert';
-import { onRequestPost, organizarSugestoes, idValido } from '../functions/api/lugar.js';
+import { onRequestPost, organizarSugestoes, organizarSpots, idValido } from '../functions/api/lugar.js';
 
 // Sugestões de lugar no Explorar (27/09): "Itapura" é a cidade OU a rua.
 
@@ -44,7 +44,8 @@ test('a mesma palavra e paga uma vez so, e vem a rua e a cidade', async () => {
     assert.strictEqual(r1.sugestoes.length, 2);
     assert.strictEqual(r1.sugestoes[0].titulo, 'Rua Itapura');
     assert.deepStrictEqual(r2, r1);
-    assert.strictEqual(google, 1, 'pagou duas vezes a mesma palavra');
+    // Dois pedidos na primeira vez (lugares + spots), nenhum na segunda.
+    assert.strictEqual(google, 2, 'pagou duas vezes a mesma palavra');
   } finally { globalThis.fetch = antigo }
 });
 
@@ -59,4 +60,35 @@ test('sem filtro do Google, estabelecimento fica de fora da lista', () => {
 test('id de lugar invalido e recusado', () => {
   assert.strictEqual(idValido('../../etc'), false);
   assert.strictEqual(idValido('ChIJ0WGkg4FEzpQRrlsz_whLqZs'), true);
+});
+
+test('nome de restaurante vem no grupo Spots, e cidade no grupo Lugares (05/10)', async () => {
+  const { env } = ambiente();
+  const antigo = globalThis.fetch;
+  globalThis.fetch = async (u, o) => {
+    const s = String(u);
+    if (s.includes('/auth/v1/user')) return new Response(JSON.stringify({ id: 'eu' }), { status: 200 });
+    if (s.includes('places:autocomplete')) {
+      const corpo = JSON.parse(o.body);
+      const tipo = (corpo.includedPrimaryTypes || [])[0];
+      if (tipo === 'establishment') return new Response(JSON.stringify({ suggestions: [
+        PRED('ChIJmani_restaurante1', 'Maní', 'Rua Joaquim Antunes, Jardins, São Paulo', ['restaurant', 'food', 'establishment'])] }), { status: 200 });
+      return new Response(JSON.stringify({ suggestions: [
+        PRED('ChIJmanila_cidade_001', 'Manila', 'Filipinas', ['locality', 'political', 'geocode'])] }), { status: 200 });
+    }
+    return new Response('{}', { status: 200 });
+  };
+  try {
+    const r = await (await onRequestPost({ request: pedido({ op: 'sugerir', texto: 'Mani' }), env, waitUntil: () => {} })).json();
+    assert.deepStrictEqual(r.sugestoes.map(x => x.titulo), ['Manila']);
+    assert.deepStrictEqual(r.spots.map(x => x.titulo), ['Maní']);
+    assert.ok(r.spots[0].tipos.includes('restaurant'));
+  } finally { globalThis.fetch = antigo }
+});
+
+test('sem filtro do Google, cidade nao entra no grupo Spots', () => {
+  const l = organizarSpots([
+    PRED('ChIJhospital_000001', 'Hospital Santa Casa', 'São Paulo', ['hospital', 'establishment']),
+    PRED('ChIJcidade_sp_00001', 'São Paulo', 'SP, Brasil', ['locality', 'political'])], true);
+  assert.deepStrictEqual(l.map(x => x.titulo), ['Hospital Santa Casa']);
 });

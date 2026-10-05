@@ -69,6 +69,11 @@ pg.on('request', r => {
   if (/supabase\.co\/(auth|storage)/.test(u)) return r.respond({ status: 200, contentType: 'application/json', body: '{}' });
   if (u.includes('/api/places')) { let q = ''; try { q = JSON.parse(r.postData() || '{}').textQuery || '' } catch (e) {} return r.respond({ status: 200, contentType: 'application/json', body: JSON.stringify({ places: q ? (/xyzzy/i.test(q)?[gPlace('Farmácia Central','Porto')]:[gPlace(q.split(',')[0], /Porto/.test(q)?'Porto':'Lisboa')]) : [] }) }) }
   if (u.includes('/api/importar')) { if (r.method()==='GET') return r.respond({status:200,contentType:'application/json',body:JSON.stringify({ligado:true})}); return r.respond({status:200,contentType:'application/json',body:JSON.stringify({lugares:[{texto:'taberna da rua das flores',nome:'Taberna da Rua das Flores',cidade:'Lisboa',pais:'Portugal',status:'been'},{texto:'pasteis de belem (amei)',nome:'Pastéis de Belém',cidade:'Lisboa',pais:'Portugal',status:'been'},{texto:'livraria lello',nome:'Livraria Lello',cidade:'Porto',pais:'Portugal',status:'want'},{texto:'o bar xyzzy do joão',nome:'Bar Xyzzy',cidade:'Porto',pais:'Portugal',status:'want'}]})}) }
+  // Sugestões do Explorar em dois grupos (05/10): "Mani" acha o restaurante e a cidade.
+  if (u.includes('/api/lugar')) return r.respond({ status: 200, contentType: 'application/json', body: JSON.stringify({
+    sugestoes: [{ id: 'ChIJmanila_cidade_001', titulo: 'Manila', sub: 'Filipinas' }],
+    spots: [{ id: 'ChIJmani_restaurante1', titulo: 'Maní', sub: 'Rua Joaquim Antunes, Jardins, São Paulo', tipos: ['restaurant', 'food', 'establishment'] },
+      { id: 'ChIJtaberna_flores01', titulo: 'Taberna da Rua das Flores', sub: 'Rua da Misericórdia, Lisboa', tipos: ['restaurant'] }] }) });
   if (u.includes('/api/lista')) return r.respond({ status: 200, contentType: 'application/json', body: JSON.stringify({ codigo: 'abcdefgh1234' }) });
   if (u.includes('/api/')) return r.respond({ status: 200, contentType: 'application/json', body: '{}' });
   r.continue();
@@ -135,6 +140,11 @@ await passoDe('primeiro Fui (folha)', `(()=>{localStorage.removeItem('spot_virou
 await passoDe('primeiro Fui: ver em Viagens', `(async()=>{closeOv('ov-virou');goTo('dashboard');renderTrips()})()`, 1500);
 await passoDe('perfil sem próxima (vazio)', `(async()=>{goTo('profile');renderProximas()})()`);
 await passoDe('explorar', `(async()=>{goTo('explore');loadExplore()})()`, 2500);
+await passoDe('explorar: digitar Mani', `(()=>{const c=document.getElementById('exploreCitySearch');c.value='Mani';c.focus();sugerirLugar('Mani')})()`, 1500);
+await passoDe('explorar: abrir spot sugerido', `escolherSpotSugerido(0)`, 1500);
+await passoDe('explorar: salvar como Quero ir', `setStatus('want')`, 2500);
+await passoDe('explorar: faixa some ao sair', `(()=>{goTo('explore')})()`, 800);
+console.log('  faixa:', await pg.evaluate(() => (document.getElementById('faixaSalvo') || {}).className));
 await passoDe('salvar da lista pública', `(async()=>{localStorage.setItem('spot_salvar_pendente','abcdefgh1234.11111111-2222-3333-4444-555555555555');await salvarSpotPendente()})()`, 1500);
 await passoDe('v2: 5 destinos (recolhe)', `(()=>{plnAbrir({destinos:[{tipo:'pais',nome:'Portugal'},{tipo:'cidade',nome:'Lisboa'},{tipo:'pais',nome:'Itália'},{tipo:'pais',nome:'Espanha'},{tipo:'pais',nome:'Marrocos'}],amigos:['${ANA}','${RAFA}'],volta:'dashboard'})})()`, 1500);
 await passoDe('v2: lista Todas (cidade à direita)', `plnVerLista()`, 1500);
