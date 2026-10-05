@@ -1917,7 +1917,6 @@ body.tem-apple #convite .btn-apple{display:flex}
 .fi-preco i{font-style:normal;color:#C4C4C0}
 #place.previa.com-amigo .fi-amigos{display:block!important}
 /* Aba Viagens (c1, 05/10) */
-.pc-fixo{cursor:default}
 .vg-rot{margin:24px 0 8px;font-size:14px;font-weight:600;color:var(--ink2)}
 .vg-casa2{display:flex;align-items:center;gap:12px;width:100%;padding:10px;border:none;border-radius:var(--r-card);background:var(--surface);text-align:left;font:inherit;cursor:pointer;box-sizing:border-box}
 .vg-casa2-foto{flex:none;width:72px;height:56px;border-radius:10px;background:var(--photo-empty) center/cover no-repeat}
@@ -2389,10 +2388,12 @@ body.exm .exm-filtros{position:relative;z-index:1}
         <button class="pc-item" onclick="openList('cities')">
           <span class="pc-n" id="statCities">0</span><span class="pc-r">cidades<i class="pc-seta">›</i></span>
         </button>
-        <!-- Continentes não abre nada (desenho c1, 05/10). "Spots" saiu do placar. -->
-        <div class="pc-item pc-fixo">
-          <span class="pc-n" id="statConts">0</span><span class="pc-r">continentes</span>
-        </div>
+        <!-- O placar fica países · cidades · spots (o Lucas reprovou trocar spots
+             por continentes, 05/10). "Spots" abre os Meus spots do Perfil: a
+             lista geral saiu do app. -->
+        <button class="pc-item" onclick="abrirMeusSpots()">
+          <span class="pc-n" id="statSpots">0</span><span class="pc-r">spots<i class="pc-seta">›</i></span>
+        </button>
       </div>
     </div>
   <div class="mapa-branco" id="dashConvite" style="display:none"></div>
@@ -3808,6 +3809,11 @@ function plnLugarDoGrupo(g){
 async function plnSalvarMontagem(btn){
   const lista=PLN.grupos.filter(g=>!g.meu&&PLN.marcados.has(g.chave));if(!lista.length)return;
   if(btn)btn.disabled=true;
+  // Viagem nova criada aqui é planejamento: entra em Próximas viagens.
+  MONTANDO_VIAGEM=true;
+  try{return await plnSalvarMontagemDeVerdade(btn,lista)}finally{MONTANDO_VIAGEM=false}
+}
+async function plnSalvarMontagemDeVerdade(btn,lista){
   const salvos=[];let falhou=0,i=0;
   // Um de cada vez: o primeiro spot de um país cria a viagem dele, e o
   // segundo tem que encontrar essa viagem em vez de criar outra.
@@ -4299,12 +4305,14 @@ async function trocarQuemVe(privada){
   toast(privada?'Só você vê esta viagem':'Seus amigos veem esta viagem','','check');
 }
 
-// ── Viagem criada sozinha pra receber um spot ──
-// Se ela ficar só com Quero ir, nasceu como PRÓXIMA viagem, e próxima viagem
-// nasce "Só eu vejo" (desenho, item 2 do Explorar). Quem decide é o primeiro
-// loadDashboard depois do save, que já tem os spots dela na mão.
+// ── Viagem criada sozinha pelo "Montar minha viagem" ──
+// Montar é planejar de propósito: a viagem que ele cria nasce PRÓXIMA viagem,
+// "Só eu vejo". Viagem criada sozinha por qualquer outro caminho (salvar um
+// Quero ir no Explorar, de um amigo) é viagem comum — fica na aba Viagens.
+// Quem grava é o primeiro loadDashboard depois do save.
 const VIAGENS_NOVAS=new Set();
-function marcarViagemNova(t){if(t&&t.id)VIAGENS_NOVAS.add(t.id)}
+let MONTANDO_VIAGEM=false;
+function marcarViagemNova(t){if(t&&t.id&&MONTANDO_VIAGEM)VIAGENS_NOVAS.add(t.id)}
 async function fecharViagensNovas(){
   if(bancoTemPrivacidade()!==true)return;
   for(const id of [...VIAGENS_NOVAS]){
@@ -4312,18 +4320,26 @@ async function fecharViagensNovas(){
     if(!t){VIAGENS_NOVAS.delete(id);continue}
     if(!(t._spots||[]).length)continue;
     VIAGENS_NOVAS.delete(id);
-    if(!viagemPlanejada(t))continue;
+    if((t._spots||[]).some(x=>x.status!=='want'))continue;
     const r=await dbUpdate('trips',t.id,{privada:true,proxima:true});
     if(!r||!r.error){t.privada=true;t.proxima=true}
   }
-  // Próxima viagem de antes da 028 (só Quero ir, sem a marca): ganha a marca,
-  // pra não virar "viagem feita" se o último spot dela sair. A privacidade
-  // não muda: ela era visível e continua — quem decide esconder é a pessoa.
-  for(const t of proximasViagens()){
-    if(t.proxima!==false)continue;
-    const r=await dbUpdate('trips',t.id,{proxima:true});
-    if(!r||!r.error)t.proxima=true;
-  }
+  // CONSERTO (05/10): a versão publicada às 14h05 marcou como próxima toda
+  // viagem antiga só com Quero ir. Nenhuma viagem criada antes disso foi feita
+  // como próxima (o "Nova viagem" não existia), então a marca sai de todas
+  // elas. Uma vez por aparelho.
+  try{
+    if(localStorage.getItem('spot_conserto_proxima_0510')!=='1'){
+      const antes='2026-10-05T17:04:00Z';
+      for(const t of (S.trips||[])){
+        if(t.proxima!==true||!(String(t.created_at||'')<antes))continue;
+        const r=await dbUpdate('trips',t.id,{proxima:false});
+        if(!r||!r.error)t.proxima=false;
+      }
+      localStorage.setItem('spot_conserto_proxima_0510','1');
+      renderTrips();
+    }
+  }catch(e){}
 }
 
 // ── Primeiro Fui (p4): a viagem muda de aba ──
@@ -5227,7 +5243,6 @@ function pintarPlacar(){
   const pinta=(id,v)=>{const el=document.getElementById(id);if(el)el.textContent=v};
   pinta('statTrips',PLACAR.viagens);
   pinta('statSpots',PLACAR.spots);
-  pinta('statConts',PLACAR.continentes||0);
   pinta('statCities',PLACAR.cidades);
   // O contador de países virou a frase do topo, e leva pra mesma lista de antes.
   // 195 é o número de países soberanos — o mesmo denominador que o Perfil já
@@ -6045,7 +6060,13 @@ function darDadosDeViagens(){
 }
 
 window.darDadosDeViagens=darDadosDeViagens;
+// O "spots" do placar (site e app) abre os Meus spots do Perfil.
+function abrirMeusSpots(){
+  goTo('profile');loadProfile();
+  requestAnimationFrame(()=>{const el=document.getElementById('mlStatus');if(el)el.scrollIntoView({block:'start'})});
+}
 window.acaoDeViagens=function(acao,valor){
+  if(acao==='lista'&&valor==='spots'){abrirMeusSpots();return}
   if(acao==='regiao'){trocarRegiao(valor);darDadosDeViagens();return}
   if(acao==='abrir'){openTrip(valor);return}
   if(acao==='lista'){openList(valor);return}
@@ -13064,20 +13085,27 @@ function loadScript(urls){
 // aparecia no mapa e no placar como se já tivesse ido. Agora conta: marcado
 // como visitado, a cidade onde mora, viagem concluída, viagem com algum Fui —
 // e viagem sem spot nenhum (criada à mão), que é o comportamento de antes.
-function viagemConta(t){return !!t&&!viagemPlanejada(t)}
-// PRÓXIMA VIAGEM (05/10, desenho p1–p4): nenhum Fui ainda. Mora só no Perfil,
-// nunca na aba Viagens nem no mapa. Duas origens:
-//   · viagem com spots e todos Quero ir (a regra de 01/10);
-//   · viagem criada como próxima (Perfil > Nova, coluna `proxima` da 028)
-//     ainda sem spot. Sem a marca, viagem vazia criada à mão é viagem feita,
-//     como sempre foi.
-// Só Quero ir é planejamento; Fui, Não recomendo (foi e não gostou) e spot
+// PINTA O MAPA? (01/10) Viagem com algum Fui, marcada como visitada, a cidade
+// onde mora, ou criada à mão sem spot. Só Quero ir NÃO pinta: fui pra
+// Argentina e deixei restaurantes em Quero ir — a viagem continua na aba
+// Viagens, mas sem Fui nenhum ela não prova que fui. Fui, Não recomendo e spot
 // antigo sem status contam como visitado.
-function viagemPlanejada(t){
-  if(!t||t.dates==='__quickvisit__'||ehCasa(t)||t.status==='done')return false;
+function viagemConta(t){
+  if(!t)return false;
+  if(t.dates==='__quickvisit__'||ehCasa(t)||t.status==='done')return true;
+  if(viagemPlanejada(t))return false;
   const sp=t._spots;
-  if(!sp||!sp.length)return !!t.proxima;
-  return !sp.some(x=>x.status!=='want');
+  if(!sp||!sp.length)return true;
+  return sp.some(x=>x.status!=='want');
+}
+// PRÓXIMA VIAGEM (05/10): SÓ a que a pessoa criou como próxima — "Nova
+// viagem" no Perfil ou "Montar minha viagem" no Planejar (coluna `proxima` da
+// 028) — e enquanto não tem nenhum Fui. "Só Quero ir" sozinho não basta (o
+// Lucas, 05/10: ter ido pra Argentina e deixado restaurantes em Quero ir não
+// é planejar viagem pra Argentina). Mora só no Perfil.
+function viagemPlanejada(t){
+  if(!t||!t.proxima||t.dates==='__quickvisit__'||ehCasa(t)||t.status==='done')return false;
+  return !(t._spots||[]).some(x=>x.status!=='want');
 }
 // O que entra na aba Viagens (lista, placar, continentes, tela nativa).
 function naAbaViagens(t){return !isNonTrip(t)&&!viagemPlanejada(t)}
@@ -14605,6 +14633,7 @@ let amFiltro='';
 // sem nenhum, procura a pessoa no Spot.
 function amBuscar(v){
   amFiltro=String(v||'');
+  if(amFiltro.trim())friendsTab='amigos';
   renderFriendsTab();
   const t=amFiltro.trim().replace(/^@/,'');
   if(t.length>=3&&document.getElementById('amPessoas'))buscarPessoas(t,'amPessoas');
@@ -15113,9 +15142,8 @@ function linhaDePedidos(recebidos,enviados){
 }
 function renderFriendsTab(){
   const d=FRIENDS_DATA;if(!d)return;
-  // Desde 05/10 (desenho c7) a aba é a lista; o feed e os pedidos foram pra
-  // Atividade. As abas Recente/Todos saíram.
-  friendsTab='amigos';
+  // As abas Recente (o feed) e Todos continuam (o Lucas, 05/10: o feed não sai
+  // da aba). A Atividade é a entrada nova, no canto de cima.
   pintarPontoDaAtividade();
   // Aceitou/recusou/cancelou um pedido de dentro da Atividade: ela se redesenha.
   {const at=document.getElementById('atividade');if(at&&at.classList.contains('active'))pintarAtividade()}
@@ -15153,7 +15181,9 @@ function renderFriendsTab(){
     darDadosDeAmigos();
     return;
   }
-  document.getElementById('amAbas').innerHTML='';
+  document.getElementById('amAbas').innerHTML=abas.map(([id,rot,n])=>
+    '<button class="'+(friendsTab===id?'on':'')+'" onclick="switchFriendsTab(\''+id+'\')">'+rot
+    +(n?' <span class="am-badge">'+n+'</span>':'')+'</button>').join('');
 
   let h='';
   if(friendsTab==='pedidos'){

@@ -319,8 +319,7 @@ export default function TelaViagens({ dados, ocupado, acao }) {
         <View style={e.placarCol}>
           <LinhaDoPlacar n={d.paises} rotulo="países" onPress={() => acao('mapa')} />
           <LinhaDoPlacar n={d.cidades} rotulo="cidades" onPress={() => acao('lista', 'cities')} />
-          {/* "Spots" saiu do placar (desenho c1, 05/10): a lista geral saiu do app. */}
-          <LinhaDoPlacar n={d.continentes || 0} rotulo="continentes" />
+          <LinhaDoPlacar n={d.spots} rotulo="spots" onPress={() => acao('lista', 'spots')} />
         </View>
       </View>
       ) : null}

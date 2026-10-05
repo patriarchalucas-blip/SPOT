@@ -4,8 +4,9 @@ const { app } = require('./_ajuda.js');
 
 const A = app();
 
-// Próximas viagens (05/10, desenho p1–p4): viagem com 0 Fui mora só no
-// Perfil — nunca na aba Viagens nem no mapa — e cada uma tem "Quem vê".
+// Próximas viagens (05/10, desenho p1–p4): só a viagem CRIADA como próxima
+// (Nova viagem, Montar minha viagem) e ainda sem Fui. Mora só no Perfil e cada
+// uma tem "Quem vê".
 
 function cenario(extra) {
   A.avaliar("S.user={id:'eu'};S.profile={home_city:'São Paulo'};CHEGOU.clear();PLANEJADAS=null;VIAGENS_NOVAS.clear()");
@@ -85,26 +86,52 @@ test('viagem que perde o ultimo spot nao conta como "virou viagem"', () => {
   } finally { A.avaliar('showOv=_s2') }
 });
 
-test('viagem criada sozinha so com Quero ir nasce "So eu vejo"', async () => {
-  cenario(`.concat([{id:'fr',name:'França',destinations:['França'],dates:'',status:'planning',privada:false,proxima:false,_spotsLoaded:true,_spots:[{id:'f1',name:'Le Bistro',city:'Paris',status:'want'}]}])`);
+test('Argentina: fui, deixei restaurantes em Quero ir e nao marquei Fui — continua em Viagens', () => {
+  cenario(`.concat([{id:'ar',name:'Argentina',destinations:['Argentina'],dates:'',status:'planning',privada:false,proxima:false,_spotsLoaded:true,_spots:[{id:'a1',name:'Don Julio',city:'Buenos Aires',status:'want'}]}])`);
+  const ar = "S.trips.find(t=>t.id==='ar')";
+  assert.strictEqual(A.avaliar('viagemPlanejada(' + ar + ')'), false, 'so Quero ir nao e planejar');
+  assert.strictEqual(A.avaliar('naAbaViagens(' + ar + ')'), true);
+  assert.ok(!A.avaliar('visitedCountryNames()').includes('Argentina'), 'sem Fui nao pinta o mapa');
+});
+
+test('viagem criada pelo Montar minha viagem nasce proxima e "So eu vejo"; por outro caminho, nao', async () => {
+  cenario(`.concat([{id:'fr',name:'França',destinations:['França'],dates:'',status:'planning',privada:false,proxima:false,_spotsLoaded:true,_spots:[{id:'f1',name:'Le Bistro',city:'Paris',status:'want'}]},
+    {id:'es',name:'Espanha',destinations:['Espanha'],dates:'',status:'planning',privada:false,proxima:false,_spotsLoaded:true,_spots:[{id:'e1',name:'Bar',city:'Madri',status:'want'}]}])`);
+  A.avaliar("localStorage.setItem('spot_conserto_proxima_0510','1')");
   A.avaliar("window.__upd=[];dbUpdate=async function(tab,id,p){window.__upd.push([tab,id,p]);return{error:null}}");
-  A.avaliar("marcarViagemNova({id:'fr'})");
+  A.avaliar("MONTANDO_VIAGEM=true;marcarViagemNova({id:'fr'});MONTANDO_VIAGEM=false;marcarViagemNova({id:'es'})");
   await A.avaliar('fecharViagensNovas()');
   const upd = A.avaliar('JSON.stringify(window.__upd)');
   assert.ok(upd.includes('"fr",{"privada":true,"proxima":true}'), upd);
-  assert.strictEqual(A.avaliar("S.trips.find(t=>t.id==='fr').privada"), true);
+  assert.ok(!upd.includes('"es"'), 'Quero ir salvo do Explorar nao vira proxima viagem');
+  assert.strictEqual(A.avaliar("proximasViagens().map(t=>t.id).includes('fr')"), true);
 });
 
-test('sem a migracao 028 (linha sem privada), nada e gravado e a tela diz Amigos veem', async () => {
+test('conserto de 05/10: viagem antiga marcada como proxima por engano volta pra Viagens', async () => {
+  A.avaliar("S.user={id:'eu'};VIAGENS_NOVAS.clear();localStorage.removeItem('spot_conserto_proxima_0510')");
+  A.avaliar(`S.trips=[{id:'ar',name:'Argentina',destinations:['Argentina'],dates:'',status:'planning',privada:false,proxima:true,created_at:'2026-09-10T10:00:00Z',_spotsLoaded:true,_spots:[{id:'a1',name:'Don Julio',status:'want'}]},
+    {id:'jp',name:'Japão',destinations:['Japão'],dates:'',status:'planning',privada:true,proxima:true,created_at:'2026-10-05T18:00:00Z',_spotsLoaded:true,_spots:[]}]`);
+  A.avaliar("window.__upd=[];dbUpdate=async function(tab,id,p){window.__upd.push([tab,id,p]);return{error:null}}");
+  await A.avaliar('fecharViagensNovas()');
+  assert.strictEqual(A.avaliar('JSON.stringify(window.__upd)'), '[["trips","ar",{"proxima":false}]]');
+  assert.strictEqual(A.avaliar("naAbaViagens(S.trips.find(t=>t.id==='ar'))"), true);
+  assert.strictEqual(A.avaliar("viagemPlanejada(S.trips.find(t=>t.id==='jp'))"), true, 'a criada depois pelo Nova viagem continua');
+  // Uma vez por aparelho.
+  A.avaliar('window.__upd=[]');
+  await A.avaliar('fecharViagensNovas()');
+  assert.strictEqual(A.avaliar('window.__upd.length'), 0);
+});
+
+test('sem a migracao 028 (linha sem privada), nada e gravado e nao ha proxima viagem', async () => {
   A.avaliar("S.user={id:'eu'};VIAGENS_NOVAS.clear()");
   A.avaliar(`S.trips=[{id:'x',name:'França',destinations:['França'],dates:'',status:'planning',_spotsLoaded:true,_spots:[{id:'f1',name:'Le Bistro',city:'Paris',status:'want'}]}]`);
   A.avaliar("window.__upd=[];dbUpdate=async function(tab,id,p){window.__upd.push([tab,id,p]);return{error:null}}");
   assert.strictEqual(A.avaliar('bancoTemPrivacidade()'), false);
-  A.avaliar("marcarViagemNova({id:'x'})");
+  A.avaliar("MONTANDO_VIAGEM=true;marcarViagemNova({id:'x'});MONTANDO_VIAGEM=false");
   await A.avaliar('fecharViagensNovas()');
   assert.strictEqual(A.avaliar('window.__upd.length'), 0);
   A.renderProximas();
-  assert.ok(A.avaliar("document.getElementById('pxLista').innerHTML").includes('Amigos veem'));
+  assert.ok(A.avaliar("document.getElementById('pxLista').innerHTML").includes('Para onde é a próxima?'));
 });
 
 test('Meus spots: Fui inclui Nao recomendo; agrupado por cidade, ate 8 linhas', () => {

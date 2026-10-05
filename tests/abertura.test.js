@@ -45,7 +45,8 @@ test('viagem so com Quero ir e planejamento: nao pinta o pais nem conta (01/10)'
   const v = A.avaliar('visitedCountryNames()');
   assert.ok(!v.includes('Japão'), 'Japao so com Quero ir nao e visitado');
   assert.ok(v.includes('Itália') && v.includes('Chile'));
-  // Desde 05/10 a viagem planejada mora so no Perfil (Proximas viagens).
-  assert.strictEqual(A.avaliar('naAbaViagens(S.trips[0])'), false, 'Japao nao aparece na aba Viagens');
-  assert.strictEqual(A.avaliar('proximasViagens().map(t=>t.id).join()'), 'a');
+  // So Quero ir nao vira "proxima viagem" sozinha (o Lucas, 05/10): fica na
+  // aba Viagens, so nao pinta o mapa.
+  assert.strictEqual(A.avaliar('naAbaViagens(S.trips[0])'), true);
+  assert.strictEqual(A.avaliar('proximasViagens().length'), 0);
 });

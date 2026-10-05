@@ -104,7 +104,7 @@ test('bug 10: cidade nao vira spot', () => {
 test('bug 11: montar a ideia de viagem (so Quero ir) nao conta como ido', () => {
   A.avaliar(`S.trips=[{id:'j',name:'Japão',destinations:['Japão'],dates:'',status:'planning',_spots:[{status:'want',city:'Tóquio',name:'X'}],_spotsLoaded:true}]`);
   assert.ok(!A.avaliar('visitedCountryNames()').includes('Japão'));
-  assert.strictEqual(A.avaliar('naAbaViagens(S.trips[0])'), false, 'vai pras Proximas viagens do Perfil');
+  assert.strictEqual(A.avaliar('naAbaViagens(S.trips[0])'), true, 'sem a marca de proxima, fica em Viagens');
 });
 
 test('bug 4: link de app e de compartilhar nao viram @ do Instagram', () => {
