@@ -105,7 +105,7 @@ ul{list-style:none;margin:0;padding:0;display:flex;flex-direction:column}
 .folha .r{margin:10px 0 0}
 .folha .de{margin:4px 0 0;font-size:14px;color:var(--ink3)}
 .folha .acoes{display:flex;flex-direction:column;gap:8px;margin-top:20px}
-.folha .obs{margin:0;text-align:center;font-size:13px;color:var(--ink3)}`;
+.folha .obs{margin:0;text-align:center;font-size:13px;color:var(--ink3)}.folha .obs a{color:var(--green);font-weight:600;text-decoration:none}`;
 
 function cabecalho(titulo, desc, ogImg, url, extra) {
   return `<!doctype html><html lang="pt-BR"><head><meta charset="utf-8">
@@ -201,7 +201,9 @@ function folha(codigo, primeiro) {
   return '<div class="fundo" id="fundo"></div><div class="folha" id="folha" role="dialog" aria-modal="true"><div class="alca"></div>'
     + '<div class="foto" id="fFoto"></div><div class="n" id="fNome"></div><div class="m" id="fMeta"></div><p class="r" id="fRev"></p>'
     + '<p class="de">A nota e a frase são de ' + esc(primeiro) + '.</p>'
-    + '<div class="acoes"><a class="btn" id="fSalvar" href="/">Salvar no meu Spot</a><p class="obs">Grátis. Fica na sua lista de Quero ir.</p>'
+    // 06/10: fora do app o /?salvar= cai no "O Spot é um app". A página diz
+    // isso antes do toque, em vez de prometer que o spot já fica salvo.
+    + '<div class="acoes"><a class="btn" id="fSalvar" href="/">Salvar no meu Spot</a><p class="obs">Abre no app do Spot e entra na sua lista de Quero ir. Ainda não tem o app? <a href="' + esc(LOJA + (LOJA.includes('apple.com') ? '?ct=l_' : '?ref=l_') + codigo) + '">Baixe o Spot</a> e toque neste link de novo.</p>'
     + '<a class="btn btn2" id="fMapa" href="/" target="_blank" rel="noopener">Ver no mapa</a></div></div>'
     + `<script>(function(){var fundo=document.getElementById('fundo'),fo=document.getElementById('folha'),C=${JSON.stringify(codigo)};
 function fecha(){fundo.classList.remove('on');fo.classList.remove('on')}

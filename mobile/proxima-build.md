@@ -13,6 +13,16 @@ pra "Já compilado".
 ## Na fila
 
 - **Foto da pessoa no card grande do feed** (06/10, `CardDeVisita` em TelaAmigos.js): a build 20 só tinha iniciais ali. Já no código, `expo export` ok.
+- Da revisão com agentes (06/10) — só resolve com app novo:
+  - **Convite e "Salvar no meu Spot" a partir do Safari:** link do mesmo domínio tocado no Safari não abre o app. `conviteDoLink` aceitar `spot://c/<código>` e `spot://salvar/<código>.<id>`, e as páginas `/c/` e `/l/` usarem esse endereço no botão (caindo na App Store se não abrir).
+  - **Troca de conta:** `setDadosDaTela({})` no `onLoadStart` do WebView (o site já manda `pronto:false`, isto é o reforço).
+  - **Amigos carregando sem saída:** o "carregando" da TelaAmigos dentro de ScrollView com RefreshControl.
+  - **Toque na notificação de comentário** abrir o spot comentado (mandar `spot_id` no `data` em notificar.js e tratar em `aoTocar`), não só a aba Amigos.
+  - **@ e "De cidade · N spots" no pedido recebido** na aba Pedidos nativa (o dado já chega em `recebidos`).
+  - **Aviso nativo (App.js ~752)** ainda na paleta velha (#16232A, borda, sombra) e aparece junto com o toast do site — decidir um só.
+  - **Notificação recusada:** caminho pra reabrir (Linking.openSettings) quando a permissão está negada.
+  - **Sem internet o app não abre** (PROVÁVEL): service worker não roda em WKWebView sem App-Bound Domains. Decidir: ligar WKAppBoundDomains (meuspot.app + Supabase) ou tirar a promessa de offline.
+  - **Cidades visitadas 10b** na lista de viagens nativa: país sem cidade mostra "+ Marcar cidades"; botão "+ Adicionar" com o texto "Adicionar".
 
 - **Abas Viagens e Amigos nativas no desenho novo** (lista em linhas, + Adicionar, busca de amigo): pendente de decisão do Lucas — reescrever no app ou deixar o site desenhar.
 - Depois da 1.0.2 aprovada: tirar o modo "spots" da tela Lista (lista geral).

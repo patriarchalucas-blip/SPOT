@@ -111,7 +111,8 @@ test('places: 1a pagina (pageSize, sem token) e cacheada sem o nextPageToken; pa
   await comFetch(f, async () => {
     const a = await pede(corpo, true);
     assert.strictEqual(a.nextPageToken, 'TOKEN_1', 'quem paga recebe o token');
-    const chaves = [...kv.m.keys()].filter((k) => k.startsWith('places_') && !k.startsWith('places_count_'));
+    // Fora os contadores: o por pessoa (places_user_) grava por sorteio, 1 em 4.
+    const chaves = [...kv.m.keys()].filter((k) => k.startsWith('places_') && !k.startsWith('places_count_') && !k.startsWith('places_user_'));
     assert.strictEqual(chaves.length, 1);
     assert.ok(!chaves[0].includes(UID), 'nada do usuario na chave');
     assert.ok(!kv.m.get(chaves[0]).includes('TOKEN_1'), 'token nao vai pro cache');

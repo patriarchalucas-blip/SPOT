@@ -33,7 +33,12 @@ const EXPO = 'https://exp.host/--/api/v2/push/send';
 const TEXTOS = {
   pedido:     (nome) => ({ title: 'Pedido de amizade', body: `${nome} quer ser seu amigo no Spot` }),
   aceite:     (nome) => ({ title: 'Vocês são amigos',  body: `${nome} aceitou seu pedido. Já dá pra ver as viagens.` }),
-  comentario: (nome, extra) => ({ title: 'Comentário', body: extra ? `${nome} comentou em ${extra}` : `${nome} comentou no seu lugar` })
+  comentario: (nome, extra) => ({ title: 'Comentário', body: extra ? `${nome} comentou em ${extra}` : `${nome} comentou no seu lugar` }),
+  // Não é um tipo que o app pede: é o 'comentario' quando quem recebe NÃO é
+  // dono do spot — o dono respondeu no fio (06/10). Dizia "comentou no seu
+  // lugar" sobre um lugar que não era de quem recebia. Decidido aqui, pelo
+  // banco; o SQL (enderecos_para_avisar) continua vendo só 'comentario'.
+  resposta: (nome, extra) => ({ title: 'Resposta', body: extra ? `${nome} respondeu na conversa de ${extra}` : `${nome} respondeu na conversa de um spot` })
 };
 
 export async function onRequestPost(context) {
@@ -50,7 +55,7 @@ export async function onRequestPost(context) {
   // sai do banco, depois de conferir que o comentário existe.
   const spotId = String(body.spot || '');
 
-  if (!TEXTOS[tipo]) return json({ error: 'tipo_invalido' }, 400);
+  if (!TEXTOS[tipo] || tipo === 'resposta') return json({ error: 'tipo_invalido' }, 400);
   if (!/^[0-9a-f-]{36}$/i.test(alvo)) return json({ error: 'alvo_invalido' }, 400);
 
   // 1. quem está chamando
@@ -80,9 +85,11 @@ export async function onRequestPost(context) {
   const par = 'push_par_' + tipo + '_' + quem.uid + '_' + alvo + (tipo === 'comentario' ? '_' + spotId : '');
   if (await lerKV(env, par)) return json({ enviados: 0, motivo: 'repetido' });
 
-  let extra = '';
+  let extra = '', texto = tipo;
   if (tipo === 'comentario' && /^[0-9a-f-]{36}$/i.test(spotId)) {
-    extra = await nomeDoSpotComentado(env, spotId, quem.uid, alvo);
+    const c = await nomeDoSpotComentado(env, spotId, quem.uid, alvo);
+    extra = c.nome;
+    if (c.resposta) texto = 'resposta';
   }
 
   // 2. o banco decide se o vínculo justifica, e devolve os endereços
@@ -109,7 +116,7 @@ export async function onRequestPost(context) {
 
   // 3. o texto sai daqui, nunca de quem chamou
   const nome = await nomeDe(env, quem.uid);
-  const { title, body: corpo } = TEXTOS[tipo](nome, extra);
+  const { title, body: corpo } = TEXTOS[texto](nome, extra);
 
   const mensagens = enderecos.slice(0, 20).map((to) => ({
     to, title, body: corpo, sound: 'default', priority: 'high',
@@ -143,19 +150,22 @@ export async function onRequestPost(context) {
   }
 }
 
-// Nome do spot, só se: o spot é de quem vai receber E quem chamou comentou
-// nele nos últimos 10 minutos. Fora disso: sem nome, e a notificação sai
-// genérica ("comentou no seu lugar").
+// Nome do spot, só se quem chamou comentou nele nos últimos 10 minutos E o
+// spot é de quem vai receber (comentário) ou de quem chamou (o dono
+// respondendo no fio — vira 'resposta', 06/10). Fora disso: sem nome, e a
+// notificação sai genérica. Devolve { nome, resposta }.
 async function nomeDoSpotComentado(env, spotId, de, para) {
   try {
     const h = { apikey: env.SUPABASE_SERVICE_KEY, Authorization: 'Bearer ' + env.SUPABASE_SERVICE_KEY };
     const desde = new Date(Date.now() - 10 * 60 * 1000).toISOString();
     const [c] = await (await fetch(SB_URL + '/rest/v1/spot_comments?select=id&spot_id=eq.' + spotId
       + '&user_id=eq.' + de + '&created_at=gte.' + encodeURIComponent(desde) + '&limit=1', { headers: h })).json();
-    if (!c) return '';
-    const [sp] = await (await fetch(SB_URL + '/rest/v1/spots?select=name&id=eq.' + spotId + '&user_id=eq.' + para, { headers: h })).json();
-    return sp && sp.name ? String(sp.name).replace(/\s+/g, ' ').trim().slice(0, 60) : '';
-  } catch (e) { return '' }
+    if (!c) return { nome: '', resposta: false };
+    const [sp] = await (await fetch(SB_URL + '/rest/v1/spots?select=name,user_id&id=eq.' + spotId, { headers: h })).json();
+    if (!sp || (sp.user_id !== para && sp.user_id !== de)) return { nome: '', resposta: false };
+    const nome = sp.name ? String(sp.name).replace(/\s+/g, ' ').trim().slice(0, 60) : '';
+    return { nome, resposta: sp.user_id !== para };
+  } catch (e) { return { nome: '', resposta: false } }
 }
 
 async function nomeDe(env, uid) {

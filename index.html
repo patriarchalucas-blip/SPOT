@@ -2992,7 +2992,10 @@ body.exm .exm-filtros{position:relative;z-index:1}
     const h=String(location.hash||''),q=String(location.search||'');
     if(/type=(recovery|signup|invite|magiclink|email_change)|access_token=|error_description=/.test(h+q))return;
     window.__soNoApp=true;
-    const veioDeLink=/[?&]c=/.test(q)?'O convite fica esperando.':/[?&]salvar=/.test(q)?'O spot fica esperando.':'';
+    // Nada "fica esperando" (06/10): o Safari e o app não dividem memória. O
+    // que funciona é tocar no link DA CONVERSA com o app instalado — aí o
+    // iPhone abre o app direto (Associated Domains) e o link vale lá.
+    const veioDeLink=/[?&]c=/.test(q)?'Com o app instalado, o link abre direto nele e o convite vale.':/[?&]salvar=/.test(q)?'Com o app instalado, o link abre direto nele.':'';
     const titulo=veioDeLink?'Abra no app do Spot':'O Spot é um app';
     const texto=veioDeLink?'Instale o Spot e depois toque no link de novo na conversa.<br>'+veioDeLink
       :'Seus lugares e os dos seus amigos ficam no app.<br>Baixe na App Store pra entrar.';
@@ -4184,7 +4187,8 @@ async function plnSalvar(status,btn){
 // Google, e a pessoa confere antes de qualquer coisa ser gravada.
 //
 // A busca aqui pede só os campos da faixa MAIS BARATA do Google (sem nota,
-// telefone, site, horário): é o que a revisão mostra, e com 150 lugares a
+// telefone, site, horário): é o que a revisão mostra, e com até 100 lugares
+// (o teto do servidor desde 06/10; nenhum texto visível do app cita o número) a
 // diferença conta. O /api/places guarda cada busca por 7 dias, então o mesmo
 // lugar importado por várias pessoas é pago uma vez.
 //
@@ -4369,7 +4373,8 @@ function impPintarRevisar(){
     ?'<button class="exm-btn" disabled>Salvando '+IMP.salvandoN+' de '+marcados+'…</button>'
     :'<button class="exm-btn" onclick="impSalvar()"'+(marcados?'':' disabled')+'>'+(marcados?'Salvar '+marcados+(marcados===1?' spot':' spots'):'Nada marcado')+'</button>';
 }
-function impMarcar(i){const it=IMP.itens[i];if(!it||IMP.etapa!=='revisar')return;it.on=!it.on;impPintarRevisar()}
+// Item 'Já está nos seus spots' não marca (06/10): salvava de novo, duplicado.
+function impMarcar(i){const it=IMP.itens[i];if(!it||IMP.etapa!=='revisar')return;if(it.dup&&!it.on){toast('Já está nos seus spots',it.p&&it.p.name||'','check');return}it.on=!it.on;impPintarRevisar()}
 function impStatus(i,s){const it=IMP.itens[i];if(!it||IMP.etapa!=='revisar')return;it.status=s;impPintarRevisar()}
 function impTudo(){if(IMP.etapa!=='revisar')return;const ligar=IMP.itens.some(it=>!it.on&&!it.dup);IMP.itens.forEach(it=>{if(!it.dup)it.on=ligar});impPintarRevisar()}
 function impIgnorar(j){IMP.naoAchou.splice(j,1);impPintarRevisar()}
@@ -4420,7 +4425,7 @@ function impNenhumDesses(){
 
 // ── salvar e pronto ──
 async function impSalvar(){
-  const lista=IMP.itens.filter(it=>it.on);if(!lista.length)return;
+  const lista=IMP.itens.filter(it=>it.on&&!it.dup);if(!lista.length)return;
   IMP.etapa='salvando';IMP.salvandoN=0;IMP.salvos=[];impPintarRevisar();
   let falhou=0,semPais=0;
   // Um de cada vez: cada spot pode criar a viagem do país, e o segundo spot
@@ -4668,7 +4673,8 @@ const SS={volta:'dashboard',status:'been',cat:'',lugar:null,ordem:'',busca:'',bu
 try{SS.status=localStorage.getItem('spot_ss_status')==='want'?'want':'been'}catch(e){}
 const SS_CAT={food:'Gastronomia',hotel:'Hospedagem',experience:'Experiências'};
 const SS_CAT1={food:'Gastronomia',hotel:'Hospedagem',experience:'Experiência'};
-function ssFoi(x){return x.status==='been'||x.status==='skip'}
+// Status nulo (spot antigo) conta como Fui, igual viagemConta e o RLS (06/10).
+function ssFoi(x){return x.status!=='want'}
 function ssTodos(){
   return allSpotsFlat().map(x=>Object.assign(x,{_cid:cityOf(x)||x.city||'',_pais:normalizeCountry(x._country||'')||x._country||''}));
 }
@@ -4714,9 +4720,11 @@ function renderSeusSpots(){
   tela.classList.toggle('ss-com-lugar',!!SS.lugar);
   if(SS.buscando){renderBuscaDosSpots();return}
   const todos=ssTodos();
-  const cids=new Set(todos.map(x=>x._cid).filter(Boolean)),paises=new Set(todos.map(x=>x._pais).filter(Boolean));
+  // Cidades e países pela regra do placar (06/10): contar os de Quero ir junto
+  // dava um número que o placar não mostra.
+  const nCid=cidadesVisitadas().size,nPai=visitedCountryNames().length;
   document.getElementById('ssTit').textContent=todos.length+(todos.length===1?' spot':' spots');
-  document.getElementById('ssSub').textContent='em '+cids.size+(cids.size===1?' cidade':' cidades')+' de '+paises.size+(paises.size===1?' país':' países');
+  document.getElementById('ssSub').textContent=nCid+(nCid===1?' cidade':' cidades')+' e '+nPai+(nPai===1?' país':' países')+' onde você foi';
   // segmentado (contagens dentro do lugar escolhido)
   const noLugar=todos.filter(ssNoLugar);
   const nf=noLugar.filter(ssFoi).length,nq=noLugar.length-nf;
@@ -5100,8 +5108,12 @@ async function pintarDelesNaFicha(s){
   if(S.curPlace!==s)return;
   const cid=cityOf(s);
   const por={};
+  // Na ficha do spot de um amigo, ele mesmo não entra no bloco (06/10): 'Ana
+  // foi' na ficha da Ana repetia a dona do post. Só na prévia (_comentId) —
+  // no SEU spot, from_user_id é quem indicou, e ele continua aparecendo.
+  const dono=s._comentId?(s.from_user_id||(s._amigo&&s._amigo.user_id)||''):'';
   (deles||[]).forEach(o=>{
-    if(!o||o.user_id===S.user.id||!mesmoLugar(o.name,s.name))return;
+    if(!o||o.user_id===S.user.id||(dono&&o.user_id===dono)||o.id===s._comentId||!mesmoLugar(o.name,s.name))return;
     if(cid&&cityOf(o)&&!mesmoLugar(cityOf(o),cid))return;
     const a=por[o.user_id];
     if(!a||(a.status!=='been'&&o.status==='been'))por[o.user_id]=o;
@@ -5249,17 +5261,18 @@ async function adicionarFotosAoSpot(input){
   if(cabe<=0){toast('Já tem 10 fotos','Tire uma pra pôr outra.','alert');return}
   const lote=arqs.slice(0,cabe);
   toast(lote.length===1?'Enviando a foto…':'Enviando '+lote.length+' fotos…','','check');
-  let foram=0,primeira='';
+  let foram=0,primeira='',avisou=false;
   for(const f of lote){
     try{
       const url=await uploadToStorage(await encolherFoto(f),'spot');
       if(!url)continue;
       const{error}=await dbInsert('spot_fotos',{spot_id:sp.id,url});
-      if(error){if(!foram)toast('Não salvou','Falta uma atualização do Spot pra guardar várias fotos.','alert');break}
+      if(error){if(!foram){toast('Não salvou','Falta uma atualização do Spot pra guardar várias fotos.','alert');avisou=true}break}
       foram++;if(!primeira)primeira=url;
     }catch(e){}
   }
-  if(!foram)return;
+  // Nenhuma foi (06/10): o 'Enviando…' ficava sendo a última palavra.
+  if(!foram){if(!avisou)toast('Não enviou','Confere a conexão e tenta de novo.','alert');return}
   // Sem foto sua na capa, a primeira que você subiu vira a capa.
   if(primeira&&!/\/storage\//.test(String(sp.photo_url||''))){
     const{error}=await dbUpdate('spots',sp.id,{photo_url:primeira});
@@ -5276,8 +5289,15 @@ async function tirarFotoDoSpot(fotoId,url){
   const{error}=await dbDelete('spot_fotos',fotoId);
   if(error){toast('Não tirou','Confere a conexão e tenta de novo.','alert');return}
   const resto=(await fotosSuasDoSpot(sp.id,true)).filter(f=>f.id!==fotoId);
-  // Era a capa: a próxima sua vira capa (sem nenhuma, a capa fica como está).
-  if(sp.photo_url===url&&resto.length){const{error:e2}=await dbUpdate('spots',sp.id,{photo_url:resto[0].url});if(!e2){sp.photo_url=resto[0].url;const h=document.getElementById('placeHeroImg');if(h)h.style.backgroundImage=cssUrl(resto[0].url)}}
+  // Era a capa: a próxima sua vira capa. Sem nenhuma sua (06/10), volta a
+  // 1ª do Google — ou fica sem capa. Antes a foto tirada continuava na capa.
+  if(sp.photo_url===url){
+    let nova='';
+    if(resto.length)nova=resto[0].url;
+    else{try{const g=await fotosDoLugar(Object.assign({},sp,{photo_url:''}));nova=(g&&g[0]&&g[0].url)||''}catch(e){}}
+    const{error:e2}=await dbUpdate('spots',sp.id,{photo_url:nova});
+    if(!e2){sp.photo_url=nova;sp._fotoVista='';const h=document.getElementById('placeHeroImg');if(h)h.style.backgroundImage=nova?cssUrl(nova):destGradient(sp.city||sp.name||'')}
+  }
   if(S.curPlace===sp)montarCarrossel(sp);
   toast('Foto tirada','','trash');
 }
@@ -5445,6 +5465,13 @@ function nomeNaAtividade(id){
   const p=FRIENDS_DATA&&FRIENDS_DATA.pmap&&FRIENDS_DATA.pmap[id];
   return friendName(p)||plnPrimeiro(id)||'Alguém';
 }
+// Quem está pedindo (06/10): @, cidade e quantos spots — o que a 032 passou
+// a devolver em pending_request_profiles. Sem os campos, sobra só o @.
+function detalheDoPedido(p){
+  if(!p)return '';
+  const n=Number(p.spots)||0;
+  return [p.username?'@'+p.username:'',p.home_city?'De '+p.home_city:'',n?n+(n===1?' spot':' spots'):''].filter(Boolean).join(' · ');
+}
 function pintarAtividade(){
   const box=document.getElementById('atCorpo');if(!box)return;
   const d=FRIENDS_DATA||{};
@@ -5456,7 +5483,7 @@ function pintarAtividade(){
   if(inc.length||out.length){
     h+='<div class="at-sec">Pedidos</div>';
     // O @ embaixo (06/10): com nome repetido, é o que diz quem está pedindo.
-    const arroba=p=>p&&p.username?'<span class="busca-user" style="display:block">@'+esc(p.username)+'</span>':'';
+    const arroba=p=>{const t=detalheDoPedido(p);return t?'<span class="busca-user" style="display:block">'+esc(t)+'</span>':''};
     h+=inc.map(r=>'<div class="at-linha">'+av(r.follower_id)+'<div class="at-txt"><b>'+esc(friendName(pmap[r.follower_id]))+'</b> quer adicionar você'+arroba(pmap[r.follower_id])+'</div>'
       +'<button class="at-aceitar" onclick="respondRequest(\''+esc(r.id)+'\',true)">Aceitar</button><button class="at-recusar" onclick="respondRequest(\''+esc(r.id)+'\',false)">Recusar</button></div>').join('');
     h+=out.map(r=>'<div class="at-linha">'+av(r.following_id)+'<div class="at-txt">Pedido enviado pra <b>'+esc(friendName(pmap[r.following_id]))+'</b></div>'
@@ -6146,6 +6173,14 @@ function nomeDeExibicao(){
   return nome.charAt(0).toUpperCase()+nome.slice(1).toLowerCase();
 }
 let PLACAR={viagens:0,spots:0,cidades:0,paises:0};
+// A regra ÚNICA de cidade do placar (06/10): só cidade com Fui, ou a cidade
+// onde mora. A lista de cidades e Seus spots usam esta mesma — o placar dizia
+// 5 e a tela que ele abre mostrava 9 (as de Quero ir junto).
+function cidadesVisitadas(){
+  const set=new Set();
+  for(const t of (S.trips||[]))(t._spots||[]).forEach(sp=>{if(sp.status==='want'&&!ehCasa(t))return;const c=cityOf(sp);if(c)set.add(c)});
+  return set;
+}
 // Já existe dado DESTA conta pra desenhar (o guardado no aparelho ou o que
 // veio do banco)? Antes disso a tela de Viagens não pode concluir nada: com
 // PLACAR zerado ela anunciava "Seu mapa está em branco" por dois segundos a
@@ -6158,10 +6193,10 @@ function contarPlacar(){
   for(const t of S.trips){
     ts+=t._spots.length;
     // Cidade e país só contam o que foi visitado (ver viagemConta).
-    t._spots.forEach(sp=>{if(sp.status==='want'&&!ehCasa(t))return;const c=cityOf(sp);if(c)cities.add(c)});
-    if(viagemConta(t))(t.destinations||[]).forEach(d=>ctrs.add(d));
+    paisesQueAViagemPinta(t).forEach(d=>ctrs.add(d));
   }
   // Continentes contam os países visitados (ver viagemConta).
+  cidadesVisitadas().forEach(c=>cities.add(c));
   const conts=new Set(visitedCountryNames().map(regionFor).filter(r=>r&&r!=='Outros'));
   PLACAR={
     continentes:conts.size,
@@ -6170,6 +6205,11 @@ function contarPlacar(){
     cidades:cities.size,
     paises:ctrs.size
   };
+}
+// Placar em dia depois de mexer em país, viagem ou status (06/10): marcar um
+// país no mapa e voltar mostrava o número velho até recarregar.
+function atualizarPlacar(){
+  try{contarPlacar();pintarPlacar();if(naCasca())darDadosDeViagens()}catch(e){}
 }
 function pintarPlacar(){
   const pinta=(id,v)=>{const el=document.getElementById(id);if(el)el.textContent=v};
@@ -6302,6 +6342,10 @@ window.irParaAba=function(id){
 function ligarAbasNativas(){
   if(!naCasca())return;
   document.body.classList.add('na-casca');
+  // Abertura (06/10): "ainda não tenho dados" ANTES do login carregar. A casca
+  // guarda o que recebeu, e depois de trocar de conta as abas Viagens e
+  // Explorar seguiam com a conta anterior até os dados novos chegarem.
+  if(!DADOS_DA_CONTA){falarComACasca({tipo:'viagens',pronto:false});falarComACasca({tipo:'explorar',pronto:false})}
   // Quem já está na tela quando isto roda: sem este primeiro aviso, a barra
   // só apareceria na primeira troca de tela.
   const atual=document.querySelector('.screen.active');
@@ -6343,8 +6387,13 @@ async function guardarEnderecoPush(){
       method:'POST',
       body:JSON.stringify({user_id:S.user.id,token:ENDERECO_PUSH,plataforma:'ios'})
     },{'Content-Type':'application/json','Prefer':'resolution=merge-duplicates'});
-    if(!r.ok)console.warn('push_tokens',r.status);
-  }catch(e){console.warn('push_tokens',e&&e.message)}
+    // Falha ia só pro console.warn, que ninguém vê (06/10). Vai pro registro
+    // de erros — só o status, nunca o endereço do aparelho.
+    if(!r.ok)avisarFalhaDoPush(String(r.status));
+  }catch(e){avisarFalhaDoPush('rede')}
+}
+function avisarFalhaDoPush(st){
+  try{if(window.reportarErro)window.reportarErro('console','push: '+st,'');else console.warn('push',st)}catch(e){}
 }
 
 // Dispara um aviso. NUNCA manda o texto — só o tipo e o alvo. O texto é
@@ -6544,7 +6593,9 @@ async function loadDashboard(){
   maybeShowCheckin(); // idem — só aparece se achar algo, nunca trava a tela
   // Migração: viagens antigas criadas por "marcar país visitado" antes de existir
   // o marcador __quickvisit__ (só pode ter vindo de lá: status done + sem datas)
-  const legacy=S.trips.filter(t=>t.status==='done'&&t.dates==='');
+  // Só linha antiga (06/10): o '+ Adicionar' agora cria viagem 'done' sem data
+  // de propósito, e sem o corte ela virava marcador e sumia da lista.
+  const legacy=S.trips.filter(t=>t.status==='done'&&t.dates===''&&String(t.created_at||'')<'2026-10-06');
   for(const t of legacy){
     dbUpdate('trips',t.id,{dates:'__quickvisit__'});
     t.dates='__quickvisit__';
@@ -7057,8 +7108,7 @@ const LIST_TITLES={spots:'Todos os spots',cities:'Cidades',trips:'Viagens'};
 function allSpotsFlat(){
   const out=[];
   S.trips.forEach(t=>{
-    const country=(t.destinations&&t.destinations[0])||t.name;
-    (t._spots||[]).forEach(s=>out.push(Object.assign({},s,{_country:country,_tripId:t.id,_tripName:t.name})));
+    (t._spots||[]).forEach(s=>out.push(Object.assign({},s,{_country:paisDoSpot(s,t),_tripId:t.id,_tripName:t.name})));
   });
   return out;
 }
@@ -7147,14 +7197,15 @@ function renderList(){
   }
 
   else if(LS.mode==='cities'){
-    const map={};
-    spots.forEach(s=>{const c=cityOf(s);if(!c)return;(map[c]=map[c]||{city:c,country:s._country,n:0}).n++});
+    // Só as cidades que o placar conta (cidadesVisitadas), com todos os spots dela.
+    const map={},vis=cidadesVisitadas();
+    spots.forEach(s=>{const c=cityOf(s);if(!c||!vis.has(c))return;(map[c]=map[c]||{city:c,country:s._country,n:0}).n++});
     const list=Object.values(map).sort((a,b)=>b.n-a.n);
     LS.items=list;
     title.textContent=list.length+(list.length===1?' cidade':' cidades');
     const nPais=new Set(list.map(c=>c.country).filter(Boolean)).size;
     kicker.textContent=nPais?('em '+nPais+(nPais===1?' país':' países')):'';
-    if(!list.length)h='<div class="empty-state"><div class="ei">'+icon('city')+'</div><h3>Nenhuma cidade ainda</h3><p>As cidades aparecem conforme você salva spots.</p></div>';
+    if(!list.length)h='<div class="empty-state"><div class="ei">'+icon('city')+'</div><h3>Nenhuma cidade ainda</h3><p>As cidades aparecem quando você marca Fui num spot.</p></div>';
     list.forEach((c,i)=>{
       h+=`<div class="lrow" onclick="drillFromList(${i},'city')"><span class="lflag">${flagHTML(c.country)}</span><div class="lmain"><div class="lname">${esc(c.city)}</div><div class="lmeta">${esc(c.country)}</div></div><span class="lcount">${c.n} ${c.n===1?'spot':'spots'}</span></div>`;
     });
@@ -7274,6 +7325,7 @@ async function deleteSpot(){
   const{error}=await dbDelete('spots',id);
   if(!error){
     (S.trips||[]).forEach(t=>{if(t._spots)t._spots=t._spots.filter(s=>s.id!==id)});
+    atualizarPlacar();
     // Volta pra onde a pessoa estava. Antes ia sempre pra tela da viagem — e
     // spot da cidade onde mora caía na linha escondida da casa, numa tela com
     // "Excluir viagem" que apagaria todos os spots da cidade.
@@ -7683,7 +7735,8 @@ function spotsDaCidade(){
 // categoria tem spot. Abre em Fui; se a categoria só tem Quero ir, abre em
 // Quero ir; lembra a última escolha por cidade enquanto o app está aberto.
 // "Não recomendo" é um jeito de ter ido: entra em Fui.
-function foiNoSpot(sp){return sp.status==='been'||sp.status==='skip'}
+// Status nulo (spot antigo) também é Fui, igual viagemConta e o RLS (06/10).
+function foiNoSpot(sp){return sp.status!=='want'}
 function renderCityStatusFilter(){
   const box = document.getElementById('cityStatusFilter');
   if(!box) return;
@@ -7742,7 +7795,7 @@ function renderCityBody(){
     const thumb=s.photo_url?`<div class="place-thumb"><img src="${escUrl(fotoNaLargura(s.photo_url,220))}" loading="lazy" decoding="async" style="width:100%;height:100%;object-fit:cover;border-radius:inherit" onerror="onSpotPhotoError(this,'${esc(s.id)}','${esc(s.category)}')"></div>`:`<div class="place-thumb" data-foto="${esc(s.id)}">${catIcon(s.category)}</div>`;
     // Desenho 5a: o status sai da direita e vira a 1ª palavra da linha 2,
     // antes da nota. O nome ganha a largura toda.
-    const nota=(s.status==='been'?(s.my_review||s.my_note):(s.my_note||s.my_review))||'';
+    const nota=(foiNoSpot(s)?(s.my_review||s.my_note):(s.my_note||s.my_review))||'';
     // Desenho c2: o status sai da linha (o segmentado já diz). Fica a nota e a
     // frase (Fui) ou de quem veio a dica (Quero ir).
     const dica=s.status==='want'&&nomeDeQuemIndicou(s)?'dica de '+nomeDeQuemIndicou(s):'';
@@ -8225,6 +8278,7 @@ async function setStatus(s,save=true){
   spot.status=s;
   if(document.getElementById('city').classList.contains('active'))renderCityBody();
   conferirViagensQueViraram();
+  atualizarPlacar();
 }
 // ═══ EDITAR A NOTA ═══
 // A my_note era gravada UMA vez, no saveSpot, e depois so exibida — nao havia
@@ -8391,13 +8445,16 @@ function populateTripOpts(destaque){
 }
 // Pula direto pra ficha de nota: usado quando viagem, categoria e lugar já
 // são todos conhecidos (Explorar, check-in) — nada a perguntar.
-async function jumpToNoteSheet(trip,cat,place,status){
+async function jumpToNoteSheet(trip,cat,place,status,auto){
   S.addTrip=trip;S.addCat=cat;
   // pickPlace já chama resetNoteSheet() por dentro — setSpotStatus tem que
   // vir DEPOIS, senão o reset apaga o status que a gente acabou de marcar.
   // await: pickPlace pode precisar criar a viagem antes de abrir a ficha, e
   // sem esperar o setSpotStatus abaixo rodava antes de a ficha existir.
   await pickPlace(place); // também cuida do check de país trocado, se acontecer
+  // A viagem veio deduzida do lugar, não escolhida: o saveSpot decide de
+  // novo com o status final (06/10).
+  S.addTripAuto=!!auto;
   if(status)setSpotStatus(status);
 }
 function selTripForSpot(id){
@@ -8975,8 +9032,19 @@ function paisDoEndereco(addr){
 }
 // A viagem que ja cobre este lugar, se existir. Cidade vale mais que pais:
 // duas viagens pro Brasil e uma delas e a de Sao Paulo.
-function viagemQueCobre(cidade,pais){
-  const t=S.trips||[];
+// status (06/10): Fui/Não recomendo não entram em próxima viagem (ela é o
+// plano, e o lugar já foi); Quero ir procura a próxima viagem ANTES — é ali
+// que a pessoa está juntando o que quer fazer.
+function viagemQueCobre(cidade,pais,status){
+  const todas=S.trips||[];
+  if(status==='been'||status==='skip')return viagemQueCobreEm(todas.filter(x=>!viagemPlanejada(x)),cidade,pais);
+  if(status==='want'){
+    const plan=viagemQueCobreEm(todas.filter(viagemPlanejada),cidade,pais);
+    if(plan)return plan;
+  }
+  return viagemQueCobreEm(todas,cidade,pais);
+}
+function viagemQueCobreEm(t,cidade,pais){
   // A cidade da viagem nao mora so em initial_city: uma viagem que ja tem
   // spots em Paris cobre Paris, mesmo tendo nascido sem cidade inicial (todas
   // as viagens antes da migracao 007 nasceram assim). Se os spots ainda nao
@@ -9089,7 +9157,7 @@ async function adicionarSpotAbertoDoAmigo(btn){
     abrirEscolhaDeViagem();
     return;
   }
-  jumpToNoteSheet(viagem,cat,lugar,'want');
+  jumpToNoteSheet(viagem,cat,lugar,'want',true);
 }
 
 
@@ -9117,10 +9185,16 @@ function loadExplore(){
 async function abrirExploreInicial(){
   if(EXM_LIGADO)return exmAbrirInicial();
   const casa=(S.profile&&S.profile.home_city)||'';
+  const antes=exploreMarca();
   const aqui=await cidadeOndeEstou();
+  if(exploreMexeu(antes))return;
   if(aqui&&(!casa||!mesmoLugar(aqui,casa)))return exploreEm(aqui,'Perto de você · '+aqui);
   if(casa)return exploreEm(casa,'Sua cidade · '+casa);
 }
+// A localização pode levar segundos (até 4 s na casca). Se nesse meio-tempo
+// a pessoa digitou ou buscou, a abertura não passa por cima (06/10).
+function exploreMarca(){const c=document.getElementById('exploreCitySearch');return{req:EXPLORE_REQ,txt:c?c.value:''}}
+function exploreMexeu(a){const c=document.getElementById('exploreCitySearch');return EXPLORE_REQ!==a.req||(c?c.value:'')!==a.txt}
 function exploreEm(cidade,rotulo){
   const campo=document.getElementById('exploreCitySearch');
   if(campo)campo.value=cidade;
@@ -10258,7 +10332,9 @@ async function exmRecentralizar(){
 // Abrir o Explorar no mapa: com a sua localização, busca ~1,4 km em volta de
 // você (a mesma área de "rua" da busca); sem ela, abre na lista da sua cidade.
 async function exmAbrirInicial(){
+  const antes=exploreMarca();
   const cidade=await cidadeOndeEstou();
+  if(exploreMexeu(antes))return;
   const a=window.__spotAqui;
   if(a&&cidade){
     const campo=document.getElementById('exploreCitySearch');if(campo)campo.value=cidade;
@@ -11127,10 +11203,10 @@ function comecarSpotSemViagem(){
 // Decide a viagem a partir do proprio lugar. Mesma regra do fluxo de amigo:
 // usa a que cobre o destino, cria quando nao existe, e so pergunta quando nem
 // o endereco diz o pais.
-async function viagemParaOLugar(p,semCriar){
+async function viagemParaOLugar(p,semCriar,status){
   const cidade=p.city||'';
   const pais=p.country||paisDoEndereco(p.address||p.meta||'');
-  return garantirViagem(cidade,pais,semCriar);
+  return garantirViagem(cidade,pais,semCriar,status);
 }
 // Devolve a viagem que serve pro lugar, criando SO se nao existir nenhuma.
 //
@@ -11147,7 +11223,7 @@ async function viagemParaOLugar(p,semCriar){
 // PENDENTE, que o saveSpot cria de verdade na hora de salvar — escolher o
 // lugar e desistir deixava uma viagem vazia pra trás (29/09).
 function viagemPendente(cidade,pais){return{__pendente:true,cidade,pais,id:'',name:pais,destinations:[pais],_spots:[]}}
-async function garantirViagem(cidade,pais,semCriar){
+async function garantirViagem(cidade,pais,semCriar,status){
   // Lugar da cidade onde mora não vira viagem (ver "ONDE VOCÊ MORA").
   if(ehDaCasa(cidade,pais)){
     const ja=(S.trips||[]).find(ehCasa);
@@ -11155,11 +11231,12 @@ async function garantirViagem(cidade,pais,semCriar){
     if(semCriar)return viagemPendente(cidade,pais);
     const casa=await viagemDeCasa(pais);if(casa)return casa;
   }
-  let viagem=viagemQueCobre(cidade,pais);
+  let viagem=viagemQueCobre(cidade,pais,status);
   if(viagem)return viagem;
   if(!pais)return null;
   // Ja existe viagem desse pais, mesmo que a cidade nao case?
-  const doPaisAgora=()=>(S.trips||[]).find(t=>!isNonTrip(t)&&(
+  const foi=status==='been'||status==='skip';
+  const doPaisAgora=()=>(S.trips||[]).find(t=>!isNonTrip(t)&&!(foi&&viagemPlanejada(t))&&(
     mesmoLugar(t.name,pais)||(t.destinations||[]).some(d=>mesmoLugar(d,pais))));
   const doPais=doPaisAgora();
   if(doPais)return doPais;
@@ -11186,13 +11263,14 @@ async function pickPlace(p){
       abrirEscolhaDeViagem();
       return;
     }
-    S.addTrip=viagem;
+    S.addTrip=viagem;S.addTripAuto=true;
     // Viagem recem-decidida a partir do proprio lugar: nao ha pais pra
     // conferir contra, os dois vem da mesma fonte.
     S.selPlace=p;document.getElementById('selName').textContent=p.name;document.getElementById('selMeta').textContent=p.meta||p.address||'';
     document.getElementById('selIcon').innerHTML=p.icon;resetNoteSheet();nextOv('ov-search','ov-note');
     return;
   }
+  S.addTripAuto=false;
   // ── Sanity check: does the place's country match the trip's country? ──
   // So faz sentido comparar pais com pais. Viagem pode se chamar pela cidade
   // ("Paris"), e ai a comparacao contra "França" acusava troca de pais que
@@ -11346,6 +11424,13 @@ function resetNoteSheet(){
   document.getElementById('ratingRow').style.display='none';
   document.querySelectorAll('#addStars .star-btn').forEach(b=>b.style.color='rgba(0,0,0,0.1)');
   const nf=document.getElementById('noteField');nf.value='';nf.classList.remove('error');
+  // 06/10: lugar que já é Fui abre a folha já em Fui, com a nota dele —
+  // abrir em Quero ir convidava a rebaixar sem querer.
+  const ja=S.selPlace&&meuSpotIgual(S.selPlace.name,S.selPlace.city||'');
+  if(ja&&ja.status==='been'){
+    setSpotStatus('been');
+    addRating=Number(ja.my_rating)||0;pintarEstrelas('#addStars',addRating);atualizarBotaoSalvar();
+  }
 }
 // ═══ CRITERIO DE CIDADE ═══
 // A cidade e o MUNICIPIO: a menor unidade administrativa que o Google
@@ -11390,8 +11475,15 @@ async function resolverCidadeDoSpot(p,trip){
   btn.disabled=true;btn2.disabled=true;
   (addAnother?btn2:btn).textContent='Salvando...';
   const p=S.selPlace;
+  // 06/10: viagem deduzida do lugar (não escolhida) decide de novo com o
+  // status final — Fui não cai na próxima viagem, Quero ir prefere ela.
+  if(S.addTrip&&S.addTripAuto&&!S.addTrip.__pendente&&!ehCasa(S.addTrip)){
+    const pais=p.country||paisDoEndereco(p.address||p.meta||'')||(S.addTrip.destinations||[])[0]||'';
+    const melhor=await garantirViagem(p.city||'',pais,true,addStatus);
+    if(melhor)S.addTrip=melhor;
+  }
   if(S.addTrip&&S.addTrip.__pendente){
-    const criada=await garantirViagem(S.addTrip.cidade,S.addTrip.pais);
+    const criada=await garantirViagem(S.addTrip.cidade,S.addTrip.pais,false,addStatus);
     if(!criada){
       toast('Não salvou','Confere a conexão e tenta de novo.','alert');
       btn.textContent='Salvar spot';btn2.textContent='Salvar e adicionar outro';btn.disabled=false;btn2.disabled=false;
@@ -11456,11 +11548,14 @@ async function resolverCidadeDoSpot(p,trip){
   const existente=meuSpotIgual(p.name,cidade);
   let data=null,error=null,atualizou=false;
   if(existente){
-    const patch={status:addStatus};
+    // 06/10: re-salvar como Quero ir um lugar que já é Fui/Não recomendo não
+    // rebaixa — só acrescenta a frase. Subir de Quero ir pra Fui continua.
+    const rebaixaria=addStatus==='want'&&(existente.status==='been'||existente.status==='skip');
+    const patch=rebaixaria?{}:{status:addStatus};
     if(addStatus==='been'){patch.my_rating=addRating;if(note)patch.my_review=note}
-    else if(note)patch.my_note=note;
+    else if(note)patch[rebaixaria?'my_review':'my_note']=note;
     if(fotoPropria)patch.photo_url=fotoPropria;
-    const r=await dbUpdate('spots',existente.id,patch);
+    const r=Object.keys(patch).length?await dbUpdate('spots',existente.id,patch):null;
     if(r&&r.error)error=r.error;
     else{Object.assign(existente,patch);data=existente;atualizou=true}
   }else ({data,error}=await dbInsert('spots',rec));
@@ -11481,13 +11576,18 @@ async function resolverCidadeDoSpot(p,trip){
   }
   if(!error&&data){
     if(!atualizou){if(!t._spots)t._spots=[];t._spots.push(data)}
+    // A foto da folha da nota também entra em spot_fotos (06/10): é o que
+    // deixa ela ser tirada depois no carrossel. Falhar aqui não desfaz o spot.
+    if(fotoPropria&&data.id){
+      try{await dbInsert('spot_fotos',{spot_id:data.id,url:fotoPropria});FOTOS_SUAS.delete(data.id)}catch(e){}
+    }
     // Antes de loadDashboard, que é quem dispara o backfill: assim a busca de
     // Instagram deste spot é a primeira, não a última.
     spotPrioritario=data.id;
     // Com "Salvar e adicionar outro" a ficha não abre: o aviso curto fica.
     // Sem ele, quem confirma é a faixa verde na ficha (logo abaixo).
     if(addAnother){
-      if(atualizou)toast('Já estava na sua lista','Agora em '+({been:'Fui',want:'Quero ir',skip:'Não recomendo'}[addStatus]||'Quero ir')+' · '+p.name,'check');
+      if(atualizou)toast('Já estava na sua lista','Agora em '+({been:'Fui',want:'Quero ir',skip:'Não recomendo'}[data.status||addStatus]||'Quero ir')+' · '+p.name,'check');
       else toast(foiPraCasa?'Salvo em Onde você mora':(t!==S.addTrip?'Salvo em '+t.name:'Spot salvo'),note?`"${p.name} · ${note}"`:p.name,'check');
     }
     if(S.curTrip?.id===t.id){
@@ -11526,7 +11626,7 @@ async function resolverCidadeDoSpot(p,trip){
       const origem=tela&&['city','profile','explore','list','dashboard'].includes(tela.id)?tela.id:'trip';
       const salvo=(S.trips||[]).reduce((a,v)=>a||(v._spots||[]).find(x=>x.id===data.id),null)||data;
       openPlace(salvo.id,origem);
-      mostrarFaixaSalvo(addStatus,salvo);
+      mostrarFaixaSalvo(salvo.status||addStatus,salvo);
     }
   }else toast('Erro',error?.message||'');
   btn.textContent='Salvar spot';btn2.textContent='Salvar e adicionar outro';btn.disabled=false;btn2.disabled=false;
@@ -11543,7 +11643,9 @@ async function createTrip(){
   const name=proxima?plnJuntar(paises):selectedNewTripCity.country;
   // Uma viagem por país: se ela já existe, abre a que existe (com um destino
   // pendente do Explorar ou de amigo, segue o fluxo antigo, que escolhe ali).
-  const ja=!S.explorePick&&paises.length===1&&(S.trips||[]).find(t=>!isNonTrip(t)&&(mesmoLugar(t.name,name)||(t.destinations||[]).some(d=>mesmoLugar(d,name))));
+  // No modo próxima (06/10) só reaproveita o que já é próxima viagem: a
+  // Argentina que você já fez não é o plano de voltar pra lá.
+  const ja=!S.explorePick&&paises.length===1&&(S.trips||[]).find(t=>!isNonTrip(t)&&(!proxima||viagemPlanejada(t))&&(mesmoLugar(t.name,name)||(t.destinations||[]).some(d=>mesmoLugar(d,name))));
   if(ja){
     closeOv('ov-newtrip');
     toast(viagemPlanejada(ja)?name+' já está nas suas próximas viagens':'Você já tem '+name+' nas suas viagens','', 'suitcase');
@@ -11578,23 +11680,28 @@ async function createTrip(){
       btn.textContent='Criar viagem';btn.style.pointerEvents='auto';return;
     }
   }
-  if(!data)({data,error}=await dbInsert('trips',{user_id:S.user.id,name,destinations:[name],dates,date_start:s||null,date_end:e||null,status:'planning',initial_city:cidadeEscolhida||null}));
+  // '+ Adicionar' promete 'entra como viagem feita' (06/10): nasce 'done', e o
+  // 1º Quero ir não apaga mais o país do mapa. Com um lugar pendente (Explorar,
+  // amigo) a viagem é só o destino do lugar e segue 'planning'.
+  const st=S.explorePick?'planning':'done';
+  if(!data)({data,error}=await dbInsert('trips',{user_id:S.user.id,name,destinations:[name],dates,date_start:s||null,date_end:e||null,status:st,initial_city:cidadeEscolhida||null}));
   // Degrada aos poucos se colunas novas ainda não existirem (migração não rodada):
   // 1) sem colunas de data, com initial_city  2) com colunas de data, sem initial_city  3) nenhuma das duas
   if(error&&!data){
-    const retry1=await dbInsert('trips',{user_id:S.user.id,name,destinations:[name],dates,status:'planning',initial_city:cidadeEscolhida||null});
+    const retry1=await dbInsert('trips',{user_id:S.user.id,name,destinations:[name],dates,status:st,initial_city:cidadeEscolhida||null});
     data=retry1.data;error=retry1.error;
   }
   if(error&&!data){
-    const retry2=await dbInsert('trips',{user_id:S.user.id,name,destinations:[name],dates,date_start:s||null,date_end:e||null,status:'planning'});
+    const retry2=await dbInsert('trips',{user_id:S.user.id,name,destinations:[name],dates,date_start:s||null,date_end:e||null,status:st});
     data=retry2.data;error=retry2.error;
   }
   if(error&&!data){
-    const retry3=await dbInsert('trips',{user_id:S.user.id,name,destinations:[name],dates,status:'planning'});
+    const retry3=await dbInsert('trips',{user_id:S.user.id,name,destinations:[name],dates,status:st});
     data=retry3.data;error=retry3.error;
   }
   if(!error&&data){
     data._spots=[];data._spotsLoaded=true;S.trips.unshift(data);closeOv('ov-newtrip');
+    atualizarPlacar();
     // reset picker
     selectedNewTripCity=null;
     document.getElementById('countrySearch').value='';
@@ -12401,13 +12508,13 @@ function textoDaFalhaAoSalvar(data){
   return data==='sem_pais'?'Não achei em que país fica. Abra a ficha e salve por lá.':'Confere a conexão e tenta de novo.';
 }
 async function salvarSpotDireto(p,cat,status,avaliacao){
-  let viagem=await viagemParaOLugar(p);
+  let viagem=await viagemParaOLugar(p,false,status);
   // Sem país no lugar nem no endereço (06/10): pergunta ao Google antes de
   // desistir, como o salvarSpotPendente já fazia. Só nesse caso — se o país
   // existia, quem falhou foi o banco, e outra busca paga não ajuda.
   if(!viagem&&!(p.country||paisDoEndereco(p.address||p.meta||''))){
     const pais=await comPrazo(paisPeloGoogle(p),4000,'');
-    if(pais){p=Object.assign({},p,{country:pais});viagem=await viagemParaOLugar(p)}
+    if(pais){p=Object.assign({},p,{country:pais});viagem=await viagemParaOLugar(p,false,status)}
   }
   if(!viagem)return 'sem_pais';
   const cidade=await resolverCidadeDoSpot(p,viagem);
@@ -13049,6 +13156,13 @@ async function carregarComentarios(spotId){
   if(faltando.length){
     const perfis=await dbGet('profiles','id=in.('+faltando.join(',')+')');
     (perfis||[]).forEach(p=>{COMENT_PERFIS[p.id]=p});
+    // Quem não é seu amigo o RLS de profiles esconde, e virava 'Alguém'
+    // (06/10). A 032 dá nome e @ de quem está na conversa de um spot que
+    // você vê. Marcado _conversa: o nome não vira link pro perfil.
+    if(faltando.some(id=>!COMENT_PERFIS[id])){
+      const daConversa=await dbRpc('perfis_da_conversa',{p_spot:spotId});
+      if(Array.isArray(daConversa)&&!falhou(daConversa))daConversa.forEach(p=>{if(p&&p.id&&!COMENT_PERFIS[p.id])COMENT_PERFIS[p.id]=Object.assign({},p,{_conversa:true})});
+    }
   }
   return COMENTARIOS[spotId];
 }
@@ -13080,7 +13194,8 @@ function renderComentarios(spotId,alvo,donoDoSpot){
       :'';
     // Nome e foto de quem comentou abrem o perfil da pessoa (05/10). O seu
     // não abre nada. Só uuid no onclick.
-    const abre=(c.user_id&&c.user_id!==meu)?' onclick="abrirPerfilDoComentario(\''+esc(c.user_id)+'\')" role="button"':'';
+    // Quem não é amigo (_conversa, 06/10) não abre: o perfil dele não carrega.
+    const abre=(c.user_id&&c.user_id!==meu&&!(p&&p._conversa))?' onclick="abrirPerfilDoComentario(\''+esc(c.user_id)+'\')" role="button"':'';
     return'<div class="coment-item">'
       +avatarDe(c.user_id,nome,'coment-av'+(abre?' coment-link':'')).replace('<div class=','<div'+abre+' class=')
       +'<div class="coment-corpo">'
@@ -14245,8 +14360,27 @@ function visitedCountryNames(){
   const set=new Set();
   // Todos os países da viagem: viagem de vários destinos ("Itália e França")
   // pinta os dois.
-  S.trips.forEach(t=>{if(!viagemConta(t))return;const ds=(t.destinations&&t.destinations.length)?t.destinations:[t.name];ds.forEach(n=>{if(n)set.add(n)})});
+  S.trips.forEach(t=>paisesQueAViagemPinta(t).forEach(n=>{if(n)set.add(n)}));
   return [...set];
+}
+// Os países que UMA viagem pinta (06/10). Viagem de um destino: como antes
+// (viagemConta decide). De vários ("Itália e França"): só o país onde houve
+// Fui — ir à Itália e deixar a França em Quero ir não é ter ido à França.
+// Viagem de vários destinos sem spot nenhum (marcada feita) pinta todos.
+function paisesQueAViagemPinta(t){
+  if(!viagemConta(t))return [];
+  const ds=((t.destinations&&t.destinations.length)?t.destinations:[t.name]).filter(Boolean);
+  if(ds.length<2)return ds;
+  const sp=t._spots||[];
+  if(!sp.length)return ds;
+  const set=new Set();
+  sp.forEach(x=>{if(x.status==='want')return;const p=paisDoSpot(x,t);if(p)set.add(p)});
+  return [...set];
+}
+// O país DE UM SPOT (06/10): o endereço diz onde ele fica; o 1º destino da
+// viagem é só o último recurso (punha tudo de "Itália e França" na Itália).
+function paisDoSpot(sp,t){
+  return paisDoEndereco(sp&&sp.address)||(t&&t.destinations&&t.destinations[0])||(t&&t.name)||'';
 }
 function homeCountryName(){
   return(S.profile&&S.profile.home_country)||null;
@@ -14336,7 +14470,7 @@ async function desmarcarPais(c,ev){
     if(error){toast('Erro','Não consegui tirar agora. Tenta de novo.');return}
     S.trips=S.trips.filter(x=>x.id!==t.id);
   }
-  renderTrips();populateTripOpts();loadProfile();
+  renderTrips();populateTripOpts();loadProfile();atualizarPlacar();
   toast(c+' saiu do mapa','','trash');
 }
 // ═══ A ESTANTE ═══
@@ -15342,7 +15476,7 @@ function abrirMapaMundi(origem){
   renderWorldMap(visited);
   renderListaDePaises(visited,'mapaPaises');
 }
-function fecharMapaMundi(){goTo(voltarDoMapa)}
+function fecharMapaMundi(){atualizarPlacar();goTo(voltarDoMapa)}
 async function renderMiniMapa(){
   const wrap=document.getElementById('dashMapa');
   if(!wrap)return;
@@ -15396,7 +15530,7 @@ async function marcarPaisVisitado(nome){
     destinations:[nome],dates:'__quickvisit__',status:'done'}]);
   if(error||!data||!data.length){toast('Erro','Não consegui marcar. Tenta de novo.');return}
   data.forEach(t=>{t._spots=[];S.trips.unshift(t)});
-  renderTrips();populateTripOpts();
+  renderTrips();populateTripOpts();atualizarPlacar();
   // O mapa tem que ficar verde na hora: é o retorno do toque.
   const visitados=visitedCountryNames();
   document.getElementById('mapaTitulo').textContent=
@@ -15876,6 +16010,8 @@ async function loadFriends(daAba){
     }else{
       c.innerHTML='<div class="empty-state"><div class="ei">'+icon('users')+'</div><h3>Não carregou</h3><p>Confere a conexão e puxa pra baixo pra tentar de novo.</p></div>';
       falarComACasca({tipo:'amigos',pronto:false});
+      // Sem isto a aba nativa girava pra sempre na 1ª carga que falhou (06/10).
+      falarComACasca({tipo:'aviso',titulo:'Não carregou',texto:'Toque em Amigos de novo pra tentar.',erro:true});
     }
     if(navigator.onLine)toast('Não carregou','Confere a conexão. O que está na tela pode estar desatualizado.','alert');
     return;
@@ -15914,7 +16050,11 @@ async function loadFriends(daAba){
       // Amigo aceito: linha do profiles direto (é o que a política libera).
       dbGet('profiles',`id=in.(${friendIds.join(',')})`),
       dbGet('trips',`user_id=in.(${friendIds.join(',')})&dates=not.in.(__quickvisit__,__home__,__casa__)&proxima=is.true&order=created_at.desc&limit=15`),
-      dbGet('spots',`user_id=in.(${friendIds.join(',')})&status=eq.been&order=created_at.desc&limit=15`),
+      // Ordem de QUANDO foi (fui_em, 032), não de quando salvou (06/10): o
+      // Quero ir antigo que virou Fui hoje aparece hoje. Sem a coluna (400),
+      // volta pra ordem antiga.
+      dbGet('spots',`user_id=in.(${friendIds.join(',')})&status=eq.been&order=fui_em.desc.nullslast,created_at.desc&limit=15`)
+        .then(l=>falhou(l)?dbGet('spots',`user_id=in.(${friendIds.join(',')})&status=eq.been&order=created_at.desc&limit=15`):l),
       dbGet('spot_comments',`user_id=in.(${friendIds.join(',')})&order=created_at.desc&limit=15`).catch(()=>[]),
       meusSpots.length
         ? dbGet('spot_comments',`spot_id=in.(${meusSpots.join(',')})&user_id=neq.${uid}&order=created_at.desc&limit=15`).catch(()=>[])
@@ -15943,7 +16083,7 @@ async function loadFriends(daAba){
     // tem público. A consulta já trazia todos esses campos, só eram jogados
     // fora na montagem.
     spots.forEach(sp=>{
-      feedItems.push({tipo:'visita',user_id:sp.user_id,created_at:sp.created_at,spot:sp});
+      feedItems.push({tipo:'visita',user_id:sp.user_id,created_at:sp.fui_em||sp.created_at,spot:sp});
     });
     // Nome do lugar comentado: dos spots dos amigos que ja vieram acima, ou
     // dos seus. Sem ele o item diria so "comentou em algo".
@@ -16114,7 +16254,9 @@ function darDadosDeAmigos(){
     salvando:SALVANDO_NO_FEED,
     abas:abas,
     feed:feed,
-    recebidos:incoming.map(r=>Object.assign({pedido:r.id},pessoaPraTela(r.follower_id,pmap))),
+    // detalhe (06/10): '@ana · De Recife · 12 spots'. A build 19 ainda não
+    // desenha este campo; vai junto pra próxima.
+    recebidos:incoming.map(r=>Object.assign({pedido:r.id,detalhe:detalheDoPedido(pmap[r.follower_id])},pessoaPraTela(r.follower_id,pmap))),
     enviados:outgoing.map(r=>Object.assign({pedido:r.id},pessoaPraTela(r.following_id,pmap))),
     amigos:(friendIds||[]).map(fid=>pessoaPraTela(fid,pmap)),
     // Sem amigo nenhum a tela é o vazio do desenho, sem abas. convidou
@@ -16406,7 +16548,7 @@ function renderFriendsTab(){
         // saber qual era qual antes de aceitar.
         return '<div class="req-card">'+avatarDe(r.follower_id,name,'feed-avatar')
           +'<div style="flex:1;min-width:0"><div class="req-name">'+esc(name)+'</div>'
-          +(p&&p.username?'<div class="busca-user">@'+esc(p.username)+'</div>':'')+'</div>'
+          +(detalheDoPedido(p)?'<div class="busca-user">'+esc(detalheDoPedido(p))+'</div>':'')+'</div>'
           +'<button class="req-btn req-decline" onclick="respondRequest(\''+esc(r.id)+'\',false)">Recusar</button>'
           +'<button class="req-btn req-accept" onclick="respondRequest(\''+esc(r.id)+'\',true)">Aceitar</button></div>';
       }).join('');

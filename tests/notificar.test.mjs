@@ -9,7 +9,7 @@ import { onRequestPost } from '../functions/api/notificar.js';
 const ALVO = '11111111-1111-1111-1111-111111111111';
 const SPOT = '22222222-2222-2222-2222-222222222222';
 
-function montar(comentarioExiste) {
+function montar(comentarioExiste, donoDoSpot) {
   const kv = new Map();
   const env = {
     SUPABASE_SERVICE_KEY: 's',
@@ -21,7 +21,7 @@ function montar(comentarioExiste) {
     if (u.includes('/auth/v1/user')) return new Response(JSON.stringify({ id: 'eu' }), { status: 200 });
     if (u.includes('enderecos_para_avisar')) return new Response(JSON.stringify([{ token: 'ExponentPushToken[a]' }]), { status: 200 });
     if (u.includes('/rest/v1/spot_comments')) return new Response(JSON.stringify(comentarioExiste ? [{ id: 'c' }] : []), { status: 200 });
-    if (u.includes('/rest/v1/spots')) return new Response(JSON.stringify([{ name: 'Mocotó' }]), { status: 200 });
+    if (u.includes('/rest/v1/spots')) return new Response(JSON.stringify([{ name: 'Mocotó', user_id: donoDoSpot || ALVO }]), { status: 200 });
     if (u.includes('/rest/v1/profiles')) return new Response(JSON.stringify([{ display_name: 'Clara' }]), { status: 200 });
     if (u.includes('exp.host')) { enviados.push(JSON.parse(opt.body)); return new Response('{"data":[{"status":"ok"}]}', { status: 200 }) }
     return new Response('[]', { status: 200 });
@@ -57,5 +57,26 @@ test('pedido de amizade: um aviso por dia pra mesma pessoa', async () => {
   try {
     for (let i = 0; i < 5; i++) await onRequestPost({ request: pedido({ tipo: 'pedido', alvo: ALVO }), env, waitUntil: () => {} });
     assert.strictEqual(enviados.length, 1);
+  } finally { globalThis.fetch = antigo }
+});
+
+// 06/10: o dono respondendo no fio avisa quem comentou — e o texto não pode
+// dizer 'no seu lugar' pra quem não é dono do spot.
+test('resposta do dono no fio: respondeu na conversa', async () => {
+  const antigo = globalThis.fetch;
+  const { env, enviados } = montar(true, 'eu');
+  try {
+    await onRequestPost({ request: pedido({ tipo: 'comentario', alvo: ALVO, spot: SPOT }), env, waitUntil: () => {} });
+    assert.strictEqual(enviados[0][0].body, 'Clara respondeu na conversa de Mocotó');
+  } finally { globalThis.fetch = antigo }
+});
+
+test('resposta nao e tipo que o app pode pedir', async () => {
+  const antigo = globalThis.fetch;
+  const { env, enviados } = montar(true);
+  try {
+    const r = await onRequestPost({ request: pedido({ tipo: 'resposta', alvo: ALVO, spot: SPOT }), env, waitUntil: () => {} });
+    assert.strictEqual(r.status, 400);
+    assert.strictEqual(enviados.length, 0);
   } finally { globalThis.fetch = antigo }
 });
