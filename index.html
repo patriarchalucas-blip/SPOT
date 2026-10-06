@@ -15731,21 +15731,6 @@ async function loadFriends(daAba){
   const outgoingVivos=outgoing.filter(r=>!jaAmigo.has(r.following_id));
   FRIENDS_DATA={uid,friendIds,incoming:incomingVivos,outgoing:outgoingVivos,pmap,feedItems,lugaresPorAmigo:{},convidou:CONVIDOU};
   AMIGOS_CARREGADO_EM=Date.now();
-  // DIAGNÓSTICO TEMPORÁRIO (06/10): pedido e foto de amigo somem no iPhone do
-  // Lucas e não reproduzem aqui. Só contagens, uma vez por aparelho por dia,
-  // só dentro do app. Sai assim que a causa aparecer em /api/erro.
-  try{
-    const k='spot_diag_amigos_'+new Date().toISOString().slice(0,10);
-    if(naCasca()&&!localStorage.getItem(k)&&window.reportarErro){
-      localStorage.setItem(k,'1');
-      const comFoto=friendIds.filter(f=>pmap[f]&&pmap[f].avatar_url);
-      const host=comFoto.length?String(pmap[comFoto[0]].avatar_url).split('/')[2]:'-';
-      reportarErro('console','diag-amigos v1 conta='+((S.profile&&S.profile.username)==='lucaspatriarcha'?'lucaspatriarcha':'outra')
-        +' pend_brutos='+incoming.length+' pend_vivos='+incomingVivos.length+' bloq='+BLOQUEADOS.size
-        +' amigos='+friendIds.length+' com_foto='+comFoto.length+' host='+host
-        +' perfis='+Object.keys(pmap).length,'');
-    }
-  }catch(e){}
   // Já gerou um link de convite? Decide o vazio: "Convite enviado" em vez
   // de pedir de novo o que a pessoa já fez. Falhou a consulta, fica o vazio
   // de quem nunca convidou — o pior caso é oferecer o convite outra vez.
