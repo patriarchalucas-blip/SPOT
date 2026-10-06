@@ -3820,6 +3820,7 @@ function plnSpotsDeles(){
   PLN_DELES.t=Date.now();
   PLN_DELES.p=(async()=>{
     const ids=await plnCarregarAmigos();
+    PLN_DELES.ids=ids;   // de quem são estes spots (o Planejar confere)
     if(!ids.length)return[];
     const lista=ids.join(',');
     const [viagens,spots]=await Promise.all([
@@ -4057,11 +4058,24 @@ function plnDefinirDestino(i){
 }
 
 // ── 4d a lista juntada ──
-function plnVerLista(){if(!PLN.destinos.length||!PLN.amigos.size)return;PLN.abaCidade='';PLN.cat='';PLN.montando=false;PLN.montado=null;goTo('planejar');plnMontarLista()}
+// Abrir a lista busca os spots de novo (06/10): a memória de 2 min deixava de
+// fora o que a amiga salvou nesse meio-tempo. É o nosso banco, não o Google.
+function plnVerLista(){if(!PLN.destinos.length||!PLN.amigos.size)return;PLN_DELES.t=0;PLN.abaCidade='';PLN.cat='';PLN.montando=false;PLN.montado=null;goTo('planejar');plnMontarLista()}
+// Só a montagem mais nova escreve (06/10): duas rodavam juntas, e a antiga
+// (com a lista de antes da amizade) terminava por último e apagava a certa.
+let PLN_MONTA=0;
 async function plnMontarLista(){
+  const meu=++PLN_MONTA;
   const box=document.getElementById('plnLista');
   if(!PLN.grupos.length)box.innerHTML='<p class="pln-nada" style="margin-top:40px">Juntando os spots...</p>';
-  const deles=(await plnSpotsDeles()).filter(s=>PLN.amigos.has(s.user_id));
+  // Amizade nova que a memória de 2 min ainda não conhece (06/10): quem
+  // aceitou foi a outra pessoa, e o Planejar abriu direto do perfil dela.
+  // As duas memórias vencem separadas: a de spots pode ser de antes da
+  // amizade mesmo com a de amigos já nova. Confere a de spots.
+  let todos=await plnSpotsDeles();
+  if([...PLN.amigos].some(id=>!(PLN_DELES.ids||[]).includes(id))){esquecerAmigosGuardados();todos=await plnSpotsDeles()}
+  if(meu!==PLN_MONTA)return;
+  const deles=todos.filter(s=>PLN.amigos.has(s.user_id));
   PLN.grupos=plnAgrupar(plnNosDestinos(plnMeusSpots().concat(deles)));
   plnPintarLista();
 }
@@ -16951,6 +16965,11 @@ async function loadFriends(daAba){
   const jaAmigo=new Set(friendIds);
   const incomingVivos=incoming.filter(r=>!jaAmigo.has(r.follower_id));
   const outgoingVivos=outgoing.filter(r=>!jaAmigo.has(r.following_id));
+  // A lista de amigos mudou (06/10): quando é a OUTRA pessoa que aceita, o
+  // respondRequest daqui nunca roda, e o Planejar/ficha/Atividade seguiam
+  // com a lista guardada de antes por até 2 min — sem a amiga nova.
+  const antes=(FRIENDS_DATA&&FRIENDS_DATA.uid===uid)?FRIENDS_DATA.friendIds.slice().sort().join(','):null;
+  if(antes!==null&&antes!==friendIds.slice().sort().join(','))esquecerAmigosGuardados();
   FRIENDS_DATA={uid,friendIds,incoming:incomingVivos,outgoing:outgoingVivos,pmap,feedItems,lugaresPorAmigo:{},convidou:CONVIDOU};
   AMIGOS_CARREGADO_EM=Date.now();
   // Já gerou um link de convite? Decide o vazio: "Convite enviado" em vez

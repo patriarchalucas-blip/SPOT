@@ -315,7 +315,10 @@ ver `mobile/app-store/login-apple.md`. Pede um build novo que substitui a build 
 4. **Sem staging** — cada push no `main` vai direto pra produção. Existe CI
    (`.github/workflows/ci.yml`: `node --test` + sintaxe do script e das functions),
    mas ele roda EM PARALELO com o deploy: avisa, não impede. Rodar `node --test`
-   antes de todo push.
+   antes de todo push. Desde 06/10, também `node ferramentas/pente-fino.mjs` (ERROS (0)) e
+   `node ferramentas/jornadas.mjs` (FALHAS (0)): duas contas no mesmo banco falso que imita
+   o RLS — pedido, aceite, comentário, Planejar, bloqueio, troca de conta. Os dois pedem o
+   servidor estático local na porta 8935.
 
 ## Próximos passos discutidos (não construídos ainda, sem ordem de prioridade fechada)
 
