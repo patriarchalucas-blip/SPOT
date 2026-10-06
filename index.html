@@ -555,8 +555,9 @@ input,textarea,select{font-size:max(16px,1em)!important}
   display:flex;align-items:center;justify-content:center;font-family:var(--mono);font-size:11px}
 .coment-corpo{flex:1;min-width:0}
 .coment-topo{display:flex;align-items:center;gap:8px}
-.coment-nome{font-size:15px;font-weight:600;color:var(--ink)}
-.coment-quando{font-size:12px;color:var(--ink3)}
+/* 06/10: nome comprido corta com reticência em vez de esmagar a data. */
+.coment-nome{font-size:15px;font-weight:600;color:var(--ink);min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.coment-quando{font-size:12px;color:var(--ink3);flex:none;white-space:nowrap}
 /* O X fica no fim da linha e so aparece pra quem pode apagar. */
 .coment-x{margin-left:auto;width:30px;height:30px;border:none;background:none;color:var(--ink3);
   display:flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0}
@@ -600,7 +601,9 @@ input,textarea,select{font-size:max(16px,1em)!important}
 .am-barra{display:flex;justify-content:space-between;align-items:center;padding:8px 8px 0}
 .am-barra button{width:44px;height:44px;background:none;border:none;padding:0;display:flex;align-items:center;justify-content:center;color:var(--ink);cursor:pointer}
 .am-cab{padding:8px 20px 0}
-.am-nome{margin:0;font-size:40px;font-weight:700;letter-spacing:-.04em;line-height:1;color:var(--ink);overflow-wrap:anywhere}
+/* 06/10: nome de 60 caracteres ia a 4 linhas — encolhe e para em 2. */
+.am-nome{margin:0;font-size:clamp(28px,9vw,40px);font-weight:700;letter-spacing:-.04em;line-height:1;color:var(--ink);overflow-wrap:anywhere;
+  display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2;overflow:hidden}
 .am-linha{margin-top:4px;font-size:15px;color:var(--ink2)}
 .am-comum{margin:24px 20px 0;background:var(--surface);border-radius:14px;padding:14px 16px;cursor:pointer}
 .am-comum b{display:block;font-size:16px;font-weight:600;color:var(--ink)}
@@ -864,6 +867,8 @@ input,textarea,select{font-size:max(16px,1em)!important}
 /* Sugestões de lugar enquanto digita (27/09): "Itapura" é a cidade ou a rua. */
 #exploreCitySearch{padding-right:40px}
 .ex-limpar{position:absolute;right:6px;top:50%;transform:translateY(-50%);width:36px;height:36px;border:none;background:none;font-size:22px;line-height:1;color:var(--ink3);cursor:pointer}
+/* 06/10: × só com texto no campo. */
+#exploreCitySearch:placeholder-shown~.ex-limpar{display:none}
 #explore .dash-top{position:relative;z-index:40}
 .ex-sugestoes{position:absolute;left:0;right:0;top:calc(100% + 6px);z-index:30;background:var(--surface);border-radius:var(--r-card);padding:6px 0;max-height:60vh;overflow-y:auto}
 .ex-sug{display:block;width:100%;text-align:left;background:none;border:none;padding:10px 16px;cursor:pointer}
@@ -888,7 +893,7 @@ input,textarea,select{font-size:max(16px,1em)!important}
 .ex-sg-st.meu{font-weight:600;color:var(--green)}
 .ex-sg-nada{padding:12px 16px;font-size:15px;color:var(--ink2)}
 /* Faixa "Salvo" (e6) */
-.faixa-salvo{position:fixed;left:12px;right:12px;bottom:calc(90px + env(safe-area-inset-bottom));z-index:900;min-height:60px;box-sizing:border-box;
+.faixa-salvo{position:fixed;left:20px;right:20px;bottom:calc(90px + env(safe-area-inset-bottom));z-index:900;min-height:60px;box-sizing:border-box;
   display:flex;align-items:center;gap:12px;padding:10px 16px;border-radius:14px;background:var(--green);color:var(--base);
   transform:translateY(16px);opacity:0;pointer-events:none;transition:transform .2s,opacity .2s}
 .faixa-salvo.on{transform:none;opacity:1;pointer-events:auto}
@@ -988,15 +993,18 @@ html.cv-digitando #cvSalvar{display:none}
 /* Denúncia e bloqueio — exigência 1.2 da Apple. Alvos de toque com 44px de
    altura mínima, que é o mínimo que a Apple também espera. */
 .den-sobre{padding:0 20px 12px;font-size:14px;color:var(--ink2)}
-.den-motivos{display:flex;flex-direction:column;gap:7px;padding:0 24px 14px}
-.den-motivo{text-align:left;min-height:44px;padding:11px 14px;border:none;border-radius:var(--r-btn);background:transparent;color:var(--ink2);font-size:14px;font-family:inherit;cursor:pointer;transition:border-color .15s,color .15s}
-.den-motivo.on{border-color:var(--ink);color:var(--ink);font-weight:500}
+/* 06/10: margem lateral 20 (era 24 e a caixa de texto ia até a borda); a
+   escolha agora aparece (border-color não fazia nada sem borda). */
+.den-motivos{display:flex;flex-direction:column;gap:7px;padding:0 20px 14px}
+.den-motivo{text-align:left;min-height:44px;padding:11px 14px;border:none;border-radius:var(--r-btn);background:transparent;color:var(--ink2);font-size:14px;font-family:inherit;cursor:pointer;transition:background .15s,color .15s}
+.den-motivo.on{background:var(--surface);color:var(--ink);font-weight:600}
+#denunciaDetalhe{display:block;margin:0 20px 12px;width:calc(100% - 40px);box-sizing:border-box}
 .lista-bloqueados{padding:0 24px 8px;display:flex;flex-direction:column;gap:10px;max-height:46vh;overflow-y:auto}
 .blq-linha{display:flex;align-items:center;gap:11px;min-height:44px}
 .blq-nome{flex:1;min-width:0;font-size:14.5px;color:var(--ink);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .blq-desfazer{flex:none;min-height:36px;padding:7px 13px;border:none;border-radius:var(--r-btn);background:transparent;color:var(--ink2);font-size:12.5px;font-family:var(--mono);cursor:pointer}
 /* Botão de denunciar dentro do comentário: discreto, mas alcançável. */
-.coment-den{flex:none;background:none;border:none;color:var(--ink3);font-size:12px;cursor:pointer;padding:4px 6px;margin-left:2px}
+.coment-den{flex:none;white-space:nowrap;background:none;border:none;color:var(--ink3);font-size:12px;cursor:pointer;padding:4px 6px;margin-left:2px}
 .friend-mais{flex:none;width:36px;height:36px;display:flex;align-items:center;justify-content:center;
   background:var(--surface);border:none;border-radius:50%;color:var(--ink);cursor:pointer}
 .friend-mais:active{opacity:.7}
@@ -1984,6 +1992,12 @@ body.tem-apple #convite .btn-apple{display:flex}
 .pv5-cidade i{font-style:normal;font-size:13px;color:var(--ink2)}
 .pv5-abas{display:flex;gap:20px;margin-bottom:12px;overflow-x:auto;scrollbar-width:none}
 .pv5-abas::-webkit-scrollbar{display:none}
+/* 06/10: abas que rolam de lado terminam com 20 de folga, não colada na
+   borda. padding-right em faixa flex rolável o Safari ignora; o ::after (com
+   o gap da faixa) é o que garante os 20. Seus spots sangra até a borda como
+   as outras faixas. */
+#ssAbas{margin-left:-20px;margin-right:-20px;padding-left:20px;padding-right:20px}
+#ssAbas::after,.cont-abas::after,.exm-filtros::after{content:'';flex:0 0 1px}
 .pv5-abas button{flex:none;border:none;background:none;padding:0 0 8px;font:inherit;font-size:15px;font-weight:600;color:var(--ink3);cursor:pointer}
 .pv5-abas button.on{color:var(--ink);box-shadow:inset 0 -2px 0 var(--ink)}
 .pv5-abas i{font-style:normal;font-weight:400;font-size:14px;color:var(--ink3);margin-left:5px}
@@ -2087,6 +2101,7 @@ body.tem-apple #convite .btn-apple{display:flex}
 .fi-carro::after{content:"";position:absolute;inset:0;pointer-events:none;background:linear-gradient(to top,rgba(0,0,0,.55),transparent 40%)}
 .fi-cont,.fi-google{position:absolute;bottom:14px;z-index:1;font-size:13px;color:var(--base);pointer-events:none}
 .fi-cont{right:20px;font-weight:600}
+.fi-carro.esperando .fi-cont,.fi-carro.esperando .fi-google{visibility:hidden} /* 06/10: até a capa carregar */
 .fi-google{left:20px;opacity:0;transition:opacity .2s}
 .fi-google.on{opacity:1}
 .fi-foto .fi-topo-veu{z-index:1;pointer-events:none}
@@ -2339,15 +2354,16 @@ html.tem-janela,html.tem-janela body{overflow:hidden}
 .note-input::placeholder{color:var(--ink3)}
 .note-input.error{box-shadow:inset 0 0 0 2px var(--ink3)}
 .note-hint{font-size:12px;color:var(--ink3);padding:8px 20px 0}
-.status-choice{display:flex;gap:10px;padding:4px 20px 0}
-.status-opt{flex:1;background:var(--surface);border:none;border-radius:var(--r-card);padding:16px;cursor:pointer;
+/* 06/10: segmentado do sistema (trilho --surface, escolhida --base), não pílula verde cheia. */
+.status-choice{display:flex;gap:4px;margin:4px 20px 0;padding:4px;background:var(--surface);border-radius:var(--r-btn)}
+.status-opt{flex:1;background:transparent;border:none;border-radius:8px;padding:12px;cursor:pointer;
   display:flex;flex-direction:column;align-items:center;gap:8px;font-family:'Inter Tight',sans-serif}
 .status-opt:active{opacity:.7}
-.status-opt.active{background:var(--green)}
-.so-emoji{color:var(--ink2);display:flex}
+.status-opt.active{background:var(--base)}
+.so-emoji{color:var(--ink3);display:flex}
 .so-emoji svg{width:20px;height:20px}
-.so-label{font-size:14px;font-weight:600;color:var(--ink)}
-.status-opt.active .so-label{color:var(--on-green)}
+.so-label{font-size:14px;font-weight:600;color:var(--ink2)}
+.status-opt.active .so-label{color:var(--ink)}
 .note-label{font-size:14px;font-weight:600;color:var(--ink2);padding:18px 20px 8px}
 #addStars{padding:0 24px}
 .sheet-cta{display:block;width:calc(100% - 40px);min-height:48px;margin:20px 20px 28px;background:var(--green);
@@ -2411,7 +2427,7 @@ svg.ic path,svg.ic circle,svg.ic line,svg.ic polyline,svg.ic rect{fill:none;stro
 .nav-icon{color:var(--ink3)}
 .nav-item.active .nav-icon{color:var(--green)}
 .si,.dsi,.info-cell-icon{color:var(--ink3)}
-.status-opt.active .so-emoji{color:var(--on-green)}
+.status-opt.active .so-emoji{color:var(--ink)}
 .star-btn svg.ic path{fill:currentColor;stroke:none}
 .reserve-btn{display:flex;align-items:center;justify-content:center;gap:8px}
 /* ═══ Explorar com mapa (30/09, atrás de ?mapa=1 — ver EXM_LIGADO) ═══ */
@@ -2652,7 +2668,7 @@ body.exm .exm-filtros{position:relative;z-index:1}
     <div class="dash-top-row"><div><div class="dash-hello">Explorar</div><div class="dash-name" style="font-size:26px">Tendências por lugar</div></div></div>
     <div class="ex-abas" id="exploreAbas"></div>
     <div class="search-wrap" style="padding:0;display:flex;gap:8px;align-items:center">
-      <div class="search-field" style="flex:1"><span class="si" data-ic="search"></span><input class="search-input" autocomplete="off" autocorrect="off" spellcheck="false" id="exploreCitySearch" placeholder="Spot, cidade, bairro ou rua" enterkeyhint="search" autocomplete="off" onkeydown="if(event.key==='Enter'){fecharSugestoes();runExplore()}" oninput="sugerirLugar(this.value)" onfocus="this.select();sugerirLugar(this.value)" onblur="setTimeout(fecharSugestoes,200)"><button class="ex-limpar" onclick="limparBuscaDoExplorar()" aria-label="Limpar busca">×</button><div class="ex-sugestoes" id="exploreSugestoes" style="display:none"></div></div>
+      <div class="search-field" style="flex:1"><span class="si" data-ic="search"></span><input class="search-input" autocomplete="off" autocorrect="off" spellcheck="false" id="exploreCitySearch" placeholder="Spot, bairro ou cidade" enterkeyhint="search" autocomplete="off" onkeydown="if(event.key==='Enter'){fecharSugestoes();runExplore()}" oninput="sugerirLugar(this.value)" onfocus="this.select();sugerirLugar(this.value)" onblur="setTimeout(fecharSugestoes,200)"><button class="ex-limpar" onclick="limparBuscaDoExplorar()" aria-label="Limpar busca">×</button><div class="ex-sugestoes" id="exploreSugestoes" style="display:none"></div></div>
       <button class="req-btn req-accept" style="height:48px;padding:0 16px" onclick="runExplore()">Ir</button>
     </div>
   </div>
@@ -2926,7 +2942,7 @@ body.exm .exm-filtros{position:relative;z-index:1}
 <div class="overlay" id="ov-search" onclick="closeOut(event,'ov-search')"><div class="sheet sheet-fixa"><button class="sheet-close" onclick="closeOv('ov-search')" data-ic="close" aria-label="Fechar"></button><div class="sheet-handle"></div><div class="sheet-title">Buscar lugar</div><div class="step-dots"><div class="step-dot active"></div><div class="step-dot"></div></div><div class="search-wrap"><div class="search-field"><span class="si" data-ic="search"></span><input class="search-input" autocomplete="off" autocorrect="off" spellcheck="false" id="placeSearch" placeholder="Nome do lugar..." oninput="searchPlaces(this.value)"></div></div><button class="imp-entrada" id="impEntrada" style="display:none" onclick="impAbrir('')"><span class="imp-entrada-ic" data-ic="menu"></span><span class="imp-t"><b>Colar uma lista</b><span>Notas ou conversa com vários lugares</span></span><span class="imp-seta">›</span></button><div class="search-powered"><span>Resultados via</span><strong>Google Places</strong></div><div class="lista-rolante" id="searchResults"><div class="search-loading">Digite para buscar...</div></div></div></div>
 
 <div class="overlay" id="ov-note" onclick="closeOut(event,'ov-note')"><div class="sheet"><button class="sheet-close" onclick="closeOv('ov-note')" data-ic="close" aria-label="Fechar"></button><div class="sheet-handle"></div><div class="sheet-title">Adicionar spot</div><div class="note-place-row"><div class="note-place-icon" id="selIcon" data-ic="food"></div><div><div class="note-place-name" id="selName"></div><div class="note-place-meta" id="selMeta"></div></div></div><button class="nota-foto" id="noteFotoBtn" onclick="document.getElementById('noteFotoInput').click()">Adicionar sua foto</button><input type="file" id="noteFotoInput" accept="image/*" style="display:none" onchange="onNoteFotoChosen(this)">
-<div class="status-choice"><button class="status-opt active" id="stWant" onclick="setSpotStatus('want')"><div class="so-emoji" data-ic="bookmark"></div><div class="so-label">Quero ir</div></button><button class="status-opt" id="stBeen" onclick="setSpotStatus('been')"><div class="so-emoji" data-ic="check"></div><div class="so-label">Já fui</div></button></div>
+<div class="status-choice"><button class="status-opt active" id="stWant" onclick="setSpotStatus('want')"><div class="so-emoji" data-ic="bookmark"></div><div class="so-label">Quero ir</div></button><button class="status-opt" id="stBeen" onclick="setSpotStatus('been')"><div class="so-emoji" data-ic="check"></div><div class="so-label">Fui</div></button></div>
 <div class="cat-bloco" id="noteCat"></div>
 <div id="subcatRow" style="display:none"><div class="note-label">Que tipo de experiência?</div><div class="subcat-row" id="subcatChips"></div></div>
 <div id="ratingRow" style="display:none"><div class="note-label">Sua avaliação</div><div class="stars-row" id="addStars"><button class="star-btn" onclick="setAddRating(1,event)" aria-label="Dar nota 1"><span class="st-base" data-ic="star"></span><span class="st-fill" data-ic="star"></span></button><button class="star-btn" onclick="setAddRating(2,event)" aria-label="Dar nota 2"><span class="st-base" data-ic="star"></span><span class="st-fill" data-ic="star"></span></button><button class="star-btn" onclick="setAddRating(3,event)" aria-label="Dar nota 3"><span class="st-base" data-ic="star"></span><span class="st-fill" data-ic="star"></span></button><button class="star-btn" onclick="setAddRating(4,event)" aria-label="Dar nota 4"><span class="st-base" data-ic="star"></span><span class="st-fill" data-ic="star"></span></button><button class="star-btn" onclick="setAddRating(5,event)" aria-label="Dar nota 5"><span class="st-base" data-ic="star"></span><span class="st-fill" data-ic="star"></span></button></div></div>
@@ -2991,7 +3007,7 @@ body.exm .exm-filtros{position:relative;z-index:1}
 <a class="prof-linha" href="/suporte" target="_blank" rel="noopener" style="text-decoration:none;color:inherit"><span class="pl-txt">Ajuda e suporte</span><span class="pl-seta">›</span></a>
 <div class="prof-linha prof-sair" style="border-bottom:none;padding-bottom:26px" onclick="abrirExcluirConta()"><span class="pl-txt">Excluir minha conta</span></div></div></div>
 
-<div class="overlay" id="ov-excluir" onclick="closeOut(event,'ov-excluir')"><div class="sheet"><button class="sheet-close" onclick="closeOv('ov-excluir')" data-ic="close" aria-label="Fechar"></button><div class="sheet-handle"></div><div class="sheet-title">Excluir minha conta</div><div class="ex-corpo" style="padding:0 24px 4px"><div class="nt-label" style="margin-bottom:10px">Isso apaga de vez, e não tem como desfazer:</div><ul style="margin:0 0 16px;padding-left:20px;font-size:14px;line-height:1.7;color:var(--ink2)"><li>suas viagens e todos os seus lugares</li><li>suas notas, avaliações e comentários</li><li>suas fotos de perfil e de lugares</li><li>seus amigos e os links de convite que você criou</li></ul><div class="nt-label">Para confirmar, digite <b>EXCLUIR</b></div><input class="nt-input" autocomplete="off" autocorrect="off" spellcheck="false" id="confirmaExcluir" placeholder="digite aqui" autocapitalize="characters" oninput="atualizarBotaoExcluir()"></div><button class="sheet-cta" id="btnExcluirConta" style="background:var(--red);box-shadow:none;opacity:.4;pointer-events:none" onclick="excluirConta()">Excluir minha conta</button></div></div>
+<div class="overlay" id="ov-excluir" onclick="closeOut(event,'ov-excluir')"><div class="sheet"><button class="sheet-close" onclick="closeOv('ov-excluir')" data-ic="close" aria-label="Fechar"></button><div class="sheet-handle"></div><div class="sheet-title">Excluir minha conta</div><div class="ex-corpo" style="padding:0 24px 4px"><div class="nt-label" style="margin-bottom:10px">Isso apaga de vez, e não tem como desfazer:</div><ul style="margin:0 0 16px;padding-left:20px;font-size:14px;line-height:1.7;color:var(--ink2)"><li>suas viagens e todos os seus spots</li><li>suas notas, avaliações e comentários</li><li>suas fotos de perfil e de spots</li><li>seus amigos e os links de convite que você criou</li></ul><div class="nt-label">Para confirmar, digite <b>EXCLUIR</b></div><input class="nt-input" autocomplete="off" autocorrect="off" spellcheck="false" id="confirmaExcluir" placeholder="digite aqui" autocapitalize="characters" oninput="atualizarBotaoExcluir()"></div><button class="sheet-cta" id="btnExcluirConta" style="background:var(--red);box-shadow:none;opacity:.4;pointer-events:none" onclick="excluirConta()">Excluir minha conta</button></div></div>
 
 <!-- O X virou "Fechar" escrito: num alvo de 36 no canto, o X é o controle que
      mais gente erra, e aqui a folha tem uma ação só. O divisor "ou" saiu — era
@@ -2999,13 +3015,13 @@ body.exm .exm-filtros{position:relative;z-index:1}
 <div class="overlay" id="ov-addfriend" onclick="closeOut(event,'ov-addfriend')"><div class="sheet"><div class="sheet-handle"></div>
 <div class="af-topo"><span class="af-titulo">Adicionar amigo</span><button class="af-fechar" onclick="closeOv('ov-addfriend')">Fechar</button></div>
 <div class="nt-wrap"><div class="af-campo"><span class="af-lupa" data-ic="search"></span><input class="af-input" id="friendUsernameInput" type="text" placeholder="Buscar por @username" autocapitalize="none" autocomplete="off" oninput="buscarPessoas(this.value)"></div><div class="auth-error" id="friendAddErr"></div><div class="busca-res" id="buscaPessoasRes"></div></div>
-<div class="af-rodape"><div class="af-rodape-txt">Seu amigo ainda não está no Spot?</div><button class="af-convite" id="convidarBtn" onclick="compartilharConvite()">Compartilhar convite</button></div></div></div>
+<div class="af-rodape"><div class="af-rodape-txt">Quem você quer chamar ainda não está no Spot?</div><button class="af-convite" id="convidarBtn" onclick="compartilharConvite()">Compartilhar convite</button></div></div></div>
 
 <div class="overlay" id="ov-novasenha"><div class="sheet"><div class="sheet-handle"></div><div class="sheet-title">Escolha uma senha nova</div><div class="den-sobre">Você chegou pelo link de recuperação. Defina a nova senha para entrar.</div><div class="nt-label" style="padding:0 24px">Nova senha</div><input class="nt-input" autocomplete="off" autocorrect="off" spellcheck="false" id="novaSenha" type="password" autocomplete="new-password" placeholder="8+ caracteres, com letras e números"><div class="auth-error show" id="erroNovaSenha" style="padding:0 24px;min-height:18px;background:none;border:none"></div><button class="sheet-cta" id="btnNovaSenha" onclick="salvarNovaSenha()">Salvar e entrar</button><button class="ns-agora-nao" onclick="pularNovaSenha()">Agora não</button></div></div>
 
 <div class="overlay" id="ov-escolha" onclick="closeOut(event,'ov-escolha')"><div class="sheet esc-sheet"><div class="coz-alca"></div><div id="escolhaItens"></div></div></div>
 <div class="overlay" id="ov-cozinhas" onclick="closeOut(event,'ov-cozinhas')"><div class="sheet coz-sheet"><div class="coz-alca"></div><div class="coz-cab"><h2>O que você quer comer?</h2><span id="cozTipos"></span></div><div class="coz-grade" id="cozGrade"></div></div></div>
-<div class="overlay" id="ov-denuncia" onclick="closeOut(event,'ov-denuncia')"><div class="sheet"><button class="sheet-close" onclick="closeOv('ov-denuncia')" data-ic="close" aria-label="Fechar"></button><div class="sheet-handle"></div><div class="sheet-title">Denunciar</div><div class="den-sobre" id="denunciaSobre"></div><div class="nt-label" style="padding:0 24px">O que houve?</div><div class="den-motivos" id="denunciaMotivos"></div><div class="nt-label" style="padding:0 24px">Quer contar mais? (opcional)</div><textarea class="nt-input" id="denunciaDetalhe" rows="3" maxlength="1000" placeholder="Descreva o problema"></textarea><button class="sheet-cta" id="btnEnviarDenuncia" onclick="enviarDenuncia()">Enviar denúncia</button><div class="conv-dica">Analisamos toda denúncia em até 24 horas. Se quiser parar de ver essa pessoa agora, você também pode bloquear.</div></div></div>
+<div class="overlay" id="ov-denuncia" onclick="closeOut(event,'ov-denuncia')"><div class="sheet"><button class="sheet-close" onclick="closeOv('ov-denuncia')" data-ic="close" aria-label="Fechar"></button><div class="sheet-handle"></div><div class="sheet-title">Denunciar</div><div class="den-sobre" id="denunciaSobre"></div><div class="nt-label" style="padding:0 20px 8px">O que houve?</div><div class="den-motivos" id="denunciaMotivos"></div><div class="nt-label" style="padding:0 20px 8px">Quer contar mais? (opcional)</div><textarea class="nt-input" id="denunciaDetalhe" rows="3" maxlength="1000" placeholder="Descreva o problema"></textarea><button class="sheet-cta" id="btnEnviarDenuncia" onclick="enviarDenuncia()">Enviar denúncia</button><div class="conv-dica">Analisamos toda denúncia em até 24 horas. Se quiser parar de ver essa pessoa agora, você também pode bloquear.</div></div></div>
 
 <div class="overlay" id="ov-pergunta" onclick="if(event.target===this)responderPergunta(-1)"><div class="sheet"><div class="sheet-handle"></div><div class="sheet-title" id="perguntaTitulo"></div><div class="den-sobre" id="perguntaTexto"></div><div id="perguntaAcoes"></div></div></div>
 
@@ -3279,6 +3295,10 @@ function applyAvatar(elId,name,avatarUrl){
 async function fetchOwnProfile(force){
   if(S.profile&&!force)return S.profile;
   const rows=await dbGet('profiles','id=eq.'+S.user.id);
+  // 06/10: falha não vira perfil vazio. Antes guardava {} e o app nunca mais
+  // perguntava ao banco (e achava que a pessoa não tinha cidade/@). Fica o que
+  // havia (ou null, pra tentar de novo); quem chama recebe um objeto.
+  if(falhou(rows))return S.profile||{};
   S.profile=(rows&&rows[0])||{};
   return S.profile;
 }
@@ -3492,6 +3512,23 @@ async function dbGet(table,query){
   if(!r.ok){console.error('dbGet error',table,r.status,await r.text());return listaComFalha()}
   try{return await r.json()}
   catch(e){console.error('dbGet json',table,e);return listaComFalha()}
+}
+// Todas as linhas, de 1000 em 1000 (06/10). O servidor corta em 1000 linhas
+// por resposta — limit=5000 não passa disso, e conta com mais spots perdia o
+// resto calada. Ordem fixa pra a paginação não pular nem repetir linha. Teto de
+// 10 páginas como rede de segurança. Qualquer página falhando = falha inteira.
+async function dbGetTodas(table,query,paginas){
+  const POR=1000,teto=paginas||10;
+  const q=String(query||'').replace(/&?limit=\d+/,'');
+  const ordem=/(^|&)order=/.test(q)?'':'&order=id.asc';
+  const todas=[];
+  for(let i=0;i<teto;i++){
+    const pg=await dbGet(table,q+ordem+'&limit='+POR+'&offset='+(i*POR));
+    if(falhou(pg)||!Array.isArray(pg))return listaComFalha();
+    todas.push(...pg);
+    if(pg.length<POR)break;
+  }
+  return todas;
 }
 // Rede caindo no meio faz o fetch LANÇAR, não devolver resposta ruim. Sem
 // este catch a exceção subia até o onclick, e como não existia handler
@@ -3711,6 +3748,14 @@ async function dbRpc(fn,params){
 const PLN={destinos:[],amigos:new Set(),volta:'dashboard',busca:'',sugestoes:[],destLista:[],grupos:[],vistos:[],abaCidade:'',cat:'',montando:false,marcados:new Set(),montado:null};
 const PLN_AMIGOS={t:0,p:null,perfis:{}};
 let PLN_DELES={t:0,p:null};
+// 06/10: amizade mudou (aceitar, desfazer, bloquear, convite) — a memória de
+// 2 min dos amigos e dos spots deles cai, e a da Atividade também. Sem isso,
+// a amiga recém-aceita não aparecia no Planejar/ficha e a desfeita ficava.
+function esquecerAmigosGuardados(){
+  PLN_AMIGOS.t=0;PLN_AMIGOS.p=null;
+  PLN_DELES.t=0;PLN_DELES.p=null;
+  try{ATIV.em=0;ATIV.p=null}catch(e){}
+}
 const PLN_CORES=['#0B3D2E','#6B5B4B','#4F5B66','#6E7F73','#5B4F66'];
 
 function plnCor(id){let h=0;String(id||'').split('').forEach(c=>{h=(h*31+c.charCodeAt(0))>>>0});return PLN_CORES[h%PLN_CORES.length]}
@@ -3778,8 +3823,9 @@ function plnSpotsDeles(){
     if(!ids.length)return[];
     const lista=ids.join(',');
     const [viagens,spots]=await Promise.all([
-      dbGet('trips','user_id=in.('+lista+')&select=id,name,destinations'),
-      dbGet('spots','user_id=in.('+lista+')&status=in.(been,want)&limit=5000'
+      // 06/10: paginado — o servidor corta em 1000 e limit=5000 não passava disso.
+      dbGetTodas('trips','user_id=in.('+lista+')&select=id,name,destinations'),
+      dbGetTodas('spots','user_id=in.('+lista+')&status=in.(been,want)'
         +'&select=id,user_id,trip_id,name,category,subcategory,place_type,city,address,photo_url,photo_author,photo_author_url,maps_url,website_url,phone,lat,lng,rating_google,price_level,status,my_rating,my_review')]);
     const porId={};(viagens||[]).forEach(t=>{porId[t.id]=t});
     return (spots||[]).filter(s=>s&&!estaBloqueado(s.user_id)).map(s=>Object.assign(s,{_pais:plnPaisDoSpot(porId[s.trip_id],s)}))
@@ -4037,7 +4083,7 @@ function plnPintarLista(){
       ?'<button class="exm-btn" onclick="plnExplorar(0)">Explorar '+esc(ds[0].nome)+'</button>'
       :ds.slice(0,4).map((d,i)=>'<button class="pln-explorar" onclick="plnExplorar('+i+')"><span class="pln-explorar-ic">'+(d.tipo==='pais'?flagFor(d.nome):icon('pin'))+'</span><b>Explorar '+esc(d.nome)+'</b><i>›</i></button>').join('')
         +(ds.length>4?'<p class="pln-sub">e mais '+(ds.length-4)+'</p>':'');
-    box.innerHTML=cab+'<div class="pln-vazio"><h2>Ninguém salvou nada lá ainda</h2><p>Comece explorando um dos destinos.</p>'+corpoVazio+'</div>';
+    box.innerHTML=cab+'<div class="pln-vazio"><h2>Ninguém salvou nada lá ainda</h2><p>'+(ds.length===1?'Comece explorando '+esc(ds[0].nome)+'.':'Comece explorando um dos destinos.')+'</p>'+corpoVazio+'</div>';
     rod.innerHTML=IMP.ligado?'<button class="exm-btn exm-btn2" onclick="impAbrir(\'\')">Colar uma lista</button>':'';
     hydrateIcons(box);return;
   }
@@ -4424,7 +4470,8 @@ function impPintarRevisar(){
       h+='<div class="imp-linha'+(it.on?'':' off')+'"><button class="pln-check'+(it.on?' on':'')+'" onclick="impMarcar('+i+')" aria-label="'+(it.on?'Desmarcar':'Marcar')+'">'+(it.on?icon('check'):'')+'</button>'
         +'<span class="imp-foto">'+(p.photo_thumb?'<img src="'+escUrl(p.photo_thumb)+'" alt="" loading="lazy" onerror="this.remove()">':catIcon(p._cat))+'</span>'
         +'<button class="imp-t" onclick="impAbrirTroca('+i+')"><b>'+esc(p.name)+'</b><span>'+esc(meta)+'</span></button>'
-        +'<span class="imp-seg"><button class="'+(it.status==='want'?'on':'')+'" onclick="impStatus('+i+',\'want\')">Quero ir</button><button class="'+(it.status==='been'?'on':'')+'" onclick="impStatus('+i+',\'been\')">Fui</button></span></div>';
+        // 06/10: já salvo não ganha Quero ir/Fui — não vai ser gravado de novo.
+        +(it.dup?'':'<span class="imp-seg"><button class="'+(it.status==='want'?'on':'')+'" onclick="impStatus('+i+',\'want\')">Quero ir</button><button class="'+(it.status==='been'?'on':'')+'" onclick="impStatus('+i+',\'been\')">Fui</button></span>')+'</div>';
     });
   });
   IMP.naoAchou.forEach((x,j)=>{
@@ -4810,7 +4857,9 @@ function renderSeusSpots(){
   if(!lista.length){
     mais.innerHTML='';
     if(SS.status==='want'&&!ssTodos().some(x=>!ssFoi(x)))box.innerHTML='<div class="ss-vazio"><b>Nada na sua lista Quero ir ainda</b><span>Salve pelo Explorar ou na ficha de um amigo.</span><button class="pf-ver" onclick="goTo(\'explore\');loadExplore()">Abrir o Explorar ›</button></div>';
-    else box.innerHTML='<div class="ss-vazio"><span>Nenhum spot'+(SS.cat?' de '+esc(SS_CAT[SS.cat]):'')+(SS.lugar?' em '+esc(SS.lugar.nome):'')+'.</span><button class="pf-ver" onclick="ssLimparFiltros()">Limpar filtros</button></div>';
+    // 06/10: "Limpar filtros" só com filtro ligado; sem filtro é conta sem spot.
+    else if(SS.cat||SS.lugar)box.innerHTML='<div class="ss-vazio"><span>Nenhum spot'+(SS.cat?' de '+esc(SS_CAT[SS.cat]):'')+(SS.lugar?' em '+esc(SS.lugar.nome):'')+'.</span><button class="pf-ver" onclick="ssLimparFiltros()">Limpar filtros</button></div>';
+    else box.innerHTML='<div class="ss-vazio"><b>Você ainda não salvou nenhum spot</b><button class="btn-primario" style="margin-top:12px" onclick="comecarSpotSemViagem()">Adicionar spot</button></div>';
     return;
   }
   if(SS.lugar){box.innerHTML=ssOrdenar(lista).map(x=>ssLinhaHTML(x)).join('');mais.innerHTML='';return}
@@ -5183,8 +5232,28 @@ async function pintarDelesNaFicha(s){
   });
   const l=Object.values(por).sort((a,b)=>((a.status==='been'?0:1)-(b.status==='been'?0:1))||((Number(b.my_rating)||0)-(Number(a.my_rating)||0)));
   s._deles=l;
+  // 06/10 (regressão do mesmo dia): tirar a dona do bloco sumiu com a nota e
+  // a frase DELA na ficha do spot dela. A linha dela volta no topo, sem seta
+  // (já é o spot dela).
+  let doDono='';
+  {
+    const av=EXPLORE.avulso;
+    const sd=s._amigo||(s._comentId&&s._i==='avulso'&&av&&av._amigo)||null;
+    if(s._comentId&&sd&&sd.user_id&&sd.user_id!==S.user.id){
+      const quem=plnPrimeiro(sd.user_id)||(FRIEND_NOMES&&FRIEND_NOMES[sd.user_id])||'';
+      if(quem){
+        if(sd.status==='want'){
+          doDono='<div class="fi-dele">'+plnAvatar(sd.user_id,'g')+'<span class="fi-dele-txt"><b>'+esc(quem)+' <em>quer ir</em></b></span></div>';
+        }else{
+          const n=Number(sd.my_rating)>0?' '+fmtRating(sd.my_rating)+'★':'';
+          doDono='<div class="fi-dele">'+plnAvatar(sd.user_id,'g')+'<span class="fi-dele-txt"><b>'+esc(quem+' foi'+n)+'</b>'
+            +(sd.my_review?'<span>'+esc(sd.my_review)+'</span>':'')+'</span></div>';
+        }
+      }
+    }
+  }
   // Tocar abre o spot DELA: a nota, a frase e a conversa de lá (05/10).
-  box.innerHTML=l.map((o,i)=>{
+  box.innerHTML=doDono+l.map((o,i)=>{
     const quem=plnPrimeiro(o.user_id);
     if(o.status==='been'){
       const n=Number(o.my_rating)>0?' '+fmtRating(o.my_rating)+'★':'';
@@ -5399,6 +5468,20 @@ async function montarCarrossel(sp){
   el.innerHTML='<div class="fi-faixa">'+fotos.map((f,i)=>'<div class="fi-slide" data-i="'+i+'"></div>').join('')+'</div>'
     +'<span class="fi-google">Fotos do Google</span><span class="fi-cont">1 de '+fotos.length+'</span>';
   caixa.querySelector('.place-hero-img').after(el);
+  // 06/10: "1 de 3" e o crédito ficavam sobre o quadro vazio enquanto a capa
+  // não chegava (ou quando ela quebrava). Só aparecem depois que ela carrega.
+  // Carrega a MESMA URL do fundo da capa (já em cache; não é outra busca paga).
+  {
+    const hero=caixa.querySelector('.place-hero-img');
+    const m=String((hero&&hero.style.backgroundImage)||'').match(/url\(["']?(.+?)["']?\)/);
+    const capa=m?m[1]:'';
+    if(capa){
+      el.classList.add('esperando');
+      const im=new Image();
+      im.onload=()=>el.classList.remove('esperando');
+      im.src=capa;
+    }
+  }
   const faixa=el.querySelector('.fi-faixa'),slides=[...el.querySelectorAll('.fi-slide')];
   const cont=el.querySelector('.fi-cont'),google=el.querySelector('.fi-google');
   const carregar=i=>{const f=fotos[i],d=slides[i];if(!f||!d||d.dataset.ok)return;d.dataset.ok='1';d.style.backgroundImage=cssUrl(safeUrl(f.url))};
@@ -5458,7 +5541,15 @@ function fecharVisualizador(){const v=document.getElementById('fiVer');if(v)v.cl
 //   · "Carol comentou na Taberna: …" (comentário nos seus spots).
 // Viagem "Só eu vejo" não gera nada: os Quero ir dela não passam pelo RLS.
 const ATIV_VISTA='spot_atividade_vista';
-let ATIV={itens:null,em:0,p:null};
+let ATIV={itens:null,em:0,p:null,erro:false};
+// Comentários dos outros nos SEUS spots (06/10). Era spot_id=in.(todos os ids):
+// com 400 spots a URL passa de 14 KB e a consulta falhava calada. Agora filtra
+// pelo dono via embed (FK spot_comments.spot_id → spots, migração 012).
+function comentariosNosMeusSpots(limite){
+  const uid=S.user.id;
+  return dbGet('spot_comments','select=*,spots!inner(user_id)&spots.user_id=eq.'+uid
+    +'&user_id=neq.'+uid+'&order=created_at.desc&limit='+(limite||30));
+}
 function atividadeVistaEm(){try{return localStorage.getItem(ATIV_VISTA)||''}catch(e){return ''}}
 async function carregarAtividade(forcar){
   if(!S.user)return [];
@@ -5468,13 +5559,14 @@ async function carregarAtividade(forcar){
     const uid=S.user.id;
     const amigos=new Set((FRIENDS_DATA&&FRIENDS_DATA.friendIds)||[]);
     const meus=allSpotsFlat();
-    const ids=meus.map(x=>x.id);
     const [indicou,coment,deles]=await Promise.all([
       dbGet('spots','from_user_id=eq.'+uid+'&user_id=neq.'+uid+'&order=created_at.desc&limit=30'
         +'&select=id,user_id,trip_id,name,category,city,address,photo_url,status,my_rating,my_review,created_at'),
-      ids.length?dbGet('spot_comments','spot_id=in.('+ids.join(',')+')&user_id=neq.'+uid+'&order=created_at.desc&limit=30').catch(()=>[]):Promise.resolve([]),
+      meus.length?comentariosNosMeusSpots(30):Promise.resolve([]),
       plnSpotsDeles().catch(()=>[])
     ]);
+    // 06/10: falha não é "nada aconteceu" — a tela mostra o erro com Tentar de novo.
+    ATIV.erro=falhou(indicou)||falhou(coment);
     const itens=[];
     const ja=new Set();
     (falhou(indicou)?[]:indicou||[]).forEach(x=>{
@@ -5533,7 +5625,7 @@ function nomeNaAtividade(id){
 function detalheDoPedido(p){
   if(!p)return '';
   const n=Number(p.spots)||0;
-  return [p.username?'@'+p.username:'',p.home_city?'De '+p.home_city:'',n?n+(n===1?' spot':' spots'):''].filter(Boolean).join(' · ');
+  return [p.username?'@'+p.username:'',p.home_city?'Mora em '+p.home_city:'',n?n+(n===1?' spot':' spots'):''].filter(Boolean).join(' · ');
 }
 function pintarAtividade(){
   const box=document.getElementById('atCorpo');if(!box)return;
@@ -5555,6 +5647,11 @@ function pintarAtividade(){
   const itens=ATIV.itens;
   ATIV_TELA=itens||[];
   if(!itens){h+='<div class="at-vazio">Carregando...</div>';box.innerHTML=h;hydrateIcons(box);return}
+  // 06/10: offline mostrava o vazio ("Quando seus amigos…") como se não houvesse nada.
+  if(!itens.length&&ATIV.erro){
+    h+='<div class="at-vazio">Não carregou. Confere a conexão.<br><button class="btn-primario" style="margin-top:16px" onclick="abrirAtividade()">Tentar de novo</button></div>';
+    box.innerHTML=h;hydrateIcons(box);return;
+  }
   if(!itens.length&&!inc.length&&!out.length){
     box.innerHTML='<div class="at-vazio">Quando seus amigos salvarem um spot que você indicou, forem num spot seu ou comentarem, aparece aqui.</div>';
     return;
@@ -5564,10 +5661,11 @@ function pintarAtividade(){
     const nome='<b>'+esc(nomeNaAtividade(it.user_id))+'</b>';
     const spot='<b>'+esc(it.spot.name||'')+'</b>';
     const trecho=it.frase?' "'+esc(String(it.frase).slice(0,80))+(String(it.frase).length>80?'…':'')+'"':'';
-    const txt=it.tipo==='quer'?nome+' marcou Quero ir no '+spot+', que você indicou'
-      :it.tipo==='foi'?nome+' foi no '+spot+', que você indicou'+(trecho?', e disse:'+trecho:'')
-      :it.tipo==='tambem'?nome+' também foi no '+spot+(trecho?' e disse:'+trecho:'')
-      :nome+' comentou no '+spot+':'+trecho;
+    // 06/10: "em", não "no" — o gênero do spot é desconhecido ("no Livraria Lello").
+    const txt=it.tipo==='quer'?nome+' marcou Quero ir em '+spot+', que você indicou'
+      :it.tipo==='foi'?nome+' foi em '+spot+', que você indicou'+(trecho?', e disse:'+trecho:'')
+      :it.tipo==='tambem'?nome+' também foi em '+spot+(trecho?' e disse:'+trecho:'')
+      :nome+' comentou em '+spot+':'+trecho;
     const foto=it.spot.photo_url?' style="background-image:'+cssUrl(fotoNaLargura(it.spot.photo_url,120))+'"':'';
     return '<button class="at-linha at-evento" onclick="abrirDaAtividade('+i+')">'+av(it.user_id)+'<span class="at-txt">'+txt+'</span><span class="at-foto"'+foto+'></span></button>';
   };
@@ -5710,7 +5808,7 @@ async function init(){
         // recarga em laço.
         const havia=!!S.user;
         if(havia){try{limparDadosLocais()}catch(e){}}
-        S.user=null;S.token=null;tokenExp=0;S.trips=[];S.cidadesMarcadas=[];S.profile=null;DADOS_DA_CONTA=false;
+        S.user=null;S.token=null;tokenExp=0;S.trips=[];S.cidadesMarcadas=[];S.profile=null;DADOS_DA_CONTA=false;CARGA_FALHOU_SEM_DADOS=false;
         if(havia){location.reload();return}
         goTo('login');
       }
@@ -6084,7 +6182,7 @@ async function signOut(){
   // cache local guarda viagens e notas, e num aparelho emprestado isso não
   // pode sobrar pra quem entrar depois.
   limparDadosLocais();
-  DADOS_DA_CONTA=false;
+  DADOS_DA_CONTA=false;CARGA_FALHOU_SEM_DADOS=false;
   // O aparelho deixa de receber os avisos desta conta. Sem isto, quem entrasse
   // depois no mesmo iPhone via na tela de bloqueio os pedidos e comentários
   // da conta anterior — e não conseguia gravar o próprio endereço.
@@ -6253,6 +6351,19 @@ function cidadesVisitadas(){
 // PLACAR zerado ela anunciava "Seu mapa está em branco" por dois segundos a
 // cada abertura, até o banco responder (25/09).
 let DADOS_DA_CONTA=false;
+// 06/10: a carga de viagens falhou e nenhuma deu certo ainda nesta conta.
+// Enquanto for true, nada cria viagem sozinho: com S.trips vazio por falha,
+// viagemQueCobre não acha a viagem que existe e o app criaria uma duplicada.
+let CARGA_FALHOU_SEM_DADOS=false;
+let avisoCargaEm=0;
+function viagensCarregadas(){
+  if(!CARGA_FALHOU_SEM_DADOS)return true;
+  if(Date.now()-avisoCargaEm>3000){
+    avisoCargaEm=Date.now();
+    toast('Ainda não carregou suas viagens','Tenta de novo em instantes.','alert');
+  }
+  return false;
+}
 // O placar sai de S.trips, e roda tanto com o que está guardado no aparelho
 // quanto com a resposta do banco — antes só com a segunda.
 function contarPlacar(){
@@ -6287,6 +6398,15 @@ function pintarPlacar(){
   // 195 é o número de países soberanos — o mesmo denominador que o Perfil já
   // usa pra calcular a porcentagem (o "X/243" de lá conta territórios também).
   pinta('dashPaisesN',PLACAR.paises);
+  // 06/10: singular com 1 ("1 cidade", não "1 cidades"). O rótulo é o 1º
+  // texto do span ao lado (a seta › vem depois, num <i>).
+  const rotulo=(id,n,um,varios)=>{
+    const el=document.getElementById(id),r=el&&el.nextElementSibling;
+    if(r&&r.firstChild&&r.firstChild.nodeType===3)r.firstChild.nodeValue=Number(n)===1?um:varios;
+  };
+  rotulo('dashPaisesN',PLACAR.paises,'país','países');
+  rotulo('statCities',PLACAR.cidades,'cidade','cidades');
+  rotulo('statSpots',PLACAR.spots,'spot','spots');
   // "12% do mundo" sai do mesmo numero do placar, e e pintado aqui junto —
   // pendurar no resumo do Perfil deixava a linha vazia ate alguem abrir o
   // Perfil, que e uma tela que a pessoa pode nunca visitar.
@@ -6611,7 +6731,8 @@ async function loadDashboard(){
   const geoPronta=carregarGeoMundo().catch(()=>false);
   const [trips,allSpots,marcadas]=await Promise.all([
     dbGet('trips','user_id=eq.'+S.user.id+'&order=created_at.desc'),
-    dbGet('spots','user_id=eq.'+S.user.id+'&order=created_at.asc'),
+    // 06/10: paginado — sem isso, quem passa de 1000 spots perdia o resto.
+    dbGetTodas('spots','user_id=eq.'+S.user.id+'&order=created_at.asc,id.asc'),
     carregarCidadesMarcadas()
   ]);
   if(atropelado())return;
@@ -6628,10 +6749,19 @@ async function loadDashboard(){
     // Sem nada guardado e sem banco, girar pra sempre é pior que mostrar a
     // tela com o que houver: o aviso de erro vem junto, logo abaixo.
     DADOS_DA_CONTA=true;
+    if(!S.trips.length)usarDadosLocais();
+    // 06/10: nada no aparelho e nada do banco: a tela mostra o erro com
+    // "Tentar de novo" (não "Nenhuma viagem ainda") e trava criar viagem.
+    if(!S.trips.length){
+      CARGA_FALHOU_SEM_DADOS=true;
+      renderTrips();
+      if(!navigator.onLine)pintarAvisoOffline();
+      darDadosDeViagens();
+      return;
+    }
     // Offline não é erro: é o modo esperado dentro de um avião. O aviso fixo
     // já está na tela, então um toast de erro por cima só assusta à toa.
     if(!navigator.onLine){
-      if(!S.trips.length)usarDadosLocais();
       pintarAvisoOffline();
       darDadosDeViagens();
       return;
@@ -6642,6 +6772,7 @@ async function loadDashboard(){
   }
   S.trips=trips||[];
   DADOS_DA_CONTA=true;
+  CARGA_FALHOU_SEM_DADOS=false;
   const byId={};
   S.trips.forEach(t=>{t._spots=[];t._spotsLoaded=false;byId[t.id]=t});
   (allSpots||[]).forEach(s=>{const t=byId[s.trip_id];if(t)t._spots.push(s)});
@@ -6658,8 +6789,12 @@ async function loadDashboard(){
   renderTrips();populateTripOpts();
   guardarDadosLocais(); // pra próxima abertura sem sinal
   carregarBloqueios(); // quem você bloqueou some do feed, dos amigos e dos comentários
-  revalidarInstagramsAntigos().then(autoBackfillPlaceLinks); // silencioso, não bloqueia nada
-  corrigirCidadesAntigas(); // idem — conserta o que a regra velha gravou errado
+  // 06/10: revalidarInstagramsAntigos (e destravar/esquecer dentro dela) saiu
+  // daqui. Eram migrações de setembro com o "já rodei" no localStorage: num
+  // aparelho novo refaziam a conta inteira (400 spots = 400 PATCH + 400 buscas
+  // pagas no Google + 400 na Brave). Já rodaram nos aparelhos de antes.
+  autoBackfillPlaceLinks(); // silencioso, não bloqueia nada
+  // corrigirCidadesAntigas saiu em 06/10 — ver o comentário na função.
   buscarFotosQueFaltam();  // idem — spot que nunca teve foto nunca se consertava
   corrigirPaisesDesconhecidos(); // idem — viagem que caiu em "Outros"
   maybeShowCheckin(); // idem — só aparece se achar algo, nunca trava a tela
@@ -6798,6 +6933,7 @@ function ehDaCasa(cidade,pais){
 const CRIANDO_VIAGEM=new Map();
 function criarViagemUmaVez(chave,criar){
   if(CRIANDO_VIAGEM.has(chave))return CRIANDO_VIAGEM.get(chave);
+  if(!viagensCarregadas())return Promise.resolve(null); // 06/10: sem carga, sem duplicar viagem
   const p=criar().finally(()=>CRIANDO_VIAGEM.delete(chave));
   CRIANDO_VIAGEM.set(chave,p);
   return p;
@@ -6892,7 +7028,7 @@ function blocoDeMapaEmBranco(){
     +'<p class="mb-sub">Comece pelos países onde você já esteve. Leva um minuto.</p>'
     +passo(1,'Marcar países que já visitei','o mapa pinta na hora','openVisitedCountryPicker()')
     +passo(2,'Salvar seu primeiro spot','um lugar que você amou ou quer ir','comecarSpotSemViagem()')
-    +passo(3,'Chamar um amigo','pra ver os lugares dele','convidarAmigo()');
+    +passo(3,'Chamar um amigo','pra ver os spots de quem você conhece','convidarAmigo()');
 }
 // Convite sem depender de um botão específico: o Início, o primeiro acesso e
 // a aba Amigos chamam o mesmo.
@@ -6980,6 +7116,12 @@ function aoRolarFilme(){
 
 function renderTrips(){
   const c=document.getElementById('tripsContainer');
+  // 06/10: primeira carga falhou e não há nada guardado — não é conta vazia.
+  if(CARGA_FALHOU_SEM_DADOS&&!S.trips.length){
+    c.innerHTML='<div class="vg-primeiro vg-erro"><h2>Não carregou suas viagens</h2><p>Confere a conexão e tenta de novo.</p>'
+      +'<button class="btn-primario btn-largo" onclick="loadDashboard()">Tentar de novo</button></div>';
+    darDadosDeViagens();return;
+  }
   const visibleTrips=S.trips.filter(naAbaViagens);
   // Conta sem viagem: a saida antecipada daqui era a unica no caminho de quem
   // acabou de criar conta, e deixava a tela nativa girando pra sempre — a
@@ -7870,7 +8012,7 @@ function buscarFotosDaCidade(spots){
       try{url=await healSpotPhoto(x.id)}catch(e){}
       if(!url)continue;
       const box=document.querySelector('#cityBody [data-foto="'+x.id+'"]');
-      if(box)box.innerHTML='<img src="'+escUrl(fotoNaLargura(url,220))+'" alt="" decoding="async" style="width:100%;height:100%;object-fit:cover;border-radius:inherit">';
+      if(box)box.innerHTML='<img src="'+escUrl(fotoNaLargura(url,220))+'" alt="" onerror="this.remove()" decoding="async" style="width:100%;height:100%;object-fit:cover;border-radius:inherit">';
     }
   };
   for(let k=0;k<4;k++)uma();
@@ -8091,7 +8233,8 @@ function desenharFichaDoLugar(s){
   // "Na sua lista" + a cidade, quando o spot é seu (desenho e4). Na prévia, o
   // rótulo é o "Salvar como" de cima.
   const rot=document.getElementById('fiListaRot');
-  if(rot)rot.innerHTML=s._previa?'':'<span>Na sua lista</span><span class="fi-lista-cid">'+esc(cityOf(s)||'')+'</span>';
+  // 06/10: sem a cidade aqui — ela já está logo acima, no cabeçalho da ficha.
+  if(rot)rot.innerHTML=s._previa?'':'<span>Na sua lista</span>';
   notaDaFicha=Number(s.my_rating)||0;
   pintarEstrelas('#placeStars',notaDaFicha);
   setStatus(s.status||'want',false);
@@ -9040,7 +9183,7 @@ async function buscarAmigosNoLugar(termo,tambemCanonico){
 // frase própria; o plural só entra quando há plural de verdade.
 function fraseNadaAqui(quantos,lugar){
   const onde=lugar?(" em "+lugar):"";
-  if(quantos===1)return "Seu amigo no Spot ainda não salvou nada"+onde+".";
+  if(quantos===1)return "Ninguém da sua lista de amigos salvou nada"+onde+" ainda."; // 06/10: neutro em gênero
   return "Nenhum dos seus "+quantos+" amigos salvou nada"+onde+".";
 }
 function renderAmigosNoLugar(r,lugar){
@@ -9241,7 +9384,7 @@ async function adicionarSpotAbertoDoAmigo(btn){
     // fora do mapa-mundi (que conta pais), mas o lugar nao se perde e nao ha
     // pergunta — e o mapa se acerta quando uma viagem de pais aparecer.
     const nome=pais||cidade;
-    if(nome){
+    if(nome&&viagensCarregadas()){
       const{data,error}=await dbInsert('trips',{user_id:S.user.id,name:nome,
         destinations:[nome],dates:'',status:'planning',initial_city:cidade||null});
       if(!error&&data){data._spots=[];data._spotsLoaded=true;S.trips.unshift(data);viagem=data;marcarViagemNova(data)}
@@ -9499,10 +9642,32 @@ function pintarRotuloDoExplorar(){
 }
 // O selo: você já salvou esse lugar? Mesmo nome, mesma cidade.
 // O MEU spot desse lugar (o objeto de S.trips, não cópia), por nome + cidade.
+// Índice dos seus spots por nome (06/10). meuSpotIgual varria TODOS os seus
+// spots pra cada spot de amigo: Amigos/Atividade travavam 0,5–0,7 s com 400.
+// mesmoLugar é igualdade exata depois de tirar acento e caixa — a mesma
+// normalização vira a chave, e a cidade é conferida só dentro do nome.
+// Refaz quando S.trips é trocado ou muda a quantidade de spots.
+let INDICE_MEUS={trips:null,assin:'',mapa:null};
+function chaveDeLugar(x){return String(x||'').normalize('NFD').replace(/\p{Diacritic}/gu,'').trim().toLowerCase()}
+function indiceDosMeus(){
+  const trips=S.trips||[];
+  let n=0;for(const t of trips)n+=(t._spots||[]).length;
+  const assin=trips.length+'|'+n;
+  if(INDICE_MEUS.mapa&&INDICE_MEUS.trips===trips&&INDICE_MEUS.assin===assin)return INDICE_MEUS.mapa;
+  const mapa=new Map();
+  for(const t of trips)for(const x of (t._spots||[])){
+    const k=chaveDeLugar(x.name);if(!k)continue;
+    if(!mapa.has(k))mapa.set(k,[]);
+    mapa.get(k).push(x);
+  }
+  INDICE_MEUS={trips,assin,mapa};
+  return mapa;
+}
 function meuSpotIgual(nome,cidade){
-  for(const t of (S.trips||[]))for(const x of (t._spots||[])){
+  const lista=indiceDosMeus().get(chaveDeLugar(nome))||[];
+  for(const x of lista){
     if(x.user_id&&S.user&&x.user_id!==S.user.id)continue;
-    if(mesmoLugar(x.name,nome)&&(!cidade||!cityOf(x)||mesmoLugar(cityOf(x),cidade)))return x;
+    if(!cidade||!cityOf(x)||mesmoLugar(cityOf(x),cidade))return x;
   }
   return null;
 }
@@ -9906,7 +10071,7 @@ function exmMontar(){
   document.body.classList.add('exm');
   const busca=document.querySelector('#explore .search-wrap');
   const campo=document.getElementById('exploreCitySearch');
-  if(campo)campo.placeholder='Spot, rua, bairro ou cidade';
+  if(campo)campo.placeholder='Spot, bairro ou cidade'; // 06/10: mais curto, cabia cortado
   const seg=document.createElement('div');
   seg.className='exm-seg';seg.id='exmSeg';
   seg.innerHTML='<button data-m="mapa" onclick="exmModo(\'mapa\')">Mapa</button><button data-m="lista" onclick="exmModo(\'lista\')">Lista</button>';
@@ -10445,6 +10610,9 @@ async function exmAbrirInicial(){
   EXM.modo=modo;EXM.modoEscolhido=false;exmPintarSeg();exmIrPara(modo==='lista'?'alta':'baixa',true);
   const casa=(S.profile&&S.profile.home_city)||'';
   if(casa)return exploreEm(casa,'Sua cidade · '+casa);
+  // 06/10: sem cidade e sem localização (conta nova, offline) o #exmCorpo
+  // ficava em branco. Desenha o vazio "Busque um lugar".
+  exmDesenhar();
 }
 // Busca nova abre no MAPA (perto ou longe de você).
 function exmDepoisDeBuscar(){
@@ -10781,7 +10949,7 @@ function showNearbySuggestions(){
         return{name:p.displayName?.text||'',icon:catIcon(S.addCat||categoriaDoLugar(p.types)),types:p.types||[],city,country,address:addr,subcat:guessSubcat(p.types),phone:p.nationalPhoneNumber||'',photo_url:fotos.full,photo_thumb:fotos.thumb,photo_author:autorDaFoto(p),rating_google:p.rating?String(p.rating):'',website_url:p.websiteUri||'',maps_url:p.googleMapsUri||''};
       });
       r.innerHTML='<div class="search-nearby-label">Perto de você</div>'+S_nearbyResults.map((p,i)=>{
-        const thumb=p.photo_thumb?'<div class="sr-icon"><img src="'+escUrl(p.photo_thumb)+'" loading="eager" style="width:100%;height:100%;object-fit:cover;border-radius:12px"></div>':'<div class="sr-icon">'+p.icon+'</div>';
+        const thumb=p.photo_thumb?'<div class="sr-icon"><img src="'+escUrl(p.photo_thumb)+'" alt="" onerror="this.remove()" loading="eager" style="width:100%;height:100%;object-fit:cover;border-radius:12px"></div>':'<div class="sr-icon">'+p.icon+'</div>';
         return '<div class="search-result" onclick="pickNearbyResult('+i+')">'+thumb+'<div><div class="sr-name">'+esc(p.name)+'</div><div class="sr-meta">'+esc(p.address.substring(0,50)+(p.rating_google?' · '+p.rating_google:''))+'</div></div></div>';
       }).join('');
     }catch(e){console.error('showNearbySuggestions',e)}
@@ -11005,7 +11173,7 @@ function searchPlaces(v){
       });
       if(myReqId!==searchReqId)return;
       r.innerHTML=S.searchResults.map((p,i)=>{
-        const thumb=p.photo_thumb?'<div class="sr-icon"><img src="'+escUrl(p.photo_thumb)+'" loading="eager" style="width:100%;height:100%;object-fit:cover;border-radius:12px"></div>':'<div class="sr-icon">'+p.icon+'</div>';
+        const thumb=p.photo_thumb?'<div class="sr-icon"><img src="'+escUrl(p.photo_thumb)+'" alt="" onerror="this.remove()" loading="eager" style="width:100%;height:100%;object-fit:cover;border-radius:12px"></div>':'<div class="sr-icon">'+p.icon+'</div>';
         // Já está na lista: o status aparece na hora (Alexanderplatz salvo três vezes, 01/10).
         const ja=statusNaMinhaLista({name:p.name,city:p.city});
         return '<div class="search-result" onclick="pickSearchResult('+i+')">'+thumb+'<div><div class="sr-name">'+esc(p.name)+(ja?' <span class="sr-ja">'+esc(ja)+'</span>':'')+'</div><div class="sr-meta">'+esc(p.address.substring(0,50)+(p.rating_google?' · '+p.rating_google:''))+'</div></div></div>';
@@ -11407,6 +11575,7 @@ async function moveToCorrectCountry(existingTrip,createNew){
   const p=S.pendingPlace;if(!p)return;
   let trip=existingTrip;
   if(createNew){
+    if(!viagensCarregadas())return;
     const country=p.country;
     const{data,error}=await dbInsert('trips',{user_id:S.user.id,name:country,destinations:[country],dates:'',status:'planning'});
     if(error||!data){toast('Erro ao criar viagem','');return}
@@ -11573,6 +11742,8 @@ async function resolverCidadeDoSpot(p,trip){
   const note=document.getElementById('noteField').value.trim(); // optional now
   // Mesmo filtro do comentário: a nota vai ser lida pelos amigos.
   if(textoBarrado(note)){avisarConteudoBarrado();return}
+  // 06/10: com a carga de viagens falhando, o spot não tem viagem certa onde cair.
+  if(!viagensCarregadas())return;
   const btn=document.getElementById('saveSpotBtn'),btn2=document.getElementById('saveAndAddBtn');
   btn.disabled=true;btn2.disabled=true;
   (addAnother?btn2:btn).textContent='Salvando...';
@@ -11725,14 +11896,17 @@ async function resolverCidadeDoSpot(p,trip){
       // Desenho B7/e6: depois de "Salvar spot", a ficha do spot salvo com a
       // faixa verde — não a tela de onde a pessoa saiu, sem sinal nenhum.
       const tela=document.querySelector('.screen.active');
-      const origem=tela&&['city','profile','explore','list','dashboard'].includes(tela.id)?tela.id:'trip';
+      let origem=tela&&['city','profile','explore','list','dashboard'].includes(tela.id)?tela.id:'trip';
+      // 06/10: salvo do feed/perfil de amigo/Atividade — o Voltar caía numa
+      // viagem velha ('trip'). Volta pra tela de onde saiu.
+      if(tela&&['friends','friend','atividade','friendCity'].includes(tela.id)){telaAntesDaFicha=tela.id;origem='amigo'}
       const salvo=(S.trips||[]).reduce((a,v)=>a||(v._spots||[]).find(x=>x.id===data.id),null)||data;
       openPlace(salvo.id,origem);
       mostrarFaixaSalvo(salvo.status||addStatus,salvo);
       // 10c (06/10): 1º spot com Fui num país → "passou por outras cidades?"
       cvTalvezPerguntar(salvo);
     }
-  }else toast('Erro',error?.message||'');
+  }else toast('Não salvou',textoDaFalhaAoSalvar(null),'alert'); // 06/10: era a mensagem crua do banco
   btn.textContent='Salvar spot';btn2.textContent='Salvar e adicionar outro';btn.disabled=false;btn2.disabled=false;
 }
 
@@ -12138,6 +12312,9 @@ async function talvezAbrirBoasVindas(){
   if(!S.user)return;
   let p={};
   try{p=await fetchOwnProfile()}catch(e){return}
+  // 06/10: carga que falhou não é conta nova — sem perfil ou sem viagens do
+  // banco, o primeiro acesso abria pra quem já usa o app.
+  if(!S.profile||CARGA_FALHOU_SEM_DADOS)return;
   // Só no primeiro acesso: quem terminou, já respondeu a cidade ou já usou
   // o app não vê mais. onboarding_done mora na conta de login (metadados do
   // Supabase Auth), sem coluna nova e sem migração.
@@ -13172,6 +13349,12 @@ function mesmoEstabelecimento(a,b){
 // acontecia, nao havia como saber se era porque nao havia o que corrigir, se
 // os spots nao tinham endereco, se a busca nao achava, ou se estava quebrada.
 // Ficamos duas rodadas no escuro por causa disso.
+// 06/10: DESLIGADA na abertura (loadDashboard não chama mais). O registro de
+// conferidos mora no localStorage, então aparelho novo reconferia 25 spots
+// pagos a cada loadDashboard (todo toque em Viagens) até passar a conta toda —
+// inclusive spot novo, que o saveSpot já grava com a cidade canônica. A regra
+// v3 é de 09/09 e já rodou em quem tinha spot antigo. Fica aqui (e nos testes)
+// caso precise rodar à mão.
 async function corrigirCidadesAntigas(opcoes){
   const o=opcoes||{};
   const r={total:0,elegiveis:0,semEndereco:0,naoAchou:0,outroLugar:0,jaCerto:0,corrigidos:0,erro:0,exemplos:[]};
@@ -13361,7 +13544,7 @@ function renderComentarios(spotId,alvo,donoDoSpot){
     :'Comentários');
   box.innerHTML=(titulo?'<div class="coment-titulo">'+titulo+'</div>':'')+linhas
     +'<div class="coment-escrever">'
-    +'<textarea class="coment-campo" id="campo-'+esc(alvo)+'" rows="1" maxlength="1000" placeholder="'+(meuSpot?'Responda quem comentou...':'Escreva algo sobre esse lugar...')+'"></textarea>'
+    +'<textarea class="coment-campo" id="campo-'+esc(alvo)+'" rows="1" maxlength="1000" placeholder="'+(meuSpot?'Responda quem comentou...':'Escreva algo sobre esse spot...')+'"></textarea>'
     +'<button class="coment-enviar" onclick="enviarComentario(\''+esc(spotId)+'\',\''+esc(alvo)+'\',\''+esc(donoDoSpot||'')+'\')">Enviar</button>'
     +'</div>';
   hydrateIcons(box);
@@ -13563,6 +13746,7 @@ async function bloquearUsuario(userId,nome){
   // Desfaz a amizade nos dois sentidos. Bloquear e continuar amigo não faz
   // sentido, e deixaria o conteúdo dele voltando pelo feed.
   await apagarVinculosCom(userId);
+  esquecerAmigosGuardados();
   toast('Bloqueado','Você não vê mais o conteúdo dessa pessoa.','check');
   FRIENDS_DATA=null;
   if(document.getElementById('friends').classList.contains('active'))loadFriends();
@@ -13588,6 +13772,7 @@ async function desfazerAmizade(userId,nome){
     'Vocês deixam de ver os spots um do outro. A pessoa não é avisada.',
     'Desfazer amizade'))return;
   if(!await apagarVinculosCom(userId)){toast('Não desfez','Confere a conexão e tenta de novo.','alert');return}
+  esquecerAmigosGuardados();
   toast('Amizade desfeita','','check');
   FRIENDS_DATA=null;
   goTo('friends');
@@ -13619,7 +13804,7 @@ let DENUNCIA_ALVO=null;
 // viaja dentro de um onclick: nome é texto que o outro usuário escolhe, e em
 // manipulador em linha o navegador desfaz a escapatória de HTML antes do JS
 // ler, então um apóstrofo no nome fecharia a string e o resto viraria código.
-const ROTULO_DENUNCIA={comentario:'Comentário de ',spot:'Lugar salvo por ',perfil:'Perfil de '};
+const ROTULO_DENUNCIA={comentario:'Comentário de ',spot:'Spot salvo por ',perfil:'Perfil de '};
 function abrirDenuncia(tipo,alvoId,donoId){
   DENUNCIA_ALVO={tipo:tipo,alvo_id:alvoId,dono_id:donoId||null};
   const quem=donoId?friendName(COMENT_PERFIS[donoId]):'';
@@ -13769,6 +13954,7 @@ const INSTA_RECHECK_FLAG='spot_insta_recheck_v3';
 // tudo de novo em Instagram que já está certo. São conjuntos diferentes de
 // spots e problemas diferentes — cada um roda uma vez.
 const INSTA_DESTRAVA_FLAG='spot_insta_destrava_v2'; // v2: agora existe o passo do site oficial
+// 06/10: DESLIGADA (ninguém chama). Ver o comentário em loadDashboard.
 async function revalidarInstagramsAntigos(){
   try{
     if(!localStorage.getItem(INSTA_RECHECK_FLAG)){
@@ -13963,6 +14149,11 @@ async function buscarInstagramAgora(id,btn){
   }
   toast('Não deu pra procurar',MOTIVO_HUMANO[r.motivo]||('Motivo: '+(r.motivo||'desconhecido')),'alert');
 }
+// 06/10: teto por abertura do app. Sem ele, conta com 400 spots pendentes
+// (aparelho novo, coluna nova) disparava 400 buscas pagas de uma vez. O spot
+// recém-adicionado (spotPrioritario) passa do teto: é o que a pessoa olha.
+const BACKFILL_TETO_SESSAO=10;
+let backfillFeitosNaSessao=0;
 async function autoBackfillPlaceLinks(){
   if(placeLinksBackfillRunning)return;
   placeLinksBackfillRunning=true;
@@ -13978,27 +14169,41 @@ async function autoBackfillPlaceLinks(){
   }));
   // O spot que a pessoa acabou de adicionar fura a fila: é o único que
   // alguém está olhando neste momento.
+  let prioridade=null;
   if(spotPrioritario){
     const i=targets.findIndex(s=>s.id===spotPrioritario);
-    if(i>0)targets.unshift(targets.splice(i,1)[0]);
+    if(i>=0){prioridade=spotPrioritario;if(i>0)targets.unshift(targets.splice(i,1)[0])}
     spotPrioritario=null;
   }
   for(const s of targets){
+    if(s.id!==prioridade){
+      if(backfillFeitosNaSessao>=BACKFILL_TETO_SESSAO)break;
+      backfillFeitosNaSessao++;
+    }
     try{
       const precisaInstagram=s.category==='food'&&!s.insta_checked&&!braveIndisponivel;
       const precisaFone=s.category==='food'&&s.phone===null;
       const patch={};
-      let googleSite='',mapsUrl=null,fone='';
-      if(precisaInstagram||s.maps_url===null||precisaFone){
+      // 06/10: site já gravado (e não é Instagram) serve de googleSite — não
+      // gasta busca no Google só pra achar o Instagram.
+      const siteGravado=/instagram\.com/i.test(s.website_url||'')?'':(s.website_url||'');
+      let googleSite=siteGravado,mapsUrl=null,fone='';
+      if((precisaInstagram&&!siteGravado)||s.maps_url===null||precisaFone){
         const resp=await googlePlaces('searchText',{
           method:'POST',
           headers:{'Content-Type':'application/json','X-Goog-FieldMask':'places.displayName,places.websiteUri,places.googleMapsUri,places.nationalPhoneNumber'},
           body:JSON.stringify({textQuery:s.name+(cityOf(s)?' '+cityOf(s):''),languageCode:'pt-BR',maxResultCount:5})
         });
+        // 06/10: busca que FALHOU (rede, teto, servidor) não é "não existe".
+        // Antes gravava maps_url:''/phone:'' e o spot nunca mais era procurado.
+        // Pula sem gravar e para a rodada: os próximos teriam a mesma falha.
+        if(!resp||!resp.ok||resp.capped)break;
         const d=await resp.json();
-        const best=pickBestPlaceMatch(d.places,s.name);
+        if(!d||typeof d!=='object'||d.error)break;
+        // Sem `places` com resposta ok é o Google dizendo "nada": isso é resposta.
+        const best=pickBestPlaceMatch(d.places||[],s.name);
         fone=(best&&best.nationalPhoneNumber)||'';
-        googleSite=(best&&best.websiteUri)||'';
+        googleSite=(best&&best.websiteUri)||siteGravado;
         mapsUrl=(best&&best.googleMapsUri)||'';
       }
       if(precisaInstagram){
@@ -14185,6 +14390,9 @@ async function healSpotPhoto(id,soCredito){
   if(!id||photoHealing.has(id))return null;
   const s=findSpotById(id);
   if(!s||!s.name)return null;
+  // 06/10: foto do armazenamento (subida pela pessoa) não vira a do Google por
+  // uma falha passageira de carregamento — e não tem crédito do Google.
+  if(/\/storage\//.test(String(s.photo_url||'')))return null;
   if(soCredito&&creditoJaBuscado.has(id))return null;
   if(soCredito)creditoJaBuscado.add(id);
   photoHealing.add(id);
@@ -14295,7 +14503,7 @@ function onSpotPhotoError(img,id,cat){
   const box=img.parentElement;
   thumbFallback(img,cat);
   healSpotPhoto(id).then(url=>{
-    if(url&&box)box.innerHTML='<img src="'+escUrl(fotoNaLargura(url,220))+'" loading="lazy" decoding="async" style="width:100%;height:100%;object-fit:cover;border-radius:inherit">';
+    if(url&&box)box.innerHTML='<img src="'+escUrl(fotoNaLargura(url,220))+'" alt="" onerror="this.remove()" loading="lazy" decoding="async" style="width:100%;height:100%;object-fit:cover;border-radius:inherit">';
   });
 }
 // Cache for city photos so we don't refetch
@@ -15986,6 +16194,9 @@ function cvTodosPaises(){
 async function cvSalvar(){
   if(CV.ocupado)return;
   const onb=CV.modo==='onb';
+  // 06/10: o passo 6 do primeiro acesso JÁ perguntou das cidades de cada país
+  // marcado — grava a marca da 10c pra ela não repetir a pergunta depois.
+  if(onb&&S.user)[...ONB.paises].forEach(p=>{try{localStorage.setItem('spot_cv_perguntou_'+S.user.id+'_'+normName(p),'1')}catch(e){}});
   const novas=CV.sel.slice(),tirar=[...CV.tirar];
   if(!novas.length&&!tirar.length){cvTeclado(false);if(onb)onbIr(3);else closeOv('ov-cidades');return}
   CV.ocupado=true;
@@ -16297,6 +16508,7 @@ function restaurarRolagem(r){
 }
 function goTo(id,manterRolagem){
   if(FAIXA.el&&FAIXA.tela!==id)esconderFaixaSalvo();
+  esconderFaixaDesfazer(); // 06/10: não segue pra outra tela
   if(id!=='place')fecharVisualizador();
   const antes=document.querySelector('.screen.active');
   if(antes&&antes.id!==id)ROLAGEM[antes.id]={y:window.scrollY,dentro:rolagensDentro(antes)};
@@ -16354,7 +16566,8 @@ async function confirmar(titulo,texto,rotulo){
   return await perguntar(titulo,texto,[{rotulo:rotulo||'Confirmar',valor:true,tom:'perigo'}])===true;
 }
 
-function showOv(id){populateTripOpts();if(id==='ov-newtrip')prepNewTrip();if(id==='ov-quickvisit')prepQuickVisit();document.getElementById(id).classList.add('show');avisarSeTemJanela()}
+// 06/10: a faixa "desmarcada · Desfazer" (z-index 900) ficava por cima da folha.
+function showOv(id){if(typeof esconderFaixaDesfazer==='function')esconderFaixaDesfazer();populateTripOpts();if(id==='ov-newtrip')prepNewTrip();if(id==='ov-quickvisit')prepQuickVisit();document.getElementById(id).classList.add('show');avisarSeTemJanela()}
 function closeOv(id){
   // Fechar a folha de categoria sem escolher encerra o "Mudar categoria": a
   // trava ficava ligada, e o próximo + trocava a categoria do spot antigo.
@@ -16622,13 +16835,14 @@ async function loadFriends(daAba){
     if(FRIENDS_DATA){
       renderFriendsTab();      // o que ja estava na tela continua valendo
       darDadosDeAmigos();      // e a tela nativa para de girar
+      // 06/10: toast só aqui — com o erro já na tela, ele repetia o mesmo aviso.
+      if(navigator.onLine)toast('Não carregou','Confere a conexão. O que está na tela pode estar desatualizado.','alert');
     }else{
       c.innerHTML='<div class="empty-state"><div class="ei">'+icon('users')+'</div><h3>Não carregou</h3><p>Confere a conexão e puxa pra baixo pra tentar de novo.</p></div>';
       falarComACasca({tipo:'amigos',pronto:false});
       // Sem isto a aba nativa girava pra sempre na 1ª carga que falhou (06/10).
       falarComACasca({tipo:'aviso',titulo:'Não carregou',texto:'Toque em Amigos de novo pra tentar.',erro:true});
     }
-    if(navigator.onLine)toast('Não carregou','Confere a conexão. O que está na tela pode estar desatualizado.','alert');
     return;
   }
 
@@ -16671,8 +16885,9 @@ async function loadFriends(daAba){
       dbGet('spots',`user_id=in.(${friendIds.join(',')})&status=eq.been&order=fui_em.desc.nullslast,created_at.desc&limit=15`)
         .then(l=>falhou(l)?dbGet('spots',`user_id=in.(${friendIds.join(',')})&status=eq.been&order=created_at.desc&limit=15`):l),
       dbGet('spot_comments',`user_id=in.(${friendIds.join(',')})&order=created_at.desc&limit=15`).catch(()=>[]),
+      // 06/10: pelo dono, não por spot_id=in.(todos) — URL gigante falhava calada.
       meusSpots.length
-        ? dbGet('spot_comments',`spot_id=in.(${meusSpots.join(',')})&user_id=neq.${uid}&order=created_at.desc&limit=15`).catch(()=>[])
+        ? comentariosNosMeusSpots(15).catch(()=>[])
         : Promise.resolve([])
     ]);
     (profiles||[]).forEach(p=>pmap[p.id]=p);
@@ -16753,7 +16968,7 @@ async function loadFriends(daAba){
   // já libera spots de amigo aceito, e contar aqui evita uma consulta por
   // pessoa. Falhou, os números simplesmente não aparecem.
   if(friendIds.length){
-    dbGet('spots','user_id=in.('+friendIds.join(',')+')&status=eq.been&select=user_id')
+    dbGetTodas('spots','user_id=in.('+friendIds.join(',')+')&status=eq.been&select=user_id') // 06/10: passa de 1000
       .then(function(linhas){
         if(falhou(linhas)||!FRIENDS_DATA)return;
         const conta={};
@@ -17077,7 +17292,7 @@ async function salvarDoFeed(i,btn){
 // o feed vai ficar — é o que explica a aba melhor que qualquer frase.
 function exemploDeFeed(){
   return '<div class="am-exemplo" aria-hidden="true"><div class="am-ex-topo"><span class="feed-avatar">M</span>'
-    +'<span><b>Marina</b> foi a <b>Cervejaria Ramiro</b><span class="l-meta">Lisboa · há 2 dias</span></span></div>'
+    +'<span><b>Marina</b> salvou <b>Cervejaria Ramiro</b><span class="l-meta">Lisboa · há 2 dias</span></span></div>'
     +'<div class="am-ex-foto"></div><p class="am-ex-nota">"Vai cedo, senão a fila vira a noite."</p></div>';
 }
 function vazioDeAmigos(convidou){
@@ -17088,7 +17303,7 @@ function vazioDeAmigos(convidou){
       +'<div class="am-rotulo">Assim fica o seu feed</div>'+exemploDeFeed();
   }
   return exemploDeFeed()
-    +'<div class="am-vazio-txt">Aqui aparecem os lugares<br>que seus amigos salvam.</div>'
+    +'<div class="am-vazio-txt">Aqui aparecem os spots<br>que seus amigos salvam.</div>'
     +'<p class="am-vazio-sub">Quem entrar pelo seu link já vira seu amigo.</p>'
     +'<button class="btn-primario btn-largo" onclick="convidarAmigo()">Compartilhar convite</button>'
     +'<label class="onb-campo am-busca">'+icon('search')+'<input id="amVazioBusca" type="text" placeholder="Buscar por @username" autocomplete="off" autocapitalize="off" oninput="buscarPessoas(this.value,\'amVazioRes\',\'amVazioBusca\')"></label>'
@@ -17211,7 +17426,7 @@ function renderFriendsTab(){
           :'<div class="feed-avatar">'+esc(initials(nome))+'</div>';
         // "De Lisboa, Portugal · 61 spots" (desenho c7): ajuda a achar quem é
         // do lugar.
-        const de=p&&p.home_city?'De '+p.home_city+(p.home_country?', '+p.home_country:''):'';
+        const de=p&&p.home_city?'Mora em '+p.home_city+(p.home_country?', '+p.home_country:''):'';
         const sub=[de,n?n+(n===1?' spot':' spots'):''].filter(Boolean).join(' · ');
         return '<div class="friend-row am-linha2" onclick="openFriend(\''+esc(fid)+'\')">'
           +av
@@ -17224,7 +17439,7 @@ function renderFriendsTab(){
     // exatamente quem pode querer mais.
     h+='<div class="conv-bloco" style="margin-top:24px">'
       +'<div class="conv-tit">Traga mais gente</div>'
-      +'<div class="conv-txt">Quem entrar pelo seu link vira seu amigo e vê seus lugares.</div>'
+      +'<div class="conv-txt">Quem entrar pelo seu link vira seu amigo e vê seus spots.</div>'
       +'<button class="conv-btn" onclick="compartilharConvite()">Compartilhar convite</button></div>';
   }else{
     if(!friendIds.length){
@@ -17296,7 +17511,11 @@ async function openFriend(id){
   FRIEND.cidadesMarcadas=marcadasDele||[];
   const p=(perfis&&perfis[0])||null;
   FRIEND.profile=p;
-  const exibido=friendName(p)||nome;
+  // 06/10: offline, friendName(null) dava "Alguém" e o vazio dizia "ainda não
+  // salvou nenhum spot". Sem perfil fica o nome que já se sabia; consulta que
+  // falhou vira "Não carregou" (renderFriendProfile olha FRIEND.erro).
+  FRIEND.erro=falhou(perfis)||falhou(tripsDele)||falhou(spotsDele);
+  const exibido=p?friendName(p):nome;
   document.getElementById('friendName').textContent=exibido;
   document.getElementById('friendUser').textContent=p&&p.username?'@'+p.username:'';
   applyAvatar('friendAvatar',exibido,p&&p.avatar_url);
@@ -17426,10 +17645,13 @@ function renderFriendProfile(){
   const todos=[];FRIEND.trips.forEach(t=>{const pais=(t.destinations&&t.destinations[0])||'';
     (t._spots||[]).forEach(s=>{s._pais=pais;s._regiao=regionFor(pais);todos.push(s)})});
   const cidades=new Set(),paises=new Set();
-  todos.forEach(s=>{const c=cityOf(s);if(c)cidades.add(c)});
+  // 06/10: mesma regra do placar da dona (cidadesVisitadas/paisesQueAViagemPinta):
+  // Quero ir não é ter ido — só Fui/Não recomendo (ou a cidade de casa) e as
+  // cidades marcadas contam; país só de viagem que conta.
+  FRIEND.trips.forEach(t=>(t._spots||[]).forEach(s=>{if(s.status==='want'&&!ehCasa(t))return;const c=cityOf(s);if(c)cidades.add(c)}));
   {const ja=new Set([...cidades].map(normName));
    (FRIEND.cidadesMarcadas||[]).forEach(m=>{const k=normName(m.nome);if(m.nome&&!ja.has(k)){ja.add(k);cidades.add(m.nome)}})}
-  FRIEND.trips.forEach(t=>(t.destinations||[]).forEach(d=>paises.add(d)));
+  FRIEND.trips.forEach(t=>paisesQueAViagemPinta(t).forEach(d=>{if(d)paises.add(d)}));
   // "@usuario · 1 país · 1 cidade · 4 spots" — itens em 0 somem; "viagens" não entra.
   const p=FRIEND.profile||{};
   const plural=(n,um,varios)=>n+' '+(n===1?um:varios);
@@ -17474,7 +17696,7 @@ function pintarTopoDoAmigo(p,nome){
     av.textContent=foto?'':initials(nome||'?');
   }
   const de=document.getElementById('friendDe');
-  if(de){const c=p&&p.home_city;de.textContent=c?'De '+c+(p.home_country?', '+p.home_country:''):'';de.style.display=c?'':'none'}
+  if(de){const c=p&&p.home_city;de.textContent=c?'Mora em '+c+(p.home_country?', '+p.home_country:''):'';de.style.display=c?'':'none'}
 }
 // "Spot" que é a própria cidade ou país ("Bonito" em Bonito, "Chile" no
 // Chile): dado antigo, de antes da trava naoEhSpot. Não é recomendação — no
@@ -17568,7 +17790,13 @@ function pintarSpotsDoAmigo(){
   const buscaBox=document.getElementById('friendBuscaBox');
   const todos=FRIEND.todos||[];
   FRIEND.grade=[];
-  if(!todos.length){sec.style.display='none';box.innerHTML='<div class="am-vazio">Seu amigo ainda não salvou nenhum spot.</div>';return}
+  // 06/10: consulta que falhou não é "não salvou nada"; e o vazio usa o nome
+  // (texto neutro em gênero, não "Seu amigo").
+  if(!todos.length&&FRIEND.erro){sec.style.display='none';box.innerHTML='<div class="am-vazio">Não carregou. Confere a conexão.</div>';return}
+  if(!todos.length){
+    const quem=FRIEND.profile?String(friendName(FRIEND.profile)||'').split(' ')[0]:'';
+    sec.style.display='none';box.innerHTML='<div class="am-vazio">'+esc(quem||'Esta pessoa')+' ainda não salvou nenhum spot.</div>';return;
+  }
   // Lista "em comum": os spots com a nota dele, no lugar das cidades.
   if(FRIEND.soComum){
     sec.style.display='none';
@@ -17576,7 +17804,7 @@ function pintarSpotsDoAmigo(){
     FRIEND.grade=lista;
     box.innerHTML='<div class="am-lista-nota"><h2>Da sua lista Quero ir</h2>'
       +lista.map((s,i)=>{
-        const nota=s.my_rating?'★ '+fmtRating(s.my_rating):'';
+        const nota=s.my_rating?fmtRating(s.my_rating)+'★':'';
         const txt=s.my_review||s.my_note||'';
         const foto=s.photo_url||s._fotoVista||'';
         const thumb=foto?'<div class="place-thumb"><img src="'+escUrl(fotoNaLargura(foto,220))+'" loading="lazy" style="width:100%;height:100%;object-fit:cover;border-radius:inherit" onerror="fotoDaGradeFalhou(this,'+i+')"></div>':'<div class="place-thumb">'+catIcon(s.category)+'</div>';
@@ -17776,7 +18004,7 @@ function renderFriendCityBody(){
   if(!temOsDois)st=0;
   if(linha){linha.style.display=temOsDois?'':'none';linha.innerHTML=temOsDois?linhaDeEscolha(ROTULO_SITUACAO[st],'abrirStatusDaCidadeDoAmigo()'):''}
   const spots=st===1?daAba.filter(s=>s.status!=='been'):st===2?daAba.filter(s=>s.status==='been'):daAba;
-  if(!spots.length){b.innerHTML=`<div class="empty-state" style="padding:40px 24px"><div class="ei">${catIcon(fcCat)}</div><h3>Nada aqui</h3><p>Seu amigo não salvou nada dessa categoria nesta cidade.</p></div>`;FRIEND_CITY_SPOTS=[];return}
+  if(!spots.length){b.innerHTML=`<div class="empty-state" style="padding:40px 24px"><div class="ei">${catIcon(fcCat)}</div><h3>Nada aqui</h3><p>${esc((FRIEND.profile&&String(friendName(FRIEND.profile)||'').split(' ')[0])||'Esta pessoa')} não salvou nada dessa categoria nesta cidade.</p></div>`;FRIEND_CITY_SPOTS=[];return} // 06/10: nome, não "Seu amigo"
   // guarda a ordem exibida: o clique manda o ÍNDICE, não o id no HTML
   FRIEND_CITY_SPOTS=spots;
   b.innerHTML=spots.map((s,i)=>friendSpotRowHTML(s,i)).join('');
@@ -17803,14 +18031,14 @@ function friendSpotRowHTML(s,i){
   const thumb=fotoDoAmigo
     ?'<div class="place-thumb"><img src="'+escUrl(fotoNaLargura(fotoDoAmigo,220))+'" loading="lazy" decoding="async" style="width:100%;height:100%;object-fit:cover;border-radius:inherit" onerror="'+(i==null?'thumbFallback(this,\''+esc(s.category)+'\')':'fotoDoAmigoFalhou(this,'+i+')')+'"></div>'
     :'<div class="place-thumb">'+catIcon(s.category)+'</div>';
-  const nota=s.my_rating?'★ '+fmtRating(s.my_rating):'';
+  const nota=s.my_rating?fmtRating(s.my_rating)+'★':''; // 06/10: "4,5★" como no resto
   const tag=spotTag(s);
   const clique=(i==null)?' style="cursor:default"':' onclick="abrirSpotDoAmigo('+i+')"';
   // Desenho 5a, igual à sua cidade: sem rótulo à direita; status antes da nota.
   if(i!=null){
     const txt=(s.status==='been'?(s.my_review||s.my_note):(s.my_note||s.my_review))||'';
     const stTxt=s.status==='been'?'<span class="st-fui">Fui</span>':'<span class="st-quero">Quero ir</span>';
-    const notaTxt=s.my_rating?' · ★ '+esc(fmtRating(s.my_rating)):'';
+    const notaTxt=s.my_rating?' · '+esc(fmtRating(s.my_rating))+'★':'';
     return '<div class="cid-row"'+clique+'>'+thumb.replace('class="place-thumb"','class="place-thumb"')
       +'<div class="cid-txt"><div class="cid-nome">'+esc(s.name)+'</div><div class="cid-linha">'+stTxt+notaTxt+(txt?' · '+esc(txt):'')+'</div></div></div>';
   }
@@ -17845,6 +18073,7 @@ async function respondRequest(followId,accept){
     // amigos" mesmo quando o banco recusava.
     if(error){toast('Erro','Não foi possível aceitar. Tenta de novo.');return false}
     if(quemPediu)avisar('aceite',quemPediu);
+    esquecerAmigosGuardados();
     toast('Amigo adicionado','Vocês já podem ver a atividade um do outro.','users');
   }else{
     await dbDelete('follows',followId);
@@ -18022,7 +18251,7 @@ async function montarPaginaDeConvite(){
   document.getElementById('cvTitulo').textContent = n
     ? (n+(n===1?' spot':' spots')+(nc?(' em '+nc+(nc===1?' cidade':' cidades')):'')
        +', cada um com a nota de quem foi.')
-    : ('Você foi convidado a ver os lugares de '+nome+'.');
+    : ('Você recebeu um convite pra ver os spots de '+nome+'.'); // 06/10: neutro em gênero
   return true;
 }
 
@@ -18062,7 +18291,7 @@ async function resgatarConvitePendente(){
   if(houveResposta&&status!=='sem_sessao'){
     try{localStorage.removeItem(CONVITE_GUARDADO)}catch(e){}
   }
-  if(status==='ok')toast('Vocês são amigos','Já dá pra ver as viagens um do outro.','users');
+  if(status==='ok'){esquecerAmigosGuardados();toast('Vocês são amigos','Já dá pra ver as viagens um do outro.','users')}
 }
 
 // ═══ BUSCAR PESSOA ═══
@@ -18169,7 +18398,7 @@ function linhaDePessoa(p,i){
   // busca e o pedido foi pra que ele não usa. Com "53 spots" de um lado e
   // "0 spots" do outro, dá pra ver qual é a pessoa.
   const nSpots=typeof p.spots==='number'?(p.spots===1?'1 spot':p.spots+' spots'):'';
-  const sub=[p.username?'@'+p.username:'',p.home_city?'De '+p.home_city:'',nSpots,comum?'amigo de '+comum:''].filter(Boolean).join(' · ');
+  const sub=[p.username?'@'+p.username:'',p.home_city?'Mora em '+p.home_city:'',nSpots,comum?'amigo de '+comum:''].filter(Boolean).join(' · ');
   return '<div class="req-card af-linha">'+av
     +'<div style="flex:1;min-width:0"><div class="req-name">'+esc(nome)+'</div>'
     +(sub?'<div class="busca-user">'+esc(sub)+'</div>':'')
