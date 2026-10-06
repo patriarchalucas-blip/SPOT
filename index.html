@@ -1289,7 +1289,7 @@ body.na-casca .bottom-nav{display:none}
 .af-linha{gap:12px;min-height:64px}
 .af-linha .feed-avatar{width:44px;height:44px;font-size:14px}
 .af-linha .req-name{font-size:16px;letter-spacing:-.02em}
-.af-linha .busca-user{font-size:13px;color:var(--ink2);margin-top:2px}
+.af-linha .busca-user{font-size:13px;color:var(--ink2);margin-top:2px;white-space:normal;line-height:1.35}
 .af-rodape{padding:6px 20px 18px}
 .af-rodape-txt{font-size:13px;color:var(--ink2);margin-bottom:10px}
 .af-convite{width:100%;height:48px;background:var(--surface);border:none;
@@ -17130,7 +17130,11 @@ function linhaDePessoa(p,i){
   // username estranho em alguém que dá pra reconhecer. Vem da 025, que
   // devolve só UM nome e só quando ele também é amigo SEU.
   const comum=BUSCA_COMUM[p.id];
-  const sub=[p.username?'@'+p.username:'',comum?'amigo de '+comum:''].filter(Boolean).join(' · ');
+  // Cidade e spots (031, 06/10): três contas "Lucas Patriarcha" iguais na
+  // busca e o pedido foi pra que ele não usa. Com "53 spots" de um lado e
+  // "0 spots" do outro, dá pra ver qual é a pessoa.
+  const nSpots=typeof p.spots==='number'?(p.spots===1?'1 spot':p.spots+' spots'):'';
+  const sub=[p.username?'@'+p.username:'',p.home_city?'De '+p.home_city:'',nSpots,comum?'amigo de '+comum:''].filter(Boolean).join(' · ');
   return '<div class="req-card af-linha">'+av
     +'<div style="flex:1;min-width:0"><div class="req-name">'+esc(nome)+'</div>'
     +(sub?'<div class="busca-user">'+esc(sub)+'</div>':'')
