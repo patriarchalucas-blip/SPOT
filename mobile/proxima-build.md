@@ -12,6 +12,8 @@ pra "Já compilado".
 
 ## Na fila
 
+- **Foto da pessoa no card grande do feed** (06/10, `CardDeVisita` em TelaAmigos.js): a build 20 só tinha iniciais ali. Já no código, `expo export` ok.
+
 - **Abas Viagens e Amigos nativas no desenho novo** (lista em linhas, + Adicionar, busca de amigo): pendente de decisão do Lucas — reescrever no app ou deixar o site desenhar.
 - Depois da 1.0.2 aprovada: tirar o modo "spots" da tela Lista (lista geral).
 

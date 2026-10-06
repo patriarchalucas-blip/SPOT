@@ -205,9 +205,9 @@ function CardDeVisita({ item, aoAbrir, aoPerfil, aoSalvar, salvando }) {
           o PERFIL; o da foto e o da nota abrem o SPOT. Dois destinos no mesmo
           card, igual ao site. */}
       <Pressable onPress={aoPerfil} style={({ pressed }) => [e.quem, pressed && { opacity: 0.6 }]}>
-        <View style={e.quemAv}>
-          <Text style={e.quemAvTxt}>{item.quem.iniciais}</Text>
-        </View>
+        {/* A foto da pessoa (06/10): este card desenhava só as iniciais —
+            a build 20 pôs foto nas linhas pequenas e esqueceu este. */}
+        <Avatar iniciais={item.quem.iniciais} foto={item.quem.foto} tamanho={36} />
         <Text style={e.quemTxt} numberOfLines={2}>
           {/* "salvou", nao "foi": o app sabe quando o spot foi registrado,
               nao quando a visita aconteceu — ver o mesmo card no index.html. */}
