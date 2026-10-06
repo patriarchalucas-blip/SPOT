@@ -276,11 +276,17 @@ function CardDeVisita({ item, aoAbrir, aoPerfil, aoSalvar, salvando }) {
 export default function TelaAmigos({ dados, ocupado, acao }) {
   const margem = useSafeAreaInsets();
 
+  // Carregando com saída (06/10): se a 1ª carga falha, puxar pra baixo
+  // tenta de novo — antes era um girar sem fim.
   if (!dados) {
     return (
-      <View style={[e.fundo, e.centro]}>
+      <ScrollView
+        style={e.fundo}
+        contentContainerStyle={[e.centro, { flexGrow: 1 }]}
+        refreshControl={<RefreshControl refreshing={false} onRefresh={() => acao('recarregar')} tintColor={INK3} />}
+      >
         <ActivityIndicator size="large" color={VERDE} />
-      </View>
+      </ScrollView>
     );
   }
 
@@ -367,7 +373,14 @@ export default function TelaAmigos({ dados, ocupado, acao }) {
             {recebidos.map((p) => (
               <View key={p.pedido} style={e.reqCard}>
                 <Avatar iniciais={p.iniciais} foto={p.foto} />
-                <Text style={e.reqNome} numberOfLines={1}>{p.nome}</Text>
+                {/* @ e "Mora em · N spots" (06/10): três contas com o mesmo
+                    nome eram indistinguíveis na hora de aceitar. */}
+                <View style={{ flex: 1, minWidth: 0 }}>
+                  <Text style={e.reqNome} numberOfLines={1}>{p.nome}</Text>
+                  {p.detalhe || p.username ? (
+                    <Text style={e.reqDetalhe} numberOfLines={2}>{p.detalhe || '@' + p.username}</Text>
+                  ) : null}
+                </View>
                 <Pressable onPress={() => acao('recusar', p.pedido)} style={[e.reqBotao, e.reqRecusar]}>
                   <Text style={e.reqRecusarTxt}>Recusar</Text>
                 </Pressable>
@@ -588,6 +601,7 @@ const e = StyleSheet.create({
     paddingVertical: 10,
   },
   reqNome: { flex: 1, fontSize: 15, fontWeight: '600', color: INK },
+  reqDetalhe: { fontSize: 13, color: INK2, marginTop: 2 },
   reqBotao: { borderRadius: 10, paddingHorizontal: 14, minHeight: 40, justifyContent: 'center' },
   reqAceitar: { backgroundColor: VERDE },
   reqAceitarTxt: { color: ON_GREEN, fontSize: 14, fontWeight: '600' },

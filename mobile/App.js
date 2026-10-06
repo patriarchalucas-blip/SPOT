@@ -241,6 +241,17 @@ const FONTES = {
 // (`searchParams.get` lança "not implemented" em várias versões), e o erro
 // caía no catch — o link de convite abriria o app sem abrir o convite.
 export function conviteDoLink(url) {
+  // Esquema próprio (06/10): link do mesmo domínio tocado DENTRO do Safari
+  // não abre o app (regra da Apple). spot://c/<código> e
+  // spot://salvar/<código>.<id> abrem — as páginas /c/ e /l/ passam a usar
+  // quando esta versão estiver na mão da maioria.
+  const esq = String(url || '').match(/^spot:\/\/(c|salvar)\/([A-Za-z0-9_.%-]{4,80})\/?$/i);
+  if (esq) {
+    const v = esq[2].replace('%2E', '.');
+    if (esq[1].toLowerCase() === 'c' && /^[A-Za-z0-9_-]{4,64}$/.test(v)) return SITE + '/?c=' + v;
+    if (/^[A-Za-z0-9]{8,24}\.[0-9a-fA-F-]{36}$/.test(v)) return SITE + '/?salvar=' + v;
+    return '';
+  }
   const m = String(url || '').match(/^https:\/\/(?:www\.)?meuspot\.app(?=[/?#]|$)(\/[^?#]*)?(?:\?([^#]*))?/i);
   if (!m) return '';
   const caminho = (m[1] || '/').match(/^\/c\/([A-Za-z0-9_-]{4,64})\/?$/);
@@ -649,6 +660,9 @@ function Conteudo() {
               // Recarregou: até o site dizer onde está, a barra some. Melhor
               // nenhuma barra que uma barra apontando pra tela errada.
               setMostrarAbas(false);
+              // Troca de conta (06/10): as abas nativas não seguram o pacote
+              // da conta anterior enquanto o site recarrega.
+              setDadosDaTela({});
             }}
             onLoadEnd={() => {
               setCarregando(false);
