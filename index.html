@@ -3221,10 +3221,27 @@ async function refreshAvatars(name){
   const rows=await dbGet('profiles','id=eq.'+S.user.id);
   if(falhou(rows)||!rows||!rows[0])return;
   const novo=Object.assign(S.profile||{},rows[0]);S.profile=novo;
+  await trazerFotoDoGoogle(novo);
   if((novo.avatar_url||'')!==antes){
     applyAvatar('dashAvatar',name,novo.avatar_url);applyAvatar('profAvatar',name,novo.avatar_url);
     try{guardarDadosLocais();darDadosDePerfil();darDadosDeViagens()}catch(e){}
   }
+}
+// A foto da conta do Google vira a foto do perfil (06/10). Antes só existia
+// foto de quem subia uma na mão — quase ninguém —, e a busca por @, o feed e
+// os comentários mostravam iniciais pra todo mundo: dava pra mandar pedido
+// pra pessoa errada sem perceber. Foto subida no app (bucket do Supabase)
+// nunca é trocada; a do Google é atualizada se a pessoa trocou lá.
+function ehFotoDoGoogle(u){return /^https:\/\/[a-z0-9-]+\.googleusercontent\.com\//.test(String(u||''))}
+async function trazerFotoDoGoogle(p){
+  const meta=(S.user&&S.user.user_metadata)||{};
+  // Vem em 96 px ("=s96-c"); 256 fica nítido no avatar grande do Perfil.
+  const g=String(meta.avatar_url||meta.picture||'').replace(/=s\d+-c$/,'=s256-c');
+  if(!ehFotoDoGoogle(g)||!p||!p.id)return;
+  const atual=p.avatar_url||'';
+  if(atual&&(!ehFotoDoGoogle(atual)||atual===g))return;
+  const{error}=await dbUpdate('profiles',S.user.id,{avatar_url:g});
+  if(!error)p.avatar_url=g;
 }
 function hydrateIcons(root){(root||document).querySelectorAll('[data-ic]:not([data-ic-done])').forEach(function(el){el.innerHTML=icon(el.getAttribute('data-ic'));el.setAttribute('data-ic-done','1');});}
 if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',function(){hydrateIcons();});else hydrateIcons();
@@ -15714,6 +15731,21 @@ async function loadFriends(daAba){
   const outgoingVivos=outgoing.filter(r=>!jaAmigo.has(r.following_id));
   FRIENDS_DATA={uid,friendIds,incoming:incomingVivos,outgoing:outgoingVivos,pmap,feedItems,lugaresPorAmigo:{},convidou:CONVIDOU};
   AMIGOS_CARREGADO_EM=Date.now();
+  // DIAGNÓSTICO TEMPORÁRIO (06/10): pedido e foto de amigo somem no iPhone do
+  // Lucas e não reproduzem aqui. Só contagens, uma vez por aparelho por dia,
+  // só dentro do app. Sai assim que a causa aparecer em /api/erro.
+  try{
+    const k='spot_diag_amigos_'+new Date().toISOString().slice(0,10);
+    if(naCasca()&&!localStorage.getItem(k)&&window.reportarErro){
+      localStorage.setItem(k,'1');
+      const comFoto=friendIds.filter(f=>pmap[f]&&pmap[f].avatar_url);
+      const host=comFoto.length?String(pmap[comFoto[0]].avatar_url).split('/')[2]:'-';
+      reportarErro('console','diag-amigos v1 conta='+((S.profile&&S.profile.username)==='lucaspatriarcha'?'lucaspatriarcha':'outra')
+        +' pend_brutos='+incoming.length+' pend_vivos='+incomingVivos.length+' bloq='+BLOQUEADOS.size
+        +' amigos='+friendIds.length+' com_foto='+comFoto.length+' host='+host
+        +' perfis='+Object.keys(pmap).length,'');
+    }
+  }catch(e){}
   // Já gerou um link de convite? Decide o vazio: "Convite enviado" em vez
   // de pedir de novo o que a pessoa já fez. Falhou a consulta, fica o vazio
   // de quem nunca convidou — o pior caso é oferecer o convite outra vez.
