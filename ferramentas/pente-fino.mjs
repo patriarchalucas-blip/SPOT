@@ -143,6 +143,7 @@ await passoDe('salvar spot abre a ficha (B7)', `(async()=>{S.addCat='food';S.add
 await passoDe('aba amigos', `(async()=>{goTo('friends');await loadFriends()})()`, 2000);
 await passoDe('perfil da Ana', `openFriend('${ANA}')`, 2000);
 await passoDe('ficha única: spot da Ana (e5)', `(async()=>{document.querySelectorAll('.overlay.show').forEach(o=>closeOv(o.id));const l=await plnSpotsDeles();FRIEND_CITY_SPOTS=l.filter(x=>x.id==='a4');abrirSpotDoAmigo(0)})()`, 2000);
+console.log('  capa:', await pg.evaluate(() => (document.getElementById('placeHeroImg').style.backgroundImage||'').slice(0,60)));
 await passoDe('ficha única: voltar', `backFromPlace()`);
 await passoDe('ficha única: spot que é meu (e4)', `(async()=>{const l=await plnSpotsDeles();FRIEND_CITY_SPOTS=l.filter(x=>x.id==='r1');abrirSpotDoAmigo(0)})()`, 2000);
 console.log('  slides:', await pg.evaluate(() => document.querySelectorAll('#place .fi-slide').length));

@@ -5220,13 +5220,20 @@ async function montarCarrossel(sp){
   caixa.querySelectorAll('.fi-carro').forEach(x=>x.remove());
   // A 1ª é a que já está no topo (a sua foto, se você subiu uma); as outras
   // são as do Google que ainda não apareceram.
+  // Capa vazia (spot de amigo salvo sem foto, prévia do Explorar sem foto): a
+  // 1ª do lugar vira a capa. Sem isto a ficha ficava com o topo verde e o
+  // "1 de N" no canto (vídeo do Lucas, 06/10: Cervejaria Ramiro da Ana).
+  if(!(sp.photo_url||sp._fotoVista)){
+    const primeira=(suas||[])[0]||lista[0];
+    if(primeira&&primeira.url){sp._fotoVista=primeira.url;const h=caixa.querySelector('.place-hero-img');if(h)h.style.backgroundImage=cssUrl(safeUrl(primeira.url))}
+  }
   const atual=chaveDaFoto(sp.photo_url||sp._fotoVista||'');
   const vistas=new Set([atual]);
   // A capa, quando veio do Google, é quase sempre a 1ª foto do lugar — e o
   // Google muda o nome da foto a cada consulta, então comparar o nome não
   // pega a repetida (o Lucas viu a mesma foto duas vezes, 05/10). Capa do
   // Google: pula a 1ª. Capa sua (foto que você subiu): todas entram.
-  const capaDoGoogle=!!(sp.photo_url||sp._fotoVista)&&!/\/storage\//.test(String(sp.photo_url||''));
+  const capaDoGoogle=!!(sp.photo_url||sp._fotoVista)&&!/\/storage\//.test(String(sp.photo_url||sp._fotoVista||''));
   // As suas (spot_fotos) vêm antes das do Google; a que já é a capa não repete.
   const minhas=(suas||[]).filter(f=>f.url&&f.url!==sp.photo_url).map(f=>({url:f.url,id:f.id,dono:f.user_id}));
   const extras=minhas.concat(lista.slice(capaDoGoogle?1:0)).filter(f=>{const k=chaveDaFoto(f.url);if(!k||vistas.has(k))return false;vistas.add(k);return true});
@@ -9912,7 +9919,13 @@ function exmSelecionar(i){
 }
 function exmVerSpot(i){
   const it=EXM.itens[i];if(!it)return;
-  if(it.tipo==='amigo')return abrirLugarDosAmigos(it.gi);
+  // A foto que o card já mostrou vai junto: a ficha abre com ela na capa, sem
+  // esperar outra busca (vídeo do Lucas, 06/10: o topo ficava verde).
+  if(it.tipo==='amigo'){
+    const g=lugaresDosAmigosNaCategoria()[it.gi];
+    if(g&&g.capa&&it.foto&&!g.capa.photo_url&&!g.capa._fotoVista)g.capa._fotoVista=it.foto;
+    return abrirLugarDosAmigos(it.gi);
+  }
   if(it.tipo==='google')return abrirPreviaDoExplorar(it.idx);
   if(it.tipo==='meu')return openPlace(it.s.id,'explore');
 }
