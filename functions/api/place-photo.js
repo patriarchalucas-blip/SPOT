@@ -89,9 +89,15 @@ export async function onRequestGet(context) {
   const etiqueta = new Request(
     url.origin + '/_foto/' + chave + '/' + largura + (webp ? '/webp' : '/jpeg')
   );
+  // A FALHA mora só na borda (06/10). Gravada no KV, qualquer um sem login
+  // inventando refs no formato certo gastava uma gravação do KV grátis (mil
+  // por dia, pro app inteiro) a cada ref. A borda não tem teto de gravação.
+  // O 'X' antigo no KV ainda é lido abaixo até vencer (10 min).
+  const etiquetaFalha = new Request(url.origin + '/_foto/' + chave + '/falha');
   try {
     const naBorda = await borda.match(etiqueta);
     if (naBorda) return naBorda;
+    if (await borda.match(etiquetaFalha)) return vazio(404);   // falha conhecida, não retenta agora
   } catch (e) { /* borda fora: segue pro KV */ }
 
   if (kv) {
@@ -150,7 +156,7 @@ export async function onRequestGet(context) {
     // fazia uma recusa de cota virar foto sumida (27/09, fotos pararam de
     // aparecer depois que o teto diário do Google estourou).
     if (r.status === 400 || r.status === 404) {
-      if (kv) { try { await kv.put(chave, 'X', { expirationTtl: TTL_FALHA }) } catch (e) {} }
+      try { context.waitUntil(borda.put(etiquetaFalha, new Response('X', { headers: { 'Cache-Control': 'public, max-age=' + TTL_FALHA } }))) } catch (e) {}
       return vazio(404);
     }
     return vazio(503);

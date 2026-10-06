@@ -1,4 +1,5 @@
 import { lerKV } from '../api/_kv.js';
+import { viagensPrivadas, semQueroIrPrivado } from '../api/_privada.js';
 
 // Cloudflare Pages Function — a LISTA PÚBLICA de spots: meuspot.app/l/<código>.
 // Desenho: handoff "crescimento", fluxo 1 (1a–1f), 30/09/2026.
@@ -11,7 +12,8 @@ import { lerKV } from '../api/_kv.js';
 // "quais cidades". Os spots são lidos aqui, na hora, com a chave de serviço.
 //
 // NUNCA APARECE: a nota privada ("por que te chamou atenção", my_note), os
-// spots em "Não recomendo" e os de outras cidades. Link revogado → 410.
+// spots em "Não recomendo", os de outras cidades e os Quero ir de viagem
+// "Só eu vejo" (06/10, functions/api/_privada.js). Link revogado → 410.
 //
 // Texto sem gênero: o app não sabe o gênero de ninguém ("Os spots de Lucas",
 // "Lucas guarda os spots no Spot"), diferente do desenho, que usava "do"/"dele".
@@ -237,12 +239,13 @@ export async function onRequestGet(context) {
 
   const sb = (caminho) => fetch(SB_URL + caminho, { headers: { apikey: env.SUPABASE_SERVICE_KEY, Authorization: 'Bearer ' + env.SUPABASE_SERVICE_KEY } });
   const lista = dado.cidades.map((c) => '"' + String(c).replace(/["\\]/g, '') + '"').join(',');
-  const [rs, rp] = await Promise.all([
-    sb('/rest/v1/spots?select=id,name,category,subcategory,place_type,status,my_rating,my_review,photo_url,maps_url,address,city,created_at&user_id=eq.' + dado.uid
+  const [rs, rp, privadas] = await Promise.all([
+    sb('/rest/v1/spots?select=id,name,category,subcategory,place_type,status,my_rating,my_review,photo_url,maps_url,address,city,created_at,trip_id&user_id=eq.' + dado.uid
       + '&status=in.(been,want)&city=in.(' + encodeURIComponent(lista) + ')&order=created_at.desc&limit=300'),
-    sb('/rest/v1/profiles?select=display_name,username,avatar_url&id=eq.' + dado.uid)
+    sb('/rest/v1/profiles?select=display_name,username,avatar_url&id=eq.' + dado.uid),
+    viagensPrivadas(env, dado.uid)
   ]);
-  const spots = rs.ok ? await rs.json() : [];
+  const spots = semQueroIrPrivado(rs.ok ? await rs.json() : [], privadas);
   const perfil = rp.ok ? ((await rp.json())[0] || {}) : {};
   const avatar = /^https:\/\/kzidnilsyrvauzgelsqd\.supabase\.co\/storage\//.test(String(perfil.avatar_url || '')) ? perfil.avatar_url : '';
   // O nome: o do perfil; senão o que o app mandou ao criar o link (o do login

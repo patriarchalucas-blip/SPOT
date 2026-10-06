@@ -1,4 +1,4 @@
-import { quemEsta, podeGastar } from './_auth.js';
+import { quemEsta, podeGastar, SB_ANON } from './_auth.js';
 import { lerKV, gravarKV } from './_kv.js';
 
 // Cloudflare Pages Function — completa a POSIÇÃO (lat/lng) de spot antigo.
@@ -42,7 +42,9 @@ export async function onRequestPost(context) {
   if (!ids.length) return json({ posicoes: {} });
 
   const quem = await quemEsta(request, env);
-  if (!quem.permitir) return json({ unauthorized: true }, 401);
+  // Sem uid não há teto por pessoa (06/10): o "deixa passar" do _auth.js
+  // pra Supabase fora do ar virava gasto pago sem dono. Aqui, recusa.
+  if (!quem.permitir || !quem.uid) return json({ unauthorized: true }, 401);
   if (!env.GOOGLE_PLACES_KEY || !env.SUPABASE_SERVICE_KEY) return json({ configured: false });
 
   const sb = (caminho, opcoes) => fetch(SB_URL + caminho, Object.assign({
@@ -51,10 +53,19 @@ export async function onRequestPost(context) {
   }, opcoes && { method: opcoes.method, body: opcoes.body }));
 
   // Só os que ainda estão sem posição, e que não falharam há pouco.
-  const r = await sb('/rest/v1/spots?select=id,name,city,address,lat&id=in.(' + ids.join(',') + ')');
+  // A LEITURA vai com o token de quem chama, não com a chave de serviço
+  // (06/10): a chave de serviço passa por cima do RLS, e qualquer pessoa
+  // logada que mandasse um id qualquer gastava a nossa busca no Google e
+  // gravava posição em spot que ela nem pode ver (inclusive Quero ir de
+  // viagem "Só eu vejo"). Agora só entra o que o RLS devolve pra ela — o
+  // próprio spot ou o de amigo — e só esses são gravados lá embaixo.
+  const token = (request.headers.get('Authorization') || '').replace(/^Bearer\s+/i, '').trim();
+  const r = await fetch(SB_URL + '/rest/v1/spots?select=id,name,city,address,lat&id=in.(' + ids.join(',') + ')',
+    { headers: { apikey: SB_ANON, Authorization: 'Bearer ' + token } });
   const spots = r.ok ? await r.json() : [];
   const faltam = [];
-  for (const s of spots) {
+  for (const s of Array.isArray(spots) ? spots : []) {
+    if (!s || !ids.includes(String(s.id))) continue;
     if (s.lat != null) continue;
     if (await lerKV(env, 'pos_falhou_' + s.id)) continue;
     faltam.push(s);

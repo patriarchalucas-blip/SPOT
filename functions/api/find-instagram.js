@@ -62,7 +62,9 @@ export async function onRequestPost(context) {
   // Toda chamada exige estar logado — inclusive a que só lê o site oficial,
   // senão isto viraria um buscador de páginas aberto pra qualquer um.
   const quem = await quemEsta(request, env);
-  if (!quem.permitir) return json({ instagram_url: null, unauthorized: true }, 401);
+  // Sem uid não há teto por pessoa (06/10): o "deixa passar" do _auth.js
+  // pra Supabase fora do ar virava gasto pago sem dono. Aqui, recusa.
+  if (!quem.permitir || !quem.uid) return json({ instagram_url: null, unauthorized: true }, 401);
 
   // ═══ PASSO 1: o site oficial do lugar ═══
   // O jeito mais confiável e o mais barato, nesta ordem, e por isso vem antes

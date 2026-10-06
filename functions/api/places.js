@@ -1,4 +1,5 @@
 import { quemEsta, podeGastar } from './_auth.js';
+import { contarUso } from './_kv.js';
 
 // Cloudflare Pages Function — busca de lugares, via Google Places (New).
 //
@@ -41,6 +42,9 @@ const CAP_MENSAL = 5000;
 // conta criada de propósito pra queimar a cota de todos.
 const CAP_USUARIO = 1500;
 const TTL_BUSCA = 60 * 60 * 24 * 7;
+// A 1ª página do Explorar (06/10). Mais curto que a busca solta: é a lista
+// que muda com o "aberto agora" e a nota, e é a que mais se repete.
+const TTL_PAGINA_1 = 60 * 60 * 6;
 
 // Campos que o app usa hoje. Pedir além disso custa mais caro por requisição,
 // então o que não está aqui é descartado em vez de repassado.
@@ -87,9 +91,19 @@ export async function onRequestPost(context) {
   if (!payload) return json({ error: 'parametros_invalidos' }, 400);
 
   const kv = env.SPOT_KV;
-  // Busca paginada não entra no cache: o token da próxima página vence, e
-  // servir um token velho do cache faria a rolagem parar na página 1.
-  const cacheavel = op === 'searchText' && kv && !payload.pageSize;
+  // CACHE DA 1ª PÁGINA (06/10). Antes só a busca sem pageSize entrava — e o
+  // Explorar SEMPRE manda pageSize:20, então a busca principal do app nunca
+  // saía do cache: cada pessoa abrindo "restaurantes em Lisboa" pagava a sua.
+  // Agora a página 1 (sem pageToken) entra, por 6 h. A chave é o corpo já
+  // limpo por montarTexto (texto, tipo, área, pageSize, idioma) + a máscara:
+  // nada de quem pediu. As páginas seguintes (com token) seguem sem cache.
+  //
+  // O nextPageToken NÃO vai pra cópia guardada: a documentação do Places
+  // (New) não diz quanto tempo o token vale, e um token vencido faria a
+  // página 2 voltar erro. Quem pega a página 1 do cache recebe só ela; o app
+  // trata "sem token" como fim da consulta e segue pra fila de cozinhas
+  // vizinhas (filaDoExplorar). Quem paga a busca recebe o token, como antes.
+  const cacheavel = op === 'searchText' && kv && !payload.pageToken;
   let chave = null;
   if (cacheavel) {
     chave = 'places_' + (await hash(op + '|' + mascara + '|' + JSON.stringify(payload)));
@@ -103,7 +117,9 @@ export async function onRequestPost(context) {
 
   // Daqui pra baixo custa dinheiro de verdade — só pra quem está logado.
   const quem = await quemEsta(request, env);
-  if (!quem.permitir) return json({ places: [], unauthorized: true }, 401);
+  // Sem uid não há teto por pessoa (06/10): o "deixa passar" do _auth.js
+  // pra Supabase fora do ar virava gasto pago sem dono. Aqui, recusa.
+  if (!quem.permitir || !quem.uid) return json({ places: [], unauthorized: true }, 401);
   if (!env.GOOGLE_PLACES_KEY) return json({ places: [], configured: false });
   // ORÇAMENTO SEPARADO PRO PREENCHIMENTO DE COORDENADA.
   //
@@ -126,7 +142,9 @@ export async function onRequestPost(context) {
     try {
       const usado = parseInt((await kv.get(contador)) || '0', 10);
       if (usado >= CAP_MENSAL) return json({ places: [], capped: true, scope: 'global' });
-      await kv.put(contador, String(usado + 1), { expirationTtl: 60 * 60 * 24 * 40 });
+      // Por amostragem (06/10, como lugar.js): gravava a cada busca, e
+      // gravação no KV grátis tem teto de mil por dia.
+      await contarUso(env, contador, usado, 1, 60 * 60 * 24 * 40);
     } catch (e) { /* contador indisponível não bloqueia o usuário */ }
   }
 
@@ -156,7 +174,8 @@ export async function onRequestPost(context) {
   const saida = { places: Array.isArray(dados.places) ? dados.places : [] };
   if (typeof dados.nextPageToken === 'string' && dados.nextPageToken) saida.nextPageToken = dados.nextPageToken;
   if (cacheavel && chave) {
-    try { await kv.put(chave, JSON.stringify(saida), { expirationTtl: TTL_BUSCA }) } catch (e) {}
+    const guardar = payload.pageSize ? { places: saida.places } : saida;
+    try { await kv.put(chave, JSON.stringify(guardar), { expirationTtl: payload.pageSize ? TTL_PAGINA_1 : TTL_BUSCA }) } catch (e) {}
   }
   return json(saida);
 }

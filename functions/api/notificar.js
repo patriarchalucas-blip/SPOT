@@ -31,7 +31,7 @@ const EXPO = 'https://exp.host/--/api/v2/push/send';
 // Lista fechada. `nome` é o display_name de quem enviou, já escapado de nada
 // porque notificação é texto puro — não há HTML no caminho.
 const TEXTOS = {
-  pedido:     (nome) => ({ title: 'Pedido de amizade', body: `${nome} quer te seguir no Spot` }),
+  pedido:     (nome) => ({ title: 'Pedido de amizade', body: `${nome} quer ser seu amigo no Spot` }),
   aceite:     (nome) => ({ title: 'Vocês são amigos',  body: `${nome} aceitou seu pedido. Já dá pra ver as viagens.` }),
   comentario: (nome, extra) => ({ title: 'Comentário', body: extra ? `${nome} comentou em ${extra}` : `${nome} comentou no seu lugar` })
 };
@@ -74,9 +74,11 @@ export async function onRequestPost(context) {
   // Um aviso por par e por tipo: pedido e aceite, um por dia; comentário, um a
   // cada 2 minutos no mesmo spot. Sem isto, um pedido de amizade (que só pede
   // vínculo pendente) permitia 60 avisos por hora na tela de um estranho.
+  // A marca só é GRAVADA depois que o aviso sai de fato (06/10): gravada antes,
+  // um pedido feito antes do vínculo existir no banco (ou com o Expo fora)
+  // calava o aviso de verdade pelo resto do dia.
   const par = 'push_par_' + tipo + '_' + quem.uid + '_' + alvo + (tipo === 'comentario' ? '_' + spotId : '');
   if (await lerKV(env, par)) return json({ enviados: 0, motivo: 'repetido' });
-  await gravarKV(env, par, '1', tipo === 'comentario' ? 120 : 60 * 60 * 24);
 
   let extra = '';
   if (tipo === 'comentario' && /^[0-9a-f-]{36}$/i.test(spotId)) {
@@ -133,7 +135,9 @@ export async function onRequestPost(context) {
       }
     });
     if (mortos.length) context.waitUntil(apagarEnderecos(env, mortos));
-    return json({ enviados: lista.filter((x) => x && x.status === 'ok').length });
+    const enviados = lista.filter((x) => x && x.status === 'ok').length;
+    if (enviados) await gravarKV(env, par, '1', tipo === 'comentario' ? 120 : 60 * 60 * 24);
+    return json({ enviados });
   } catch (e) {
     return json({ enviados: 0, erro: 'envio' });
   }

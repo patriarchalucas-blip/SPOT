@@ -1,5 +1,6 @@
 import { lerKV } from '../../api/_kv.js';
 import { fotoDoSpot } from '../[codigo].js';
+import { viagensPrivadas, semQueroIrPrivado } from '../../api/_privada.js';
 
 // Cloudflare Pages Function — a IMAGEM da prévia do WhatsApp: /l/capa/<código>.
 //
@@ -11,7 +12,8 @@ import { fotoDoSpot } from '../[codigo].js';
 // também descarta). Fica na cache da borda por um dia.
 //
 // A foto é a do primeiro spot de Fui que tiver foto que abra (senão Quero ir);
-// sem nenhuma, a imagem padrão do site.
+// sem nenhuma, a imagem padrão do site. Quero ir de viagem "Só eu vejo" não
+// entra (06/10): a foto dele na prévia já contava pra onde a pessoa vai.
 
 const SB_URL = 'https://kzidnilsyrvauzgelsqd.supabase.co';
 
@@ -31,10 +33,11 @@ export async function onRequestGet(context) {
   if (!dado || dado.revogado || !Array.isArray(dado.cidades)) return padrao();
 
   const lista = dado.cidades.map((c) => '"' + String(c).replace(/["\\]/g, '') + '"').join(',');
-  const r = await fetch(SB_URL + '/rest/v1/spots?select=photo_url,status,my_rating&user_id=eq.' + dado.uid
+  const [r, privadas] = await Promise.all([fetch(SB_URL + '/rest/v1/spots?select=photo_url,status,my_rating,trip_id&user_id=eq.' + dado.uid
     + '&status=in.(been,want)&photo_url=not.is.null&city=in.(' + encodeURIComponent(lista) + ')&limit=40',
-    { headers: { apikey: env.SUPABASE_SERVICE_KEY, Authorization: 'Bearer ' + env.SUPABASE_SERVICE_KEY } });
-  const spots = r.ok ? await r.json() : [];
+    { headers: { apikey: env.SUPABASE_SERVICE_KEY, Authorization: 'Bearer ' + env.SUPABASE_SERVICE_KEY } }),
+    viagensPrivadas(env, dado.uid)]);
+  const spots = semQueroIrPrivado(r.ok ? await r.json() : [], privadas);
   spots.sort((a, b) => (b.status === 'been') - (a.status === 'been') || (Number(b.my_rating) || 0) - (Number(a.my_rating) || 0));
 
   // Tenta até 4 fotos: endereço de foto do Google expira, e a primeira pode ter morrido.

@@ -22,7 +22,9 @@
 // Guardar como env só criaria mais uma coisa pra configurar no Cloudflare sem
 // esconder nada de ninguém.
 const SB_URL = 'https://kzidnilsyrvauzgelsqd.supabase.co';
-const SB_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imt6aWRuaWxzeXJ2YXV6Z2Vsc3FkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODEyODE5NDAsImV4cCI6MjA5Njg1Nzk0MH0.BMgiP_lTe8mCfe0eSPNUCksXatOntuWAhcqGtR8hco4';
+// Exportada (06/10): posicao.js lê spots COM o token de quem chama, pro RLS
+// decidir o que essa pessoa vê.
+export const SB_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imt6aWRuaWxzeXJ2YXV6Z2Vsc3FkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODEyODE5NDAsImV4cCI6MjA5Njg1Nzk0MH0.BMgiP_lTe8mCfe0eSPNUCksXatOntuWAhcqGtR8hco4';
 
 // 10 min: uma sessão ativa valida uma vez e as chamadas seguintes saem do KV.
 // Sem isso, abrir uma viagem com 5 cidades novas viraria 5 idas ao Supabase.

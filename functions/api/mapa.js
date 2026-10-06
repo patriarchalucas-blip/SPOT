@@ -123,7 +123,9 @@ export async function onRequestGet(context) {
 
   // Daqui pra baixo custa dinheiro — só pra quem está logado.
   const quem = await quemEsta(request, env);
-  if (!quem.permitir) return json({ error: 'sem_sessao' }, 401);
+  // Sem uid não há teto por pessoa (06/10): o "deixa passar" do _auth.js
+  // pra Supabase fora do ar virava gasto pago sem dono. Aqui, recusa.
+  if (!quem.permitir || !quem.uid) return json({ error: 'sem_sessao' }, 401);
   if (!env.GOOGLE_PLACES_KEY) return json({ configured: false }, 200);
   if (!await podeGastar(env, 'mapa', quem.uid, 1, CAP_USUARIO)) {
     return json({ capped: true, scope: 'user' }, 200);

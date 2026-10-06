@@ -40,10 +40,14 @@ export async function onRequestPost(context) {
   if (op === 'detalhe' && !idValido(id)) return json({ error: 'id_invalido' }, 400);
 
   const quem = await quemEsta(request, env);
-  if (!quem.permitir) return json({ unauthorized: true }, 401);
+  // Sem uid não há teto por pessoa (06/10): o "deixa passar" do _auth.js
+  // pra Supabase fora do ar virava gasto pago sem dono. Aqui, recusa.
+  if (!quem.permitir || !quem.uid) return json({ unauthorized: true }, 401);
   if (!env.GOOGLE_PLACES_KEY) return json({ configured: false });
 
-  // sug2 (05/10): a resposta ganhou o grupo de spots; a memória antiga não tem.
+  // A versão na chave descarta a memória de formato velho: sug2 (05/10) ganhou
+  // o grupo de spots; sug3 (05/10, onboarding) passou a levar o tipo de cada
+  // sugestão. Mudou o formato da resposta, sobe o número.
   const chave = op === 'sugerir'
     ? 'lugar_sug3_' + (await hash(texto.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '')))
     : 'lugar_det_' + (await hash(id));

@@ -88,8 +88,12 @@ export async function onRequestPost(context) {
   // grátis de mil gravações por dia, no app inteiro). A resposta conta.
   const gravou = await gravarKV(env, chave, JSON.stringify(d), UM_MES);
   if (novo) {
-    const aviso = avisarDono(env, 'Erro novo no Spot' + (tela ? ' (' + tela + ')' : ''),
-      msg.slice(0, 140) + (onde === 'app' ? ' · no app' : ' · no navegador'), 'operacao');
+    // Texto FIXO (06/10): /api/erro não pede login, e a mensagem vinha de quem
+    // chamou — qualquer um escrevia o que quisesse na tela de bloqueio do
+    // Lucas. A mensagem fica só no registro do KV (GET /api/erro).
+    const telaSegura = String(tela || '').toLowerCase().replace(/[^a-z0-9-]/g, '').slice(0, 40);
+    const aviso = avisarDono(env, 'Erro novo no app',
+      (telaSegura ? 'Tela ' + telaSegura : 'Tela desconhecida') + (onde === 'app' ? ' · no app' : ' · no navegador'), 'operacao');
     if (typeof context.waitUntil === 'function') context.waitUntil(aviso); else await aviso;
   }
   return json({ ok: true, gravou });

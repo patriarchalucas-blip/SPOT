@@ -25,8 +25,13 @@ import { avisarDono } from './_aviso-dono.js';
 // não se guarda nada dele (nem no KV). Está na política de privacidade.
 
 const MODELO = 'claude-haiku-4-5';
-const MAX_CARACTERES = 15000;   // ~150 lugares numa nota comprida
-const MAX_LUGARES = 150;
+const MAX_CARACTERES = 15000;   // o mesmo IMP_MAX do app
+// 100, não 150 (06/10): a saída cabe em max_tokens 8000 (era 16000, e
+// resposta longa é cobrada e demora). Cada lugar no JSON sai por ~50 tokens
+// (o trecho do texto, até 80 caracteres, é a maior parte): 150 dava ~7.500,
+// colado no teto — e corte por tamanho perde a importação inteira
+// (ia_max_tokens). 100 dá ~5.000, com folga.
+const MAX_LUGARES = 100;
 const TETO_PESSOA = 40;         // importações por mês, por conta
 const TETO_MES = 3000;          // importações por mês, no app inteiro
 const AVISOS = [50, 80, 100];
@@ -110,7 +115,7 @@ export async function onRequestPost(context) {
       headers: { 'content-type': 'application/json', 'x-api-key': env.ANTHROPIC_API_KEY, 'anthropic-version': '2023-06-01' },
       body: JSON.stringify({
         model: MODELO,
-        max_tokens: 16000,
+        max_tokens: 8000,
         system: SISTEMA,
         messages: [{ role: 'user', content: texto }],
         output_config: { format: { type: 'json_schema', schema: ESQUEMA } }

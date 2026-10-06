@@ -85,7 +85,9 @@ export async function onRequestPost(context) {
   const daEntrada = CIDADES_DA_ENTRADA.has(normKey(query));
   if (!daEntrada) {
     const quem = await quemEsta(request, env);
-    if (!quem.permitir) return json({ url: '', unauthorized: true }, 401);
+    // Sem uid não há teto por pessoa (06/10): o "deixa passar" do _auth.js
+    // pra Supabase fora do ar virava gasto pago sem dono. Aqui, recusa.
+    if (!quem.permitir || !quem.uid) return json({ url: '', unauthorized: true }, 401);
     if (!await podeGastar(env, 'unsplash', quem.uid, 1, USER_CAP)) {
       return json({ url: '', capped: true, scope: 'user' });
     }
