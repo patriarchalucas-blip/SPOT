@@ -43,6 +43,12 @@ const DB = {
     { id: 'r1', user_id: RAFA, trip_id: 'tr', name: 'Taberna da Rua das Flores', category: 'food', city: 'Lisboa', status: 'been', my_rating: 4, created_at: '2026-08-01' },
     { id: 'a2', user_id: ANA, trip_id: 'tac', name: 'Bar da Dona Onça', category: 'food', city: 'São Paulo', address: 'Av. Ipiranga, 200 - República, São Paulo - SP, 01046-010, Brasil', status: 'been', my_rating: 5, created_at: '2026-08-01' }]
 };
+// Cidades visitadas (06/10): Sintra marcada sem spot; a Ana esteve em Madri e
+// Sevilha (sugestões da pergunta 10c e da folha 9b).
+DB.cidades_visitadas = [{ id: 'cv-sintra', user_id: EU, chave: 'sintra|portugal', nome: 'Sintra', pais: 'Portugal', place_id: null, created_at: '2026-10-06' }];
+DB.trips.push({ id: 'tae', user_id: ANA, name: 'Espanha', destinations: ['Espanha'], dates: '', status: 'planning', created_at: '2026-07-01' });
+DB.spots.push({ id: 'ae1', user_id: ANA, trip_id: 'tae', name: 'Bodega Madri', category: 'food', city: 'Madri', status: 'been', my_rating: 4, created_at: '2026-07-02' },
+  { id: 'ae2', user_id: ANA, trip_id: 'tae', name: 'Bar Sevilha', category: 'food', city: 'Sevilha', status: 'been', my_rating: 4, created_at: '2026-07-03' });
 DB.spot_comments = [{ id: 'c1', spot_id: 'a4', user_id: RAFA, body: 'Reserva ou chega cedo?', created_at: '2026-10-01' }, { id: 'c2', spot_id: 'a4', user_id: ANA, body: 'Balcão sem reserva, às 19h.', created_at: '2026-10-02' }];
 function filtra(tab, qs) {
   let l = (DB[tab] || []).slice();
@@ -76,7 +82,12 @@ pg.on('request', r => {
   const rest = u.match(/supabase\.co\/rest\/v1\/([a-z_]+)\??(.*)$/);
   if (rest) {
     if (r.method() === 'POST' && rest[1] === 'spots') { const body = JSON.parse(r.postData() || '{}'); const row = Object.assign({ id: 'n' + Math.random().toString(16).slice(2, 8), created_at: new Date().toISOString() }, body); DB.spots.push(row); return r.respond({ status: 201, contentType: 'application/json', body: JSON.stringify([row]) }) }
-    if (r.method() === 'POST' && rest[1] === 'trips') { const body = JSON.parse(r.postData() || '{}'); const row = Object.assign({ id: 'nt' + Math.random().toString(16).slice(2, 8) }, body); DB.trips.push(row); return r.respond({ status: 201, contentType: 'application/json', body: JSON.stringify([row]) }) }
+    // Em lote também (06/10): o "marcar país" manda um array, e o mock antigo
+    // devolvia uma linha só, sem nome.
+    if (r.method() === 'POST' && rest[1] === 'trips') { const body = JSON.parse(r.postData() || '{}'); const rows = (Array.isArray(body) ? body : [body]).map(b => Object.assign({ id: 'nt' + Math.random().toString(16).slice(2, 8) }, b)); DB.trips.push(...rows); return r.respond({ status: 201, contentType: 'application/json', body: JSON.stringify(rows) }) }
+    // cidades_visitadas: POST em lote (ignora a chave repetida) e DELETE por id=eq/in.
+    if (r.method() === 'POST' && rest[1] === 'cidades_visitadas') { let body = JSON.parse(r.postData() || '[]'); if (!Array.isArray(body)) body = [body]; const novas = body.filter(b => !DB.cidades_visitadas.some(x => x.user_id === b.user_id && x.chave === b.chave)).map(b => Object.assign({ id: 'cv' + Math.random().toString(16).slice(2, 8), created_at: new Date().toISOString() }, b)); DB.cidades_visitadas.push(...novas); return r.respond({ status: 201, contentType: 'application/json', body: JSON.stringify(novas) }) }
+    if (r.method() === 'DELETE' && rest[1] === 'cidades_visitadas') { const m = decodeURIComponent(rest[2]).match(/id=(eq\.([^&]+)|in\.\(([^)]*)\))/); const ids = m ? (m[2] ? [m[2]] : m[3].split(',')) : []; const fora = DB.cidades_visitadas.filter(x => ids.includes(x.id)); DB.cidades_visitadas = DB.cidades_visitadas.filter(x => !ids.includes(x.id)); return r.respond({ status: 200, contentType: 'application/json', body: JSON.stringify(fora) }) }
     if (r.method() === 'POST' && rest[1] === 'rpc') return r.respond({ status: 200, contentType: 'application/json', body: '[]' });
     return r.respond({ status: 200, contentType: 'application/json', body: JSON.stringify(filtra(rest[1], rest[2])) });
   }
@@ -242,6 +253,40 @@ await passoDe('a2: trocar pra Ficar', `trocarCategoriaDoLugar('hotel')`, 1200);
 await passoDe('a1: nota com segmentado', `(()=>{S.addCat='food';S.addTrip=S.trips[0];S.selPlace={name:'Teste',city:'Lisboa',country:'Portugal'};resetNoteSheet();showOv('ov-note')})()`);
 await passoDe('a1: escolher Experiências', `escolherCatDaNota('experience')`);
 await passoDe('a1: fechar', `closeOv('ov-note')`);
+// ── Cidades visitadas (06/10, handoff 9a–9f e 10a–10c) ──
+await passoDe('cidades: folha Adicionar (10a)', `(async()=>{document.querySelectorAll('.overlay.show').forEach(o=>closeOv(o.id));goTo('dashboard');await loadDashboard();abrirFolhaAdicionar()})()`, 1500);
+console.log('  placar cidades:', await pg.evaluate(() => PLACAR.cidades + ' / marcadas: ' + S.cidadesMarcadas.map(m => m.nome).join(',')));
+await passoDe('cidades: Onde você já foi (9b)', `adEscolher('cidades')`, 1500);
+await passoDe('cidades: tocar sugestão (9b)', `(()=>{const l=document.querySelector('#cvLista .cv-linha:not(.on)');if(l)l.click()})()`);
+await passoDe('cidades: buscar Manila (9c)', `(()=>{const i=document.getElementById('cvBusca');i.value='Manila';cvBuscar('Manila')})()`, 1500);
+await passoDe('cidades: tocar resultado (9c)', `(()=>{const l=document.querySelector('#cvLista .cv-linha:not(.on)');if(l)l.click();const i=document.getElementById('cvBusca');i.value='';cvBuscar('');i.blur()})()`);
+console.log('  selecionadas:', await pg.evaluate(() => CV.sel.map(c => c.nome + '/' + c.pais).join(', ')), '| botão:', await pg.evaluate(() => document.getElementById('cvSalvar').textContent));
+await passoDe('cidades: marcar (um POST)', `cvSalvar()`, 1800);
+console.log('  marcadas:', await pg.evaluate(() => S.cidadesMarcadas.map(m => m.nome).join(',') + ' | placar ' + PLACAR.cidades + ' | Filipinas no mapa: ' + visitedCountryNames().includes('Filipinas')));
+await passoDe('cidades: lista do placar (9a)', `openList('cities')`, 1200);
+await passoDe('cidades: viagem Portugal (9d)', `openTrip('t1')`, 1500);
+await passoDe('cidades: rolar até os cards', `(()=>{const c=document.querySelector('#tripBody .cv-add');if(c)c.scrollIntoView({block:'center'})})()`);
+console.log('  sem spot na viagem:', await pg.evaluate(() => CV_CARDS.map(m => m.nome).join(',')), '| meta:', await pg.evaluate(() => tripMetaText(S.trips.find(t => t.id === 't1'))));
+await passoDe('cidades: folha sem spot (9e)', `(()=>{const i=CV_CARDS.findIndex(m=>m.nome==='Sintra');cvAbrirCard(i<0?0:i)})()`, 1500);
+await passoDe('cidades: desmarcar (faixa)', `cvDesmarcar()`, 1000);
+console.log('  depois de desmarcar:', await pg.evaluate(() => S.cidadesMarcadas.map(m => m.nome).join(',') + ' | faixa: ' + document.getElementById('faixaDesfazer').innerText.replace(/\n/g, ' · ')));
+await passoDe('cidades: desfazer', `document.getElementById('fdDesfazer').click()`, 1500);
+console.log('  depois de desfazer:', await pg.evaluate(() => S.cidadesMarcadas.map(m => m.nome).join(',') + ' | cards: ' + CV_CARDS.map(m => m.nome).join(',')));
+await passoDe('cidades: adicionar spot na cidade', `(async()=>{const i=CV_CARDS.findIndex(m=>m.nome==='Sintra');cvAbrirCard(i<0?0:i);await new Promise(r=>setTimeout(r,300));cvAdicionarSpotNaCidade()})()`, 1200);
+console.log('  busca:', await pg.evaluate(() => document.getElementById('placeSearch').placeholder + ' | ' + JSON.stringify(S.buscarEm)));
+await passoDe('cidades: fechar busca', `closeOv('ov-search')`);
+await passoDe('cidades: pergunta depois do spot (10c)', `(()=>{localStorage.removeItem('spot_cv_perguntou_${EU}_espanha');PLN_DELES.t=0;const t={id:'tx',user_id:'${EU}',name:'Espanha',destinations:['Espanha'],dates:'',status:'planning',_spots:[],_spotsLoaded:true};const sp={id:'sx',user_id:'${EU}',trip_id:'tx',name:'Bar X',city:'Barcelona',status:'been',category:'food'};t._spots.push(sp);S.trips.push(t);document.querySelectorAll('.overlay.show').forEach(o=>closeOv(o.id));goTo('dashboard');cvTalvezPerguntar(sp)})()`, 2500);
+await passoDe('cidades: 10c tocar Madri', `cvpTocar(0)`);
+await passoDe('cidades: 10c marcar', `cvpMarcar()`, 1500);
+console.log('  marcadas:', await pg.evaluate(() => S.cidadesMarcadas.map(m => m.nome).join(',')), '| já perguntou da Espanha:', await pg.evaluate(`!!localStorage.getItem('spot_cv_perguntou_${EU}_espanha')`));
+await passoDe('cidades: tirar o check (9b)', `(async()=>{abrirMarcarCidades('Portugal');await new Promise(r=>setTimeout(r,300));const l=[...document.querySelectorAll('#cvLista .cv-linha.on')].find(x=>/Sintra/.test(x.innerText));if(l)l.click()})()`, 1200);
+console.log('  botão:', await pg.evaluate(() => document.getElementById('cvSalvar').textContent));
+await passoDe('cidades: salvar desmarca', `cvSalvar()`, 1500);
+console.log('  marcadas:', await pg.evaluate(() => S.cidadesMarcadas.map(m => m.nome).join(',') + ' | placar ' + PLACAR.cidades));
+await passoDe('onb: e as cidades? (9f)', `(()=>{document.querySelectorAll('.overlay.show').forEach(o=>closeOv(o.id));showOv('ov-onb');ONB.paises=new Set(['Portugal','Espanha']);ONB.passo=2;onbIr(6)})()`, 1500);
+await passoDe('onb: cidades continuar', `(async()=>{const l=document.querySelector('#cvLista .cv-linha:not(.on)');if(l)l.click();await cvSalvar()})()`, 1500);
+console.log('  passo depois das cidades:', await pg.evaluate(() => ONB.passo));
+await passoDe('onb: fechar', `closeOv('ov-onb')`);
 if (await pg.evaluate(() => typeof impAbrir === 'function')) {
   await passoDe('importar: ver se ligado', `impVerSeEstaLigado()`);
   await passoDe('importar: entrada no Adicionar', `(()=>{goTo('dashboard');abrirBuscaDeSpot()})()`);

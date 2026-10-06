@@ -69,7 +69,11 @@ test('os paises viram as linhas escondidas de "ja visitei", num POST so', async 
     await A.onbSalvarPaises();
     assert.deepStrictEqual(c.gravado.viagens.map((v) => v.name).sort(), ['Brasil', 'Portugal']);
     assert.ok(c.gravado.viagens.every((v) => v.dates === '__quickvisit__'));
-    // O passo 3 (lugar indicado) saiu em 01/10: dos países vai direto pros amigos.
+    // 06/10 (cidades visitadas, 9f): com país marcado vem o passo opcional
+    // "E as cidades?" (passo 6). Seguir sem marcar nada vai pros amigos — o
+    // passo 3 (lugar indicado) saiu em 01/10.
+    assert.strictEqual(A.avaliar('ONB.passo'), 6);
+    await A.cvSalvar();
     assert.strictEqual(A.avaliar('ONB.passo'), 4);
   } finally { c.fim() }
 });

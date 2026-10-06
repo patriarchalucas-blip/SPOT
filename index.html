@@ -899,6 +899,55 @@ input,textarea,select{font-size:max(16px,1em)!important}
 .fx-txt b{font-size:16px;font-weight:600}
 .fx-txt span{font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .fx-ver{flex:none;border:none;background:none;padding:6px 0 6px 8px;font:inherit;font-size:15px;font-weight:600;color:var(--base);cursor:pointer}
+/* Cidades visitadas (06/10, handoff 9a–9f e 10a–10c) */
+.ad-linha{display:flex;align-items:center;gap:14px;width:100%;min-height:64px;padding:10px 20px;border:none;background:none;font:inherit;text-align:left;cursor:pointer;color:var(--ink)}
+.ad-linha:active{opacity:.6}
+.ad-linha:last-child{margin-bottom:24px}
+.ad-ic{flex:none;width:44px;height:44px;border-radius:12px;background:var(--surface);color:var(--green);display:flex;align-items:center;justify-content:center}
+.ad-ic svg{width:20px;height:20px}
+.ad-txt{flex:1;min-width:0;display:flex;flex-direction:column;gap:2px}
+.ad-txt b{font-size:17px;font-weight:600;letter-spacing:-.02em}
+.ad-txt span{font-size:14px;color:var(--ink2)}
+.ad-seta{flex:none;font-size:20px;color:var(--ink3)}
+.cv-busca{padding:0 20px 4px}
+.cv-campo{height:48px}
+.cv-sel{display:flex;flex-wrap:wrap;gap:8px 16px;padding:12px 0 4px}
+.cv-sel-folha{padding:12px 20px 4px}
+.cv-chip{display:inline-flex;align-items:center;gap:6px;border:none;background:none;padding:0;font:inherit;font-size:15px;font-weight:600;color:var(--green);cursor:pointer}
+.cv-chip span{font-size:12px;color:var(--ink2)}
+.cv-folha .cv-lista{padding:0 20px 8px}
+.cv-lista .cv-linha{min-height:52px;box-sizing:border-box}
+.cv-lista .l-nome{font-size:17px;font-weight:600;letter-spacing:-.02em}
+.cv-lista .l-meta{font-size:14px}
+.cv-lista .cv-fixa{cursor:default}
+.cv-lista .onb-check{border-radius:50%}
+.cv-grupo{display:flex;align-items:baseline;gap:6px;padding:20px 0 4px;font-size:15px}
+.cv-grupo b{font-weight:600;color:var(--ink)}
+.cv-grupo span{color:var(--ink3)}
+.cv-mais{display:block;border:none;background:none;padding:10px 0;font:inherit;font-size:15px;font-weight:600;color:var(--green);cursor:pointer}
+html.cv-digitando #cvSalvar{display:none}
+.cv-cab{margin:8px 0 4px}
+.city-card-count.cv-add{font-size:14px;font-weight:600;color:var(--green)}
+.cv-marcar-topo{margin:0 0 12px}
+.cv-ficha{padding:4px 20px 20px}
+.cv-ficha-topo{display:flex;align-items:center;gap:14px;margin-bottom:20px}
+.cv-ficha-foto{flex:none;width:72px;height:56px;border-radius:var(--r-card);background:var(--photo-empty) center/cover no-repeat}
+.cv-ficha h2{margin:0;font-size:22px;font-weight:700;letter-spacing:-.03em;line-height:1.15;color:var(--ink)}
+.cv-ficha-sub{font-size:14px;color:var(--ink2);margin-top:2px}
+.cv-ficha .pf-bt{height:48px}
+.cv-desmarcar{font-size:15px;font-weight:600;margin-top:4px}
+.cv-ficha-nota{margin:0;font-size:14px;line-height:1.45;color:var(--ink2);text-align:center}
+.cvp{padding:4px 20px 24px}
+.cvp-kicker{font-size:14px;font-weight:600;color:var(--green)}
+.cvp h2{margin:6px 0 8px;font-size:24px;font-weight:700;letter-spacing:-.03em;line-height:1.15;color:var(--ink)}
+.cvp p{margin:0 0 16px;font-size:15px;line-height:1.45;color:var(--ink2)}
+.cvp-chips{display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin-bottom:24px}
+.cvp-chip{height:44px;padding:0 16px;border:none;border-radius:10px;background:var(--surface);font:inherit;font-size:16px;font-weight:500;color:var(--ink);cursor:pointer}
+.cvp-chip.on{background:var(--green);color:var(--base)}
+.cvp-outra{height:44px;padding:0 8px;border:none;background:none;font:inherit;font-size:16px;font-weight:600;color:var(--green);cursor:pointer}
+.cvp-bts{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.cvp-bts .pf-bt{height:48px}
+.cvp-bts .pf-bt2{background:var(--surface)}
 .coz-linha{display:flex;justify-content:space-between;align-items:baseline;padding:16px 20px 0}
 .coz-atual{display:flex;align-items:baseline;gap:6px;min-height:44px;padding:0;background:none;border:none;cursor:pointer;
   font-size:20px;font-weight:600;letter-spacing:-.02em;color:var(--ink)}
@@ -2890,6 +2939,17 @@ body.exm .exm-filtros{position:relative;z-index:1}
 <div class="overlay" id="ov-mandartop" onclick="closeOut(event,'ov-mandartop')"><div class="sheet"><div class="sheet-handle"></div><div class="mt-corpo"><h2 class="mt-tit">Alguém pediu dica?</h2><p class="mt-sub" id="mtSub"></p><div class="pv-rotulo">Quantos</div><div class="pf-seg" id="mtSeg"></div><pre class="mt-previa" id="mtPrevia"></pre><button class="pf-bt pf-largo" onclick="mandarTopNoWhatsApp()">Mandar pelo WhatsApp…</button><button class="pf-bt pf-bt2 pf-largo mt-copiar" onclick="copiarTop()">Copiar texto</button></div></div></div>
 <div class="overlay" id="ov-virou" onclick="closeOut(event,'ov-virou')"><div class="sheet"><div class="sheet-handle"></div><div class="pv-virou"><div class="pv-virou-topo"><span class="pv-virou-foto" id="virouFoto"></span><div><div class="pv-virou-sub" id="virouSub"></div><h2 id="virouTit"></h2></div></div><p id="virouTxt"></p><button class="pf-bt pf-largo" onclick="closeOv('ov-virou');goTo('dashboard');loadDashboard()">Ver em Viagens</button><button class="pf-bt pf-bt2 pf-largo" onclick="closeOv('ov-virou')">Continuar aqui</button></div></div></div>
 <div class="overlay" id="ov-quickvisit" onclick="closeOut(event,'ov-quickvisit')"><div class="sheet sheet-fixa"><button class="sheet-close" onclick="closeOv('ov-quickvisit')" data-ic="close" aria-label="Fechar"></button><div class="sheet-handle"></div><div class="sheet-title" id="quickVisitTitle">Quais países você já visitou?</div><div class="dest-search-wrap"><span class="dsi" data-ic="search"></span><input class="nt-input" autocomplete="off" autocorrect="off" spellcheck="false" style="padding-left:44px" id="countrySearch2" placeholder="Buscar país..." oninput="filterCountries2(this.value)"></div><div class="lista-rolante" id="countryList2"></div><button class="sheet-cta" id="createVisitBtn" onclick="markVisited()" style="opacity:.4;pointer-events:none">Selecione um país</button></div></div>
+<!-- CIDADES VISITADAS (06/10, ver o bloco no JS). 10a "Adicionar"; 9b a folha
+     "Onde você já foi?" (o miolo é montado ao abrir: o passo do primeiro acesso
+     usa os mesmos ids); 9e a cidade sem spot; 10c a pergunta depois do spot. -->
+<div class="overlay" id="ov-adicionar" onclick="closeOut(event,'ov-adicionar')"><div class="sheet"><div class="sheet-handle"></div><div class="sheet-title">Adicionar</div>
+<button class="ad-linha" onclick="adEscolher('spot')"><span class="ad-ic" data-ic="pin"></span><span class="ad-txt"><b>Um spot</b><span>Restaurante, hotel, passeio</span></span><span class="ad-seta">›</span></button>
+<button class="ad-linha" onclick="adEscolher('cidades')"><span class="ad-ic" data-ic="check"></span><span class="ad-txt"><b>Cidades onde já fui</b><span>Contam no mapa, mesmo sem spot</span></span><span class="ad-seta">›</span></button>
+<button class="ad-linha" onclick="adEscolher('paises')"><span class="ad-ic" data-ic="globe"></span><span class="ad-txt"><b>Países onde já fui</b><span id="adPaisesSub"></span></span><span class="ad-seta">›</span></button>
+</div></div>
+<div class="overlay" id="ov-cidades" onclick="closeOut(event,'ov-cidades')"><div class="sheet sheet-fixa cv-folha" id="cvFolha"></div></div>
+<div class="overlay" id="ov-cvcidade" onclick="closeOut(event,'ov-cvcidade')"><div class="sheet"><div class="sheet-handle"></div><div class="cv-ficha"><div class="cv-ficha-topo"><span class="cv-ficha-foto" id="cvFichaFoto"></span><div><h2 id="cvFichaNome"></h2><div class="cv-ficha-sub" id="cvFichaSub"></div></div></div><button class="pf-bt pf-largo" id="cvFichaAdd" onclick="cvAdicionarSpotNaCidade()"></button><button class="btn-texto cv-desmarcar" onclick="cvDesmarcar()">Desmarcar cidade</button><p class="cv-ficha-nota">Sai do placar de cidades. O país continua no seu mapa.</p></div></div></div>
+<div class="overlay" id="ov-cvpergunta" onclick="closeOut(event,'ov-cvpergunta')"><div class="sheet"><div class="sheet-handle"></div><div class="cvp"><div class="cvp-kicker" id="cvpKicker"></div><h2 id="cvpTit"></h2><p>Marque e elas entram no seu mapa.</p><div class="cvp-chips" id="cvpChips"></div><div class="cvp-bts"><button class="pf-bt pf-bt2" onclick="cvpAgoraNao()">Agora não</button><button class="pf-bt" id="cvpMarcar" onclick="cvpMarcar()">Marcar</button></div></div></div></div>
 <!-- PRIMEIRO ACESSO (ver "PRIMEIRO ACESSO" no JS). Tela cheia, sem fechar tocando fora:
      a cidade é obrigatória, e cada tela tem a própria saída. -->
 <div class="overlay onb" id="ov-onb"><div class="onb-tela"><div class="onb-topo" id="onbTopo"></div><div class="onb-corpo" id="onbCorpo"></div><div class="onb-pe" id="onbPe"></div></div></div>
@@ -3343,7 +3403,7 @@ const SB_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZ
 let sb;
 try{sb=supabase.createClient(SB_URL,SB_KEY)}catch(e){console.error(e)}
 
-const S={user:null,trips:[],curTrip:null,curPlace:null,curCity:null,addTrip:null,addCat:null,selPlace:null,pendingPlace:null,searchResults:[],token:null,profile:null};
+const S={user:null,trips:[],cidadesMarcadas:[],curTrip:null,curPlace:null,curCity:null,addTrip:null,addCat:null,selPlace:null,pendingPlace:null,searchResults:[],token:null,profile:null};
 let authMode='signin';
 
 // ═══ DATA LAYER (raw fetch — bypasses buggy SB client) ═══
@@ -3453,14 +3513,17 @@ async function dbInsert(table,obj){
 // Insert de varias linhas de uma vez. dbInsert existe pra UMA linha e devolve
 // body[0]; mudar o retorno dele quebraria todas as chamadas de hoje, entao a
 // versao em lote vive ao lado e devolve o array inteiro.
-async function dbInsertMany(table,linhas){
+// `conflito` (06/10, cidades visitadas): as colunas do unique. Com ele, linha
+// repetida é ignorada em vez de derrubar o POST inteiro com 409 — e só as
+// novas voltam no corpo.
+async function dbInsertMany(table,linhas,conflito){
   if(!linhas||!linhas.length)return{error:null,data:[]};
   let r,body;
   try{
-    r=await sbFetch('/rest/v1/'+table,{
+    r=await sbFetch('/rest/v1/'+table+(conflito?'?on_conflict='+encodeURIComponent(conflito):''),{
       method:'POST',
       body:JSON.stringify(linhas)
-    },{'Content-Type':'application/json','Prefer':'return=representation'});
+    },{'Content-Type':'application/json','Prefer':'return=representation'+(conflito?',resolution=ignore-duplicates':'')});
     body=await r.json();
   }catch(e){console.error('dbInsertMany rede',table,e);return{error:ERRO_REDE,data:null}}
   if(!r.ok){console.error('dbInsertMany error',table,body);return{error:body,data:null}}
@@ -5647,7 +5710,7 @@ async function init(){
         // recarga em laço.
         const havia=!!S.user;
         if(havia){try{limparDadosLocais()}catch(e){}}
-        S.user=null;S.token=null;tokenExp=0;S.trips=[];S.profile=null;DADOS_DA_CONTA=false;
+        S.user=null;S.token=null;tokenExp=0;S.trips=[];S.cidadesMarcadas=[];S.profile=null;DADOS_DA_CONTA=false;
         if(havia){location.reload();return}
         goTo('login');
       }
@@ -6179,6 +6242,10 @@ let PLACAR={viagens:0,spots:0,cidades:0,paises:0};
 function cidadesVisitadas(){
   const set=new Set();
   for(const t of (S.trips||[]))(t._spots||[]).forEach(sp=>{if(sp.status==='want'&&!ehCasa(t))return;const c=cityOf(sp);if(c)set.add(c)});
+  // Cidade marcada sem spot (06/10, cidades visitadas) conta igual. A de
+  // mesmo nome que já veio dos spots não conta duas vezes.
+  const ja=new Set([...set].map(normName));
+  (S.cidadesMarcadas||[]).forEach(m=>{const c=cityOf({city:m.nome})||m.nome;const k=normName(c);if(c&&!ja.has(k)){ja.add(k);set.add(c)}});
   return set;
 }
 // Já existe dado DESTA conta pra desenhar (o guardado no aparelho ou o que
@@ -6446,6 +6513,7 @@ function guardarDadosLocais(){
     localStorage.setItem(chaveDosDados(),JSON.stringify({
       quando:Date.now(),
       trips:S.trips,
+      cidades:S.cidadesMarcadas||[],
       profile:S.profile||null
     }));
   }catch(e){
@@ -6461,6 +6529,7 @@ function usarDadosLocais(){
   try{g=JSON.parse(localStorage.getItem(chaveDosDados())||'null')}catch(e){return false}
   if(!g||!Array.isArray(g.trips)||!g.trips.length)return false;
   S.trips=g.trips;
+  if(Array.isArray(g.cidades))S.cidadesMarcadas=g.cidades;
   if(g.profile&&!S.profile)S.profile=g.profile;
   S.trips.forEach(t=>{if(!Array.isArray(t._spots))t._spots=[];t._spotsLoaded=true});
   rebuildCityCanon();
@@ -6540,11 +6609,14 @@ async function loadDashboard(){
   // mostra tela vazia até a consulta voltar.
   if(!S.trips.length)usarDadosLocais();
   const geoPronta=carregarGeoMundo().catch(()=>false);
-  const [trips,allSpots]=await Promise.all([
+  const [trips,allSpots,marcadas]=await Promise.all([
     dbGet('trips','user_id=eq.'+S.user.id+'&order=created_at.desc'),
-    dbGet('spots','user_id=eq.'+S.user.id+'&order=created_at.asc')
+    dbGet('spots','user_id=eq.'+S.user.id+'&order=created_at.asc'),
+    carregarCidadesMarcadas()
   ]);
   if(atropelado())return;
+  // Cidades marcadas (06/10): falhou, fica o que já estava (do aparelho).
+  if(marcadas)S.cidadesMarcadas=marcadas;
   // Consulta que FALHOU não é conta vazia. Antes, um 500 do Supabase, o
   // projeto pausado por inatividade ou o Wi-Fi trocando de rede zeravam
   // S.trips e o Dashboard anunciava "Nenhuma viagem ainda" pra quem tem
@@ -6620,6 +6692,9 @@ async function loadDashboard(){
 function tripCityCount(t){
   const cities=new Set((t._spots||[]).map(s=>cityOf(s)).filter(Boolean));
   if(t.initial_city)cities.add(cityOf({city:t.initial_city})||t.initial_city);
+  // "3 cidades · 17 spots" inclui as marcadas sem spot (06/10).
+  const ja=new Set([...cities].map(normName));
+  cidadesSemSpotDaViagem(t).forEach(m=>{const k=normName(cityOf({city:m.nome})||m.nome);if(!ja.has(k)){ja.add(k);cities.add(m.nome)}});
   return cities.size;
 }
 function isQuickVisit(t){return t.dates==='__quickvisit__'&&(!t._spots||!t._spots.length)}
@@ -6962,7 +7037,8 @@ function renderTrips(){
   // Linhas (desenho c1, 05/10): foto, país, "2 cidades · 14 spots", ›. O
   // mosaico mostrava 4 viagens por tela; a linha mostra o dobro.
   h+='<div class="vg-lista">'+ordenadas.map(linhaDeViagem).join('')+'</div>';
-  h+='<button class="btn-primario btn-largo" onclick="comecarSpotSemViagem()">Adicionar spot</button>';
+  // 10a (06/10): "Adicionar" pergunta o quê — spot, cidades ou países.
+  h+='<button class="btn-primario btn-largo" onclick="abrirFolhaAdicionar()">'+(CV_LIGADO?'Adicionar':'Adicionar spot')+'</button>';
   // Colar uma lista continua à mão depois do primeiro acesso (05/10).
   if(IMP.ligado)h+='<button class="exm-btn exm-btn2" style="margin-top:8px" onclick="impAbrir(\'\')">Colar uma lista de lugares</button>';
   c.innerHTML=h;
@@ -7067,7 +7143,10 @@ window.acaoDeViagens=function(acao,valor){
   if(acao==='nova'){showOv('ov-newtrip');return}
   // O mesmo que o botao + do site faz: escolher categoria e cair no fluxo
   // normal de adicionar lugar, que cria a viagem sozinho se precisar.
-  if(acao==='novoLugar'){comecarSpotSemViagem();return}
+  // 10a (06/10): o "Adicionar spot" nativo abre a folha Um spot / Cidades /
+  // Países — é site, chega sem build. Quem ainda não tem spot nenhum vai
+  // direto pro spot (o botão de lá é o "Seu primeiro spot").
+  if(acao==='novoLugar'){if(allSpotsFlat().length)abrirFolhaAdicionar();else comecarSpotSemViagem();return}
   if(acao==='importar'){impAbrir('');return}
   if(acao==='checkinAdd'){checkinAdd();return}
   if(acao==='checkinIgnorar'){checkinIgnore();return}
@@ -7201,12 +7280,20 @@ function renderList(){
     const map={},vis=cidadesVisitadas();
     spots.forEach(s=>{const c=cityOf(s);if(!c||!vis.has(c))return;(map[c]=map[c]||{city:c,country:s._country,n:0}).n++});
     const list=Object.values(map).sort((a,b)=>b.n-a.n);
+    // 9a (06/10): as marcadas sem spot entram no fim, com "Esteve aqui".
+    const ja=new Set(list.map(c=>normName(c.city)));
+    cidadesSemSpot().slice().sort((a,b)=>String(a.nome).localeCompare(String(b.nome),'pt-BR')).forEach(m=>{
+      const c=cityOf({city:m.nome})||m.nome;if(ja.has(normName(c)))return;ja.add(normName(c));
+      list.push({city:c,country:m.pais||'',n:0,marcada:m});
+    });
     LS.items=list;
     title.textContent=list.length+(list.length===1?' cidade':' cidades');
     const nPais=new Set(list.map(c=>c.country).filter(Boolean)).size;
     kicker.textContent=nPais?('em '+nPais+(nPais===1?' país':' países')):'';
-    if(!list.length)h='<div class="empty-state"><div class="ei">'+icon('city')+'</div><h3>Nenhuma cidade ainda</h3><p>As cidades aparecem quando você marca Fui num spot.</p></div>';
+    if(CV_LIGADO)h+='<button class="btn-primario btn-largo cv-marcar-topo" onclick="abrirMarcarCidades(\'\')">+ Marcar cidades onde já fui</button>';
+    if(!list.length)h+='<div class="empty-state"><div class="ei">'+icon('city')+'</div><h3>Nenhuma cidade ainda</h3><p>As cidades aparecem quando você marca Fui num spot'+(CV_LIGADO?' ou marca onde já foi':'')+'.</p></div>';
     list.forEach((c,i)=>{
+      if(c.marcada){h+=`<div class="lrow" onclick="cvAbrirDaLista(${i})"><span class="lflag">${flagHTML(c.country)}</span><div class="lmain"><div class="lname">${esc(c.city)}</div><div class="lmeta">${esc(c.country)}</div></div><span class="lcount">Esteve aqui</span></div>`;return}
       h+=`<div class="lrow" onclick="drillFromList(${i},'city')"><span class="lflag">${flagHTML(c.country)}</span><div class="lmain"><div class="lname">${esc(c.city)}</div><div class="lmeta">${esc(c.country)}</div></div><span class="lcount">${c.n} ${c.n===1?'spot':'spots'}</span></div>`;
     });
   }
@@ -7452,13 +7539,24 @@ function renderTripBody(){
   if(!t)return;
   if(viagemPlanejada(t)){renderProximaViagem(t,b);return}
   const hasSpots=spotsDaViagem(t).length;
-  if(!hasSpots&&!t.initial_city){b.innerHTML=`<div class="empty-state" style="padding:40px 24px"><div class="ei">${icon('pin')}</div><h3>Nenhum spot aqui</h3><p>Toca no + para adicionar</p></div>`;return}
-  const byCity=agruparPorCidade(spotsDaViagem(t),t.initial_city);
+  // 9d (06/10): "Cidades" + "+ Marcar cidade", e as marcadas sem spot como
+  // card depois das outras. Na cidade onde mora não: ela não é um país.
+  const comCidades=CV_LIGADO&&!ehCasa(t);
+  const cab=comCidades?'<div class="pf-cab cv-cab"><h2 class="pf-tit">Cidades</h2><button class="pf-nova" onclick="cvMarcarNaViagem()">+ Marcar cidade</button></div>':'';
+  const byCity0=hasSpots||t.initial_city?agruparPorCidade(spotsDaViagem(t),t.initial_city):{};
+  const nomes=new Set(Object.keys(byCity0).map(normName));
+  CV_CARDS=comCidades?cidadesSemSpotDaViagem(t).filter(m=>{const k=normName(cityOf({city:m.nome})||m.nome);if(nomes.has(k))return false;nomes.add(k);return true}):[];
+  const semSpot=CV_CARDS.map((m,i)=>'<div class="city-card" onclick="cvAbrirCard('+i+')"><div class="city-card-top"><div class="city-card-name">'+esc(cityOf({city:m.nome})||m.nome)+'</div></div><div class="city-card-count cv-add">+ Adicionar spot</div></div>').join('');
+  if(!hasSpots&&!t.initial_city){
+    b.innerHTML=cab+(semSpot||`<div class="empty-state" style="padding:40px 24px"><div class="ei">${icon('pin')}</div><h3>Nenhum spot aqui</h3><p>Toca no + para adicionar</p></div>`);
+    return;
+  }
+  const byCity=byCity0;
   const country=(t.destinations&&t.destinations[0])||t.name;
   const month=tripClimateMonth(t);
   const{html,ordem}=cityCardsHTML(byCity,country,month,'openCityFromTrip','clima-');
   TRIP_CITY_ORDER=ordem;
-  b.innerHTML=html;
+  b.innerHTML=cab+html+semSpot;
   plnPintarEntrada('tripPlanejar',ehCasa(t)?paisDaViagem(t):country,ehCasa(t)?t.name:'');
   pendurarClima(byCity,country,month,'clima-');
 }
@@ -10645,7 +10743,9 @@ function haversineMeters(lat1,lon1,lat2,lon2){
 // Reabre a ficha de busca do jeito certo: campo limpo + tenta sugerir o que
 // tem perto, sem travar nada se a localização não estiver disponível.
 function resetSearchSheet(){
-  const si=document.getElementById('placeSearch');if(si)si.value='';
+  // "Adicionar spot em Sintra" (06/10) vale só pra aquela abertura.
+  S.buscarEm=null;
+  const si=document.getElementById('placeSearch');if(si){si.value='';si.placeholder='Nome do lugar...'}
   showNearbySuggestions();
 }
 let S_nearbyResults=[];
@@ -10881,7 +10981,9 @@ function searchPlaces(v){
       const resp=await googlePlaces('searchText',{
         method:'POST',
         headers:{'Content-Type':'application/json','X-Goog-FieldMask':CAMPOS_DA_LISTA},
-        body:JSON.stringify(Object.assign({textQuery:termo,languageCode:'pt-BR',maxResultCount:10},centroDaBusca()))
+        // Cidade marcada sem spot (06/10): sem coordenada pra centrar, o nome
+        // dela vai no texto. Mesma busca, nenhuma consulta a mais.
+        body:JSON.stringify(Object.assign({textQuery:termo+(S.buscarEm&&!contemComoPalavra(termo,S.buscarEm.cidade)?' '+S.buscarEm.cidade:''),languageCode:'pt-BR',maxResultCount:10},centroDaBusca()))
       });
       if(myReqId!==searchReqId)return; // busca mais nova já foi disparada, ignora essa resposta atrasada
       const data=await resp.json();
@@ -11627,6 +11729,8 @@ async function resolverCidadeDoSpot(p,trip){
       const salvo=(S.trips||[]).reduce((a,v)=>a||(v._spots||[]).find(x=>x.id===data.id),null)||data;
       openPlace(salvo.id,origem);
       mostrarFaixaSalvo(salvo.status||addStatus,salvo);
+      // 10c (06/10): 1º spot com Fui num país → "passou por outras cidades?"
+      cvTalvezPerguntar(salvo);
     }
   }else toast('Erro',error?.message||'');
   btn.textContent='Salvar spot';btn2.textContent='Salvar e adicionar outro';btn.disabled=false;btn2.disabled=false;
@@ -12050,19 +12154,24 @@ async function talvezAbrirBoasVindas(){
 // Lucas, 01/10). No lugar dele entrou "Colar uma lista": cole as notas do
 // celular e, no fim do cadastro, o Spot mostra os lugares encontrados pra
 // conferir. Sem a IA ligada no servidor, o passo é pulado nos dois sentidos.
-function onbIr(n){if(n===3&&!IMP.ligado)n=ONB.passo>3?2:4;ONB.passo=n;ONB.ocupado=false;onbDesenhar();
+// 9f (06/10): "E as cidades?" é o passo 6, entre Países (2) e Colar (3) — o
+// número novo não renumera os outros. Só existe com 1+ país marcado.
+function onbTemCidades(){return CV_LIGADO&&ONB.paises.size>0}
+function onbIr(n){if(n===3&&!IMP.ligado)n=(ONB.passo>3&&ONB.passo!==6)?(onbTemCidades()?6:2):4;ONB.passo=n;ONB.ocupado=false;onbDesenhar();
   const c=document.getElementById('onbCorpo');if(c)c.scrollTop=0}
 
 function onbTopo(){
   const n=ONB.passo;
   if(!n)return'';
   if(ONB.soCidade)return '<button class="onb-voltar" onclick="fecharCidadeDeCasa()" aria-label="Voltar">'+icon('back')+'</button>';
-  const voltar=n<5
-    ?'<button class="onb-voltar" onclick="onbIr('+(n-1)+')" aria-label="Voltar">'+icon('back')+'</button>'
+  const antes=n===6?2:(n===3&&onbTemCidades())?6:n-1;
+  const voltar=(n<5||n===6)
+    ?'<button class="onb-voltar" onclick="onbIr('+antes+')" aria-label="Voltar">'+icon('back')+'</button>'
     :'<span class="onb-voltar"></span>';
-  const barra='<div class="onb-barra">'+(IMP.ligado?[1,2,3,4,5]:[1,2,4,5]).map(i=>'<i'+(i<=n?' class="on"':'')+'></i>').join('')+'</div>';
+  const naBarra=n===6?2:n;
+  const barra='<div class="onb-barra">'+(IMP.ligado?[1,2,3,4,5]:[1,2,4,5]).map(i=>'<i'+(i<=naBarra?' class="on"':'')+'></i>').join('')+'</div>';
   // A cidade não tem "Pular" (obrigatória) e a última tela não tem o que pular.
-  const pular=(n>=2&&n<=4)?'<button class="onb-pular" onclick="onbPular()">Pular</button>':'';
+  const pular=((n>=2&&n<=4)||n===6)?'<button class="onb-pular" onclick="onbPular()">Pular</button>':'';
   return voltar+barra+pular;
 }
 
@@ -12096,6 +12205,16 @@ function onbDesenhar(){
     onbListarPaises('');
     onbPintarMapa([...ONB.paises]);
     onbPePaises();
+  }else if(n===6){
+    // 9f: o mesmo miolo da folha "Onde você já foi?", em tela cheia. A folha
+    // fica vazia enquanto isso: os dois usam os mesmos ids.
+    const f=document.getElementById('cvFolha');if(f)f.innerHTML='';
+    cvZerar('onb','');
+    corpo.innerHTML='<h1 class="onb-titulo">E as cidades?</h1>'
+      +'<p class="onb-sub">Dos países que você marcou. Contam no seu mapa mesmo sem spot.</p>'
+      +cvCampoHTML()+'<div class="cv-sel" id="cvSel"></div><div class="cv-lista" id="cvLista"></div>';
+    pe.innerHTML='<button class="onb-btn" id="cvSalvar" onclick="cvSalvar()">Continuar</button>';
+    cvPintar();
   }else if(n===3){
     corpo.innerHTML='<h1 class="onb-titulo">Tem lugares anotados no celular?</h1>'
       +'<p class="onb-sub">Notas, WhatsApp, Instagram: cole o texto e o Spot encontra os lugares. Você confere antes de salvar.</p>'
@@ -12127,6 +12246,7 @@ function onbDesenhar(){
 
 function onbPular(){
   if(ONB.passo===2)return onbIr(3);
+  if(ONB.passo===6){cvTeclado(false);return onbIr(3)}
   if(ONB.passo===3)return onbIr(4);
   if(ONB.passo===4)return onbIr(5);
 }
@@ -12164,54 +12284,66 @@ function onbBuscarCidade(v){
   // Mesma espera das outras buscas: o Places cobra por requisição.
   onbBuscaTO=setTimeout(async function(){
     const meu=++onbReq;
+    // A busca mora em buscarCidades (06/10): a folha "Onde você já foi?" usa
+    // a mesma, sem duplicar a regra.
+    const r=await buscarCidades(t,()=>meu===onbReq);
+    if(!r||meu!==onbReq)return;
+    ONB.cidades=r.cidades;
     // Falha do servidor ≠ cidade que não existe (06/10): as duas diziam
     // "Nenhuma cidade encontrada", e a cidade é obrigatória — sem busca, a
     // pessoa não passava daqui. Agora as duas oferecem "Usar “<texto>”".
-    let sugestaoFalhou=false;
-    // 1º: a sugestão de lugar (a mesma do Explorar, feita pra nome de lugar).
-    // A busca por texto com filtro rígido de "cidade" perdia "São Paulo" — o
-    // Google acha o ESTADO primeiro (o Lucas, 06/10: só com "São Paulo SP").
-    try{
-      const d=await pedirLugar({op:'sugerir',texto:t});
-      if(meu!==onbReq)return;
-      if(!d||d.error||d.capped)sugestaoFalhou=true;
-      const CIDADE=['locality','administrative_area_level_2','postal_town'];
-      const vistas=new Set();
-      const achadas=((d&&d.sugestoes)||[]).filter(x=>(x.tipos||[]).some(k=>CIDADE.includes(k))).map(x=>{
-        const partes=String(x.sub||'').split(',').map(p=>p.trim()).filter(Boolean);
-        const pais=normalizeCountry(partes[partes.length-1]||'')||partes[partes.length-1]||'';
-        return{nome:x.titulo,pais,onde:x.sub||pais};
-      }).filter(c=>{const k=normName(c.nome)+'|'+normName(c.pais);if(!c.nome||vistas.has(k))return false;vistas.add(k);return true}).slice(0,6);
-      if(achadas.length){ONB.cidades=achadas;onbListarCidades('');return}
-    }catch(e){sugestaoFalhou=true}
-    if(meu!==onbReq)return;
-    // Reserva: a busca por texto, como antes.
-    try{
-      // DOIS tipos, em paralelo. strictTypeFiltering é o que impede "São
-      // Paulo" de voltar Parque Ibirapuera e hotel — mas com ele só vem o tipo
-      // pedido, e no Brasil o Google cataloga boa parte das cidades como
-      // MUNICÍPIO (administrative_area_level_2), não como localidade: só com
-      // 'locality', Salvador não aparecia (25/09). Mesma regra do
-      // cityFromComponents, que já aceita os dois níveis como cidade.
-      const buscar=tipo=>googlePlaces('searchText',{
-        headers:{'X-Goog-FieldMask':'places.displayName,places.formattedAddress,places.addressComponents'},
-        body:JSON.stringify({textQuery:t,includedType:tipo,strictTypeFiltering:true,languageCode:'pt-BR',maxResultCount:5})
-      }).then(r=>r&&r.ok?r.json():{falhou:true}).then(d=>d&&!d.error?d:{falhou:true}).catch(()=>({falhou:true}));
-      const[a,b]=await Promise.all([buscar('locality'),buscar('administrative_area_level_2')]);
-      if(meu!==onbReq)return;
-      const vistas=new Set();
-      ONB.cidades=[...((a&&a.places)||[]),...((b&&b.places)||[])].map(onbCidadeDoPlace).filter(c=>{
-        const k=normName(c.nome)+'|'+normName(c.pais);
-        if(!c.nome||vistas.has(k))return false;
-        vistas.add(k);return true;
-      }).slice(0,6);
-      const caiu=a.falhou&&b.falhou;
-      ONB.oferecerTexto=!ONB.cidades.length;
-      onbListarCidades(ONB.cidades.length?'':(caiu||sugestaoFalhou&&(a.falhou||b.falhou))
-        ?'Não deu pra buscar agora. Você pode usar o nome como escreveu.'
-        :'Nenhuma cidade encontrada. Confere o nome, ou use como escreveu.');
-    }catch(e){if(meu===onbReq){ONB.oferecerTexto=true;onbListarCidades('Não deu pra buscar agora. Você pode usar o nome como escreveu.')}}
+    ONB.oferecerTexto=!ONB.cidades.length;
+    onbListarCidades(ONB.cidades.length?'':r.falhou
+      ?'Não deu pra buscar agora. Você pode usar o nome como escreveu.'
+      :'Nenhuma cidade encontrada. Confere o nome, ou use como escreveu.');
   },320);
+}
+// BUSCA DE CIDADE, uma só (06/10): o primeiro acesso e a folha "Onde você já
+// foi?" usam esta. Devolve {cidades:[{nome,pais,onde,place_id}], falhou}, ou
+// null quando `vivo()` diz que a busca já é velha (a pessoa seguiu digitando)
+// — aí nem a reserva paga sai.
+async function buscarCidades(t,vivo){
+  const ainda=()=>!vivo||vivo();
+  let sugestaoFalhou=false;
+  // 1º: a sugestão de lugar (a mesma do Explorar, feita pra nome de lugar).
+  // A busca por texto com filtro rígido de "cidade" perdia "São Paulo" — o
+  // Google acha o ESTADO primeiro (o Lucas, 06/10: só com "São Paulo SP").
+  try{
+    const d=await pedirLugar({op:'sugerir',texto:t});
+    if(!ainda())return null;
+    if(!d||d.error||d.capped)sugestaoFalhou=true;
+    const CIDADE=['locality','administrative_area_level_2','postal_town'];
+    const vistas=new Set();
+    const achadas=((d&&d.sugestoes)||[]).filter(x=>(x.tipos||[]).some(k=>CIDADE.includes(k))).map(x=>{
+      const partes=String(x.sub||'').split(',').map(p=>p.trim()).filter(Boolean);
+      const pais=normalizeCountry(partes[partes.length-1]||'')||partes[partes.length-1]||'';
+      return{nome:x.titulo,pais,onde:x.sub||pais,place_id:x.id||null};
+    }).filter(c=>{const k=normName(c.nome)+'|'+normName(c.pais);if(!c.nome||vistas.has(k))return false;vistas.add(k);return true}).slice(0,6);
+    if(achadas.length)return{cidades:achadas,falhou:false};
+  }catch(e){sugestaoFalhou=true}
+  if(!ainda())return null;
+  // Reserva: a busca por texto, como antes.
+  try{
+    // DOIS tipos, em paralelo. strictTypeFiltering é o que impede "São
+    // Paulo" de voltar Parque Ibirapuera e hotel — mas com ele só vem o tipo
+    // pedido, e no Brasil o Google cataloga boa parte das cidades como
+    // MUNICÍPIO (administrative_area_level_2), não como localidade: só com
+    // 'locality', Salvador não aparecia (25/09). Mesma regra do
+    // cityFromComponents, que já aceita os dois níveis como cidade.
+    const buscar=tipo=>googlePlaces('searchText',{
+      headers:{'X-Goog-FieldMask':'places.id,places.displayName,places.formattedAddress,places.addressComponents'},
+      body:JSON.stringify({textQuery:t,includedType:tipo,strictTypeFiltering:true,languageCode:'pt-BR',maxResultCount:5})
+    }).then(r=>r&&r.ok?r.json():{falhou:true}).then(d=>d&&!d.error?d:{falhou:true}).catch(()=>({falhou:true}));
+    const[a,b]=await Promise.all([buscar('locality'),buscar('administrative_area_level_2')]);
+    if(!ainda())return null;
+    const vistas=new Set();
+    const cidades=[...((a&&a.places)||[]),...((b&&b.places)||[])].map(onbCidadeDoPlace).filter(c=>{
+      const k=normName(c.nome)+'|'+normName(c.pais);
+      if(!c.nome||vistas.has(k))return false;
+      vistas.add(k);return true;
+    }).slice(0,6);
+    return{cidades,falhou:!!((a.falhou&&b.falhou)||sugestaoFalhou&&(a.falhou||b.falhou))};
+  }catch(e){return ainda()?{cidades:[],falhou:true}:null}
 }
 // A cidade como a pessoa escreveu, quando a busca não ajuda. "Lisboa,
 // Portugal" separa o país; sem país reconhecível, vai só o nome (home_country
@@ -12230,7 +12362,7 @@ function onbCidadeDoPlace(pl){
   const nome=(pl.displayName&&pl.displayName.text)||'';
   const pais=countryFromComponents(pl.addressComponents)||paisDoEndereco(pl.formattedAddress||'');
   const onde=String(pl.formattedAddress||'').replace(/^.*?,\s*/,'');
-  return{nome,pais,onde:onde||pais};
+  return{nome,pais,onde:onde||pais,place_id:pl.id||null};
 }
 function onbListarCidades(dica){
   const cx=document.getElementById('onbCidadeRes');
@@ -12389,7 +12521,8 @@ async function onbSalvarPaises(){
   }
   const jaTem=new Set(visitedCountryNames());
   const nomes=[...ONB.paises].filter(n=>!jaTem.has(n));
-  if(!nomes.length)return onbIr(3);
+  // Marcou país: o passo opcional das cidades (9f) vem antes do Colar.
+  if(!nomes.length)return onbIr(onbTemCidades()?6:3);
   ONB.ocupado=true;
   const b=document.getElementById('onbSeguir');if(b){b.disabled=true;b.textContent='Marcando...'}
   // Mesma linha escondida do "marcar país visitado": um POST só pra todos.
@@ -12402,7 +12535,7 @@ async function onbSalvarPaises(){
     return;
   }
   data.forEach(t=>{t._spots=[];S.trips.unshift(t);ONB.paisesGravados[t.name]=t.id});
-  onbIr(3);
+  onbIr(onbTemCidades()?6:3);
 }
 
 // ── 3 · um lugar ──
@@ -12974,6 +13107,9 @@ function rebuildCityCanon(){
     if(t.initial_city)raws.push(t.initial_city);
     (t._spots||[]).forEach(s=>{if(s.city)raws.push(s.city)});
   });
+  // A cidade marcada entra na fusão de grafias (06/10): marcada "Split" e
+  // spot em "Split-Dalmatia County" são a mesma.
+  (S.cidadesMarcadas||[]).forEach(m=>{if(m.nome)raws.push(m.nome)});
   S.cityCanon=buildCityCanon(raws);
 }
 function cityOf(s){
@@ -15150,6 +15286,9 @@ function darDadosDePerfil(){
   // quando a tela WEB do perfil desenha — e no app nativo ela nunca desenha.
   // Sem esta linha, tocar numa cidade do mosaico não fazia nada.
   ESTANTE_CIDADES=cidades;
+  // O NÚMERO de cidades segue a regra do placar (06/10): inclui as marcadas
+  // sem spot. A estante continua só com as que têm spot.
+  const nCidades=cidadesVisitadas().size;
 
   const estante=cidades.map(function(c){
     const lista=byCity[c].slice().sort(function(x,y){
@@ -15250,16 +15389,16 @@ function darDadosDePerfil(){
     // pintarResumoDoPerfil desenha os TRES numeros grandes na web. O retorno
     // e a mesma conta em uma linha; a tela nativa recebe os tres separados
     // pra desenhar os mesmos blocos, e nao um paragrafo de legenda.
-    resumoNumeros:pintarResumoDoPerfil(visitados.length,spots.length,cidades.length),
+    resumoNumeros:pintarResumoDoPerfil(visitados.length,spots.length,nCidades),
     numeros:[
       {n:visitados.length,rotulo:visitados.length===1?'país':'países',modo:'countries'},
-      {n:cidades.length,rotulo:cidades.length===1?'cidade':'cidades',modo:'cities'},
+      {n:nCidades,rotulo:nCidades===1?'cidade':'cidades',modo:'cities'},
       {n:spots.length,rotulo:spots.length===1?'spot':'spots',modo:'spots'},
       // Amizade aqui é mútua (008), então é UM número, não seguidores/seguindo.
       {n:AMIGOS_TOTAL,rotulo:AMIGOS_TOTAL===1?'amigo':'amigos',modo:'amigos'}
     ].filter(b=>b.n),
     resumo:spots.length?(spots.length+(spots.length===1?' spot · ':' spots · ')
-      +cidades.length+(cidades.length===1?' cidade':' cidades')):'',
+      +nCidades+(nCidades===1?' cidade':' cidades')):'',
     // O MOSAICO de "Meus spots", igual ao da web: uma peça por cidade, com a
     // foto de um lugar que a própria pessoa salvou lá. O índice é o que
     // atravessa a ponte, nunca o nome — nome de cidade tem acento e apóstrofo.
@@ -15540,6 +15679,480 @@ async function marcarPaisVisitado(nome){
   carregarGeoMundo().catch(()=>false).then(()=>renderMiniMapa());
   toast('Marcado!',nome+' agora está no seu mapa.','globe');
 }
+// ═══ CIDADES VISITADAS (06/10, handoff "cidades-visitadas", 9a–9f e 10a–10c) ═══
+// Cidade onde a pessoa esteve SEM spot nenhum. Conta no placar de cidades,
+// pinta o país (e marca o país, se ele ainda não pintava) e aparece na viagem
+// do país como card sem spot. Mora na tabela cidades_visitadas (migração 032):
+// (user_id, chave) único, chave = place id do Google ou "nome|país"
+// normalizado. O RLS não tem UPDATE: desfazer é apagar e inserir de novo.
+// Desmarcar tira só a cidade — o país continua. Cidade com Fui não sai: ela
+// existe pelos spots, e a marcação deixa de importar.
+var CV_LIGADO=true; // false quando a 032 não existe (404): a feature some, sem erro
+let CV_CARDS=[];    // cards sem spot da viagem aberta (o onclick manda o índice)
+let CV_FICHA=null;  // a cidade da folha 9e
+const CV={modo:'folha',pais:'',paisInicial:'',busca:'',res:[],dica:'',sel:[],tirar:new Set(),
+  linhas:[],paisesLista:[],req:0,to:null,ocupado:false,amigos:null};
+let CVP=null;       // a pergunta 10c aberta
+
+// As marcadas de uma conta (a sua, ou a de um amigo: o RLS deixa amigo aceito
+// ler). null = não deu pra saber; aí quem chamou fica com o que já tinha.
+async function carregarCidadesMarcadas(uid){
+  const quem=uid||(S.user&&S.user.id);
+  if(!quem||!CV_LIGADO)return null;
+  let r;
+  try{r=await sbFetch('/rest/v1/cidades_visitadas?user_id=eq.'+encodeURIComponent(quem)
+    +'&select=id,chave,nome,pais,place_id,created_at&order=created_at.asc',{})}
+  catch(e){return null}
+  // 404 (PGRST205) = a tabela não existe: o app segue sem a feature.
+  if(r.status===404){CV_LIGADO=false;return null}
+  if(!r.ok)return null;
+  try{const l=await r.json();return Array.isArray(l)?l:null}catch(e){return null}
+}
+function chaveDaCidade(c){
+  return String(c.place_id?c.place_id:normName(c.nome)+'|'+normName(c.pais||'')).slice(0,300);
+}
+function cvCid(c){if(c&&!c.chave)c.chave=chaveDaCidade(c);return c}
+// Spot que prova a cidade: Fui/Não recomendo, ou qualquer um na cidade onde
+// mora. Só Quero ir não prova — aí a marcação é o que conta.
+function cidadeTemFui(nome,pais){
+  const alvo=cityOf({city:nome})||nome;
+  for(const t of (S.trips||[]))for(const sp of (t._spots||[])){
+    if(sp.status==='want'&&!ehCasa(t))continue;
+    if(!mesmoLugar(cityOf(sp),alvo)&&!mesmoLugar(sp.city,nome))continue;
+    const p=pais?paisDoSpot(sp,t):'';
+    if(!pais||!p||mesmoLugar(p,pais))return true;
+  }
+  return false;
+}
+function cidadesSemSpot(pais){
+  return (S.cidadesMarcadas||[]).filter(m=>(!pais||mesmoLugar(m.pais,pais))&&!cidadeTemFui(m.nome,m.pais));
+}
+// As que viram card na viagem do país. Casa e próxima viagem não têm.
+function cidadesSemSpotDaViagem(t){
+  if(!t||ehCasa(t)||viagemPlanejada(t)||!(S.cidadesMarcadas||[]).length)return[];
+  const ds=((t.destinations&&t.destinations.length)?t.destinations:[t.name]).filter(Boolean);
+  return cidadesSemSpot().filter(m=>ds.some(d=>mesmoLugar(d,m.pais))&&!ehDaCasa(m.nome,m.pais));
+}
+function cvMarcadaDe(c){
+  const k=c.chave||chaveDaCidade(c);
+  return (S.cidadesMarcadas||[]).find(m=>m.chave===k
+    ||(mesmoLugar(m.nome,c.nome)&&(!m.pais||!c.pais||mesmoLugar(m.pais,c.pais))))||null;
+}
+// Quantas cidades (com Fui ou marcadas) o país já tem.
+function cvCidadesNoPais(pais){
+  const set=new Set();
+  (S.trips||[]).forEach(t=>(t._spots||[]).forEach(sp=>{
+    if(sp.status==='want'&&!ehCasa(t))return;
+    if(!mesmoLugar(paisDoSpot(sp,t),pais))return;
+    const c=cityOf(sp);if(c)set.add(normName(c));
+  }));
+  (S.cidadesMarcadas||[]).forEach(m=>{if(mesmoLugar(m.pais,pais))set.add(normName(cityOf({city:m.nome})||m.nome))});
+  return set.size;
+}
+
+// Grava várias de uma vez. Primeiro os países que ainda não pintam o mapa (a
+// mesma linha escondida __quickvisit__ do "marcar país", num POST só), depois
+// as cidades, num POST só; a repetida (user_id, chave) é ignorada pelo banco.
+async function gravarCidades(lista){
+  const novas=(lista||[]).filter(c=>c&&c.nome&&!cvMarcadaDe(c));
+  if(!novas.length)return{error:null,data:[],paises:[]};
+  const pintados=visitedCountryNames();
+  const paises=[...new Set(novas.map(c=>c.pais).filter(p=>p&&COUNTRIES.some(x=>x.name===p)&&!pintados.some(v=>mesmoLugar(v,p))))];
+  if(paises.length){
+    const{data,error}=await dbInsertMany('trips',paises.map(name=>
+      ({user_id:S.user.id,name,destinations:[name],dates:'__quickvisit__',status:'done'})));
+    if(error||!data)return{error:true,paises:[]};
+    data.forEach(t=>{t._spots=[];t._spotsLoaded=true;S.trips.unshift(t)});
+  }
+  const{data,error}=await dbInsertMany('cidades_visitadas',novas.map(c=>({user_id:S.user.id,
+    chave:c.chave||chaveDaCidade(c),nome:String(c.nome).slice(0,200),pais:c.pais||'',place_id:c.place_id||null})),'user_id,chave');
+  if(error||!data)return{error:true,paises};
+  data.forEach(m=>{if(!S.cidadesMarcadas.some(x=>x.id===m.id))S.cidadesMarcadas.push(m)});
+  return{error:null,data,paises};
+}
+// Tudo que mostra cidade se atualiza na hora: placar (site e nativo), metas
+// das viagens, a lista de cidades, a viagem aberta, o perfil e o mapa.
+function depoisDeMudarCidades(paisesNovos){
+  rebuildCityCanon();
+  atualizarPlacar();
+  guardarDadosLocais();
+  try{refreshTripMetas()}catch(e){}
+  const ativa=telaAtual();
+  if(ativa==='list'&&LS.mode==='cities')renderList();
+  if(S.curTrip&&ativa==='trip')renderTripBody();
+  if(ativa==='profile')try{loadProfile()}catch(e){}
+  else if(naCasca())try{darDadosDePerfil()}catch(e){}
+  if(paisesNovos&&paisesNovos.length){populateTripOpts();carregarGeoMundo().catch(()=>false).then(()=>renderMiniMapa())}
+}
+
+// ── 10a · a folha "Adicionar" ──
+function abrirFolhaAdicionar(){
+  if(!CV_LIGADO||!S.user){comecarSpotSemViagem();return}
+  const n=visitedCountryNames().length;
+  const el=document.getElementById('adPaisesSub');
+  if(el)el.textContent=n?n+(n===1?' marcado':' marcados'):'Pintam o seu mapa';
+  showOv('ov-adicionar');
+}
+function adEscolher(o){
+  closeOv('ov-adicionar');
+  setTimeout(()=>{
+    if(o==='spot')comecarSpotSemViagem();
+    else if(o==='cidades')abrirMarcarCidades('');
+    else openVisitedCountryPicker();
+  },220);
+}
+
+// ── 9b/9c · "Onde você já foi?" (folha) e 9f (passo do primeiro acesso) ──
+function cvZerar(modo,pais){
+  clearTimeout(CV.to);CV.req++;
+  Object.assign(CV,{modo,pais:pais||'',paisInicial:pais||'',busca:'',res:[],dica:'',sel:[],linhas:[],paisesLista:[],ocupado:false,amigos:null});
+  CV.tirar=new Set();
+  cvCarregarAmigos();
+}
+function abrirMarcarCidades(pais){
+  if(!CV_LIGADO||!S.user)return;
+  cvZerar('folha',pais);
+  const f=document.getElementById('cvFolha');if(!f)return;
+  f.innerHTML='<button class="sheet-close" onclick="closeOv(\'ov-cidades\')" aria-label="Fechar">'+icon('close')+'</button>'
+    +'<div class="sheet-handle"></div><div class="sheet-title">Onde você já foi?</div>'
+    +'<div class="cv-busca">'+cvCampoHTML()+'</div>'
+    +'<div class="cv-sel cv-sel-folha" id="cvSel"></div>'
+    +'<div class="lista-rolante cv-lista" id="cvLista"></div>'
+    +'<button class="sheet-cta" id="cvSalvar" onclick="cvSalvar()"></button>';
+  cvPintar();
+  showOv('ov-cidades');
+}
+function cvMarcarNaViagem(){const t=S.curTrip;abrirMarcarCidades(t?paisDaViagem(t):'')}
+function cvPlaceholder(){return CV.pais?'Buscar cidade · '+CV.pais:'Buscar cidade'}
+function cvCampoHTML(){
+  return '<label class="onb-campo cv-campo">'+icon('search')+'<input id="cvBusca" type="text" placeholder="'+esc(cvPlaceholder())
+    +'" autocomplete="off" autocorrect="off" spellcheck="false" oninput="cvBuscar(this.value)" onfocus="cvTeclado(true)" onblur="cvTeclado(false)"></label>';
+}
+// Com o teclado aberto o botão de salvar fica escondido (ele tapava a lista);
+// fechou o teclado, ele volta com o total.
+function cvTeclado(on){document.documentElement.classList.toggle('cv-digitando',!!on)}
+// As cidades onde os AMIGOS estiveram (Fui), por país. É a sugestão sem
+// digitar — no lugar de uma lista fixa de "mais visitadas", que pediria
+// manutenção. Sem amigo ou sem dado, fica só a busca.
+function cvCarregarAmigos(){
+  if(CV.amigos)return;
+  CV.amigos=new Map();
+  if(!S.user)return;
+  plnSpotsDeles().then(l=>{
+    const por={};
+    (l||[]).forEach(s=>{
+      if(s.status!=='been')return;
+      const nome=cityOf(s)||s.city,pais=s._pais;
+      if(!nome||!pais)return;
+      const g=por[normName(pais)]||(por[normName(pais)]={});
+      const x=g[normName(nome)]||(g[normName(nome)]={nome,pais,quem:new Set()});
+      x.quem.add(s.user_id);
+    });
+    const m=new Map();
+    Object.keys(por).forEach(k=>m.set(k,Object.values(por[k])
+      .sort((a,b)=>b.quem.size-a.quem.size||String(a.nome).localeCompare(String(b.nome),'pt-BR'))
+      .map(x=>({nome:x.nome,pais:x.pais,quem:[...x.quem]}))));
+    CV.amigos=m;
+    if(document.getElementById('cvLista')&&CV.busca.trim().length<3)cvPintarLista();
+    if(CVP&&document.getElementById('ov-cvpergunta').classList.contains('show'))cvpPintar();
+  }).catch(()=>{});
+}
+function cvDosAmigos(pais){return (CV.amigos&&CV.amigos.get(normName(pais)))||[]}
+function cvBuscar(v){
+  clearTimeout(CV.to);
+  CV.busca=String(v||'');
+  const t=CV.busca.trim();
+  if(t.length<3){CV.req++;CV.res=[];CV.dica=t.length?'Digite pelo menos 3 letras':'';cvPintarLista();return}
+  CV.dica='Buscando...';cvPintarLista();
+  CV.to=setTimeout(async()=>{
+    const meu=++CV.req;
+    const r=await buscarCidades(t,()=>meu===CV.req);
+    if(!r||meu!==CV.req)return;
+    let l=r.cidades.map(c=>cvCid(Object.assign({},c)));
+    // Filtrada num país (veio da viagem dele): as de lá primeiro.
+    if(CV.pais)l=l.slice().sort((a,b)=>(mesmoLugar(b.pais,CV.pais)?1:0)-(mesmoLugar(a.pais,CV.pais)?1:0));
+    CV.res=l;
+    CV.dica=l.length?'':(r.falhou?'Não deu pra buscar agora. Tenta de novo em instantes.':'Nenhuma cidade encontrada. Confere o nome.');
+    cvPintarLista();
+  },320);
+}
+function cvMesma(a,b){return a.chave===b.chave||(mesmoLugar(a.nome,b.nome)&&mesmoLugar(a.pais||'',b.pais||''))}
+function cvEstado(c){
+  if(ehDaCasa(c.nome,c.pais))return 'casa';
+  if(cidadeTemFui(c.nome,c.pais))return 'spot';
+  const m=cvMarcadaDe(c);
+  if(m)return CV.tirar.has(m.id)?'tirada':'marcada';
+  return CV.sel.some(x=>cvMesma(x,c))?'sel':'livre';
+}
+function cvLinha(c,meta){
+  const i=CV.linhas.push(c)-1;
+  const st=cvEstado(c);
+  const on=st==='marcada'||st==='sel'||st==='spot'||st==='casa';
+  const sub=st==='casa'?'Onde você mora':st==='spot'?'Já tem spot aqui':(meta||'');
+  // mousedown sem padrão: tocar marca SEM tirar o foco da busca (o teclado
+  // fica aberto e dá pra seguir digitando a próxima).
+  return '<div class="onb-linha cv-linha'+(on?' on':'')+(st==='casa'||st==='spot'?' cv-fixa':'')+'" onmousedown="event.preventDefault()" onclick="cvTocar('+i+')">'
+    +'<div class="l-txt"><div class="l-nome">'+esc(c.nome)+'</div>'+(sub?'<div class="l-meta">'+esc(sub)+'</div>':'')+'</div>'
+    +'<span class="onb-check">'+icon('check')+'</span></div>';
+}
+function cvTocar(i){
+  const c=CV.linhas[i];if(!c)return;
+  const st=cvEstado(c);
+  if(st==='casa'||st==='spot')return;
+  if(st==='marcada'||st==='tirada'){const m=cvMarcadaDe(c);if(m){if(st==='marcada')CV.tirar.add(m.id);else CV.tirar.delete(m.id)}}
+  else if(st==='sel')CV.sel=CV.sel.filter(x=>!cvMesma(x,c));
+  else CV.sel.push(c);
+  cvPintar();
+}
+function cvTirarSel(i){CV.sel.splice(i,1);cvPintar()}
+function cvPintar(){cvPintarSel();cvPintarLista();cvPintarBotao()}
+function cvPintarSel(){
+  const el=document.getElementById('cvSel');if(!el)return;
+  el.innerHTML=CV.sel.map((c,i)=>'<button class="cv-chip" onmousedown="event.preventDefault()" onclick="cvTirarSel('+i+')" aria-label="Tirar '+esc(c.nome)+'">'+esc(c.nome)+'<span>✕</span></button>').join('');
+  el.style.display=CV.sel.length?'':'none';
+}
+// Os países da lista sem texto: os sem cidade nenhuma primeiro (quem só
+// marcou o país), depois o resto pelos spots.
+function cvPaisesDaFolha(){
+  if(CV.pais)return[CV.pais];
+  const base=CV.modo==='onb'?[...ONB.paises]:visitedCountryNames();
+  const todos=allSpotsFlat();
+  const nCid={},nSp={};
+  base.forEach(p=>{nCid[p]=cvCidadesNoPais(p);nSp[p]=todos.filter(s=>mesmoLugar(s._country,p)).length});
+  return base.slice().sort((a,b)=>(nCid[a]?1:0)-(nCid[b]?1:0)||nSp[b]-nSp[a]||String(a).localeCompare(String(b),'pt-BR'));
+}
+function cvSugestoesHTML(){
+  const paises=cvPaisesDaFolha();
+  CV.paisesLista=paises;
+  let h='';
+  if(CV.pais&&!CV.paisInicial&&CV.modo==='folha')h+='<button class="cv-mais" onmousedown="event.preventDefault()" onclick="cvTodosPaises()">Todos os países</button>';
+  if(!paises.length)return h+'<div class="busca-dica">Busque uma cidade pelo nome.</div>';
+  const lim=CV.pais?12:4;
+  paises.forEach((p,pi)=>{
+    const linhas=[],vistos=[];
+    const junta=(c,meta)=>{c=cvCid(c);if(vistos.some(x=>cvMesma(x,c)))return;vistos.push(c);linhas.push([c,meta])};
+    // as já marcadas (com check), as escolhidas agora, e as dos amigos
+    (S.cidadesMarcadas||[]).filter(m=>mesmoLugar(m.pais,p)&&!cidadeTemFui(m.nome,m.pais))
+      .forEach(m=>junta({nome:m.nome,pais:m.pais,place_id:m.place_id,chave:m.chave},''));
+    CV.sel.filter(c=>mesmoLugar(c.pais,p)).forEach(c=>junta(c,c.onde||''));
+    let n=0;
+    cvDosAmigos(p).forEach(a=>{
+      if(n>=lim)return;
+      const c={nome:a.nome,pais:a.pais};
+      if(ehDaCasa(c.nome,c.pais)||cidadeTemFui(c.nome,c.pais)||cvMarcadaDe(c))return;
+      n++;junta(c,plnNomesCurtos(a.quem)+(a.quem.length===1?' foi':' foram'));
+    });
+    const zero=!cvCidadesNoPais(p);
+    h+='<div class="cv-grupo"><b>'+esc(p)+'</b>'+(zero&&CV.modo==='folha'?'<span>você já marcou o país</span>':'')+'</div>';
+    h+=linhas.map(([c,meta])=>cvLinha(c,meta)).join('');
+    h+='<button class="cv-mais" onmousedown="event.preventDefault()" onclick="cvBuscarNoPais('+pi+')">'+(linhas.length?'Buscar outra cidade':'Buscar cidade')+'</button>';
+  });
+  return h;
+}
+function cvPintarLista(){
+  const el=document.getElementById('cvLista');if(!el)return;
+  CV.linhas=[];
+  let h='';
+  if(CV.busca.trim().length>=3){
+    h+=CV.res.map(c=>cvLinha(c,c.onde||c.pais)).join('');
+    if(CV.dica)h+='<div class="busca-dica">'+esc(CV.dica)+'</div>';
+  }else{
+    if(CV.dica)h+='<div class="busca-dica">'+esc(CV.dica)+'</div>';
+    h+=cvSugestoesHTML();
+  }
+  el.innerHTML=h;
+}
+function cvPintarBotao(){
+  const b=document.getElementById('cvSalvar');if(!b)return;
+  const n=CV.sel.length,r=CV.tirar.size;
+  if(CV.modo==='onb'){b.textContent='Continuar'+(n?' · '+n+(n===1?' cidade':' cidades'):'');b.disabled=false;return}
+  b.textContent=n&&r?'Salvar':n?'Marcar '+n+(n===1?' cidade':' cidades'):r?'Desmarcar '+r+(r===1?' cidade':' cidades'):'Marcar cidades';
+  const ok=!!(n||r);
+  b.style.opacity=ok?'':'.4';b.style.pointerEvents=ok?'':'none';
+}
+function cvBuscarNoPais(i){
+  const p=CV.paisesLista[i];if(!p)return;
+  CV.pais=p;
+  const inp=document.getElementById('cvBusca');
+  if(inp){inp.placeholder=cvPlaceholder();inp.focus()}
+  cvPintarLista();
+  const l=document.getElementById('cvLista');if(l)l.scrollTop=0;
+}
+function cvTodosPaises(){
+  CV.pais='';
+  const inp=document.getElementById('cvBusca');if(inp)inp.placeholder=cvPlaceholder();
+  cvPintarLista();
+}
+async function cvSalvar(){
+  if(CV.ocupado)return;
+  const onb=CV.modo==='onb';
+  const novas=CV.sel.slice(),tirar=[...CV.tirar];
+  if(!novas.length&&!tirar.length){cvTeclado(false);if(onb)onbIr(3);else closeOv('ov-cidades');return}
+  CV.ocupado=true;
+  const b=document.getElementById('cvSalvar');
+  if(b){b.textContent='Salvando...';b.style.pointerEvents='none';b.disabled=true}
+  let erro=false,paises=[];
+  // Um POST pras novas (e um pros países que faltavam); um DELETE pras tiradas.
+  if(novas.length){const r=await gravarCidades(novas);if(r.error)erro=true;else{paises=r.paises||[];CV.sel=[]}}
+  if(!erro&&tirar.length){
+    const d=await dbDeleteOnde('cidades_visitadas','id=in.('+tirar.map(encodeURIComponent).join(',')+')');
+    if(d.error)erro=true;
+    else{const fora=new Set(tirar);S.cidadesMarcadas=S.cidadesMarcadas.filter(m=>!fora.has(m.id));CV.tirar=new Set()}
+  }
+  CV.ocupado=false;
+  depoisDeMudarCidades(paises);
+  if(erro){if(b){b.style.pointerEvents='';b.disabled=false}cvPintar();toast('Não salvou','Confere a conexão e tenta de novo.','alert');return}
+  cvTeclado(false);
+  if(onb){onbIr(3);return}
+  closeOv('ov-cidades');
+  if(novas.length)toast('Marcado!',novas.length===1?novas[0].nome+' agora está no seu mapa.':novas.length+' cidades agora estão no seu mapa.','globe');
+  else toast('Pronto',tirar.length===1?'Uma cidade saiu do seu placar.':tirar.length+' cidades saíram do seu placar.','check');
+}
+
+// ── 9e · tocar numa cidade sem spot ──
+// Em vez de uma tela de cidade vazia, uma folha: adicionar spot nela ou
+// desmarcar.
+function cvAbrirFicha(m){
+  if(!m)return;
+  CV_FICHA=m;
+  const nome=cityOf({city:m.nome})||m.nome;
+  document.getElementById('cvFichaNome').textContent=nome;
+  document.getElementById('cvFichaSub').textContent=(m.pais?m.pais+' · ':'')+'esteve aqui, sem spots';
+  document.getElementById('cvFichaAdd').textContent='Adicionar spot em '+nome;
+  const f=document.getElementById('cvFichaFoto');
+  f.style.backgroundImage=destGradient(nome);
+  // A mesma busca de foto das viagens.
+  fetchCityPhoto(nome,m.pais||'').then(u=>{if(u&&CV_FICHA===m)f.style.backgroundImage=cssUrl(u)}).catch(()=>{});
+  showOv('ov-cvcidade');
+}
+function cvAbrirCard(i){cvAbrirFicha(CV_CARDS[i])}
+function cvAbrirDaLista(i){const it=LS.items[i];if(it&&it.marcada)cvAbrirFicha(it.marcada)}
+// "Adicionar spot em Sintra": a busca de spot já olhando a cidade (o nome dela
+// vai junto no texto da busca — sem spot lá, não há coordenada pra centrar).
+function cvAdicionarSpotNaCidade(){
+  const m=CV_FICHA;if(!m)return;
+  closeOv('ov-cvcidade');
+  setTimeout(()=>{
+    S.addTrip=null;
+    abrirBuscaDeSpot();
+    S.buscarEm={cidade:cityOf({city:m.nome})||m.nome,pais:m.pais||''};
+    const i=document.getElementById('placeSearch');if(i)i.placeholder='Buscar em '+S.buscarEm.cidade;
+  },220);
+}
+// Um toque, sem confirmação (handoff 9e): some na hora e a faixa oferece
+// Desfazer por 5 s. O país continua marcado.
+async function cvDesmarcar(){
+  const m=CV_FICHA;if(!m)return;
+  closeOv('ov-cvcidade');
+  S.cidadesMarcadas=S.cidadesMarcadas.filter(x=>x.id!==m.id);
+  depoisDeMudarCidades();
+  const{error}=await dbDelete('cidades_visitadas',m.id);
+  if(error){
+    if(!S.cidadesMarcadas.some(x=>x.id===m.id))S.cidadesMarcadas.push(m);
+    depoisDeMudarCidades();
+    toast('Não desmarcou','Confere a conexão e tenta de novo.','alert');return;
+  }
+  mostrarFaixaDesfazer((cityOf({city:m.nome})||m.nome)+' desmarcada',()=>cvRemarcar(m));
+}
+async function cvRemarcar(m){
+  const r=await gravarCidades([{nome:m.nome,pais:m.pais,place_id:m.place_id,chave:m.chave}]);
+  if(r.error){toast('Não voltou','Confere a conexão e tenta de novo.','alert');return}
+  depoisDeMudarCidades(r.paises);
+}
+const FAIXA_CV={el:null,to:null,fn:null};
+function mostrarFaixaDesfazer(texto,fn){
+  esconderFaixaSalvo();
+  if(!FAIXA_CV.el){
+    const el=document.createElement('div');
+    el.className='faixa-salvo cv-faixa';el.id='faixaDesfazer';
+    el.innerHTML='<span class="fx-txt"><b id="fdTxt"></b></span><button class="fx-ver" id="fdDesfazer">Desfazer</button>';
+    el.addEventListener('click',e=>{const f=FAIXA_CV.fn;esconderFaixaDesfazer();if(e.target&&e.target.id==='fdDesfazer'&&f)f()});
+    document.body.appendChild(el);FAIXA_CV.el=el;
+  }
+  document.getElementById('fdTxt').textContent=texto;
+  FAIXA_CV.fn=fn;
+  clearTimeout(FAIXA_CV.to);
+  FAIXA_CV.el.classList.add('on');
+  FAIXA_CV.to=setTimeout(esconderFaixaDesfazer,5000);
+}
+function esconderFaixaDesfazer(){clearTimeout(FAIXA_CV.to);FAIXA_CV.fn=null;if(FAIXA_CV.el)FAIXA_CV.el.classList.remove('on')}
+
+// ── 10c · depois de salvar o 1º spot num país ──
+// "Passou por outras cidades?" — uma vez por país, por conta (guardado no
+// aparelho). Só com Fui/Não recomendo (Quero ir não é ter ido) e só enquanto
+// o país tem uma cidade só. Não pergunta por cima de outra folha.
+function cvTalvezPerguntar(spot){
+  try{
+    if(!CV_LIGADO||!spot||!S.user||spot.status==='want')return;
+    const t=(S.trips||[]).find(x=>x.id===spot.trip_id);
+    if(!t||ehCasa(t))return;
+    const pais=paisDoSpot(spot,t);
+    if(!pais||!COUNTRIES.some(c=>c.name===pais))return;
+    const chave='spot_cv_perguntou_'+S.user.id+'_'+normName(pais);
+    let ja=null;try{ja=localStorage.getItem(chave)}catch(e){}
+    if(ja||cvCidadesNoPais(pais)>1)return;
+    const cidade=cityOf(spot)||spot.city||'';
+    setTimeout(()=>{
+      if(document.querySelector('.overlay.show'))return;
+      CVP={pais,cidade,chave,sel:[],sug:[]};
+      cvpAbrir();
+    },900);
+  }catch(e){}
+}
+function cvpAbrir(){
+  if(!CVP)return;
+  try{localStorage.setItem(CVP.chave,'1')}catch(e){}
+  document.getElementById('cvpKicker').textContent=CVP.cidade?'Salvo em '+CVP.cidade:'Salvo';
+  // Sem preposição antes do país (ela muda com o gênero: da Itália, do Japão).
+  document.getElementById('cvpTit').textContent=CVP.pais+': passou por outras cidades?';
+  if(!CV.amigos||!CV.amigos.size){CV.amigos=null;cvCarregarAmigos()}
+  cvpPintar();
+  showOv('ov-cvpergunta');
+}
+function cvpPintar(){
+  if(!CVP)return;
+  CVP.sug=cvDosAmigos(CVP.pais).filter(c=>!mesmoLugar(c.nome,CVP.cidade)&&!cvMarcadaDe(c)
+    &&!cidadeTemFui(c.nome,c.pais)&&!ehDaCasa(c.nome,c.pais)).slice(0,4);
+  CVP.sel=CVP.sel.filter(i=>i<CVP.sug.length);
+  const el=document.getElementById('cvpChips');
+  el.innerHTML=CVP.sug.map((c,i)=>'<button class="cvp-chip'+(CVP.sel.includes(i)?' on':'')+'" onclick="cvpTocar('+i+')">'+esc(c.nome)+'</button>').join('')
+    +(CVP.sug.length?'<button class="cvp-outra" onclick="cvpOutra()">Outra…</button>':'');
+  el.style.display=CVP.sug.length?'':'none';
+  const b=document.getElementById('cvpMarcar');
+  // Sem sugestão (nenhum amigo esteve lá): o botão vira a busca.
+  b.textContent=!CVP.sug.length?'Buscar cidade':CVP.sel.length>1?'Marcar '+CVP.sel.length:'Marcar';
+  const ok=!CVP.sug.length||CVP.sel.length>0;
+  b.style.opacity=ok?'':'.4';b.style.pointerEvents=ok?'':'none';
+}
+function cvpTocar(i){
+  if(!CVP)return;
+  CVP.sel=CVP.sel.includes(i)?CVP.sel.filter(x=>x!==i):CVP.sel.concat(i);
+  cvpPintar();
+}
+function cvpAgoraNao(){closeOv('ov-cvpergunta')}
+function cvpOutra(){
+  if(!CVP)return;
+  const p=CVP.pais,levar=CVP.sel.map(i=>CVP.sug[i]).filter(Boolean);
+  closeOv('ov-cvpergunta');
+  setTimeout(()=>{
+    abrirMarcarCidades(p);
+    // O que já tinha tocado aqui vai junto, selecionado.
+    levar.forEach(c=>CV.sel.push(cvCid({nome:c.nome,pais:c.pais})));
+    cvPintar();
+  },220);
+}
+async function cvpMarcar(){
+  if(!CVP)return;
+  if(!CVP.sug.length){cvpOutra();return}
+  const lista=CVP.sel.map(i=>CVP.sug[i]).filter(Boolean).map(c=>cvCid({nome:c.nome,pais:c.pais}));
+  if(!lista.length)return;
+  const b=document.getElementById('cvpMarcar');b.textContent='Marcando...';b.style.pointerEvents='none';
+  const r=await gravarCidades(lista);
+  if(r.error){cvpPintar();toast('Não marcou','Confere a conexão e tenta de novo.','alert');return}
+  closeOv('ov-cvpergunta');
+  depoisDeMudarCidades(r.paises);
+  toast('Marcado!',lista.length===1?lista[0].nome+' agora está no seu mapa.':lista.length+' cidades agora estão no seu mapa.','globe');
+}
 async function renderWorldMap(visited){
   const wrap=document.getElementById('worldMapWrap');
   const visitedGeo=new Set(visited.map(c=>geoFor(c)).filter(Boolean));
@@ -15748,6 +16361,8 @@ function closeOv(id){
   if(id==='ov-cat')trocandoCategoria=false;
   // A folha de criar viagem é a mesma nos dois modos: fechou, volta pro normal.
   if(id==='ov-newtrip')NOVA_PROXIMA=false;
+  // Folha de cidades fechada com o teclado aberto: o botão escondido volta.
+  if(id==='ov-cidades')document.documentElement.classList.remove('cv-digitando');
   document.getElementById(id).classList.remove('show');avisarSeTemJanela();
 }
 function closeOut(e,id){if(e.target===document.getElementById(id))closeOv(id)}
@@ -16647,7 +17262,7 @@ const FRIEND={id:null,profile:null,trips:[],visiveis:[],trip:null,city:null,spot
 const FRIEND_NOMES={};
 function backToFriends(){goTo('friends');loadFriends(true)}
 async function openFriend(id){
-  FRIEND.id=id;FRIEND.trips=[];FRIEND.visiveis=[];FRIEND.trip=null;FRIEND.status='been';FRIEND.soComum=false;FRIEND.abertas={};FRIEND.todos=[];FRIEND.busca='';FRIEND.buscando=false;
+  FRIEND.id=id;FRIEND.trips=[];FRIEND.cidadesMarcadas=[];FRIEND.visiveis=[];FRIEND.trip=null;FRIEND.status='been';FRIEND.soComum=false;FRIEND.abertas={};FRIEND.todos=[];FRIEND.busca='';FRIEND.buscando=false;
   {const b=document.getElementById('friendBusca');if(b)b.value='';
    const tela=document.getElementById('friend');if(tela)tela.classList.remove('am-buscando','am-saindo');
    const bx=document.getElementById('friendBuscaBox');if(bx)bx.classList.remove('tem-texto')}
@@ -16669,12 +17284,16 @@ async function openFriend(id){
   // Perfil, viagens e spots AO MESMO TEMPO (01/10): eram três consultas em
   // fila, ~2 s de tela parada. Os spots vêm por user_id (o RLS só devolve os
   // de amigo), sem esperar a lista de viagens pra montar o filtro.
-  const[perfis,tripsDele,spotsDele]=await Promise.all([
+  const[perfis,tripsDele,spotsDele,marcadasDele]=await Promise.all([
     dbGet('profiles','id=eq.'+encodeURIComponent(id)),
     dbGet('trips','user_id=eq.'+encodeURIComponent(id)+'&order=created_at.desc'),
-    dbGet('spots','user_id=eq.'+encodeURIComponent(id)+'&order=created_at.asc')
+    dbGet('spots','user_id=eq.'+encodeURIComponent(id)+'&order=created_at.asc'),
+    // As cidades que ele marcou sem spot (06/10) contam no "N cidades" dele.
+    // O RLS da 032 deixa amigo aceito ler; sem a tabela, volta null.
+    carregarCidadesMarcadas(id)
   ]);
   if(FRIEND.id!==id)return; // abriu outro amigo no meio do caminho
+  FRIEND.cidadesMarcadas=marcadasDele||[];
   const p=(perfis&&perfis[0])||null;
   FRIEND.profile=p;
   const exibido=friendName(p)||nome;
@@ -16808,6 +17427,8 @@ function renderFriendProfile(){
     (t._spots||[]).forEach(s=>{s._pais=pais;s._regiao=regionFor(pais);todos.push(s)})});
   const cidades=new Set(),paises=new Set();
   todos.forEach(s=>{const c=cityOf(s);if(c)cidades.add(c)});
+  {const ja=new Set([...cidades].map(normName));
+   (FRIEND.cidadesMarcadas||[]).forEach(m=>{const k=normName(m.nome);if(m.nome&&!ja.has(k)){ja.add(k);cidades.add(m.nome)}})}
   FRIEND.trips.forEach(t=>(t.destinations||[]).forEach(d=>paises.add(d)));
   // "@usuario · 1 país · 1 cidade · 4 spots" — itens em 0 somem; "viagens" não entra.
   const p=FRIEND.profile||{};
