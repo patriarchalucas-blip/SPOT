@@ -45,7 +45,7 @@ export async function onRequestPost(context) {
 
   // sug2 (05/10): a resposta ganhou o grupo de spots; a memória antiga não tem.
   const chave = op === 'sugerir'
-    ? 'lugar_sug2_' + (await hash(texto.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '')))
+    ? 'lugar_sug3_' + (await hash(texto.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '')))
     : 'lugar_det_' + (await hash(id));
   const guardado = await lerKV(env, chave);
   if (guardado) { try { return json(JSON.parse(guardado)) } catch (e) {} }
@@ -114,7 +114,9 @@ export function organizarSugestoes(lista, filtrarAqui) {
       return {
         id: p.placeId || '',
         titulo: String((f.mainText && f.mainText.text) || (p.text && p.text.text) || '').slice(0, 120),
-        sub: String((f.secondaryText && f.secondaryText.text) || '').slice(0, 160)
+        sub: String((f.secondaryText && f.secondaryText.text) || '').slice(0, 160),
+        // O tipo vai junto (06/10): o onboarding mostra só cidade.
+        tipos: (p.types || []).filter((t) => /^[a-z_0-9]{2,40}$/.test(t)).slice(0, 8)
       };
     })
     .filter((x) => idValido(x.id) && x.titulo);

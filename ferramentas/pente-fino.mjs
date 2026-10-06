@@ -85,7 +85,7 @@ pg.on('request', r => {
   if (u.includes('/api/importar')) { if (r.method()==='GET') return r.respond({status:200,contentType:'application/json',body:JSON.stringify({ligado:true})}); return r.respond({status:200,contentType:'application/json',body:JSON.stringify({lugares:[{texto:'taberna da rua das flores',nome:'Taberna da Rua das Flores',cidade:'Lisboa',pais:'Portugal',status:'been'},{texto:'pasteis de belem (amei)',nome:'Pastéis de Belém',cidade:'Lisboa',pais:'Portugal',status:'been'},{texto:'livraria lello',nome:'Livraria Lello',cidade:'Porto',pais:'Portugal',status:'want'},{texto:'o bar xyzzy do joão',nome:'Bar Xyzzy',cidade:'Porto',pais:'Portugal',status:'want'}]})}) }
   // Sugestões do Explorar em dois grupos (05/10): "Mani" acha o restaurante e a cidade.
   if (u.includes('/api/lugar')) return r.respond({ status: 200, contentType: 'application/json', body: JSON.stringify({
-    sugestoes: [{ id: 'ChIJmanila_cidade_001', titulo: 'Manila', sub: 'Filipinas' }],
+    sugestoes: [{ id: 'ChIJmanila_cidade_001', titulo: 'Manila', sub: 'Filipinas', tipos: ['locality', 'political'] }, { id: 'ChIJrua_manila_00001', titulo: 'Rua Manila', sub: 'São Paulo, Brasil', tipos: ['route'] }],
     spots: [{ id: 'ChIJmani_restaurante1', titulo: 'Maní', sub: 'Rua Joaquim Antunes, Jardins, São Paulo', tipos: ['restaurant', 'food', 'establishment'] },
       { id: 'ChIJtaberna_flores01', titulo: 'Taberna da Rua das Flores', sub: 'Rua da Misericórdia, Lisboa', tipos: ['restaurant'] }] }) });
   if (u.includes('/api/lista')) return r.respond({ status: 200, contentType: 'application/json', body: JSON.stringify({ codigo: 'abcdefgh1234' }) });
@@ -255,6 +255,8 @@ if (await pg.evaluate(() => typeof impAbrir === 'function')) {
   await passoDe('importar: salvar (2d)', `impSalvar()`, 3000);
   await passoDe('importar: abrir cidade', `impAbrirCidade(0)`, 1200);
   await passoDe('a3: viagens sem nenhum spot', `(async()=>{IMP.ligado=true;S.trips=[];window.dbGet=async()=>[];goTo('dashboard');await loadDashboard()})()`, 2000);
+await passoDe('onb: cidade onde mora', `(()=>{showOv('ov-onb');ONB.passo=0;onbIr(1);const i=document.getElementById('onbCidade');if(i){i.value='Manila';onbBuscarCidade('Manila')}})()`, 1500);
+console.log('  cidades:', await pg.evaluate(() => JSON.stringify((ONB.cidades||[]).map(c=>c.nome+'/'+c.pais))));
 await passoDe('onb: passo 3 colar', `(()=>{IMP.ligado=true;ONB.textoImportar='';showOv('ov-onb');ONB.passo=2;onbIr(3)})()`);
 await passoDe('onb: colou texto', `(()=>{const t=document.getElementById('onbImportar');t.value='lisboa: taberna da rua das flores, pasteis de belem (amei)';t.dispatchEvent(new Event('input'))})()`);
 await passoDe('onb: segue pros amigos', `document.getElementById('onbSeguirImp').click()`);

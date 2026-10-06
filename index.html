@@ -11864,6 +11864,23 @@ function onbBuscarCidade(v){
   // Mesma espera das outras buscas: o Places cobra por requisição.
   onbBuscaTO=setTimeout(async function(){
     const meu=++onbReq;
+    // 1º: a sugestão de lugar (a mesma do Explorar, feita pra nome de lugar).
+    // A busca por texto com filtro rígido de "cidade" perdia "São Paulo" — o
+    // Google acha o ESTADO primeiro (o Lucas, 06/10: só com "São Paulo SP").
+    try{
+      const d=await pedirLugar({op:'sugerir',texto:t});
+      if(meu!==onbReq)return;
+      const CIDADE=['locality','administrative_area_level_2','postal_town'];
+      const vistas=new Set();
+      const achadas=((d&&d.sugestoes)||[]).filter(x=>(x.tipos||[]).some(k=>CIDADE.includes(k))).map(x=>{
+        const partes=String(x.sub||'').split(',').map(p=>p.trim()).filter(Boolean);
+        const pais=normalizeCountry(partes[partes.length-1]||'')||partes[partes.length-1]||'';
+        return{nome:x.titulo,pais,onde:x.sub||pais};
+      }).filter(c=>{const k=normName(c.nome)+'|'+normName(c.pais);if(!c.nome||vistas.has(k))return false;vistas.add(k);return true}).slice(0,6);
+      if(achadas.length){ONB.cidades=achadas;onbListarCidades('');return}
+    }catch(e){}
+    if(meu!==onbReq)return;
+    // Reserva: a busca por texto, como antes.
     try{
       // DOIS tipos, em paralelo. strictTypeFiltering é o que impede "São
       // Paulo" de voltar Parque Ibirapuera e hotel — mas com ele só vem o tipo

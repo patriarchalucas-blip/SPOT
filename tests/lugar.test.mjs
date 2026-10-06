@@ -92,3 +92,8 @@ test('sem filtro do Google, cidade nao entra no grupo Spots', () => {
     PRED('ChIJcidade_sp_00001', 'São Paulo', 'SP, Brasil', ['locality', 'political'])], true);
   assert.deepStrictEqual(l.map(x => x.titulo), ['Hospital Santa Casa']);
 });
+
+test('sugestao de lugar leva o tipo (o onboarding filtra cidade)', () => {
+  const l = organizarSugestoes([PRED('ChIJsaopaulo_cidade01', 'São Paulo', 'SP, Brasil', ['locality', 'political', 'geocode'])], false);
+  assert.ok(l[0].tipos.includes('locality'));
+});
