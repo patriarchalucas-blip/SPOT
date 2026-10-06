@@ -43,7 +43,8 @@ export async function onRequestPost(context){
 
   // Daqui pra baixo a chamada VAI gastar cota paga — só pra quem está logado.
   const quem=await quemEsta(request,env);
-  if(!quem.permitir)return json({avg_temp:null,unauthorized:true},401);
+  // 06/10: permitir sem uid (sessão sem conta) também não gasta — igual às outras.
+  if(!quem.permitir||!quem.uid)return json({avg_temp:null,unauthorized:true},401);
   if(!await podeGastar(env,'climate',quem.uid,90,USER_RECORD_CAP)){
     return json({avg_temp:null,capped:true,scope:'user'});
   }

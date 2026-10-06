@@ -38,7 +38,8 @@ export async function onRequestGet(context) {
   // navegador de qualquer jeito depois), mas tira ela da mão de robô que só
   // varre endereço público.
   const quem = await quemEsta(request, env);
-  if (!quem.permitir) return json({ error: 'sem_sessao' }, 401);
+  // 06/10: exige uid também, como as outras functions.
+  if (!quem.permitir || !quem.uid) return json({ error: 'sem_sessao' }, 401);
   if (!env.GOOGLE_MAPS_JS_KEY) return json({ configurado: false });
   return json({ configurado: true, chave: env.GOOGLE_MAPS_JS_KEY });
 }

@@ -3276,7 +3276,7 @@ function fotoDoAmigoFalhou(img,i){
   const s=(FRIEND_CITY_SPOTS||[])[i];
   if(!s||img.dataset.tentou){thumbFallback(img,(s&&s.category)||'food');return}
   img.dataset.tentou='1';
-  fotoParaVer(s).then(u=>{
+  fotoParaVerComTeto(s).then(u=>{
     if(u&&img.isConnected){s._fotoVista=u;img.src=safeUrl(fotoNaLargura(u,220))}
     else if(img.isConnected)thumbFallback(img,s.category);
   });
@@ -3827,7 +3827,8 @@ function plnSpotsDeles(){
       // 06/10: paginado — o servidor corta em 1000 e limit=5000 não passava disso.
       dbGetTodas('trips','user_id=in.('+lista+')&select=id,name,destinations'),
       dbGetTodas('spots','user_id=in.('+lista+')&status=in.(been,want)'
-        +'&select=id,user_id,trip_id,name,category,subcategory,place_type,city,address,photo_url,photo_author,photo_author_url,maps_url,website_url,phone,lat,lng,rating_google,price_level,status,my_rating,my_review')]);
+        +'&select=id,user_id,trip_id,name,category,subcategory,place_type,city,address,photo_url,photo_author,photo_author_url,maps_url,website_url,phone,lat,lng,rating_google,price_level,status,my_rating,my_review,created_at,fui_em')]);
+    // 06/10: created_at/fui_em — sem eles a Atividade "também foi" saía sem ordem.
     const porId={};(viagens||[]).forEach(t=>{porId[t.id]=t});
     return (spots||[]).filter(s=>s&&!estaBloqueado(s.user_id)).map(s=>Object.assign(s,{_pais:plnPaisDoSpot(porId[s.trip_id],s)}))
       // "Spot" que é a própria cidade/país (dado antigo) não é recomendação.
@@ -4170,7 +4171,7 @@ function plnFotoFalhou(img,i){
   const g=(PLN.vis||[])[i];
   if(!g||img.dataset.tentou){img.parentElement.innerHTML=catIcon(g?g.base.category:'food');return}
   img.dataset.tentou='1';
-  fotoParaVer(g.base).then(u=>{if(u&&img.isConnected)img.src=safeUrl(fotoNaLargura(u,200));else if(img.isConnected)img.parentElement.innerHTML=catIcon(g.base.category)});
+  fotoParaVerComTeto(g.base).then(u=>{if(u&&img.isConnected)img.src=safeUrl(fotoNaLargura(u,200));else if(img.isConnected)img.parentElement.innerHTML=catIcon(g.base.category)});
 }
 function plnAba(i){PLN.abaCidade=i<0?'':((PLN.abasCid||[])[i]||'');PLN.cat='';plnPintarLista()}
 function plnCat(c){PLN.cat=c;plnPintarLista()}
@@ -5594,7 +5595,7 @@ async function carregarAtividade(forcar){
       // "também" mentia — você ainda não foi.
       const meu=meuSpotIgual(x.name,cityOf(x));
       if(!meu||(meu.status!=='been'&&meu.status!=='skip'))return;
-      itens.push({tipo:'tambem',user_id:x.user_id,quando:x.created_at,spot:x,frase:x.my_review||''});
+      itens.push({tipo:'tambem',user_id:x.user_id,quando:x.fui_em||x.created_at,spot:x,frase:x.my_review||''});
     });
     const porId={};meus.forEach(m=>{porId[m.id]=m});
     (Array.isArray(coment)?coment:[]).forEach(c=>{
@@ -5822,7 +5823,7 @@ async function init(){
         // recarga em laço.
         const havia=!!S.user;
         if(havia){try{limparDadosLocais()}catch(e){}}
-        S.user=null;S.token=null;tokenExp=0;S.trips=[];S.cidadesMarcadas=[];S.profile=null;DADOS_DA_CONTA=false;CARGA_FALHOU_SEM_DADOS=false;
+        S.user=null;S.token=null;tokenExp=0;S.trips=[];S.cidadesMarcadas=[];S.profile=null;DADOS_DA_CONTA=false;CARGA_FALHOU_SEM_DADOS=false;cancelarRecargaAutomatica();
         if(havia){location.reload();return}
         goTo('login');
       }
@@ -6196,7 +6197,7 @@ async function signOut(){
   // cache local guarda viagens e notas, e num aparelho emprestado isso não
   // pode sobrar pra quem entrar depois.
   limparDadosLocais();
-  DADOS_DA_CONTA=false;CARGA_FALHOU_SEM_DADOS=false;
+  DADOS_DA_CONTA=false;CARGA_FALHOU_SEM_DADOS=false;cancelarRecargaAutomatica();
   // O aparelho deixa de receber os avisos desta conta. Sem isto, quem entrasse
   // depois no mesmo iPhone via na tela de bloqueio os pedidos e comentários
   // da conta anterior — e não conseguia gravar o próprio endereço.
@@ -6370,13 +6371,37 @@ let DADOS_DA_CONTA=false;
 // viagemQueCobre não acha a viagem que existe e o app criaria uma duplicada.
 let CARGA_FALHOU_SEM_DADOS=false;
 let avisoCargaEm=0;
+let recargaPedidaEm=0;
 function viagensCarregadas(){
   if(!CARGA_FALHOU_SEM_DADOS)return true;
   if(Date.now()-avisoCargaEm>3000){
     avisoCargaEm=Date.now();
     toast('Ainda não carregou suas viagens','Tenta de novo em instantes.','alert');
   }
+  // 06/10: a rede pode voltar sem o evento "online" (Wi-Fi trocando, iPhone
+  // acordando). Sem isto, salvar ficava travado até tocar em Viagens.
+  if(S.user&&Date.now()-recargaPedidaEm>5000){
+    recargaPedidaEm=Date.now();
+    loadDashboard();
+  }
   return false;
+}
+// 06/10: 1ª carga falhou sem nada no aparelho: tenta sozinho de novo em
+// 5 s, 15 s e 45 s. Para quando der certo ou quando a conta muda.
+const RECARGA_ESPERAS=[5000,15000,45000];
+let recargaTimer=null,recargaN=0;
+function cancelarRecargaAutomatica(){
+  if(recargaTimer){clearTimeout(recargaTimer);recargaTimer=null}
+  recargaN=0;
+}
+function agendarRecargaAutomatica(){
+  if(recargaTimer||recargaN>=RECARGA_ESPERAS.length||!S.user)return;
+  const uid=S.user.id;
+  recargaTimer=setTimeout(()=>{
+    recargaTimer=null;
+    if(!S.user||S.user.id!==uid||!CARGA_FALHOU_SEM_DADOS)return;
+    loadDashboard();
+  },RECARGA_ESPERAS[recargaN++]);
 }
 // O placar sai de S.trips, e roda tanto com o que está guardado no aparelho
 // quanto com a resposta do banco — antes só com a segunda.
@@ -6680,7 +6705,8 @@ function limparDadosLocais(){
   // do Explorar (CHAVE_RECENTES) entregavam pra quem entrasse depois por onde
   // a conta anterior andou procurando; as marcas de "já vi" do feed
   // (FEED_VISTO) e da Atividade (ATIV_VISTA) escondiam novidade da conta nova.
-  ['spot_explorar_recentes_v1','spot_feed_visto_em','spot_atividade_vista'].forEach(k=>{
+  // spot_checkin_perto_v1 (06/10): guarda posições arredondadas por onde a conta passou.
+  ['spot_explorar_recentes_v1','spot_feed_visto_em','spot_atividade_vista','spot_checkin_perto_v1'].forEach(k=>{
     try{localStorage.removeItem(k)}catch(e){}
   });
 }
@@ -6768,6 +6794,7 @@ async function loadDashboard(){
     // "Tentar de novo" (não "Nenhuma viagem ainda") e trava criar viagem.
     if(!S.trips.length){
       CARGA_FALHOU_SEM_DADOS=true;
+      agendarRecargaAutomatica();
       renderTrips();
       if(!navigator.onLine)pintarAvisoOffline();
       darDadosDeViagens();
@@ -6787,6 +6814,7 @@ async function loadDashboard(){
   S.trips=trips||[];
   DADOS_DA_CONTA=true;
   CARGA_FALHOU_SEM_DADOS=false;
+  cancelarRecargaAutomatica();
   const byId={};
   S.trips.forEach(t=>{t._spots=[];t._spotsLoaded=false;byId[t.id]=t});
   (allSpots||[]).forEach(s=>{const t=byId[s.trip_id];if(t)t._spots.push(s)});
@@ -7211,7 +7239,8 @@ function renderTrips(){
 // nativo recebe o emoji cru e desenha direto, sem carregar imagem de um CDN
 // pra resolver um problema que ele não tem.
 function darDadosDeViagens(){
-  if(!S.user||!DADOS_DA_CONTA){falarComACasca({tipo:'viagens',pronto:false});return}
+  // 06/10: carga falhou sem dados: "carregando", não o vazio de conta nova.
+  if(!S.user||!DADOS_DA_CONTA||(CARGA_FALHOU_SEM_DADOS&&!S.trips.length)){falarComACasca({tipo:'viagens',pronto:false});return}
   const visiveis=S.trips.filter(naAbaViagens);
   const{groups,ordem}=regioesComViagem();
   const regiao=(REGIAO_ATIVA&&groups[REGIAO_ATIVA])?REGIAO_ATIVA:ordem[0];
@@ -9930,10 +9959,9 @@ async function lugaresDosAmigos(area,pontual,cidade){
   });
   lugares.sort((a,b)=>b.foram.length-a.foram.length||b.media-a.media||b.querem.length-a.querem.length
     ||String(a.capa.name).localeCompare(String(b.capa.name),'pt-BR'));
-  // Card sem foto: a do lugar, só pra mostrar, e redesenha quando chegar.
-  lugares.filter(g=>!g.foto).forEach(g=>{
-    fotoParaVer(g.capa).then(u=>{if(u&&!g.foto){g.foto=u;if(EXPLORE.aba==='amigos')renderExploreResults();else darDadosDeExplorar()}});
-  });
+  // 06/10: card sem foto NÃO busca aqui — era uma busca paga por spot de
+  // amigo a cada busca/arrasto (90 ao abrir SP). Quem cura é
+  // conferirFotosDosAmigos, só as 12 primeiras e só quando a lista aparece.
   return{estado:'ok',lugares,amigos:ids.length};
 }
 function lugaresDosAmigosNaCategoria(){
@@ -9990,6 +10018,7 @@ function abrirLugarDosAmigos(i){
 function renderLugaresDosAmigos(body){
   const aviso=avisoDosAmigos();
   if(aviso){body.innerHTML='<div class="empty-state"><div class="ei" data-ic="users"></div><p>'+esc(aviso)+'</p></div>';hydrateIcons(body);return}
+  conferirFotosDosAmigos();   // 06/10: card sem foto busca aqui (12 no máx.), não na carga
   body.innerHTML=lugaresDosAmigosNaCategoria().map((g,i)=>{
     const s=g.capa;
     const foto=safeUrl(fotoNaLargura(semChaveDoPlaces(g.foto),larguraNaTela(window.innerWidth-40)));
@@ -10013,8 +10042,9 @@ function renderLugaresDosAmigos(body){
 // atual do lugar e redesenha as duas telas.
 let REDESENHO_AMIGOS_AREA=null;
 function conferirFotosDosAmigos(){
+  // 06/10: fora da aba Amigos (mapa do Explorar) redesenha pelo darDadosDeExplorar.
   const redesenhar=()=>{clearTimeout(REDESENHO_AMIGOS_AREA);REDESENHO_AMIGOS_AREA=setTimeout(()=>{
-    if(EXPLORE.aba==='amigos'){try{renderExploreResults()}catch(e){}}},300)};
+    try{if(EXPLORE.aba==='amigos')renderExploreResults();else darDadosDeExplorar()}catch(e){}},300)};
   const trocar=g=>fotoParaVer(g.capa).then(u=>{if(u&&u!==g.foto){g.foto=u;redesenhar()}});
   // Só as primeiras 12: cada teste é uma foto paga, e ninguém vê o fim da
   // lista sem rolar — as de baixo seguem pelo caminho de antes.
@@ -10031,7 +10061,7 @@ function fotoDoCardDoAmigoFalhou(img,i){
   const g=lugaresDosAmigosNaCategoria()[i];
   if(!g||img.dataset.tentou){img.remove();return}
   img.dataset.tentou='1';
-  fotoParaVer(g.capa).then(u=>{if(u&&img.isConnected){g.foto=u;img.src=safeUrl(fotoNaLargura(u,larguraNaTela(window.innerWidth-40)))}else if(img.isConnected)img.remove()});
+  fotoParaVerComTeto(g.capa).then(u=>{if(u&&img.isConnected){g.foto=u;img.src=safeUrl(fotoNaLargura(u,larguraNaTela(window.innerWidth-40)))}else if(img.isConnected)img.remove()});
 }
 async function carregarAmigosDaArea(meu,area,pontual,cidade){
   AMIGOS_AREA={estado:'carregando',lugares:[],amigos:0};
@@ -10209,6 +10239,7 @@ function exmMontarTodos(){const m=EXM.modo;EXM.modo='lista';try{return exmMontar
 function exmMontarItens(){
   const itens=[];
   const grupos=lugaresDosAmigosNaCategoria();
+  conferirFotosDosAmigos();   // 06/10: foto que falta, só pelo caminho com teto de 12
   grupos.forEach((g,gi)=>{
     const c=g.capa;
     itens.push({tipo:'amigo',g,gi,nome:c.name||'',lat:c.lat!=null?Number(c.lat):null,lng:c.lng!=null?Number(c.lng):null,
@@ -10350,7 +10381,7 @@ function exmFotoFalhou(img,i,larg){
   if(!it||img.dataset.tentou){img.remove();return}
   img.dataset.tentou='1';
   const alvo=it.g?it.g.capa:{name:it.nome,city:it.cidade};
-  fotoParaVer(alvo).then(u=>{if(u&&img.isConnected&&u!==it.foto){exmGuardarFoto(it,u);img.src=safeUrl(fotoNaLargura(u,larg))}else if(img.isConnected)img.remove()});
+  fotoParaVerComTeto(alvo).then(u=>{if(u&&img.isConnected&&u!==it.foto){exmGuardarFoto(it,u);img.src=safeUrl(fotoNaLargura(u,larg))}else if(img.isConnected)img.remove()});
 }
 function exmTitulo(){
   const t=document.getElementById('exmTitulo'),c=document.getElementById('exmConta');if(!t)return;
@@ -10981,6 +11012,25 @@ function pickNearbyResult(i){
 // pergunta de novo pelo MESMO lugar por 4h — sem virar notificação chata.
 const CHECKIN={place:null};
 let lastCheckinCheck=0;
+// 06/10: cache do searchNearby do check-in por posição arredondada, 30 min.
+// Memória + aparelho (o app reabre o WebView a toda hora); guarda só 5 posições.
+const CHECKIN_CACHE='spot_checkin_perto_v1',CHECKIN_VALIDADE=30*60*1000;
+const CHECKIN_MEM={};
+function lerCheckinGuardado(k){
+  let e=CHECKIN_MEM[k];
+  if(!e){try{e=(JSON.parse(localStorage.getItem(CHECKIN_CACHE)||'{}')||{})[k]}catch(x){}}
+  return e&&Date.now()-e.t<CHECKIN_VALIDADE?e.data:null;
+}
+function guardarCheckin(k,data){
+  const e={t:Date.now(),data};
+  CHECKIN_MEM[k]=e;
+  try{
+    const m=JSON.parse(localStorage.getItem(CHECKIN_CACHE)||'{}')||{};
+    m[k]=e;
+    Object.keys(m).sort((a,b)=>m[b].t-m[a].t).slice(5).forEach(x=>delete m[x]);
+    localStorage.setItem(CHECKIN_CACHE,JSON.stringify(m));
+  }catch(x){}
+}
 function normName(s){return String(s||'').toLowerCase().normalize('NFD').replace(/\p{Diacritic}/gu,'').trim()}
 function maybeShowCheckin(){
   if(!navigator.geolocation)return;
@@ -10990,6 +11040,11 @@ function maybeShowCheckin(){
   navigator.geolocation.getCurrentPosition(async(pos)=>{
     const{latitude,longitude}=pos.coords;
     try{
+      // 06/10: parado no mesmo lugar (~100 m, 3 casas), a resposta vale 30 min.
+      // Antes era um searchNearby pago a cada 2 min de app aberto.
+      const ckChave=latitude.toFixed(3)+','+longitude.toFixed(3);
+      let data=lerCheckinGuardado(ckChave);
+      if(!data){
       const resp=await googlePlaces('searchNearby',{
         method:'POST',
         headers:{'Content-Type':'application/json','X-Goog-FieldMask':'places.displayName,places.formattedAddress,places.addressComponents,places.rating,places.userRatingCount,places.types,places.websiteUri,places.googleMapsUri,places.location,places.photos'},
@@ -11003,7 +11058,9 @@ function maybeShowCheckin(){
         // caso real de uso). Hotel também saiu — não é "check-in" o alvo ali.
         body:JSON.stringify({includedTypes:['restaurant','bakery','cafe','bar'],maxResultCount:15,languageCode:'pt-BR',locationRestriction:{circle:{center:{latitude,longitude},radius:45}}})
       });
-      const data=await resp.json();
+      data=await resp.json();
+      if(resp.ok&&data&&!data.error)guardarCheckin(ckChave,data);
+      }
       // O locationRestriction do Google é só uma dica de área — não é garantia
       // de raio exato. Recalcula a distância real (Haversine) e reforça um
       // limite rígido de 40m — mais apertado que antes (era 55m), porque um
@@ -13008,6 +13065,8 @@ function prepQuickVisit(){
   renderCountryList2('');
 }
 async function markVisited(){
+  // 06/10: com a carga falha, S.trips vazio duplicaria viagem que já existe.
+  if(!viagensCarregadas())return;
   if(!paisesSelecionados.size)return;
   if(quickVisitMode==='home')return saveHomeCountry([...paisesSelecionados][0]);
   const jaTem=new Set(visitedCountryNames());
@@ -14336,6 +14395,8 @@ async function corrigirPaisesDesconhecidos(){
 // propósito: os spots que ela travou ganham uma nova tentativa.
 const FOTO_TENTADA='spot_foto_tentada_v2';
 const FOTO_TETO=6;
+const FOTO_TETO_SESSAO=12;   // 06/10: soma de todas as passadas numa abertura do app
+let fotosBuscadasNaSessao=0;
 const FOTO_DE_NOVO=3*24*60*60*1000;
 function fotosJaTentadas(){
   let m={};
@@ -14377,14 +14438,36 @@ function fotoParaVer(s){
   FOTO_VISTA.set(k,p);
   return p;
 }
+// 06/10: miniatura quebrada (onerror) virava busca paga sem limite — numa
+// queda do /api/place-photo, cada <img> da tela pedia uma. Cada chave cura
+// uma vez por sessão e a sessão inteira cura no máximo CURA_TETO_SESSAO.
+// O onerror não diz se foi 429/5xx, então o que segura é só o teto.
+const CURA_TETO_SESSAO=20;
+const CURA_TENTADA=new Set();
+function podeCurarFoto(chave){
+  if(CURA_TENTADA.has(chave)||CURA_TENTADA.size>=CURA_TETO_SESSAO)return false;
+  CURA_TENTADA.add(chave);
+  return true;
+}
+function fotoParaVerComTeto(s){
+  if(!s||!s.name)return Promise.resolve('');
+  const k=normName(s.name)+'|'+normName(cityOf(s)||'');
+  if(FOTO_VISTA.has(k))return FOTO_VISTA.get(k);   // já buscada: sai de graça
+  if(!podeCurarFoto('ver|'+k))return Promise.resolve('');
+  return fotoParaVer(s);
+}
 async function buscarFotosQueFaltam(){
   if(!S.user)return;
   const feitos=fotosJaTentadas();
-  const alvos=allSpotsFlat().filter(s=>s&&s.name&&!s.photo_url&&!feitos.has(s.id)).slice(0,FOTO_TETO);
+  // 06/10: teto por SESSÃO (cada toque em Viagens chamava de novo) e marca
+  // ANTES do laço — dois toques seguidos pegavam os mesmos 6 spots, pagando dobrado.
+  const vaga=FOTO_TETO_SESSAO-fotosBuscadasNaSessao;
+  if(vaga<=0)return;
+  const alvos=allSpotsFlat().filter(s=>s&&s.name&&!s.photo_url&&!feitos.has(s.id)).slice(0,Math.min(FOTO_TETO,vaga));
   if(!alvos.length)return;
-  const tentados=[];
+  fotosBuscadasNaSessao+=alvos.length;
+  marcarFotoTentada(alvos.map(s=>s.id));
   for(const s of alvos){
-    tentados.push(s.id);
     try{
       const url=await healSpotPhoto(s.id);
       // Se achou, redesenha o que estiver na tela — senão a foto só apareceria
@@ -14395,7 +14478,6 @@ async function buscarFotosQueFaltam(){
       }
     }catch(e){/* uma foto que falha nao pode parar as outras */}
   }
-  marcarFotoTentada(tentados);
 }
 // soCredito=true: a foto está boa, o que falta é o nome de quem a tirou.
 // Nesse modo a URL da foto não é regravada — trocar uma foto que funciona
@@ -14440,8 +14522,12 @@ async function healSpotPhoto(id,soCredito){
     // automático (ver autoBackfillPlaceLinks).
     if(s.category==='food'&&!s.insta_checked){
       const googleJaEInstagram=/instagram\.com/i.test(p.websiteUri||'');
+      // 06/10: a busca do Instagram (paga) entra no mesmo teto do backfill;
+      // estourado, guarda só o site e o backfill tenta numa próxima abertura.
+      const podeBrave=!googleJaEInstagram&&backfillFeitosNaSessao<BACKFILL_TETO_SESSAO;
+      if(podeBrave)backfillFeitosNaSessao++;
       const r=googleJaEInstagram?{url:p.websiteUri,conclusivo:true}
-                                :await findInstagramViaBrave(s.name,cityOf(s),p.websiteUri||'');
+             :podeBrave?await findInstagramViaBrave(s.name,cityOf(s),p.websiteUri||''):{url:'',conclusivo:false};
       if(r.url||r.conclusivo){
         const finalLink=r.url||p.websiteUri||'';
         patch.website_url=finalLink;s.website_url=finalLink;
@@ -14516,6 +14602,7 @@ function onSpotPhotoError(img,id,cat){
   }
   const box=img.parentElement;
   thumbFallback(img,cat);
+  if(!podeCurarFoto('meu|'+id))return;   // 06/10: teto de curas por sessão
   healSpotPhoto(id).then(url=>{
     if(url&&box)box.innerHTML='<img src="'+escUrl(fotoNaLargura(url,220))+'" alt="" onerror="this.remove()" loading="lazy" decoding="async" style="width:100%;height:100%;object-fit:cover;border-radius:inherit">';
   });
@@ -14874,17 +14961,22 @@ let AMIGOS_TOTAL = 0;
 //   · falha em silêncio. Isso é enfeite de tela, não pode quebrar nada.
 const COORD_TENTADOS = new Set();
 let coordRodando = false;
+// 06/10: cada toque em Perfil pedia mais 6; a sessão inteira para em 12.
+const COORD_TETO_SESSAO = 12;
 
 async function preencherCoordenadasQueFaltam(limite){
   if(coordRodando||!S.user)return;
+  const vaga=COORD_TETO_SESSAO-COORD_TENTADOS.size;
+  if(vaga<=0)return;
   const faltam=allSpotsFlat().filter(function(s){
     return s.lat==null&&!COORD_TENTADOS.has(s.id)&&(s.address||s.name);
   });
   if(!faltam.length)return;
   coordRodando=true;
+  const lote=faltam.slice(0,Math.min(limite||6,vaga));
+  lote.forEach(function(s){COORD_TENTADOS.add(s.id)});   // marca antes do laço
   try{
-    for(const s of faltam.slice(0,limite||6)){
-      COORD_TENTADOS.add(s.id);
+    for(const s of lote){
       // O endereço é o que desambigua. Sem ele, o nome sozinho com a cidade.
       const consulta=[s.name,s.address||cityOf(s)].filter(Boolean).join(', ');
       let r;
@@ -15887,6 +15979,7 @@ async function tocouNoPais(geo){
 // assim que o app guarda 'estive aqui' sem viagem de verdade (ver
 // isQuickVisit).
 async function marcarPaisVisitado(nome){
+  if(!viagensCarregadas())return; // 06/10: idem markVisited
   const{data,error}=await dbInsertMany('trips',[{user_id:S.user.id,name:nome,
     destinations:[nome],dates:'__quickvisit__',status:'done'}]);
   if(error||!data||!data.length){toast('Erro','Não consegui marcar. Tenta de novo.');return}
@@ -17201,7 +17294,7 @@ function fotoDoFeedFalhou(img,i){
   const it=itemDoFeed(i),sp=it&&it.spot;
   if(!sp||img.dataset.tentou){img.remove();return}
   img.dataset.tentou='1';
-  fotoParaVer(sp).then(u=>{if(u&&img.isConnected){sp._fotoVista=u;img.src=safeUrl(fotoNaLargura(u,larguraNaTela(window.innerWidth-40)))}else if(img.isConnected)img.remove()});
+  fotoParaVerComTeto(sp).then(u=>{if(u&&img.isConnected){sp._fotoVista=u;img.src=safeUrl(fotoNaLargura(u,larguraNaTela(window.innerWidth-40)))}else if(img.isConnected)img.remove()});
 }
 function cardDeVisita(it,i,nome){
   const sp=it.spot;
@@ -17784,7 +17877,7 @@ function fotoDaCidadeDoAmigoFalhou(img,ci,k){
   const g=(FRIEND.cidadesDaTela||[])[ci],sp=g&&g.spots[k];
   if(!sp||img.dataset.tentou){img.remove();return}
   img.dataset.tentou='1';
-  fotoParaVer(sp).then(u=>{if(u&&img.isConnected){sp._fotoVista=u;img.src=safeUrl(fotoNaLargura(u,160))}else if(img.isConnected)img.remove()});
+  fotoParaVerComTeto(sp).then(u=>{if(u&&img.isConnected){sp._fotoVista=u;img.src=safeUrl(fotoNaLargura(u,160))}else if(img.isConnected)img.remove()});
 }
 function linhaDeCidadeDoAmigo(g,ci){
   // Uma foto por spot, até três — nunca a mesma repetida pra encher (o Lucas,
@@ -17874,7 +17967,7 @@ function fotoDaGradeFalhou(img,i){
   const s=(FRIEND.grade||[])[i];
   if(!s||img.dataset.tentou){img.parentElement.innerHTML=catIcon((s&&s.category)||'food');return}
   img.dataset.tentou='1';
-  fotoParaVer(s).then(u=>{if(u&&img.isConnected){s._fotoVista=u;img.src=safeUrl(fotoNaLargura(u,400))}else if(img.isConnected)img.parentElement.innerHTML=catIcon(s.category)});
+  fotoParaVerComTeto(s).then(u=>{if(u&&img.isConnected){s._fotoVista=u;img.src=safeUrl(fotoNaLargura(u,400))}else if(img.isConnected)img.parentElement.innerHTML=catIcon(s.category)});
 }
 function abrirSpotDaGrade(i){
   const s=(FRIEND.grade||[])[i];if(!s)return;
