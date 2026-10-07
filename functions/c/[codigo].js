@@ -70,7 +70,7 @@ export async function onRequestGet(context) {
   const titulo = nome ? (nome + ' te convidou pro Spot') : 'Convite pro Spot';
   // 07/10: "2 spots em 1 cidade, cada um com a nota de quem foi" não
   // convidava ninguém. Diz o que a pessoa ganha e onde baixar.
-  const primeiro = nome ? nome.replace(/^@/, '').split(/s+/)[0] : '';
+  const primeiro = nome ? nome.replace(/^@/, '').split(/\s+/)[0] : '';
   const descricao = n && primeiro
     ? ('Veja ' + (n === 1 ? 'o spot' : 'os ' + n + ' spots') + ' que ' + primeiro + ' recomenda e guarde os seus. Grátis no iPhone.')
     : 'Veja os spots que seus amigos recomendam e guarde os seus. Grátis no iPhone.';
