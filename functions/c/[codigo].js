@@ -68,13 +68,22 @@ export async function onRequestGet(context) {
   const n = p ? Number(p.lugares) || 0 : 0;
   const nc = p ? Number(p.cidades) || 0 : 0;
   const titulo = nome ? (nome + ' te convidou pro Spot') : 'Convite pro Spot';
-  const descricao = n
-    ? (n + (n === 1 ? ' spot' : ' spots') + (nc ? (' em ' + nc + (nc === 1 ? ' cidade' : ' cidades')) : '')
-       + ', cada um com a nota de quem foi.')
-    : 'Os lugares favoritos de quem você conhece.';
+  // 07/10: "2 spots em 1 cidade, cada um com a nota de quem foi" não
+  // convidava ninguém. Diz o que a pessoa ganha e onde baixar.
+  const primeiro = nome ? nome.replace(/^@/, '').split(/s+/)[0] : '';
+  const descricao = n && primeiro
+    ? ('Veja ' + (n === 1 ? 'o spot' : 'os ' + n + ' spots') + ' que ' + primeiro + ' recomenda e guarde os seus. Grátis no iPhone.')
+    : 'Veja os spots que seus amigos recomendam e guarde os seus. Grátis no iPhone.';
   // A foto de um lugar da pessoa, quando houver — é o que faz a prévia
   // parecer o convite dela e não um cartaz do app.
-  const foto = (p && Array.isArray(p.fotos) && fotoSegura(p.fotos[0])) || (origem + '/compartilhar-v3.png');
+  const fotoDele = p && Array.isArray(p.fotos) && fotoSegura(p.fotos[0]);
+  const foto = fotoDele || (origem + '/compartilhar-v3.png');
+  // O WhatsApp monta a prévia no celular de quem envia e, sem o tamanho da
+  // imagem, às vezes desiste da foto (07/10: o convite do pai do Lucas chegou
+  // só com texto). A imagem padrão tem tamanho conhecido.
+  const tamanho = fotoDele ? '' : '<meta property="og:image:width" content="1200"><meta property="og:image:height" content="630"><meta property="og:image:type" content="image/png">';
+  // og:url é ESTA página: apontar pra /?c= fazia o robô ler a tela do app.
+  const aqui = origem + '/c/' + encodeURIComponent(codigo);
 
   const html = '<!DOCTYPE html><html lang="pt-BR"><head><meta charset="utf-8">'
     + '<meta name="viewport" content="width=device-width,initial-scale=1">'
@@ -84,8 +93,8 @@ export async function onRequestGet(context) {
     + '<meta property="og:site_name" content="Spot">'
     + '<meta property="og:title" content="' + esc(titulo) + '">'
     + '<meta property="og:description" content="' + esc(descricao) + '">'
-    + '<meta property="og:image" content="' + esc(foto) + '">'
-    + '<meta property="og:url" content="' + esc(destino) + '">'
+    + '<meta property="og:image" content="' + esc(foto) + '">' + tamanho
+    + '<meta property="og:url" content="' + esc(aqui) + '">'
     + '<meta name="twitter:card" content="summary_large_image">'
     + '<meta name="twitter:title" content="' + esc(titulo) + '">'
     + '<meta name="twitter:description" content="' + esc(descricao) + '">'
@@ -93,7 +102,7 @@ export async function onRequestGet(context) {
     // Quem chegou com navegador segue pro app. O robô não executa nada disso
     // e fica só com as etiquetas — que é o ponto.
     + '<meta http-equiv="refresh" content="0;url=' + esc(destino) + '">'
-    + '<link rel="canonical" href="' + esc(destino) + '">'
+    + '<link rel="canonical" href="' + esc(aqui) + '">'
     + '</head><body style="font-family:system-ui;background:#F5F5F3;color:#111;padding:40px">'
     + '<p>' + esc(titulo) + '</p>'
     + '<p><a href="' + esc(destino) + '">Abrir o convite</a></p>'

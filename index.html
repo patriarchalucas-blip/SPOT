@@ -7094,7 +7094,7 @@ async function convidarAmigo(){
   if(!codigo){toast('Não deu','Não consegui criar o convite agora.','alert');return}
   CONVIDOU=true;
   const nome=(S.profile&&S.profile.display_name)||'Um amigo';
-  await mandarTextoPraFora(nome+' te convidou pro Spot — os lugares favoritos de quem você conhece.\n'+linkDoConvite(codigo),'Seu link de convite');
+  await mandarTextoPraFora(textoDoConvite(nome)+'\n'+linkDoConvite(codigo),'Seu link de convite');
   if(document.getElementById('friends')&&document.getElementById('friends').classList.contains('active'))loadFriends();
 }
 let CONVIDOU=false;
@@ -18327,6 +18327,11 @@ function novoCodigoConvite(){
 function linkDoConvite(codigo){
   return location.origin+'/c/'+encodeURIComponent(codigo);
 }
+// O texto que vai junto do link (07/10): diz o que é o app e o passo que
+// todo mundo pulava — instalar e tocar no link DE NOVO pra virar amigo.
+function textoDoConvite(nome){
+  return (nome||'Uma pessoa amiga')+' te convidou pro Spot, o app pra guardar os lugares onde você foi e ver os que os amigos recomendam. Baixe no iPhone e toque no link pra virar amigo lá dentro:';
+}
 // Reaproveita o convite ativo se já existir — o link que você já mandou pros
 // outros continua valendo em vez de virar lixo a cada toque no botão.
 async function obterOuCriarConvite(){
@@ -18352,7 +18357,7 @@ async function compartilharConvite(){
   if(!codigo){toast('Erro','Não foi possível criar o convite. Falta rodar a migração 011?');return}
   const url=linkDoConvite(codigo);
   const nome=(S.profile&&S.profile.display_name)||'Um amigo';
-  const texto=nome+' te convidou pro Spot — os lugares favoritos de quem você conhece.';
+  const texto=textoDoConvite(nome);
   // Mesmo caminho de "compartilhar cidade": folha nativa, área de transferência,
   // folha do app. Estava escrito aqui dentro; com dois usos virou uma função só,
   // e de brinde o convite passou a abrir a folha NATIVA dentro do app — antes
