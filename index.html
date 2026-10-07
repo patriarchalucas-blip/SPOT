@@ -9502,6 +9502,30 @@ function exploreEm(cidade,rotulo){
 // A cidade onde a pessoa está AGORA — só se a localização já estiver
 // liberada (nunca dispara o pedido). Guardada por 30 min: sem isso cada
 // abertura do Explorar seria uma consulta paga ao Google.
+// POSIÇÃO SEM PERGUNTAR (07/10). Dentro do app, navigator.geolocation faz o
+// iPhone perguntar "meuspot.app quer usar sua localização" A CADA abertura —
+// o WebView não guarda a resposta. O Lucas via a pergunta toda vez que abria.
+// Aqui: no app, quem responde é a casca (permissão do app, que o iPhone
+// lembra; se não foi dada, volta null sem perguntar). No navegador, só usa se
+// a permissão já foi dada. Pedir de verdade só no toque da pessoa
+// (onbPedirLocal, "usar minha localização").
+async function posicaoSemPerguntar(){
+  if(naCasca()){
+    if(!window.cascaTemLocal)return null;
+    return await new Promise(ok=>{
+      const fim=setTimeout(()=>ok(null),4000);
+      window.addEventListener('spot-local-pronto',()=>{clearTimeout(fim);ok(window.__spotLocal||null)},{once:true});
+      falarComACasca({tipo:'pedir-local'});
+    });
+  }
+  try{
+    if(!navigator.geolocation||!navigator.permissions||!navigator.permissions.query)return null;
+    const st=await navigator.permissions.query({name:'geolocation'});
+    if(!st||st.state!=='granted')return null;
+    const p=await new Promise((ok,nao)=>navigator.geolocation.getCurrentPosition(ok,nao,{timeout:6000,maximumAge:300000}));
+    return{lat:p.coords.latitude,lng:p.coords.longitude};
+  }catch(e){return null}
+}
 async function cidadeOndeEstou(){
   try{
     const g=JSON.parse(sessionStorage.getItem('spot_cidade_aqui')||'null');
@@ -10644,8 +10668,8 @@ function exmEuNoMapa(){
 }
 async function exmRecentralizar(){
   let a=window.__spotAqui;
-  if(!a&&navigator.geolocation){
-    a=await new Promise(ok=>navigator.geolocation.getCurrentPosition(p=>ok({lat:p.coords.latitude,lng:p.coords.longitude}),()=>ok(null),{timeout:8000,maximumAge:300000}));
+  if(!a){
+    a=await posicaoSemPerguntar();
     if(a)window.__spotAqui=a;
   }
   if(!a){toast('Sem localização','Libere a localização pra ver o que tem perto de você.','alert');return}
@@ -10983,8 +11007,9 @@ function showNearbySuggestions(){
   // Sem API de localização, sem permissão, sem HTTPS (não deve ocorrer em
   // produção) — qualquer um desses casos só mantém o texto padrão. Nunca
   // impede a busca manual normal.
-  if(!navigator.geolocation)return;
-  navigator.geolocation.getCurrentPosition(async(pos)=>{
+  posicaoSemPerguntar().then(async(aq)=>{
+    if(!aq)return;
+    const pos={coords:{latitude:aq.lat,longitude:aq.lng}};
     const si=document.getElementById('placeSearch');
     if(si&&si.value.trim())return; // já digitou algo enquanto localizava
     const{latitude,longitude}=pos.coords;
@@ -11013,7 +11038,7 @@ function showNearbySuggestions(){
         return '<div class="search-result" onclick="pickNearbyResult('+i+')">'+thumb+'<div><div class="sr-name">'+esc(p.name)+'</div><div class="sr-meta">'+esc(p.address.substring(0,50)+(p.rating_google?' · '+p.rating_google:''))+'</div></div></div>';
       }).join('');
     }catch(e){console.error('showNearbySuggestions',e)}
-  },function(){/* negada ou indisponível: fica no texto padrão, sem drama */},{timeout:6000,maximumAge:5*60*1000});
+  }).catch(function(){/* sem posição: fica no texto padrão */});
 }
 function pickNearbyResult(i){
   const p=S_nearbyResults[i];if(!p)return;
@@ -11048,11 +11073,12 @@ function guardarCheckin(k,data){
 }
 function normName(s){return String(s||'').toLowerCase().normalize('NFD').replace(/\p{Diacritic}/gu,'').trim()}
 function maybeShowCheckin(){
-  if(!navigator.geolocation)return;
   if(document.getElementById('checkinBanner').style.display==='flex')return; // já tem um aberto
   if(Date.now()-lastCheckinCheck<2*60*1000)return; // loadDashboard roda o tempo todo — não martela localização/API
   lastCheckinCheck=Date.now();
-  navigator.geolocation.getCurrentPosition(async(pos)=>{
+  posicaoSemPerguntar().then(async(aq)=>{
+    if(!aq)return;
+    const pos={coords:{latitude:aq.lat,longitude:aq.lng}};
     const{latitude,longitude}=pos.coords;
     try{
       // 06/10: parado no mesmo lugar (~100 m, 3 casas), a resposta vale 30 min.
@@ -11117,11 +11143,10 @@ function maybeShowCheckin(){
       document.getElementById('checkinBanner').style.display='flex';
       darDadosDeViagens();
     }catch(e){console.error('maybeShowCheckin',e)}
-  // maximumAge:0 força uma leitura fresca do GPS — com cache de minutos, se
-  // você tivesse passado por um lugar e andado embora, o app continuava
-  // achando que você ainda estava lá. enableHighAccuracy pede a leitura mais
-  // precisa do aparelho (mais lenta, mas é exatamente o que "check-in" exige).
-  },function(){/* negada ou indisponível: sem banner, sem drama */},{timeout:8000,maximumAge:0,enableHighAccuracy:true});
+  // A posição vem de posicaoSemPerguntar (07/10): no app, a última leitura
+  // do iPhone de até 10 min — trocada pela leitura fresca de antes, que
+  // fazia o iPhone perguntar a permissão a cada abertura.
+  }).catch(function(){/* sem posição: sem banner */});
 }
 function checkinIgnore(){
   document.getElementById('checkinBanner').style.display='none';
