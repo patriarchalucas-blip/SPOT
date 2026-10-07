@@ -273,19 +273,33 @@ export default function TelaViagens({ dados, ocupado, acao }) {
       <View style={[e.mapaArea, { paddingTop: 18 }]}>
         <View style={e.topoLinha}>
           <Text style={e.marca}>SPOT</Text>
-          <Pressable
-            onPress={() => acao('perfil')}
-            accessibilityRole="button"
-            accessibilityLabel="Abrir seu perfil"
-          >
-            {d.avatar ? (
-              <Image source={{ uri: d.avatar }} style={e.avatar} />
-            ) : (
-              <View style={e.avatar}>
-                <Text style={e.avatarTxt}>{d.inicial}</Text>
-              </View>
-            )}
-          </Pressable>
+          <View style={e.topoAcoes}>
+            {/* 07/10: o Adicionar ficava no FIM da tela, depois de todas as
+                viagens — quem tinha várias nunca via. */}
+            <Pressable
+              onPress={() => acao('novoLugar')}
+              style={({ pressed }) => [e.mais, pressed && { opacity: 0.6 }]}
+              accessibilityRole="button"
+              accessibilityLabel="Adicionar"
+            >
+              <Svg width={22} height={22} viewBox="0 0 24 24">
+                <Path d="M12 5.5v13M5.5 12h13" stroke={INK} strokeWidth={1.8} strokeLinecap="round" />
+              </Svg>
+            </Pressable>
+            <Pressable
+              onPress={() => acao('perfil')}
+              accessibilityRole="button"
+              accessibilityLabel="Abrir seu perfil"
+            >
+              {d.avatar ? (
+                <Image source={{ uri: d.avatar }} style={e.avatar} />
+              ) : (
+                <View style={e.avatar}>
+                  <Text style={e.avatarTxt}>{d.inicial}</Text>
+                </View>
+              )}
+            </Pressable>
+          </View>
         </View>
         <Pressable
           onPress={() => acao('mapa')}
@@ -441,6 +455,11 @@ const e = StyleSheet.create({
   // 76 de altura reduzido a 20px na tela. 100×20/76 = 26, e 6×20/76 = 1,6.
   marca: { fontFamily: 'Cinzel', fontSize: 26, lineHeight: 30, color: GREEN, letterSpacing: 1.6 },
   mapa: { marginTop: 24 },
+  topoAcoes: { flexDirection: 'row', alignItems: 'center', gap: 12 },
+  mais: {
+    width: 40, height: 40, borderRadius: 20, backgroundColor: BASE,
+    alignItems: 'center', justifyContent: 'center',
+  },
   avatar: {
     width: 40, height: 40, borderRadius: 20, backgroundColor: GREEN,
     alignItems: 'center', justifyContent: 'center',

@@ -224,6 +224,9 @@ body.tem-apple .btn-apple{display:flex}
 .dash-mapa-fade{display:none}
 .dash-topo-linha{position:absolute;top:18px;left:20px;right:20px;display:flex;
   align-items:center;justify-content:space-between;z-index:2}
+.dash-topo-acoes{display:flex;align-items:center;gap:12px}
+.dash-mais{width:40px;height:40px;border-radius:50%;border:0;padding:0;background:var(--base);color:var(--ink);display:flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0}
+.dash-mais svg,.dash-mais svg.ic{width:22px;height:22px}
 
 /* ═══ O PLACAR VIRA CARD ═══════════════════════════════════════════════
    Antes eram três números soltos na página e, embaixo deles, uma linha
@@ -2613,7 +2616,11 @@ body.exm .exm-filtros{position:relative;z-index:1}
     <div class="dash-mapa-fade"></div>
     <div class="dash-topo-linha">
       <svg class="dash-wordmark" viewBox="3 77 273 76" role="img" aria-label="Spot"><text x="0" y="150" font-family="Cinzel" font-weight="500" font-size="100" letter-spacing="6" fill="#0B3D2E">SPOT</text></svg>
-      <div class="avatar" id="dashAvatar" onclick="goTo('profile');loadProfile()" role="button" tabindex="0" aria-label="Abrir seu perfil">?</div>
+      <div class="dash-topo-acoes">
+        <!-- 07/10: o Adicionar ficava no FIM da tela, depois de todas as viagens. -->
+        <button class="dash-mais" onclick="adicionarDoTopo()" data-ic="plus" aria-label="Adicionar"></button>
+        <div class="avatar" id="dashAvatar" onclick="goTo('profile');loadProfile()" role="button" tabindex="0" aria-label="Abrir seu perfil">?</div>
+      </div>
     </div>
   </div>
     <div class="placar-card" id="dashPlacar">
@@ -7361,7 +7368,7 @@ window.acaoDeViagens=function(acao,valor){
   // 10a (06/10): o "Adicionar spot" nativo abre a folha Um spot / Cidades /
   // Países — é site, chega sem build. Quem ainda não tem spot nenhum vai
   // direto pro spot (o botão de lá é o "Seu primeiro spot").
-  if(acao==='novoLugar'){if(allSpotsFlat().length)abrirFolhaAdicionar();else comecarSpotSemViagem();return}
+  if(acao==='novoLugar'){adicionarDoTopo();return}
   if(acao==='importar'){impAbrir('');return}
   if(acao==='checkinAdd'){checkinAdd();return}
   if(acao==='checkinIgnorar'){checkinIgnore();return}
@@ -16222,6 +16229,9 @@ function depoisDeMudarCidades(paisesNovos){
 }
 
 // ── 10a · a folha "Adicionar" ──
+// O + do topo da aba Viagens (site e nativo) e o Adicionar do fim da lista.
+// Sem spot nenhum, vai direto pro spot.
+function adicionarDoTopo(){if(allSpotsFlat().length)abrirFolhaAdicionar();else comecarSpotSemViagem()}
 function abrirFolhaAdicionar(){
   if(!CV_LIGADO||!S.user){comecarSpotSemViagem();return}
   const n=visitedCountryNames().length;

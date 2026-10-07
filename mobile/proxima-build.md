@@ -12,6 +12,8 @@ pra "Já compilado".
 
 ## Na fila
 
+- **"+" no topo da aba Viagens** (`TelaViagens.js`, ao lado do avatar → `acao('novoLugar')`), feito no código em 07/10. O "Adicionar spot" ficava só no fim da tela, depois de todas as viagens; o Lucas reclamou que "arrumamos e não mudou nada" — a arrumação de 05/10 tinha sido só no site, e a aba Viagens do iPhone é nativa.
+
 - Ainda só com app novo (revisão de 06/10):
   - **Páginas /c/ e /l/ usarem spot://** no botão — só quando a build 21 estiver na maioria (as antigas não entendem o esquema).
   - **Toque na notificação de comentário** abrir o spot comentado (mandar `spot_id` no `data` em notificar.js e tratar em `aoTocar`).
