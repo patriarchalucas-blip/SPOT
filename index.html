@@ -10541,7 +10541,7 @@ async function exmPrepararMapa(){
     const chave=await chaveDoMapa();if(!chave)return null;
     await carregarMapaJS(chave);if(!window.google||!google.maps)return null;
     EXM.mapa=new google.maps.Map(document.getElementById('exmMapa'),{
-      styles:ESTILO_DO_MAPA,disableDefaultUI:true,gestureHandling:'greedy',clickableIcons:false,
+      styles:ESTILO_DO_EXPLORAR,disableDefaultUI:true,gestureHandling:'greedy',clickableIcons:false,
       center:{lat:-23.55,lng:-46.63},zoom:12,backgroundColor:'#E4E8E4'});
     EXM.mapa.addListener('click',()=>{if(EXM.sel>=0){EXM.sel=-1;exmDesenhar();exmIrPara('baixa')}});
     EXM.mapa.addListener('idle',()=>{exmAgendar();exmTalvezBuscarNaArea()});
@@ -15219,6 +15219,27 @@ const ESTILO_DO_MAPA=[
   {featureType:'road',elementType:'labels',stylers:[{visibility:'off'}]},
   {elementType:'labels.text.fill',stylers:[{color:'#6B6B67'}]},
   {elementType:'labels.text.stroke',stylers:[{visibility:'off'}]}
+];
+
+// O Explorar é pra se achar na cidade (07/10, pedido do Lucas: "popular as
+// ruas"): nome de rua e de bairro aparecem, a rua se destaca do fundo e as
+// grandes ficam um tom mais marcadas. Pontos de interesse do Google seguem
+// fora — os pinos são os nossos. Só cinzas do sistema, nenhuma cor nova.
+const ESTILO_DO_EXPLORAR=[
+  {elementType:'labels.icon',stylers:[{visibility:'off'}]},
+  {featureType:'poi',stylers:[{visibility:'off'}]},
+  {featureType:'transit',stylers:[{visibility:'off'}]},
+  {featureType:'administrative',elementType:'geometry',stylers:[{visibility:'off'}]},
+  {featureType:'landscape',elementType:'geometry',stylers:[{color:'#E4E8E4'}]},
+  {featureType:'water',elementType:'geometry',stylers:[{color:'#D7DDD8'}]},
+  {featureType:'road',elementType:'geometry',stylers:[{color:'#FFFFFF'}]},
+  {featureType:'road.arterial',elementType:'geometry',stylers:[{color:'#FAFAF8'}]},
+  {featureType:'road.highway',elementType:'geometry',stylers:[{color:'#F0F0EC'}]},
+  {featureType:'road',elementType:'labels.text.fill',stylers:[{color:'#6B6B67'}]},
+  {featureType:'road',elementType:'labels.text.stroke',stylers:[{color:'#FFFFFF'},{weight:3}]},
+  {featureType:'administrative.neighborhood',elementType:'labels.text.fill',stylers:[{color:'#9A9A96'}]},
+  {featureType:'administrative.locality',elementType:'labels.text.fill',stylers:[{color:'#6B6B67'}]},
+  {elementType:'labels.text.stroke',stylers:[{color:'#E4E8E4'},{weight:2}]}
 ];
 
 async function chaveDoMapa(){
