@@ -676,6 +676,7 @@ confere(ramiroB && ramiroB.from_user_id === A.id, 'Ramiro salvo pela ficha guard
 await ir(pa, `(async()=>{goTo('friends');FRIENDS_DATA=null;await loadFriends();abrirAtividade()})()`, 2200);
 const ativA2 = await texto(pa, '#atCorpo');
 confere(/Bruno|bruno/.test(ativA2 || '') && /Taberna|Ramiro/.test(ativA2 || ''), 'Atividade de A: B quer ir no que ela indicou', ativA2);
+confere(/agora são amigos/.test(ativA2 || ''), 'Atividade de A mostra a amizade nova com B', ativA2);
 // Planejar com A, multi-país (Portugal + Espanha)
 await ir(pb, `(async()=>{document.querySelectorAll('.overlay.show').forEach(o=>closeOv(o.id));await openFriend('${A.id}');plnDoAmigo()})()`, 1500);
 await ir(pb, `(()=>{PLN.destinos=[{tipo:'pais',nome:'Portugal'},{tipo:'pais',nome:'Espanha'},{tipo:'pais',nome:'Brasil'}];plnPintarEscolha();plnVerLista()})()`, 2000);

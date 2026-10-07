@@ -5589,11 +5589,15 @@ async function carregarAtividade(forcar){
     const uid=S.user.id;
     const amigos=new Set((FRIENDS_DATA&&FRIENDS_DATA.friendIds)||[]);
     const meus=allSpotsFlat();
-    const [indicou,coment,deles]=await Promise.all([
+    const [indicou,coment,deles,amizades]=await Promise.all([
       dbGet('spots','from_user_id=eq.'+uid+'&user_id=neq.'+uid+'&order=created_at.desc&limit=30'
         +'&select=id,user_id,trip_id,name,category,city,address,photo_url,status,my_rating,my_review,created_at'),
       meus.length?comentariosNosMeusSpots(30):Promise.resolve([]),
-      plnSpotsDeles().catch(()=>[])
+      plnSpotsDeles().catch(()=>[]),
+      // Amizades novas (07/10, o Lucas virou amigo do pai e a Atividade não
+      // mostrou nada). Sem coluna de "aceito em": vale a data do pedido.
+      dbGet('follows','status=eq.accepted&or=(follower_id.eq.'+uid+',following_id.eq.'+uid+')'
+        +'&order=created_at.desc&limit=20&select=follower_id,following_id,created_at').catch(()=>[])
     ]);
     // 06/10: falha não é "nada aconteceu" — a tela mostra o erro com Tentar de novo.
     ATIV.erro=falhou(indicou)||falhou(coment);
@@ -5616,6 +5620,13 @@ async function carregarAtividade(forcar){
     (Array.isArray(coment)?coment:[]).forEach(c=>{
       if(estaBloqueado(c.user_id)||!porId[c.spot_id])return;
       itens.push({tipo:'coment',user_id:c.user_id,quando:c.created_at,spot:porId[c.spot_id],frase:c.body||'',meu:true});
+    });
+    const amigosVistos=new Set();
+    (Array.isArray(amizades)?amizades:[]).forEach(f=>{
+      const outro=f.follower_id===uid?f.following_id:f.follower_id;
+      if(!outro||amigosVistos.has(outro)||estaBloqueado(outro))return;
+      amigosVistos.add(outro);
+      itens.push({tipo:'amizade',user_id:outro,quando:f.created_at});
     });
     itens.sort((a,b)=>String(b.quando||'').localeCompare(String(a.quando||'')));
     ATIV.itens=itens.slice(0,40);
@@ -5689,6 +5700,8 @@ function pintarAtividade(){
   const semana=Date.now()-7*864e5;
   const linha=(it,i)=>{
     const nome='<b>'+esc(nomeNaAtividade(it.user_id))+'</b>';
+    if(it.tipo==='amizade')return '<button class="at-linha at-evento" onclick="abrirDaAtividade('+i+')">'+av(it.user_id)
+      +'<span class="at-txt">Você e '+nome+' agora são amigos</span></button>';
     const spot='<b>'+esc(it.spot.name||'')+'</b>';
     const trecho=it.frase?' "'+esc(String(it.frase).slice(0,80))+(String(it.frase).length>80?'…':'')+'"':'';
     // 06/10: "em", não "no" — o gênero do spot é desconhecido ("no Livraria Lello").
@@ -5708,7 +5721,9 @@ function pintarAtividade(){
 }
 // Tocar abre a ficha do spot (a sua, se é seu; senão a do amigo).
 function abrirDaAtividade(i){
-  const it=ATIV_TELA[i];if(!it||!it.spot)return;
+  const it=ATIV_TELA[i];if(!it)return;
+  if(it.tipo==='amizade'){openFriend(it.user_id);return}
+  if(!it.spot)return;
   telaAntesDaFicha='atividade';
   if(it.meu){openPlace(it.spot.id,'amigo');return}
   abrirFichaDoSpotDeAmigo(it.spot);
