@@ -32,7 +32,7 @@ const EXPO = 'https://exp.host/--/api/v2/push/send';
 // porque notificação é texto puro — não há HTML no caminho.
 const TEXTOS = {
   pedido:     (nome) => ({ title: 'Pedido de amizade', body: `${nome} quer ser seu amigo no Spot` }),
-  aceite:     (nome) => ({ title: 'Vocês são amigos',  body: `${nome} aceitou seu pedido. Já dá pra ver as viagens.` }),
+  aceite:     (nome) => ({ title: 'Vocês são amigos',  body: `${nome} aceitou sua solicitação de amizade` }),
   comentario: (nome, extra) => ({ title: 'Comentário', body: extra ? `${nome} comentou em ${extra}` : `${nome} comentou no seu lugar` }),
   // Não é um tipo que o app pede: é o 'comentario' quando quem recebe NÃO é
   // dono do spot — o dono respondeu no fio (06/10). Dizia "comentou no seu
