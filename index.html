@@ -2248,6 +2248,21 @@ html.tem-janela,html.tem-janela body{overflow:hidden}
 .onb-mapa-sangra+.onb-mapa-n{padding:0;margin:-12px 0 12px}
 .onb-marca{display:block;margin:0 0 24px}
 .onb-pe{padding:12px 20px calc(16px + env(safe-area-inset-bottom,0px))}
+.onbf-mapa{aspect-ratio:auto;height:200px}
+.onbf-topo{display:flex;align-items:center;gap:20px;padding:4px 0 0}
+.onbf-anel{position:relative;width:120px;height:120px;flex:none}
+.onbf-anel svg{width:120px;height:120px;display:block}
+.onbf-pct{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center}
+.onbf-pct b{font-size:30px;font-weight:700;letter-spacing:-.04em;line-height:1;color:var(--ink)}
+.onbf-pct span{font-size:13px;color:var(--ink2);margin-top:4px}
+.onbf-txt{min-width:0}
+.onbf-titulo{font-size:28px;line-height:1.05;text-wrap:balance;margin:0 0 6px}
+.onbf-n{font-size:15px;color:var(--ink2)}
+.onbf-cont{margin-top:22px}
+.onbf-linha{display:flex;justify-content:space-between;align-items:center;min-height:48px;font-size:17px;font-weight:500;color:var(--ink);animation:onbfEntra .15s ease-out both;animation-delay:calc(var(--i)*60ms + 700ms)}
+.onbf-linha span+span{font-size:15px;font-weight:400;color:var(--ink2)}
+@keyframes onbfEntra{from{opacity:0}to{opacity:1}}
+@media (prefers-reduced-motion: reduce){.onbf-linha{animation:none}}
 .onb-btn{width:100%;height:52px;border:none;border-radius:var(--r-card);background:var(--green);color:var(--on-green);font:600 16px 'Inter Tight',sans-serif;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px}
 .onb-btn:disabled{background:var(--surface);color:var(--ink3);cursor:default}
 .onb-link{display:block;width:100%;background:none;border:none;padding:16px 0 4px;color:var(--ink2);font:600 15px 'Inter Tight',sans-serif;cursor:pointer}
@@ -12479,17 +12494,62 @@ function onbDesenhar(){
     pe.innerHTML='<button class="onb-btn" onclick="onbIr(5)">Continuar</button>';
   }else{
     const nome=String((S.profile&&S.profile.display_name)||'').trim().split(/\s+/)[0]||'';
-    corpo.innerHTML='<div class="onb-mapa onb-mapa-sangra" id="onbMapa"></div>'
-      +'<div class="onb-mapa-n" id="onbMapaN"></div>'
-      +'<h1 class="onb-titulo">Seu mapa está pronto'+(nome?', '+esc(nome):'')+'.</h1>'
+    // 11b (07/10, Claude Design): mapa, anel "do mundo" e até 4 continentes.
+    const nomes=visitedCountryNames();
+    const titulo='<h1 class="onb-titulo onbf-titulo">Seu mapa está pronto'+(nome?', '+esc(nome):'')+'.</h1>';
+    corpo.innerHTML='<div class="onb-mapa onb-mapa-sangra onbf-mapa" id="onbMapa"></div>'
+      +(nomes.length
+        ?'<div class="onbf-topo">'+anelDoOnboarding(nomes.length)
+          +'<div class="onbf-txt">'+titulo+'<div class="onbf-n">'+nomes.length+' de '+PAISES_NO_MUNDO+' países</div></div></div>'
+          +'<div class="onbf-cont">'+continentesDoOnboarding(nomes).map((c,i)=>
+            '<div class="onbf-linha" style="--i:'+i+'"><span>'+esc(c.nome)+'</span><span>'+c.n+' de '+c.t+'</span></div>').join('')+'</div>'
+        :titulo+'<p class="onb-sub">Marque países quando quiser, em Viagens.</p>')
       +'<div id="onbLocal"></div>';
     pe.innerHTML='<button class="onb-btn" onclick="onbTerminar()">Começar a usar</button>';
-    const nomes=visitedCountryNames();
     onbPintarMapa(nomes);
-    onbContar(nomes.length);
+    animarAnelDoOnboarding(nomes.length);
     onbTalvezPedirLocal();
   }
   hydrateIcons(corpo);hydrateIcons(topo);hydrateIcons(pe);
+}
+
+// ── tela final (11b) ──
+// Totais por continente sobre os 195 (o mesmo mundo do anel). A lista de
+// países do app tem território (Porto Rico, Aruba), então N é limitado a T.
+const CONTINENTES_195={'África':54,'Ásia':48,'Europa':44,'América do Norte':23,'América do Sul':12,'Oceania':14};
+function continentesDoOnboarding(nomes){
+  const n={};
+  nomes.forEach(p=>{const r=regionFor(p);if(CONTINENTES_195[r])n[r]=(n[r]||0)+1});
+  return Object.keys(n).map(k=>({nome:k,t:CONTINENTES_195[k],n:Math.min(n[k],CONTINENTES_195[k])}))
+    .sort((a,b)=>b.n-a.n||b.n/b.t-a.n/a.t).slice(0,4);
+}
+const ONBF_R=54,ONBF_VOLTA=2*Math.PI*54;
+function fatiaDoMundo(paises){
+  const f=Math.min(1,(Number(paises)||0)/PAISES_NO_MUNDO);
+  return paises>0?Math.max(f,0.025):0;   // 1 país ainda aparece no anel
+}
+function anelDoOnboarding(paises){
+  return '<div class="onbf-anel"><svg viewBox="0 0 120 120" aria-hidden="true">'
+    +'<circle cx="60" cy="60" r="'+ONBF_R+'" fill="none" stroke="#E2E2DE" stroke-width="12"/>'
+    +'<circle id="onbfArco" cx="60" cy="60" r="'+ONBF_R+'" fill="none" stroke="var(--green)" stroke-width="12" stroke-linecap="round"'
+    +' transform="rotate(-90 60 60)" stroke-dasharray="'+(ONBF_VOLTA*fatiaDoMundo(paises))+' '+ONBF_VOLTA+'"/></svg>'
+    +'<div class="onbf-pct"><b id="onbfPct">'+(percentualDoMundo(paises)||'0%')+'</b><span>do mundo</span></div></div>';
+}
+// Uma vez, 700 ms: o arco sai do zero e o número conta junto. Sem animação
+// com "Reduzir movimento" (o CSS cuida dos continentes).
+function animarAnelDoOnboarding(paises){
+  const arco=document.getElementById('onbfArco'),pct=document.getElementById('onbfPct');
+  if(!arco||!pct||!paises)return;
+  if(window.matchMedia&&matchMedia('(prefers-reduced-motion: reduce)').matches)return;
+  const fim=fatiaDoMundo(paises),t0=performance.now();
+  const passo=agora=>{
+    const k=Math.min(1,(agora-t0)/700),e=1-Math.pow(1-k,3);
+    arco.setAttribute('stroke-dasharray',(ONBF_VOLTA*fim*e)+' '+ONBF_VOLTA);
+    pct.textContent=percentualDoMundo(Math.max(1,Math.round(paises*e)))||'0%';
+    if(k<1)requestAnimationFrame(passo);else pct.textContent=percentualDoMundo(paises);
+  };
+  arco.setAttribute('stroke-dasharray','0 '+ONBF_VOLTA);
+  requestAnimationFrame(passo);
 }
 
 function onbPular(){
