@@ -14832,6 +14832,14 @@ function paisDaViagem(t){
 }
 async function fetchCityPhoto(entrada,pais){
   if(!entrada)return'';
+  // PAÍS (08/10): a foto do Google do 'lugar Brasil' é a de um usuário
+  // qualquer (um prédio, uma escola) e o link dela expira — a capa mudava
+  // sozinha. País pede uma paisagem do Unsplash pelo nome em inglês, que é
+  // como o acervo descreve as fotos, escolhida uma vez e guardada.
+  if(COUNTRIES.some(c=>c.name===entrada)){
+    const u=await buscarFotoDe(nomeEmIngles(entrada)||entrada,{pais:true});
+    if(u)return u;
+  }
   let url=await buscarFotoDe(entrada);
   if(url)return url;
   const ingles=nomeEmIngles(entrada);
@@ -14843,8 +14851,10 @@ async function fetchCityPhoto(entrada,pais){
   }
   return'';
 }
-async function buscarFotoDe(query){
+async function buscarFotoDe(query,extra){
   if(!query)return'';
+  const pedido=query;
+  if(extra&&extra.pais)query='pais:'+query;
   // Return cached (persisted) result if we have it — inclui negativos, pra não reconsultar toda hora
   if(cityPhotoCache[query]!==undefined){
     const c=cityPhotoCache[query];
@@ -14864,7 +14874,7 @@ async function buscarFotoDe(query){
     const resp=await fetch('/api/city-photo',{
       method:'POST',
       headers:Object.assign({'Content-Type':'application/json'},tk?{'Authorization':'Bearer '+tk}:{}),
-      body:JSON.stringify({query})
+      body:JSON.stringify(Object.assign({query:pedido},extra||{}))
     });
     if(!resp.ok)return'';
     const d=await resp.json();

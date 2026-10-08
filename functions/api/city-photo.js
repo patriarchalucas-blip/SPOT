@@ -74,7 +74,13 @@ export async function onRequestPost(context) {
   // As fotos da TELA DE LOGIN foram escolhidas a dedo (são o anúncio do app):
   // ficam com a chave e a regra antigas, do Unsplash.
   const daEntradaCedo = CIDADES_DA_ENTRADA.has(normKey(query));
-  const cacheKey = (daEntradaCedo ? 'cityphoto3_' : 'cityphoto4_') + normKey(query);
+  // PAÍS (08/10): o app manda o nome em inglês com pais:true. A foto do Google
+  // do país é a de um usuário qualquer e o link expira — a capa do Brasil
+  // virou um prédio e mudava sozinha. País vai direto pro Unsplash (a foto
+  // mais relevante que cita o país), com chave própria.
+  const ehPais = body.pais === true;
+  const cacheKey = ehPais ? 'paisfoto1_' + normKey(query)
+    : (daEntradaCedo ? 'cityphoto3_' : 'cityphoto4_') + normKey(query);
   const cached = await lerKV(env, cacheKey);
   // Cache liberado sem login, igual à /api/climate: responder daqui não gasta
   // cota nem expõe nada, e é o caminho da maioria das chamadas.
@@ -102,7 +108,7 @@ export async function onRequestPost(context) {
   const mesG = new Date().toISOString().slice(0, 7);
   const contadorG = 'places_count_' + mesG;
   const usadoG = parseInt((await lerKV(env, contadorG)) || '0', 10);
-  if (!daEntradaCedo && usadoG < 5000) {
+  if (!daEntradaCedo && !ehPais && usadoG < 5000) {
     await contarUso(env, contadorG, usadoG, 1, 60 * 60 * 24 * 40);
     const g = await fotoDoGoogle(env, query);
     if (g) { await gravarKV(env, cacheKey, JSON.stringify(g), TTL_OK); return responder(context, g); }
@@ -143,7 +149,8 @@ export async function onRequestPost(context) {
   // citar o lugar no texto dela e não pode ser de gente. Entre as que passam,
   // a escolha continua estável (deriva do nome).
   const pool = results.filter((f) => fotoServe(f, query)).slice(0, 6);
-  let foto = pool.length ? pool[hashNum(query) % pool.length] : null;
+  // País fica com a MAIS relevante; cidade sorteia estável entre as boas.
+  let foto = pool.length ? (ehPais ? pool[0] : pool[hashNum(query) % pool.length]) : null;
   let url = foto ? (foto.urls || {}).regular || '' : '';
   // Nenhuma serve: a foto do Google do próprio lugar (cidade, região, praia).
   if (!url) {
