@@ -5872,16 +5872,25 @@ async function init(){
         // depois do dashboard: se a pessoa chegou por um link de convite, a
         // amizade é criada agora que existe sessão
         try{await resgatarConvitePendente()}catch(e){console.error('convite:',e)}
+        // Convite aberto no Safari antes de instalar o app (08/10).
         impVerSeEstaLigado();
         try{await salvarSpotPendente()}catch(e){console.error('salvar da lista:',e)}
-        // Por último: as duas perguntas de primeiro acesso. Depois do convite
-        // de propósito — quem chegou por link já entra com um amigo, e a
-        // sequência não deve atropelar isso.
-        try{await talvezAbrirBoasVindas()}catch(e){console.error('boas-vindas:',e)}
-        // Permissão de notificação: pedida AGORA, depois do login — e, pra quem
-        // está no primeiro acesso, no fim dele (onbTerminar). Na primeira tela,
-        // antes de saber o que é o app, muita gente recusava pra sempre.
-        if(!document.getElementById('ov-onb').classList.contains('show'))falarComACasca({tipo:'pedir-push'});
+        // Daqui pra baixo SEM segurar o login (08/10): o Supabase espera este
+        // ouvinte terminar antes de dar o login por concluído, e a pergunta do
+        // convite espera o toque da pessoa — o login ficava pendurado nela.
+        (async()=>{
+          // Convite aberto no Safari antes de instalar o app (08/10). Antes do
+          // primeiro acesso, de propósito: quem aceita já entra com um amigo.
+          try{await conviteDaConexao()}catch(e){console.error('convite pela conexão:',e)}
+          // Por último: as duas perguntas de primeiro acesso. Depois do convite
+          // de propósito — quem chegou por link já entra com um amigo, e a
+          // sequência não deve atropelar isso.
+          try{await talvezAbrirBoasVindas()}catch(e){console.error('boas-vindas:',e)}
+          // Permissão de notificação: pedida AGORA, depois do login — e, pra quem
+          // está no primeiro acesso, no fim dele (onbTerminar). Na primeira tela,
+          // antes de saber o que é o app, muita gente recusava pra sempre.
+          if(!document.getElementById('ov-onb').classList.contains('show'))falarComACasca({tipo:'pedir-push'});
+        })();
       }
       // Sem sessão nenhuma na abertura: vai pro login NA HORA. Antes nada
       // tratava esse caso e a pessoa esperava a trava de 3 s abaixo olhando a
@@ -6795,6 +6804,8 @@ function usarDadosLocais(){
 
 function limparDadosLocais(){
   try{localStorage.removeItem(chaveDosDados())}catch(e){}
+  // A marca "já perguntei do convite pela conexão" leva o id da conta (08/10).
+  try{if(S.user)localStorage.removeItem('spot_convite_conexao_'+S.user.id)}catch(e){}
   // Também o que não leva o id da conta na chave (06/10): as buscas recentes
   // do Explorar (CHAVE_RECENTES) entregavam pra quem entrasse depois por onde
   // a conta anterior andou procurando; as marcas de "já vi" do feed
@@ -18649,6 +18660,40 @@ async function resgatarConvitePendente(){
     try{localStorage.removeItem(CONVITE_GUARDADO)}catch(e){}
   }
   if(status==='ok'){esquecerAmigosGuardados();toast('Vocês são amigos','Já dá pra ver as viagens um do outro.','users')}
+}
+
+// ── convite que se perdia na instalação (08/10) ──
+// Quem abriu o link sem ter o app instalou pela App Store, e o código ficou no
+// Safari. O servidor anotou a CONEXÃO que abriu o link (ver
+// functions/api/_convite-conexao.js); a conta NOVA que entra por ela recebe a
+// pergunta. Uma vez por conta neste aparelho; nunca vira amizade sem o toque.
+async function conviteDaConexao(){
+  if(!S.user)return;
+  let guardado=null;try{guardado=localStorage.getItem(CONVITE_GUARDADO)}catch(e){}
+  if(guardado)return;
+  const criada=Date.parse(S.user.created_at||'');
+  if(!criada||Date.now()-criada>48*3600*1000)return;
+  const marca='spot_convite_conexao_'+S.user.id;
+  try{if(localStorage.getItem(marca))return;localStorage.setItem(marca,'1')}catch(e){return}
+  let codigo='';
+  try{
+    const tk=await ensureToken();if(!tk)return;
+    const r=await fetch('/api/convite-conexao',{headers:{'Authorization':'Bearer '+tk}});
+    if(!r.ok)return;
+    codigo=String((await r.json()).codigo||'');
+  }catch(e){return}
+  if(!codigo)return;
+  const dono=await dbRpc('invite_owner',{invite_code:codigo});
+  if(falhou(dono)||!dono.length)return;
+  const p=dono[0];
+  if(p.username&&S.profile&&p.username===S.profile.username)return; // o próprio convite
+  const nome=p.display_name||(p.username?'@'+p.username:'');
+  if(!nome)return;
+  const sim=await perguntar(nome+' te convidou pro Spot','Adicionar como amigo? Vocês passam a ver os spots um do outro.',
+    Object.assign([{rotulo:'Adicionar',valor:true}],{cancelar:'Agora não'}));
+  if(sim!==true)return;
+  try{localStorage.setItem(CONVITE_GUARDADO,codigo)}catch(e){}
+  await resgatarConvitePendente();
 }
 
 // ═══ BUSCAR PESSOA ═══

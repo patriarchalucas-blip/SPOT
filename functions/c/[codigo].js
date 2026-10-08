@@ -19,6 +19,9 @@
 // três contagens e até três fotos — quem recebe a mensagem vê o mesmo que
 // veria abrindo o link.
 
+import { gravarKV } from '../api/_kv.js';
+import { chaveDaConexao, ehRobo, TTL_CONVITE_CONEXAO } from '../api/_convite-conexao.js';
+
 const SB_URL = 'https://kzidnilsyrvauzgelsqd.supabase.co';
 const SB_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imt6aWRuaWxzeXJ2YXV6Z2Vsc3FkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODEyODE5NDAsImV4cCI6MjA5Njg1Nzk0MH0.BMgiP_lTe8mCfe0eSPNUCksXatOntuWAhcqGtR8hco4';
 
@@ -44,7 +47,7 @@ function fotoSegura(u) {
 }
 
 export async function onRequestGet(context) {
-  const { params, request } = context;
+  const { params, request, env } = context;
   const codigo = String(params.codigo || '').slice(0, 64);
   const origem = new URL(request.url).origin;
   const destino = origem + '/?c=' + encodeURIComponent(codigo);
@@ -62,6 +65,14 @@ export async function onRequestGet(context) {
         if (Array.isArray(d) && d.length) p = d[0];
       }
     } catch (e) { /* sem prévia personalizada: cai no texto genérico */ }
+  }
+
+  // Convite que se perdia na instalação (08/10): anota que esta conexão abriu
+  // este convite, pra conta nova que entrar por ela receber a pergunta.
+  // Só convite que existe e só gente (não o robô da prévia).
+  if (p && !ehRobo(request)) {
+    const chave = await chaveDaConexao(request);
+    if (chave && typeof context.waitUntil === 'function') context.waitUntil(gravarKV(env, chave, codigo, TTL_CONVITE_CONEXAO));
   }
 
   const nome = (p && (p.display_name || (p.username ? '@' + p.username : ''))) || '';

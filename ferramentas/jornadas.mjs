@@ -160,7 +160,13 @@ const RPC = {
     const ids = new Set(DB.spot_comments.filter(c => c.spot_id === p_spot).map(c => c.user_id)); return DB.profiles.filter(p => ids.has(p.id)).map(p => ({ id: p.id, display_name: p.display_name, username: p.username, avatar_url: p.avatar_url })) },
   find_profile_by_username: (u, { uname }) => DB.profiles.filter(p => semAcento(p.username) === semAcento(uname)).map(p => ({ id: p.id, display_name: p.display_name, username: p.username })),
   registrar_aparelho: () => null,
-  invite_owner: () => [], invite_preview: () => [], redeem_invite: () => null,
+  // Convite (011/022/027): dono pelo código; resgatar cria a amizade aceita.
+  invite_owner: (u, { invite_code }) => { const i = DB.invites.find(x => x.code === invite_code && !x.revoked); const p = i && DB.profiles.find(x => x.id === i.user_id); return p ? [{ display_name: p.display_name, username: p.username }] : [] },
+  invite_preview: () => [],
+  redeem_invite: (u, { invite_code }) => { if (!u) return 'sem_sessao'; const i = DB.invites.find(x => x.code === invite_code && !x.revoked); if (!i) return 'invalido'; const dono = i.user_id;
+    if (dono === u) return 'proprio_convite'; if (haBloqueio(u, dono)) return 'invalido'; if (amigos(u, dono)) return 'ja_amigos';
+    const ex = DB.follows.find(f => (f.follower_id === u && f.following_id === dono) || (f.following_id === u && f.follower_id === dono));
+    if (ex) ex.status = 'accepted'; else DB.follows.push({ id: uuid(), follower_id: u, following_id: dono, status: 'accepted', created_at: agora() }); return 'ok' },
 };
 
 // ── o que cada conta pediu (pra conferir avisos e erros) ──
@@ -168,6 +174,7 @@ const AVISOS = [];        // /api/notificar
 const ERROS_APP = [];     // /api/erro (o app reporta os próprios erros)
 const RECUSAS = [];       // escrita que o RLS falso recusou
 const ESCRITAS = [];      // PATCH em spots (pra depurar)
+let CONVITE_CONEXAO = '', CONSULTAS_CONEXAO = 0;
 let FALHA_STORAGE = false;   // true = a foto do armazenamento falha ao abrir
 
 function quemE(headers) {
@@ -358,6 +365,9 @@ async function trataPedido(pg, r) {
     if (api === 'place-photo' || api === 'city-photo' && metodo === 'GET' && /img=1/.test(u)) return responde(200, PNG1, 'image/png');
     if (api === 'importar') return responde(200, JSON.stringify(metodo === 'GET' ? { ligado: true } : { lugares: [] }));
     if (api === 'lista') return responde(200, JSON.stringify({ codigo: 'abcdefgh1234' }));
+    // Convite aberto no Safari antes de instalar (08/10): CONVITE_CONEXAO é o
+    // que /c/<código> anotou pra conexão de quem chama.
+    if (api === 'convite-conexao') { CONSULTAS_CONEXAO++; return responde(200, JSON.stringify({ codigo: CONVITE_CONEXAO })) }
     return responde(200, '{}');
   }
   if (/fonts\.(googleapis|gstatic)\.com|unsplash|googleusercontent|maps\.googleapis/.test(u)) return responde(200, '', 'text/plain');
@@ -1096,6 +1106,44 @@ for (const [termo, alvo, rot] of buscas6) {
 }
 confere(!/privaterelay|k3m9q2zz|p8w3n6tt/.test(await texto(pe, '#buscaPessoasRes') || ''), '(6) a busca não mostra o e-mail de retransmissão');
 ['E', 'F', 'H'].forEach(n => { const e = errosDe(PAGINAS[n]); confere(!e.length, 'sem erro de JS no aparelho ' + n, e) });
+
+// ═══ JORNADA 9 · convite aberto antes de instalar o app (08/10) ═══
+// A família do sócio do Lucas: o Elton mandou o link, cada um abriu no Safari,
+// instalou pela App Store e entrou — e ninguém virou amigo do Elton, porque o
+// código ficou no Safari. Agora a conexão que abriu o link é lembrada.
+if (Number(process.env.SO_ATE) && Number(process.env.SO_ATE) < 9) await fim();
+JORNADA = '9 convite pela conexao';
+console.log('\n── ' + JORNADA);
+DB.invites.push({ code: 'convElisa123', user_id: E.id, created_at: agora(), revoked: false });
+CONVITE_CONEXAO = 'convElisa123';
+const pi = await abrirAparelho('I', { casca: true });
+await carregar(pi);
+await entrar(pi, 'irene.teste@exemplo.test', 'senhaI-teste-8', true);
+const I = CONTAS['irene.teste@exemplo.test'];
+const perguntaI = await ate(async () => (await janelas(pi)).includes('ov-pergunta'), 6000);
+const tituloI = await texto(pi, '#perguntaTitulo');
+confere(perguntaI && /Elisa Teste te convidou/.test(tituloI || ''), 'conta nova vinda do link pergunta quem convidou', tituloI);
+confere(!amigos(I.id, E.id), 'sem o toque, ainda não são amigos');
+await ir(pi, 'window.responderPergunta(0)', 1800);
+confere(amigos(I.id, E.id), 'tocou em Adicionar: viram amigos');
+// Outra conta nova pela mesma conexão, que diz "Agora não": nada acontece.
+const pj = await abrirAparelho('J', { casca: true });
+await carregar(pj);
+await entrar(pj, 'joao.teste@exemplo.test', 'senhaJ-teste-9', true);
+const J = CONTAS['joao.teste@exemplo.test'];
+await ate(async () => (await janelas(pj)).includes('ov-pergunta'), 6000);
+await ir(pj, 'window.responderPergunta(-1)', 1200);
+confere(!amigos(J.id, E.id), '"Agora não" não cria amizade');
+// Conta antiga (Ana, criada em 01/09) não é perguntada nem consulta o servidor.
+A.criada = '2026-09-01T10:00:00Z';
+const antes9 = CONSULTAS_CONEXAO;
+const pk = await abrirAparelho('K', { casca: true });
+await carregar(pk);
+await entrar(pk, A.email, A.senha, false);
+await espera(1500);
+confere(!(await janelas(pk)).includes('ov-pergunta') && CONSULTAS_CONEXAO === antes9, 'conta antiga não é perguntada nem consulta o servidor', { janelas: await janelas(pk), consultas: CONSULTAS_CONEXAO - antes9 });
+CONVITE_CONEXAO = '';
+['I', 'J', 'K'].forEach(n => { const e = errosDe(PAGINAS[n]); confere(!e.length, 'sem erro de JS no aparelho ' + n, e) });
 
 // ═══ fim ═══
 await fim();
