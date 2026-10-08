@@ -31,7 +31,7 @@ import {
   View,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import Svg, { Circle, Path, Text as SvgText } from 'react-native-svg';
+import Svg, { Path } from 'react-native-svg';
 import MapaMundi from './MapaMundi';
 import { BASE, SURFACE, INK, INK2, INK3, GREEN, ON_GREEN, MAP_BG, PHOTO_EMPTY } from './cores';
 import { folgaDeRolagem } from './BarraDeAbas';
@@ -40,43 +40,13 @@ import { folgaDeRolagem } from './BarraDeAbas';
 // não é o tamanho de COUNTRIES (243), que inclui território não soberano.
 const PAISES_NO_MUNDO = 195;
 
-// O anel: um arco sobre um trilho, sem gradiente e sem sombra. O trilho é a
-// cor da PÁGINA, então o vazio do anel é o fundo aparecendo por baixo do card.
-function Anel({ paises }) {
-  const r = 33;
-  const volta = 2 * Math.PI * r;
-  const fatia = Math.min(1, (Number(paises) || 0) / PAISES_NO_MUNDO);
-  const pc = Math.min(100, ((Number(paises) || 0) / PAISES_NO_MUNDO) * 100);
-  return (
-    <View style={e.anel}>
-      <Svg width={76} height={76} viewBox="0 0 76 76">
-        {/* girado -90° pra fatia começar no topo, e não às 3 horas */}
-        <Circle cx="38" cy="38" r={r} fill="none" stroke={BASE} strokeWidth={7} />
-        <Circle
-          cx="38" cy="38" r={r} fill="none" stroke={GREEN} strokeWidth={7}
-          strokeLinecap="round"
-          strokeDasharray={`${volta * fatia} ${volta}`}
-          transform="rotate(-90 38 38)"
-        />
-        {/* O NÚMERO É DESENHO, NÃO TEXTO POR CIMA. Ele era um View absoluto
-            sobre o SVG e no iPhone apareceu FORA do círculo, escrito em cima
-            do rótulo de baixo. Dentro do próprio desenho não há layout que
-            possa errar: x=38 y=38 é o centro, e ponto.
-            Sempre inteiro, sem casa decimal: abrir espaço pra vírgula faz o
-            número balançar de largura conforme a pessoa viaja. */}
-        {/* Linha de base FIXA pra cada texto, sem alignmentBaseline nem dy (05/10):
-            no iPhone os dois somavam e o "12%" descia em cima do "de 195" (print
-            do Lucas). Medido no anel de 76: o miolo vai de y=12 a y=64; a
-            porcentagem (19 px) assenta em 40 e o "de 195" (9,5 px) em 53. */}
-        <SvgText x={38} y={40} fill={INK} fontSize={19} fontWeight="700" textAnchor="middle">
-          {pc ? Math.round(pc) + '%' : '0%'}
-        </SvgText>
-        <SvgText x={38} y={53} fill={INK2} fontSize={9.5} textAnchor="middle">
-          {'de ' + PAISES_NO_MUNDO}
-        </SvgText>
-      </Svg>
-    </View>
-  );
+// "Você conheceu N% do mundo" (15a, 08/10): o anel saiu. Inteiro a partir de
+// 10%, uma casa abaixo disso, sem ",0". Mesma regra de fracaoDoMundo no site.
+function fracaoDoMundo(n) {
+  const pc = Math.min(100, ((Number(n) || 0) / PAISES_NO_MUNDO) * 100);
+  if (pc >= 10) return Math.round(pc) + '%';
+  const t = pc.toFixed(1);
+  return (t.endsWith('.0') ? t.slice(0, -2) : t.replace('.', ',')) + '%';
 }
 
 // Sem onPress (continentes, desenho c1 de 05/10), a linha não é botão e
@@ -317,21 +287,19 @@ export default function TelaViagens({ dados, ocupado, acao }) {
           pontos de luminosidade do --base e sem ela o olho não acha a borda do
           bloco. Escolha do Lucas entre três saídas testadas. */}
       {d.placar !== false ? (
+      <>
+      <View style={e.frase}>
+        <Text style={e.frase1}>Você conheceu</Text>
+        <Text style={e.frase2}>{fracaoDoMundo(d.paises) + ' do mundo'}</Text>
+      </View>
       <View style={e.placar}>
-        <Pressable
-          onPress={() => acao('mapa')}
-          style={({ pressed }) => [e.anelBloco, pressed && { opacity: 0.6 }]}
-          accessibilityRole="button"
-          accessibilityLabel="Ver o mapa-múndi"
-        >
-          <Anel paises={d.paises} />
-        </Pressable>
         <View style={e.placarCol}>
           <LinhaDoPlacar n={d.paises} rotulo="países" onPress={() => acao('mapa')} />
           <LinhaDoPlacar n={d.cidades} rotulo="cidades" onPress={() => acao('lista', 'cities')} />
           <LinhaDoPlacar n={d.spots} rotulo="spots" onPress={() => acao('lista', 'spots')} />
         </View>
       </View>
+      </>
       ) : null}
 
       {/* Sem país nenhum, o placar zerado some e entram os três passos
@@ -472,7 +440,7 @@ const e = StyleSheet.create({
     alignItems: 'center',
     gap: 20,
     marginHorizontal: 20,
-    marginTop: 14,
+    marginTop: 16,
     backgroundColor: SURFACE,
     borderRadius: 14,
     paddingVertical: 16,
@@ -483,8 +451,10 @@ const e = StyleSheet.create({
     shadowOffset: { width: 0, height: 5 },
     elevation: 3,
   },
-  anelBloco: { alignItems: 'center', gap: 6 },
-  anel: { width: 76, height: 76 },
+  // 15a: a frase entre o mapa e o placar. 20 acima, 16 abaixo (marginTop do placar).
+  frase: { marginTop: 20, marginHorizontal: 20 },
+  frase1: { fontSize: 14, lineHeight: 18, color: INK2 },
+  frase2: { fontSize: 30, fontWeight: '700', letterSpacing: -1.2, lineHeight: 32, color: GREEN },
   // Os três em FILEIRA, número em cima e rótulo embaixo — o desenho do site
   // (29/09). Lado a lado eles se comparam; empilhados viravam uma lista.
   placarCol: { flex: 1, minWidth: 0, flexDirection: 'row', alignItems: 'flex-end', gap: 14 },

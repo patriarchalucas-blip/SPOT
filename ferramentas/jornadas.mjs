@@ -15,7 +15,7 @@
 //         2) node jornadas.mjs   → termina com "FALHAS (n)" (saída 1 se n > 0).
 //         SO_ATE=3 node jornadas.mjs  → para depois da jornada 3 (mais rápido).
 //         VERBOSO=1 → mostra cada asserção ok e as respostas 4xx do banco falso.
-// Leva ~2 min. Seis jornadas: 1 cadastro+amizade · 2 spots/privacidade/
+// Leva ~2 min. Oito jornadas (7 Apple sem nome, 8 pedidos de borda): 1 cadastro+amizade · 2 spots/privacidade/
 // comentário · 3 salvar do amigo/Planejar/Montar/Mandar · 4 cidades visitadas ·
 // 5 bloqueio/desbloqueio/desfazer · 6 troca de conta no mesmo aparelho (casca).
 // Duas asserções dependem do relógio (memória de 2 min do Planejar): antes do
@@ -238,6 +238,13 @@ function restResponde(metodo, tabela, qs, corpoTxt, headers) {
 function authResponde(caminho, metodo, corpoTxt, headers) {
   let corpo = {}; try { corpo = JSON.parse(corpoTxt || '{}') } catch (e) {}
   const j = (status, body) => ({ status, body: body === undefined ? '' : JSON.stringify(body) });
+  // Login da Apple (id_token falso 'apple:<email>'): cria a conta no 1º acesso.
+  if (caminho.startsWith('token') && /grant_type=id_token/.test(caminho)) {
+    const email = String(corpo.id_token || '').replace(/^apple:/, '').toLowerCase();
+    let c = CONTAS[email];
+    if (!c) { c = novaConta(email, uuid(), {}); criarPerfil(c) }
+    return j(200, sessao(c));
+  }
   if (caminho.startsWith('token') && /grant_type=password/.test(caminho)) {
     const c = CONTAS[String(corpo.email || '').toLowerCase()];
     if (!c || c.senha !== corpo.password) return j(400, { error: 'invalid_grant', error_description: 'Invalid login credentials', code: 'invalid_credentials', msg: 'Invalid login credentials' });
@@ -899,15 +906,196 @@ confere(!!portugal, 'Portugal (só marcado) aparece na lista de Viagens do app c
 confere(portugal && /1 cidade/.test(portugal.meta), 'o card diz "1 cidade"', portugal && portugal.meta);
 confere(!vd.primeiro, 'com cidade marcada, a aba não fica no "Seu primeiro spot"', vd.primeiro);
 confere(vd.cidades >= 1, 'placar conta a cidade', vd.cidades);
-// Pedido que ninguém via (Roberta → Felipe, 08/10): sem tocar em Amigos, abrir o app mostra o pedido.
+// Pedido que ninguém via (Roberta → Felipe, 08/10): o app recebe quantos pedidos esperam e acende o ponto na aba Amigos.
 DB.follows.push({ id: uuid(), follower_id: A.id, following_id: D.id, status: 'pending', created_at: agora() });
+await limpaCasca(pd);
 await ir(pd, `(async()=>{document.querySelectorAll('.overlay.show').forEach(o=>closeOv(o.id));goTo('dashboard');PEDIDOS_CONFERIDOS_EM=0;await loadDashboard()})()`, 2500);
-confere(await tela(pd) === 'atividade', 'pedido recebido abre a tela de pedidos sozinho ao abrir o app', await tela(pd));
-const txtAtiv = await texto(pd, '#atCorpo');
-confere(/quer adicionar você/.test(txtAtiv || '') && /Aceitar/.test(txtAtiv || ''), 'a tela mostra quem pediu com Aceitar', (txtAtiv || '').slice(0, 200));
-await ir(pd, `(async()=>{goTo('dashboard');PEDIDOS_CONFERIDOS_EM=0;await loadDashboard()})()`, 2000);
-confere(await tela(pd) === 'dashboard', 'o mesmo pedido não abre a tela de novo', await tela(pd));
+const pedPac = await ultimoPacote(pd, 'pedidos');
+confere(pedPac && pedPac.n === 1, 'ao abrir, o app recebe 1 pedido esperando (ponto na aba Amigos)', pedPac);
+confere(await tela(pd) === 'dashboard', 'nenhuma tela abre sozinha', await tela(pd));
+await ir(pd, `(async()=>{await loadFriends();const r=FRIENDS_DATA.incoming[0];await respondRequest(r.id,true)})()`, 2000);
+const pedPac2 = await ultimoPacote(pd, 'pedidos');
+confere(pedPac2 && pedPac2.n === 0, 'aceitou: o ponto apaga', pedPac2);
 ['D'].forEach(n => { const e = errosDe(PAGINAS[n]); confere(!e.length, 'sem erro de JS no aparelho ' + n, e) });
+
+// ═══ JORNADA 8 · pedidos de amizade: casos de borda ═══
+if (Number(process.env.SO_ATE) && Number(process.env.SO_ATE) < 8) await fim();
+JORNADA = '8 pedidos de borda';
+console.log('\n── ' + JORNADA);
+const E = novaConta('elisa.teste@exemplo.test', 'senhaE-teste-5', { full_name: 'Elisa Teste', onboarding_done: true });
+const F = novaConta('fabio.teste@exemplo.test', 'senhaF-teste-6', { full_name: 'Fabio Teste', onboarding_done: true });
+DB.profiles.push({ id: E.id, display_name: 'Elisa Teste', username: 'elisateste', home_city: 'Lisboa', home_country: 'Portugal', avatar_url: null, bio: '', created_at: agora() });
+DB.profiles.push({ id: F.id, display_name: 'Fabio Teste', username: 'fabioteste', home_city: 'Porto', home_country: 'Portugal', avatar_url: null, bio: '', created_at: agora() });
+const pe = await abrirAparelho('E', { casca: false });
+const pf = await abrirAparelho('F', { casca: true });
+await carregar(pe); await entrar(pe, E.email, E.senha, false);
+await carregar(pf); await entrar(pf, F.email, F.senha, false);
+const entre = (x, y) => DB.follows.filter(f => (f.follower_id === x && f.following_id === y) || (f.follower_id === y && f.following_id === x));
+const zera = (x, y) => { DB.follows = DB.follows.filter(f => !entre(x, y).includes(f)) };
+const fechaTudo = `document.querySelectorAll('.overlay.show').forEach(o=>closeOv(o.id));`;
+const abrirBusca = (pg, termo) => ir(pg, `(()=>{${fechaTudo}abrirAddFriend();const i=document.getElementById('friendUsernameInput');i.value=${JSON.stringify(termo)};buscarPessoas(i.value)})()`, 1300);
+const pedirPelaBusca = async (pg, termo, alvoId) => { await abrirBusca(pg, termo); await ir(pg, `pedirAmizade(BUSCA_PESSOAS.findIndex(p=>p.id==='${alvoId}'))`, 1300) };
+const tocarAbaAmigos = (pg, ms = 1500) => ir(pg, `(()=>{${fechaTudo}window.irParaAba('friends')})()`, ms);
+const ultimoToast = pg => ev(pg, () => document.getElementById('toastTitle').textContent + ' | ' + document.getElementById('toastMsg').textContent);
+
+// (1) E pede; F (casca) já tinha aberto Amigos há < 30 s e toca na aba de novo.
+await tocarAbaAmigos(pf);
+await pedirPelaBusca(pe, 'fabio', F.id);
+const p1 = DB.follows.find(f => f.follower_id === E.id && f.following_id === F.id);
+confere(p1 && p1.status === 'pending', '(1) pedido E→F gravado', p1);
+await limpaCasca(pf);
+await tocarAbaAmigos(pf);
+const pac1 = await ultimoPacote(pf, 'amigos');
+confere(pac1 && (pac1.dados.recebidos || []).some(x => x.pedido === (p1 || {}).id), '(1) F vê o pedido ao tocar na aba Amigos (sem puxar pra atualizar)', pac1 && { recebidos: pac1.dados.recebidos, vazio: pac1.dados.vazio });
+confere(pac1 && pac1.dados.vazio && pac1.dados.vazio.pedidos === 1, '(1) o vazio nativo de F anuncia 1 pedido', pac1 && pac1.dados.vazio);
+await ir(pf, `(async()=>{FRIENDS_DATA=null;await loadFriends()})()`, 1500);   // contorno pra seguir
+await ir(pf, `window.acaoDeAmigos('atividade')`, 1500);
+const at1 = await texto(pf, '#atCorpo');
+confere(await tela(pf) === 'atividade' && /Elisa Teste/.test(at1 || '') && /Aceitar/.test(at1 || ''), '(1) Atividade de F (aberta pela aba nativa) mostra o pedido com Aceitar', at1);
+await ir(pf, `(()=>{const b=document.querySelector('#atCorpo .at-aceitar');if(!b)throw new Error('sem Aceitar');b.click()})()`, 1800);
+confere(p1 && p1.status === 'accepted', '(1) F aceita pela Atividade', p1 && p1.status);
+const pac1b = await ultimoPacote(pf, 'amigos');
+confere(pac1b && (pac1b.dados.amigos || []).some(x => x.id === E.id) && !pac1b.dados.vazio && !(pac1b.dados.recebidos || []).length, '(1) pacote de F já lista E, sem vazio e sem pedido', pac1b && pac1b.dados);
+confere(!/quer adicionar você/.test(await texto(pf, '#atCorpo') || ''), '(1) Atividade de F tira o pedido aceito', await texto(pf, '#atCorpo'));
+await tocarAbaAmigos(pe);
+const dE1 = await ev(pe, () => ({ amigos: FRIENDS_DATA.friendIds, enviados: FRIENDS_DATA.outgoing.length, idade: Date.now() - AMIGOS_CARREGADO_EM }));
+confere(dE1.amigos.includes(F.id) && !dE1.enviados, '(1) E vê F como amigo ao tocar na aba (sem recarregar)', dE1);
+['E', 'F'].forEach(n => { const e = errosDe(PAGINAS[n]); confere(!e.length, '(1) sem erro de JS no aparelho ' + n, e) });
+
+// (2) Os dois pedem ao mesmo tempo (cada um com a busca aberta antes do pedido do outro).
+zera(E.id, F.id);
+await ir(pe, `(async()=>{FRIENDS_DATA=null;goTo('friends');await loadFriends()})()`, 1000);
+await ir(pf, `(async()=>{FRIENDS_DATA=null;goTo('friends');await loadFriends()})()`, 1000);
+await abrirBusca(pe, 'fabio');
+await abrirBusca(pf, 'elisa');
+await Promise.all([
+  ir(pe, `pedirAmizade(BUSCA_PESSOAS.findIndex(p=>p.id==='${F.id}'))`, 1500),
+  ir(pf, `pedirAmizade(BUSCA_PESSOAS.findIndex(p=>p.id==='${E.id}'))`, 1500),
+]);
+confere(entre(E.id, F.id).length >= 1, '(2) pedidos cruzados chegam ao banco', entre(E.id, F.id));
+await ir(pe, `(async()=>{FRIENDS_DATA=null;await loadFriends()})()`, 1500);
+await ir(pf, `(async()=>{FRIENDS_DATA=null;await loadFriends()})()`, 1500);
+const dE2 = await ev(pe, f => ({ rec: FRIENDS_DATA.incoming.filter(r => r.follower_id === f).length, env: FRIENDS_DATA.outgoing.filter(r => r.following_id === f).length, amigo: FRIENDS_DATA.friendIds.includes(f) }), F.id);
+confere(dE2.amigo || dE2.rec + dE2.env === 1, '(2) E não fica com F em Recebidos E Enviados ao mesmo tempo', dE2);
+const pac2 = await ultimoPacote(pf, 'amigos');
+const dF2 = pac2 && { rec: (pac2.dados.recebidos || []).filter(x => x.id === E.id).length, env: (pac2.dados.enviados || []).filter(x => x.id === E.id).length, amigo: (pac2.dados.amigos || []).some(x => x.id === E.id) };
+confere(dF2 && (dF2.amigo || dF2.rec + dF2.env === 1), '(2) pacote de F não traz E em Recebidos E Enviados', dF2);
+// E aceita o de F; sobra o E→F pendente no banco?
+const pFE = DB.follows.find(f => f.follower_id === F.id && f.following_id === E.id && f.status === 'pending');
+if (pFE) await ir(pe, `respondRequest('${pFE.id}',true)`, 1800);
+confere(amigos(E.id, F.id), '(2) aceitar um dos dois cruzados → amigos');
+const sobra2 = DB.follows.filter(f => f.status === 'pending' && entre(E.id, F.id).includes(f));
+confere(!sobra2.length, '(2) nenhum pedido pendente sobra entre quem já é amigo', sobra2);
+await ir(pf, `(async()=>{PEDIDOS_CONFERIDOS_EM=0;await avisarPedidosEsperando()})()`, 800);
+const nPed2 = await ultimoPacote(pf, 'pedidos');
+confere(nPed2 && nPed2.n === 0, '(2) ponto de pedidos da casca de F não conta pedido de quem já é amigo', nPed2);
+['E', 'F'].forEach(n => errosDe(PAGINAS[n]));
+
+// (3) E cancela antes de F aceitar; a tela de F acompanha.
+zera(E.id, F.id);
+await ir(pe, `(async()=>{FRIENDS_DATA=null;await loadFriends()})()`, 800);
+await pedirPelaBusca(pe, 'fabio', F.id);
+const p3 = DB.follows.find(f => f.follower_id === E.id && f.following_id === F.id);
+await ir(pf, `(async()=>{${fechaTudo}FRIENDS_DATA=null;window.irParaAba('friends')})()`, 1800);
+const pac3a = await ultimoPacote(pf, 'amigos');
+confere(pac3a && (pac3a.dados.recebidos || []).some(x => x.pedido === (p3 || {}).id), '(3) F vê o pedido antes do cancelamento', pac3a && pac3a.dados.recebidos);
+await ir(pe, `(async()=>{${fechaTudo}goTo('friends');await loadFriends();await cancelRequest('${p3 && p3.id}')})()`, 1500);
+confere(p3 && !DB.follows.some(f => f.id === p3.id), '(3) E cancela → pedido apagado');
+confere(!(await ev(pe, () => FRIENDS_DATA.outgoing.length)), '(3) E sem pedido enviado depois de cancelar');
+await limpaCasca(pf);
+await tocarAbaAmigos(pf);
+const pac3b = await ultimoPacote(pf, 'amigos');
+confere(pac3b && !(pac3b.dados.recebidos || []).length, '(3) F toca na aba e o pedido cancelado some', pac3b && pac3b.dados.recebidos);
+errosDe(pf);
+await limpaCasca(pf);
+await ir(pf, `window.acaoDeAmigos('aceitar','${p3 && p3.id}')`, 1800);
+confere(!amigos(E.id, F.id), '(3) aceitar pedido cancelado não cria amizade');
+const avisos3 = await casca(pf, 'aviso');
+confere(!avisos3.some(a => /tenta de novo/i.test(a.texto || '')), '(3) aceitar pedido cancelado não pede "tenta de novo"', avisos3);
+const pac3c = await ultimoPacote(pf, 'amigos');
+confere(pac3c && !(pac3c.dados.recebidos || []).length, '(3) depois do toque, o pedido cancelado sai da tela de F', pac3c && pac3c.dados.recebidos);
+errosDe(pf);   // dbUpdate escreve console.error 'nenhuma linha' — esperado
+
+// (4) F recusa; E (tela velha) toca Cancelar; E pede de novo.
+zera(E.id, F.id);
+await pedirPelaBusca(pe, 'fabio', F.id);
+const p4 = DB.follows.find(f => f.follower_id === E.id && f.following_id === F.id);
+await ir(pf, `(async()=>{FRIENDS_DATA=null;await loadFriends()})()`, 1500);
+await ir(pf, `window.acaoDeAmigos('recusar','${p4 && p4.id}')`, 1500);
+confere(p4 && !DB.follows.some(f => f.id === p4.id), '(4) F recusa → pedido apagado');
+await ir(pe, `(()=>{${fechaTudo}abrirAtividade()})()`, 1200);
+await ir(pe, `(()=>{const b=[...document.querySelectorAll('#atCorpo .at-recusar')].find(x=>/Cancelar/.test(x.innerText));if(!b)throw new Error('sem Cancelar na Atividade');b.click()})()`, 1500);
+const toast4 = await ultimoToast(pe);
+confere(!/amigos/i.test(toast4), '(4) cancelar pedido já recusado não diz "Vocês já são amigos"', toast4);
+confere(!amigos(E.id, F.id), '(4) e de fato não são amigos');
+confere(!(await ev(pe, () => FRIENDS_DATA.outgoing.length)), '(4) E fica sem pedido enviado na tela');
+await pedirPelaBusca(pe, 'fabio', F.id);
+const p4b = DB.follows.find(f => f.follower_id === E.id && f.following_id === F.id);
+confere(p4b && p4b.status === 'pending' && p4b.id !== (p4 || {}).id, '(4) E pede de novo depois da recusa', p4b);
+confere(/pedido enviado/i.test(await texto(pe, '#buscaPessoasRes') || ''), '(4) busca de E mostra "pedido enviado" no 2º pedido');
+['E', 'F'].forEach(n => errosDe(PAGINAS[n]));
+
+// (5) E pede com o cache de Amigos fresco (< 30 s): a tela mostra o pedido na hora.
+zera(E.id, F.id);
+await tocarAbaAmigos(pe, 1200);
+const idade5 = await ev(pe, () => Date.now() - AMIGOS_CARREGADO_EM);
+await pedirPelaBusca(pe, 'fabio', F.id);
+const p5 = DB.follows.find(f => f.follower_id === E.id && f.following_id === F.id);
+await tocarAbaAmigos(pe, 600);
+confere(idade5 < 30000, '(5) pré-condição: cache de Amigos de E fresco', idade5);
+confere((await ev(pe, () => FRIENDS_DATA.outgoing.map(r => r.id))).includes(p5 && p5.id), '(5) E vê o pedido enviado na hora, com o cache fresco');
+confere(/1 pedido enviado/.test(await texto(pe, '#friendsContainer') || ''), '(5) tela de Amigos de E diz "1 pedido enviado"', (await texto(pe, '#friendsContainer') || '').slice(0, 200));
+
+// (8) F (casca, sem amigos) pede: nenhum pacote mostra o vazio sem o pedido.
+zera(E.id, F.id);
+await ir(pf, `(async()=>{${fechaTudo}FRIENDS_DATA=null;window.irParaAba('friends')})()`, 1500);
+await limpaCasca(pf);
+await pedirPelaBusca(pf, 'elisa', E.id);
+const p8 = DB.follows.find(f => f.follower_id === F.id && f.following_id === E.id);
+confere(p8 && p8.status === 'pending', '(8) pedido F→E gravado', p8);
+const pacs8 = await casca(pf, 'amigos');
+const enganosos = pacs8.filter(m => m.pronto && m.dados.vazio && !(m.dados.enviados || []).length);
+confere(pacs8.length && !enganosos.length, '(8) nenhum pacote depois do pedido mostra o vazio sem o pedido enviado', pacs8.map(m => m.pronto ? { vazio: m.dados.vazio, env: (m.dados.enviados || []).length } : 'carregando'));
+const ult8 = pacs8[pacs8.length - 1];
+confere(ult8 && (ult8.dados.enviados || []).some(x => x.pedido === (p8 || {}).id), '(8) último pacote de F traz o pedido enviado', ult8 && ult8.dados);
+confere(ult8 && ult8.dados.vazio && !(ult8.dados.vazio.pedidos && !(ult8.dados.recebidos || []).length), '(8) vazio nativo não anuncia "N pedido de amizade" pra quem só ENVIOU', ult8 && ult8.dados.vazio);
+['E', 'F'].forEach(n => errosDe(PAGINAS[n]));
+
+// (7) Pedido pra quem bloqueou: o banco recusa e a pessoa vê uma mensagem.
+zera(E.id, F.id);
+await abrirBusca(pe, 'fabio');
+await ir(pf, `(async()=>{${fechaTudo}await bloquearUsuario('${E.id}','Elisa')})()`, 1500);
+confere(DB.bloqueios.some(b => b.bloqueador_id === F.id && b.bloqueado_id === E.id), '(7) F bloqueia E');
+await ir(pe, `pedirAmizade(BUSCA_PESSOAS.findIndex(p=>p.id==='${F.id}'))`, 1200);
+confere(!DB.follows.some(f => f.follower_id === E.id && f.following_id === F.id), '(7) banco recusa o pedido pra quem bloqueou');
+const err7 = (await texto(pe, '#friendAddErr') || '').trim(), toast7 = await ultimoToast(pe);
+confere(!!err7 || /não enviado/i.test(toast7), '(7) a recusa aparece pra E', { err7, toast7 });
+confere(!/conex/i.test(toast7 + ' ' + err7), '(7) recusa por bloqueio não manda "conferir a conexão"', { err7, toast7 });
+await abrirBusca(pf, 'elisa');
+confere(!/Elisa Teste/.test(await texto(pf, '#buscaPessoasRes') || ''), '(7) quem bloqueou não acha o bloqueado na busca');
+const pedido7 = await ev(pf, async e => { const r = await dbInsert('follows', { follower_id: S.user.id, following_id: e, status: 'pending' }); return !!r.error }, E.id);
+confere(pedido7 && !DB.follows.some(f => f.follower_id === F.id && f.following_id === E.id), '(7) quem bloqueou também não consegue pedir');
+await ir(pf, `desbloquearUsuario('${E.id}')`, 800);
+['E', 'F'].forEach(n => errosDe(PAGINAS[n]));   // console.error do insert recusado é esperado
+
+// (6) Busca por nome (não só @) e conta Apple com e-mail escondido.
+const G = novaConta('k3m9q2zz@privaterelay.appleid.com', 'senhaG-teste-7', { full_name: 'Roberta Félix', onboarding_done: true });
+criarPerfil(G);
+const ph = await abrirAparelho('H', { casca: true });
+await carregar(ph);
+await ev(ph, () => window.voltouDoLoginApple({ token: 'apple:p8w3n6tt@privaterelay.appleid.com', nome: 'Carla Nogueira' }));
+const H = await ate(() => CONTAS['p8w3n6tt@privaterelay.appleid.com'], 6000);
+const hNome = await ate(() => H && nomeDe(H.id) === 'Carla Nogueira', 6000);
+confere(hNome, '(6) Apple 1º login: o nome que a Apple manda vira o display_name (é o que a busca acha)', H && nomeDe(H.id));
+const buscas6 = [['roberta', G.id, 'primeiro nome'], ['felix', G.id, 'sobrenome sem acento'], ['Félix', G.id, 'sobrenome com acento'], ['@' + (DB.profiles.find(p => p.id === G.id) || {}).username, G.id, '@username'],
+  ['nogueira', H && H.id, 'nome vindo da Apple'], ['jezler', D.id, 'nome trocado em Ajustes'], ['gabi jez', D.id, 'nome + começo do sobrenome']];
+for (const [termo, alvo, rot] of buscas6) {
+  await abrirBusca(pe, termo);
+  const ids = await ev(pe, () => BUSCA_PESSOAS.map(p => p.id));
+  confere(ids.includes(alvo), '(6) busca acha pelo ' + rot + ' ("' + termo + '")', (await texto(pe, '#buscaPessoasRes') || '').slice(0, 200));
+}
+confere(!/privaterelay|k3m9q2zz|p8w3n6tt/.test(await texto(pe, '#buscaPessoasRes') || ''), '(6) a busca não mostra o e-mail de retransmissão');
+['E', 'F', 'H'].forEach(n => { const e = errosDe(PAGINAS[n]); confere(!e.length, 'sem erro de JS no aparelho ' + n, e) });
 
 // ═══ fim ═══
 await fim();

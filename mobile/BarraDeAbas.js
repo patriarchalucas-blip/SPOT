@@ -83,7 +83,10 @@ export const ABAS = [
   { tela: 'profile', icone: 'user', rotulo: 'Perfil' },
 ];
 
-export default function BarraDeAbas({ ativa, aoTocar, margemDeBaixo }) {
+// pontos: { friends: true } acende o ponto verde no ícone (08/10: pedido de
+// amizade esperando — o Felipe nunca soube do pedido da Roberta, porque o
+// ponto só existia dentro da aba Amigos).
+export default function BarraDeAbas({ ativa, aoTocar, margemDeBaixo, pontos }) {
   const folga = margemDeBaixo || 0;
   return (
     <View style={estilo.ancora} pointerEvents="box-none">
@@ -117,7 +120,10 @@ export default function BarraDeAbas({ ativa, aoTocar, margemDeBaixo }) {
                 // não chega lá.
                 hitSlop={4}
               >
-                <Icone nome={a.icone} cor={sel ? GREEN : INK3} />
+                <View>
+                  <Icone nome={a.icone} cor={sel ? GREEN : INK3} />
+                  {pontos && pontos[a.tela] ? <View style={estilo.ponto} /> : null}
+                </View>
                 <Text style={[estilo.rotulo, sel && estilo.rotuloAtivo]}>{a.rotulo}</Text>
               </Pressable>
             );
@@ -155,6 +161,8 @@ const estilo = StyleSheet.create({
     gap: 4,
   },
   itemPressionado: { opacity: 0.6 },
+  // O mesmo ponto do botão Atividade (TelaAmigos), no canto do ícone.
+  ponto: { position: 'absolute', top: -1, right: -3, width: 8, height: 8, borderRadius: 4, backgroundColor: GREEN },
   rotulo: { fontSize: 11, fontWeight: '500', color: INK3 },
   // O rótulo ativo é tinta, não verde: o acento fica no ÍCONE. É o que o site
   // desenha hoje em todas as telas.

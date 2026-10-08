@@ -168,7 +168,7 @@ function VazioDeAmigos({ convidou, acao }) {
       {/* A busca por @username é a da folha de adicionar amigo, que já
           existe: o campo abre ela. */}
       <Pressable onPress={() => acao('adicionar')} style={e.vzBusca} accessibilityRole="button">
-        <Text style={e.vzBuscaTxt}>Buscar por @username</Text>
+        <Text style={e.vzBuscaTxt}>Buscar pelo nome ou @</Text>
       </Pressable>
     </View>
   );
@@ -313,6 +313,14 @@ export default function TelaAmigos({ dados, ocupado, acao }) {
                 {dados.vazio.pedidos}{dados.vazio.pedidos === 1 ? ' pedido de amizade' : ' pedidos de amizade'} ›
               </Text>
             </Pressable>
+          ) : dados.vazio.enviados ? (
+            // Só ENVIOU (08/10): a Roberta pediu o Felipe e não via o pedido
+            // em lugar nenhum — achou que o app tinha perdido.
+            <Pressable onPress={() => acao('aba', 'pedidos')} style={e.vzPedidos}>
+              <Text style={e.vzPedidosTxt}>
+                {dados.vazio.enviados === 1 ? 'Pedido enviado · esperando aceitar' : dados.vazio.enviados + ' pedidos enviados · esperando aceitar'} ›
+              </Text>
+            </Pressable>
           ) : null}
           <VazioDeAmigos convidou={dados.vazio.convidou} acao={acao} />
         </ScrollView>
@@ -395,7 +403,16 @@ export default function TelaAmigos({ dados, ocupado, acao }) {
             {enviados.map((p) => (
               <View key={p.pedido} style={e.reqCard}>
                 <Avatar iniciais={p.iniciais} foto={p.foto} />
-                <Text style={e.reqNome} numberOfLines={1}>{p.nome}</Text>
+                {/* Qual conta (08/10): pedido pra uma conta parada de mesmo nome
+                    ficava esperando pra sempre sem ninguém perceber. */}
+                <View style={{ flex: 1, minWidth: 0 }}>
+                  <Text style={e.reqNome} numberOfLines={1}>{p.nome}</Text>
+                  {p.detalhe ? (
+                    <Text style={e.reqDetalhe} numberOfLines={2}>{'Esperando aceitar · ' + p.detalhe}</Text>
+                  ) : (
+                    <Text style={e.reqDetalhe} numberOfLines={1}>Esperando aceitar</Text>
+                  )}
+                </View>
                 <Pressable onPress={() => acao('cancelar', p.pedido)} style={[e.reqBotao, e.reqRecusar]}>
                   <Text style={e.reqRecusarTxt}>Cancelar</Text>
                 </Pressable>

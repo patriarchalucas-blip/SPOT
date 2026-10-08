@@ -12,7 +12,6 @@ pra "Já compilado".
 
 ## Na fila
 
-- **Número de pedidos em cima da aba Amigos** (`BarraDeAbas.js`, badge com `recebidos.length`). 08/10: a Roberta adicionou o Felipe e ele nunca soube — sem notificação e sem tocar em Amigos. O site já abre a Atividade ao abrir o app com pedido novo; o número na aba é o que falta.
 - **Quem recusou notificação poder ligar de novo** (`Linking.openSettings`): 7 de 17 contas novas sem aparelho registrado em 08/10.
 
 - Ainda só com app novo (revisão de 06/10):
@@ -26,7 +25,13 @@ pra "Já compilado".
 - **Abas Viagens e Amigos nativas no desenho novo** (lista em linhas, + Adicionar, busca de amigo): pendente de decisão do Lucas — reescrever no app ou deixar o site desenhar.
 - Depois da 1.0.2 aprovada: tirar o modo "spots" da tela Lista (lista geral).
 
-## Já foi na build 22 (07/10, 1.0.3) — TestFlight, ainda não enviada pra revisão
+## Já foi na build 23 (08/10, 1.0.4)
+
+- **Ponto verde na aba Amigos** com pedido de amizade esperando (`BarraDeAbas.js` prop `pontos`, `App.js` mensagem `{tipo:'pedidos',n}`). Substitui a Atividade abrindo sozinha (o Lucas: "não escala, o Instagram não funciona assim").
+- **Placar 15a** (`TelaViagens.js`, handoff `mapa.zip`/placar.md): o anel saiu; "Você conheceu / N% do mundo" entre o mapa e o card; três colunas iguais.
+- **Amigos** (`TelaAmigos.js`): Enviados mostra "Esperando aceitar · @ · cidade · spots"; vazio de quem só enviou diz "Pedido enviado · esperando aceitar" (antes "1 pedido de amizade"); busca "Buscar pelo nome ou @".
+
+## Já foi na build 22 (07/10, 1.0.3) — aprovada em 08/10
 
 - **"+" no topo da aba Viagens** (`TelaViagens.js`, ao lado do avatar → `acao('novoLugar')`). O "Adicionar spot" ficava só no fim da tela, depois de todas as viagens; o Lucas reclamou que "arrumamos e não mudou nada" — a arrumação de 05/10 tinha sido só no site, e a aba Viagens do iPhone é nativa.
 

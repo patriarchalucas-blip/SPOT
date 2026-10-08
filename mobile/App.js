@@ -289,6 +289,7 @@ function Conteudo() {
   // escondem a navegação, e o botão de voltar dele muda de tela sem passar
   // por aqui. A barra reflete o app, nunca o contrário.
   const [abaAtiva, setAbaAtiva] = useState('dashboard');
+  const [pedidosEsperando, setPedidosEsperando] = useState(0);
   const [mostrarAbas, setMostrarAbas] = useState(false);
   // O site diz se o Explorar dele é o que vale (o Explorar com mapa, 30/09).
   // Aí a tela nativa não cobre a aba: quem desenha é a página, e a barra de
@@ -509,6 +510,12 @@ function Conteudo() {
       webRef.current?.goBack();
       return;
     }
+    // Quantos pedidos de amizade esperam resposta (08/10): o site manda ao
+    // carregar e depois de aceitar/recusar. Acende o ponto na aba Amigos.
+    if (dados && dados.tipo === 'pedidos') {
+      setPedidosEsperando(Number(dados.n) || 0);
+      return;
+    }
     if (dados && dados.tipo === 'tela') {
       if (typeof dados.aba === 'string') setAbaAtiva(dados.aba);
       setMostrarAbas(!!dados.comAbas);
@@ -663,6 +670,7 @@ function Conteudo() {
               // Troca de conta (06/10): as abas nativas não seguram o pacote
               // da conta anterior enquanto o site recarrega.
               setDadosDaTela({});
+              setPedidosEsperando(0);
             }}
             onLoadEnd={() => {
               setCarregando(false);
@@ -711,7 +719,7 @@ function Conteudo() {
             </View>
           ) : null}
           {mostrarAbas ? (
-            <BarraDeAbas ativa={abaAtiva} aoTocar={trocarDeAba} margemDeBaixo={margem.bottom} />
+            <BarraDeAbas ativa={abaAtiva} aoTocar={trocarDeAba} margemDeBaixo={margem.bottom} pontos={{ friends: pedidosEsperando > 0 }} />
           ) : null}
           {/* Por cima de TUDO, inclusive das telas nativas: e o unico jeito
               de um aviso do site chegar em quem esta numa aba nativa. */}
