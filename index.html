@@ -3345,10 +3345,14 @@ async function refreshAvatars(name){
 // escondendo o e-mail aparecia como "V66gc4kfmt" no feed, nos pedidos e nos
 // comentários dos amigos, mesmo depois de trocar o @ (08/10, família do sócio
 // do Lucas). Sem perguntar nada: se o @ é de verdade, ele vira o nome.
+// 08/10: antes do @, o nome que veio no cadastro (Google/Apple) — a Apple às
+// vezes manda o nome só aí, e o perfil ficava com o começo do e-mail.
 function nomeDoArrobaSePreciso(p){
   if(!S.user||!p||p.id!==S.user.id||!nomeEhAutomatico(p.display_name))return;
-  if(!p.username||nomeEhAutomatico(p.username))return;
-  const nome=p.username;
+  const meta=S.user.user_metadata||{};
+  const doCadastro=[meta.full_name,meta.name].map(n=>String(n||'').replace(/\s+/g,' ').trim()).find(n=>n.length>=2&&!nomeEhAutomatico(n));
+  const nome=doCadastro?doCadastro.slice(0,40):((p.username&&!nomeEhAutomatico(p.username))?p.username:'');
+  if(!nome)return;
   dbUpdate('profiles',S.user.id,{display_name:nome}).then(function(res){
     if(res&&res.error)return;
     if(S.profile&&S.profile.id===p.id)S.profile.display_name=nome;
@@ -5615,9 +5619,11 @@ async function carregarAtividade(forcar){
       meus.length?comentariosNosMeusSpots(30):Promise.resolve([]),
       plnSpotsDeles().catch(()=>[]),
       // Amizades novas (07/10, o Lucas virou amigo do pai e a Atividade não
-      // mostrou nada). Sem coluna de "aceito em": vale a data do pedido.
+      // mostrou nada). Vale a hora do ACEITE (accepted_at, migração 033) —
+      // sem ela, a do pedido, e quem aceitava dias depois ficava escondido.
+      // select=* de propósito: pedir accepted_at antes da 033 rodar dá 400.
       dbGet('follows','status=eq.accepted&or=(follower_id.eq.'+uid+',following_id.eq.'+uid+')'
-        +'&order=created_at.desc&limit=20&select=follower_id,following_id,created_at').catch(()=>[])
+        +'&order=created_at.desc&limit=20&select=*').catch(()=>[])
     ]);
     // 06/10: falha não é "nada aconteceu" — a tela mostra o erro com Tentar de novo.
     ATIV.erro=falhou(indicou)||falhou(coment);
@@ -5646,7 +5652,7 @@ async function carregarAtividade(forcar){
       const outro=f.follower_id===uid?f.following_id:f.follower_id;
       if(!outro||amigosVistos.has(outro)||estaBloqueado(outro))return;
       amigosVistos.add(outro);
-      itens.push({tipo:'amizade',user_id:outro,quando:f.created_at});
+      itens.push({tipo:'amizade',user_id:outro,quando:f.accepted_at||f.created_at});
     });
     itens.sort((a,b)=>String(b.quando||'').localeCompare(String(a.quando||'')));
     ATIV.itens=itens.slice(0,40);
@@ -6738,7 +6744,8 @@ function avisar(tipo,alvo,extra,spot){
     return fetch('/api/notificar',{
       method:'POST',
       headers:{'Content-Type':'application/json','Authorization':'Bearer '+tk},
-      body:JSON.stringify({tipo,alvo,spot:spot||''})
+      // extra como objeto vai junto (08/10: {convite:true} no aceite pelo link).
+      body:JSON.stringify(Object.assign({tipo,alvo,spot:spot||''},(extra&&typeof extra==='object')?extra:{}))
     }).then(r=>r.json()).catch(()=>null);
   }).catch(()=>null);
 }
@@ -18645,6 +18652,11 @@ async function resgatarConvitePendente(){
   let c=null;
   try{c=localStorage.getItem(CONVITE_GUARDADO)}catch(e){}
   if(!c)return;
+  // Os amigos ANTES do resgate: o novo é quem convidou (redeem_invite só
+  // devolve 'ok'), e é pra ele que vai o aviso (08/10).
+  const uid=S.user&&S.user.id;
+  const idsDosAmigos=async()=>{const l=await dbGet('follows','status=eq.accepted&or=(follower_id.eq.'+uid+',following_id.eq.'+uid+')&select=follower_id,following_id');return falhou(l)?null:l.map(f=>f.follower_id===uid?f.following_id:f.follower_id)};
+  const antes=uid?await idsDosAmigos():null;
   const r=await dbRpc('redeem_invite',{invite_code:c});
   const status=Array.isArray(r)?r[0]:r;
   // 'sem_sessao' é o único caso em que vale tentar de novo depois; nos outros
@@ -18659,7 +18671,10 @@ async function resgatarConvitePendente(){
   if(houveResposta&&status!=='sem_sessao'){
     try{localStorage.removeItem(CONVITE_GUARDADO)}catch(e){}
   }
-  if(status==='ok'){esquecerAmigosGuardados();toast('Vocês são amigos','Já dá pra ver as viagens um do outro.','users')}
+  if(status==='ok'){
+    esquecerAmigosGuardados();toast('Vocês são amigos','Já dá pra ver as viagens um do outro.','users');
+    if(antes){const depois=await idsDosAmigos();(depois||[]).filter(id=>!antes.includes(id)).forEach(id=>avisar('aceite',id,{convite:true}))}
+  }
 }
 
 // ── convite que se perdia na instalação (08/10) ──

@@ -38,7 +38,11 @@ const TEXTOS = {
   // dono do spot — o dono respondeu no fio (06/10). Dizia "comentou no seu
   // lugar" sobre um lugar que não era de quem recebia. Decidido aqui, pelo
   // banco; o SQL (enderecos_para_avisar) continua vendo só 'comentario'.
-  resposta: (nome, extra) => ({ title: 'Resposta', body: extra ? `${nome} respondeu na conversa de ${extra}` : `${nome} respondeu na conversa de um spot` })
+  resposta: (nome, extra) => ({ title: 'Resposta', body: extra ? `${nome} respondeu na conversa de ${extra}` : `${nome} respondeu na conversa de um spot` }),
+  // Também não é tipo que o app pede: é o 'aceite' de quem entrou pelo LINK de
+  // convite (08/10). Quem mandou o link nunca ficava sabendo. O banco segue
+  // vendo 'aceite' (a amizade já existe, então ele autoriza).
+  convite: (nome) => ({ title: 'Vocês são amigos', body: `${nome} entrou no Spot pelo seu convite` })
 };
 
 export async function onRequestPost(context) {
@@ -86,6 +90,7 @@ export async function onRequestPost(context) {
   if (await lerKV(env, par)) return json({ enviados: 0, motivo: 'repetido' });
 
   let extra = '', texto = tipo;
+  if (tipo === 'aceite' && body.convite === true) texto = 'convite';
   if (tipo === 'comentario' && /^[0-9a-f-]{36}$/i.test(spotId)) {
     const c = await nomeDoSpotComentado(env, spotId, quem.uid, alvo);
     extra = c.nome;
