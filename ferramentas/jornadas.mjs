@@ -860,6 +860,46 @@ const recentes = await ev(pc, () => localStorage.getItem('spot_explorar_recentes
 confere(!recentes || !/Lisboa/.test(recentes), 'buscas recentes do Explorar de A não aparecem pra B', recentes);
 ['C'].forEach(n => { const e = errosDe(PAGINAS[n]); confere(!e.length, 'sem erro de JS no aparelho ' + n, e) });
 
+// ═══ JORNADA 7 · Apple com e-mail escondido (08/10, família do sócio) ═══
+// O perfil nasce com o começo do e-mail de retransmissão como nome
+// ("V66gc4kfmt" no Perfil, mesmo depois de trocar o @), e as cidades marcadas
+// num país só marcado não apareciam em lugar nenhum.
+if (Number(process.env.SO_ATE) && Number(process.env.SO_ATE) < 7) await fim();
+JORNADA = '7 apple sem nome';
+console.log('\n── ' + JORNADA);
+const D = novaConta('x7k2p9ab@privaterelay.appleid.com', 'senhaD-teste-4', { onboarding_done: true });
+DB.profiles.push({ id: D.id, display_name: 'x7k2p9ab', username: 'gjezler', home_city: 'Salvador', home_country: 'Brasil', avatar_url: null, bio: '', created_at: agora() });
+DB.trips.push({ id: uuid(), user_id: D.id, name: 'Portugal', destinations: ['Portugal'], dates: '__quickvisit__', status: 'done', privada: false, proxima: false, created_at: agora() });
+const pd = await abrirAparelho('D', { casca: true });
+await carregar(pd);
+await entrar(pd, D.email, D.senha, false);
+const perguntou = await ate(async () => (await janelas(pd)).includes('ov-seunome'), 5000);
+confere(perguntou, 'conta com nome automático recebe a pergunta do nome', await janelas(pd));
+const nomeAntes = await ev(pd, () => nomeDeExibicao());
+confere(nomeAntes === 'gjezler', 'antes de ter nome, o Perfil mostra o @ trocado, não o e-mail', nomeAntes);
+await ir(pd, `(async()=>{document.getElementById('seuNomeInput').value='Gabriel Jezler';await salvarSeuNome()})()`, 1200);
+confere(nomeDe(D.id) === 'Gabriel Jezler', 'o nome vai pro banco (é o que amigo vê e a busca acha)', nomeDe(D.id));
+const pacPerfilD = await ultimoPacote(pd, 'perfil');
+confere(pacPerfilD && pacPerfilD.dados && pacPerfilD.dados.nome === 'Gabriel', 'o Perfil do app mostra o nome novo', pacPerfilD && pacPerfilD.dados && pacPerfilD.dados.nome);
+// Ajustes também troca o nome
+await ir(pd, `(async()=>{abrirConfig();document.getElementById('displayNameInput').value='Gabi Jezler';await salvarPerfil()})()`, 1500);
+confere(nomeDe(D.id) === 'Gabi Jezler', 'Ajustes troca o nome', nomeDe(D.id));
+// Cidade num país só marcado
+await ir(pd, `(async()=>{document.querySelectorAll('.overlay.show').forEach(o=>closeOv(o.id));goTo('dashboard');abrirMarcarCidades('Portugal')})()`, 1200);
+await ir(pd, `(()=>{const i=document.getElementById('cvBusca');i.value='Sintra';cvBuscar('Sintra')})()`, 1200);
+await ir(pd, `(()=>{const l=[...document.querySelectorAll('#cvLista .cv-linha:not(.on)')].find(x=>/Sintra/.test(x.innerText));if(l)l.click()})()`, 300);
+await ir(pd, `cvSalvar()`, 1500);
+confere(DB.cidades_visitadas.some(c => c.user_id === D.id && c.nome === 'Sintra'), 'D marca Sintra', DB.cidades_visitadas.filter(c => c.user_id === D.id));
+await ir(pd, `(async()=>{await loadDashboard()})()`, 1500);
+const pacViagensD = await ultimoPacote(pd, 'viagens');
+const vd = (pacViagensD && pacViagensD.dados) || {};
+const portugal = (vd.viagensDaRegiao || []).find(t => t.nome === 'Portugal');
+confere(!!portugal, 'Portugal (só marcado) aparece na lista de Viagens do app com a cidade', (vd.viagensDaRegiao || []).map(t => t.nome));
+confere(portugal && /1 cidade/.test(portugal.meta), 'o card diz "1 cidade"', portugal && portugal.meta);
+confere(!vd.primeiro, 'com cidade marcada, a aba não fica no "Seu primeiro spot"', vd.primeiro);
+confere(vd.cidades >= 1, 'placar conta a cidade', vd.cidades);
+['D'].forEach(n => { const e = errosDe(PAGINAS[n]); confere(!e.length, 'sem erro de JS no aparelho ' + n, e) });
+
 // ═══ fim ═══
 await fim();
 async function fim() {

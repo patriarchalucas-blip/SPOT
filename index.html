@@ -3008,11 +3008,20 @@ body.exm .exm-filtros{position:relative;z-index:1}
 
 <div class="overlay" id="ov-detalheamigo" onclick="closeOut(event,'ov-detalheamigo')"><div class="sheet"><button class="sheet-close" onclick="closeOv('ov-detalheamigo')" data-ic="close" aria-label="Fechar"></button><div class="sheet-handle"></div><div class="sheet-title" id="daTitulo">—</div><div id="daCorpo"></div></div></div>
 
-<div class="overlay" id="ov-editperfil" onclick="closeOut(event,'ov-editperfil')"><div class="sheet"><button class="sheet-close" onclick="closeOv('ov-editperfil')" data-ic="close" aria-label="Fechar"></button><div class="sheet-handle"></div><div class="sheet-title">Configurações</div>
+<div class="overlay" id="ov-seunome" onclick="closeOut(event,'ov-seunome')"><div class="sheet"><button class="sheet-close" onclick="closeOv('ov-seunome')" data-ic="close" aria-label="Fechar"></button><div class="sheet-handle"></div><div class="sheet-title">Como seus amigos te chamam?</div>
+<p style="font-size:14px;color:var(--ink2);margin:0 0 16px;line-height:1.4">O Spot não recebeu o seu nome no cadastro. É ele que aparece pros seus amigos e na busca.</p>
+<input class="nt-input" autocomplete="name" id="seuNomeInput" placeholder="Seu nome" maxlength="40" style="margin-bottom:4px" oninput="document.getElementById('seuNomeStatus').textContent=''" onkeydown="if(event.key==='Enter')salvarSeuNome()">
+<div class="feed-time" id="seuNomeStatus" style="margin-bottom:16px;color:var(--ink3)"></div>
+<button class="sheet-cta" id="seuNomeBtn" onclick="salvarSeuNome()">Salvar</button></div></div>
+
+<div class="overlay" id="ov-editperfil"onclick="closeOut(event,'ov-editperfil')"><div class="sheet"><button class="sheet-close" onclick="closeOv('ov-editperfil')" data-ic="close" aria-label="Fechar"></button><div class="sheet-handle"></div><div class="sheet-title">Configurações</div>
 <div class="prof-linha" onclick="document.getElementById('avatarFileInput').click()"><span class="pl-ic" data-ic="user"></span><span class="pl-txt">Trocar foto de perfil</span><span class="pl-seta">›</span></div>
 <div class="prof-linha" onclick="closeOv('ov-editperfil');abrirCidadeDeCasa()"><span class="pl-ic" data-ic="pin"></span><span class="pl-txt">Onde moro<span class="pl-valor" id="cfgCidade"></span></span><span class="pl-seta">›</span></div>
 <div class="prof-linha" onclick="closeOv('ov-editperfil');openVisitedCountryPicker()"><span class="pl-ic" data-ic="globe"></span><span class="pl-txt">Países que já visitei</span><span class="pl-seta">›</span></div>
 <div style="height:18px"></div>
+<div class="nt-label">Seu nome</div>
+<input class="nt-input" autocomplete="name" id="displayNameInput" placeholder="Como seus amigos te chamam" maxlength="40" style="margin-bottom:4px" oninput="document.getElementById('displayNameStatus').textContent=''">
+<div class="feed-time" id="displayNameStatus" style="margin-bottom:18px"></div>
 <div class="nt-label">Seu nome de usuário</div>
 <input class="nt-input" autocomplete="off" autocorrect="off" spellcheck="false" id="usernameInput" placeholder="seu_username" style="margin-bottom:4px" autocapitalize="none" oninput="document.getElementById('usernameStatus').textContent=''">
 <div class="feed-time" id="usernameStatus" style="margin-bottom:18px"></div>
@@ -3337,10 +3346,53 @@ async function refreshAvatars(name){
   if(falhou(rows)||!rows||!rows[0])return;
   const novo=Object.assign(S.profile||{},rows[0]);S.profile=novo;
   await trazerFotoDoGoogle(novo);
+  // O nome também pode ter mudado com o perfil do banco (08/10).
+  const nomeNovo=nomeDeExibicao();
+  if(nomeNovo!==name){
+    name=nomeNovo;
+    const pn=document.getElementById('profName');if(pn)pn.textContent=nomeNovo;
+    if(!novo.avatar_url)applyAvatar('dashAvatar',name,'');
+    try{darDadosDePerfil();darDadosDeViagens()}catch(e){}
+  }
+  talvezPedirNome(novo);
   if((novo.avatar_url||'')!==antes){
     applyAvatar('dashAvatar',name,novo.avatar_url);applyAvatar('profAvatar',name,novo.avatar_url);
     try{guardarDadosLocais();darDadosDePerfil();darDadosDeViagens()}catch(e){}
   }
+}
+// Perfil com o nome automático (o começo do e-mail): quem entra pela Apple
+// escondendo o e-mail vira "V66gc4kfmt" pros amigos, e ninguém acha a pessoa
+// pelo nome na busca (08/10, família do sócio do Lucas). Pergunta uma vez por
+// dia até ter nome; nunca em cima do primeiro acesso.
+function talvezPedirNome(p){
+  if(!S.user||!p||!p.id||!nomeEhAutomatico(p.display_name))return;
+  const chave='spot_pediu_nome_'+S.user.id;
+  try{const em=+localStorage.getItem(chave)||0;if(Date.now()-em<864e5)return}catch(e){}
+  setTimeout(()=>{
+    if(!S.user||S.user.id!==p.id||!nomeEhAutomatico((S.profile||{}).display_name))return;
+    if(document.querySelector('.overlay.show'))return;
+    try{localStorage.setItem(chave,String(Date.now()))}catch(e){}
+    const el=document.getElementById('seuNomeInput');if(el)el.value='';
+    const st=document.getElementById('seuNomeStatus');if(st)st.textContent='';
+    showOv('ov-seunome');
+  },1500);
+}
+async function salvarSeuNome(){
+  const el=document.getElementById('seuNomeInput'),st=document.getElementById('seuNomeStatus');
+  const nome=el.value.replace(/\s+/g,' ').trim().slice(0,40);
+  if(nome.length<2){st.textContent='Escreve pelo menos 2 letras';return}
+  if(textoBarrado(nome)){st.textContent='Esse nome não é permitido';return}
+  const b=document.getElementById('seuNomeBtn');b.textContent='Salvando...';b.style.pointerEvents='none';
+  const{error}=await dbUpdate('profiles',S.user.id,{display_name:nome});
+  b.textContent='Salvar';b.style.pointerEvents='';
+  if(error){st.textContent='Não salvou. Confere a conexão e tenta de novo.';return}
+  S.profile=Object.assign(S.profile||{},{display_name:nome});
+  closeOv('ov-seunome');
+  const n=nomeDeExibicao();
+  const pn=document.getElementById('profName');if(pn)pn.textContent=n;
+  if(!S.profile.avatar_url)applyAvatar('dashAvatar',n,'');
+  try{guardarDadosLocais();darDadosDePerfil();darDadosDeViagens()}catch(e){}
+  toast('Pronto','Seus amigos agora te acham como '+nome+'.','check');
 }
 // A foto da conta do Google vira a foto do perfil (06/10). Antes só existia
 // foto de quem subia uma na mão — quase ninguém —, e a busca por @, o feed e
@@ -6378,11 +6430,24 @@ async function excluirConta(){
 // Perfil) e uma TERCEIRA, diferente, ia pras telas nativas: la o nome saia
 // do display_name do banco, que pra quem entrou com Google e o pedaco do
 // email. Resultado: "Lucas" na web e "lucas.patriarcha" no app.
+// O começo do e-mail é o nome que o cadastro dá quando não sabe outro. Com a
+// Apple escondendo o e-mail ele é aleatório ("v66gc4kfmt", 08/10).
+function prefixoDoEmail(){return String((S.user&&S.user.email)||'').split('@')[0].toLowerCase()}
+function nomeEhAutomatico(n){
+  const x=String(n||'').trim().toLowerCase();
+  return !x||x===prefixoDoEmail();
+}
+// 08/10: o nome do PERFIL vem primeiro. Antes só olhava o cadastro (Google) e
+// o e-mail, então quem entrava pela Apple via "V66gc4kfmt" no Perfil mesmo
+// depois de trocar o @ — e não havia onde trocar o nome.
 function nomeDeExibicao(){
   if(!S.user)return '';
   const meta=S.user.user_metadata||{};
-  let nome=meta.full_name||meta.name||String(S.user.email||'').split('@')[0].split('.')[0];
-  nome=String(nome).split(' ')[0];
+  const p=S.profile||{};
+  let nome=[p.display_name,meta.full_name,meta.name].find(n=>n&&!nomeEhAutomatico(n));
+  if(!nome&&p.username&&!nomeEhAutomatico(p.username))return p.username;
+  if(!nome)nome=prefixoDoEmail().split('.')[0];
+  nome=String(nome).trim().split(/\s+/)[0];
   return nome.charAt(0).toUpperCase()+nome.slice(1).toLowerCase();
 }
 let PLACAR={viagens:0,spots:0,cidades:0,paises:0};
@@ -7133,6 +7198,8 @@ function tripMetaText(t,curto){
   // banco; so nao e mais mostrado. O card e sobre o lugar, nao sobre quando.
   if(!t._spotsLoaded)return'';
   if(CHEGOU.has(t.id))return 'Acabou de chegar';
+  // País só com cidades marcadas (08/10): '2 cidades', sem o '0 spots'.
+  if(!sp.length&&cities>0)return cities+(cities===1?' cidade':' cidades');
   return cityTxt+sp.length+(sp.length===1?' spot':' spots');
 }
 function refreshTripMetas(){
@@ -7314,7 +7381,7 @@ function darDadosDeViagens(){
     casa:(function(){const r=resumoDeCasa();if(!r)return null;
       return{cidade:r.cidade,meta:r.meta,foto:FOTO_DE_CASA?fotoPraCasca(safeUrl(FOTO_DE_CASA)):'',
         cores:coresDoGradiente((S.profile&&S.profile.home_country)||'')}})(),
-    primeiro:!allSpotsFlat().length?{ia:!!(typeof IMP!=='undefined'&&IMP.ligado)}:null,
+    primeiro:!allSpotsFlat().length&&!visiveis.length?{ia:!!(typeof IMP!=='undefined'&&IMP.ligado)}:null,
     vazioTexto:(S.profile&&S.profile.home_city)
       ?'Salve um lugar fora de '+S.profile.home_city+' e a viagem aparece aqui sozinha.'
       :'Salve o primeiro spot e a viagem aparece aqui sozinha.',
@@ -14906,7 +14973,14 @@ function viagemPlanejada(t){
   return !(t._spots||[]).some(x=>x.status!=='want');
 }
 // O que entra na aba Viagens (lista, placar, continentes, tela nativa).
-function naAbaViagens(t){return !isNonTrip(t)&&!viagemPlanejada(t)}
+// 08/10: país marcado SEM spot entra quando tem cidade marcada — antes a
+// cidade marcada num país do "Países que visitei" não aparecia em lugar
+// nenhum (só no número do placar). País sem cidade continua fora (10b).
+function naAbaViagens(t){
+  if(ehCasa(t)||viagemPlanejada(t))return false;
+  if(isQuickVisit(t))return CV_LIGADO&&cidadesSemSpotDaViagem(t).length>0;
+  return true;
+}
 function proximasViagens(){return (S.trips||[]).filter(viagemPlanejada)}
 function visitedCountryNames(){
   const set=new Set();
@@ -14945,10 +15019,18 @@ function visitedCityCount(){
 }
 function abrirConfig(){
   const p=S.profile||{};
+  preencherNomeDaConfig(p);
   document.getElementById('usernameInput').value=p.username||'';
   document.getElementById('bioInput').value=p.bio||'';
   document.getElementById('usernameStatus').textContent='';
   showOv('ov-editperfil');
+}
+// Nome automático (começo do e-mail) fica fora do campo: a pessoa vê o
+// "Como seus amigos te chamam" e entende que falta.
+function preencherNomeDaConfig(p){
+  const el=document.getElementById('displayNameInput');if(!el)return;
+  el.value=nomeEhAutomatico(p.display_name)?'':(p.display_name||'');
+  const st=document.getElementById('displayNameStatus');if(st)st.textContent='';
 }
 async function loadProfile(){
   if(!S.user)return;
@@ -14962,6 +15044,10 @@ async function loadProfile(){
   const cfg=document.getElementById('cfgCidade');if(cfg)cfg.textContent=p.home_city?' · '+p.home_city:'';
   const bio=document.getElementById('profBio');
   if(p.bio){bio.textContent=p.bio;bio.style.display='block'}else{bio.style.display='none'}
+  // O nome da 1ª linha saiu antes do perfil chegar: com ele, pode mudar.
+  const nomeAgora=nomeDeExibicao();
+  if(nomeAgora!==name)document.getElementById('profName').textContent=nomeAgora;
+  preencherNomeDaConfig(p);
   document.getElementById('usernameInput').value=p.username||'';
   document.getElementById('bioInput').value=p.bio||'';
   applyAvatar('dashAvatar',name,p.avatar_url);
@@ -18735,6 +18821,15 @@ async function salvarPerfil(){
   // Bio e username aparecem pra qualquer um que ache o perfil — passam
   // pelo mesmo filtro do resto do conteúdo escrito.
   if(textoBarrado(bio)){avisarConteudoBarrado();return}
+
+  // O nome (08/10) é o que os amigos veem e o que a busca acha. Vazio = não mexe.
+  const nomeEl=document.getElementById('displayNameStatus');
+  const nome=document.getElementById('displayNameInput').value.replace(/\s+/g,' ').trim();
+  if(nome){
+    if(textoBarrado(nome)){nomeEl.style.color=var_red();nomeEl.textContent='Esse nome não é permitido';return}
+    if(nome.length<2){nomeEl.style.color=var_red();nomeEl.textContent='Escreve pelo menos 2 letras';return}
+    patch.display_name=nome.slice(0,40);
+  }
 
   if(raw){
     if(textoBarrado(raw.replace(/_/g,' '))){
