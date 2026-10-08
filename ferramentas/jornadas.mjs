@@ -873,14 +873,15 @@ DB.trips.push({ id: uuid(), user_id: D.id, name: 'Portugal', destinations: ['Por
 const pd = await abrirAparelho('D', { casca: true });
 await carregar(pd);
 await entrar(pd, D.email, D.senha, false);
-const perguntou = await ate(async () => (await janelas(pd)).includes('ov-seunome'), 5000);
-confere(perguntou, 'conta com nome automático recebe a pergunta do nome', await janelas(pd));
+// Sem pergunta (o Lucas, 08/10): o @ trocado vira o nome, sozinho, e é ele que os amigos veem.
+const virouArroba = await ate(() => nomeDe(D.id) === 'gjezler', 6000);
+confere(virouArroba, 'nome automático vira o @ no banco (é o que amigo vê e a busca acha)', nomeDe(D.id));
+confere(!(await janelas(pd)).length, 'nenhuma folha aberta sozinha', await janelas(pd));
 const nomeAntes = await ev(pd, () => nomeDeExibicao());
-confere(nomeAntes === 'gjezler', 'antes de ter nome, o Perfil mostra o @ trocado, não o e-mail', nomeAntes);
-await ir(pd, `(async()=>{document.getElementById('seuNomeInput').value='Gabriel Jezler';await salvarSeuNome()})()`, 1200);
-confere(nomeDe(D.id) === 'Gabriel Jezler', 'o nome vai pro banco (é o que amigo vê e a busca acha)', nomeDe(D.id));
+confere(nomeAntes === 'gjezler', 'o Perfil mostra o @, não o e-mail', nomeAntes);
+await ir(pd, `(async()=>{await loadProfile()})()`, 1500);
 const pacPerfilD = await ultimoPacote(pd, 'perfil');
-confere(pacPerfilD && pacPerfilD.dados && pacPerfilD.dados.nome === 'Gabriel', 'o Perfil do app mostra o nome novo', pacPerfilD && pacPerfilD.dados && pacPerfilD.dados.nome);
+confere(pacPerfilD && pacPerfilD.dados && pacPerfilD.dados.nome === 'gjezler', 'o Perfil do app mostra gjezler', pacPerfilD && pacPerfilD.dados && pacPerfilD.dados.nome);
 // Ajustes também troca o nome
 await ir(pd, `(async()=>{abrirConfig();document.getElementById('displayNameInput').value='Gabi Jezler';await salvarPerfil()})()`, 1500);
 confere(nomeDe(D.id) === 'Gabi Jezler', 'Ajustes troca o nome', nomeDe(D.id));

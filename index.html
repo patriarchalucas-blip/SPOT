@@ -3008,12 +3008,6 @@ body.exm .exm-filtros{position:relative;z-index:1}
 
 <div class="overlay" id="ov-detalheamigo" onclick="closeOut(event,'ov-detalheamigo')"><div class="sheet"><button class="sheet-close" onclick="closeOv('ov-detalheamigo')" data-ic="close" aria-label="Fechar"></button><div class="sheet-handle"></div><div class="sheet-title" id="daTitulo">—</div><div id="daCorpo"></div></div></div>
 
-<div class="overlay" id="ov-seunome" onclick="closeOut(event,'ov-seunome')"><div class="sheet"><button class="sheet-close" onclick="closeOv('ov-seunome')" data-ic="close" aria-label="Fechar"></button><div class="sheet-handle"></div><div class="sheet-title">Como seus amigos te chamam?</div>
-<p style="font-size:14px;color:var(--ink2);margin:0 0 16px;line-height:1.4">O Spot não recebeu o seu nome no cadastro. É ele que aparece pros seus amigos e na busca.</p>
-<input class="nt-input" autocomplete="name" id="seuNomeInput" placeholder="Seu nome" maxlength="40" style="margin-bottom:4px" oninput="document.getElementById('seuNomeStatus').textContent=''" onkeydown="if(event.key==='Enter')salvarSeuNome()">
-<div class="feed-time" id="seuNomeStatus" style="margin-bottom:16px;color:var(--ink3)"></div>
-<button class="sheet-cta" id="seuNomeBtn" onclick="salvarSeuNome()">Salvar</button></div></div>
-
 <div class="overlay" id="ov-editperfil"onclick="closeOut(event,'ov-editperfil')"><div class="sheet"><button class="sheet-close" onclick="closeOv('ov-editperfil')" data-ic="close" aria-label="Fechar"></button><div class="sheet-handle"></div><div class="sheet-title">Configurações</div>
 <div class="prof-linha" onclick="document.getElementById('avatarFileInput').click()"><span class="pl-ic" data-ic="user"></span><span class="pl-txt">Trocar foto de perfil</span><span class="pl-seta">›</span></div>
 <div class="prof-linha" onclick="closeOv('ov-editperfil');abrirCidadeDeCasa()"><span class="pl-ic" data-ic="pin"></span><span class="pl-txt">Onde moro<span class="pl-valor" id="cfgCidade"></span></span><span class="pl-seta">›</span></div>
@@ -3354,45 +3348,25 @@ async function refreshAvatars(name){
     if(!novo.avatar_url)applyAvatar('dashAvatar',name,'');
     try{darDadosDePerfil();darDadosDeViagens()}catch(e){}
   }
-  talvezPedirNome(novo);
+  nomeDoArrobaSePreciso(novo);
   if((novo.avatar_url||'')!==antes){
     applyAvatar('dashAvatar',name,novo.avatar_url);applyAvatar('profAvatar',name,novo.avatar_url);
     try{guardarDadosLocais();darDadosDePerfil();darDadosDeViagens()}catch(e){}
   }
 }
 // Perfil com o nome automático (o começo do e-mail): quem entra pela Apple
-// escondendo o e-mail vira "V66gc4kfmt" pros amigos, e ninguém acha a pessoa
-// pelo nome na busca (08/10, família do sócio do Lucas). Pergunta uma vez por
-// dia até ter nome; nunca em cima do primeiro acesso.
-function talvezPedirNome(p){
-  if(!S.user||!p||!p.id||!nomeEhAutomatico(p.display_name))return;
-  const chave='spot_pediu_nome_'+S.user.id;
-  try{const em=+localStorage.getItem(chave)||0;if(Date.now()-em<864e5)return}catch(e){}
-  setTimeout(()=>{
-    if(!S.user||S.user.id!==p.id||!nomeEhAutomatico((S.profile||{}).display_name))return;
-    if(document.querySelector('.overlay.show'))return;
-    try{localStorage.setItem(chave,String(Date.now()))}catch(e){}
-    const el=document.getElementById('seuNomeInput');if(el)el.value='';
-    const st=document.getElementById('seuNomeStatus');if(st)st.textContent='';
-    showOv('ov-seunome');
-  },1500);
-}
-async function salvarSeuNome(){
-  const el=document.getElementById('seuNomeInput'),st=document.getElementById('seuNomeStatus');
-  const nome=el.value.replace(/\s+/g,' ').trim().slice(0,40);
-  if(nome.length<2){st.textContent='Escreve pelo menos 2 letras';return}
-  if(textoBarrado(nome)){st.textContent='Esse nome não é permitido';return}
-  const b=document.getElementById('seuNomeBtn');b.textContent='Salvando...';b.style.pointerEvents='none';
-  const{error}=await dbUpdate('profiles',S.user.id,{display_name:nome});
-  b.textContent='Salvar';b.style.pointerEvents='';
-  if(error){st.textContent='Não salvou. Confere a conexão e tenta de novo.';return}
-  S.profile=Object.assign(S.profile||{},{display_name:nome});
-  closeOv('ov-seunome');
-  const n=nomeDeExibicao();
-  const pn=document.getElementById('profName');if(pn)pn.textContent=n;
-  if(!S.profile.avatar_url)applyAvatar('dashAvatar',n,'');
-  try{guardarDadosLocais();darDadosDePerfil();darDadosDeViagens()}catch(e){}
-  toast('Pronto','Seus amigos agora te acham como '+nome+'.','check');
+// escondendo o e-mail aparecia como "V66gc4kfmt" no feed, nos pedidos e nos
+// comentários dos amigos, mesmo depois de trocar o @ (08/10, família do sócio
+// do Lucas). Sem perguntar nada: se o @ é de verdade, ele vira o nome.
+function nomeDoArrobaSePreciso(p){
+  if(!S.user||!p||p.id!==S.user.id||!nomeEhAutomatico(p.display_name))return;
+  if(!p.username||nomeEhAutomatico(p.username))return;
+  const nome=p.username;
+  dbUpdate('profiles',S.user.id,{display_name:nome}).then(function(res){
+    if(res&&res.error)return;
+    if(S.profile&&S.profile.id===p.id)S.profile.display_name=nome;
+    try{guardarDadosLocais()}catch(e){}
+  }).catch(function(){});
 }
 // A foto da conta do Google vira a foto do perfil (06/10). Antes só existia
 // foto de quem subia uma na mão — quase ninguém —, e a busca por @, o feed e
@@ -6446,6 +6420,8 @@ function nomeDeExibicao(){
   const p=S.profile||{};
   let nome=[p.display_name,meta.full_name,meta.name].find(n=>n&&!nomeEhAutomatico(n));
   if(!nome&&p.username&&!nomeEhAutomatico(p.username))return p.username;
+  // Nome que é o próprio @ sai como a pessoa escreveu ('gjezler', não 'Gjezler').
+  if(nome&&p.username&&nome===p.username)return nome;
   if(!nome)nome=prefixoDoEmail().split('.')[0];
   nome=String(nome).trim().split(/\s+/)[0];
   return nome.charAt(0).toUpperCase()+nome.slice(1).toLowerCase();
@@ -18871,6 +18847,7 @@ async function salvarPerfil(){
       }
     }
     patch.username=raw;
+    if(!patch.display_name&&nomeEhAutomatico((S.profile||{}).display_name))patch.display_name=raw;
   }
 
   if(btn){btn.textContent='Salvando...';btn.style.pointerEvents='none'}
