@@ -899,6 +899,14 @@ confere(!!portugal, 'Portugal (só marcado) aparece na lista de Viagens do app c
 confere(portugal && /1 cidade/.test(portugal.meta), 'o card diz "1 cidade"', portugal && portugal.meta);
 confere(!vd.primeiro, 'com cidade marcada, a aba não fica no "Seu primeiro spot"', vd.primeiro);
 confere(vd.cidades >= 1, 'placar conta a cidade', vd.cidades);
+// Pedido que ninguém via (Roberta → Felipe, 08/10): sem tocar em Amigos, abrir o app mostra o pedido.
+DB.follows.push({ id: uuid(), follower_id: A.id, following_id: D.id, status: 'pending', created_at: agora() });
+await ir(pd, `(async()=>{document.querySelectorAll('.overlay.show').forEach(o=>closeOv(o.id));goTo('dashboard');PEDIDOS_CONFERIDOS_EM=0;await loadDashboard()})()`, 2500);
+confere(await tela(pd) === 'atividade', 'pedido recebido abre a tela de pedidos sozinho ao abrir o app', await tela(pd));
+const txtAtiv = await texto(pd, '#atCorpo');
+confere(/quer adicionar você/.test(txtAtiv || '') && /Aceitar/.test(txtAtiv || ''), 'a tela mostra quem pediu com Aceitar', (txtAtiv || '').slice(0, 200));
+await ir(pd, `(async()=>{goTo('dashboard');PEDIDOS_CONFERIDOS_EM=0;await loadDashboard()})()`, 2000);
+confere(await tela(pd) === 'dashboard', 'o mesmo pedido não abre a tela de novo', await tela(pd));
 ['D'].forEach(n => { const e = errosDe(PAGINAS[n]); confere(!e.length, 'sem erro de JS no aparelho ' + n, e) });
 
 // ═══ fim ═══

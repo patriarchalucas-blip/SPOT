@@ -5684,6 +5684,31 @@ function pintarPontoDaAtividade(){
   const nova=(ATIV.itens||[]).some(i=>String(i.quando||'')>vista);
   el.style.display=(pedidos||nova)?'':'none';
 }
+// PEDIDO QUE NINGUÉM VIA (08/10). A Roberta adicionou o Felipe e ele nunca
+// soube: sem notificação no celular dele (iOS recusado ou nunca pedido) e os
+// amigos só carregam quando se toca em Amigos — que ele não tocou. Ela via
+// que ele não era amigo e achava que o app estava quebrado. Agora, ao abrir
+// o app, pedido recebido que esta pessoa ainda não viu abre a Atividade
+// (Aceitar/Recusar), uma vez por pedido. Tela do site: vale em qualquer build.
+let PEDIDOS_CONFERIDOS_EM=0;
+async function mostrarPedidosNovos(){
+  if(!S.user||Date.now()-PEDIDOS_CONFERIDOS_EM<60000)return;
+  PEDIDOS_CONFERIDOS_EM=Date.now();
+  const uid=S.user.id;
+  const linhas=await dbGet('follows','status=eq.pending&following_id=eq.'+uid+'&select=id');
+  if(falhou(linhas)||!linhas.length||!S.user||S.user.id!==uid)return;
+  const chave='spot_pedidos_mostrados_'+uid;
+  let vistos=[];try{vistos=JSON.parse(localStorage.getItem(chave)||'[]')}catch(e){}
+  const novos=linhas.map(l=>l.id).filter(id=>!vistos.includes(id));
+  if(!novos.length)return;
+  // Nunca por cima do primeiro acesso, de uma folha aberta ou de quem já
+  // está na Atividade.
+  if(document.querySelector('.overlay.show')||telaAtual()==='atividade')return;
+  try{localStorage.setItem(chave,JSON.stringify(vistos.concat(novos).slice(-200)))}catch(e){}
+  await loadFriends();
+  if(!S.user||S.user.id!==uid||document.querySelector('.overlay.show'))return;
+  abrirAtividade();
+}
 function abrirAtividade(){
   goTo('atividade');
   pintarAtividade();
@@ -6893,6 +6918,7 @@ async function loadDashboard(){
   DADOS_DA_CONTA=true;
   CARGA_FALHOU_SEM_DADOS=false;
   cancelarRecargaAutomatica();
+  mostrarPedidosNovos();
   const byId={};
   S.trips.forEach(t=>{t._spots=[];t._spotsLoaded=false;byId[t.id]=t});
   (allSpots||[]).forEach(s=>{const t=byId[s.trip_id];if(t)t._spots.push(s)});
