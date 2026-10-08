@@ -4,7 +4,9 @@
 <meta charset="UTF-8">
 <!-- As fotos de lugar vêm do CDN do Google (o /api/place-photo redireciona
      pra lá): abrir a conexão já na carga tira o aperto de mão da 1ª foto. -->
-<link rel="preconnect" href="https://lh3.googleusercontent.com" crossorigin>
+<!-- Sem crossorigin (08/10): <img> pede sem CORS, e a conexão aberta COM
+     crossorigin fica num balde separado que a foto não usa. -->
+<link rel="preconnect" href="https://lh3.googleusercontent.com">
 <link rel="dns-prefetch" href="https://lh3.googleusercontent.com">
 <!-- Sem zoom da página: dentro do app do iPhone, um toque duplo ou uma pinça
      sem querer deixava a tela ampliada e a pessoa tinha que desfazer com os
@@ -5880,6 +5882,9 @@ async function init(){
         try{await resgatarConvitePendente()}catch(e){console.error('convite:',e)}
         // Convite aberto no Safari antes de instalar o app (08/10).
         impVerSeEstaLigado();
+        // Mede a posição logo na abertura (08/10), sem segurar nada: quando a
+        // pessoa toca no Explorar, ela já está pronta. Não pergunta permissão.
+        setTimeout(()=>{if(S.user)cidadeOndeEstou().catch(()=>{})},2000);
         try{await salvarSpotPendente()}catch(e){console.error('salvar da lista:',e)}
         // Daqui pra baixo SEM segurar o login (08/10): o Supabase espera este
         // ouvinte terminar antes de dar o login por concluído, e a pergunta do
@@ -6612,8 +6617,13 @@ function falarComACasca(msg){
 function temJanelaAberta(){
   return !!document.querySelector('.overlay.show,.cropper-overlay.show');
 }
+// Viagens e Amigos desenhados pelo SITE dentro do app (08/10, build 24+): as
+// telas nativas estavam no desenho antigo e cada mudança pedia build. A casca
+// nova avisa com cascaTemAbasWeb e deixa de cobrir essas abas; as antigas
+// seguem com as nativas (e com os pacotes darDadosDe*, que continuam saindo).
+function abasQueOSiteDesenha(){return (naCasca()&&window.cascaTemAbasWeb)?['dashboard','friends']:[]}
 function avisarTelaAtual(id){
-  falarComACasca({tipo:'tela',aba:id,comAbas:!!ABAS_DO_APP[id]&&!temJanelaAberta(),explorarWeb:EXM_LIGADO});
+  falarComACasca({tipo:'tela',aba:id,comAbas:!!ABAS_DO_APP[id]&&!temJanelaAberta(),explorarWeb:EXM_LIGADO,abasWeb:abasQueOSiteDesenha()});
 }
 
 // Janela que abre POR CIMA (configurações, criar viagem, adicionar amigo,
@@ -6811,14 +6821,16 @@ function usarDadosLocais(){
 
 function limparDadosLocais(){
   try{localStorage.removeItem(chaveDosDados())}catch(e){}
-  // A marca "já perguntei do convite pela conexão" leva o id da conta (08/10).
-  try{if(S.user)localStorage.removeItem('spot_convite_conexao_'+S.user.id)}catch(e){}
+  // A marca "já perguntei do convite pela conexão" e o último Explorar levam
+  // o id da conta (08/10).
+  try{if(S.user){localStorage.removeItem('spot_convite_conexao_'+S.user.id);localStorage.removeItem('spot_explorar_ultimo_'+S.user.id)}}catch(e){}
   // Também o que não leva o id da conta na chave (06/10): as buscas recentes
   // do Explorar (CHAVE_RECENTES) entregavam pra quem entrasse depois por onde
   // a conta anterior andou procurando; as marcas de "já vi" do feed
   // (FEED_VISTO) e da Atividade (ATIV_VISTA) escondiam novidade da conta nova.
   // spot_checkin_perto_v1 (06/10): guarda posições arredondadas por onde a conta passou.
-  ['spot_explorar_recentes_v1','spot_feed_visto_em','spot_atividade_vista','spot_checkin_perto_v1'].forEach(k=>{
+  // spot_aqui_v2 (08/10): a última posição, guardada pro Explorar abrir rápido.
+  ['spot_explorar_recentes_v1','spot_feed_visto_em','spot_atividade_vista','spot_checkin_perto_v1','spot_aqui_v2'].forEach(k=>{
     try{localStorage.removeItem(k)}catch(e){}
   });
 }
@@ -9583,21 +9595,50 @@ function loadExplore(){
 }
 async function abrirExploreInicial(){
   if(EXM_LIGADO)return exmAbrirInicial();
+  const op={guardar:true,silencioso:restaurarUltimoExplorar()};
   const casa=(S.profile&&S.profile.home_city)||'';
   const antes=exploreMarca();
   const aqui=await cidadeOndeEstou();
   if(exploreMexeu(antes))return;
-  if(aqui&&(!casa||!mesmoLugar(aqui,casa)))return exploreEm(aqui,'Perto de você · '+aqui);
-  if(casa)return exploreEm(casa,'Sua cidade · '+casa);
+  if(aqui&&(!casa||!mesmoLugar(aqui,casa)))return exploreEm(aqui,'Perto de você · '+aqui,op);
+  if(casa)return exploreEm(casa,'Sua cidade · '+casa,op);
 }
 // A localização pode levar segundos (até 4 s na casca). Se nesse meio-tempo
 // a pessoa digitou ou buscou, a abertura não passa por cima (06/10).
 function exploreMarca(){const c=document.getElementById('exploreCitySearch');return{req:EXPLORE_REQ,txt:c?c.value:''}}
 function exploreMexeu(a){const c=document.getElementById('exploreCitySearch');return EXPLORE_REQ!==a.req||(c?c.value:'')!==a.txt}
-function exploreEm(cidade,rotulo){
+function exploreEm(cidade,rotulo,opts){
   const campo=document.getElementById('exploreCitySearch');
   if(campo)campo.value=cidade;
-  runExplore(rotulo);
+  runExplore(rotulo,undefined,opts);
+}
+// O ÚLTIMO EXPLORAR, GUARDADO NO APARELHO (08/10). A aba esperava a posição,
+// a busca no Google e as fotos, em fila, pra mostrar qualquer coisa (2 a 6 s).
+// Agora ela abre com o que a pessoa viu da última vez e troca quando a busca
+// nova chega. Só a abertura automática ("Perto de você", "Sua cidade") guarda;
+// busca digitada não. Por conta; sai no logout.
+function chaveDoUltimoExplorar(){return 'spot_explorar_ultimo_'+((S.user&&S.user.id)||'')}
+function guardarUltimoExplorar(){
+  if(!S.user||!EXPLORE.items.length)return;
+  try{localStorage.setItem(chaveDoUltimoExplorar(),JSON.stringify({t:Date.now(),campo:EXPLORE.city,rotulo:EXPLORE.rotulo,
+    cat:EXPLORE.cat,cozinha:EXPLORE.cozinha,items:EXPLORE.items.slice(0,40),area:EXPLORE.area||null,lugar:EXPLORE.lugar||null,
+    lugarTexto:EXPLORE.lugarTexto||'',termo:EXPLORE.termo||'',ondeTermo:EXPLORE.ondeTermo||''}))}catch(e){}
+}
+function restaurarUltimoExplorar(){
+  if(!S.user)return false;
+  let g=null;try{g=JSON.parse(localStorage.getItem(chaveDoUltimoExplorar())||'null')}catch(e){}
+  if(!g||!Array.isArray(g.items)||!g.items.length||Date.now()-g.t>3*86400000)return false;
+  if(g.cat!==EXPLORE.cat||(g.cozinha||'')!==(EXPLORE.cozinha||''))return false;
+  const campo=document.getElementById('exploreCitySearch');if(campo)campo.value=g.campo||'';
+  // fim:true até a busca nova chegar: sem o marcador da página, "carregar
+  // mais" repetiria a primeira.
+  Object.assign(EXPLORE,{city:g.campo||'',rotulo:g.rotulo||'',items:g.items,area:g.area,lugar:g.lugar,lugarTexto:g.lugarTexto,
+    termo:g.termo,ondeTermo:g.ondeTermo,token:'',fim:true,carregandoMais:false});
+  EXPLORE_ESTADO='ok';
+  pintarRotuloDoExplorar();
+  if(EXM_LIGADO)exmAgendar();
+  renderExploreResults();
+  return true;
 }
 // A cidade onde a pessoa está AGORA — só se a localização já estiver
 // liberada (nunca dispara o pedido). Guardada por 30 min: sem isso cada
@@ -9626,13 +9667,32 @@ async function posicaoSemPerguntar(){
     return{lat:p.coords.latitude,lng:p.coords.longitude};
   }catch(e){return null}
 }
+// LENTIDÃO (08/10): a posição ficava no sessionStorage, que zera a cada vez
+// que o app abre — e o Explorar esperava até 4 s pelo iPhone + uma busca no
+// Google pelo nome da cidade, ANTES de buscar qualquer lugar. Agora a última
+// posição fica no aparelho por 6 h: responde na hora e, passada meia hora,
+// mede de novo por trás. Sai no logout (limparDadosLocais).
+const AQUI_GUARDADO='spot_aqui_v2';
+let AQUI_MEDINDO=null;
 async function cidadeOndeEstou(){
   try{
-    const g=JSON.parse(sessionStorage.getItem('spot_cidade_aqui')||'null');
-    const aq=JSON.parse(sessionStorage.getItem('spot_aqui')||'null');
-    if(aq&&Date.now()-aq.t<30*60*1000&&!window.__spotAqui)window.__spotAqui={lat:aq.lat,lng:aq.lng};
-    if(g&&Date.now()-g.t<30*60*1000)return g.cidade||'';
+    const g=JSON.parse(localStorage.getItem(AQUI_GUARDADO)||'null');
+    if(g&&g.cidade&&Date.now()-g.t<6*3600*1000){
+      if(!window.__spotAqui)window.__spotAqui={lat:g.lat,lng:g.lng};
+      if(Date.now()-g.t>30*60*1000&&!AQUI_MEDINDO)AQUI_MEDINDO=medirOndeEstou().finally(()=>{AQUI_MEDINDO=null});
+      return g.cidade;
+    }
   }catch(e){}
+  if(AQUI_MEDINDO)return AQUI_MEDINDO;
+  AQUI_MEDINDO=medirOndeEstou().finally(()=>{AQUI_MEDINDO=null});
+  return AQUI_MEDINDO;
+}
+// Distância em km entre dois pontos (aproximação boa pra poucos km).
+function kmEntre(a,b){
+  const dLat=(a.lat-b.lat)*111,dLng=(a.lng-b.lng)*111*Math.cos(a.lat*Math.PI/180);
+  return Math.sqrt(dLat*dLat+dLng*dLng);
+}
+async function medirOndeEstou(){
   try{
     // No app do iPhone quem responde é o próprio iPhone (ver 'pedir-local' na
     // casca): pela página, o WKWebView quase nunca dizia que a localização
@@ -9653,7 +9713,15 @@ async function cidadeOndeEstou(){
       coords={lat:p.coords.latitude,lng:p.coords.longitude};
     }
     window.__spotAqui={lat:coords.lat,lng:coords.lng};
-    try{sessionStorage.setItem('spot_aqui',JSON.stringify({lat:coords.lat,lng:coords.lng,t:Date.now()}))}catch(e){}
+    // Andou menos de 2 km desde a última medida: a cidade é a mesma, e o nome
+    // dela (busca paga no Google) não precisa ser pedido de novo.
+    try{
+      const g=JSON.parse(localStorage.getItem(AQUI_GUARDADO)||'null');
+      if(g&&g.cidade&&kmEntre(g,coords)<2){
+        localStorage.setItem(AQUI_GUARDADO,JSON.stringify({lat:coords.lat,lng:coords.lng,cidade:g.cidade,t:Date.now()}));
+        return g.cidade;
+      }
+    }catch(e){}
     const pos={coords:{latitude:coords.lat,longitude:coords.lng}};
     const r=await googlePlaces('searchNearby',{
       headers:{'X-Goog-FieldMask':'places.displayName'},
@@ -9662,7 +9730,7 @@ async function cidadeOndeEstou(){
     });
     const d=await r.json();
     const cidade=(d&&d.places&&d.places[0]&&d.places[0].displayName&&d.places[0].displayName.text)||'';
-    try{sessionStorage.setItem('spot_cidade_aqui',JSON.stringify({cidade,t:Date.now()}))}catch(e){}
+    if(cidade)try{localStorage.setItem(AQUI_GUARDADO,JSON.stringify({lat:coords.lat,lng:coords.lng,cidade,t:Date.now()}))}catch(e){}
     return cidade;
   }catch(e){return''}
 }
@@ -9685,7 +9753,10 @@ function lugarDoExplorar(p){
 // restaurante de bairro com 2 mil a 4,8.
 function notaDoExplorar(p){return (Number(p.rating)||0)*Math.log10((Number(p.userRatingCount)||0)+1)}
 
-async function runExplore(rotulo,lugarEscolhido){
+// opts.silencioso (08/10): atualiza POR TRÁS do Explorar guardado que já está
+// na tela — a lista só troca quando a nova chega.
+async function runExplore(rotulo,lugarEscolhido,opts){
+  const silencioso=!!(opts&&opts.silencioso);
   const city=document.getElementById('exploreCitySearch').value.trim();
   // Avisa E desliga o girar da tela nativa: sem o segundo, o indicador
   // ficava rodando ate a pessoa trocar de aba e voltar.
@@ -9696,15 +9767,16 @@ async function runExplore(rotulo,lugarEscolhido){
   pintarRotuloDoExplorar();
   // A lista antiga sai ANTES da nova chegar: manter os lugares da cidade
   // passada embaixo do nome da nova e a pior forma de errar.
-  EXPLORE.items=[];EXPLORE.token='';EXPLORE.fim=false;EXPLORE.carregandoMais=false;
+  if(!silencioso)EXPLORE.items=[];
+  EXPLORE.token='';EXPLORE.fim=false;EXPLORE.carregandoMais=false;
   EXPLORE.termo=termoDoExplorar(city);
   EXPLORE.ondeTermo=city;EXPLORE.fila=filaDoExplorar();
   EXPLORE._vazias=0;EXPLORE._fracas=0;EXPLORE._inicioDaConsulta=null;
-  EXPLORE_ESTADO='buscando';
+  if(!silencioso)EXPLORE_ESTADO='buscando';
   const meu=++EXPLORE_REQ;
   if(EXM_LIGADO)exmAgendar();
   const body=document.getElementById('exploreBody');
-  body.innerHTML='<div class="search-loading">Buscando tendências...</div>';
+  if(!silencioso)body.innerHTML='<div class="search-loading">Buscando tendências...</div>';
   // Onde é o que foi digitado: rua, bairro, cidade ou país (ver
   // resolverLugarDoExplorar). Sem resposta, segue só pelo texto, como antes.
   EXPLORE.area=null;
@@ -9747,9 +9819,12 @@ async function runExplore(rotulo,lugarEscolhido){
     EXPLORE.items=pagina;
     EXPLORE_ESTADO='ok';
     renderExploreResults();
+    if(opts&&opts.guardar)guardarUltimoExplorar();
   }catch(e){
     if(meu!==EXPLORE_REQ)return;
     console.error('runExplore',e);
+    // Por trás e falhou: o guardado continua na tela, sem tela de erro.
+    if(silencioso&&EXPLORE.items.length){darDadosDeExplorar();return}
     EXPLORE.items=[];
     EXPLORE_ESTADO='erro';
     body.innerHTML='<div class="empty-state"><div class="ei" data-ic="alert"></div><h3>Erro ao buscar</h3><p>Tenta de novo em alguns segundos.</p></div>';hydrateIcons(body);
@@ -10779,6 +10854,7 @@ async function exmRecentralizar(){
 // Abrir o Explorar no mapa: com a sua localização, busca ~1,4 km em volta de
 // você (a mesma área de "rua" da busca); sem ela, abre na lista da sua cidade.
 async function exmAbrirInicial(){
+  const op={guardar:true,silencioso:restaurarUltimoExplorar()};
   const antes=exploreMarca();
   const cidade=await cidadeOndeEstou();
   if(exploreMexeu(antes))return;
@@ -10787,13 +10863,17 @@ async function exmAbrirInicial(){
     const campo=document.getElementById('exploreCitySearch');if(campo)campo.value=cidade;
     const modo=exmModoGuardado()||'mapa';
     EXM.modo=modo;EXM.modoEscolhido=false;exmPintarSeg();exmIrPara(modo==='lista'?'alta':'baixa',true);
-    return runExplore('Perto de você',{nome:'Perto de você',tipo:'ponto',cidade,pais:'',area:areaDaBusca({latitude:a.lat,longitude:a.lng},null,'rua')});
+    // Centro arredondado (~500 m, 08/10): com a posição exata, cada passo
+    // era uma busca nova no Google; arredondado, quem está no mesmo pedaço
+    // do bairro reaproveita a busca guardada no servidor.
+    const arred=x=>Math.round(x/0.005)*0.005;
+    return runExplore('Perto de você',{nome:'Perto de você',tipo:'ponto',cidade,pais:'',area:areaDaBusca({latitude:arred(a.lat),longitude:arred(a.lng)},null,'rua')},op);
   }
   // Sem localização: o mapa da sua cidade.
   const modo=exmModoGuardado()||'mapa';
   EXM.modo=modo;EXM.modoEscolhido=false;exmPintarSeg();exmIrPara(modo==='lista'?'alta':'baixa',true);
   const casa=(S.profile&&S.profile.home_city)||'';
-  if(casa)return exploreEm(casa,'Sua cidade · '+casa);
+  if(casa)return exploreEm(casa,'Sua cidade · '+casa,op);
   // 06/10: sem cidade e sem localização (conta nova, offline) o #exmCorpo
   // ficava em branco. Desenha o vazio "Busque um lugar".
   exmDesenhar();
@@ -17657,9 +17737,9 @@ function vazioDeAmigos(convidou){
   return exemploDeFeed()
     +'<div class="am-vazio-txt">Aqui aparecem os spots<br>que seus amigos salvam.</div>'
     +'<p class="am-vazio-sub">Quem entrar pelo seu link já vira seu amigo.</p>'
-    +'<button class="btn-primario btn-largo" onclick="convidarAmigo()">Compartilhar convite</button>'
-    +'<label class="onb-campo am-busca">'+icon('search')+'<input id="amVazioBusca" type="text" placeholder="Buscar pelo nome ou @" autocomplete="off" autocapitalize="off" oninput="buscarPessoas(this.value,\'amVazioRes\',\'amVazioBusca\')"></label>'
-    +'<div id="amVazioRes"></div>';
+    // A busca daqui saiu (08/10): repetia a do topo ("Buscar amigo ou @"),
+    // que sem amigo nenhum já procura a pessoa no Spot.
+    +'<button class="btn-primario btn-largo" onclick="convidarAmigo()">Compartilhar convite</button>';
 }
 // Linha de pedidos no topo: os recebidos (ponto verde) ou, sem nenhum
 // recebido, os ENVIADOS. Antes só o recebido abria a lista, e quem mandou

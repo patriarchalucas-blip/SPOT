@@ -294,6 +294,9 @@ function placesResponde(corpoTxt) {
   const t = semAcento(b.textQuery || '');
   if (b.op === 'searchNearby') return { places: [] };
   if (b.includedType === 'locality' || b.includedType === 'administrative_area_level_2') return { places: CIDADES.filter(c => t.includes(semAcento(c[0]))).map(placeCidade) };
+  // Explorar ("restaurantes em Lisboa"): os lugares da cidade.
+  const cidQ = /restaurante/.test(t) && CIDADES.find(c => t.includes(semAcento(c[0])));
+  if (cidQ) return { places: LUGARES.filter(x => x[1] === cidQ[0]).map(placeLugar) };
   const l = LUGARES.filter(x => t.includes(semAcento(x[0]).slice(0, 8)));
   if (l.length) return { places: l.map(placeLugar) };
   return { places: CIDADES.filter(c => t.startsWith(semAcento(c[0]))).map(placeCidade) };
@@ -1143,6 +1146,27 @@ await entrar(pk, A.email, A.senha, false);
 await espera(1500);
 confere(!(await janelas(pk)).includes('ov-pergunta') && CONSULTAS_CONEXAO === antes9, 'conta antiga não é perguntada nem consulta o servidor', { janelas: await janelas(pk), consultas: CONSULTAS_CONEXAO - antes9 });
 CONVITE_CONEXAO = '';
+// Abas desenhadas pelo site (build 24+): casca antiga não recebe, casca nova recebe.
+await limpaCasca(pk);
+await ir(pk, `(()=>{document.querySelectorAll('.overlay.show').forEach(o=>closeOv(o.id));goTo('friends')})()`, 600);
+const telaVelha = await ultimoPacote(pk, 'tela');
+confere(telaVelha && Array.isArray(telaVelha.abasWeb) && !telaVelha.abasWeb.length, 'casca antiga: as abas seguem nativas', telaVelha);
+await ir(pk, `(()=>{window.cascaTemAbasWeb=true;goTo('dashboard')})()`, 600);
+const telaNova = await ultimoPacote(pk, 'tela');
+confere(telaNova && (telaNova.abasWeb || []).includes('dashboard') && (telaNova.abasWeb || []).includes('friends'), 'casca nova: o site desenha Viagens e Amigos', telaNova);
+confere(/Viagens/.test(await texto(pk, '#dashboard') || ''), 'a aba Viagens do site está desenhada', (await texto(pk, '#dashboard') || '').slice(0, 120));
+// Explorar abre com o último guardado (08/10) e troca quando a busca nova chega.
+await ir(pk, `(()=>{document.querySelectorAll('.overlay.show').forEach(o=>closeOv(o.id));
+  localStorage.setItem('spot_aqui_v2',JSON.stringify({lat:38.7223,lng:-9.1393,cidade:'Lisboa',t:Date.now()}));
+  localStorage.setItem('spot_explorar_ultimo_'+S.user.id,JSON.stringify({t:Date.now()-3600e3,campo:'Lisboa',rotulo:'Perto de você',cat:EXPLORE.cat,cozinha:EXPLORE.cozinha,
+    items:[{name:'Guardado da Última Vez',city:'Lisboa',address:'Rua X, Lisboa',rating:'4.8',count:100,lat:38.72,lng:-9.14}],area:null,lugar:null,lugarTexto:'',termo:'restaurantes em Lisboa',ondeTermo:'Lisboa'}));
+  EXPLORE_ABRIU=false;EXPLORE.city='';EXPLORE.items=[];goTo('explore');EXPLORE_ABRIU=false;EXPLORE.city='';loadExplore();window.__logo=EXPLORE.items.map(i=>i.name)})()`, 50);
+const logo = await ev(pk, () => window.__logo);
+confere(logo[0] === 'Guardado da Última Vez', 'Explorar mostra na hora o último guardado', logo);
+const depois = await ate(() => ev(pk, () => EXPLORE.items.length && EXPLORE.items[0].name !== 'Guardado da Última Vez' ? EXPLORE.items.map(i => i.name) : null), 8000);
+confere(depois && depois.length, 'e troca pela busca nova quando ela chega', depois);
+const guardadoNovo = await ev(pk, () => { try { return JSON.parse(localStorage.getItem('spot_explorar_ultimo_' + S.user.id)).items[0].name } catch (e) { return null } });
+confere(guardadoNovo && guardadoNovo !== 'Guardado da Última Vez', 'a busca nova vira o guardado', guardadoNovo);
 ['I', 'J', 'K'].forEach(n => { const e = errosDe(PAGINAS[n]); confere(!e.length, 'sem erro de JS no aparelho ' + n, e) });
 
 // ═══ fim ═══
