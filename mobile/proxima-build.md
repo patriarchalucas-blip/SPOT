@@ -12,6 +12,8 @@ pra "Já compilado".
 
 ## Na fila
 
+- **"Adicionar spot" do fim da lista de Viagens saiu** (`TelaViagens.js`, 09/10, o Lucas: repetia o "+" do topo). Feito no código; pode ir por EAS Update (só JS) — mas `App.js` tem a mudança das abas desenhadas pelo site ainda SEM decisão: não mandar update com ela junto.
+
 - Ainda só com app novo (revisão de 06/10):
   - **Páginas /c/ e /l/ usarem spot://** no botão — só quando a build 21 estiver na maioria (as antigas não entendem o esquema).
   - **Toque na notificação de comentário** abrir o spot comentado (mandar `spot_id` no `data` em notificar.js e tratar em `aoTocar`).

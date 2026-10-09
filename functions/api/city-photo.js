@@ -84,7 +84,14 @@ export async function onRequestPost(context) {
   const cached = await lerKV(env, cacheKey);
   // Cache liberado sem login, igual à /api/climate: responder daqui não gasta
   // cota nem expõe nada, e é o caminho da maioria das chamadas.
-  if (cached) return responder(context, JSON.parse(cached));
+  // País que caiu na foto do Google (09/10: a dos EUA — o filtro abaixo exigia
+  // que a legenda citasse "United States of America" inteiro) é escolhido de
+  // novo, uma vez: a do Google é a de um usuário qualquer e o link expira.
+  let guardado = null;
+  try { guardado = cached ? JSON.parse(cached) : null } catch (e) {}
+  // Só uma vez: se cair no Google de novo, fica marcado (reescolhido) e não
+  // gasta cota a cada abertura.
+  if (guardado && !(ehPais && guardado.fonte === 'google' && !guardado.reescolhido)) return responder(context, guardado);
 
   // Daqui pra baixo gasta cota de verdade — só pra quem está logado, ou para
   // uma das cidades fixas da tela de entrada (ver CIDADES_DA_ENTRADA).
@@ -111,7 +118,7 @@ export async function onRequestPost(context) {
   if (!daEntradaCedo && !ehPais && usadoG < 5000) {
     await contarUso(env, contadorG, usadoG, 1, 60 * 60 * 24 * 40);
     const g = await fotoDoGoogle(env, query);
-    if (g) { await gravarKV(env, cacheKey, JSON.stringify(g), TTL_OK); return responder(context, g); }
+    if (g) { await gravarKV(env, cacheKey, JSON.stringify(ehPais ? Object.assign({ reescolhido: true }, g) : g), TTL_OK); return responder(context, g); }
   }
 
   const mes = new Date().toISOString().slice(0, 7);
@@ -133,7 +140,7 @@ export async function onRequestPost(context) {
   if (r.status === 403 || r.status === 429) {
     // Cota do Unsplash na hora: a foto do Google do próprio lugar resolve.
     const g = await fotoDoGoogle(env, query);
-    if (g) { await gravarKV(env, cacheKey, JSON.stringify(g), TTL_OK); return responder(context, g); }
+    if (g) { await gravarKV(env, cacheKey, JSON.stringify(ehPais ? Object.assign({ reescolhido: true }, g) : g), TTL_OK); return responder(context, g); }
     const espera = { url: '', quotaExceeded: true };
     await gravarKV(env, cacheKey, JSON.stringify(espera), 600);
     return json(espera);
@@ -148,14 +155,17 @@ export async function onRequestPost(context) {
   // de alguém de lá), e "Joinville" virou um retrato. Agora a foto precisa
   // citar o lugar no texto dela e não pode ser de gente. Entre as que passam,
   // a escolha continua estável (deriva do nome).
-  const pool = results.filter((f) => fotoServe(f, query)).slice(0, 6);
+  // País (09/10): a busca do Unsplash pelo país já é boa por relevância, e a
+  // legenda quase nunca cita o nome dele — exigir isso derrubava todas e caía
+  // no Google. Pra país, basta não ser foto de gente.
+  const pool = results.filter((f) => ehPais ? fotoServeDePais(f) : fotoServe(f, query)).slice(0, 6);
   // País fica com a MAIS relevante; cidade sorteia estável entre as boas.
   let foto = pool.length ? (ehPais ? pool[0] : pool[hashNum(query) % pool.length]) : null;
   let url = foto ? (foto.urls || {}).regular || '' : '';
   // Nenhuma serve: a foto do Google do próprio lugar (cidade, região, praia).
   if (!url) {
     const g = await fotoDoGoogle(env, query);
-    if (g) { await gravarKV(env, cacheKey, JSON.stringify(g), TTL_OK); return responder(context, g); }
+    if (g) { await gravarKV(env, cacheKey, JSON.stringify(ehPais ? Object.assign({ reescolhido: true }, g) : g), TTL_OK); return responder(context, g); }
   }
 
   // Duas exigências dos termos do Unsplash, as duas obrigatórias:
@@ -206,6 +216,11 @@ const DE_GENTE = /\b(man|men|woman|women|boy|boys|girl|girls|child|children|kid|
 // em "São Paulo" bastava "São", e passava São Sebastião (05/10). A busca às
 // vezes vem com o país no fim ("São Paulo Brasil"): aí vale o nome sem a
 // última palavra, desde que sobrem duas ou mais.
+export function fotoServeDePais(f) {
+  if (!f) return false;
+  const texto = [f.description, f.alt_description].concat((f.tags || []).map((t) => t && t.title)).filter(Boolean).join(' ');
+  return !DE_GENTE.test(texto);
+}
 export function fotoServe(f, query) {
   if (!f) return false;
   const texto = [f.description, f.alt_description].concat((f.tags || []).map((t) => t && t.title)).filter(Boolean).join(' ');

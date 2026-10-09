@@ -392,15 +392,8 @@ export default function TelaViagens({ dados, ocupado, acao }) {
           </ScrollView>
 
           {viagens.length ? <Mosaico viagens={viagens} acao={acao} /> : null}
-
-          <Pressable
-            onPress={() => acao('novoLugar')}
-            style={({ pressed }) => [e.adicionar, pressed && { opacity: 0.85 }]}
-            accessibilityRole="button"
-            accessibilityLabel="Adicionar um spot"
-          >
-            <Text style={e.adicionarTxt}>Adicionar spot</Text>
-          </Pressable>
+          {/* O "Adicionar spot" do fim da lista saiu (09/10, o Lucas): repetia
+              o "+" do topo. Fica só no vazio e no "Seu primeiro spot". */}
         </View>
       )}
     </ScrollView>

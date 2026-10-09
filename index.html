@@ -7390,8 +7390,8 @@ function renderTrips(){
   // Linhas (desenho c1, 05/10): foto, país, "2 cidades · 14 spots", ›. O
   // mosaico mostrava 4 viagens por tela; a linha mostra o dobro.
   h+='<div class="vg-lista">'+ordenadas.map(linhaDeViagem).join('')+'</div>';
-  // 10a (06/10): "Adicionar" pergunta o quê — spot, cidades ou países.
-  h+='<button class="btn-primario btn-largo" onclick="abrirFolhaAdicionar()">'+(CV_LIGADO?'Adicionar':'Adicionar spot')+'</button>';
+  // O "Adicionar" do fim da lista saiu (09/10, o Lucas): repetia o "+" do topo,
+  // que abre a mesma folha (spot, cidades ou países).
   // Colar uma lista continua à mão depois do primeiro acesso (05/10).
   if(IMP.ligado)h+='<button class="exm-btn exm-btn2" style="margin-top:8px" onclick="impAbrir(\'\')">Colar uma lista de lugares</button>';
   c.innerHTML=h;
@@ -15067,6 +15067,19 @@ function nomeEmIngles(q){
   const c=COUNTRIES.find(x=>x.name===q);
   return (c&&c.geo&&c.geo!==q)?c.geo:'';
 }
+// O nome COMUM do país em inglês ("United States", não o "United States of
+// America" do mapa), como o acervo de fotos descreve (09/10: a capa dos EUA
+// caía na foto aleatória do Google porque ninguém escreve o nome formal). Sai
+// da bandeira: os dois símbolos regionais dela são o código ISO do país, e o
+// próprio navegador sabe o nome — nenhuma lista escrita à mão.
+let NOMES_EN=null;
+function nomeComumEmIngles(q){
+  const c=COUNTRIES.find(x=>x.name===q);
+  if(!c||!c.flag)return'';
+  const cod=[...c.flag].map(ch=>ch.codePointAt(0)-0x1F1E6).filter(n=>n>=0&&n<26).map(n=>String.fromCharCode(65+n)).join('');
+  if(cod.length!==2)return'';
+  try{if(!NOMES_EN)NOMES_EN=new Intl.DisplayNames(['en'],{type:'region'});const n=NOMES_EN.of(cod);return n&&n!==cod?n:''}catch(e){return''}
+}
 // Cidade pequena simplesmente NAO existe no acervo pelo nome exato: Braganca
 // Paulista, Sorocaba e afins voltavam vazias e o card ficava so com o
 // degrade. Somar o pais ao termo acha foto da regiao — nao e a cidade, e
@@ -15085,7 +15098,7 @@ async function fetchCityPhoto(entrada,pais){
   // sozinha. País pede uma paisagem do Unsplash pelo nome em inglês, que é
   // como o acervo descreve as fotos, escolhida uma vez e guardada.
   if(COUNTRIES.some(c=>c.name===entrada)){
-    const u=await buscarFotoDe(nomeEmIngles(entrada)||entrada,{pais:true});
+    const u=await buscarFotoDe(nomeComumEmIngles(entrada)||nomeEmIngles(entrada)||entrada,{pais:true});
     if(u)return u;
   }
   let url=await buscarFotoDe(entrada);
