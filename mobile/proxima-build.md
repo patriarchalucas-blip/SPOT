@@ -12,13 +12,10 @@ pra "Já compilado".
 
 ## Na fila
 
-- **Quem recusou notificação poder ligar de novo** (`Linking.openSettings`): 7 de 17 contas novas sem aparelho registrado em 08/10.
-
 - Ainda só com app novo (revisão de 06/10):
   - **Páginas /c/ e /l/ usarem spot://** no botão — só quando a build 21 estiver na maioria (as antigas não entendem o esquema).
   - **Toque na notificação de comentário** abrir o spot comentado (mandar `spot_id` no `data` em notificar.js e tratar em `aoTocar`).
   - **Aviso nativo (App.js ~752)** na paleta velha (#16232A, borda, sombra) e duplicado com o toast do site — decidir um só.
-  - **Notificação recusada:** caminho pra reabrir (Linking.openSettings).
   - **Sem internet o app não abre** (PROVÁVEL): WKAppBoundDomains ou tirar a promessa de offline.
   - **Cidades visitadas 10b** na lista nativa; botão "+ Adicionar" com o texto "Adicionar".
 
