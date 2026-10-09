@@ -126,7 +126,9 @@ export async function onRequestPost(context) {
   const mensagens = enderecos.slice(0, 20).map((to) => ({
     to, title, body: corpo, sound: 'default', priority: 'high',
     // o app usa isso pra abrir na tela certa quando a pessoa toca
-    data: { tipo, de: quem.uid }
+    // spot (09/10): o toque num comentário abre o spot comentado. Só o id,
+    // e só o que já foi conferido acima (formato de uuid).
+    data: Object.assign({ tipo, de: quem.uid }, tipo === 'comentario' && /^[0-9a-f-]{36}$/i.test(spotId) ? { spot: spotId } : {})
   }));
 
   try {

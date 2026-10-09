@@ -295,6 +295,38 @@ de 8 etapas discutido em 08–09/10 (schema + dados + auth.users com senha +
 storage + reconfigurar Google/Apple/Resend + ensaio + virada de 30–60 min,
 todo mundo entra de novo uma vez). Falta pg_dump nesta máquina (é da Sólides).
 
+## Auditoria de 09/10/2026 (3 agentes: viagens/spots, Explorar/fotos/custo, perfil/privacidade)
+
+**Migração 034 (`migrations/034_aceite_sem_troca.sql`) — ESCRITA, FALTA RODAR:** a
+política de UPDATE em `follows` (008) não prendia o `follower_id`; um PATCH
+direto na API num pedido recebido de uma 2ª conta virava amizade ACEITA com
+qualquer pessoa (lê viagens/spots dela, passa por cima de bloqueio). Gatilho
+`follows_sem_troca` + aceite checa `ha_bloqueio`.
+
+Corrigido no site em 09/10: medição de posição na abertura do app (gastava a cota
+paga sem abrir o Explorar); "Perto de você" reaproveitado prendia a busca da
+cidade; "carregar mais" durante a atualização por trás trocava o termo; país sem
+foto caía na do Google; re-escolha de foto de país perdia a foto em falha; foto
+do Google com validade de 30 dias (o link expira); posição guardada arredondada;
+convite pela conexão só pra conta < 48 h CONFERIDO NO SERVIDOR; convite/salvar
+pendentes saem no logout; lojas da mesma rede na mesma cidade (>150 m) são spots
+diferentes (`outraLoja`); nota da ficha capturada antes do await; retry de
+insert de spot só em coluna desconhecida (não duplica); viagem do Montar nasce
+"Só eu vejo" (`privadaSeMontando`); "Seu nome" como a pessoa escreveu.
+
+**Pendente da auditoria (não feito):** viagem vazia que sobra quando o spot
+falha ao salvar (pinta país não visitado); cidades marcadas "zumbis" depois de
+excluir viagem/desmarcar país; duas viagens do mesmo país (quickvisit com cidade
++ viagem nova); cidade de mesmo nome em 2 países (Valência) cai na viagem
+errada; `juntarSpotsDeCasa` pode expor Quero ir de viagem privada; Explorar
+mostra "Nada encontrado" quando a cota estoura (e places.js sem aviso 50/80/100);
+"Nesta área" do mapa sem arredondar (cada arrasto é busca paga); `lugar.js` sem
+sessionToken (autocomplete cobrado por pedido); faixa de preço do Places
+(Enterprise vs Pro) — conferir no faturamento do Google; `ha_bloqueio` com 2
+argumentos deixa qualquer um consultar bloqueio de terceiros; `fui_em`/
+`created_at` editáveis pelo cliente; sem CHECK de tamanho/formato em
+display_name/username; `delete_my_account` apaga denúncias contra a pessoa.
+
 ## Custo e cotas (27/09/2026) — o Lucas disse: "isso não pode falhar"
 
 - **Google Cloud (projeto spot-499219), cotas por dia na Places API (New)**, postas

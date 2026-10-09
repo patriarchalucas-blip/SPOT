@@ -54,6 +54,9 @@ const USER_CAP = 500;
 // exatamente o defeito que a /api/climate tinha).
 const TTL_OK = 60 * 60 * 24 * 180;
 const TTL_FALHA = 60 * 60;
+// A foto do Google sai de um photos[].name do Places, que EXPIRA (09/10): 30
+// dias e escolhe de novo, em vez de 6 meses servindo um link morto.
+const TTL_GOOGLE = 60 * 60 * 24 * 30;
 
 export async function onRequestPost(context) {
   const { request, env } = context;
@@ -92,6 +95,9 @@ export async function onRequestPost(context) {
   // Só uma vez: se cair no Google de novo, fica marcado (reescolhido) e não
   // gasta cota a cada abertura.
   if (guardado && !(ehPais && guardado.fonte === 'google' && !guardado.reescolhido)) return responder(context, guardado);
+  // Re-escolha que falha (sem login, teto, Unsplash fora) devolve a foto que
+  // já havia, em vez de nenhuma (09/10).
+  const ouGuardado = (resp) => guardado ? responder(context, guardado) : resp;
 
   // Daqui pra baixo gasta cota de verdade — só pra quem está logado, ou para
   // uma das cidades fixas da tela de entrada (ver CIDADES_DA_ENTRADA).
@@ -100,9 +106,9 @@ export async function onRequestPost(context) {
     const quem = await quemEsta(request, env);
     // Sem uid não há teto por pessoa (06/10): o "deixa passar" do _auth.js
     // pra Supabase fora do ar virava gasto pago sem dono. Aqui, recusa.
-    if (!quem.permitir || !quem.uid) return json({ url: '', unauthorized: true }, 401);
+    if (!quem.permitir || !quem.uid) return ouGuardado(json({ url: '', unauthorized: true }, 401));
     if (!await podeGastar(env, 'unsplash', quem.uid, 1, USER_CAP)) {
-      return json({ url: '', capped: true, scope: 'user' });
+      return ouGuardado(json({ url: '', capped: true, scope: 'user' }));
     }
   }
 
@@ -118,20 +124,20 @@ export async function onRequestPost(context) {
   if (!daEntradaCedo && !ehPais && usadoG < 5000) {
     await contarUso(env, contadorG, usadoG, 1, 60 * 60 * 24 * 40);
     const g = await fotoDoGoogle(env, query);
-    if (g) { await gravarKV(env, cacheKey, JSON.stringify(ehPais ? Object.assign({ reescolhido: true }, g) : g), TTL_OK); return responder(context, g); }
+    if (g) { await gravarKV(env, cacheKey, JSON.stringify(ehPais ? Object.assign({ reescolhido: true }, g) : g), TTL_GOOGLE); return responder(context, g); }
   }
 
   const mes = new Date().toISOString().slice(0, 7);
   const contador = 'unsplash_count_' + mes;
   const usado = parseInt((await lerKV(env, contador)) || '0', 10);
-  if (usado >= MONTHLY_CAP) return json({ url: '', capped: true, scope: 'mes' });
+  if (usado >= MONTHLY_CAP) return ouGuardado(json({ url: '', capped: true, scope: 'mes' }));
 
   let r;
   try {
     r = await fetch('https://api.unsplash.com/search/photos?per_page=10&orientation=landscape&query='
       + encodeURIComponent(query) + '&client_id=' + env.UNSPLASH_KEY);
   } catch (e) {
-    return json({ url: '' }); // sem cachear: rede falhou, não é resposta do Unsplash
+    return ouGuardado(json({ url: '' })); // sem cachear: rede falhou, não é resposta do Unsplash
   }
   // conta a tentativa: é a chamada que consome a cota, não a resposta
   await contarUso(env, contador, usado, 1, 60 * 60 * 24 * 40);
@@ -140,15 +146,16 @@ export async function onRequestPost(context) {
   if (r.status === 403 || r.status === 429) {
     // Cota do Unsplash na hora: a foto do Google do próprio lugar resolve.
     const g = await fotoDoGoogle(env, query);
-    if (g) { await gravarKV(env, cacheKey, JSON.stringify(ehPais ? Object.assign({ reescolhido: true }, g) : g), TTL_OK); return responder(context, g); }
+    if (g) { await gravarKV(env, cacheKey, JSON.stringify(ehPais ? Object.assign({ reescolhido: true }, g) : g), TTL_GOOGLE); return responder(context, g); }
     const espera = { url: '', quotaExceeded: true };
+    if (guardado) return responder(context, guardado);
     await gravarKV(env, cacheKey, JSON.stringify(espera), 600);
     return json(espera);
   }
-  if (!r.ok) return json({ url: '' });
+  if (!r.ok) return ouGuardado(json({ url: '' }));
 
   let d;
-  try { d = await r.json() } catch (e) { return json({ url: '' }) }
+  try { d = await r.json() } catch (e) { return ouGuardado(json({ url: '' })) }
   const results = (d && d.results) || [];
   // Só vale foto QUE É DO LUGAR (01/10). Antes sorteava entre as 6 primeiras
   // sem olhar: o Unsplash devolve qualquer foto marcada com o nome (tirada lá,
@@ -165,7 +172,7 @@ export async function onRequestPost(context) {
   // Nenhuma serve: a foto do Google do próprio lugar (cidade, região, praia).
   if (!url) {
     const g = await fotoDoGoogle(env, query);
-    if (g) { await gravarKV(env, cacheKey, JSON.stringify(ehPais ? Object.assign({ reescolhido: true }, g) : g), TTL_OK); return responder(context, g); }
+    if (g) { await gravarKV(env, cacheKey, JSON.stringify(ehPais ? Object.assign({ reescolhido: true }, g) : g), TTL_GOOGLE); return responder(context, g); }
   }
 
   // Duas exigências dos termos do Unsplash, as duas obrigatórias:
@@ -192,6 +199,7 @@ export async function onRequestPost(context) {
     // guardado no cache, nunca devolvido ao navegador — ver responder()
     baixar: baixar || ''
   };
+  if (!url && guardado) return responder(context, guardado);
   await gravarKV(env, cacheKey, JSON.stringify(resultado), url ? TTL_OK : TTL_FALHA);
   if (baixar && env.UNSPLASH_KEY && typeof context.waitUntil === 'function') {
     context.waitUntil(fetch(baixar + '&client_id=' + env.UNSPLASH_KEY).catch(() => {}));

@@ -310,7 +310,7 @@ function Conteudo() {
   const [semSinal, setSemSinal] = useState(false);
 
   // Toque em notificação esperando a página ficar pronta (ver aoTocar).
-  const toqueRef = useRef('');
+  const toqueRef = useRef(null);
   const paginaProntaRef = useRef(false);
   // Convite esperando a página ficar pronta, igual ao toque em notificação.
   const linkRef = useRef('');
@@ -333,12 +333,15 @@ function Conteudo() {
   }, [aplicarLink]);
 
   const aplicarToque = useCallback(() => {
-    const tipo = toqueRef.current;
-    if (!tipo || !paginaProntaRef.current || !webRef.current) return;
-    toqueRef.current = '';
+    const toque = toqueRef.current;
+    if (!toque || !paginaProntaRef.current || !webRef.current) return;
+    toqueRef.current = null;
+    const tipo = toque.tipo || 'amigos';
     const aba = tipo === 'pedido' ? "if(window.switchFriendsTab)switchFriendsTab('pedidos');" : '';
+    // Site novo decide (aoTocarNotificacao); site antigo, o de sempre.
     webRef.current.injectJavaScript(
-      "try{if(window.irParaAba)irParaAba('friends');" + aba + "}catch(e){}true;"
+      'try{if(window.aoTocarNotificacao){aoTocarNotificacao(' + JSON.stringify(toque) + ')}else{' +
+        "if(window.irParaAba)irParaAba('friends');" + aba + '}}catch(e){}true;'
     );
   }, []);
 
@@ -364,8 +367,10 @@ function Conteudo() {
     // nota perdia o texto e caía em Viagens. Com o app fechado, o toque fica
     // guardado e é aplicado quando a página terminar de carregar.
     const aoTocar = (resp) => {
-      const tipo = resp?.notification?.request?.content?.data?.tipo || '';
-      toqueRef.current = tipo || 'amigos';
+      // O pacote inteiro vai pro site (09/10): ele decide o que abrir — o
+      // comentário abre o spot comentado. Mudar isso depois não pede build.
+      const d = resp?.notification?.request?.content?.data || {};
+      toqueRef.current = { tipo: String(d.tipo || 'amigos'), de: String(d.de || ''), spot: String(d.spot || '') };
       aplicarToque();
     };
     const sub = Notifications.addNotificationResponseReceivedListener(aoTocar);
@@ -761,34 +766,31 @@ function Aviso({ aviso, aoSumir }) {
 
 const estilo = StyleSheet.create({
   fundo: { flex: 1, backgroundColor: TINTA },
+  // Sistema F (09/10): sem vermelho — erro e aviso são tinta, não cor própria.
   faixaSemSinal: {
     position: 'absolute',
     top: 0,
     left: 0,
     right: 0,
-    backgroundColor: '#A8342C',
+    backgroundColor: INK,
     paddingVertical: 7,
     paddingHorizontal: 16,
   },
-  faixaSemSinalTxt: { color: '#fff', fontSize: 12, textAlign: 'center' },
-  aviso: { position: 'absolute', left: 0, right: 0, bottom: 96, alignItems: 'center', paddingHorizontal: 20 },
+  faixaSemSinalTxt: { color: BASE, fontSize: 12, textAlign: 'center', fontFamily: 'Inter Tight' },
+  // O mesmo aviso do site (.toast, 09/10): tinta, raio 14, sem borda e sem
+  // sombra; erro não ganha cor própria.
+  aviso: { position: 'absolute', left: 0, right: 0, bottom: 94, alignItems: 'center', paddingHorizontal: 20 },
   avisoCaixa: {
-    maxWidth: 420,
-    backgroundColor: '#16232A',
-    borderWidth: StyleSheet.hairlineWidth,
-    borderColor: 'rgba(234,231,224,0.15)',
+    width: '100%',
+    maxWidth: 390,
+    backgroundColor: INK,
     borderRadius: 14,
-    paddingVertical: 12,
+    paddingVertical: 14,
     paddingHorizontal: 16,
-    shadowColor: '#000',
-    shadowOpacity: 0.35,
-    shadowRadius: 14,
-    shadowOffset: { width: 0, height: 6 },
-    elevation: 6,
   },
-  avisoErro: { borderColor: 'rgba(168,52,44,0.6)' },
-  avisoTitulo: { color: '#EAE7E0', fontSize: 14, fontWeight: '600', textAlign: 'center' },
-  avisoTexto: { color: '#B4BCBF', fontSize: 12.5, marginTop: 3, textAlign: 'center' },
+  avisoErro: {},
+  avisoTitulo: { color: BASE, fontSize: 15, fontFamily: 'Inter Tight Bold', marginBottom: 2 },
+  avisoTexto: { color: 'rgba(245,245,243,0.72)', fontSize: 14, lineHeight: 19.6, fontFamily: 'Inter Tight' },
   // Empilha a barra por cima do WebView em vez de dividir a tela: o site
   // continua ocupando a altura inteira e a barra flutua, exatamente como a
   // .bottom-nav do CSS faz hoje.

@@ -1160,15 +1160,6 @@ await entrar(pk, A.email, A.senha, false);
 await espera(1500);
 confere(!(await janelas(pk)).includes('ov-pergunta') && CONSULTAS_CONEXAO === antes9, 'conta antiga não é perguntada nem consulta o servidor', { janelas: await janelas(pk), consultas: CONSULTAS_CONEXAO - antes9 });
 CONVITE_CONEXAO = '';
-// Abas desenhadas pelo site (build 24+): casca antiga não recebe, casca nova recebe.
-await limpaCasca(pk);
-await ir(pk, `(()=>{document.querySelectorAll('.overlay.show').forEach(o=>closeOv(o.id));goTo('friends')})()`, 600);
-const telaVelha = await ultimoPacote(pk, 'tela');
-confere(telaVelha && Array.isArray(telaVelha.abasWeb) && !telaVelha.abasWeb.length, 'casca antiga: as abas seguem nativas', telaVelha);
-await ir(pk, `(()=>{window.cascaTemAbasWeb=true;goTo('dashboard')})()`, 600);
-const telaNova = await ultimoPacote(pk, 'tela');
-confere(telaNova && (telaNova.abasWeb || []).includes('dashboard') && (telaNova.abasWeb || []).includes('friends'), 'casca nova: o site desenha Viagens e Amigos', telaNova);
-confere(/Viagens/.test(await texto(pk, '#dashboard') || ''), 'a aba Viagens do site está desenhada', (await texto(pk, '#dashboard') || '').slice(0, 120));
 // Explorar abre com o último guardado (08/10) e troca quando a busca nova chega.
 await ir(pk, `(()=>{document.querySelectorAll('.overlay.show').forEach(o=>closeOv(o.id));
   localStorage.setItem('spot_aqui_v2',JSON.stringify({lat:38.7223,lng:-9.1393,cidade:'Lisboa',t:Date.now()}));
@@ -1181,6 +1172,19 @@ const depois = await ate(() => ev(pk, () => EXPLORE.items.length && EXPLORE.item
 confere(depois && depois.length, 'e troca pela busca nova quando ela chega', depois);
 const guardadoNovo = await ev(pk, () => { try { return JSON.parse(localStorage.getItem('spot_explorar_ultimo_' + S.user.id)).items[0].name } catch (e) { return null } });
 confere(guardadoNovo && guardadoNovo !== 'Guardado da Última Vez', 'a busca nova vira o guardado', guardadoNovo);
+// Toque na notificação (09/10): comentário abre o spot comentado (o seu e o do amigo); pedido abre Amigos.
+const spA9 = DB.spots.find(s => s.user_id === A.id);
+const spB9 = DB.spots.find(s => s.user_id === B.id && s.status === 'been');
+if (spA9) {
+  await ir(pk, `(async()=>{document.querySelectorAll('.overlay.show').forEach(o=>closeOv(o.id));goTo('dashboard');await aoTocarNotificacao({tipo:'comentario',spot:'${spA9.id}'})})()`, 1500);
+  confere(await tela(pk) === 'place', 'notificação de comentário no MEU spot abre a ficha', await tela(pk));
+}
+if (spB9 && amigos(A.id, B.id)) {
+  await ir(pk, `(async()=>{goTo('dashboard');await aoTocarNotificacao({tipo:'comentario',spot:'${spB9.id}'})})()`, 1500);
+  confere(await tela(pk) === 'place', 'notificação de comentário no spot do AMIGO abre a ficha', await tela(pk));
+}
+await ir(pk, `(async()=>{goTo('dashboard');await aoTocarNotificacao({tipo:'pedido'})})()`, 1200);
+confere(await tela(pk) === 'friends', 'notificação de pedido abre Amigos', await tela(pk));
 ['I', 'J', 'K'].forEach(n => { const e = errosDe(PAGINAS[n]); confere(!e.length, 'sem erro de JS no aparelho ' + n, e) });
 
 // ═══ fim ═══

@@ -4809,6 +4809,10 @@ async function trocarQuemVe(privada){
 const VIAGENS_NOVAS=new Set();
 let MONTANDO_VIAGEM=false;
 function marcarViagemNova(t){if(t&&t.id&&MONTANDO_VIAGEM)VIAGENS_NOVAS.add(t.id)}
+// Viagem criada pelo Montar já NASCE "Só eu vejo" (09/10, auditoria): antes ela
+// entrava visível pros amigos e só virava privada no próximo loadDashboard — se
+// o app fechasse antes, os Quero ir dela ficavam à vista.
+function privadaSeMontando(){return (MONTANDO_VIAGEM&&bancoTemPrivacidade()===true)?{privada:true,proxima:true}:{}}
 async function fecharViagensNovas(){
   if(bancoTemPrivacidade()!==true)return;
   for(const id of [...VIAGENS_NOVAS]){
@@ -5924,9 +5928,10 @@ async function init(){
         try{await resgatarConvitePendente()}catch(e){console.error('convite:',e)}
         // Convite aberto no Safari antes de instalar o app (08/10).
         impVerSeEstaLigado();
-        // Mede a posição logo na abertura (08/10), sem segurar nada: quando a
-        // pessoa toca no Explorar, ela já está pronta. Não pergunta permissão.
-        setTimeout(()=>{if(S.user)cidadeOndeEstou().catch(()=>{})},2000);
+        // (A medição de posição na abertura do app, de 08/10, saiu em 09/10:
+        // cada abertura podia virar uma busca paga no Google pelo nome da
+        // cidade, mesmo sem a pessoa abrir o Explorar — e essa cota é a mesma
+        // da busca de spots de todo mundo.)
         try{await salvarSpotPendente()}catch(e){console.error('salvar da lista:',e)}
         // Daqui pra baixo SEM segurar o login (08/10): o Supabase espera este
         // ouvinte terminar antes de dar o login por concluído, e a pergunta do
@@ -6496,6 +6501,9 @@ function nomeDeExibicao(){
   if(!nome&&p.username&&!nomeEhAutomatico(p.username))return p.username;
   // Nome que é o próprio @ sai como a pessoa escreveu ('gjezler', não 'Gjezler').
   if(nome&&p.username&&nome===p.username)return nome;
+  // Nome escrito pela pessoa (perfil) sai como ela escreveu — "DJ Lu", não
+  // "Dj" (09/10). O formatado abaixo é só pro que veio do cadastro/e-mail.
+  if(nome&&p.display_name&&nome===p.display_name)return String(nome).trim().split(/s+/)[0];
   if(!nome)nome=prefixoDoEmail().split('.')[0];
   nome=String(nome).trim().split(/\s+/)[0];
   return nome.charAt(0).toUpperCase()+nome.slice(1).toLowerCase();
@@ -6659,13 +6667,11 @@ function falarComACasca(msg){
 function temJanelaAberta(){
   return !!document.querySelector('.overlay.show,.cropper-overlay.show');
 }
-// Viagens e Amigos desenhados pelo SITE dentro do app (08/10, build 24+): as
-// telas nativas estavam no desenho antigo e cada mudança pedia build. A casca
-// nova avisa com cascaTemAbasWeb e deixa de cobrir essas abas; as antigas
-// seguem com as nativas (e com os pacotes darDadosDe*, que continuam saindo).
-function abasQueOSiteDesenha(){return (naCasca()&&window.cascaTemAbasWeb)?['dashboard','friends']:[]}
+// (09/10: o site desenhar Viagens e Amigos dentro do app foi considerado e
+// descartado pelo Lucas — a diferença pras nativas era pequena. Elas seguem
+// nativas.)
 function avisarTelaAtual(id){
-  falarComACasca({tipo:'tela',aba:id,comAbas:!!ABAS_DO_APP[id]&&!temJanelaAberta(),explorarWeb:EXM_LIGADO,abasWeb:abasQueOSiteDesenha()});
+  falarComACasca({tipo:'tela',aba:id,comAbas:!!ABAS_DO_APP[id]&&!temJanelaAberta(),explorarWeb:EXM_LIGADO});
 }
 
 // Janela que abre POR CIMA (configurações, criar viagem, adicionar amigo,
@@ -6713,6 +6719,25 @@ window.voltarDoAndroid=function(){
     if(id&&id!=='dashboard'&&ABAS_DO_APP[id]&&S.user){window.irParaAba('dashboard');return}
   }catch(e){}
   if(window.ReactNativeWebView)window.ReactNativeWebView.postMessage(JSON.stringify({tipo:'sair'}));
+};
+// Toque numa notificação (09/10; a casca da build 24+ chama, as antigas vão
+// direto pra aba Amigos). Comentário abre o spot comentado — o seu ou o do
+// amigo —; o resto, a aba Amigos (pedido: na lista de pedidos).
+window.aoTocarNotificacao=async function(d){
+  d=d||{};
+  if(!S.user){ABA_PENDENTE='friends';return}
+  if(d.tipo==='comentario'&&/^[0-9a-f-]{36}$/i.test(String(d.spot||''))){
+    try{
+      const l=await dbGet('spots','id=eq.'+d.spot+'&select=*');
+      const s=!falhou(l)&&l[0];
+      if(s){
+        if(s.user_id===S.user.id){await openPlace(s.id,'notificacao');return}
+        abrirFichaDoSpotDeAmigo(s,true);return;
+      }
+    }catch(e){}
+  }
+  window.irParaAba('friends');
+  if(d.tipo==='pedido'&&window.switchFriendsTab)switchFriendsTab('pedidos');
 };
 window.irParaAba=function(id){
   if(!ABAS_DO_APP[id])return;
@@ -6872,7 +6897,9 @@ function limparDadosLocais(){
   // (FEED_VISTO) e da Atividade (ATIV_VISTA) escondiam novidade da conta nova.
   // spot_checkin_perto_v1 (06/10): guarda posições arredondadas por onde a conta passou.
   // spot_aqui_v2 (08/10): a última posição, guardada pro Explorar abrir rápido.
-  ['spot_explorar_recentes_v1','spot_feed_visto_em','spot_atividade_vista','spot_checkin_perto_v1','spot_aqui_v2'].forEach(k=>{
+  // spot_convite_pendente / spot_salvar_pendente (09/10): um convite que não
+  // resgatou por falta de sinal virava amizade da PRÓXIMA conta do aparelho.
+  ['spot_explorar_recentes_v1','spot_feed_visto_em','spot_atividade_vista','spot_checkin_perto_v1','spot_aqui_v2','spot_convite_pendente','spot_salvar_pendente'].forEach(k=>{
     try{localStorage.removeItem(k)}catch(e){}
   });
 }
@@ -8773,15 +8800,18 @@ async function rateStar(base,ev){
   const v=notaDoToque(base,ev);
   const anterior=notaDaFicha;
   notaDaFicha=(notaDaFicha===v?0:v);
+  // A nota DESTE toque, guardada antes da ida ao banco (09/10): abrir outro
+  // spot no meio da espera trocava notaDaFicha, e a nota errada ia pra memória.
+  const nova=notaDaFicha;
   pintarEstrelas('#placeStars',notaDaFicha);
   // Zerar é tirar a nota: null, não 0 (0 parecia uma nota péssima gravada).
-  const{error}=await dbUpdate('spots',s.id,{my_rating:notaDaFicha||null});
+  const{error}=await dbUpdate('spots',s.id,{my_rating:nova||null});
   if(error){
     if(S.curPlace===s){notaDaFicha=anterior;pintarEstrelas('#placeStars',notaDaFicha)}
     toast('Não salvou','Confere a conexão e tenta de novo.','alert');
     return;
   }
-  s.my_rating=notaDaFicha;
+  s.my_rating=nova;
   if(document.getElementById('city').classList.contains('active'))renderCityBody();
 }
 
@@ -9597,8 +9627,8 @@ async function adicionarSpotAbertoDoAmigo(btn){
     // pergunta — e o mapa se acerta quando uma viagem de pais aparecer.
     const nome=pais||cidade;
     if(nome&&viagensCarregadas()){
-      const{data,error}=await dbInsert('trips',{user_id:S.user.id,name:nome,
-        destinations:[nome],dates:'',status:'planning',initial_city:cidade||null});
+      const{data,error}=await dbInsert('trips',Object.assign({user_id:S.user.id,name:nome,
+        destinations:[nome],dates:'',status:'planning',initial_city:cidade||null},privadaSeMontando()));
       if(!error&&data){data._spots=[];data._spotsLoaded=true;S.trips.unshift(data);viagem=data;marcarViagemNova(data)}
     }
   }
@@ -9674,7 +9704,9 @@ function restaurarUltimoExplorar(){
   const campo=document.getElementById('exploreCitySearch');if(campo)campo.value=g.campo||'';
   // fim:true até a busca nova chegar: sem o marcador da página, "carregar
   // mais" repetiria a primeira.
-  Object.assign(EXPLORE,{city:g.campo||'',rotulo:g.rotulo||'',items:g.items,area:g.area,lugar:g.lugar,lugarTexto:g.lugarTexto,
+  // lugar/lugarTexto NÃO voltam (09/10): o lugar guardado ("Perto de você")
+  // seria reaproveitado pela busca da cidade de mesmo nome.
+  Object.assign(EXPLORE,{city:g.campo||'',rotulo:g.rotulo||'',items:g.items,area:g.area,
     termo:g.termo,ondeTermo:g.ondeTermo,token:'',fim:true,carregandoMais:false});
   EXPLORE_ESTADO='ok';
   pintarRotuloDoExplorar();
@@ -9729,6 +9761,9 @@ async function cidadeOndeEstou(){
   AQUI_MEDINDO=medirOndeEstou().finally(()=>{AQUI_MEDINDO=null});
   return AQUI_MEDINDO;
 }
+// No aparelho a posição fica ARREDONDADA (~500 m, 09/10): basta pro "andou 2 km?"
+// e pro "Perto de você", que já arredonda o centro.
+function arredAqui(x){return Math.round(Number(x)/0.005)*0.005}
 // Distância em km entre dois pontos (aproximação boa pra poucos km).
 function kmEntre(a,b){
   const dLat=(a.lat-b.lat)*111,dLng=(a.lng-b.lng)*111*Math.cos(a.lat*Math.PI/180);
@@ -9760,7 +9795,7 @@ async function medirOndeEstou(){
     try{
       const g=JSON.parse(localStorage.getItem(AQUI_GUARDADO)||'null');
       if(g&&g.cidade&&kmEntre(g,coords)<2){
-        localStorage.setItem(AQUI_GUARDADO,JSON.stringify({lat:coords.lat,lng:coords.lng,cidade:g.cidade,t:Date.now()}));
+        localStorage.setItem(AQUI_GUARDADO,JSON.stringify({lat:arredAqui(coords.lat),lng:arredAqui(coords.lng),cidade:g.cidade,t:Date.now()}));
         return g.cidade;
       }
     }catch(e){}
@@ -9772,7 +9807,7 @@ async function medirOndeEstou(){
     });
     const d=await r.json();
     const cidade=(d&&d.places&&d.places[0]&&d.places[0].displayName&&d.places[0].displayName.text)||'';
-    if(cidade)try{localStorage.setItem(AQUI_GUARDADO,JSON.stringify({lat:coords.lat,lng:coords.lng,cidade,t:Date.now()}))}catch(e){}
+    if(cidade)try{localStorage.setItem(AQUI_GUARDADO,JSON.stringify({lat:arredAqui(coords.lat),lng:arredAqui(coords.lng),cidade,t:Date.now()}))}catch(e){}
     return cidade;
   }catch(e){return''}
 }
@@ -9810,7 +9845,10 @@ async function runExplore(rotulo,lugarEscolhido,opts){
   // A lista antiga sai ANTES da nova chegar: manter os lugares da cidade
   // passada embaixo do nome da nova e a pior forma de errar.
   if(!silencioso)EXPLORE.items=[];
-  EXPLORE.token='';EXPLORE.fim=false;EXPLORE.carregandoMais=false;
+  // Por trás, o "carregar mais" fica travado (fim) até a 1ª página nova chegar
+  // (09/10): rolar a lista guardada disparava maisDoExplorar, que trocava o
+  // termo ("pizzarias em X") no meio da busca principal.
+  EXPLORE.token='';EXPLORE.fim=silencioso;EXPLORE.carregandoMais=false;
   EXPLORE.termo=termoDoExplorar(city);
   EXPLORE.ondeTermo=city;EXPLORE.fila=filaDoExplorar();
   EXPLORE._vazias=0;EXPLORE._fracas=0;EXPLORE._inicioDaConsulta=null;
@@ -9826,7 +9864,11 @@ async function runExplore(rotulo,lugarEscolhido,opts){
   // Mesmo texto da última busca (trocou só a cozinha ou a aba): reaproveita o
   // lugar já achado — senão "Rua Itapura" escolhida na lista viraria outra
   // adivinhação. Busca digitada (sem rótulo automático) entra nas recentes.
-  const repetida=!lugarEscolhido&&EXPLORE.lugarTexto===city&&EXPLORE.lugar!==undefined;
+  // Só reaproveita lugar de busca de cidade/sugestão (09/10): "Perto de você"
+  // (ponto) e "Nesta área" (mapa) guardam um quadrado pequeno, e a busca da
+  // cidade de mesmo nome ficava presa nele ("Sua cidade · SP" em 1,4 km).
+  const repetida=!lugarEscolhido&&EXPLORE.lugarTexto===city&&EXPLORE.lugar!==undefined
+    &&!(EXPLORE.lugar&&(EXPLORE.lugar.tipo==='ponto'||EXPLORE.lugar.tipo==='mapa'));
   const lugar=lugarEscolhido||(repetida?EXPLORE.lugar:await resolverLugarDoExplorar(city));
   // Só grava DEPOIS de conferir que esta ainda é a busca atual: uma busca
   // digitada que voltasse atrasada sobrescrevia o lugar escolhido na lista.
@@ -9962,13 +10004,25 @@ function indiceDosMeus(){
   INDICE_MEUS={trips,assin,mapa};
   return mapa;
 }
-function meuSpotIgual(nome,cidade){
+// onde (09/10, opcional): {lat,lng,address} do lugar que está sendo salvo.
+// Rede com várias lojas na mesma cidade (Starbucks, Outback) virava um spot
+// só: a nota da loja nova caía na velha. Com as duas coordenadas, longe mais
+// de ~150 m é outra loja; sem coordenada, endereços diferentes também.
+function meuSpotIgual(nome,cidade,onde){
   const lista=indiceDosMeus().get(chaveDeLugar(nome))||[];
   for(const x of lista){
     if(x.user_id&&S.user&&x.user_id!==S.user.id)continue;
-    if(!cidade||!cityOf(x)||mesmoLugar(cityOf(x),cidade))return x;
+    if(!(!cidade||!cityOf(x)||mesmoLugar(cityOf(x),cidade)))continue;
+    if(onde&&outraLoja(x,onde))continue;
+    return x;
   }
   return null;
+}
+function outraLoja(x,onde){
+  const la=Number(onde.lat),lo=Number(onde.lng),xa=Number(x.lat),xo=Number(x.lng);
+  if(onde.lat!=null&&x.lat!=null&&isFinite(la)&&isFinite(lo)&&isFinite(xa)&&isFinite(xo))return kmEntre({lat:la,lng:lo},{lat:xa,lng:xo})>0.15;
+  const a=normName(String(onde.address||'').split(',')[0]),b=normName(String(x.address||'').split(',')[0]);
+  return !!(a&&b&&a!==b);
 }
 function statusNaMinhaLista(p){
   const s=allSpotsFlat().find(x=>mesmoLugar(x.name,p.name)&&(!p.city||!cityOf(x)||mesmoLugar(cityOf(x),p.city)));
@@ -11847,8 +11901,8 @@ async function garantirViagem(cidade,pais,semCriar,status){
   return criarViagemUmaVez('pais:'+normName(pais),async()=>{
     const ja=doPaisAgora();
     if(ja)return ja;
-    const{data,error}=await dbInsert('trips',{user_id:S.user.id,name:pais,
-      destinations:[pais],dates:'',status:'planning',initial_city:cidade||null});
+    const{data,error}=await dbInsert('trips',Object.assign({user_id:S.user.id,name:pais,
+      destinations:[pais],dates:'',status:'planning',initial_city:cidade||null},privadaSeMontando()));
     if(error||!data)return null;
     data._spots=[];data._spotsLoaded=true;marcarViagemNova(data);
     S.trips.unshift(data);
@@ -11910,7 +11964,7 @@ async function moveToCorrectCountry(existingTrip,createNew){
   if(createNew){
     if(!viagensCarregadas())return;
     const country=p.country;
-    const{data,error}=await dbInsert('trips',{user_id:S.user.id,name:country,destinations:[country],dates:'',status:'planning'});
+    const{data,error}=await dbInsert('trips',Object.assign({user_id:S.user.id,name:country,destinations:[country],dates:'',status:'planning'},privadaSeMontando()));
     if(error||!data){toast('Erro ao criar viagem','');return}
     data._spots=[];S.trips.unshift(data);trip=data;marcarViagemNova(data);
   }
@@ -12151,7 +12205,7 @@ async function resolverCidadeDoSpot(p,trip){
   // vezes, e "Quero ir" + "Fui" do mesmo lugar viravam dois registros. Se o
   // lugar já está na lista, ATUALIZA o que existe — status, nota, frase —
   // em vez de criar outro.
-  const existente=meuSpotIgual(p.name,cidade);
+  const existente=meuSpotIgual(p.name,cidade,{lat:p.lat,lng:p.lng,address:p.address});
   let data=null,error=null,atualizou=false;
   if(existente){
     // 06/10: re-salvar como Quero ir um lugar que já é Fui/Não recomendo não
@@ -12172,7 +12226,11 @@ async function resolverCidadeDoSpot(p,trip){
   // Colunas que vêm de migração: se ela ainda não rodou, o Postgres recusa o
   // insert INTEIRO por causa de uma coluna desconhecida e o spot não seria
   // salvo. Retenta sem os opcionais — perder o campo é melhor que perder o spot.
-  if(!atualizou&&!existente&&error&&(rec.subcategory||rec.phone||rec.photo_author||rec.lat!=null
+  // Só quando o banco disse "coluna desconhecida" (09/10): retentar em falha de
+  // rede duplicava o spot quando o 1º insert tinha entrado e só a resposta se
+  // perdeu — e a cópia vinha sem coordenada nem tipo.
+  const colunaDesconhecida=error&&error!==ERRO_REDE&&/42703|PGRST204/.test(String(error.code||'')+' '+String(error.message||''));
+  if(!atualizou&&!existente&&colunaDesconhecida&&(rec.subcategory||rec.phone||rec.photo_author||rec.lat!=null
              ||rec.from_user_id||rec.price_level!=null||rec.opening_hours)){
     console.warn('insert sem colunas opcionais (migração 009/010/023/024 ainda não rodou?)');
     delete rec.subcategory;delete rec.phone;delete rec.photo_author;delete rec.photo_author_url;
@@ -13201,7 +13259,7 @@ async function salvarSpotDireto(p,cat,status,avaliacao){
   const cidade=await resolverCidadeDoSpot(p,viagem);
   // Um spot por lugar: já existe, devolve o que existe (e promove Quero ir
   // pra Fui, se for o caso) em vez de criar outro (01/10).
-  const ja=meuSpotIgual(p.name,cidade);
+  const ja=meuSpotIgual(p.name,cidade,{lat:p.lat,lng:p.lng,address:p.address});
   if(ja){
     if(status==='been'&&ja.status==='want'){const{error}=await dbUpdate('spots',ja.id,{status:'been'});if(!error)ja.status='been'}
     return ja;
@@ -15099,7 +15157,9 @@ async function fetchCityPhoto(entrada,pais){
   // como o acervo descreve as fotos, escolhida uma vez e guardada.
   if(COUNTRIES.some(c=>c.name===entrada)){
     const u=await buscarFotoDe(nomeComumEmIngles(entrada)||nomeEmIngles(entrada)||entrada,{pais:true});
-    if(u)return u;
+    // País NÃO cai pro caminho de cidade (09/10): lá a foto é a do Google
+    // (o "prédio" do Brasil). Sem foto, fica o fundo, e tenta de novo depois.
+    return u||'';
   }
   let url=await buscarFotoDe(entrada);
   if(url)return url;
@@ -15108,7 +15168,7 @@ async function fetchCityPhoto(entrada,pais){
   const reserva=String(pais||'').trim();
   if(reserva&&reserva!==String(entrada)){
     url=await buscarFotoDe(entrada+' '+reserva);
-    if(url){cityPhotoCache[entrada]=url;savePhotoCache();return url}
+    if(url){cityPhotoCache[entrada]=/^\/api\/place-photo/.test(url)?{url,exp:Date.now()+30*864e5}:url;savePhotoCache();return url}
   }
   return'';
 }
@@ -15158,7 +15218,9 @@ async function buscarFotoDe(query,extra){
     // Quem tirou a foto vem junto da URL e fica guardado por URL: os termos
     // do Unsplash exigem o crédito toda vez que a foto aparece.
     if(url&&d.autor)guardarCreditoCidade(url,{nome:d.autor,url:d.autorUrl||'',fonte:d.fonte||''});
-    if(url){cityPhotoCache[query]=url;savePhotoCache()}
+    // Foto do Google (/api/place-photo) expira: no aparelho, vale 30 dias e
+    // pede de novo (09/10). A do Unsplash é permanente.
+    if(url){cityPhotoCache[query]=/^\/api\/place-photo/.test(url)?{url,exp:Date.now()+30*864e5}:url;savePhotoCache()}
     else{cityPhotoCache[query]={url:'',exp:Date.now()+60*60*1000};savePhotoCache()} // sem resultado: não retenta por 1h
     return url;
   }catch(e){return''}
@@ -17195,7 +17257,18 @@ function toast(t,m,ic){
   // invisível quando a ação partia de uma das quatro abas nativas — e os que
   // mais importam são os de erro ("Não consegui tirar agora"), que viravam
   // falha silenciosa: a pessoa tocava, nada acontecia, e nada explicava.
-  falarComACasca({tipo:'aviso',titulo:String(t||''),texto:String(m||''),erro:/erro|não |nao /i.test(String(t||''))});
+  // 09/10: só quando uma aba NATIVA está na frente. Com a tela do site à
+  // vista, o aviso daqui já aparece — mandar pra casca também mostrava dois,
+  // um por cima do outro.
+  if(abaNativaNaFrente())falarComACasca({tipo:'aviso',titulo:String(t||''),texto:String(m||''),erro:/erro|não |nao /i.test(String(t||''))});
+}
+function abaNativaNaFrente(){
+  if(!naCasca())return false;
+  let atual='';try{atual=telaAtual()}catch(e){}
+  if(!ABAS_DO_APP[atual]||temJanelaAberta())return false;
+  // O Explorar com mapa é desenhado pelo site (build 17+).
+  if(atual==='explore'&&typeof EXM_LIGADO!=='undefined'&&EXM_LIGADO)return false;
+  return true;
 }
 
 // ═══ LOGIN BACKGROUNDS (real city photos via Google Places + gradient fallback) ═══

@@ -12,16 +12,16 @@ pra "Já compilado".
 
 ## Na fila
 
-- **"Adicionar spot" do fim da lista de Viagens saiu** (`TelaViagens.js`, 09/10, o Lucas: repetia o "+" do topo). Feito no código; pode ir por EAS Update (só JS) — mas `App.js` tem a mudança das abas desenhadas pelo site ainda SEM decisão: não mandar update com ela junto.
+- **Toque na notificação repassa o pacote pro site** (`App.js` `aoTocar`/`aplicarToque` → `window.aoTocarNotificacao`, 09/10): comentário abre o spot comentado (o seu ou o do amigo). O servidor já manda `spot` no `data` e o site já tem a função; falta só a casca nova. Casca antiga segue indo pra aba Amigos.
+- **Aviso nativo no sistema F** (`App.js` `estilo.aviso*` e `faixaSemSinal`, 09/10): tinta, raio 14, sem borda/sombra/vermelho, igual ao `.toast` do site. A duplicação (site + casca ao mesmo tempo) já foi resolvida no site (`abaNativaNaFrente`).
+- **"Adicionar spot" do fim da lista de Viagens saiu** (`TelaViagens.js`, 09/10, o Lucas: repetia o "+" do topo). Feito no código; pode ir por EAS Update (só JS). (A ideia de o site desenhar Viagens/Amigos foi descartada pelo Lucas em 09/10; `App.js` voltou ao que estava.)
 
 - Ainda só com app novo (revisão de 06/10):
   - **Páginas /c/ e /l/ usarem spot://** no botão — só quando a build 21 estiver na maioria (as antigas não entendem o esquema).
-  - **Toque na notificação de comentário** abrir o spot comentado (mandar `spot_id` no `data` em notificar.js e tratar em `aoTocar`).
-  - **Aviso nativo (App.js ~752)** na paleta velha (#16232A, borda, sombra) e duplicado com o toast do site — decidir um só.
   - **Sem internet o app não abre** (PROVÁVEL): WKAppBoundDomains ou tirar a promessa de offline.
   - **Cidades visitadas 10b** na lista nativa; botão "+ Adicionar" com o texto "Adicionar".
 
-- **Abas Viagens e Amigos nativas no desenho novo** (lista em linhas, + Adicionar, busca de amigo): pendente de decisão do Lucas — reescrever no app ou deixar o site desenhar.
+- ~~Abas Viagens e Amigos nativas no desenho novo~~ — **decidido 09/10: ficam como estão** (o Lucas viu o comparativo: a diferença era só a lista de viagens em linhas e a busca de amigo no topo; "não vejo motivo"). Nem site desenhando, nem reescrita.
 - Depois da 1.0.2 aprovada: tirar o modo "spots" da tela Lista (lista geral).
 
 ## Já foi na build 23 (08/10, 1.0.4)
