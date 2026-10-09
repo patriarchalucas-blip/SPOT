@@ -2212,6 +2212,20 @@ html.tem-janela,html.tem-janela body{overflow:hidden}
    por baixo dele e o botão fica no pé. */
 .overlay.onb{top:0;height:100dvh;background:var(--base);backdrop-filter:none;padding:0;align-items:stretch;z-index:260}
 .onb-tela{width:100%;max-width:430px;margin:0 auto;height:100%;display:flex;flex-direction:column;padding-top:env(safe-area-inset-top,0px)}
+/* Como o Spot funciona (09/10). Provisório até o desenho do Claude Design. */
+.tut-topo{display:flex;justify-content:flex-end;padding:12px 20px 0}
+.tut-pular{background:none;border:0;padding:8px 0;font-size:15px;font-weight:600;color:var(--ink3);cursor:pointer}
+.tut-trilho{flex:1;display:flex;overflow-x:auto;scroll-snap-type:x mandatory;scrollbar-width:none;-webkit-overflow-scrolling:touch}
+.tut-trilho::-webkit-scrollbar{display:none}
+.tut-slide{flex:0 0 100%;scroll-snap-align:center;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:0 32px;gap:16px}
+.tut-ic{width:96px;height:96px;border-radius:50%;background:var(--surface);color:var(--green);display:flex;align-items:center;justify-content:center;margin-bottom:8px}
+.tut-ic svg,.tut-ic svg.ic{width:40px;height:40px}
+.tut-tit{font-size:28px;font-weight:700;letter-spacing:-.03em;line-height:1.1;color:var(--ink);margin:0}
+.tut-txt{font-size:16px;line-height:1.45;color:var(--ink2);margin:0;max-width:300px}
+.tut-pe{padding:16px 20px calc(24px + env(safe-area-inset-bottom,0px));display:flex;flex-direction:column;gap:20px}
+.tut-pontos{display:flex;justify-content:center;gap:8px}
+.tut-pontos span{width:8px;height:8px;border-radius:50%;background:var(--ink3);opacity:.35}
+.tut-pontos span.on{background:var(--green);opacity:1}
 .onb-topo{display:flex;align-items:center;gap:16px;padding:16px 20px 0;min-height:44px}
 .onb-voltar{width:28px;height:28px;flex:none;display:flex;align-items:center;background:none;border:none;padding:0;color:var(--ink);font-size:22px;cursor:pointer}
 .onb-barra{flex:1;display:flex;gap:6px}
@@ -2997,7 +3011,20 @@ body.exm .exm-filtros{position:relative;z-index:1}
 
 <div class="overlay" id="ov-detalheamigo" onclick="closeOut(event,'ov-detalheamigo')"><div class="sheet"><button class="sheet-close" onclick="closeOv('ov-detalheamigo')" data-ic="close" aria-label="Fechar"></button><div class="sheet-handle"></div><div class="sheet-title" id="daTitulo">—</div><div id="daCorpo"></div></div></div>
 
-<div class="overlay" id="ov-editperfil"onclick="closeOut(event,'ov-editperfil')"><div class="sheet"><button class="sheet-close" onclick="closeOv('ov-editperfil')" data-ic="close" aria-label="Fechar"></button><div class="sheet-handle"></div><div class="sheet-title">Configurações</div>
+<!-- Como o Spot funciona (09/10): 4 telas depois do primeiro acesso, opcional.
+     Versão provisória (ícone + texto); o desenho final vem do Claude Design. -->
+<div class="overlay onb" id="ov-tutorial" role="dialog" aria-label="Como o Spot funciona"><div class="onb-tela tut">
+<div class="tut-topo"><button class="tut-pular" onclick="fecharTutorial()">Pular</button></div>
+<div class="tut-trilho" id="tutTrilho" onscroll="tutRolou()">
+<section class="tut-slide"><div class="tut-ic" data-ic="bookmark"></div><h2 class="tut-tit">Seus spots, sua voz</h2><p class="tut-txt">Salve restaurantes, hotéis e passeios com a sua nota. Um spot é um lugar que você indicaria pra um amigo.</p></section>
+<section class="tut-slide"><div class="tut-ic" data-ic="check"></div><h2 class="tut-tit">Fui ou Quero ir</h2><p class="tut-txt">Marque o que você já viveu e o que está na sua lista. Onde você foi pinta o seu mapa.</p></section>
+<section class="tut-slide"><div class="tut-ic" data-ic="users"></div><h2 class="tut-tit">Onde seus amigos foram</h2><p class="tut-txt">Veja os spots de quem você confia, com a nota de quem esteve lá.</p></section>
+<section class="tut-slide"><div class="tut-ic" data-ic="suitcase"></div><h2 class="tut-tit">Planeje a próxima viagem</h2><p class="tut-txt">Escolha o destino e junte os spots que seus amigos já salvaram lá.</p></section>
+</div>
+<div class="tut-pe"><div class="tut-pontos" id="tutPontos"><span></span><span></span><span></span><span></span></div><button class="btn-primario btn-largo" id="tutBtn" onclick="tutAvancar()">Continuar</button></div>
+</div></div>
+
+<div class="overlay" id="ov-editperfil" onclick="closeOut(event,'ov-editperfil')"><div class="sheet"><button class="sheet-close" onclick="closeOv('ov-editperfil')" data-ic="close" aria-label="Fechar"></button><div class="sheet-handle"></div><div class="sheet-title">Configurações</div>
 <div class="prof-linha" onclick="document.getElementById('avatarFileInput').click()"><span class="pl-ic" data-ic="user"></span><span class="pl-txt">Trocar foto de perfil</span><span class="pl-seta">›</span></div>
 <div class="prof-linha" onclick="closeOv('ov-editperfil');abrirCidadeDeCasa()"><span class="pl-ic" data-ic="pin"></span><span class="pl-txt">Onde moro<span class="pl-valor" id="cfgCidade"></span></span><span class="pl-seta">›</span></div>
 <div class="prof-linha" onclick="closeOv('ov-editperfil');openVisitedCountryPicker()"><span class="pl-ic" data-ic="globe"></span><span class="pl-txt">Países que já visitei</span><span class="pl-seta">›</span></div>
@@ -3013,6 +3040,7 @@ body.exm .exm-filtros{position:relative;z-index:1}
 <button class="sheet-cta" id="btnSalvarPerfil" onclick="salvarPerfil()">Salvar</button>
 <div class="prof-linha prof-sair" style="margin-top:10px;border-top:1px solid var(--border);border-bottom:none" onclick="signOut()"><span class="pl-txt">Sair da conta</span></div>
 <div class="prof-linha" onclick="abrirBloqueados()"><span class="pl-txt">Pessoas bloqueadas</span></div>
+<div class="prof-linha" onclick="closeOv('ov-editperfil');setTimeout(abrirTutorial,250)"><span class="pl-txt">Como o Spot funciona</span><span class="pl-seta">›</span></div>
 <!-- Termos e privacidade acessiveis DE DENTRO do app: a diretriz 1.2 da Apple
      pede termos publicados, e o revisor procura por eles aqui. So ter a URL na
      ficha da loja nao basta. -->
@@ -13234,11 +13262,56 @@ async function marcarCadastroFeito(){
     if(r.ok&&S.user){S.user.user_metadata=Object.assign({},S.user.user_metadata,{onboarding_done:true})}
   }catch(e){}
 }
+// ── Como o Spot funciona (09/10) ──
+// 4 telas, desliza ou "Continuar", "Pular" sempre à mão. Uma vez por conta
+// neste aparelho; de novo pelas Configurações ("Como o Spot funciona").
+let TUT_PEDIR_PUSH=false;
+function chaveDoTutorial(){return 'spot_tutorial_visto_'+((S.user&&S.user.id)||'')}
+function tutorialJaVisto(){try{return !!localStorage.getItem(chaveDoTutorial())}catch(e){return true}}
+function abrirTutorial(){
+  const t=document.getElementById('tutTrilho');if(!t)return;
+  try{localStorage.setItem(chaveDoTutorial(),'1')}catch(e){}
+  hydrateIcons(document.getElementById('ov-tutorial'));
+  showOv('ov-tutorial');
+  TUT_I=0;t.scrollLeft=0;tutPintar(0);
+}
+// A tela atual fica numa variável: a rolagem anima, e lida no meio dela o
+// "Continuar" tocado duas vezes rápido voltava pra mesma tela.
+let TUT_I=0,TUT_ANIMANDO_ATE=0;
+function tutIndice(){return TUT_I}
+function tutRolou(){
+  if(Date.now()<TUT_ANIMANDO_ATE)return;   // rolagem do próprio botão
+  const t=document.getElementById('tutTrilho');if(!t||!t.clientWidth)return;
+  TUT_I=Math.round(t.scrollLeft/t.clientWidth);tutPintar(TUT_I);
+}
+function tutPintar(i){
+  const n=document.querySelectorAll('#tutTrilho .tut-slide').length;
+  document.querySelectorAll('#tutPontos span').forEach((s,j)=>s.classList.toggle('on',j===i));
+  const b=document.getElementById('tutBtn');if(b)b.textContent=i>=n-1?'Começar':'Continuar';
+}
+function tutAvancar(){
+  const t=document.getElementById('tutTrilho');if(!t)return;
+  const n=t.querySelectorAll('.tut-slide').length,i=tutIndice();
+  if(i>=n-1)return fecharTutorial();
+  TUT_I=i+1;TUT_ANIMANDO_ATE=Date.now()+600;
+  t.scrollTo({left:TUT_I*t.clientWidth,behavior:'smooth'});
+  tutPintar(TUT_I);
+}
+function fecharTutorial(){
+  closeOv('ov-tutorial');
+  if(TUT_PEDIR_PUSH){TUT_PEDIR_PUSH=false;falarComACasca({tipo:'pedir-push'})}
+}
+
 function onbTerminar(){
   const colado=String(ONB.textoImportar||'').trim();ONB.textoImportar='';
   if(colado&&IMP.ligado)setTimeout(()=>{impAbrir(colado);impEncontrar()},400);
   marcarCadastroFeito();
-  falarComACasca({tipo:'pedir-push'});
+  // Como o Spot funciona (09/10): logo depois do primeiro acesso, uma vez. O
+  // pedido de notificação do iPhone espera o tutorial fechar — por cima dele,
+  // a pessoa recusava sem ler. Quem colou uma lista vai direto pra ela.
+  const tutorial=!(colado&&IMP.ligado)&&!tutorialJaVisto();
+  if(tutorial){TUT_PEDIR_PUSH=true;setTimeout(abrirTutorial,350)}
+  else falarComACasca({tipo:'pedir-push'});
   closeOv('ov-onb');
   renderTrips();populateTripOpts();
   try{loadDashboard()}catch(e){}

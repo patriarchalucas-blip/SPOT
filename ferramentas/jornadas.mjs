@@ -481,8 +481,12 @@ await ir(pb, `onbIr(5)`, 600);
 await ir(pb, `onbTerminar()`, 1500);
 confere(!(await janelas(pb)).includes('ov-onb'), 'onb: termina e fecha');
 confere(B.meta.onboarding_done === true, 'onb: marca cadastro feito na conta de login', B.meta);
+// 09/10: depois do primeiro acesso vem o "Como o Spot funciona"; o pedido de
+// notificação espera ele fechar.
+confere((await janelas(pb)).includes('ov-tutorial'), 'onb: abre o tutorial no fim', await janelas(pb));
+await ir(pb, `fecharTutorial()`, 500);
 const pushPedido = (await casca(pb, 'pedir-push')).length;
-confere(pushPedido >= 1, 'casca: pede permissão de push no fim do primeiro acesso');
+confere(pushPedido >= 1, 'casca: pede permissão de push no fim do primeiro acesso (depois do tutorial)');
 const placarB = await ev(pb, () => ({ paises: PLACAR.paises, cidades: PLACAR.cidades }));
 confere(placarB.paises === 2, 'placar de B: 2 países depois do primeiro acesso', placarB);
 const pacViagensOnb = (await casca(pb, 'viagens')).filter(m => m.pronto).pop();
@@ -1137,6 +1141,16 @@ const J = CONTAS['joao.teste@exemplo.test'];
 await ate(async () => (await janelas(pj)).includes('ov-pergunta'), 6000);
 await ir(pj, 'window.responderPergunta(-1)', 1200);
 confere(!amigos(J.id, E.id), '"Agora não" não cria amizade');
+// Como o Spot funciona (09/10): fim do primeiro acesso abre o tutorial uma vez;
+// o pedido de notificação espera ele fechar.
+await limpaCasca(pj);
+await ir(pj, `(()=>{document.querySelectorAll('.overlay.show').forEach(o=>closeOv(o.id));localStorage.removeItem(chaveDoTutorial());onbTerminar()})()`, 900);
+confere((await janelas(pj)).includes('ov-tutorial'), 'fim do primeiro acesso abre o tutorial', await janelas(pj));
+confere(!(await casca(pj, 'pedir-push')).length, 'notificação ainda não foi pedida com o tutorial aberto');
+await ir(pj, `fecharTutorial()`, 500);
+confere((await casca(pj, 'pedir-push')).length === 1, 'pular o tutorial pede a notificação');
+await ir(pj, `(()=>{onbTerminar()})()`, 900);
+confere(!(await janelas(pj)).includes('ov-tutorial'), 'tutorial não aparece de novo', await janelas(pj));
 // Conta antiga (Ana, criada em 01/09) não é perguntada nem consulta o servidor.
 A.criada = '2026-09-01T10:00:00Z';
 const antes9 = CONSULTAS_CONEXAO;
