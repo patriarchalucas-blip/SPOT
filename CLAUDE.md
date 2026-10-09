@@ -281,6 +281,20 @@ ver `mobile/app-store/login-apple.md`. Pede um build novo que substitui a build 
   endereço escrito — a Barceloneta virava "Catalunha".
 - **Voltar do Android:** `window.voltarDoAndroid` (o site não usa histórico).
 
+## Banco em Oregon, plano Free, conta da Sólides (descoberto 08/10/2026)
+
+O projeto Supabase está em **us-west-2 (Oregon)**, plano **Free**, compute
+**nano**, **sem backup**, numa organização do e-mail da Sólides
+(lucas.patriarcha@solides.com.br). Medido de São Paulo: ~0,3 s mínimo por
+consulta só de distância, 0,7–1,5 s nas reais. O app fala com o banco DIRETO
+do celular (e as Functions rodam no Cloudflare GRU), então trazer pra São Paulo
+ajuda — diferente do projeto da Sólides (Apps Script nos EUA), onde piora.
+**Decisão do Lucas pendente** ("sei que o certo é migrar"): projeto novo em
+South America (São Paulo), numa conta com e-mail PESSOAL, Free ou Pro. Plano
+de 8 etapas discutido em 08–09/10 (schema + dados + auth.users com senha +
+storage + reconfigurar Google/Apple/Resend + ensaio + virada de 30–60 min,
+todo mundo entra de novo uma vez). Falta pg_dump nesta máquina (é da Sólides).
+
 ## Custo e cotas (27/09/2026) — o Lucas disse: "isso não pode falhar"
 
 - **Google Cloud (projeto spot-499219), cotas por dia na Places API (New)**, postas
