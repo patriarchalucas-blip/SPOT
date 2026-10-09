@@ -2212,20 +2212,38 @@ html.tem-janela,html.tem-janela body{overflow:hidden}
    por baixo dele e o botão fica no pé. */
 .overlay.onb{top:0;height:100dvh;background:var(--base);backdrop-filter:none;padding:0;align-items:stretch;z-index:260}
 .onb-tela{width:100%;max-width:430px;margin:0 auto;height:100%;display:flex;flex-direction:column;padding-top:env(safe-area-inset-top,0px)}
-/* Como o Spot funciona (09/10). Provisório até o desenho do Claude Design. */
-.tut-topo{display:flex;justify-content:flex-end;padding:12px 20px 0}
-.tut-pular{background:none;border:0;padding:8px 0;font-size:15px;font-weight:600;color:var(--ink3);cursor:pointer}
-.tut-trilho{flex:1;display:flex;overflow-x:auto;scroll-snap-type:x mandatory;scrollbar-width:none;-webkit-overflow-scrolling:touch}
-.tut-trilho::-webkit-scrollbar{display:none}
-.tut-slide{flex:0 0 100%;scroll-snap-align:center;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:0 32px;gap:16px}
-.tut-ic{width:96px;height:96px;border-radius:50%;background:var(--surface);color:var(--green);display:flex;align-items:center;justify-content:center;margin-bottom:8px}
-.tut-ic svg,.tut-ic svg.ic{width:40px;height:40px}
-.tut-tit{font-size:28px;font-weight:700;letter-spacing:-.03em;line-height:1.1;color:var(--ink);margin:0}
-.tut-txt{font-size:16px;line-height:1.45;color:var(--ink2);margin:0;max-width:300px}
-.tut-pe{padding:16px 20px calc(24px + env(safe-area-inset-bottom,0px));display:flex;flex-direction:column;gap:20px}
-.tut-pontos{display:flex;justify-content:center;gap:8px}
-.tut-pontos span{width:8px;height:8px;border-radius:50%;background:var(--ink3);opacity:.35}
-.tut-pontos span.on{background:var(--green);opacity:1}
+/* Como o Spot funciona (09/10, handoff-tutorial). A máscara é um recorte no
+   escuro: o "box-shadow" gigante é a máscara, não sombra de card — o recorte
+   fica totalmente transparente, sem borda nem halo. A barra de abas do site,
+   escondida dentro do app, volta durante o tour pra poder ser apontada (a
+   nativa some enquanto há janela aberta). */
+.overlay.tour-ov{background:transparent;backdrop-filter:none;-webkit-backdrop-filter:none;padding:0;z-index:300;top:0;height:100dvh;transition:opacity .2s ease}
+.overlay.tour-ov.show{display:block}
+.overlay.tour-ov::after{display:none}
+.overlay.tour-ov.saindo{opacity:0}
+.tour-luz{position:fixed;pointer-events:none;box-shadow:0 0 0 200vmax rgba(17,17,17,0);
+  transition:top .28s cubic-bezier(.2,.8,.2,1),left .28s cubic-bezier(.2,.8,.2,1),width .28s cubic-bezier(.2,.8,.2,1),height .28s cubic-bezier(.2,.8,.2,1),border-radius .28s cubic-bezier(.2,.8,.2,1),box-shadow .2s ease}
+.tour-ov.entrou .tour-luz{box-shadow:0 0 0 200vmax rgba(17,17,17,.62)}
+.tour-ov.sem-anim .tour-luz{transition:box-shadow .2s ease}
+.tour-balao{position:fixed;left:20px;right:20px;background:var(--base);border-radius:14px;padding:16px 16px 14px;display:flex;flex-direction:column;gap:14px;
+  opacity:0;transform:translateY(8px);transition:opacity .12s ease,transform .12s ease}
+.tour-balao.visivel{opacity:1;transform:none;transition:opacity .18s ease-out,transform .18s ease-out}
+.tour-seta{position:absolute;width:14px;height:14px;background:var(--base);border-radius:3px;transform:rotate(45deg)}
+.tour-txt{font-size:16px;line-height:1.4;color:var(--ink2);margin:0}
+.tour-txt b{font-weight:700;color:var(--ink)}
+.tour-so-leitor{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
+.tour-acoes{display:flex;align-items:center;gap:16px}
+.tour-n{flex:1;font-size:14px;color:var(--ink3)}
+.tour-pular{background:none;border:0;min-height:44px;padding:0 4px;font-size:15px;font-weight:500;color:var(--ink2);cursor:pointer}
+.tour-prox{height:40px;padding:0 18px;border:0;border-radius:var(--r-btn);background:var(--green);color:var(--base);font-size:15px;font-weight:600;cursor:pointer}
+/* O foco vai pro "Próximo" (o leitor de tela começa por ele); o contorno do
+   navegador não faz parte do desenho — o app é só de celular, sem teclado. */
+.tour-prox:focus{outline:none}
+@media (prefers-reduced-motion:reduce){
+  .tour-luz{transition:box-shadow .2s ease}
+  .tour-balao,.tour-balao.visivel{transform:none}
+}
+body.na-casca.tour-rodando .bottom-nav{display:flex}
 .onb-topo{display:flex;align-items:center;gap:16px;padding:16px 20px 0;min-height:44px}
 .onb-voltar{width:28px;height:28px;flex:none;display:flex;align-items:center;background:none;border:none;padding:0;color:var(--ink);font-size:22px;cursor:pointer}
 .onb-barra{flex:1;display:flex;gap:6px}
@@ -3011,18 +3029,14 @@ body.exm .exm-filtros{position:relative;z-index:1}
 
 <div class="overlay" id="ov-detalheamigo" onclick="closeOut(event,'ov-detalheamigo')"><div class="sheet"><button class="sheet-close" onclick="closeOv('ov-detalheamigo')" data-ic="close" aria-label="Fechar"></button><div class="sheet-handle"></div><div class="sheet-title" id="daTitulo">—</div><div id="daCorpo"></div></div></div>
 
-<!-- Como o Spot funciona (09/10): 4 telas depois do primeiro acesso, opcional.
-     Versão provisória (ícone + texto); o desenho final vem do Claude Design. -->
-<div class="overlay onb" id="ov-tutorial" role="dialog" aria-label="Como o Spot funciona"><div class="onb-tela tut">
-<div class="tut-topo"><button class="tut-pular" onclick="fecharTutorial()">Pular</button></div>
-<div class="tut-trilho" id="tutTrilho" onscroll="tutRolou()">
-<section class="tut-slide"><div class="tut-ic" data-ic="bookmark"></div><h2 class="tut-tit">Seus spots, sua voz</h2><p class="tut-txt">Salve restaurantes, hotéis e passeios com a sua nota. Um spot é um lugar que você indicaria pra um amigo.</p></section>
-<section class="tut-slide"><div class="tut-ic" data-ic="check"></div><h2 class="tut-tit">Fui ou Quero ir</h2><p class="tut-txt">Marque o que você já viveu e o que está na sua lista. Onde você foi pinta o seu mapa.</p></section>
-<section class="tut-slide"><div class="tut-ic" data-ic="users"></div><h2 class="tut-tit">Onde seus amigos foram</h2><p class="tut-txt">Veja os spots de quem você confia, com a nota de quem esteve lá.</p></section>
-<section class="tut-slide"><div class="tut-ic" data-ic="suitcase"></div><h2 class="tut-tit">Planeje a próxima viagem</h2><p class="tut-txt">Escolha o destino e junte os spots que seus amigos já salvaram lá.</p></section>
+<!-- Como o Spot funciona (09/10, handoff-tutorial do Claude Design, T1–T6): tour
+     pelo próprio app — escurece a tela e recorta o botão de verdade, um por vez.
+     A mesma peça mostra a dica única de Fui/Quero ir na primeira ficha. -->
+<div class="overlay tour-ov" id="ov-tutorial" role="dialog" aria-label="Como o Spot funciona" onclick="tourToque(event)"><div class="tour-luz" id="tourLuz"></div>
+<div class="tour-balao" id="tourBalao" onclick="event.stopPropagation()"><span class="tour-seta" id="tourSeta"></span>
+<p class="tour-txt" id="tourTxt" aria-live="polite"></p>
+<div class="tour-acoes"><span class="tour-n" id="tourN"></span><button class="tour-pular" id="tourPular" onclick="fecharTutorial()">Pular</button><button class="tour-prox" id="tourProx" onclick="tourAvancar()">Próximo</button></div></div>
 </div>
-<div class="tut-pe"><div class="tut-pontos" id="tutPontos"><span></span><span></span><span></span><span></span></div><button class="btn-primario btn-largo" id="tutBtn" onclick="tutAvancar()">Continuar</button></div>
-</div></div>
 
 <div class="overlay" id="ov-editperfil" onclick="closeOut(event,'ov-editperfil')"><div class="sheet"><button class="sheet-close" onclick="closeOv('ov-editperfil')" data-ic="close" aria-label="Fechar"></button><div class="sheet-handle"></div><div class="sheet-title">Configurações</div>
 <div class="prof-linha" onclick="document.getElementById('avatarFileInput').click()"><span class="pl-ic" data-ic="user"></span><span class="pl-txt">Trocar foto de perfil</span><span class="pl-seta">›</span></div>
@@ -13262,44 +13276,121 @@ async function marcarCadastroFeito(){
     if(r.ok&&S.user){S.user.user_metadata=Object.assign({},S.user.user_metadata,{onboarding_done:true})}
   }catch(e){}
 }
-// ── Como o Spot funciona (09/10) ──
-// 4 telas, desliza ou "Continuar", "Pular" sempre à mão. Uma vez por conta
-// neste aparelho; de novo pelas Configurações ("Como o Spot funciona").
-let TUT_PEDIR_PUSH=false;
+// ── Como o Spot funciona (09/10, handoff-tutorial do Claude Design) ──
+// Tour pelo próprio app: escurece a tela e recorta o botão de verdade, um por
+// vez, com uma frase. Começa na aba Viagens; as abas são só apontadas, a tela
+// não troca. "Pular" sempre à mão. Uma vez por conta neste aparelho (vale
+// concluir OU pular); de novo pelas Configurações. Passo cujo botão não está
+// na tela (placar de quem ainda não tem país) é pulado.
+// A mesma peça mostra a dica única de Fui/Quero ir na primeira ficha (T6).
+const TOUR=[
+  {alvo:'#dashboard .dash-mais',forma:'circulo',chave:'Adicionar.',txt:'Aqui você salva um spot, as cidades e os países onde já foi.'},
+  {alvo:'#dashPlacar',forma:'card',chave:'Seu placar.',txt:'Países, cidades e spots. Toque num número pra ver a lista.'},
+  {alvo:'#dashboard .bottom-nav .nav-item:nth-child(2)',forma:'aba',chave:'Explorar.',txt:'Spots perto de você e o que seus amigos salvaram.'},
+  {alvo:'#dashboard .bottom-nav .nav-item:nth-child(3)',forma:'aba',chave:'Amigos.',txt:'O que eles salvaram, pedidos de amizade e o convite pelo WhatsApp.'},
+  {alvo:'#dashboard .bottom-nav .nav-item:nth-child(4)',forma:'aba',chave:'Perfil.',txt:'Seus melhores spots, as próximas viagens e as configurações.'}
+];
+const DICA_STATUS={alvo:'#place .fi-status',forma:'dica',chave:'Fui ou Quero ir.',txt:'Marque se você já foi ou se quer ir. Onde você foi pinta o seu mapa.'};
+let TUT_PEDIR_PUSH=false,TOUR_PASSOS=[],TOUR_I=0,TOUR_MODO='tour',TOUR_BURACO=null,TOUR_TO=null;
 function chaveDoTutorial(){return 'spot_tutorial_visto_'+((S.user&&S.user.id)||'')}
 function tutorialJaVisto(){try{return !!localStorage.getItem(chaveDoTutorial())}catch(e){return true}}
-function abrirTutorial(){
-  const t=document.getElementById('tutTrilho');if(!t)return;
-  try{localStorage.setItem(chaveDoTutorial(),'1')}catch(e){}
-  hydrateIcons(document.getElementById('ov-tutorial'));
+function tourAlvo(p){const el=document.querySelector(p.alvo);if(!el)return null;const r=el.getBoundingClientRect();return(r.width&&r.height)?el:null}
+function tourMenosMovimento(){try{return matchMedia('(prefers-reduced-motion: reduce)').matches}catch(e){return false}}
+// O recorte de cada forma (medidas do handoff).
+function tourBuraco(p,el){
+  const r=el.getBoundingClientRect();
+  if(p.forma==='circulo'){const lado=Math.max(r.width,r.height)+16;return{x:r.left+r.width/2-lado/2,y:r.top+r.height/2-lado/2,w:lado,h:lado,raio:lado/2}}
+  if(p.forma==='aba'){const barra=el.closest('.bottom-nav');const topo=(barra?barra.getBoundingClientRect().top:r.top)+4;return{x:r.left+r.width/2-40,y:topo,w:80,h:52,raio:14}}
+  if(p.forma==='dica')return{x:r.left-6,y:r.top-6,w:r.width+12,h:r.height+12,raio:16};
+  return{x:r.left-6,y:r.top-6,w:r.width+12,h:r.height+12,raio:20};   // card: raio 14 + 6
+}
+function tourAbrirPeca(modo){
+  TOUR_MODO=modo;
+  const ov=document.getElementById('ov-tutorial');
+  ov.classList.remove('entrou','saindo');ov.classList.add('sem-anim');
+  document.getElementById('tourBalao').classList.remove('visivel');
   showOv('ov-tutorial');
-  TUT_I=0;t.scrollLeft=0;tutPintar(0);
 }
-// A tela atual fica numa variável: a rolagem anima, e lida no meio dela o
-// "Continuar" tocado duas vezes rápido voltava pra mesma tela.
-let TUT_I=0,TUT_ANIMANDO_ATE=0;
-function tutIndice(){return TUT_I}
-function tutRolou(){
-  if(Date.now()<TUT_ANIMANDO_ATE)return;   // rolagem do próprio botão
-  const t=document.getElementById('tutTrilho');if(!t||!t.clientWidth)return;
-  TUT_I=Math.round(t.scrollLeft/t.clientWidth);tutPintar(TUT_I);
+function abrirTutorial(){
+  try{localStorage.setItem(chaveDoTutorial(),'1')}catch(e){}
+  goTo('dashboard');
+  const sc=document.getElementById('dashboard');if(sc)sc.scrollTop=0;
+  try{window.scrollTo(0,0)}catch(e){}
+  document.body.classList.add('tour-rodando');
+  TOUR_PASSOS=TOUR.filter(tourAlvo);
+  if(!TOUR_PASSOS.length){document.body.classList.remove('tour-rodando');if(TUT_PEDIR_PUSH){TUT_PEDIR_PUSH=false;falarComACasca({tipo:'pedir-push'})}return}
+  tourAbrirPeca('tour');
+  TOUR_I=0;tourMostrar(true);
 }
-function tutPintar(i){
-  const n=document.querySelectorAll('#tutTrilho .tut-slide').length;
-  document.querySelectorAll('#tutPontos span').forEach((s,j)=>s.classList.toggle('on',j===i));
-  const b=document.getElementById('tutBtn');if(b)b.textContent=i>=n-1?'Começar':'Continuar';
+function tutIndice(){return TOUR_I}
+// primeiro=true: o recorte aparece já no lugar e a máscara entra em 200ms.
+function tourMostrar(primeiro){
+  const passos=TOUR_MODO==='dica'?[DICA_STATUS]:TOUR_PASSOS;
+  const p=passos[TOUR_I];const el=p&&tourAlvo(p);
+  if(!el){if(TOUR_MODO==='tour'&&TOUR_I<TOUR_PASSOS.length-1){TOUR_I++;return tourMostrar(primeiro)}return fecharTutorial()}
+  if(p.forma!=='aba')el.scrollIntoView({block:'center'});
+  const ov=document.getElementById('ov-tutorial'),luz=document.getElementById('tourLuz'),balao=document.getElementById('tourBalao');
+  const h=tourBuraco(p,el);TOUR_BURACO=h;
+  balao.classList.remove('visivel');
+  Object.assign(luz.style,{top:h.y+'px',left:h.x+'px',width:h.w+'px',height:h.h+'px',borderRadius:h.raio+'px'});
+  if(primeiro){void luz.offsetWidth;ov.classList.add('entrou');requestAnimationFrame(()=>ov.classList.remove('sem-anim'))}
+  clearTimeout(TOUR_TO);
+  TOUR_TO=setTimeout(()=>{
+    const n=passos.length,ultimo=TOUR_I>=n-1;
+    document.getElementById('tourTxt').innerHTML='<span class="tour-so-leitor">'+(TOUR_MODO==='tour'?'Passo '+(TOUR_I+1)+' de '+n+'. ':'')+'</span><b>'+esc(p.chave)+'</b> '+esc(p.txt);
+    const nEl=document.getElementById('tourN'),pular=document.getElementById('tourPular'),prox=document.getElementById('tourProx');
+    nEl.textContent=TOUR_MODO==='tour'?(TOUR_I+1)+' de '+n:'';
+    pular.style.display=TOUR_MODO==='tour'?'':'none';
+    prox.textContent=TOUR_MODO==='dica'?'Entendi':(ultimo?'Começar':'Próximo');
+    // Balão 12px embaixo do recorte; com o recorte na metade de baixo, em cima.
+    const embaixo=h.y+h.h/2<window.innerHeight/2;
+    if(embaixo){balao.style.top=(h.y+h.h+12)+'px';balao.style.bottom=''}
+    else{balao.style.bottom=(window.innerHeight-h.y+12)+'px';balao.style.top=''}
+    // Setinha no centro do recorte, a pelo menos 20px das bordas do balão.
+    const seta=document.getElementById('tourSeta'),larg=balao.getBoundingClientRect().width||(window.innerWidth-40);
+    const esq=Math.max(20,Math.min(larg-34,h.x+h.w/2-20-7));
+    seta.style.left=esq+'px';
+    if(embaixo){seta.style.top='-6px';seta.style.bottom=''}else{seta.style.bottom='-6px';seta.style.top=''}
+    balao.classList.add('visivel');
+    try{prox.focus({preventScroll:true})}catch(e){}
+  },primeiro?200:(tourMenosMovimento()?120:280));
 }
-function tutAvancar(){
-  const t=document.getElementById('tutTrilho');if(!t)return;
-  const n=t.querySelectorAll('.tut-slide').length,i=tutIndice();
-  if(i>=n-1)return fecharTutorial();
-  TUT_I=i+1;TUT_ANIMANDO_ATE=Date.now()+600;
-  t.scrollTo({left:TUT_I*t.clientWidth,behavior:'smooth'});
-  tutPintar(TUT_I);
+function tourAvancar(){
+  if(TOUR_MODO==='dica'||TOUR_I>=TOUR_PASSOS.length-1)return fecharTutorial();
+  TOUR_I++;tourMostrar(false);
 }
-function fecharTutorial(){
-  closeOv('ov-tutorial');
-  if(TUT_PEDIR_PUSH){TUT_PEDIR_PUSH=false;falarComACasca({tipo:'pedir-push'})}
+// Toque no recorte: no tour, avança (sem executar o botão); na dica, fecha e
+// a escolha vale. Toque na máscara não faz nada.
+function tourToque(e){
+  const h=TOUR_BURACO;if(!h)return;
+  const dentro=e.clientX>=h.x&&e.clientX<=h.x+h.w&&e.clientY>=h.y&&e.clientY<=h.y+h.h;
+  if(!dentro)return;
+  if(TOUR_MODO==='tour')return tourAvancar();
+  const x=e.clientX,y=e.clientY;
+  fecharTutorial(true);
+  const alvo=document.elementFromPoint(x,y);
+  if(alvo&&alvo.closest('.fi-status'))alvo.click();
+}
+function fecharTutorial(jaSem){
+  clearTimeout(TOUR_TO);
+  const ov=document.getElementById('ov-tutorial');
+  const fim=()=>{closeOv('ov-tutorial');ov.classList.remove('saindo','entrou');document.body.classList.remove('tour-rodando');TOUR_BURACO=null};
+  if(jaSem===true)fim();else{ov.classList.add('saindo');setTimeout(fim,200)}
+  if(TOUR_MODO==='tour'){
+    const sc=document.getElementById('dashboard');if(sc)sc.scrollTop=0;
+    if(TUT_PEDIR_PUSH){TUT_PEDIR_PUSH=false;falarComACasca({tipo:'pedir-push'})}
+  }
+}
+// T6: a dica de Fui/Quero ir, uma vez, na primeira ficha aberta — só pra quem
+// passou pelo tour (contas novas). Nunca por cima de outra janela.
+function talvezDicaDeStatus(){
+  if(!S.user||!tutorialJaVisto()||telaAtual()!=='place')return;
+  const k='spot_dica_status_'+S.user.id;
+  try{if(localStorage.getItem(k))return}catch(e){return}
+  if(document.querySelector('.overlay.show'))return;
+  if(!tourAlvo(DICA_STATUS))return;
+  try{localStorage.setItem(k,'1')}catch(e){}
+  TOUR_I=0;tourAbrirPeca('dica');tourMostrar(true);
 }
 
 function onbTerminar(){
@@ -17015,6 +17106,8 @@ function goTo(id,manterRolagem){
   if(manterRolagem&&ROLAGEM[id])restaurarRolagem(ROLAGEM[id]);
   else window.scrollTo(0,0);
   avisarTelaAtual(id);
+  // Dica única de Fui/Quero ir na primeira ficha (09/10, handoff T6).
+  if(id==='place')setTimeout(()=>{try{talvezDicaDeStatus()}catch(e){}},500);
 }
 // ═══ PERGUNTA ═══
 //
