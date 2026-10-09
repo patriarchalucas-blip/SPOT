@@ -297,7 +297,7 @@ todo mundo entra de novo uma vez). Falta pg_dump nesta máquina (é da Sólides)
 
 ## Auditoria de 09/10/2026 (3 agentes: viagens/spots, Explorar/fotos/custo, perfil/privacidade)
 
-**Migração 034 (`migrations/034_aceite_sem_troca.sql`) — ESCRITA, FALTA RODAR:** a
+**Migração 034 (`migrations/034_aceite_sem_troca.sql`) — RODADA em 09/10/2026 (o Lucas confirmou):** a
 política de UPDATE em `follows` (008) não prendia o `follower_id`; um PATCH
 direto na API num pedido recebido de uma 2ª conta virava amizade ACEITA com
 qualquer pessoa (lê viagens/spots dela, passa por cima de bloqueio). Gatilho
@@ -314,11 +314,14 @@ diferentes (`outraLoja`); nota da ficha capturada antes do await; retry de
 insert de spot só em coluna desconhecida (não duplica); viagem do Montar nasce
 "Só eu vejo" (`privadaSeMontando`); "Seu nome" como a pessoa escreveu.
 
-**Pendente da auditoria (não feito):** viagem vazia que sobra quando o spot
-falha ao salvar (pinta país não visitado); cidades marcadas "zumbis" depois de
-excluir viagem/desmarcar país; duas viagens do mesmo país (quickvisit com cidade
-+ viagem nova); cidade de mesmo nome em 2 países (Valência) cai na viagem
-errada; `juntarSpotsDeCasa` pode expor Quero ir de viagem privada; Explorar
+Bugs de dados corrigidos em 09/10 (depois): viagem vazia que sobrava quando o
+spot falhava (`desfazerViagemCriadaAgora`); cidades marcadas "zumbis" ao excluir
+viagem/desmarcar país (`limparCidadesDePaisQueSaiu`); país só marcado vira a
+viagem do spot novo em vez de nascer uma 2ª; cidade de mesmo nome em 2 países
+(`viagemQueCobreEm` checa o país); `juntarSpotsDeCasa` não move Quero ir de
+viagem privada.
+
+**Pendente da auditoria (não feito):** Explorar
 mostra "Nada encontrado" quando a cota estoura (e places.js sem aviso 50/80/100);
 "Nesta área" do mapa sem arredondar (cada arrasto é busca paga); `lugar.js` sem
 sessionToken (autocomplete cobrado por pedido); faixa de preço do Places
@@ -430,7 +433,7 @@ anon key devolve **200 + `confirmation_sent_at`** quando o SMTP está de pé, e
 
 ## Estado do banco (migrações aplicadas)
 
-001 a 033 já foram rodadas no Supabase (**033** = `follows.accepted_at` + gatilho `follows_aceito_em`: a hora do ACEITE, que a Atividade usa no "agora são amigos" — antes era a do pedido e aceite tardio ficava escondido; rodada em 08/10/2026, 2/2 true. **032** = tabela `cidades_visitadas` (marcar cidade sem spot; dono escreve, amigo lê), `spots.fui_em` + gatilho (feed ordena pelo Fui, não pela criação), RPC `perfis_da_conversa(spot)` (nome de quem comentou sem ser amigo), `pending_request_profiles` com home_city/spots, `handle_new_user` usa o nome do Google/Apple em vez do começo do e-mail (e corrigiu os nomes antigos), pedido de amizade recusado no banco se houver bloqueio (`ha_bloqueio`); rodada em 06/10/2026, 8/8 true. **031** = `search_profiles` devolve `home_city` e `spots` (Fui fora de viagem privada) e põe conta com uso antes da vazia — três contas "Lucas Patriarcha" iguais na busca fizeram o pedido da Isabella ir pra conta errada; rodada em 06/10/2026, anon false/logado true. **030** = tabela `spot_fotos`: várias fotos suas por spot (até 10, no app), vê quem vê o spot, põe só o dono; rodada em 05/10/2026. **029** = `spots.tipo` (tipo do Google, monta "O melhor de cada tipo") + `profiles.ranking` jsonb (ordem arrastada e desempate do "Seus melhores"); rodada em 05/10/2026, 2/2 true. **028** = próximas viagens: trips.privada/proxima + RLS que esconde de amigo os Quero ir de viagem privada; rodada em 05/10/2026, 4/4 true. Efeito colateral esperado: consulta SEM login a trips/spots agora dá 401 "permission denied for function" em vez de []; o servidor usa a service key e não é afetado) — 001–025 conferidas coluna a coluna em
+001 a 034 já foram rodadas no Supabase (**034** = gatilho `follows_sem_troca` (UPDATE não troca os lados do pedido) + aceite checa bloqueio; rodada em 09/10/2026. **033** = `follows.accepted_at` + gatilho `follows_aceito_em`: a hora do ACEITE, que a Atividade usa no "agora são amigos" — antes era a do pedido e aceite tardio ficava escondido; rodada em 08/10/2026, 2/2 true. **032** = tabela `cidades_visitadas` (marcar cidade sem spot; dono escreve, amigo lê), `spots.fui_em` + gatilho (feed ordena pelo Fui, não pela criação), RPC `perfis_da_conversa(spot)` (nome de quem comentou sem ser amigo), `pending_request_profiles` com home_city/spots, `handle_new_user` usa o nome do Google/Apple em vez do começo do e-mail (e corrigiu os nomes antigos), pedido de amizade recusado no banco se houver bloqueio (`ha_bloqueio`); rodada em 06/10/2026, 8/8 true. **031** = `search_profiles` devolve `home_city` e `spots` (Fui fora de viagem privada) e põe conta com uso antes da vazia — três contas "Lucas Patriarcha" iguais na busca fizeram o pedido da Isabella ir pra conta errada; rodada em 06/10/2026, anon false/logado true. **030** = tabela `spot_fotos`: várias fotos suas por spot (até 10, no app), vê quem vê o spot, põe só o dono; rodada em 05/10/2026. **029** = `spots.tipo` (tipo do Google, monta "O melhor de cada tipo") + `profiles.ranking` jsonb (ordem arrastada e desempate do "Seus melhores"); rodada em 05/10/2026, 2/2 true. **028** = próximas viagens: trips.privada/proxima + RLS que esconde de amigo os Quero ir de viagem privada; rodada em 05/10/2026, 4/4 true. Efeito colateral esperado: consulta SEM login a trips/spots agora dá 401 "permission denied for function" em vez de []; o servidor usa a service key e não é afetado) — 001–025 conferidas coluna a coluna em
 23/09/2026, 026 rodada e conferida (`anon = false` nas duas) em 25/09/2026, **027**
 rodada em 27/09/2026 (5/5 "true" na conferência; RPCs novas recusam anon).
 **027** = cadastro não quebra com username repetido (`handle_new_user` com sufixo);

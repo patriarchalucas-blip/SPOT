@@ -7113,7 +7113,9 @@ function juntarSpotsDeCasa(){
   (S.trips||[]).forEach(t=>{
     if(t===casa||ehCasa(t)||!(t._spots||[]).length)return;
     const pais=(t.destinations&&t.destinations[0])||'';
-    const daCasa=t._spots.filter(sp=>sp.user_id===S.user.id&&ehDaCasa(cityOf(sp),pais));
+    // Quero ir de viagem "Só eu vejo" fica onde está (09/10, auditoria): a casa
+    // não é privada, e mover pra ela mostrava aos amigos o que era escondido.
+    const daCasa=t._spots.filter(sp=>sp.user_id===S.user.id&&ehDaCasa(cityOf(sp),pais)&&!(t.privada&&sp.status==='want'));
     if(!daCasa.length)return;
     daCasa.forEach(sp=>{
       dbUpdate('spots',sp.id,{trip_id:casa.id}).then(r=>{if(r&&r.error)console.warn('juntarSpotsDeCasa',r.error)}).catch(()=>{});
@@ -7776,9 +7778,11 @@ async function deleteTrip(){
   // falhar não toca na viagem.
   const{error:erroSpots}=await dbDeleteOnde('spots','trip_id=eq.'+encodeURIComponent(id));
   if(erroSpots){toast('Não excluiu','Os spots da viagem não foram apagados. Tenta de novo.','alert');return}
+  const paisesDela=((S.curTrip.destinations&&S.curTrip.destinations.length)?S.curTrip.destinations:[S.curTrip.name]).filter(Boolean);
   const{error}=await dbDelete('trips',id);
   if(!error){
     S.trips=S.trips.filter(t=>t.id!==id);
+    await limparCidadesDePaisQueSaiu(paisesDela);
     S.curTrip=null;
     goTo('dashboard');loadDashboard();
     toast('Viagem excluída','','trash');
@@ -9535,7 +9539,15 @@ function viagemQueCobreEm(t,cidade,pais){
   const cobre=x=>mesmoLugar(x.initial_city,cidade)
     ||(x.destinations||[]).some(d=>mesmoLugar(d,cidade))
     ||(x._spots||[]).some(s=>mesmoLugar(cityOf(s),cidade));
-  const porCidade=cidade?t.filter(x=>!isNonTrip(x)&&cobre(x)):[];
+  // Mesmo nome, outro país (09/10, auditoria): Valência da Venezuela caía na
+  // viagem "Espanha" porque lá havia spots em Valência. Viagem que diz os
+  // países dela só cobre a cidade se o país do lugar for um deles.
+  const doPais=x=>{
+    if(!pais)return true;
+    const ps=[x.name,...(x.destinations||[])].filter(d=>d&&COUNTRIES.some(c=>c.name===d));
+    return !ps.length||ps.some(d=>mesmoLugar(d,pais));
+  };
+  const porCidade=cidade?t.filter(x=>!isNonTrip(x)&&cobre(x)&&doPais(x)):[];
   if(porCidade.length)return porCidade[0];
   const porPais=t.filter(x=>!isNonTrip(x)&&(
     mesmoLugar(x.name,pais)||(x.destinations||[]).some(d=>mesmoLugar(d,pais))));
@@ -11880,6 +11892,14 @@ async function viagemParaOLugar(p,semCriar,status){
 // PENDENTE, que o saveSpot cria de verdade na hora de salvar — escolher o
 // lugar e desistir deixava uma viagem vazia pra trás (29/09).
 function viagemPendente(cidade,pais){return{__pendente:true,cidade,pais,id:'',name:pais,destinations:[pais],_spots:[]}}
+// Viagem criada AGORA pra um spot que não salvou (09/10, auditoria): vazia, ela
+// pintava no mapa um país que a pessoa nunca visitou, e ficava pra sempre.
+function desfazerViagemCriadaAgora(t){
+  if(!t||!t._criadaAgora||(t._spots||[]).length)return;
+  S.trips=(S.trips||[]).filter(x=>x.id!==t.id);
+  dbDelete('trips',t.id).catch(()=>{});
+  try{atualizarPlacar()}catch(e){}
+}
 async function garantirViagem(cidade,pais,semCriar,status){
   // Lugar da cidade onde mora não vira viagem (ver "ONDE VOCÊ MORA").
   if(ehDaCasa(cidade,pais)){
@@ -11901,10 +11921,20 @@ async function garantirViagem(cidade,pais,semCriar,status){
   return criarViagemUmaVez('pais:'+normName(pais),async()=>{
     const ja=doPaisAgora();
     if(ja)return ja;
+    // País só marcado ("Países que visitei", às vezes com cidades marcadas):
+    // vira a viagem dele, em vez de nascer uma segunda "Itália" do lado
+    // (09/10, auditoria — as cidades marcadas apareciam nas duas).
+    const marcado=(S.trips||[]).find(t=>t.dates==='__quickvisit__'&&(mesmoLugar(t.name,pais)||(t.destinations||[]).some(d=>mesmoLugar(d,pais))));
+    if(marcado){
+      const r=await dbUpdate('trips',marcado.id,{dates:''});
+      if(!r||!r.error){marcado.dates='';if(!marcado._spots)marcado._spots=[];marcado._spotsLoaded=true;return marcado}
+    }
     const{data,error}=await dbInsert('trips',Object.assign({user_id:S.user.id,name:pais,
       destinations:[pais],dates:'',status:'planning',initial_city:cidade||null},privadaSeMontando()));
     if(error||!data)return null;
-    data._spots=[];data._spotsLoaded=true;marcarViagemNova(data);
+    // Criada AGORA, pra este spot: se ele não salvar, ela sai (ver
+    // desfazerViagemCriadaAgora) — vazia, ela pintava um país não visitado.
+    data._spots=[];data._spotsLoaded=true;data._criadaAgora=true;marcarViagemNova(data);
     S.trips.unshift(data);
     return data;
   });
@@ -12297,7 +12327,7 @@ async function resolverCidadeDoSpot(p,trip){
       // 10c (06/10): 1º spot com Fui num país → "passou por outras cidades?"
       cvTalvezPerguntar(salvo);
     }
-  }else toast('Não salvou',textoDaFalhaAoSalvar(null),'alert'); // 06/10: era a mensagem crua do banco
+  }else{desfazerViagemCriadaAgora(t);toast('Não salvou',textoDaFalhaAoSalvar(null),'alert')} // 06/10: era a mensagem crua do banco
   btn.textContent='Salvar spot';btn2.textContent='Salvar e adicionar outro';btn.disabled=false;btn2.disabled=false;
 }
 
@@ -13282,13 +13312,14 @@ async function salvarSpotDireto(p,cat,status,avaliacao){
   }
   let{data,error}=await dbInsert('spots',rec);
   // Mesma cascata do saveSpot: coluna de migração que ainda não rodou não
-  // pode custar o spot inteiro.
-  if(error&&(rec.subcategory||rec.phone||rec.photo_author||rec.lat!=null
+  // pode custar o spot inteiro. Só em "coluna desconhecida" (09/10): em falha
+  // de rede, a 2ª tentativa duplicava o spot.
+  if(error&&error!==ERRO_REDE&&/42703|PGRST204/.test(String(error.code||'')+' '+String(error.message||''))&&(rec.subcategory||rec.phone||rec.photo_author||rec.lat!=null
              ||rec.price_level!=null||rec.opening_hours||rec.from_user_id||rec.tipo)){
     ['subcategory','phone','photo_author','photo_author_url','lat','lng','price_level','opening_hours','from_user_id','tipo'].forEach(k=>delete rec[k]);
     ({data,error}=await dbInsert('spots',rec));
   }
-  if(error||!data)return null;
+  if(error||!data){desfazerViagemCriadaAgora(viagem);return null}
   if(!viagem._spots)viagem._spots=[];viagem._spots.push(data);
   spotPrioritario=data.id;
   return data;
@@ -15431,6 +15462,21 @@ function paisSoMarcado(c){
   const doPais=(S.trips||[]).filter(t=>((t.destinations&&t.destinations[0])||t.name)===c);
   return doPais.length>0&&doPais.every(t=>isQuickVisit(t));
 }
+// País que deixou de estar no mapa (viagem excluída, país desmarcado) leva junto
+// as cidades marcadas dele (09/10, auditoria): elas seguiam contando no placar,
+// sem viagem nenhuma onde aparecer nem jeito de tirar pela tela.
+async function limparCidadesDePaisQueSaiu(paises){
+  const pintados=visitedCountryNames();
+  const sairam=(paises||[]).filter(p=>p&&!pintados.some(v=>mesmoLugar(v,p)));
+  if(!sairam.length)return;
+  const ids=(S.cidadesMarcadas||[]).filter(m=>sairam.some(p=>mesmoLugar(m.pais||'',p))).map(m=>m.id).filter(Boolean);
+  if(!ids.length)return;
+  const d=await dbDeleteOnde('cidades_visitadas','id=in.('+ids.map(encodeURIComponent).join(',')+')');
+  if(d&&d.error)return;
+  const fora=new Set(ids);
+  S.cidadesMarcadas=(S.cidadesMarcadas||[]).filter(m=>!fora.has(m.id));
+  try{guardarDadosLocais();atualizarPlacar()}catch(e){}
+}
 async function desmarcarPais(c,ev){
   if(ev){ev.stopPropagation();ev.preventDefault()}
   if(!paisSoMarcado(c))return;
@@ -15441,6 +15487,7 @@ async function desmarcarPais(c,ev){
     if(error){toast('Erro','Não consegui tirar agora. Tenta de novo.');return}
     S.trips=S.trips.filter(x=>x.id!==t.id);
   }
+  await limparCidadesDePaisQueSaiu([c]);
   renderTrips();populateTripOpts();loadProfile();atualizarPlacar();
   toast(c+' saiu do mapa','','trash');
 }

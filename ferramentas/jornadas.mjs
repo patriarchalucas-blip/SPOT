@@ -933,6 +933,16 @@ confere(await tela(pd) === 'dashboard', 'nenhuma tela abre sozinha', await tela(
 await ir(pd, `(async()=>{await loadFriends();const r=FRIENDS_DATA.incoming[0];await respondRequest(r.id,true)})()`, 2000);
 const pedPac2 = await ultimoPacote(pd, 'pedidos');
 confere(pedPac2 && pedPac2.n === 0, 'aceitou: o ponto apaga', pedPac2);
+// Auditoria 09/10: país só marcado (com Sintra marcada) vira a viagem do spot
+// novo, sem nascer uma 2ª "Portugal"; e excluir a viagem leva as cidades junto.
+const rD = await adicionarSpot(pd, { busca: 'Café Santiago', status: 'been', nota: 4 });
+const spD = DB.spots.find(x => x.user_id === D.id && x.name === 'Café Santiago');
+confere(spD && spD.city === 'Porto', 'D salva Café Santiago (Porto)', rD.erro || spD);
+const viagensPT = DB.trips.filter(t => t.user_id === D.id && t.name === 'Portugal');
+confere(viagensPT.length === 1 && viagensPT[0].dates === '', 'uma viagem Portugal só (o país marcado virou a viagem)', viagensPT.map(t => t.dates));
+await ir(pd, `(async()=>{document.querySelectorAll('.overlay.show').forEach(o=>closeOv(o.id));S.curTrip=S.trips.find(t=>t.name==='Portugal');await deleteTrip()})()`, 2000);
+confere(!DB.trips.some(t => t.user_id === D.id && t.name === 'Portugal'), 'D exclui a viagem Portugal');
+confere(!DB.cidades_visitadas.some(c => c.user_id === D.id && c.pais === 'Portugal'), 'as cidades marcadas de Portugal saem junto (não ficam no placar)', DB.cidades_visitadas.filter(c => c.user_id === D.id));
 ['D'].forEach(n => { const e = errosDe(PAGINAS[n]); confere(!e.length, 'sem erro de JS no aparelho ' + n, e) });
 
 // ═══ JORNADA 8 · pedidos de amizade: casos de borda ═══
