@@ -42,17 +42,31 @@ create trigger spots_fui_em before insert or update on public.spots
 revoke all on function public.marcar_fui_em() from public, anon;
 
 -- ─── 3. Perfil com limites no banco, não só no app ─────────────────────
--- Tamanho do nome e formato do @ só eram conferidos na tela de Ajustes. NOT
--- VALID: vale pra toda escrita daqui pra frente sem reprovar linha antiga.
+-- Tamanho do nome e formato do @ só eram conferidos na tela de Ajustes.
+-- Gatilho em vez de CHECK: um CHECK (mesmo NOT VALID) vale em TODA edição da
+-- linha, e um perfil antigo com @ fora do padrão não conseguiria mais nem
+-- trocar a foto; e um nome do Google com mais de 60 letras quebraria o
+-- cadastro (handle_new_user). Aqui nome e bio são CORTADOS no limite, e o @
+-- só é conferido quando muda.
 alter table public.profiles drop constraint if exists profiles_nome_tamanho;
-alter table public.profiles add constraint profiles_nome_tamanho
-  check (display_name is null or char_length(display_name) <= 60) not valid;
 alter table public.profiles drop constraint if exists profiles_username_formato;
-alter table public.profiles add constraint profiles_username_formato
-  check (username is null or username ~ '^[a-z0-9_]{3,30}$') not valid;
 alter table public.profiles drop constraint if exists profiles_bio_tamanho;
-alter table public.profiles add constraint profiles_bio_tamanho
-  check (bio is null or char_length(bio) <= 300) not valid;
+create or replace function public.perfil_nos_limites()
+returns trigger language plpgsql set search_path = public as $$
+begin
+  if new.display_name is not null then new.display_name := left(new.display_name, 60); end if;
+  if new.bio is not null then new.bio := left(new.bio, 300); end if;
+  if new.username is not null
+     and (tg_op = 'INSERT' or new.username is distinct from old.username)
+     and new.username !~ '^[a-z0-9_]{3,30}$' then
+    raise exception 'username fora do formato' using errcode = '23514';
+  end if;
+  return new;
+end $$;
+drop trigger if exists profiles_nos_limites on public.profiles;
+create trigger profiles_nos_limites before insert or update on public.profiles
+  for each row execute function public.perfil_nos_limites();
+revoke all on function public.perfil_nos_limites() from public, anon;
 
 -- ── CONFERÊNCIA ── tem que voltar 3 linhas "true"
 select 'ha_bloqueio só sobre quem pergunta' as item,
@@ -62,4 +76,4 @@ select 'fui_em e created_at pelo banco',
        (select prosrc like '%old.created_at%' from pg_proc where proname = 'marcar_fui_em')
 union all
 select 'limites no perfil',
-       (select count(*) = 3 from pg_constraint where conname in ('profiles_nome_tamanho','profiles_username_formato','profiles_bio_tamanho'));
+       exists (select 1 from pg_trigger where tgname = 'profiles_nos_limites');

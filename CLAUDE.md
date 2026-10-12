@@ -334,8 +334,11 @@ display_name/username; `delete_my_account` apaga denúncias contra a pessoa.
 
 **Migração 035 (`migrations/035_pontas_de_seguranca.sql`) — ESCRITA, FALTA RODAR:**
 `ha_bloqueio` só responde sobre quem pergunta; `fui_em`/`created_at` de spots
-decididos pelo banco em qualquer escrita; limites no perfil (nome ≤ 60, @
-`^[a-z0-9_]{3,30}$`, bio ≤ 300) com NOT VALID.
+decididos pelo banco em qualquer escrita; limites no perfil por GATILHO
+`profiles_nos_limites` (nome cortado em 60, bio em 300, @ `^[a-z0-9_]{3,30}$`
+conferido só quando muda) — CHECK foi descartado: mesmo NOT VALID ele vale em
+toda edição, e perfil antigo com @ fora do padrão não salvaria mais nada; nome
+do Google com 60+ letras quebraria o cadastro.
 
 Feito no site/servidor em 11/10: card "Onde você mora" abre direto a cidade
 (`abrirCasa` → `openCityScreen`, voltar = Viagens via `CIDADE_VOLTA`); filtro
