@@ -371,6 +371,15 @@ pintar o cache antes de renovar o token; `sbFetch` renovando token em todo 403.
 - **Brave (Instagram): pago** desde 26/09, US$ 5 por mil. Teto do mês 20.000 em
   `find-instagram.js` é só rede contra desastre; o que segura o gasto é a MEMÓRIA
   por restaurante no KV (`ig_<hash nome|cidade>`, 180 dias achado / 30 não).
+- **Foto é o gasto do Google (12/10/2026):** em 1–12/10 o Google cobrou
+  R$ 109,02 de uso, TUDO no SKU "Places API Place Details Photos" (busca e
+  detalhe: zero), com pouquíssimos usuários — +48% sobre 19–30/09. Feito:
+  `place-photo.js` guarda a foto por LUGAR + `s` (tamanho original + resumo do
+  autor, `idDaFoto`, mesmo cálculo no app e no servidor) além do código, que
+  vence e pode mudar entre buscas; a busca do "Adicionar spot" só baixa foto
+  700 ms depois de a pessoa parar de digitar, e só a visível. NÃO medido ainda
+  qual dos dois pesava mais: conferir o relatório do Google (Faturamento →
+  Relatórios, SKU) uma semana depois de 12/10.
 - **Aviso no celular do Lucas** em 50/80/100% das cotas de Instagram e de fotos
   (`functions/api/_aviso-dono.js`, acha o dono pela tabela `moderadores`).
 

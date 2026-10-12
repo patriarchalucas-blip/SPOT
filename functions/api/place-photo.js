@@ -46,6 +46,29 @@ const TTL_FALHA = 60 * 10;
 // 1000 dá folga pra o Google crescer o id sem voltar a quebrar aqui.
 export const REF_OK = /^places\/[A-Za-z0-9_-]{1,120}\/photos\/[A-Za-z0-9_-]{1,1000}$/;
 
+// MEMÓRIA POR LUGAR, NÃO POR CÓDIGO (12/10/2026). O código da foto (`ref`) vem
+// de cada busca, e o Google avisa que ele vence e não pode ser guardado — a
+// mesma foto pode chegar com códigos diferentes em buscas diferentes
+// (Explorar, ficha, "perto de você", importar). Guardando só pelo código, cada
+// código novo é uma ida PAGA ao Google pela mesma foto. Em 1–12/10 todo o
+// gasto do Google (R$ 109) foi de foto, com pouquíssimos usuários.
+// O app manda junto `s` = largura×altura da foto original + um resumo do
+// autor, que o Google entrega com cada foto e não muda entre buscas. Com o id
+// do lugar (que está no próprio ref), isso identifica a foto; o código só é
+// usado pra baixar quando ela ainda não está guardada. Se dois retratos do
+// mesmo autor no mesmo lugar tiverem o mesmo tamanho, aparece um no lugar do
+// outro — mesma pessoa, mesmo lugar, crédito certo.
+export const ID_OK = /^\d{1,5}x\d{1,5}(\.[a-z0-9]{1,12})?$/;
+// O mesmo cálculo do app (idDaFoto no index.html), pra quem monta o endereço
+// aqui no servidor (city-photo.js).
+export function idDaFoto(ph) {
+  if (!ph || !(ph.widthPx > 0) || !(ph.heightPx > 0)) return '';
+  const a0 = (ph.authorAttributions || [])[0] || {};
+  const a = String(a0.uri || a0.displayName || '');
+  let h = 5381; for (let i = 0; i < a.length; i++) h = ((h * 33) ^ a.charCodeAt(i)) >>> 0;
+  return Math.round(ph.widthPx) + 'x' + Math.round(ph.heightPx) + (a ? '.' + h.toString(36) : '');
+}
+
 export async function onRequestGet(context) {
   const { request, env } = context;
   const url = new URL(request.url);
@@ -76,6 +99,8 @@ export async function onRequestGet(context) {
 
   const kv = env.SPOT_KV;
   const chave = 'placephoto2_' + (await hash(ref));
+  const id = url.searchParams.get('s') || '';
+  const chaveFixa = ID_OK.test(id) ? 'placephoto3_' + (await hash(ref.split('/')[1] + '|' + id)) : '';
 
   // A CACHE DA BORDA vem antes do KV de propósito. Ler e gravar nela não tem
   // limite diário; o KV do plano grátis para de aceitar GRAVAÇÃO depois de mil
@@ -87,7 +112,7 @@ export async function onRequestGet(context) {
   // só de etiqueta.
   const borda = caches.default;
   const etiqueta = new Request(
-    url.origin + '/_foto/' + chave + '/' + largura + (webp ? '/webp' : '/jpeg')
+    url.origin + '/_foto/' + (chaveFixa || chave) + '/' + largura + (webp ? '/webp' : '/jpeg')
   );
   // A FALHA mora só na borda (06/10). Gravada no KV, qualquer um sem login
   // inventando refs no formato certo gastava uma gravação do KV grátis (mil
@@ -102,9 +127,13 @@ export async function onRequestGet(context) {
 
   if (kv) {
     try {
-      const guardado = await kv.get(chave);
-      if (guardado === 'X') return vazio(404);       // falha conhecida, não retenta agora
-      if (guardado) return pelaBorda(context, borda, etiqueta, redirecionar(comTamanho(guardado, largura, webp)));
+      // A do lugar primeiro; a do código é a de antes (fotos já guardadas e
+      // endereços gravados no banco sem o `s`).
+      for (const k of chaveFixa ? [chaveFixa, chave] : [chave]) {
+        const guardado = await kv.get(k);
+        if (guardado === 'X') { if (k === chave) return vazio(404); continue; }  // falha conhecida, não retenta agora
+        if (guardado) return pelaBorda(context, borda, etiqueta, redirecionar(comTamanho(guardado, largura, webp)));
+      }
     } catch (e) { /* KV fora: segue e resolve */ }
   }
 
@@ -163,7 +192,7 @@ export async function onRequestGet(context) {
   }
 
   const base = semTamanho(destino);
-  if (kv) { try { await kv.put(chave, base, { expirationTtl: TTL_OK }) } catch (e) {} }
+  if (kv) { try { await kv.put(chaveFixa || chave, base, { expirationTtl: TTL_OK }) } catch (e) {} }
   return pelaBorda(context, borda, etiqueta, redirecionar(comTamanho(base, largura, webp)));
 }
 

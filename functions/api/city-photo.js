@@ -1,5 +1,6 @@
 import{quemEsta,podeGastar}from './_auth.js';
 import{lerKV,gravarKV,contarUso}from './_kv.js';
+import{idDaFoto}from './place-photo.js';
 
 // Cloudflare Pages Function — foto de uma cidade, via Unsplash.
 //
@@ -258,7 +259,8 @@ async function fotoDoGoogle(env, query) {
     if (!p) return null;
     const ph = p.photos[0];
     const a = (ph.authorAttributions || [])[0] || {};
-    return { url: '/api/place-photo?ref=' + encodeURIComponent(ph.name) + '&w=1200', autor: a.displayName || '', autorUrl: a.uri || '', fonte: 'google' };
+    const id = idDaFoto(ph);
+    return { url: '/api/place-photo?ref=' + encodeURIComponent(ph.name) + (id ? '&s=' + id : '') + '&w=1200', autor: a.displayName || '', autorUrl: a.uri || '', fonte: 'google' };
   } catch (e) { return null; }
 }
 

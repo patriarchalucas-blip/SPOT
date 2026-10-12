@@ -2379,7 +2379,7 @@ body.na-casca.tour-rodando .bottom-nav{display:flex}
 .search-result{display:flex;align-items:center;gap:12px;padding:12px 24px;cursor:pointer}
 .search-result:active{background:var(--surface)}
 .sr-icon{width:48px;height:48px;border-radius:var(--r-card);background:var(--surface);display:flex;
-  align-items:center;justify-content:center;border:none;flex-shrink:0;color:var(--ink2)}
+  align-items:center;justify-content:center;border:none;flex-shrink:0;color:var(--ink2);position:relative}
 .sr-icon svg{width:18px;height:18px}
 .sr-name{font-size:14.5px;font-weight:500;color:var(--ink)}
 .sr-meta{font-size:12px;color:var(--ink3);margin-top:3px}
@@ -3274,7 +3274,7 @@ function esc(v){return String(v==null?'':v).replace(/[&<>"'`]/g,function(c){retu
 // fica guardado no cache do Cloudflare. A segunda pessoa que vir a mesma foto
 // não custa chamada de API.
 const RE_FOTO_PLACES=/^https:\/\/places\.googleapis\.com\/v1\/(places\/[^/]+\/photos\/[^/]+)\/media\?(.*)$/i;
-const RE_FOTO_PROXY=/^\/api\/place-photo\?ref=([^&]+)&w=(\d+)$/i;
+const RE_FOTO_PROXY=/^\/api\/place-photo\?ref=([^&]+)(?:&s=[^&]+)?&w=(\d+)$/i;
 // Normaliza a URL de foto: seja o que estiver gravado no banco, o que sai
 // daqui aponta pro servidor. Existem linhas nos dois formatos — as antigas
 // com a URL direta do Google (que carregava a chave) e as novas. Converter
@@ -5441,7 +5441,9 @@ function chaveDaFoto(u){
   if(!t)return '';
   const q=t.indexOf('?');
   if(q>=0){
-    try{const ref=new URLSearchParams(t.slice(q+1)).get('ref');if(ref)return ref}catch(e){}
+    // Com o id da foto (12/10), a chave sobrevive à troca do código entre
+    // buscas: a capa gravada e a 1ª do carrossel deixam de aparecer repetidas.
+    try{const qs=new URLSearchParams(t.slice(q+1));const ref=qs.get('ref'),id=qs.get('s');if(ref)return id?ref.split('/')[1]+'#'+id:ref}catch(e){}
   }
   let d=t;try{d=decodeURIComponent(t)}catch(e){}
   const m=d.match(/places\/[^/?&]+\/photos\/[^/?&]+/);
@@ -5458,7 +5460,7 @@ function fotosDoLugar(sp){
       const d=await r.json();
       const best=pickBestPlaceMatch((d&&d.places)||[],sp.name,true);
       const W=larguraNaTela();
-      return ((best&&best.photos)||[]).slice(0,MAX_FOTOS).map(ph=>({url:placePhotoUrl({photos:[ph]},W),chave:ph.name||''}));
+      return ((best&&best.photos)||[]).slice(0,MAX_FOTOS).map(ph=>{const url=placePhotoUrl({photos:[ph]},W);return{url,chave:chaveDaFoto(url)||ph.name||''}});
     }catch(e){return []}
   })();
   FOTOS_DO_LUGAR.set(k,pr);
@@ -11264,11 +11266,23 @@ async function googlePlaces(op,opts){
   return{ok:false,status:0,json:async()=>({places:[]})};
 }
 function placePhotoUrl(p,largura){
-  const ref=(p&&p.photos&&p.photos[0]&&p.photos[0].name)||'';
+  const ph=p&&p.photos&&p.photos[0];
+  const ref=(ph&&ph.name)||'';
   if(!ref)return'';
   // Sempre pelo servidor: ele resolve o endereco do CDN do Google e
   // reencaminha. O que chega no navegador nao tem chave nenhuma.
-  return'/api/place-photo?ref='+encodeURIComponent(ref)+'&w='+largura;
+  const id=idDaFoto(ph);
+  return'/api/place-photo?ref='+encodeURIComponent(ref)+(id?'&s='+id:'')+'&w='+largura;
+}
+// O que identifica a foto entre buscas (12/10): o codigo (name) muda de uma
+// busca pra outra e cada codigo novo era uma foto PAGA de novo no servidor.
+// Tamanho original + resumo do autor nao mudam; o servidor junta com o id do
+// lugar e guarda por isso. Ver ID_OK em functions/api/place-photo.js.
+function idDaFoto(ph){
+  if(!ph||!(ph.widthPx>0)||!(ph.heightPx>0))return'';
+  const a=String((ph.authorAttributions&&ph.authorAttributions[0]&&(ph.authorAttributions[0].uri||ph.authorAttributions[0].displayName))||'');
+  let h=5381;for(let i=0;i<a.length;i++)h=((h*33)^a.charCodeAt(i))>>>0;
+  return Math.round(ph.widthPx)+'x'+Math.round(ph.heightPx)+(a?'.'+h.toString(36):'');
 }
 // Ponte pro endereco de foto. HOJE ela nao faz nada: a foto vem do Places
 // com a chave na propria URL, que e o estado pro qual o app voltou quando a
@@ -11650,11 +11664,16 @@ function searchPlaces(v){
       });
       if(myReqId!==searchReqId)return;
       r.innerHTML=S.searchResults.map((p,i)=>{
-        const thumb=p.photo_thumb?'<div class="sr-icon"><img src="'+escUrl(p.photo_thumb)+'" alt="" onerror="this.remove()" loading="eager" style="width:100%;height:100%;object-fit:cover;border-radius:12px"></div>':'<div class="sr-icon">'+p.icon+'</div>';
+        // Foto só depois que a pessoa para de digitar, e só a que está na tela
+        // (12/10): cada foto do Google é cobrada, e cada pausa no meio da
+        // palavra trazia 10 resultados com 10 fotos de lugar que ela nem queria.
+        const thumb=p.photo_thumb?'<div class="sr-icon">'+p.icon+'<img data-src="'+escUrl(p.photo_thumb)+'" alt="" onerror="this.remove()" loading="lazy" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;border-radius:12px"></div>':'<div class="sr-icon">'+p.icon+'</div>';
         // Já está na lista: o status aparece na hora (Alexanderplatz salvo três vezes, 01/10).
         const ja=statusNaMinhaLista({name:p.name,city:p.city});
         return '<div class="search-result" onclick="pickSearchResult('+i+')">'+thumb+'<div><div class="sr-name">'+esc(p.name)+(ja?' <span class="sr-ja">'+esc(ja)+'</span>':'')+'</div><div class="sr-meta">'+esc(p.address.substring(0,50)+(p.rating_google?' · '+p.rating_google:''))+'</div></div></div>';
       }).join('');
+      // 700 ms sem busca nova = a pessoa parou de digitar; aí as fotos vêm.
+      setTimeout(()=>{if(myReqId!==searchReqId)return;r.querySelectorAll('img[data-src]').forEach(im=>{im.src=im.dataset.src;im.removeAttribute('data-src')})},700);
     }catch(e){
       if(myReqId!==searchReqId)return;
       console.error(e);

@@ -75,3 +75,17 @@ test('chave da foto: proxy e Google direto batem, e fotos diferentes nao colidem
   assert.strictEqual(A.chaveDaFoto('https://places.googleapis.com/v1/places/ChIJabc/photos/Xyz/media?maxWidthPx=400'),
     A.chaveDaFoto('/api/place-photo?ref=places%2FChIJabc%2Fphotos%2FXyz&w=1200'));
 });
+
+// Foto por lugar (12/10): o app manda o mesmo id que o servidor calcula, a
+// URL nova continua sendo reconhecida como foto do Google (largura trocável),
+// e a mesma foto vinda de duas buscas tem a mesma chave no carrossel.
+test('foto do Google com id: igual ao do servidor, largura trocavel, chave estavel entre buscas', async () => {
+  const { idDaFoto } = await import('../functions/api/place-photo.js');
+  const ph = { name: 'places/ChIJabc/photos/COD1', widthPx: 4032, heightPx: 3024, authorAttributions: [{ displayName: 'Ana', uri: 'https://maps.google.com/maps/contrib/9' }] };
+  const url = A.avaliar('placePhotoUrl(' + JSON.stringify({ photos: [ph] }) + ',400)');
+  assert.strictEqual(url, '/api/place-photo?ref=' + encodeURIComponent(ph.name) + '&s=' + idDaFoto(ph) + '&w=400');
+  assert.strictEqual(A.avaliar('fotoNaLargura(' + JSON.stringify(url) + ',1200)'), url.replace('&w=400', '&w=1200'));
+  assert.ok(A.avaliar('fotoEhDoGoogle(' + JSON.stringify(url) + ')'));
+  const outraBusca = A.avaliar('placePhotoUrl(' + JSON.stringify({ photos: [{ ...ph, name: 'places/ChIJabc/photos/COD2' }] }) + ',800)');
+  assert.strictEqual(A.chaveDaFoto(url), A.chaveDaFoto(outraBusca));
+});
