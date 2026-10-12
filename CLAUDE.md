@@ -330,6 +330,36 @@ argumentos deixa qualquer um consultar bloqueio de terceiros; `fui_em`/
 `created_at` editáveis pelo cliente; sem CHECK de tamanho/formato em
 display_name/username; `delete_my_account` apaga denúncias contra a pessoa.
 
+## Auditoria de 11/10/2026 (2ª rodada: app nativo, Amigos/feed, desempenho)
+
+**Migração 035 (`migrations/035_pontas_de_seguranca.sql`) — ESCRITA, FALTA RODAR:**
+`ha_bloqueio` só responde sobre quem pergunta; `fui_em`/`created_at` de spots
+decididos pelo banco em qualquer escrita; limites no perfil (nome ≤ 60, @
+`^[a-z0-9_]{3,30}$`, bio ≤ 300) com NOT VALID.
+
+Feito no site/servidor em 11/10: card "Onde você mora" abre direto a cidade
+(`abrirCasa` → `openCityScreen`, voltar = Viagens via `CIDADE_VOLTA`); filtro
+Fui/Quero ir da cidade respeita o toque mesmo com o lado vazio; aviso no celular
+em 50/80/100% da cota de busca (places.js); "Limite de buscas do mês" e falha
+de rede no Explorar não viram "Nada encontrado"; "Nesta área" do mapa em grade
+(potência de 2) — reaproveita cache; token de sessão no autocomplete
+(`/api/lugar`, `SESSAO_LUGAR`); cidade "onde estou" por DISTÂNCIA; foto de amigo
+no Explorar com teto; resposta num Quero ir privado não manda o nome do spot;
+"comentou no seu spot"; "+ minha lista" com viagem PENDENTE (sem viagem vazia);
+"Não recomendo" do amigo rotulado e contado como Fui; Atividade: data do Fui,
+amizades por accepted_at, aceite próprio não acende o ponto, amigos carregados
+se faltarem; ficha sem "nenhum amigo salvou" junto de "Ana foi"; Conversa N
+atualiza; toque em notificação com o app fechado guarda o pacote até o login
+(`NOTIF_PENDENTE`); 1ª carga com mais tentativas; **página do app com ETag no
+middleware + `no-cache`** (304 em vez de 348 KB a cada abertura); preconnect das
+fontes; mensagens técnicas trocadas.
+
+**Pendente (ideias de desempenho que pedem migração ou mais cuidado):** salvar
+spot sem esperar o `loadDashboard`; comentários em 1 ida; Perfil desenhando da
+memória; spots dos amigos via RPC; índices em `spots(user_id)`, `spots(trip_id)`,
+`trips(user_id)`, `follows(following_id)` e `(select auth.uid())` nas políticas;
+pintar o cache antes de renovar o token; `sbFetch` renovando token em todo 403.
+
 ## Custo e cotas (27/09/2026) — o Lucas disse: "isso não pode falhar"
 
 - **Google Cloud (projeto spot-499219), cotas por dia na Places API (New)**, postas

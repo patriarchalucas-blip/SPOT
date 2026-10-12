@@ -1,5 +1,6 @@
 import { quemEsta, podeGastar } from './_auth.js';
-import { contarUso } from './_kv.js';
+import { contarUso, lerKV, gravarKV } from './_kv.js';
+import { avisarDono } from './_aviso-dono.js';
 
 // Cloudflare Pages Function — busca de lugares, via Google Places (New).
 //
@@ -145,6 +146,18 @@ export async function onRequestPost(context) {
       // Por amostragem (06/10, como lugar.js): gravava a cada busca, e
       // gravação no KV grátis tem teto de mil por dia.
       await contarUso(env, contador, usado, 1, 60 * 60 * 24 * 40);
+      // Aviso no celular do Lucas em 50/80/100% (11/10, auditoria): era a cota
+      // mais cara e a única sem aviso — estourada, o Explorar e a busca de
+      // spot param pra todo mundo.
+      for (const pct of [50, 80, 100]) {
+        const marca = Math.ceil(CAP_MENSAL * pct / 100);
+        if (usado + 1 < marca) break;
+        const k = 'places_aviso_' + mes + '_' + pct;
+        if (await lerKV(env, k)) continue;
+        await gravarKV(env, k, '1', 60 * 60 * 24 * 40);
+        if (typeof context !== 'undefined' && context.waitUntil) context.waitUntil(avisarDono(env, 'Busca do Google: ' + pct + '% da cota do mês',
+          (usado + 1) + ' de ' + CAP_MENSAL + ' em ' + mes + '. ' + (pct >= 100 ? 'Busca de spot e Explorar pararam — suba CAP_MENSAL em places.js.' : 'Se precisar, suba o teto antes de acabar.'), 'cota'));
+      }
     } catch (e) { /* contador indisponível não bloqueia o usuário */ }
   }
 
@@ -246,6 +259,9 @@ export function montarPerto(b) {
     }
   };
   if (b.languageCode) p.languageCode = String(b.languageCode).slice(0, 10);
+  // "Qual cidade é esta?" quer a MAIS PERTO, não a mais popular (11/10): em
+  // Osasco o padrão (POPULARITY) respondia São Paulo.
+  if (b.rankPreference === 'DISTANCE' || b.rankPreference === 'POPULARITY') p.rankPreference = b.rankPreference;
   return p;
 }
 

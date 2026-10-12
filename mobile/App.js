@@ -295,6 +295,11 @@ function Conteudo() {
   // Aí a tela nativa não cobre a aba: quem desenha é a página, e a barra de
   // abas continua sendo a daqui.
   const [explorarDoSite, setExplorarDoSite] = useState(false);
+  // Aba nativa que quebrou ao desenhar (11/10, auditoria): sai da frente e o
+  // site aparece no lugar, em vez de o app inteiro cair. Volta a tentar quando
+  // o site recarrega.
+  const [abasComErro, setAbasComErro] = useState({});
+  const marcarAbaComErro = useCallback((aba) => setAbasComErro((e) => ({ ...e, [aba]: true })), []);
   // Dados da tela de Amigos, mandados pelo site já prontos pra desenhar.
   // null = ainda não chegou; a tela mostra o indicador de carregando.
   // Dados de cada tela nativa, mandados pelo site ja prontos pra desenhar.
@@ -307,6 +312,7 @@ function Conteudo() {
   // partia de uma aba nativa — inclusive os de erro, que viravam falha
   // silenciosa: a pessoa toca, nada acontece, e nada explica.
   const [aviso, setAviso] = useState(null);
+  const tirarAviso = useCallback(() => setAviso(null), []);
   const [semSinal, setSemSinal] = useState(false);
 
   // Toque em notificação esperando a página ficar pronta (ver aoTocar).
@@ -676,6 +682,7 @@ function Conteudo() {
               // da conta anterior enquanto o site recarrega.
               setDadosDaTela({});
               setPedidosEsperando(0);
+              setAbasComErro({});
             }}
             onLoadEnd={() => {
               setCarregando(false);
@@ -707,7 +714,7 @@ function Conteudo() {
           {/* As quatro abas sao nativas: a tela cobre o WebView enquanto a
               aba esta aberta. O site continua carregado por baixo — e ele que
               executa as acoes e desenha as telas de detalhe. */}
-          {mostrarAbas && TELAS[abaAtiva] && !(abaAtiva === 'explore' && explorarDoSite) ? (
+          {mostrarAbas && TELAS[abaAtiva] && !(abaAtiva === 'explore' && explorarDoSite) && !abasComErro[abaAtiva] ? (
             <View style={StyleSheet.absoluteFill}>
               {/* A checagem acusa "acesso a ref durante o desenho" por causa
                   da funcao de acao, que por dentro usa a referencia do
@@ -715,12 +722,14 @@ function Conteudo() {
                   pessoa toca em alguma coisa, nunca enquanto a tela e
                   montada. O verificador nao consegue provar isso e assume o
                   pior. Desligado so nesta linha, e so esta regra. */}
-              {/* eslint-disable-next-line react-hooks/refs */}
-              {React.createElement(TELAS[abaAtiva], {
-                dados: dadosDaTela[abaAtiva],
-                ocupado: ocupada === abaAtiva,
-                acao: acaoDaAbaAtiva,
-              })}
+              <ProtecaoDaAba aba={abaAtiva} aoFalhar={marcarAbaComErro}>
+                {/* eslint-disable-next-line react-hooks/refs */}
+                {React.createElement(TELAS[abaAtiva], {
+                  dados: dadosDaTela[abaAtiva],
+                  ocupado: ocupada === abaAtiva,
+                  acao: acaoDaAbaAtiva,
+                })}
+              </ProtecaoDaAba>
             </View>
           ) : null}
           {mostrarAbas ? (
@@ -735,7 +744,7 @@ function Conteudo() {
               </Text>
             </View>
           ) : null}
-          {aviso ? <Aviso aviso={aviso} aoSumir={() => setAviso(null)} /> : null}
+          {aviso ? <Aviso aviso={aviso} aoSumir={tirarAviso} /> : null}
         </View>
         {carregando ? (
           <View style={estilo.carregando} pointerEvents="none">
@@ -745,6 +754,17 @@ function Conteudo() {
       </SafeAreaView>
     </>
   );
+}
+
+// Se uma aba nativa quebrar ao desenhar (dado inesperado do site), ela some
+// e avisa a casca — que deixa o site aparecer. Sem isto, um campo errado no
+// site derrubava o app inteiro em todas as builds de uma vez (11/10, auditoria).
+class ProtecaoDaAba extends React.Component {
+  constructor(p) { super(p); this.state = { erro: false }; }
+  static getDerivedStateFromError() { return { erro: true }; }
+  componentDidCatch() { if (this.props.aoFalhar) this.props.aoFalhar(this.props.aba); }
+  componentDidUpdate(antes) { if (antes.aba !== this.props.aba && this.state.erro) this.setState({ erro: false }); }
+  render() { return this.state.erro ? null : this.props.children; }
 }
 
 // O aviso some sozinho, como o do site: 3,5 segundos. O key no elemento pai

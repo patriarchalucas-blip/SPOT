@@ -12,6 +12,10 @@ pra "Já compilado".
 
 ## Na fila
 
+- **Proteção das abas nativas** (`App.js` `ProtecaoDaAba`, 11/10, auditoria): se uma Tela*.js quebrar com dado inesperado do site, ela sai da frente e o site aparece no lugar, em vez de derrubar o app em todas as builds. Volta a tentar quando o site recarrega.
+- **Aviso nativo some no tempo certo** (`App.js` `tirarAviso` com useCallback): cada mensagem do site reiniciava os 3,5 s.
+- **Ainda não feito (da auditoria nativa):** "puxar pra atualizar" na Viagens nativa sem dados; chave dos cards com a foto (`TelaAmigos.js:447`, `TelaExplorar.js:379`, card da casa); `WKAppBoundDomains` pro app abrir sem internet (e o service worker rodar).
+
 - **Toque na notificação repassa o pacote pro site** (`App.js` `aoTocar`/`aplicarToque` → `window.aoTocarNotificacao`, 09/10): comentário abre o spot comentado (o seu ou o do amigo). O servidor já manda `spot` no `data` e o site já tem a função; falta só a casca nova. Casca antiga segue indo pra aba Amigos.
 - **Aviso nativo no sistema F** (`App.js` `estilo.aviso*` e `faixaSemSinal`, 09/10): tinta, raio 14, sem borda/sombra/vermelho, igual ao `.toast` do site. A duplicação (site + casca ao mesmo tempo) já foi resolvida no site (`abaNativaNaFrente`).
 - **"Adicionar spot" do fim da lista de Viagens saiu** (`TelaViagens.js`, 09/10, o Lucas: repetia o "+" do topo). Feito no código; pode ir por EAS Update (só JS). (A ideia de o site desenhar Viagens/Amigos foi descartada pelo Lucas em 09/10; `App.js` voltou ao que estava.)

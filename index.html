@@ -54,6 +54,9 @@
      inicio nao ha barra de endereco pra recarregar. Servido daqui, ele chega
      junto com o HTML: se o HTML chegou, ele chega. -->
 <script src="/vendor/supabase.js"></script>
+<!-- 11/10: conexão aberta cedo com as fontes (a folha de estilos delas segura o 1º desenho). -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500&family=Inter+Tight:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
@@ -2696,7 +2699,7 @@ body.exm .exm-filtros{position:relative;z-index:1}
 </div>
 
 <div class="screen" id="city">
-  <div class="trip-hero"><div class="trip-hero-img" id="cityHeroImg"></div><div class="foto-credito" id="cityFotoCredito"></div><div class="trip-float"></div><div class="trip-hero-content"><button class="back-btn" onclick="goTo('trip')" data-ic="back" aria-label="Voltar"></button><button class="hero-share" id="cityShareBtn" onclick="compartilharCidade()" data-ic="share" aria-label="Compartilhar meus spots desta cidade"></button><div><div class="trip-hero-label" id="cityLabel"></div><div class="trip-hero-name" id="cityName"></div><div class="trip-hero-meta" id="cityMeta"></div></div></div></div>
+  <div class="trip-hero"><div class="trip-hero-img" id="cityHeroImg"></div><div class="foto-credito" id="cityFotoCredito"></div><div class="trip-float"></div><div class="trip-hero-content"><button class="back-btn" onclick="voltarDaMinhaCidade()" data-ic="back" aria-label="Voltar"></button><button class="hero-share" id="cityShareBtn" onclick="compartilharCidade()" data-ic="share" aria-label="Compartilhar meus spots desta cidade"></button><div><div class="trip-hero-label" id="cityLabel"></div><div class="trip-hero-name" id="cityName"></div><div class="trip-hero-meta" id="cityMeta"></div></div></div></div>
   <div class="pln-entrada" id="cityPlanejar"></div>
   <div class="cat-tabs-wrap"><div class="cat-tabs"><div class="cat-tab active" onclick="switchCityCat('food',this)"><div class="ct-icon" data-ic="food"></div><div>Gastronomia</div><div class="ct-count" id="cityCnt-food">0</div></div><div class="cat-tab" onclick="switchCityCat('hotel',this)"><div class="ct-icon" data-ic="hotel"></div><div>Hospedagem</div><div class="ct-count" id="cityCnt-hotel">0</div></div><div class="cat-tab" onclick="switchCityCat('experience',this)"><div class="ct-icon" data-ic="compass"></div><div>Experiências</div><div class="ct-count" id="cityCnt-experience">0</div></div></div></div>
   <div class="subcat-row" id="citySubcatFilter" style="display:none;padding:14px 20px 0;scroll-padding-left:20px"></div>
@@ -3050,7 +3053,7 @@ body.exm .exm-filtros{position:relative;z-index:1}
 <input class="nt-input" autocomplete="off" autocorrect="off" spellcheck="false" id="usernameInput" placeholder="seu_username" style="margin-bottom:4px" autocapitalize="none" oninput="document.getElementById('usernameStatus').textContent=''">
 <div class="feed-time" id="usernameStatus" style="margin-bottom:18px"></div>
 <div class="nt-label">Bio</div>
-<textarea class="note-input" id="bioInput" rows="2" placeholder="Uma frase sobre como você viaja" style="margin-bottom:8px"></textarea>
+<textarea class="note-input" id="bioInput" rows="2" maxlength="300" placeholder="Uma frase sobre como você viaja" style="margin-bottom:8px"></textarea>
 <button class="sheet-cta" id="btnSalvarPerfil" onclick="salvarPerfil()">Salvar</button>
 <div class="prof-linha prof-sair" style="margin-top:10px;border-top:1px solid var(--border);border-bottom:none" onclick="signOut()"><span class="pl-txt">Sair da conta</span></div>
 <div class="prof-linha" onclick="abrirBloqueados()"><span class="pl-txt">Pessoas bloqueadas</span></div>
@@ -5659,11 +5662,15 @@ async function carregarAtividade(forcar){
   ATIV.em=Date.now();
   ATIV.p=(async()=>{
     const uid=S.user.id;
-    const amigos=new Set((FRIENDS_DATA&&FRIENDS_DATA.friendIds)||[]);
+    // Sem a lista de amigos carregada (logo depois de bloquear/desfazer, ou
+    // Atividade aberta antes de Amigos), tudo de "indicou" sumia (11/10).
+    let idsAmigos=(FRIENDS_DATA&&FRIENDS_DATA.friendIds)||null;
+    if(!idsAmigos){try{idsAmigos=await plnCarregarAmigos()}catch(e){idsAmigos=[]}}
+    const amigos=new Set(idsAmigos||[]);
     const meus=allSpotsFlat();
     const [indicou,coment,deles,amizades]=await Promise.all([
       dbGet('spots','from_user_id=eq.'+uid+'&user_id=neq.'+uid+'&order=created_at.desc&limit=30'
-        +'&select=id,user_id,trip_id,name,category,city,address,photo_url,status,my_rating,my_review,created_at'),
+        +'&select=id,user_id,trip_id,name,category,city,address,photo_url,status,my_rating,my_review,created_at,fui_em'),
       meus.length?comentariosNosMeusSpots(30):Promise.resolve([]),
       plnSpotsDeles().catch(()=>[]),
       // Amizades novas (07/10, o Lucas virou amigo do pai e a Atividade não
@@ -5671,7 +5678,7 @@ async function carregarAtividade(forcar){
       // sem ela, a do pedido, e quem aceitava dias depois ficava escondido.
       // select=* de propósito: pedir accepted_at antes da 033 rodar dá 400.
       dbGet('follows','status=eq.accepted&or=(follower_id.eq.'+uid+',following_id.eq.'+uid+')'
-        +'&order=created_at.desc&limit=20&select=*').catch(()=>[])
+        +'&order=accepted_at.desc.nullslast,created_at.desc&limit=20&select=*').catch(()=>[])
     ]);
     // 06/10: falha não é "nada aconteceu" — a tela mostra o erro com Tentar de novo.
     ATIV.erro=falhou(indicou)||falhou(coment);
@@ -5680,7 +5687,9 @@ async function carregarAtividade(forcar){
     (falhou(indicou)?[]:indicou||[]).forEach(x=>{
       if(!amigos.has(x.user_id)||estaBloqueado(x.user_id))return;
       ja.add(x.user_id+'|'+normName(x.name));
-      itens.push({tipo:x.status==='want'?'quer':'foi',user_id:x.user_id,quando:x.created_at,spot:x,frase:x.status==='want'?'':(x.my_review||'')});
+      // "Foi em X, que você indicou" pela data do FUI (11/10): salvo como Quero
+      // ir semanas antes, ficava enterrado em "Antes" e não acendia o ponto.
+      itens.push({tipo:x.status==='want'?'quer':'foi',user_id:x.user_id,quando:x.status==='want'?x.created_at:(x.fui_em||x.created_at),spot:x,frase:x.status==='want'?'':(x.my_review||'')});
     });
     (deles||[]).forEach(x=>{
       if(x.status!=='been'||estaBloqueado(x.user_id)||ja.has(x.user_id+'|'+normName(x.name)))return;
@@ -5700,7 +5709,9 @@ async function carregarAtividade(forcar){
       const outro=f.follower_id===uid?f.following_id:f.follower_id;
       if(!outro||amigosVistos.has(outro)||estaBloqueado(outro))return;
       amigosVistos.add(outro);
-      itens.push({tipo:'amizade',user_id:outro,quando:f.accepted_at||f.created_at});
+      // Quem ACEITOU fui eu (following_id): é novidade pra mim? Não — fui eu que
+      // fiz (11/10). Aparece na lista, mas não acende o ponto.
+      itens.push({tipo:'amizade',user_id:outro,quando:f.accepted_at||f.created_at,minha:f.following_id===uid});
     });
     itens.sort((a,b)=>String(b.quando||'').localeCompare(String(a.quando||'')));
     ATIV.itens=itens.slice(0,40);
@@ -5713,7 +5724,7 @@ function temNovidadeNaAtividade(){
   const d=FRIENDS_DATA;
   const pedidos=d?(d.incoming||[]).filter(r=>!estaBloqueado(r.follower_id)).length:0;
   const vista=atividadeVistaEm();
-  return !!pedidos||(ATIV.itens||[]).some(i=>String(i.quando||'')>vista);
+  return !!pedidos||(ATIV.itens||[]).some(i=>!i.minha&&String(i.quando||'')>vista);
 }
 function pintarPontoDaAtividade(){
   // A aba nativa recebe o ponto pelos dados dela.
@@ -5722,7 +5733,7 @@ function pintarPontoDaAtividade(){
   const d=FRIENDS_DATA;
   const pedidos=d?(d.incoming||[]).filter(r=>!estaBloqueado(r.follower_id)).length:0;
   const vista=atividadeVistaEm();
-  const nova=(ATIV.itens||[]).some(i=>String(i.quando||'')>vista);
+  const nova=(ATIV.itens||[]).some(i=>!i.minha&&String(i.quando||'')>vista);
   el.style.display=(pedidos||nova)?'':'none';
 }
 // PEDIDO QUE NINGUÉM VIA (08/10). A Roberta adicionou o Felipe e ele nunca
@@ -5922,7 +5933,8 @@ async function init(){
         // olhando tela parada por todo o tempo das requisições.
         goTo('dashboard');
         try{await loadDashboard()}catch(e){console.error('Dashboard error:',e)}
-        if(ABA_PENDENTE){const a=ABA_PENDENTE;ABA_PENDENTE='';try{window.irParaAba(a)}catch(e){}}
+        if(NOTIF_PENDENTE){const d=NOTIF_PENDENTE;NOTIF_PENDENTE=null;ABA_PENDENTE='';try{window.aoTocarNotificacao(d)}catch(e){}}
+        else if(ABA_PENDENTE){const a=ABA_PENDENTE;ABA_PENDENTE='';try{window.irParaAba(a)}catch(e){}}
         // depois do dashboard: se a pessoa chegou por um link de convite, a
         // amizade é criada agora que existe sessão
         try{await resgatarConvitePendente()}catch(e){console.error('convite:',e)}
@@ -6548,7 +6560,9 @@ function viagensCarregadas(){
 }
 // 06/10: 1ª carga falhou sem nada no aparelho: tenta sozinho de novo em
 // 5 s, 15 s e 45 s. Para quando der certo ou quando a conta muda.
-const RECARGA_ESPERAS=[5000,15000,45000];
+// Mais tentativas (11/10, auditoria): a aba Viagens nativa não tem "puxar pra
+// atualizar" quando nada carregou, e depois da 3ª tentativa ficava girando.
+const RECARGA_ESPERAS=[5000,15000,45000,90000,180000,300000];
 let recargaTimer=null,recargaN=0;
 function cancelarRecargaAutomatica(){
   if(recargaTimer){clearTimeout(recargaTimer);recargaTimer=null}
@@ -6699,7 +6713,7 @@ function avisarSeTemJanela(){
 // Pedido de aba antes de a sessão voltar (toque em notificação com o app
 // fechado): fica guardado e é aplicado assim que o login termina — antes, o
 // app ia pra Amigos, quebrava sem usuário e caía em Viagens.
-let ABA_PENDENTE='';
+let ABA_PENDENTE='',NOTIF_PENDENTE=null;
 // ═══ BOTÃO VOLTAR DO ANDROID ═══
 // O site não usa o histórico do navegador (as telas trocam por goTo), então
 // o voltar do Android fecharia o app no meio de qualquer tela. A casca chama
@@ -6725,7 +6739,10 @@ window.voltarDoAndroid=function(){
 // amigo —; o resto, a aba Amigos (pedido: na lista de pedidos).
 window.aoTocarNotificacao=async function(d){
   d=d||{};
-  if(!S.user){ABA_PENDENTE='friends';return}
+  // Sem login ainda (app aberto pelo toque, token renovando): guarda o pacote
+  // INTEIRO e aplica depois do login (11/10, auditoria) — antes só sobrava a
+  // aba, e o spot do comentário se perdia.
+  if(!S.user){NOTIF_PENDENTE=d;ABA_PENDENTE='friends';return}
   if(d.tipo==='comentario'&&/^[0-9a-f-]{36}$/i.test(String(d.spot||''))){
     try{
       const l=await dbGet('spots','id=eq.'+d.spot+'&select=*');
@@ -7225,7 +7242,22 @@ async function abrirCasa(){
   const c=cidadeDeCasa();if(!c)return;
   let casa=(S.trips||[]).find(ehCasa);
   if(!casa&&S.user){try{casa=await viagemDeCasa((S.profile&&S.profile.home_country)||'')}catch(e){}}
-  if(casa){openTrip(casa.id);return}
+  if(casa){
+    // Direto pros spots (11/10, o Lucas): a casa é uma cidade só, e a tela da
+    // viagem no meio era um toque a mais pra ver a mesma lista. Com spots em
+    // mais de uma cidade (bairro que o Google chama de outra coisa), a tela da
+    // viagem continua — ali ela tem o que escolher.
+    const cidades=[...new Set((casa._spots||[]).map(sp=>cityOf(sp)).filter(Boolean))];
+    if(cidades.length<=1){
+      // Carrega a viagem SEM mostrar a tela dela (openTrip troca de tela
+      // depois do await e passaria por cima da cidade).
+      S.curTrip=casa;S.addTrip=casa;await loadTrip(casa);
+      openCityScreen(cidades[0]||c);
+      CIDADE_VOLTA='dashboard';
+      return;
+    }
+    openTrip(casa.id);return;
+  }
   // Sem linha de casa ainda (os spots da cidade estão em viagens antigas):
   // a lista da cidade continua sendo o único lugar que junta todos eles.
   drillTo('city',c);goTo('list');
@@ -8000,7 +8032,16 @@ function updateCityHeader(){
   document.getElementById('cityCnt-hotel').textContent=spots.filter(s=>s.category==='hotel').length;
   document.getElementById('cityCnt-experience').textContent=spots.filter(s=>s.category==='experience').length;
 }
+// Pra onde o voltar da tela da cidade leva: a viagem, ou a aba Viagens quando
+// a cidade foi aberta direto pelo card "Onde você mora" (11/10).
+let CIDADE_VOLTA='trip';
+function voltarDaMinhaCidade(){
+  const v=CIDADE_VOLTA;CIDADE_VOLTA='trip';
+  if(v==='dashboard'){goTo('dashboard');loadDashboard();return}
+  goTo('trip');
+}
 function openCityScreen(city){
+  CIDADE_VOLTA='trip';   // quem abre pela casa troca DEPOIS desta chamada
   S.curCity=city;curCityCat='food';
   document.querySelectorAll('#city .cat-tab').forEach(t=>t.classList.remove('active'));
   document.querySelector('#city .cat-tab').classList.add('active');
@@ -8227,9 +8268,16 @@ function renderCityStatusFilter(){
   const fui = lista.filter(foiNoSpot).length;
   const quero = lista.length - fui;
   if(!lista.length){ box.style.display='none'; box.innerHTML=''; return }
-  if(curCityStatus!=='been'&&curCityStatus!=='want')curCityStatus=fui?'been':'want';
-  if(curCityStatus==='been'&&!fui)curCityStatus='want';
-  if(curCityStatus==='want'&&!quero)curCityStatus='been';
+  // Escolha automática SÓ quando a pessoa ainda não tocou (11/10): com um
+  // Fui e nenhum Quero ir, tocar em "Quero ir" voltava sozinho pra "Fui" —
+  // o filtro "não mudava nada". Tocou, vale o toque (a lista diz que está vazia).
+  const escolhido=STATUS_POR_CIDADE[chaveDoStatus()];
+  if(escolhido==='been'||escolhido==='want')curCityStatus=escolhido;
+  else{
+    if(curCityStatus!=='been'&&curCityStatus!=='want')curCityStatus=fui?'been':'want';
+    if(curCityStatus==='been'&&!fui)curCityStatus='want';
+    if(curCityStatus==='want'&&!quero)curCityStatus='been';
+  }
   box.className = 'cid-seg'; box.style.cssText = '';
   box.innerHTML = '<div class="pf-seg">'
     +'<button class="pf-op'+(curCityStatus==='been'?' on':'')+'" onclick="setCityStatus(\'been\')">Fui'+(fui?'<i>'+fui+'</i>':'')+'</button>'
@@ -8269,7 +8317,11 @@ function renderCityBody(){
   if(curCityCat==='experience'&&curCitySubcat){
     spots=curCitySubcat==='__sem__'?spots.filter(s=>!subcatsDe(s.subcategory).length):spots.filter(s=>temSubcat(s.subcategory,curCitySubcat));
   }
-  if(!spots.length){b.innerHTML=`<div class="empty-state" style="padding:40px 24px"><div class="ei">${catIcon(curCityCat)}</div><h3>Nenhum spot aqui</h3><p>${curCitySubcat?'Nenhuma experiência desse tipo nesta cidade.':'Toca no + para adicionar'}</p></div>`;return}
+  if(!spots.length){
+    // Filtro escolhido sem nada (11/10): diz QUAL filtro está vazio.
+    const vazioDoFiltro=!curCitySubcat&&spotsDaCidade().length&&(curCityStatus==='want'||curCityStatus==='been');
+    const tit=vazioDoFiltro?(curCityStatus==='want'?'Nenhum Quero ir aqui':'Nenhum Fui aqui'):'Nenhum spot aqui';
+    b.innerHTML=`<div class="empty-state" style="padding:40px 24px"><div class="ei">${catIcon(curCityCat)}</div><h3>${tit}</h3><p>${curCitySubcat?'Nenhuma experiência desse tipo nesta cidade.':'Toca no + para adicionar'}</p></div>`;return}
   let h='';
   spots.forEach(s=>{
     const bc=s.category==='food'?'bar-food':s.category==='hotel'?'bar-hotel':'bar-experience';
@@ -9161,7 +9213,14 @@ function guardarRecente(item){
     localStorage.setItem(CHAVE_RECENTES,JSON.stringify(l.slice(0,6)));
   }catch(e){}
 }
+// Sessão de digitação (11/10, auditoria): o Google cobra cada sugestão à parte
+// sem ela; com ela, as sugestões que terminam numa escolha (detalhe) entram
+// como uma sessão só. Nasce na 1ª letra e morre quando a pessoa escolhe.
+let SESSAO_LUGAR='';
+function sessaoDoLugar(){if(!SESSAO_LUGAR){try{SESSAO_LUGAR=crypto.randomUUID()}catch(e){SESSAO_LUGAR=String(Date.now())+Math.random().toString(36).slice(2)}}return SESSAO_LUGAR}
 async function pedirLugar(corpo){
+  if(corpo&&(corpo.op==='sugerir'||corpo.op==='detalhe'))corpo=Object.assign({sessao:sessaoDoLugar()},corpo);
+  if(corpo&&corpo.op==='detalhe')SESSAO_LUGAR='';
   try{
     const tk=await ensureToken();
     const r=await fetch('/api/lugar',{method:'POST',
@@ -9638,7 +9697,11 @@ async function adicionarSpotAbertoDoAmigo(btn){
     // fora do mapa-mundi (que conta pais), mas o lugar nao se perde e nao ha
     // pergunta — e o mapa se acerta quando uma viagem de pais aparecer.
     const nome=pais||cidade;
-    if(nome&&viagensCarregadas()){
+    // Com país, a viagem só nasce quando o spot é SALVO (11/10, auditoria):
+    // criada aqui, fechar a folha sem salvar deixava uma viagem vazia pra
+    // sempre — o mesmo defeito que o + já tinha resolvido em 29/09.
+    if(pais)viagem=viagemPendente(cidade,pais);
+    else if(nome&&viagensCarregadas()){
       const{data,error}=await dbInsert('trips',Object.assign({user_id:S.user.id,name:nome,
         destinations:[nome],dates:'',status:'planning',initial_city:cidade||null},privadaSeMontando()));
       if(!error&&data){data._spots=[];data._spotsLoaded=true;S.trips.unshift(data);viagem=data;marcarViagemNova(data)}
@@ -9814,7 +9877,7 @@ async function medirOndeEstou(){
     const pos={coords:{latitude:coords.lat,longitude:coords.lng}};
     const r=await googlePlaces('searchNearby',{
       headers:{'X-Goog-FieldMask':'places.displayName'},
-      body:JSON.stringify({includedTypes:['locality'],maxResultCount:1,languageCode:'pt-BR',
+      body:JSON.stringify({includedTypes:['locality'],maxResultCount:1,languageCode:'pt-BR',rankPreference:'DISTANCE',
         locationRestriction:{circle:{center:{latitude:pos.coords.latitude,longitude:pos.coords.longitude},radius:20000}}})
     });
     const d=await r.json();
@@ -9923,7 +9986,9 @@ async function runExplore(rotulo,lugarEscolhido,opts){
     if(silencioso&&EXPLORE.items.length){darDadosDeExplorar();return}
     EXPLORE.items=[];
     EXPLORE_ESTADO='erro';
-    body.innerHTML='<div class="empty-state"><div class="ei" data-ic="alert"></div><h3>Erro ao buscar</h3><p>Tenta de novo em alguns segundos.</p></div>';hydrateIcons(body);
+    body.innerHTML=e&&e.cota
+      ?'<div class="empty-state"><div class="ei" data-ic="alert"></div><h3>Limite de buscas do mês</h3><p>O Explorar volta no começo do mês. Os spots dos seus amigos continuam na aba Amigos.</p></div>'
+      :'<div class="empty-state"><div class="ei" data-ic="alert"></div><h3>Erro ao buscar</h3><p>Tenta de novo em alguns segundos.</p></div>';hydrateIcons(body);
     darDadosDeExplorar();
   }
 }
@@ -9939,6 +10004,10 @@ async function paginaDoExplorar(token){
     headers:{'Content-Type':'application/json','X-Goog-FieldMask':CAMPOS_DO_EXPLORAR},
     body:JSON.stringify(corpo)
   });
+  // Cota do mês estourada não é "nada encontrado" (11/10, auditoria).
+  if(resp&&resp.capped){const e=new Error('cota');e.cota=true;throw e}
+  // Busca que FALHOU (rede, 5xx) não é 'nada encontrado' (11/10, auditoria).
+  if(resp&&resp.ok===false)throw new Error('busca falhou');
   const data=await resp.json();
   const places=((data&&data.places)||[]).filter(p=>p.rating&&p.userRatingCount&&!isIrrelevantPlace(p));
   places.sort((a,b)=>notaDoExplorar(b)-notaDoExplorar(a));
@@ -10367,7 +10436,9 @@ function conferirFotosDosAmigos(){
   // 06/10: fora da aba Amigos (mapa do Explorar) redesenha pelo darDadosDeExplorar.
   const redesenhar=()=>{clearTimeout(REDESENHO_AMIGOS_AREA);REDESENHO_AMIGOS_AREA=setTimeout(()=>{
     try{if(EXPLORE.aba==='amigos')renderExploreResults();else darDadosDeExplorar()}catch(e){}},300)};
-  const trocar=g=>fotoParaVer(g.capa).then(u=>{if(u&&u!==g.foto){g.foto=u;redesenhar()}});
+  // Com o teto da sessão (11/10, auditoria): sem ele, foto falhando no
+  // Explorar virava até 12 buscas pagas por busca.
+  const trocar=g=>fotoParaVerComTeto(g.capa).then(u=>{if(u&&u!==g.foto){g.foto=u;redesenhar()}});
   // Só as primeiras 12: cada teste é uma foto paga, e ninguém vê o fim da
   // lista sem rolar — as de baixo seguem pelo caminho de antes.
   lugaresDosAmigosNaCategoria().slice(0,12).forEach(g=>{
@@ -10847,7 +10918,14 @@ function exmTalvezBuscarNaArea(){
     // espalhados pelo território. Aí vale a busca digitada.
     if(exmDistKm({lat:sw.lat(),lng:sw.lng()},{lat:ne.lat(),lng:ne.lng()})>60)return;
     EXM_BUSCAS_NO_MAPA++;EXM.pessoaMexeu=false;
-    const rect={rectangle:{low:{latitude:sw.lat(),longitude:sw.lng()},high:{latitude:ne.lat(),longitude:ne.lng()}}};
+    // Retângulo arredondado PRA FORA numa grade (11/10, auditoria): com a vista
+    // exata, cada arrasto era uma busca paga nova; arredondado, vistas vizinhas
+    // caem na mesma chave e reaproveitam a busca guardada no servidor. A grade
+    // acompanha o zoom (1/8 do lado da tela), então não engorda a busca.
+    const bruto=Math.max(0.002,Math.max(ne.lat()-sw.lat(),ne.lng()-sw.lng())/8);
+    const passo=Math.pow(2,Math.round(Math.log2(bruto)));   // potência de 2: zoom parecido, mesma grade
+    const baixo=x=>Math.floor(x/passo)*passo,alto=x=>Math.ceil(x/passo)*passo,fixo=x=>Number(x.toFixed(5));
+    const rect={rectangle:{low:{latitude:fixo(baixo(sw.lat())),longitude:fixo(baixo(sw.lng()))},high:{latitude:fixo(alto(ne.lat())),longitude:fixo(alto(ne.lng()))}}};
     EXM.areaChave=[sw.lat(),sw.lng(),ne.lat(),ne.lng()].join(',');   // não re-enquadra: a pessoa escolheu a vista
     EXM.amigosEnquadrados=-1;
     const cidade=(EXPLORE.lugar&&EXPLORE.lugar.cidade)||EXPLORE.city||'';
@@ -12375,7 +12453,7 @@ async function createTrip(){
   if(proxima){
     ({data,error}=await dbInsert('trips',{user_id:S.user.id,name,destinations:paises,dates,status:'planning',initial_city:cidadeEscolhida||null,proxima:true,privada:!!privada}));
     if(error||!data){
-      toast('Erro ao criar',error?.message||'Tente novamente');
+      toast('Não criou a viagem','Confere a conexão e tenta de novo.','alert');
       btn.textContent='Criar viagem';btn.style.pointerEvents='auto';return;
     }
   }
@@ -12436,7 +12514,7 @@ async function createTrip(){
       // Desenho c3: "Os spots você adiciona depois." A viagem abre, e só.
     },300);
   }else{
-    toast('Erro ao criar',error?.message||'Tente novamente');
+    toast('Não criou a viagem','Confere a conexão e tenta de novo.','alert');
     btn.textContent='Criar viagem';btn.style.pointerEvents='auto';
   }
 }
@@ -13045,7 +13123,7 @@ function onbCidadePeloGps(){
       // da cidade pode estar a quilômetros de quem mora na borda dela.
       const r=await googlePlaces('searchNearby',{
         headers:{'X-Goog-FieldMask':'places.displayName,places.formattedAddress,places.addressComponents'},
-        body:JSON.stringify({includedTypes:['locality'],maxResultCount:1,languageCode:'pt-BR',
+        body:JSON.stringify({includedTypes:['locality'],maxResultCount:1,languageCode:'pt-BR',rankPreference:'DISTANCE',
           locationRestriction:{circle:{center:{latitude:pos.coords.latitude,longitude:pos.coords.longitude},radius:20000}}})
       });
       const d=await r.json();
@@ -14117,8 +14195,10 @@ function renderComentarios(spotId,alvo,donoDoSpot){
   // seção simplesmente não existir.
   const naFicha=alvo==='placeComentarios';
   if(meuSpot&&!lista.length){
+    // Com "Ana foi 5★" logo acima, "nenhum amigo salvou" se contradizia (11/10).
+    const temDeles=!!(S.curPlace&&(S.curPlace._deles||[]).length);
     box.innerHTML=naFicha
-      ?'<div class="ml-vazio">Nenhum amigo seu salvou este spot. Quando alguém salvar ou comentar, aparece aqui.</div>'
+      ?(temDeles?'<div class="ml-vazio">Ninguém comentou ainda.</div>':'<div class="ml-vazio">Nenhum amigo seu salvou este spot. Quando alguém salvar ou comentar, aparece aqui.</div>')
       :'';
     return;
   }
@@ -14283,6 +14363,8 @@ async function enviarComentario(spotId,alvo,donoDoSpot){
   }
   if(!COMENT_PERFIS[S.user.id])COMENT_PERFIS[S.user.id]=S.profile||{id:S.user.id,display_name:(S.user.email||'').split('@')[0]};
   renderComentarios(spotId,alvo,donoDoSpot);
+  // "Conversa N" e a linha social da ficha andam junto (11/10, auditoria).
+  if(alvo==='placeComentarios'&&S.curPlace){try{atualizarConversa(S.curPlace);renderSocialDoSpot(spotId,S.curPlace)}catch(e){}}
 }
 
 async function apagarComentario(id,spotId,alvo,donoDoSpot){
@@ -14291,6 +14373,8 @@ async function apagarComentario(id,spotId,alvo,donoDoSpot){
   if(error){toast('Não consegui apagar','','alert');return}
   COMENTARIOS[spotId]=(COMENTARIOS[spotId]||[]).filter(c=>c.id!==id);
   renderComentarios(spotId,alvo,donoDoSpot);
+  // "Conversa N" e a linha social da ficha andam junto (11/10, auditoria).
+  if(alvo==='placeComentarios'&&S.curPlace){try{atualizarConversa(S.curPlace);renderSocialDoSpot(spotId,S.curPlace)}catch(e){}}
 }
 
 // ═══ DENUNCIAR E BLOQUEAR ═══
@@ -17866,13 +17950,12 @@ window.acaoDeAmigos=function(acao,valor){
 // diferente da sua, então não dá pra comparar id. Não é exato (dois lugares
 // com o mesmo nome na mesma cidade), mas errar pra menos só mostra um botão
 // a mais, e errar pra mais esconderia uma ação legítima.
+// A MESMA regra do "+ minha lista" (11/10, auditoria): comparando letra a
+// letra, acento ou cidade faltando mostrava o botão, e o toque respondia "Já
+// está na sua lista".
 function jaNaMinhaLista(sp){
-  const n=String(sp.name||'').trim().toLowerCase();
-  const c=String(cityOf(sp)||'').trim().toLowerCase();
-  if(!n)return false;
-  return allSpotsFlat().some(m=>
-    String(m.name||'').trim().toLowerCase()===n &&
-    String(cityOf(m)||'').trim().toLowerCase()===c);
+  if(!String(sp.name||'').trim())return false;
+  return !!statusNaMinhaLista({name:sp.name,city:cityOf(sp)});
 }
 
 // A METADE APARECE AQUI TAMBEM. Antes isto arredondava (Math.round), entao
@@ -18721,7 +18804,7 @@ const STATUS_CIDADE_AMIGO={};
 function chaveStatusAmigo(){return (FRIEND.id||'')+'|'+(FRIEND.city||'')}
 function abrirStatusDaCidadeDoAmigo(){
   const lista=spotsDaCidadeDoAmigo().filter(s=>s.category===fcCat);
-  const fui=lista.filter(s=>s.status==='been').length,quero=lista.length-fui;
+  const fui=lista.filter(s=>s.status==='been'||s.status==='skip').length,quero=lista.length-fui;
   abrirFolhaDeEscolha([{id:'0',rotulo:'Todos',n:lista.length},{id:'1',rotulo:'Quero ir',n:quero},{id:'2',rotulo:'Fui',n:fui}],
     String(STATUS_CIDADE_AMIGO[chaveStatusAmigo()]||0),id=>{STATUS_CIDADE_AMIGO[chaveStatusAmigo()]=Number(id);renderFriendCityBody()});
 }
@@ -18730,11 +18813,13 @@ function renderFriendCityBody(){
   if(!FRIEND.city)return;
   const daAba=spotsDaCidadeDoAmigo().filter(s=>s.category===fcCat);
   const linha=document.getElementById('fcStatus');
-  const temOsDois=daAba.some(s=>s.status==='been')&&daAba.some(s=>s.status!=='been');
+  // "Não recomendo" é um jeito de ter ido (11/10): conta no Fui, não no Quero ir.
+  const foi=s=>s.status==='been'||s.status==='skip';
+  const temOsDois=daAba.some(foi)&&daAba.some(s=>!foi(s));
   let st=STATUS_CIDADE_AMIGO[chaveStatusAmigo()]||0;
   if(!temOsDois)st=0;
   if(linha){linha.style.display=temOsDois?'':'none';linha.innerHTML=temOsDois?linhaDeEscolha(ROTULO_SITUACAO[st],'abrirStatusDaCidadeDoAmigo()'):''}
-  const spots=st===1?daAba.filter(s=>s.status!=='been'):st===2?daAba.filter(s=>s.status==='been'):daAba;
+  const spots=st===1?daAba.filter(s=>!foi(s)):st===2?daAba.filter(foi):daAba;
   if(!spots.length){b.innerHTML=`<div class="empty-state" style="padding:40px 24px"><div class="ei">${catIcon(fcCat)}</div><h3>Nada aqui</h3><p>${esc((FRIEND.profile&&String(friendName(FRIEND.profile)||'').split(' ')[0])||'Esta pessoa')} não salvou nada dessa categoria nesta cidade.</p></div>`;FRIEND_CITY_SPOTS=[];return} // 06/10: nome, não "Seu amigo"
   // guarda a ordem exibida: o clique manda o ÍNDICE, não o id no HTML
   FRIEND_CITY_SPOTS=spots;
@@ -18768,7 +18853,7 @@ function friendSpotRowHTML(s,i){
   // Desenho 5a, igual à sua cidade: sem rótulo à direita; status antes da nota.
   if(i!=null){
     const txt=(s.status==='been'?(s.my_review||s.my_note):(s.my_note||s.my_review))||'';
-    const stTxt=s.status==='been'?'<span class="st-fui">Fui</span>':'<span class="st-quero">Quero ir</span>';
+    const stTxt=s.status==='been'?'<span class="st-fui">Fui</span>':s.status==='skip'?'<span class="st-quero">Não recomendo</span>':'<span class="st-quero">Quero ir</span>';
     const notaTxt=s.my_rating?' · '+esc(fmtRating(s.my_rating))+'★':'';
     return '<div class="cid-row"'+clique+'>'+thumb.replace('class="place-thumb"','class="place-thumb"')
       +'<div class="cid-txt"><div class="cid-nome">'+esc(s.name)+'</div><div class="cid-linha">'+stTxt+notaTxt+(txt?' · '+esc(txt):'')+'</div></div></div>';
@@ -18777,7 +18862,7 @@ function friendSpotRowHTML(s,i){
     +'<div class="place-row-info"><div class="place-row-name">'+esc(s.name)+'</div><div class="place-row-note">'+esc(s.my_note)+'</div></div>'
     +'<div class="place-row-right">'+(nota?'<span class="lrating">'+esc(nota)+'</span>':'')
     +(tag?'<span class="place-type-tag">'+esc(tag)+'</span>':'')
-    +'<div class="place-status"><span class="status-dot '+dot+'"></span><span class="place-status-label">'+(s.status==='been'?'Fui':'Quero ir')+'</span></div></div></div></div>';
+    +'<div class="place-status"><span class="status-dot '+dot+'"></span><span class="place-status-label">'+(s.status==='been'?'Fui':s.status==='skip'?'Não recomendo':'Quero ir')+'</span></div></div></div></div>';
 }
 function renderFriendTripBody(){
   const t=FRIEND.trip,b=document.getElementById('ftBody');
@@ -18885,7 +18970,7 @@ async function compartilharConvite(){
   btn.textContent='Gerando...';btn.style.pointerEvents='none';
   const codigo=await obterOuCriarConvite();
   btn.textContent=rotulo;btn.style.pointerEvents='auto';
-  if(!codigo){toast('Erro','Não foi possível criar o convite. Falta rodar a migração 011?');return}
+  if(!codigo){toast('Não criou o convite','Confere a conexão e tenta de novo.','alert');return}
   const url=linkDoConvite(codigo);
   const nome=(S.profile&&S.profile.display_name)||'Um amigo';
   const texto=textoDoConvite(nome);

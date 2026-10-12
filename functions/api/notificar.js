@@ -33,7 +33,7 @@ const EXPO = 'https://exp.host/--/api/v2/push/send';
 const TEXTOS = {
   pedido:     (nome) => ({ title: 'Pedido de amizade', body: `${nome} quer ser seu amigo no Spot` }),
   aceite:     (nome) => ({ title: 'Vocês são amigos',  body: `${nome} aceitou sua solicitação de amizade` }),
-  comentario: (nome, extra) => ({ title: 'Comentário', body: extra ? `${nome} comentou em ${extra}` : `${nome} comentou no seu lugar` }),
+  comentario: (nome, extra) => ({ title: 'Comentário', body: extra ? `${nome} comentou em ${extra}` : `${nome} comentou no seu spot` }),
   // Não é um tipo que o app pede: é o 'comentario' quando quem recebe NÃO é
   // dono do spot — o dono respondeu no fio (06/10). Dizia "comentou no seu
   // lugar" sobre um lugar que não era de quem recebia. Decidido aqui, pelo
@@ -168,9 +168,15 @@ async function nomeDoSpotComentado(env, spotId, de, para) {
     const [c] = await (await fetch(SB_URL + '/rest/v1/spot_comments?select=id&spot_id=eq.' + spotId
       + '&user_id=eq.' + de + '&created_at=gte.' + encodeURIComponent(desde) + '&limit=1', { headers: h })).json();
     if (!c) return { nome: '', resposta: false };
-    const [sp] = await (await fetch(SB_URL + '/rest/v1/spots?select=name,user_id&id=eq.' + spotId, { headers: h })).json();
+    const [sp] = await (await fetch(SB_URL + '/rest/v1/spots?select=name,user_id,status,trip_id&id=eq.' + spotId, { headers: h })).json();
     if (!sp || (sp.user_id !== para && sp.user_id !== de)) return { nome: '', resposta: false };
-    const nome = sp.name ? String(sp.name).replace(/\s+/g, ' ').trim().slice(0, 60) : '';
+    let nome = sp.name ? String(sp.name).replace(/\s+/g, ' ').trim().slice(0, 60) : '';
+    // Quero ir de viagem "Só eu vejo" (11/10, auditoria): quem recebe a
+    // resposta e não é o dono não vê mais esse spot — o nome não vai junto.
+    if (nome && sp.user_id !== para && sp.status === 'want' && sp.trip_id) {
+      const [t] = await (await fetch(SB_URL + '/rest/v1/trips?select=privada&id=eq.' + sp.trip_id, { headers: h })).json();
+      if (t && t.privada === true) nome = '';
+    }
     return { nome, resposta: sp.user_id !== para };
   } catch (e) { return { nome: '', resposta: false } }
 }

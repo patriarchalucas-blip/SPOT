@@ -323,6 +323,9 @@ async function abrirAparelho(nome, { casca }) {
   pg.on('pageerror', e => pg.__erros.push(e.message));
   pg.on('console', m => { if (m.type() === 'error' && !/Failed to load resource|ERR_|net::/.test(m.text())) pg.__erros.push('console: ' + m.text().slice(0, 300)) });
   pg.on('dialog', d => d.dismiss().catch(() => {}));
+  // Recarga que o teste não pediu (o app sai da conta, por exemplo) derruba a
+  // próxima chamada com "detached Frame" — aqui ela aparece com nome e hora.
+  pg.on('framenavigated', f => { if (f === pg.mainFrame() && !pg.__indo) console.log(`  [recarregou sozinho] aparelho ${nome} · jornada ${JORNADA} · ${f.url()}`) });
   await pg.evaluateOnNewDocument((casca) => {
     // O seletor de confirmação do app (perguntar) é testado à parte; aqui
     // "Sim" sempre, pra a jornada andar.
@@ -381,7 +384,8 @@ async function trataPedido(pg, r) {
 const ev = (pg, fn, ...a) => pg.evaluate(fn, ...a);
 async function ir(pg, codigo, ms = 600) { try { await pg.evaluate(codigo) } catch (e) { pg.__erros.push('[script do teste] ' + e.message.split('\n')[0]) } await espera(ms) }
 async function carregar(pg) {
-  await pg.goto(SITE + '/index.html', { waitUntil: 'domcontentloaded', timeout: 20000 });
+  pg.__indo = true;
+  try { await pg.goto(SITE + '/index.html', { waitUntil: 'domcontentloaded', timeout: 20000 }) } finally { pg.__indo = false }
   await ate(() => ev(pg, () => typeof S !== 'undefined' && !!document.querySelector('.screen.active') && document.querySelector('.screen.active').id !== 'loading'), 8000);
   await ev(pg, () => { window.confirmar = async () => true });
 }
@@ -1195,6 +1199,19 @@ if (spB9 && amigos(A.id, B.id)) {
 }
 await ir(pk, `(async()=>{goTo('dashboard');await aoTocarNotificacao({tipo:'pedido'})})()`, 1200);
 confere(await tela(pk) === 'friends', 'notificação de pedido abre Amigos', await tela(pk));
+// 11/10 (o Lucas): o card "Onde você mora" abre direto a lista de spots da cidade; voltar vai pra Viagens.
+await ir(pk, `(async()=>{document.querySelectorAll('.overlay.show').forEach(o=>closeOv(o.id));goTo('dashboard');await loadDashboard();await abrirCasa()})()`, 1500);
+const telaCasa = await tela(pk);
+confere(telaCasa === 'city', 'card "Onde você mora" abre direto a cidade (sem a tela da viagem no meio)', telaCasa);
+if (telaCasa === 'city') {
+  // Filtro Fui/Quero ir: tocar no lado vazio TEM que mudar (antes voltava sozinho).
+  const cont = await ev(pk, () => { const l = spotsDaCidade(); const fui = l.filter(foiNoSpot).length; return { fui, quero: l.length - fui } });
+  const vazio = cont.quero === 0 ? 'want' : (cont.fui === 0 ? 'been' : 'want');
+  await ir(pk, `setCityStatus('${vazio}')`, 400);
+  confere(await ev(pk, () => curCityStatus) === vazio, 'tocar no filtro muda o filtro, mesmo sem spot daquele tipo', { cont, agora: await ev(pk, () => curCityStatus) });
+  await ir(pk, `voltarDaMinhaCidade()`, 1200);
+  confere(await tela(pk) === 'dashboard', 'voltar da cidade aberta pela casa leva pra Viagens', await tela(pk));
+}
 ['I', 'J', 'K'].forEach(n => { const e = errosDe(PAGINAS[n]); confere(!e.length, 'sem erro de JS no aparelho ' + n, e) });
 
 // ═══ fim ═══

@@ -48,5 +48,33 @@ export async function onRequest(context) {
     });
   }
 
-  return context.next();
+  const resp = await context.next();
+  return comImpressaoDigital(context.request, resp);
+}
+
+// "ESTÁ IGUAL" PRA PÁGINA DO APP (11/10/2026). O app baixava o index.html
+// inteiro (348 KB comprimido) a cada abertura: a página sai com no-cache, mas
+// passando por este middleware ela perdia o ETag, e sem ele o celular não tem
+// como perguntar "mudou?". Aqui a página HTML ganha uma impressão digital
+// (SHA-256 do conteúdo); se o celular manda a mesma, a resposta é 304 sem
+// corpo. Deploy novo muda o conteúdo, a impressão muda, e o celular baixa.
+export async function comImpressaoDigital(request, resp) {
+  try {
+    if (request.method !== 'GET' || !resp || resp.status !== 200) return resp;
+    const tipo = resp.headers.get('Content-Type') || '';
+    if (!/text\/html/i.test(tipo)) return resp;
+    const corpo = await resp.arrayBuffer();
+    const h = await crypto.subtle.digest('SHA-256', corpo);
+    const etag = '"' + [...new Uint8Array(h)].slice(0, 16).map((b) => b.toString(16).padStart(2, '0')).join('') + '"';
+    const cab = new Headers(resp.headers);
+    cab.set('ETag', etag);
+    const pediu = (request.headers.get('If-None-Match') || '').split(',').map((s) => s.trim().replace(/^W\//, ''));
+    if (pediu.includes(etag)) {
+      cab.delete('Content-Length');
+      return new Response(null, { status: 304, headers: cab });
+    }
+    return new Response(corpo, { status: 200, statusText: resp.statusText, headers: cab });
+  } catch (e) {
+    return resp;
+  }
 }

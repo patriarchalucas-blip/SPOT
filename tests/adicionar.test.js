@@ -57,14 +57,18 @@ test('cai no pais quando nenhuma viagem tem a cidade', async () => {
   assert.strictEqual(e.notaAberta && e.notaAberta.id, 't1');
 });
 
-test('sem viagem nenhuma, CRIA em vez de perguntar', async () => {
+// 11/10: com país, a viagem fica PENDENTE e só nasce quando o spot é salvo
+// (saveSpot → garantirViagem). Criada na hora, fechar a folha sem salvar
+// deixava uma viagem vazia pra sempre.
+test('sem viagem nenhuma, não pergunta e abre a nota com a viagem pendente do país', async () => {
   const e = cenario([]);
   await A.adicionarSpotAbertoDoAmigo();
-  assert.strictEqual(e.perguntou, false, 'perguntou em vez de criar');
-  assert.strictEqual(e.viagensCriadas.length, 1);
-  assert.strictEqual(e.viagensCriadas[0].name, 'Brasil');
-  assert.strictEqual(e.viagensCriadas[0].initial_city, 'São Paulo');
-  assert.ok(e.notaAberta, 'criou a viagem mas nao abriu a nota');
+  assert.strictEqual(e.perguntou, false, 'perguntou em vez de seguir');
+  assert.strictEqual(e.viagensCriadas.length, 0, 'criou a viagem antes de o spot ser salvo');
+  assert.ok(e.notaAberta, 'não abriu a nota');
+  assert.strictEqual(e.notaAberta.__pendente, true);
+  assert.strictEqual(e.notaAberta.pais, 'Brasil');
+  assert.strictEqual(e.notaAberta.cidade, 'São Paulo');
 });
 
 test('marcacao de pais visitado nao serve de viagem', async () => {
@@ -76,7 +80,7 @@ test('marcacao de pais visitado nao serve de viagem', async () => {
   await A.adicionarSpotAbertoDoAmigo();
   assert.notStrictEqual(e.notaAberta && e.notaAberta.id, 'q1',
     'usou a marcacao de pais visitado como se fosse viagem');
-  assert.strictEqual(e.viagensCriadas.length, 1, 'devia ter criado uma viagem de verdade');
+  assert.ok(e.notaAberta && e.notaAberta.__pendente, 'devia seguir com uma viagem de verdade (pendente até salvar)');
   assert.strictEqual(e.perguntou, false);
 });
 

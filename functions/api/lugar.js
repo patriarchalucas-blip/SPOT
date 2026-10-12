@@ -36,6 +36,8 @@ export async function onRequestPost(context) {
 
   const texto = op === 'sugerir' ? limparTexto(body.texto) : '';
   const id = op === 'detalhe' ? String(body.id || '') : '';
+  // Token de sessão do Google (11/10): só formato seguro; fora da chave do cache.
+  const sessao = /^[A-Za-z0-9-]{8,64}$/.test(String(body.sessao || '')) ? String(body.sessao) : '';
   if (op === 'sugerir' && texto.length < 3) return json({ sugestoes: [] });
   if (op === 'detalhe' && !idValido(id)) return json({ error: 'id_invalido' }, 400);
 
@@ -70,7 +72,7 @@ export async function onRequestPost(context) {
 
   let resposta;
   try {
-    resposta = op === 'sugerir' ? await sugerir(env, texto) : await detalhe(env, id);
+    resposta = op === 'sugerir' ? await sugerir(env, texto, sessao) : await detalhe(env, id, sessao);
   } catch (e) {
     return json({ erro_rede: true });
   }
@@ -84,11 +86,11 @@ export async function onRequestPost(context) {
 // restaurante no Explorar e a busca devolvia "o que tem perto dele". São dois
 // pedidos em paralelo, cada um com o filtro de tipo dele. Se o Google recusar
 // o filtro, pede sem ele e separa aqui pelos tipos que cada sugestão traz.
-async function sugerir(env, texto) {
+async function sugerir(env, texto, sessao) {
   const pedir = (tipo) => fetch('https://places.googleapis.com/v1/places:autocomplete', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json', 'X-Goog-Api-Key': env.GOOGLE_PLACES_KEY },
-    body: JSON.stringify(Object.assign({ input: texto, languageCode: 'pt-BR' }, tipo ? { includedPrimaryTypes: [tipo] } : {}))
+    body: JSON.stringify(Object.assign({ input: texto, languageCode: 'pt-BR' }, sessao ? { sessionToken: sessao } : {}, tipo ? { includedPrimaryTypes: [tipo] } : {}))
   });
   const umGrupo = async (tipo) => {
     let r = await pedir(tipo);
@@ -148,8 +150,8 @@ export function organizarSpots(lista, filtrarAqui) {
     .filter((x) => idValido(x.id) && x.titulo);
 }
 
-async function detalhe(env, id) {
-  const r = await fetch('https://places.googleapis.com/v1/places/' + encodeURIComponent(id) + '?languageCode=pt-BR', {
+async function detalhe(env, id, sessao) {
+  const r = await fetch('https://places.googleapis.com/v1/places/' + encodeURIComponent(id) + '?languageCode=pt-BR' + (sessao ? '&sessionToken=' + encodeURIComponent(sessao) : ''), {
     headers: { 'X-Goog-Api-Key': env.GOOGLE_PLACES_KEY, 'X-Goog-FieldMask': CAMPOS_DETALHE }
   });
   if (!r.ok) return null;

@@ -47,7 +47,7 @@ test('sem comentario de verdade, sai generico', async () => {
   const { env, enviados } = montar(false);
   try {
     await onRequestPost({ request: pedido({ tipo: 'comentario', alvo: ALVO, spot: SPOT }), env, waitUntil: () => {} });
-    assert.strictEqual(enviados[0][0].body, 'Clara comentou no seu lugar');
+    assert.strictEqual(enviados[0][0].body, 'Clara comentou no seu spot');
   } finally { globalThis.fetch = antigo }
 });
 
