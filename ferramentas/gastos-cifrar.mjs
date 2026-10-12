@@ -49,7 +49,7 @@ if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.me
   const senha = readFileSync(path.join(raiz, '_local/gastos/senha.txt'), 'utf8').trim();
   const erros = conferir(dados);
   if (erros.length) { console.error(erros.join('\n')); process.exit(1); }
-  if (senha.length < 12) { console.error('senha curta demais'); process.exit(1); }
+  if (senha.length < 8) { console.error('senha curta demais (mínimo 8)'); process.exit(1); }
   writeFileSync(path.join(raiz, 'gastos-dados.json'), JSON.stringify(await cifrar(dados, senha)) + '\n');
   console.log(`gastos-dados.json cifrado: ${dados.gastos.length} lançamentos, ${(dados.previstos || []).length} previstos`);
 }
