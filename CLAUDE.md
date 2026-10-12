@@ -363,6 +363,18 @@ memória; spots dos amigos via RPC; índices em `spots(user_id)`, `spots(trip_id
 `trips(user_id)`, `follows(following_id)` e `(select auth.uid())` nas políticas;
 pintar o cache antes de renovar o token; `sbFetch` renovando token em todo 403.
 
+## Painel de gastos dos sócios (meuspot.app/gastos, 12/10/2026)
+
+Sócios: **Lucas Patriarcha** (paga tudo nos cartões dele) e **Lucas Jezler**,
+meio a meio. O painel só documenta o que foi gasto e o "valor pra cada" —
+dívida e transferências entre os dois o Lucas conversa por fora (pedido dele).
+`gastos.html` pede a senha e decifra `gastos-dados.json` no navegador
+(AES-GCM, PBKDF2 600 mil voltas). Dados e senha ficam em `_local/gastos/`
+(fora do git). **Lançar um mês:** editar `_local/gastos/dados.json` (gasto pelo
+MÊS DE USO; Google cobra no dia 1 o mês anterior; dólar a 5,40 por decisão
+dele), `node ferramentas/gastos-cifrar.mjs`, commit + push do
+`gastos-dados.json`. Link público do Claude não existe na conta da Sólides.
+
 ## Custo e cotas (27/09/2026) — o Lucas disse: "isso não pode falhar"
 
 - **Google Cloud (projeto spot-499219), cotas por dia na Places API (New)**, postas

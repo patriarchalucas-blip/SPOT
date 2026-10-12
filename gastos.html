@@ -1,0 +1,302 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="robots" content="noindex, nofollow">
+<title>Gastos do Spot</title>
+<link rel="icon" href="/icon-180.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500&family=Inter+Tight:wght@400;500;600;700&display=swap">
+<!--
+  PAINEL DE GASTOS DOS SÓCIOS (12/10/2026). Os valores NÃO estão neste
+  arquivo: ficam em /gastos-dados.json, cifrados (AES-GCM, chave tirada da
+  senha por PBKDF2-SHA256, 600 mil voltas). O repositório é público; sem a
+  senha o arquivo é ilegível. Quem gera o arquivo é
+  ferramentas/gastos-cifrar.mjs, a partir de _local/gastos/ (fora do git).
+  Pra lançar um mês: editar _local/gastos/dados.json, rodar o script, push.
+-->
+<style>
+:root {
+  --base: #F5F5F3; --surface: #E9E9E6; --ink: #111111; --ink2: #6B6B67; --ink3: #9A9A96;
+  --green: #0B3D2E; --on-green: #F5F5F3; --on-green2: rgba(245,245,243,.62); --mute: #C8CFC9;
+  --r-card: 14px; --r-btn: 10px;
+  --f: 'Inter Tight', 'Inter', system-ui, -apple-system, 'Segoe UI', sans-serif;
+  color-scheme: light;
+}
+* { box-sizing: border-box; }
+html, body { margin: 0; background: var(--base); color: var(--ink); font-family: var(--f); -webkit-font-smoothing: antialiased; }
+body { padding: env(safe-area-inset-top, 0px) 0 env(safe-area-inset-bottom, 0px); }
+h1, h2, p { margin: 0; }
+.sp { padding-block: 24px 48px; padding-inline: 20px; display: grid; gap: 32px; max-width: 880px; margin-inline: auto; font-variant-numeric: tabular-nums; }
+.sp-top { display: grid; gap: 20px; }
+.sp-brand { display: flex; align-items: center; gap: 12px; }
+.sp-brand img { width: 44px; height: 44px; border-radius: 12px; display: block; }
+.sp-brand svg { height: 26px; width: auto; display: block; }
+.sp-brand .sair { margin-left: auto; appearance: none; background: none; border: 0; font: 400 13px var(--f); color: var(--ink3); cursor: pointer; padding: 8px 0; }
+.sp-tit { display: flex; align-items: baseline; justify-content: space-between; gap: 8px 16px; flex-wrap: wrap; }
+.sp-tit h1 { font-size: clamp(26px, 5vw, 32px); font-weight: 600; letter-spacing: -0.02em; line-height: 1.1; }
+.sp-quando { font-size: 15px; color: var(--ink2); }
+
+.sp-capa { background: var(--green); color: var(--on-green); border-radius: 18px; padding: 24px; display: grid; gap: 24px; }
+.sp-meses { display: flex; gap: 20px; overflow-x: auto; scrollbar-width: none; }
+.sp-meses::-webkit-scrollbar { display: none; }
+.sp-mes { appearance: none; background: none; border: 0; padding: 0 0 8px; font: 600 15px/1.2 var(--f); color: var(--on-green2); cursor: pointer; white-space: nowrap; }
+.sp-mes[aria-pressed="true"] { color: var(--on-green); box-shadow: inset 0 -2px 0 var(--on-green); }
+.sp-mes:focus-visible { outline: 2px solid var(--on-green); outline-offset: 4px; border-radius: 4px; }
+.sp-numeros { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 14rem), 1fr)); gap: 20px 32px; align-items: end; }
+.sp-k { font-size: 13px; color: var(--on-green2); }
+.sp-v { font-size: clamp(36px, 7vw, 52px); font-weight: 600; line-height: 1.05; letter-spacing: -0.02em; margin-top: 4px; }
+.sp-v.menor { font-size: clamp(26px, 4.5vw, 32px); }
+
+.sp-sec { display: grid; gap: 12px; min-width: 0; }
+.sp-sec h2 { font-size: 20px; font-weight: 600; letter-spacing: -0.01em; }
+.sp-nota { font-size: 13px; color: var(--ink2); }
+.sp-graf svg { display: block; width: 100%; height: auto; }
+.sp-graf .barra { cursor: pointer; }
+.sp-graf .barra:focus-visible { outline: none; stroke: var(--ink); stroke-width: 2; }
+
+.sp-lista { display: grid; gap: 4px; }
+.sp-linha { display: grid; grid-template-columns: 48px minmax(0, 1fr) auto; gap: 12px; align-items: center; padding-block: 8px; }
+.sp-ic { width: 48px; height: 48px; border-radius: var(--r-card); background: var(--surface); display: grid; place-items: center; font-weight: 600; font-size: 16px; color: var(--green); }
+.sp-nome { font-size: 16px; font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.sp-meta { font-size: 13px; color: var(--ink2); margin-top: 2px; }
+.sp-dir { text-align: right; white-space: nowrap; }
+.sp-val { font-size: 15px; font-weight: 600; }
+.sp-sub { font-size: 13px; color: var(--ink2); margin-top: 2px; }
+.sp-sub.decidir { color: var(--ink3); }
+.sp-trilho { height: 4px; border-radius: 2px; background: var(--surface); margin-top: 8px; overflow: hidden; }
+.sp-trilho i { display: block; height: 100%; background: var(--green); border-radius: 2px; }
+.sp-grupo { font-size: 13px; font-weight: 600; color: var(--ink3); padding-top: 12px; }
+.sp-vazio { font-size: 15px; color: var(--ink2); background: var(--surface); border-radius: var(--r-card); padding: 16px 20px; }
+.sp-duas { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 22rem), 1fr)); gap: 32px; }
+.sp-rodape { font-size: 13px; color: var(--ink3); }
+
+/* Senha */
+.tranca { min-height: 100vh; min-height: 100dvh; display: grid; place-items: center; padding: 24px 20px; }
+.tranca form { width: 100%; max-width: 360px; display: grid; gap: 16px; }
+.tranca .sp-brand { justify-content: center; margin-bottom: 8px; }
+.tranca h1 { font-size: 22px; font-weight: 600; text-align: center; letter-spacing: -0.01em; }
+.tranca p { font-size: 15px; color: var(--ink2); text-align: center; }
+.tranca input[type=password] { width: 100%; font: 400 17px var(--f); padding: 14px 16px; border: 0; border-radius: var(--r-btn); background: var(--surface); color: var(--ink); }
+.tranca input[type=password]:focus-visible { outline: 2px solid var(--green); outline-offset: 2px; }
+.tranca label.lembrar { display: flex; align-items: center; gap: 8px; font-size: 15px; color: var(--ink2); justify-content: center; }
+.tranca button { font: 600 17px var(--f); padding: 14px; border: 0; border-radius: var(--r-btn); background: var(--green); color: var(--on-green); cursor: pointer; }
+.tranca button:disabled { opacity: .6; cursor: default; }
+.tranca .erro { color: var(--ink2); min-height: 1.4em; font-size: 15px; text-align: center; }
+[hidden] { display: none !important; }
+</style>
+</head>
+<body>
+
+<div class="tranca" id="tranca">
+  <form id="form-senha" autocomplete="on">
+    <div class="sp-brand">
+      <img src="/icon-180.png" alt="">
+      <svg viewBox="3 77 273 76" role="img" aria-label="Spot"><text x="0" y="150" font-family="Cinzel, serif" font-weight="500" font-size="100" letter-spacing="6" fill="#0B3D2E">SPOT</text></svg>
+    </div>
+    <h1>Gastos do app</h1>
+    <p>Só pros sócios. Digite a senha pra abrir.</p>
+    <input type="text" name="username" value="socios" autocomplete="username" hidden>
+    <input type="password" id="senha" name="password" autocomplete="current-password" placeholder="Senha" required>
+    <label class="lembrar"><input type="checkbox" id="lembrar" checked> Lembrar neste aparelho</label>
+    <button type="submit" id="abrir">Abrir</button>
+    <div class="erro" id="erro" role="status"></div>
+  </form>
+</div>
+
+<main class="sp" id="painel" hidden>
+  <header class="sp-top">
+    <div class="sp-brand">
+      <img src="/icon-180.png" alt="">
+      <svg viewBox="3 77 273 76" role="img" aria-label="Spot"><text x="0" y="150" font-family="Cinzel, serif" font-weight="500" font-size="100" letter-spacing="6" fill="#0B3D2E">SPOT</text></svg>
+      <button class="sair" type="button" id="sair">Sair</button>
+    </div>
+    <div class="sp-tit">
+      <h1>Gastos do app</h1>
+      <span class="sp-quando" id="sp-quando"></span>
+    </div>
+  </header>
+
+  <section class="sp-capa">
+    <div class="sp-meses" id="sp-meses" role="toolbar" aria-label="Escolher mês"></div>
+    <div class="sp-numeros">
+      <div><div class="sp-k" id="sp-rotulo-total">Total gasto</div><div class="sp-v" id="sp-total">—</div></div>
+      <div><div class="sp-k">Valor pra cada</div><div class="sp-v menor" id="sp-cada">—</div></div>
+    </div>
+  </section>
+
+  <section class="sp-sec">
+    <h2>Mês a mês</h2>
+    <p class="sp-nota">Pelo mês de uso. Toque numa barra pra ver o mês.</p>
+    <div class="sp-graf" id="sp-graf"></div>
+  </section>
+
+  <div class="sp-duas">
+    <section class="sp-sec"><h2>Por serviço</h2><div class="sp-lista" id="sp-servicos"></div></section>
+    <section class="sp-sec"><h2>Lançamentos</h2><div class="sp-lista" id="sp-lanc"></div></section>
+  </div>
+
+  <section class="sp-sec">
+    <h2>Pela frente</h2>
+    <p class="sp-nota">O que já vai ser cobrado e o que depende de decisão.</p>
+    <div class="sp-lista" id="sp-frente"></div>
+  </section>
+
+  <p class="sp-rodape" id="sp-rodape"></p>
+</main>
+
+<script>
+(() => {
+  const CHAVE = 'spot_gastos_senha';
+  const $ = (id) => document.getElementById(id);
+  const brl = new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' });
+  const usd = new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'USD' });
+  const pct = new Intl.NumberFormat('pt-BR', { style: 'percent', maximumFractionDigits: 0 });
+  const MC = ['jan', 'fev', 'mar', 'abr', 'mai', 'jun', 'jul', 'ago', 'set', 'out', 'nov', 'dez'];
+  const ML = ['janeiro', 'fevereiro', 'março', 'abril', 'maio', 'junho', 'julho', 'agosto', 'setembro', 'outubro', 'novembro', 'dezembro'];
+  const curto = (m) => { const [a, b] = m.split('-'); return MC[+b - 1] + '/' + a.slice(2); };
+  const longo = (m) => { const [a, b] = m.split('-'); return ML[+b - 1] + ' de ' + a; };
+  const r2 = (v) => Math.round(v * 100) / 100;
+  const el = (tag, cls, text) => { const e = document.createElement(tag); if (cls) e.className = cls; if (text != null) e.textContent = text; return e; };
+  const b64 = (s) => Uint8Array.from(atob(s), (c) => c.charCodeAt(0));
+  const lerSalva = () => { try { return localStorage.getItem(CHAVE) || ''; } catch (e) { return ''; } };
+  const salvar = (s) => { try { s ? localStorage.setItem(CHAVE, s) : localStorage.removeItem(CHAVE); } catch (e) {} };
+
+  let CIFRADO = null, DADOS = null, MES = 'todos';
+
+  async function baixar() {
+    if (CIFRADO) return CIFRADO;
+    const r = await fetch('/gastos-dados.json', { cache: 'no-cache' });
+    if (!r.ok) throw new Error('rede');
+    CIFRADO = await r.json();
+    return CIFRADO;
+  }
+
+  async function abrir(senha) {
+    const c = await baixar();
+    const base = await crypto.subtle.importKey('raw', new TextEncoder().encode(senha), 'PBKDF2', false, ['deriveKey']);
+    const chave = await crypto.subtle.deriveKey({ name: 'PBKDF2', hash: 'SHA-256', salt: b64(c.salt), iterations: c.iter },
+      base, { name: 'AES-GCM', length: 256 }, false, ['decrypt']);
+    const claro = await crypto.subtle.decrypt({ name: 'AES-GCM', iv: b64(c.iv) }, chave, b64(c.dados));
+    return JSON.parse(new TextDecoder().decode(claro));
+  }
+
+  async function tentar(senha, lembrar) {
+    $('abrir').disabled = true; $('erro').textContent = 'Abrindo…';
+    try {
+      DADOS = await abrir(senha);
+      if (lembrar) salvar(senha);
+      $('tranca').hidden = true; $('painel').hidden = false; $('erro').textContent = '';
+      desenhar();
+    } catch (e) {
+      $('erro').textContent = e && e.message === 'rede' ? 'Sem conexão. Tente de novo.' : 'Senha errada.';
+      salvar('');
+    } finally { $('abrir').disabled = false; }
+  }
+
+  $('form-senha').addEventListener('submit', (ev) => { ev.preventDefault(); tentar($('senha').value.trim(), $('lembrar').checked); });
+  $('sair').addEventListener('click', () => { salvar(''); DADOS = null; $('senha').value = ''; $('painel').hidden = true; $('tranca').hidden = false; });
+
+  function linha({ ic, nome, meta, val, sub, fatia, decidir }) {
+    const l = el('div', 'sp-linha');
+    l.appendChild(el('div', 'sp-ic', ic));
+    const meio = el('div'); meio.style.minWidth = '0';
+    meio.appendChild(el('div', 'sp-nome', nome));
+    if (meta) meio.appendChild(el('div', 'sp-meta', meta));
+    if (fatia != null) { const t = el('div', 'sp-trilho'); const i = el('i'); i.style.width = (fatia * 100).toFixed(1) + '%'; t.appendChild(i); meio.appendChild(t); }
+    l.appendChild(meio);
+    const dir = el('div', 'sp-dir');
+    dir.appendChild(el('div', 'sp-val', val));
+    if (sub) dir.appendChild(el('div', 'sp-sub' + (decidir ? ' decidir' : ''), sub));
+    l.appendChild(dir);
+    return l;
+  }
+
+  function desenhar() {
+    const gastos = DADOS.gastos.map((g) => ({ ...g, brl: r2(Number(g.valor) * Number(g.cambio)) }));
+    const meses = [...new Set(gastos.map((g) => g.mes))].sort();
+    if (MES !== 'todos' && !meses.includes(MES)) MES = 'todos';
+    const doPeriodo = gastos.filter((g) => MES === 'todos' || g.mes === MES);
+    const total = r2(doPeriodo.reduce((s, g) => s + g.brl, 0));
+
+    // capa
+    const barra = $('sp-meses'); barra.replaceChildren();
+    ['todos', ...meses].forEach((m) => {
+      const b = el('button', 'sp-mes', m === 'todos' ? 'Tudo' : curto(m));
+      b.type = 'button'; b.setAttribute('aria-pressed', String(m === MES));
+      b.addEventListener('click', () => { MES = m; desenhar(); });
+      barra.appendChild(b);
+    });
+    $('sp-total').textContent = brl.format(total);
+    $('sp-cada').textContent = brl.format(r2(total / 2));
+    $('sp-rotulo-total').textContent = MES === 'todos' ? 'Total gasto desde ' + (meses[0] ? longo(meses[0]) : '') : 'Total gasto em ' + longo(MES);
+    $('sp-quando').textContent = MES === 'todos' ? 'Todos os meses' : longo(MES);
+
+    // gráfico: um mês por barra, do primeiro ao último lançado
+    const box = $('sp-graf'); box.replaceChildren();
+    if (meses.length) {
+      const todos = [];
+      let [a, b] = meses[0].split('-').map(Number);
+      const [fa, fb] = meses[meses.length - 1].split('-').map(Number);
+      while (a < fa || (a === fa && b <= fb)) { todos.push(a + '-' + String(b).padStart(2, '0')); b++; if (b > 12) { b = 1; a++; } }
+      const val = new Map(todos.map((m) => [m, r2(gastos.filter((g) => g.mes === m).reduce((s, g) => s + g.brl, 0))]));
+      const W = Math.max(300, box.clientWidth || 600), H = 200, base = H - 28, topo = 28;
+      const max = Math.max(...val.values(), 1);
+      const passo = W / todos.length, bw = Math.min(72, passo * 0.6);
+      const NS = 'http://www.w3.org/2000/svg';
+      const svg = document.createElementNS(NS, 'svg'); svg.setAttribute('viewBox', `0 0 ${W} ${H}`);
+      const mk = (t, at, txt) => { const e = document.createElementNS(NS, t); Object.entries(at).forEach(([k, v]) => e.setAttribute(k, v)); if (txt != null) e.textContent = txt; svg.appendChild(e); return e; };
+      mk('line', { x1: 0, x2: W, y1: base, y2: base, stroke: '#E9E9E6' });
+      todos.forEach((m, i) => {
+        const v = val.get(m), cx = passo * i + passo / 2, h = v ? Math.max(4, (base - topo) * v / max) : 0;
+        const ativo = MES === 'todos' || MES === m;
+        const r = mk('rect', { class: 'barra', x: cx - bw / 2, y: base - h, width: bw, height: h, rx: 10, fill: ativo ? '#0B3D2E' : '#C8CFC9', tabindex: 0, role: 'button', 'aria-label': longo(m) });
+        const ir = () => { MES = MES === m ? 'todos' : m; desenhar(); };
+        r.addEventListener('click', ir);
+        r.addEventListener('keydown', (ev) => { if (ev.key === 'Enter' || ev.key === ' ') { ev.preventDefault(); ir(); } });
+        if (v) mk('text', { x: cx, y: base - h - 8, 'text-anchor': 'middle', 'font-size': 13, 'font-weight': 600, fill: ativo ? '#111111' : '#9A9A96', 'font-family': 'Inter Tight, system-ui, sans-serif' }, brl.format(v));
+        mk('text', { x: cx, y: H - 8, 'text-anchor': 'middle', 'font-size': 13, 'font-weight': MES === m ? 600 : 400, fill: MES === m ? '#111111' : '#6B6B67', 'font-family': 'Inter Tight, system-ui, sans-serif' }, curto(m));
+      });
+      box.appendChild(svg);
+    }
+
+    // por serviço
+    const sv = $('sp-servicos'); sv.replaceChildren();
+    const porServ = new Map();
+    doPeriodo.forEach((g) => porServ.set(g.servico, (porServ.get(g.servico) || 0) + g.brl));
+    const lista = [...porServ].sort((x, y) => y[1] - x[1]);
+    if (!lista.length) sv.appendChild(el('p', 'sp-vazio', 'Nada lançado neste mês ainda.'));
+    lista.forEach(([nome, t]) => sv.appendChild(linha({ ic: nome.charAt(0), nome, fatia: total ? t / total : 0, val: brl.format(r2(t)), sub: pct.format(total ? t / total : 0) })));
+
+    // lançamentos
+    const lc = $('sp-lanc'); lc.replaceChildren();
+    const lanc = [...doPeriodo].sort((x, y) => y.mes.localeCompare(x.mes) || y.brl - x.brl);
+    if (!lanc.length) lc.appendChild(el('p', 'sp-vazio', 'Nada lançado neste mês ainda.'));
+    let grupo = '';
+    lanc.forEach((g) => {
+      if (MES === 'todos' && g.mes !== grupo) { grupo = g.mes; lc.appendChild(el('div', 'sp-grupo', longo(g.mes))); }
+      lc.appendChild(linha({ ic: g.servico.charAt(0), nome: g.servico, meta: [g.para_que, g.obs].filter(Boolean).join(' · '), val: brl.format(g.brl), sub: g.moeda === 'USD' ? usd.format(g.valor) : '' }));
+    });
+
+    // pela frente
+    const fr = $('sp-frente'); fr.replaceChildren();
+    (DADOS.previstos || []).forEach((p) => fr.appendChild(linha({
+      ic: p.item.charAt(0), nome: p.item, meta: [p.quando, p.obs].filter(Boolean).join(' · '),
+      val: p.valor == null ? 'A definir' : (p.moeda === 'USD' ? usd : brl).format(p.valor),
+      sub: p.situacao, decidir: p.situacao !== 'Certo',
+    })));
+
+    $('sp-rodape').textContent = DADOS.atualizado ? 'Atualizado em ' + DADOS.atualizado + '.' : '';
+  }
+
+  let largura = window.innerWidth;
+  window.addEventListener('resize', () => { if (DADOS && Math.abs(window.innerWidth - largura) > 40) { largura = window.innerWidth; desenhar(); } });
+
+  const salva = lerSalva();
+  if (salva) { $('senha').value = salva; tentar(salva, true); }
+})();
+</script>
+</body>
+</html>
