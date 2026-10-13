@@ -40,9 +40,13 @@ li{margin-bottom:8px}
 footer{margin-top:44px;padding-top:20px;font-size:13px;color:var(--ink3);line-height:1.8}
 footer a{color:var(--ink2);font-weight:500}
 </style>
+<style>.lang-en{display:none}html.en .lang-pt{display:none}html.en .lang-en{display:block}</style>
+<script>(function(){var n=(navigator.languages&&navigator.languages[0])||navigator.language||"pt";if(!/^pt/i.test(n)){var d=document.documentElement;d.classList.add("en");d.lang="en";document.addEventListener("DOMContentLoaded",function(){var t=document.querySelector("meta[name=titulo-en]");if(t)document.title=t.content})}})();</script>
+<meta name="titulo-en" content="Support — Spot">
 </head>
 <body>
 <div class="wrap">
+<div class="lang-pt" lang="pt-BR">
 
 <header>
   <p class="marca">Spot</p>
@@ -93,6 +97,54 @@ hora, e não é avisado disso.</p>
   Spot — seus lugares · sua voz
 </footer>
 
+</div>
+<!-- versão em inglês (ferramentas/pagina-bilingue.cjs) -->
+<div class="lang-en" lang="en">
+<header>
+  <p class="marca">Spot</p>
+  <h1>Support</h1>
+  <p class="sub">Something broke, disappeared or doesn't make sense? Write to us.</p>
+</header>
+
+<div class="bloco">
+  <p>The fastest way is by email:</p>
+  <p><a class="email" href="mailto:suporte@meuspot.app">suporte@meuspot.app</a></p>
+  <p>We reply within <strong>2 business days</strong>. If you can, tell us what you were doing when the problem
+  showed up and which device you use — that usually cuts the back-and-forth in half.</p>
+</div>
+
+<h2>Delete your account</h2>
+<p>You can do it yourself, inside the app, without asking anyone:</p>
+<ul>
+  <li>Open the <strong>Profile</strong> tab</li>
+  <li>Tap <strong>Settings</strong>, at the top right</li>
+  <li>Scroll to <strong>Delete my account</strong></li>
+</ul>
+<p>This deletes everything and can't be undone: your trips, your places, your notes and reviews, your comments,
+your photos, your friends and the invite links you created.</p>
+<p>If you can't log in to do it, write to the email above from the address on your account and we'll delete it.</p>
+
+<h2>Common problems</h2>
+<p><strong>The confirmation email didn't arrive.</strong> Check your spam folder. If it isn't there, write to us —
+your email provider may be blocking it.</p>
+<p><strong>A place shows up in the wrong city.</strong> The city name comes from Google, and sometimes it returns the
+neighborhood or a nearby town. Write to us with the place and we'll fix it.</p>
+<p><strong>A friend doesn't show up in search.</strong> Search is by username, not email. Check their @ with them, or
+use the invite link, which skips that.</p>
+
+<h2>Report content or a person</h2>
+<p>In the app, on any comment or another person's profile, there's an option to <strong>report</strong> and one to
+<strong>block</strong>. We review every report within 24 hours. People you block stop showing up for you right away,
+and aren't told about it.</p>
+
+<footer>
+  <a href="/">Back to Spot</a> ·
+  <a href="/termos">Terms of Use</a> ·
+  <a href="/privacidade">Privacy Policy</a><br>
+  Spot — your places · your voice
+</footer>
+</div>
+<!-- /versão em inglês -->
 </div>
 </body>
 </html>

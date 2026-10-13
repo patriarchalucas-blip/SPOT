@@ -35,6 +35,7 @@ import Svg, { Path } from 'react-native-svg';
 import MapaMundi from './MapaMundi';
 import { BASE, SURFACE, INK, INK2, INK3, GREEN, ON_GREEN, MAP_BG, PHOTO_EMPTY } from './cores';
 import { folgaDeRolagem } from './BarraDeAbas';
+import { t } from './idioma';
 
 // Mesmo denominador do site. Ver a nota de PAISES_NO_MUNDO no index.html:
 // não é o tamanho de COUNTRIES (243), que inclui território não soberano.
@@ -86,14 +87,14 @@ function FaixaDeCheckin({ nome, acao }) {
         style={({ pressed }) => [e.checkinAdd, pressed && { opacity: 0.85 }]}
         accessibilityRole="button"
       >
-        <Text style={e.checkinAddTxt}>Adicionar</Text>
+        <Text style={e.checkinAddTxt}>{t("Adicionar")}</Text>
       </Pressable>
       <Pressable
         onPress={() => acao('checkinIgnorar')}
         hitSlop={6}
         style={({ pressed }) => [e.checkinX, pressed && { opacity: 0.4 }]}
         accessibilityRole="button"
-        accessibilityLabel="Ignorar"
+        accessibilityLabel={t("Ignorar")}
       >
         <Svg width={18} height={18} viewBox="0 0 24 24">
           <Path d="M6.5 6.5l11 11M17.5 6.5l-11 11" stroke={ON_GREEN} strokeWidth={1.8} strokeLinecap="round" fill="none" />
@@ -107,14 +108,14 @@ function FaixaDeCheckin({ nome, acao }) {
 // mapa na hora, sem precisar criar viagem.
 function MapaEmBranco({ nome, acao }) {
   const passos = [
-    ['marcarPaises', 'Marcar países que já visitei', 'o mapa pinta na hora'],
-    ['novoLugar', 'Salvar seu primeiro spot', 'um lugar que você amou ou quer ir'],
-    ['convidar', 'Chamar um amigo', 'e vejam os spots um do outro'],
+    ['marcarPaises', t('Marcar países que já visitei'), t('o mapa pinta na hora')],
+    ['novoLugar', t('Salvar seu primeiro spot'), t('um lugar que você amou ou quer ir')],
+    ['convidar', t('Chamar um amigo'), t('e vejam os spots um do outro')],
   ];
   return (
     <View style={e.branco}>
-      <Text style={e.brancoTitulo}>{nome ? 'Oi, ' + nome + '. ' : ''}Seu mapa está em branco.</Text>
-      <Text style={e.brancoSub}>Comece pelos países onde você já esteve. Leva um minuto.</Text>
+      <Text style={e.brancoTitulo}>{nome ? t('Oi, ') + nome + '. ' : ''}{t('Seu mapa está em branco.')}</Text>
+      <Text style={e.brancoSub}>{t("Comece pelos países onde você já esteve. Leva um minuto.")}</Text>
       {passos.map(([a, titulo, sub], i) => (
         <Pressable
           key={a}
@@ -247,7 +248,7 @@ export default function TelaViagens({ dados, ocupado, acao }) {
               onPress={() => acao('novoLugar')}
               style={({ pressed }) => [e.mais, pressed && { opacity: 0.6 }]}
               accessibilityRole="button"
-              accessibilityLabel="Adicionar"
+              accessibilityLabel={t("Adicionar")}
             >
               <Svg width={22} height={22} viewBox="0 0 24 24">
                 <Path d="M12 5.5v13M5.5 12h13" stroke={INK} strokeWidth={1.8} strokeLinecap="round" />
@@ -256,7 +257,7 @@ export default function TelaViagens({ dados, ocupado, acao }) {
             <Pressable
               onPress={() => acao('perfil')}
               accessibilityRole="button"
-              accessibilityLabel="Abrir seu perfil"
+              accessibilityLabel={t("Abrir seu perfil")}
             >
               {d.avatar ? (
                 <Image source={{ uri: d.avatar }} style={e.avatar} />
@@ -272,7 +273,7 @@ export default function TelaViagens({ dados, ocupado, acao }) {
           onPress={() => acao('mapa')}
           style={({ pressed }) => [e.mapa, pressed && { opacity: 0.7 }]}
           accessibilityRole="button"
-          accessibilityLabel="Abrir o mapa-múndi"
+          accessibilityLabel={t("Abrir o mapa-múndi")}
         >
           <View pointerEvents="none">
             <MapaMundi visitados={d.mapa} />
@@ -286,14 +287,14 @@ export default function TelaViagens({ dados, ocupado, acao }) {
       {d.placar !== false ? (
       <>
       <View style={e.frase}>
-        <Text style={e.frase1}>Você conheceu</Text>
-        <Text style={e.frase2}>{fracaoDoMundo(d.paises) + ' do mundo'}</Text>
+        <Text style={e.frase1}>{t("Você conheceu")}</Text>
+        <Text style={e.frase2}>{fracaoDoMundo(d.paises) + t(' do mundo')}</Text>
       </View>
       <View style={e.placar}>
         <View style={e.placarCol}>
-          <LinhaDoPlacar n={d.paises} rotulo="países" onPress={() => acao('mapa')} />
-          <LinhaDoPlacar n={d.cidades} rotulo="cidades" onPress={() => acao('lista', 'cities')} />
-          <LinhaDoPlacar n={d.spots} rotulo="spots" onPress={() => acao('lista', 'spots')} />
+          <LinhaDoPlacar n={d.paises} rotulo={t("países")} onPress={() => acao('mapa')} />
+          <LinhaDoPlacar n={d.cidades} rotulo={t("cidades")} onPress={() => acao('lista', 'cities')} />
+          <LinhaDoPlacar n={d.spots} rotulo={t("spots")} onPress={() => acao('lista', 'spots')} />
         </View>
       </View>
       </>
@@ -304,7 +305,7 @@ export default function TelaViagens({ dados, ocupado, acao }) {
       {d.emBranco ? <MapaEmBranco nome={d.emBranco.nome} acao={acao} /> : null}
 
       {d.convite ? (
-        <Text style={e.convite}>Crie uma viagem para pintar o primeiro país.</Text>
+        <Text style={e.convite}>{t("Crie uma viagem para pintar o primeiro país.")}</Text>
       ) : null}
 
       {d.checkin ? <FaixaDeCheckin nome={d.checkin.nome} acao={acao} /> : null}
@@ -313,7 +314,7 @@ export default function TelaViagens({ dados, ocupado, acao }) {
           cidade de casa não é viagem. */}
       {d.casa ? (
         <View style={e.corpo}>
-          <Text style={e.secaoTitulo}>Onde você mora</Text>
+          <Text style={e.secaoTitulo}>{t("Onde você mora")}</Text>
           <CardDeViagem
             t={{ nome: d.casa.cidade, meta: d.casa.meta, foto: d.casa.foto }}
             grande
@@ -327,14 +328,14 @@ export default function TelaViagens({ dados, ocupado, acao }) {
         // a3 (handoff 01/10): conta sem nenhum spot. 'Colar uma lista' só com a
         // IA ligada no servidor (o site manda primeiro.ia).
         <View style={e.corpo}>
-          <Text style={e.primeiroTitulo}>Seu primeiro spot</Text>
-          <Text style={e.vazioTexto}>Salve um lugar que você indicaria pra qualquer amigo.</Text>
+          <Text style={e.primeiroTitulo}>{t("Seu primeiro spot")}</Text>
+          <Text style={e.vazioTexto}>{t("Salve um lugar que você indicaria pra qualquer amigo.")}</Text>
           <Pressable
             onPress={() => acao('novoLugar')}
             style={({ pressed }) => [e.adicionar, pressed && { opacity: 0.85 }]}
             accessibilityRole="button"
           >
-            <Text style={e.adicionarTxt}>Adicionar spot</Text>
+            <Text style={e.adicionarTxt}>{t("Adicionar spot")}</Text>
           </Pressable>
           {d.primeiro.ia ? (
             <>
@@ -343,27 +344,27 @@ export default function TelaViagens({ dados, ocupado, acao }) {
                 style={({ pressed }) => [e.adicionar, e.secundario, pressed && { opacity: 0.85 }]}
                 accessibilityRole="button"
               >
-                <Text style={[e.adicionarTxt, e.secundarioTxt]}>Colar uma lista do celular</Text>
+                <Text style={[e.adicionarTxt, e.secundarioTxt]}>{t("Colar uma lista do celular")}</Text>
               </Pressable>
-              <Text style={e.primeiroNota}>Notas, WhatsApp, Instagram: cole o texto e o Spot encontra os lugares.</Text>
+              <Text style={e.primeiroNota}>{t("Notas, WhatsApp, Instagram: cole o texto e o Spot encontra os lugares.")}</Text>
             </>
           ) : null}
         </View>
       ) : d.vazio ? (
         <View style={e.corpo}>
-          <Text style={e.secaoTitulo}>Viagens</Text>
-          <Text style={e.vazioTexto}>{d.vazioTexto || 'Salve o primeiro spot e a viagem aparece aqui sozinha.'}</Text>
+          <Text style={e.secaoTitulo}>{t("Viagens")}</Text>
+          <Text style={e.vazioTexto}>{d.vazioTexto || t('Salve o primeiro spot e a viagem aparece aqui sozinha.')}</Text>
           <Pressable
             onPress={() => acao('novoLugar')}
             style={({ pressed }) => [e.adicionar, pressed && { opacity: 0.85 }]}
             accessibilityRole="button"
           >
-            <Text style={e.adicionarTxt}>Adicionar spot</Text>
+            <Text style={e.adicionarTxt}>{t("Adicionar spot")}</Text>
           </Pressable>
         </View>
       ) : (
         <View style={e.corpo}>
-          <Text style={e.secaoTitulo}>Viagens</Text>
+          <Text style={e.secaoTitulo}>{t("Viagens")}</Text>
 
           {/* Continente: aba de texto, não pílula colorida. A ativa é tinta
               com um traço embaixo — pastilha preenchida saiu do app inteiro. */}

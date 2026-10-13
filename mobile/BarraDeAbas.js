@@ -25,6 +25,7 @@ import { Platform, Pressable, StyleSheet, Text, View } from 'react-native';
 import { BlurView } from 'expo-blur';
 import Svg, { Circle, Path } from 'react-native-svg';
 import { BASE, INK, INK3, GREEN } from './cores';
+import { t } from './idioma';
 
 // Valores lidos do :root do index.html — não inventar aqui.
 
@@ -115,7 +116,7 @@ export default function BarraDeAbas({ ativa, aoTocar, margemDeBaixo, pontos }) {
                 style={({ pressed }) => [estilo.item, pressed && estilo.itemPressionado]}
                 accessibilityRole="tab"
                 accessibilityState={{ selected: sel }}
-                accessibilityLabel={a.rotulo}
+                accessibilityLabel={t(a.rotulo)}
                 // Alvo de toque de 44pt é o mínimo da Apple; o rótulo sozinho
                 // não chega lá.
                 hitSlop={4}
@@ -124,7 +125,7 @@ export default function BarraDeAbas({ ativa, aoTocar, margemDeBaixo, pontos }) {
                   <Icone nome={a.icone} cor={sel ? GREEN : INK3} />
                   {pontos && pontos[a.tela] ? <View style={estilo.ponto} /> : null}
                 </View>
-                <Text style={[estilo.rotulo, sel && estilo.rotuloAtivo]}>{a.rotulo}</Text>
+                <Text style={[estilo.rotulo, sel && estilo.rotuloAtivo]}>{t(a.rotulo)}</Text>
               </Pressable>
             );
           })}

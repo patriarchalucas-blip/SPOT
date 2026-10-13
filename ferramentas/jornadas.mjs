@@ -314,6 +314,7 @@ const PNG1 = Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQV
 // ═══ o navegador ═══
 const br = await puppeteer.launch({ executablePath: 'C:/Program Files/Google/Chrome/Application/chrome.exe', args: ['--no-first-run'] });
 const PAGINAS = {};
+const I18N_FALTA = new Set();
 async function abrirAparelho(nome, { casca }) {
   // Contexto separado = aparelho separado (localStorage próprio).
   const ctx = await br.createBrowserContext();
@@ -326,6 +327,10 @@ async function abrirAparelho(nome, { casca }) {
   // Recarga que o teste não pediu (o app sai da conta, por exemplo) derruba a
   // próxima chamada com "detached Frame" — aqui ela aparece com nome e hora.
   pg.on('framenavigated', f => { if (f === pg.mainFrame() && !pg.__indo) console.log(`  [recarregou sozinho] aparelho ${nome} · jornada ${JORNADA} · ${f.url()}`) });
+  // Língua (13/10): o Chrome do teste é em inglês; sem isto o app abriria em
+  // inglês. IDIOMA=en roda as jornadas no app em inglês.
+  await pg.evaluateOnNewDocument((lang) => { try { localStorage.setItem('spot_idioma', lang) } catch (e) {} }, process.env.IDIOMA || 'pt');
+  if (process.env.IDIOMA === 'en') await pg.exposeFunction('__i18nFalta', (s) => I18N_FALTA.add(s));
   await pg.evaluateOnNewDocument((casca) => {
     // O seletor de confirmação do app (perguntar) é testado à parte; aqui
     // "Sim" sempre, pra a jornada andar.
@@ -1223,6 +1228,11 @@ confere(!ERROS_APP.length, 'o app não reportou erro pra /api/erro', ERROS_APP.s
 if (VERBOSO) console.log('recusas do RLS:', JSON.stringify(RECUSAS).slice(0, 2000));
 console.log('\nASSERÇÕES: ' + (OKS.length + FALHAS.length) + ' · ok ' + OKS.length);
 console.log('FALHAS (' + FALHAS.length + '):'); FALHAS.forEach(f => console.log(' -', f));
+if (process.env.IDIOMA === 'en') {
+  const fs = await import('node:fs');
+  fs.writeFileSync('_local/i18n-faltando-jorn.json', JSON.stringify([...I18N_FALTA].sort(), null, 1));
+  console.log('SEM TRADUÇÃO: ' + I18N_FALTA.size + ' → _local/i18n-faltando-jorn.json');
+}
 await br.close();
 process.exit(FALHAS.length ? 1 : 0);
 }

@@ -68,6 +68,7 @@ import * as Notifications from 'expo-notifications';
 import * as Device from 'expo-device';
 import Constants from 'expo-constants';
 import { BASE, INK, INK2, GREEN } from './cores';
+import { t, definirIdioma } from './idioma';
 
 // Para onde o navegador do sistema devolve o login. Tem que ser IGUALZINHO
 // ao que está liberado no banco, senão a volta cai no site e a pessoa fica
@@ -290,6 +291,9 @@ function Conteudo() {
   // por aqui. A barra reflete o app, nunca o contrário.
   const [abaAtiva, setAbaAtiva] = useState('dashboard');
   const [pedidosEsperando, setPedidosEsperando] = useState(0);
+  // Língua das telas nativas (13/10): o site avisa qual é; o estado só existe
+  // pra redesenhar as abas quando muda.
+  const [, setIdioma] = useState('pt');
   const [mostrarAbas, setMostrarAbas] = useState(false);
   // O site diz se o Explorar dele é o que vale (o Explorar com mapa, 30/09).
   // Aí a tela nativa não cobre a aba: quem desenha é a página, e a barra de
@@ -523,6 +527,11 @@ function Conteudo() {
     }
     // Quantos pedidos de amizade esperam resposta (08/10): o site manda ao
     // carregar e depois de aceitar/recusar. Acende o ponto na aba Amigos.
+    if (dados && dados.tipo === 'idioma') {
+      definirIdioma(dados.lang);
+      setIdioma(dados.lang);
+      return;
+    }
     if (dados && dados.tipo === 'pedidos') {
       setPedidosEsperando(Number(dados.n) || 0);
       return;
@@ -619,12 +628,12 @@ function Conteudo() {
             contentContainerStyle={estilo.centro}
             refreshControl={<RefreshControl refreshing={false} onRefresh={tentarDeNovo} tintColor={PAPEL} />}
           >
-            <Text style={estilo.titulo}>Sem conexão</Text>
+            <Text style={estilo.titulo}>{t("Sem conexão")}</Text>
             <Text style={estilo.texto}>
               O Spot precisa de internet para carregar seus lugares. Confere a conexão e tenta de novo.
             </Text>
             <Pressable onPress={tentarDeNovo} style={estilo.botao} accessibilityRole="button">
-              <Text style={estilo.botaoTexto}>Tentar de novo</Text>
+              <Text style={estilo.botaoTexto}>{t("Tentar de novo")}</Text>
             </Pressable>
           </ScrollView>
         </SafeAreaView>

@@ -38,6 +38,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Svg, { Circle, Path } from 'react-native-svg';
 import { BASE, SURFACE, INK, INK2, INK3, VERDE, ON_GREEN, PHOTO_EMPTY, FRAUNCES } from './cores';
 import { folgaDeRolagem } from './BarraDeAbas';
+import { t } from './idioma';
 
 // :root do index.html — não inventar aqui.
 
@@ -106,7 +107,7 @@ function BotaoAdicionar({ onPress }) {
       onPress={onPress}
       style={({ pressed }) => [e.adicionar, pressed && { transform: [{ scale: 0.94 }] }]}
       accessibilityRole="button"
-      accessibilityLabel="Adicionar amigo"
+      accessibilityLabel={t("Adicionar amigo")}
       hitSlop={8}
     >
       <Svg width={18} height={18} viewBox="0 0 24 24">
@@ -126,9 +127,9 @@ function ExemploDeFeed() {
         <Avatar iniciais="M" />
         <View style={{ flex: 1 }}>
           <Text style={e.exLinha}>
-            <Text style={e.exForte}>Marina</Text> foi a <Text style={e.exForte}>Cervejaria Ramiro</Text>
+            <Text style={e.exForte}>Marina</Text>{t(' foi a ')}<Text style={e.exForte}>Cervejaria Ramiro</Text>
           </Text>
-          <Text style={e.exMeta}>Lisboa · há 2 dias</Text>
+          <Text style={e.exMeta}>{t("Lisboa · há 2 dias")}</Text>
         </View>
       </View>
       <View style={e.exFoto} />
@@ -142,13 +143,13 @@ function VazioDeAmigos({ convidou, acao }) {
     return (
       <View style={e.vz}>
         <View style={e.vzConvite}>
-          <Text style={e.vzConviteTit}>Convite enviado</Text>
-          <Text style={e.vzConviteTxt}>Quando alguém entrar pelo seu link, aparece aqui e vira seu amigo.</Text>
+          <Text style={e.vzConviteTit}>{t("Convite enviado")}</Text>
+          <Text style={e.vzConviteTxt}>{t("Quando alguém entrar pelo seu link, aparece aqui e vira seu amigo.")}</Text>
           <Pressable onPress={() => acao('convidar')} hitSlop={8}>
-            <Text style={e.vzReenviar}>Enviar de novo</Text>
+            <Text style={e.vzReenviar}>{t("Enviar de novo")}</Text>
           </Pressable>
         </View>
-        <Text style={e.vzRotulo}>Assim fica o seu feed</Text>
+        <Text style={e.vzRotulo}>{t("Assim fica o seu feed")}</Text>
         <ExemploDeFeed />
       </View>
     );
@@ -157,18 +158,18 @@ function VazioDeAmigos({ convidou, acao }) {
     <View style={e.vz}>
       <ExemploDeFeed />
       <Text style={e.vzTitulo}>Aqui aparecem os spots{'\n'}que seus amigos salvam.</Text>
-      <Text style={e.vzSub}>Quem entrar pelo seu link já vira seu amigo.</Text>
+      <Text style={e.vzSub}>{t("Quem entrar pelo seu link já vira seu amigo.")}</Text>
       <Pressable
         onPress={() => acao('convidar')}
         style={({ pressed }) => [e.vzBotao, pressed && { opacity: 0.85 }]}
         accessibilityRole="button"
       >
-        <Text style={e.vzBotaoTxt}>Compartilhar convite</Text>
+        <Text style={e.vzBotaoTxt}>{t("Compartilhar convite")}</Text>
       </Pressable>
       {/* A busca por @username é a da folha de adicionar amigo, que já
           existe: o campo abre ela. */}
       <Pressable onPress={() => acao('adicionar')} style={e.vzBusca} accessibilityRole="button">
-        <Text style={e.vzBuscaTxt}>Buscar pelo nome ou @</Text>
+        <Text style={e.vzBuscaTxt}>{t("Buscar pelo nome ou @")}</Text>
       </Pressable>
     </View>
   );
@@ -252,7 +253,7 @@ function CardDeVisita({ item, aoAbrir, aoPerfil, aoSalvar, salvando }) {
           <View style={e.cardLinha}>
             {semEstrelas ? <View /> : <Estrelas n={item.estrelas} />}
             {item.salvo ? (
-              <Text style={e.jaSalvo}>na sua lista</Text>
+              <Text style={e.jaSalvo}>{t("na sua lista")}</Text>
             ) : (
               <Pressable
                 onPress={salvando ? undefined : aoSalvar}
@@ -261,7 +262,7 @@ function CardDeVisita({ item, aoAbrir, aoPerfil, aoSalvar, salvando }) {
               >
                 {/* Salvar pode ir ate o Google pra descobrir o pais. Sem este
                     aviso o toque parece morto e a pessoa toca de novo. */}
-                <Text style={e.salvarTxt}>{salvando ? 'Adicionando...' : '+ minha lista'}</Text>
+                <Text style={e.salvarTxt}>{salvando ? t('Adicionando...') : t('+ minha lista')}</Text>
               </Pressable>
             )}
           </View>
@@ -297,7 +298,7 @@ export default function TelaAmigos({ dados, ocupado, acao }) {
     return (
       <View style={e.fundo}>
         <View style={[e.topo, { paddingTop: 26 }]}>
-          <Text style={e.titulo}>Amigos</Text>
+          <Text style={e.titulo}>{t("Amigos")}</Text>
           <BotaoAdicionar onPress={() => acao('adicionar')} />
         </View>
         <ScrollView
@@ -310,7 +311,7 @@ export default function TelaAmigos({ dados, ocupado, acao }) {
           {dados.vazio.pedidos ? (
             <Pressable onPress={() => acao('aba', 'pedidos')} style={e.vzPedidos}>
               <Text style={e.vzPedidosTxt}>
-                {dados.vazio.pedidos}{dados.vazio.pedidos === 1 ? ' pedido de amizade' : ' pedidos de amizade'} ›
+                {dados.vazio.pedidos}{dados.vazio.pedidos === 1 ? t(' pedido de amizade') : t(' pedidos de amizade')} ›
               </Text>
             </Pressable>
           ) : dados.vazio.enviados ? (
@@ -318,7 +319,7 @@ export default function TelaAmigos({ dados, ocupado, acao }) {
             // em lugar nenhum — achou que o app tinha perdido.
             <Pressable onPress={() => acao('aba', 'pedidos')} style={e.vzPedidos}>
               <Text style={e.vzPedidosTxt}>
-                {dados.vazio.enviados === 1 ? 'Pedido enviado · esperando aceitar' : dados.vazio.enviados + ' pedidos enviados · esperando aceitar'} ›
+                {dados.vazio.enviados === 1 ? t('Pedido enviado · esperando aceitar') : dados.vazio.enviados + t(' pedidos enviados · esperando aceitar')} ›
               </Text>
             </Pressable>
           ) : null}
@@ -331,12 +332,12 @@ export default function TelaAmigos({ dados, ocupado, acao }) {
   return (
     <View style={e.fundo}>
       <View style={[e.topo, { paddingTop: 26 /* a casca já desconta o topo (SafeAreaView) */ }]}>
-        <Text style={e.titulo}>Amigos</Text>
+        <Text style={e.titulo}>{t("Amigos")}</Text>
         <View style={e.topoDireita}>
           {/* Atividade (05/10): pedidos e o que aconteceu com os seus spots.
               Abre a tela do site; o ponto verde é novidade não vista. */}
-          <Pressable onPress={() => acao('atividade')} hitSlop={8} style={e.ativ} accessibilityRole="button" accessibilityLabel="Atividade">
-            <Text style={e.ativTxt}>Atividade</Text>
+          <Pressable onPress={() => acao('atividade')} hitSlop={8} style={e.ativ} accessibilityRole="button" accessibilityLabel={t("Atividade")}>
+            <Text style={e.ativTxt}>{t("Atividade")}</Text>
             {dados.atividadeNova ? <View style={e.ativPonto} /> : null}
           </Pressable>
           <BotaoAdicionar onPress={() => acao('adicionar')} />
@@ -375,9 +376,9 @@ export default function TelaAmigos({ dados, ocupado, acao }) {
         {aba === 'pedidos' ? (
           <>
             {!recebidos.length && !enviados.length ? (
-              <Vazio titulo="Nenhum pedido" texto="Pedidos recebidos e enviados aparecem aqui" />
+              <Vazio titulo={t("Nenhum pedido")} texto={t("Pedidos recebidos e enviados aparecem aqui")} />
             ) : null}
-            {recebidos.length ? <Text style={e.secao}>Recebidos</Text> : null}
+            {recebidos.length ? <Text style={e.secao}>{t("Recebidos")}</Text> : null}
             {recebidos.map((p) => (
               <View key={p.pedido} style={e.reqCard}>
                 <Avatar iniciais={p.iniciais} foto={p.foto} />
@@ -390,15 +391,15 @@ export default function TelaAmigos({ dados, ocupado, acao }) {
                   ) : null}
                 </View>
                 <Pressable onPress={() => acao('recusar', p.pedido)} style={[e.reqBotao, e.reqRecusar]}>
-                  <Text style={e.reqRecusarTxt}>Recusar</Text>
+                  <Text style={e.reqRecusarTxt}>{t("Recusar")}</Text>
                 </Pressable>
                 <Pressable onPress={() => acao('aceitar', p.pedido)} style={[e.reqBotao, e.reqAceitar]}>
-                  <Text style={e.reqAceitarTxt}>Aceitar</Text>
+                  <Text style={e.reqAceitarTxt}>{t("Aceitar")}</Text>
                 </Pressable>
               </View>
             ))}
             {enviados.length ? (
-              <Text style={[e.secao, recebidos.length ? { marginTop: 24 } : null]}>Enviados</Text>
+              <Text style={[e.secao, recebidos.length ? { marginTop: 24 } : null]}>{t("Enviados")}</Text>
             ) : null}
             {enviados.map((p) => (
               <View key={p.pedido} style={e.reqCard}>
@@ -408,20 +409,20 @@ export default function TelaAmigos({ dados, ocupado, acao }) {
                 <View style={{ flex: 1, minWidth: 0 }}>
                   <Text style={e.reqNome} numberOfLines={1}>{p.nome}</Text>
                   {p.detalhe ? (
-                    <Text style={e.reqDetalhe} numberOfLines={2}>{'Esperando aceitar · ' + p.detalhe}</Text>
+                    <Text style={e.reqDetalhe} numberOfLines={2}>{t('Esperando aceitar · ') + p.detalhe}</Text>
                   ) : (
-                    <Text style={e.reqDetalhe} numberOfLines={1}>Esperando aceitar</Text>
+                    <Text style={e.reqDetalhe} numberOfLines={1}>{t("Esperando aceitar")}</Text>
                   )}
                 </View>
                 <Pressable onPress={() => acao('cancelar', p.pedido)} style={[e.reqBotao, e.reqRecusar]}>
-                  <Text style={e.reqRecusarTxt}>Cancelar</Text>
+                  <Text style={e.reqRecusarTxt}>{t("Cancelar")}</Text>
                 </Pressable>
               </View>
             ))}
           </>
         ) : aba === 'amigos' ? (
           !amigos.length ? (
-            <Vazio titulo="Sem amigos ainda" texto="Toca no + pra adicionar um amigo pelo nome" />
+            <Vazio titulo={t("Sem amigos ainda")} texto={t("Toca no + pra adicionar um amigo pelo nome")} />
           ) : (
             amigos.map((p) => (
               <Pressable
@@ -437,9 +438,9 @@ export default function TelaAmigos({ dados, ocupado, acao }) {
             ))
           )
         ) : !amigos.length ? (
-          <Vazio titulo="Sem amigos ainda" texto="Adiciona alguém pelo username pra ver a atividade aqui" />
+          <Vazio titulo={t("Sem amigos ainda")} texto={t("Adiciona alguém pelo username pra ver a atividade aqui")} />
         ) : !feed.length ? (
-          <Vazio titulo="Nada por aqui ainda" texto="Seus amigos ainda não marcaram viagens nem spots" />
+          <Vazio titulo={t("Nada por aqui ainda")} texto={t("Seus amigos ainda não marcaram viagens nem spots")} />
         ) : (
           feed.map((it) =>
             it.tipo === 'visita' ? (

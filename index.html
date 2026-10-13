@@ -2,6 +2,15 @@
 <html lang="pt-BR">
 <head>
 <meta charset="UTF-8">
+<!-- IDIOMA (13/10/2026): o app em inglês. Escolha em Ajustes (spot_idioma) ou,
+     sem escolha, a língua do aparelho: português fica português, qualquer
+     outra vira inglês. Em português NADA a mais carrega. Ver i18n/motor.js. -->
+<script>
+(function(){var e=null;try{e=localStorage.getItem('spot_idioma')}catch(x){}
+ var n=(navigator.languages&&navigator.languages[0])||navigator.language||'pt';
+ window.IDIOMA=(e==='pt'||e==='en')?e:(/^pt/i.test(n)?'pt':'en');
+ if(window.IDIOMA==='en'){document.documentElement.lang='en';document.write('<script src="/i18n/en.js"><\/script><script src="/i18n/motor.js"><\/script>')}})();
+</script>
 <!-- As fotos de lugar vêm do CDN do Google (o /api/place-photo redireciona
      pra lá): abrir a conexão já na carga tira o aperto de mão da 1ª foto. -->
 <!-- Sem crossorigin (08/10): <img> pede sem CORS, e a conexão aberta COM
@@ -3070,6 +3079,7 @@ body.exm .exm-filtros{position:relative;z-index:1}
 <div class="prof-linha prof-sair" style="margin-top:10px;border-top:1px solid var(--border);border-bottom:none" onclick="signOut()"><span class="pl-txt">Sair da conta</span></div>
 <div class="prof-linha" onclick="abrirBloqueados()"><span class="pl-txt">Pessoas bloqueadas</span></div>
 <div class="prof-linha" onclick="closeOv('ov-editperfil');setTimeout(abrirTutorial,250)"><span class="pl-txt">Como o Spot funciona</span><span class="pl-seta">›</span></div>
+<div class="prof-linha" onclick="trocarIdioma()"><span class="pl-txt">Idioma<span class="pl-valor" id="cfgIdioma" data-sem-traduzir></span></span><span class="pl-seta">›</span></div>
 <!-- Termos e privacidade acessiveis DE DENTRO do app: a diretriz 1.2 da Apple
      pede termos publicados, e o revisor procura por eles aqui. So ter a URL na
      ficha da loja nao basta. -->
@@ -4353,7 +4363,7 @@ function plnTextoProGrupo(grupos){
   const sobra=grupos.length-cabem;
   const amigos=[...PLN.amigos].map(plnPrimeiro);
   const fim=(sobra>0?'+ '+sobra+(sobra===1?' spot':' spots')+' no Spot: ':'No Spot: ')+location.host;
-  return{texto:'Planejando '+plnRotuloDestinos()+' com '+plnJuntar(amigos)+':\n\n'+blocos.join('\n\n')+'\n\n'+fim,cortou:sobra>0};
+  return{texto:trTexto('Planejando '+plnRotuloDestinos()+' com '+plnJuntar(amigos)+':\n\n'+blocos.join('\n\n')+'\n\n'+fim),cortou:sobra>0};
 }
 // "Rafa foi, 5★" · "Rafa foi, 5★ · Ana foi" · "Ana quer ir"
 function plnFraseCurta(g,fora){
@@ -5292,7 +5302,7 @@ function textoDoTop(){
     if(f)f=f.charAt(0).toLowerCase()+f.slice(1);
     return (i+1)+'. '+x.name+(m.comCidade&&cityOf(x)?' ('+cityOf(x)+')':'')+(f?': '+f:'');
   });
-  return m.titulo+':\n\n'+linhas.join('\n')+'\n\nOs '+m.lista.length+' no Spot: meuspot.app';
+  return trTexto(m.titulo+':\n\n'+linhas.join('\n')+'\n\nOs '+m.lista.length+' no Spot: meuspot.app');
 }
 function abrirMandarTop(origem){
   {
@@ -6682,6 +6692,8 @@ function fotoPraCasca(u){
 
 function falarComACasca(msg){
   if(!naCasca())return;
+  // Em inglês, o que a aba nativa mostra sai traduzido (i18n/motor.js).
+  if(window.IDIOMA==='en'&&window.SPOT_I18N)msg=window.SPOT_I18N.trObj(msg);
   try{window.ReactNativeWebView.postMessage(JSON.stringify(msg))}catch(e){}
 }
 
@@ -6816,6 +6828,7 @@ function ligarNotificacoes(){
 // sem essa limpeza a segunda conta do aparelho ficava sem aviso.
 async function guardarEnderecoPush(){
   if(!ENDERECO_PUSH||!S.user)return;
+  avisarIdiomaAoServidor();
   try{
     // Cabeçalhos vão no TERCEIRO argumento: sbFetch reescreve opts.headers
     // pra colar a apikey, então o que for posto dentro de opts é descartado.
@@ -12685,6 +12698,8 @@ const COUNTRIES=[
   {flag:'🇼🇫',name:'Wallis e Futuna',region:'Oceania',geo:'Wallis and Futuna'},{flag:'🇿🇼',name:'Zimbábue',region:'África',geo:'Zimbabwe'},{flag:'🇿🇲',name:'Zâmbia',region:'África',geo:'Zambia'},
   {flag:'🇿🇦',name:'África do Sul',region:'África',geo:'South Africa'},{flag:'🇦🇹',name:'Áustria',region:'Europa',geo:'Austria'},{flag:'🇮🇳',name:'Índia',region:'Ásia',geo:'India'}
 ];
+// O motor do inglês (i18n/motor.js) traduz o nome do país pela bandeira: const não fica em window.
+window.COUNTRIES=COUNTRIES;
 // Antes pedia o PAÍS de uma lista fixa de 243. Agora pede a CIDADE (busca
 // de verdade, via Places API) e o país é identificado sozinho a partir
 // dela — igual o Google Maps mostra "São Paulo, Brasil". `destinations`
@@ -19546,6 +19561,41 @@ ligarOffline();
 ligarNotificacoes();
 ligarAbasNativas();
 startLoginPhotos();
+
+// ═══ IDIOMA (13/10/2026) ═══
+// Em inglês, o que a aba nativa devolve numa ação (o nome de uma região, por
+// exemplo) saiu traduzido pelo trObj de falarComACasca: aqui volta pro
+// português antes de o site procurar.
+if(window.IDIOMA==='en'&&window.SPOT_I18N)['acaoDeViagens','acaoDeExplorar','acaoDePerfil','acaoDeAmigos'].forEach(function(n){
+  const f=window[n];if(typeof f!=='function')return;
+  window[n]=function(acao,valor){return f.call(this,acao,window.SPOT_I18N.voltar(valor))};
+});
+// A notificação sai na língua de quem recebe (functions/api/notificar.js,
+// op:'idioma'). Só manda quando muda: uma gravação por pessoa, não por abertura.
+function avisarIdiomaAoServidor(){
+  if(!S.user)return;
+  const k='spot_idioma_avisado_'+S.user.id,lang=window.IDIOMA==='en'?'en':'pt';
+  try{if(localStorage.getItem(k)===lang)return}catch(e){}
+  ensureToken().then(tk=>{
+    if(!tk)return;
+    return fetch('/api/notificar',{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+tk},body:JSON.stringify({op:'idioma',lang})})
+      .then(r=>{if(r.ok)try{localStorage.setItem(k,lang)}catch(e){}});
+  }).catch(()=>{});
+}
+// Texto de várias linhas que sai do app (mandar pro grupo, top): o motor
+// traduz frase por frase da tela; aqui vai linha por linha.
+function trTexto(t){return window.IDIOMA==='en'&&window.SPOT_I18N?String(t).split('\n').map(l=>window.SPOT_I18N.tr(l)).join('\n'):t}
+function nomeDoIdioma(){return window.IDIOMA==='en'?'English':'Português'}
+async function trocarIdioma(){
+  const r=await perguntar('Idioma','',[{rotulo:'Português',valor:'pt'},{rotulo:'English',valor:'en'}]);
+  if(r!=='pt'&&r!=='en'||r===window.IDIOMA)return;
+  try{localStorage.setItem('spot_idioma',r)}catch(e){}
+  location.reload();
+}
+{const v=document.getElementById('cfgIdioma');if(v)v.textContent=nomeDoIdioma()}
+// A casca desenha as abas nativas na mesma língua (mobile/idioma.js). Casca
+// antiga ignora a mensagem e fica em português.
+try{falarComACasca({tipo:'idioma',lang:window.IDIOMA==='en'?'en':'pt'})}catch(e){}
 
 </script>
 </body>

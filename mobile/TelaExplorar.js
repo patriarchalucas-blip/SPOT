@@ -29,6 +29,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Svg, { Circle, Path } from 'react-native-svg';
 import { BASE, SURFACE, INK, INK2, INK3, VERDE, ON_GREEN, PHOTO_EMPTY, FRAUNCES } from './cores';
 import { folgaDeRolagem } from './BarraDeAbas';
+import { t } from './idioma';
 
 
 function IconeBusca({ cor = INK3 }) {
@@ -84,7 +85,7 @@ function CardDeLugar({ item, aoSalvar, aoQueroIr }) {
             hitSlop={6}
             style={({ pressed }) => [e.mais, e.maisNaFoto, (pressed || item.salvando) && { opacity: 0.6 }]}
             accessibilityRole="button"
-            accessibilityLabel="Salvar em Quero ir"
+            accessibilityLabel={t("Salvar em Quero ir")}
           >
             <Text style={e.maisTxt}>{item.salvando ? '…' : '+'}</Text>
           </Pressable>
@@ -98,7 +99,7 @@ function CardDeLugar({ item, aoSalvar, aoQueroIr }) {
         <Text style={e.aval} numberOfLines={2}>
           {item.linha
             ? item.linha
-            : item.avaliacoes + ' avaliações no Google' + (item.autor && item.foto && !falhou ? ' · foto de ' + item.autor : '')}
+            : item.avaliacoes + t(' avaliações no Google') + (item.autor && item.foto && !falhou ? t(' · foto de ') + item.autor : '')}
         </Text>
 
       </View>
@@ -115,11 +116,11 @@ function FolhaDeCozinhas({ aberta, cozinhas, atual, fechar, escolher }) {
   for (let i = 0; i < cozinhas.length; i += 2) colunas.push(cozinhas.slice(i, i + 2));
   return (
     <Modal visible={aberta} transparent animationType="slide" onRequestClose={fechar}>
-      <Pressable style={e.scrim} onPress={fechar} accessibilityLabel="Fechar" />
+      <Pressable style={e.scrim} onPress={fechar} accessibilityLabel={t("Fechar")} />
       <View style={[e.folha, { paddingBottom: 34 + margem.bottom }]}>
         <View style={e.alca} />
         <View style={e.folhaCab}>
-          <Text style={e.folhaTitulo}>O que você quer comer?</Text>
+          <Text style={e.folhaTitulo}>{t("O que você quer comer?")}</Text>
           <Text style={e.folhaTipos}>{Math.max(cozinhas.length - 1, 0)} tipos</Text>
         </View>
         <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={e.grade}>
@@ -176,7 +177,7 @@ export default function TelaExplorar({ dados, ocupado, acao }) {
       <View style={[e.topo, { paddingTop: 26 /* a casca já desconta o topo (SafeAreaView) */ }]}>
         {/* O site tem esta palavra no HTML mas a esconde por CSS. Aqui ela
             aparecia, e o app ficava com uma linha a mais que o site. */}
-        <Text style={e.titulo}>Tendências por lugar</Text>
+        <Text style={e.titulo}>{t("Tendências por lugar")}</Text>
         {/* "Para você" e "Amigos" (26/09, ideia do Lucas): acima da busca,
             alternando entre o que o Google recomenda e o que os amigos salvaram
             DENTRO da área buscada. */}
@@ -205,7 +206,7 @@ export default function TelaExplorar({ dados, ocupado, acao }) {
               onFocus={() => acao('sugerir', texto)}
               selectTextOnFocus
               clearButtonMode="while-editing"
-              placeholder="Cidade, bairro ou rua"
+              placeholder={t("Cidade, bairro ou rua")}
               placeholderTextColor={INK3}
               returnKeyType="search"
               onSubmitEditing={buscar}
@@ -214,12 +215,12 @@ export default function TelaExplorar({ dados, ocupado, acao }) {
             />
           </View>
           <Pressable onPress={buscar} style={({ pressed }) => [e.ir, pressed && { opacity: 0.85 }]}>
-            <Text style={e.irTxt}>Ir</Text>
+            <Text style={e.irTxt}>{t("Ir")}</Text>
           </Pressable>
         </View>
         {(d.sugestoes || []).length ? (
           <View style={e.sugCaixa}>
-            {d.sugestoesModo === 'recentes' ? <Text style={e.sugTitulo}>Buscas recentes</Text> : null}
+            {d.sugestoesModo === 'recentes' ? <Text style={e.sugTitulo}>{t("Buscas recentes")}</Text> : null}
             {d.sugestoes.map((x) => (
               <Pressable
                 key={x.i + x.titulo}
@@ -268,7 +269,7 @@ export default function TelaExplorar({ dados, ocupado, acao }) {
               // 'na lista' e nao 'querem ir': o selo do lado ja diz 'quer ir',
               // e junto dava "2 querem ir · quer ir". E a web decidiu evitar
               // 'dele/dela' — o app nao sabe o genero de ninguem.
-              if (g.querem) partes.push(g.querem + ' na lista');
+              if (g.querem) partes.push(g.querem + t(' na lista'));
               return (
                 <Pressable
                   key={g.i}
@@ -283,7 +284,7 @@ export default function TelaExplorar({ dados, ocupado, acao }) {
                     <Text style={e.amgOnde}>
                       {partes.join(' · ')}
                       {partes.length ? ' · ' : ''}
-                      <Text style={g.foram ? e.jaFoi : e.querIr}>{g.foram ? 'já foi' : 'quer ir'}</Text>
+                      <Text style={g.foram ? e.jaFoi : e.querIr}>{g.foram ? t('já foi') : t('quer ir')}</Text>
                     </Text>
                   </View>
                   <Text style={e.seta}>{'›'}</Text>
@@ -316,9 +317,9 @@ export default function TelaExplorar({ dados, ocupado, acao }) {
               onPress={() => setFolhaAberta(true)}
               style={e.cozAtual}
               accessibilityRole="button"
-              accessibilityLabel={'Tipo de comida: ' + (d.cozinhaRotulo || 'Todas')}
+              accessibilityLabel={t('Tipo de comida: ') + (d.cozinhaRotulo || t('Todas'))}
             >
-              <Text style={e.cozAtualTxt}>{d.cozinhaRotulo || 'Todas'}</Text>
+              <Text style={e.cozAtualTxt}>{d.cozinhaRotulo || t('Todas')}</Text>
               <Text style={e.cozSeta}>▾</Text>
             </Pressable>
             <Text style={e.cozConta}>{d.contagem || ''}</Text>
@@ -338,7 +339,7 @@ export default function TelaExplorar({ dados, ocupado, acao }) {
         {d.aba === 'amigos' ? (
           !(d.amigosLugares || []).length ? (
             <View style={e.vazio}>
-              <Text style={e.vazioTexto}>{d.avisoAmigosArea || 'Busque um lugar pra ver o que seus amigos salvaram por lá.'}</Text>
+              <Text style={e.vazioTexto}>{d.avisoAmigosArea || t('Busque um lugar pra ver o que seus amigos salvaram por lá.')}</Text>
             </View>
           ) : (
             d.amigosLugares.map((it) => (
@@ -349,24 +350,24 @@ export default function TelaExplorar({ dados, ocupado, acao }) {
           d.estado === 'buscando' ? (
             <View style={e.vazio}>
               <ActivityIndicator color={INK3} />
-              <Text style={e.vazioTexto}>Buscando tendências...</Text>
+              <Text style={e.vazioTexto}>{t("Buscando tendências...")}</Text>
             </View>
           ) : d.estado === 'semResultado' ? (
             <View style={e.vazio}>
               <IconeBusca cor={INK3} />
-              <Text style={e.vazioTitulo}>Nada encontrado</Text>
-              <Text style={e.vazioTexto}>{d.semResultadoTexto || 'Tenta outro lugar: uma cidade, um bairro ou uma rua.'}</Text>
+              <Text style={e.vazioTitulo}>{t("Nada encontrado")}</Text>
+              <Text style={e.vazioTexto}>{d.semResultadoTexto || t('Tenta outro lugar: uma cidade, um bairro ou uma rua.')}</Text>
             </View>
           ) : d.estado === 'erro' ? (
             <View style={e.vazio}>
               <IconeBusca cor={INK3} />
-              <Text style={e.vazioTitulo}>Erro ao buscar</Text>
-              <Text style={e.vazioTexto}>Tenta de novo em alguns segundos.</Text>
+              <Text style={e.vazioTitulo}>{t("Erro ao buscar")}</Text>
+              <Text style={e.vazioTexto}>{t("Tenta de novo em alguns segundos.")}</Text>
             </View>
           ) : (
             <View style={e.vazio}>
               <IconeBusca cor={INK3} />
-              <Text style={e.vazioTitulo}>Descubra o que está bombando</Text>
+              <Text style={e.vazioTitulo}>{t("Descubra o que está bombando")}</Text>
               <Text style={e.vazioTexto}>
                 Digite uma cidade pra ver os lugares mais bem avaliados.
               </Text>
@@ -388,7 +389,7 @@ export default function TelaExplorar({ dados, ocupado, acao }) {
               </View>
             ) : null}
             {d.creditoGoogle ? (
-              <Text style={e.credito}>Lugares e fotos via Google</Text>
+              <Text style={e.credito}>{t("Lugares e fotos via Google")}</Text>
             ) : null}
           </>
         )}

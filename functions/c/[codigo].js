@@ -78,11 +78,17 @@ export async function onRequestGet(context) {
   const nome = (p && (p.display_name || (p.username ? '@' + p.username : ''))) || '';
   const n = p ? Number(p.lugares) || 0 : 0;
   const nc = p ? Number(p.cidades) || 0 : 0;
-  const titulo = nome ? (nome + ' te convidou pro Spot') : 'Convite pro Spot';
+  // Inglês (13/10): pela língua de quem pede a página (o robô da prévia manda a
+  // do celular de quem colou o link). Sem cabeçalho, português como antes.
+  const lingua = String(request.headers.get('Accept-Language') || '').trim();
+  const en = !!lingua && !/^pt/i.test(lingua);
+  const titulo = en ? (nome ? nome + ' invited you to Spot' : 'Invite to Spot') : (nome ? (nome + ' te convidou pro Spot') : 'Convite pro Spot');
   // 07/10: "2 spots em 1 cidade, cada um com a nota de quem foi" não
   // convidava ninguém. Diz o que a pessoa ganha e onde baixar.
   const primeiro = nome ? nome.replace(/^@/, '').split(/\s+/)[0] : '';
-  const descricao = n && primeiro
+  const descricao = en
+    ? (n && primeiro ? ('See ' + (n === 1 ? 'the spot' : 'the ' + n + ' spots') + ' ' + primeiro + ' recommends and keep your own. Free on iPhone.') : 'See the spots your friends recommend and keep your own. Free on iPhone.')
+    : n && primeiro
     ? ('Veja ' + (n === 1 ? 'o spot' : 'os ' + n + ' spots') + ' que ' + primeiro + ' recomenda e guarde os seus. Grátis no iPhone.')
     : 'Veja os spots que seus amigos recomendam e guarde os seus. Grátis no iPhone.';
   // A foto de um lugar da pessoa, quando houver — é o que faz a prévia
@@ -96,7 +102,7 @@ export async function onRequestGet(context) {
   // og:url é ESTA página: apontar pra /?c= fazia o robô ler a tela do app.
   const aqui = origem + '/c/' + encodeURIComponent(codigo);
 
-  const html = '<!DOCTYPE html><html lang="pt-BR"><head><meta charset="utf-8">'
+  const html = '<!DOCTYPE html><html lang="' + (en ? 'en' : 'pt-BR') + '"><head><meta charset="utf-8">'
     + '<meta name="viewport" content="width=device-width,initial-scale=1">'
     + '<title>' + esc(titulo) + '</title>'
     + '<meta name="description" content="' + esc(descricao) + '">'
@@ -116,7 +122,7 @@ export async function onRequestGet(context) {
     + '<link rel="canonical" href="' + esc(aqui) + '">'
     + '</head><body style="font-family:system-ui;background:#F5F5F3;color:#111;padding:40px">'
     + '<p>' + esc(titulo) + '</p>'
-    + '<p><a href="' + esc(destino) + '">Abrir o convite</a></p>'
+    + '<p><a href="' + esc(destino) + '">' + (en ? 'Open the invite' : 'Abrir o convite') + '</a></p>'
     + '<script>location.replace(' + JSON.stringify(destino) + ')<\/script>'
     + '</body></html>';
 
@@ -124,7 +130,9 @@ export async function onRequestGet(context) {
     headers: {
       'Content-Type': 'text/html; charset=utf-8',
       // Curto: o acervo da pessoa muda, e prévia velha diz número errado.
-      'Cache-Control': 'public, max-age=600'
+      'Cache-Control': 'public, max-age=600',
+      // a mesma página sai em duas línguas: cache separado por língua
+      Vary: 'Accept-Language'
     }
   });
 }

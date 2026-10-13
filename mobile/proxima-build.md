@@ -12,6 +12,7 @@ pra "Já compilado".
 
 ## Na fila
 
+- **App em inglês nas abas nativas** (13/10, pedido do Lucas): `mobile/idioma.js` (`t()` + dicionário dos textos fixos), `t()` em TelaViagens/TelaAmigos/TelaExplorar/BarraDeAbas/App, e `App.js` ouve `{tipo:'idioma',lang}` do site. Só JS: pode ir por EAS Update. Os textos que o site manda nos pacotes já chegam traduzidos (i18n/motor.js) mesmo nas builds antigas; o que muda com a build é só o texto FIXO das abas (títulos, botões, vazios). Lint ok, `expo export` ok.
 - **"Você conheceu N% do mundo" sempre inteiro** (`TelaViagens.js` `fracaoDoMundo`, 13/10, o Lucas: a Natália via "5,6%", tem que ser "6%"). Só JS: pode ir por EAS Update. O site já está inteiro.
 - **Proteção das abas nativas** (`App.js` `ProtecaoDaAba`, 11/10, auditoria): se uma Tela*.js quebrar com dado inesperado do site, ela sai da frente e o site aparece no lugar, em vez de derrubar o app em todas as builds. Volta a tentar quando o site recarrega.
 - **Aviso nativo some no tempo certo** (`App.js` `tirarAviso` com useCallback): cada mensagem do site reiniciava os 3,5 s.

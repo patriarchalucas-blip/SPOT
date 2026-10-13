@@ -51,9 +51,13 @@ th{font-size:13px;color:var(--ink3);font-weight:600}
 footer{margin-top:44px;padding-top:20px;font-size:13px;color:var(--ink3);line-height:1.8}
 footer a{color:var(--ink2);font-weight:500}
 </style>
+<style>.lang-en{display:none}html.en .lang-pt{display:none}html.en .lang-en{display:block}</style>
+<script>(function(){var n=(navigator.languages&&navigator.languages[0])||navigator.language||"pt";if(!/^pt/i.test(n)){var d=document.documentElement;d.classList.add("en");d.lang="en";document.addEventListener("DOMContentLoaded",function(){var t=document.querySelector("meta[name=titulo-en]");if(t)document.title=t.content})}})();</script>
+<meta name="titulo-en" content="Privacy Policy — Spot">
 </head>
 <body>
 <div class="wrap">
+<div class="lang-pt" lang="pt-BR">
 
 <header>
   <p class="marca">Spot</p>
@@ -167,6 +171,118 @@ mudança valer.</p>
   <a href="/termos">Termos de Uso</a> &middot; <a href="/suporte">Suporte</a> &middot; <a href="/">Voltar para o app</a>
 </footer>
 
+</div>
+<!-- versão em inglês (ferramentas/pagina-bilingue.cjs) -->
+<div class="lang-en" lang="en">
+<header>
+  <p class="marca">Spot</p>
+  <h1>Privacy Policy</h1>
+  <p class="data">Last updated: September 25, 2026</p>
+</header>
+
+<p style="margin-top:26px">Spot is an app to keep the places you've been, with your personal note, and share them
+with the people you choose. This page explains, plainly, what the app stores about you, why, who it is shared
+with, and how to delete everything.</p>
+
+<div class="destaque">
+  <p><strong>In short:</strong> Spot stores what you write in it and what it needs to identify you. It doesn't
+  sell your data, doesn't show ads and doesn't use third-party trackers to follow you around other sites.</p>
+</div>
+
+<h2>Who is responsible</h2>
+<p>Spot is run by an individual, not a company. For any request about your data — access, correction, deletion
+or questions — write to <a href="mailto:patriarchalucas@gmail.com">patriarchalucas@gmail.com</a>. We reply within 7 days.</p>
+
+<h2>What is collected</h2>
+<div class="rolar">
+<table>
+  <thead><tr><th>Data</th><th>When</th><th>What for</th></tr></thead>
+  <tbody>
+    <tr><td>Email and password</td><td>When you create an account</td><td>To identify you and let you log in. The password is stored encrypted and not even we can read it.</td></tr>
+    <tr><td>Name, email and photo from your Google or Apple account</td><td>If you sign in with Google or Apple</td><td>To create your account and show your name. That's all Spot asks for: it doesn't read your contacts, calendar, emails or anything else in your account. With Apple, you can hide your email.</td></tr>
+    <tr><td>Name, username, bio and profile photo</td><td>When you fill them in</td><td>To show up for your friends in the app.</td></tr>
+    <tr><td>Trips, places, personal notes and reviews</td><td>When you create them</td><td>This is the app's content — the reason it exists.</td></tr>
+    <tr><td>Photos you upload</td><td>When you pick a photo</td><td>To illustrate a place or your profile.</td></tr>
+    <tr><td>Your location</td><td>Only when you use "near you" or check in, and only if you allow it</td><td>To suggest nearby places. Your position goes to Google for that search and isn't stored. <strong>It is not collected in the background</strong> and there is no movement history.</td></tr>
+    <tr><td>Where each place you save is</td><td>When you add a place</td><td>To show your places on the map. It's the location of the business, which comes from Google — not yours.</td></tr>
+    <tr><td>The city you live in and the countries you've visited</td><td>When you enter them</td><td>To open Explore with your city and fill in your world map. Your friends can see them.</td></tr>
+    <tr><td>Your device's notification address</td><td>If you allow notifications</td><td>To notify you of friend requests, accepted friendships and comments. The notification doesn't carry the comment text.</td></tr>
+    <tr><td>Comments</td><td>When you comment on a friend's place</td><td>The conversation about that place.</td></tr>
+    <tr><td>Reports you send</td><td>When you report content</td><td>To review the case. We keep who reported to prevent abuse of the feature itself.</td></tr>
+    <tr><td>Who you blocked</td><td>When you block someone</td><td>To hide that person's content from you. The list is yours and nobody else sees it — not even the person blocked.</td></tr>
+    <tr><td>Invite links you create</td><td>When you generate an invite</td><td>To know who invited whom, so the friendship starts accepted on both sides.</td></tr>
+  </tbody>
+</table>
+</div>
+
+<p>Spot does <strong>not</strong> collect: your contacts, your calendar, your browsing history, your advertising
+identifier, or your location while the app is closed.</p>
+
+<h2>Who else sees your data</h2>
+<p>To work, the app uses third-party services. Each one receives only what it needs:</p>
+<ul>
+  <li><strong>Supabase</strong> — stores your account, your data and your photos. It's where the database lives.</li>
+  <li><strong>Cloudflare</strong> — delivers the site and the app to your device.</li>
+  <li><strong>Google</strong> — when you search for a place, the search term goes to Google's maps service, which returns the business name, address and photo. The app's maps are also Google's, and Google sees the area the map shows. If you sign in with Google, login goes through it.</li>
+  <li><strong>Expo</strong> — delivers notifications to your device. It receives the notification address and the notice, without the comment text.</li>
+  <li><strong>Resend</strong> — sends the sign-up confirmation and password recovery emails. It receives your email.</li>
+  <li><strong>Unsplash</strong> — provides the city and country photos that illustrate your trips. It only receives the place name.</li>
+  <li><strong>Visual Crossing</strong> — provides the weather forecast. It only receives the city name.</li>
+  <li><strong>Anthropic (Claude)</strong> — only if you use "Paste a list": the text you paste goes to Anthropic's AI, which separates the place names. The text isn't stored on Spot, and Anthropic doesn't use it to train its models.</li>
+  <li><strong>Brave Search</strong> — when the app looks up a restaurant's official Instagram, the business name and city go to that search. Nothing of yours goes with it.</li>
+  <li><strong>Google Fonts, jsDelivr and unpkg</strong> — deliver the fonts and the map libraries. Like any file loaded from the internet, these servers see your device's network address. They don't receive any of your data from the app.</li>
+  <li><strong>Apple</strong> — if you installed from the App Store, Apple has its own install records, under its own privacy policy.</li>
+</ul>
+<p>None of these receive your personal notes, your reviews or your friends list.</p>
+
+<h2>What your friends see</h2>
+<p>That's up to you. People who are <strong>not</strong> your friends in the app see nothing of yours besides your
+name and username, and only if they search for them.</p>
+<p>People you accepted as friends see your trips, your places, your personal notes and your reviews.
+<strong>Treat your personal note as something your friends will read</strong>, because they will.</p>
+<p>Anyone with your invite link joins as an accepted friend. Treat that link like a key: whoever gets it, gets in.</p>
+
+<h2>Reporting and blocking</h2>
+<p>You can report a comment or a profile right in the app, and block anyone you want. We review every report within
+24 hours and remove content that breaks the rules. People you block stop being your friend, disappear from your
+screens and are not told about it.</p>
+
+<h2>Automatic check of what you write</h2>
+<p>Before posting a comment, a note, a review, your bio or your username, the app compares the text with a list of
+banned terms — hate, threats and sexual content. If it matches, the text <strong>doesn't leave your device</strong>
+and you get a notice right away.</p>
+<p>The check happens on the device itself, doesn't send the text anywhere and doesn't store what was blocked. No
+person reads what you write at this step.</p>
+
+<h2>How long we keep it</h2>
+<p>As long as your account exists. When you delete your account, the data is deleted with it.</p>
+
+<h2>How to delete everything</h2>
+<div class="destaque">
+  <p>In the app: <strong>Profile → Settings → Delete my account</strong>. This deletes your trips, places, notes,
+  reviews, comments, photos, friends and the invite links you created. It happens immediately and can't be undone.</p>
+</div>
+<p>If you prefer, ask by email and we'll do it for you.</p>
+
+<h2>Your rights</h2>
+<p>Under Brazil's General Data Protection Law (LGPD), you can ask at any time for: confirmation that we process your
+data, access to it, correction of anything wrong, a copy in a readable format, and deletion. Just write to the
+email above.</p>
+
+<h2>Children</h2>
+<p>Spot is not meant for children under 13, and we don't knowingly collect data from children in that age range.
+If it happens, we delete it as soon as we find out.</p>
+
+<h2>Changes to this policy</h2>
+<p>If something changes in a relevant way, the date at the top changes and we'll let you know in the app before the
+change takes effect.</p>
+
+<footer>
+  Spot — your places · your voice<br>
+  <a href="/termos">Terms of Use</a> &middot; <a href="/suporte">Support</a> &middot; <a href="/">Back to the app</a>
+</footer>
+</div>
+<!-- /versão em inglês -->
 </div>
 </body>
 </html>

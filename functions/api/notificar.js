@@ -45,11 +45,31 @@ const TEXTOS = {
   convite: (nome) => ({ title: 'Vocês são amigos', body: `${nome} entrou no Spot pelo seu convite` })
 };
 
+// Em inglês (13/10/2026): quem recebe escolheu o app em inglês (o app avisa
+// por op:'idioma', guardado no KV como idioma_<uid>).
+const TEXTOS_EN = {
+  pedido:     (nome) => ({ title: 'Friend request', body: `${nome} wants to be your friend on Spot` }),
+  aceite:     (nome) => ({ title: "You're friends",  body: `${nome} accepted your friend request` }),
+  comentario: (nome, extra) => ({ title: 'Comment', body: extra ? `${nome} commented on ${extra}` : `${nome} commented on your spot` }),
+  resposta: (nome, extra) => ({ title: 'Reply', body: extra ? `${nome} replied in the conversation on ${extra}` : `${nome} replied in a spot conversation` }),
+  convite: (nome) => ({ title: "You're friends", body: `${nome} joined Spot through your invite` })
+};
+
 export async function onRequestPost(context) {
   const { request, env } = context;
 
   let body;
   try { body = await request.json() } catch (e) { return json({ error: 'bad_request' }, 400) }
+
+  // A língua de quem usa o app (13/10): guardada pra notificação dela sair
+  // em inglês. Só a própria pessoa grava a dela.
+  if (body.op === 'idioma') {
+    const eu = await quemEsta(request, env);
+    if (!eu.permitir || !eu.uid) return json({ ok: false, unauthorized: true }, 401);
+    const lang = body.lang === 'en' ? 'en' : 'pt';
+    await gravarKV(env, 'idioma_' + eu.uid, lang, 60 * 60 * 24 * 365);
+    return json({ ok: true, lang });
+  }
 
   const tipo = String(body.tipo || '');
   const alvo = String(body.alvo || '');
@@ -121,7 +141,8 @@ export async function onRequestPost(context) {
 
   // 3. o texto sai daqui, nunca de quem chamou
   const nome = await nomeDe(env, quem.uid);
-  const { title, body: corpo } = TEXTOS[texto](nome, extra);
+  const emIngles = (await lerKV(env, 'idioma_' + alvo)) === 'en';
+  const { title, body: corpo } = (emIngles ? TEXTOS_EN : TEXTOS)[texto](nome, extra);
 
   const mensagens = enderecos.slice(0, 20).map((to) => ({
     to, title, body: corpo, sound: 'default', priority: 'high',

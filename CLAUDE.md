@@ -392,6 +392,14 @@ cifra em `gastos-recibos/<id>.bin` (mesma chave, sal fixo em `_local/gastos/sal.
 - **"% do mundo" sempre inteiro** (site já; nativo na fila da build).
 - **Perfil do amigo mostra o mapa dele.** Perfil próprio: pedido pro Claude Design em Downloads.
 
+## App em inglês (13/10/2026, pedido do Lucas: "o app inteiro em inglês")
+
+- **Como liga:** começo do `<head>` do index.html decide `window.IDIOMA`: `localStorage spot_idioma` (Ajustes → Idioma, `trocarIdioma`) ou a língua do aparelho (pt → pt, qualquer outra → en). **Em português nada a mais carrega** — o app de quem usa em português é o de antes.
+- **Como traduz:** o app continua escrevendo em português; `i18n/motor.js` traduz o que chega na tela (MutationObserver) e o pacote das abas nativas (`trObj` em `falarComACasca`; `voltar()` destraduz o que a aba devolve numa ação, ver o fim do script). Dicionário em `i18n/en.js` (`SPOT_EN` frase→frase; `SPOT_EN_MODELOS` com `{n}`/`{x}`; modelo estrito = cada {x} tem que ser nome próprio ou texto do app, senão nota de usuário sairia meio traduzida). País: inglês pela bandeira (Intl.DisplayNames; `window.COUNTRIES`). Cidade, nome de lugar e nota do usuário ficam como estão (são dado).
+- **Texto novo no app:** `node ferramentas/i18n-extrair.mjs --faltando` lista o que não tem tradução; `IDIOMA=en node ferramentas/pente-fino.mjs` e `IDIOMA=en node ferramentas/jornadas.mjs` rodam o app em inglês e gravam em `_local/i18n-faltando-*.json` o que apareceu sem tradução. Os testes rodam em português por padrão (o Chrome deles é em inglês: `spot_idioma=pt` forçado). Em inglês o pente-fino tem que dar ERROS (0); as jornadas dão ~10 falhas que são só checagem de TEXTO em português ("Mora em", "pedido enviado") — o resto, que é o banco, tem que passar.
+- **Abas nativas:** `mobile/idioma.js` (ver proxima-build.md). **Notificações:** `notificar.js` op `idioma` grava `idioma_<uid>` no KV (o app manda 1x por mudança, em `guardarEnderecoPush`) e o envio usa `TEXTOS_EN`. **/c/** pela Accept-Language (Vary); **/l/** carrega o motor quando o navegador não é pt. **Termos, privacidade e suporte** com as duas versões na página (`ferramentas/pagina-bilingue.cjs`). **/sobre** continua só em português (marketing + verificação do Google).
+- **Falta (do Lucas):** colar os e-mails bilíngues no Supabase (`ferramentas/emails-de-login/`); a ficha da App Store em inglês (`mobile/app-store/ficha-da-loja-en.md`) e capturas em inglês; mandar as abas nativas (EAS Update ou build).
+
 ## Custo e cotas (27/09/2026) — o Lucas disse: "isso não pode falhar"
 
 - **Google Cloud (projeto spot-499219), cotas por dia na Places API (New)**, postas

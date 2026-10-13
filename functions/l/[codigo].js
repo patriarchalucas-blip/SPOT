@@ -119,6 +119,7 @@ function cabecalho(titulo, desc, ogImg, url, extra) {
 <meta name="twitter:card" content="summary_large_image">
 <link rel="icon" href="/icon-192.png"><link rel="apple-touch-icon" href="/icon-180.png">
 <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500&family=Inter+Tight:wght@400;600;700&display=swap" rel="stylesheet">
+<script>/* inglês (13/10): navegador fora do português carrega a tradução do app (i18n/motor.js) */(function(){var n=(navigator.languages&&navigator.languages[0])||navigator.language||'pt';if(!/^pt/i.test(n)){window.IDIOMA='en';document.documentElement.lang='en';document.write('<script src="/i18n/en.js"><\\/script><script src="/i18n/motor.js"><\\/script>')}})();</script>
 <style>${ESTILO}${extra || ''}</style></head><body>`;
 }
 

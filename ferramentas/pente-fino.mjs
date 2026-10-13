@@ -69,10 +69,16 @@ const gPlace = (n, c) => ({ id: 'g' + n, displayName: { text: n }, formattedAddr
 
 const b = await puppeteer.launch({ executablePath: 'C:/Program Files/Google/Chrome/Application/chrome.exe' });
 const pg = await b.newPage(); await pg.setViewport({ width: 390, height: 844, deviceScaleFactor: 1 });
+// Língua (13/10): o Chrome do teste é em inglês. IDIOMA=en roda o app em inglês
+// e no fim lista o que ficou sem tradução.
+await pg.evaluateOnNewDocument((lang) => { try { localStorage.setItem('spot_idioma', lang) } catch (e) {} }, process.env.IDIOMA || 'pt');
+const I18N_FALTA = new Set();
+if (process.env.IDIOMA === 'en') await pg.exposeFunction('__i18nFalta', (s) => I18N_FALTA.add(s));
 const erros = [];
 pg.on('pageerror', e => erros.push('[' + passo + '] ' + e.message));
 pg.on('console', m => { if (m.type() === 'error' && !/Failed to load resource/.test(m.text())) erros.push('[' + passo + '] console: ' + m.text().slice(0, 200)) });
 let passo = 'abrir';
+if (process.env.VERBOSO) { pg.on('pageerror', e => console.log('  !! ' + e.message)); pg.on('framenavigated', f => { if (f === pg.mainFrame()) console.log('  >> navegou: ' + f.url() + ' (passo ' + passo + ')'); }); }
 await pg.setRequestInterception(true);
 const CORS={'Access-Control-Allow-Origin':'*','Access-Control-Allow-Headers':'*','Access-Control-Allow-Methods':'*'};
 pg.on('request', r => {
@@ -311,4 +317,9 @@ await passoDe('onb: terminar abre revisão', `onbTerminar()`, 4000);
 await passoDe('importar: vazio (2e)', `(()=>{IMP.etapa='vazio';IMP.texto='oi tudo bem';goTo('importar');impPintar()})()`);
 }
 console.log('\nERROS (' + erros.length + '):'); erros.forEach(e => console.log(' -', e));
+if (process.env.IDIOMA === 'en') {
+  const fs = await import('node:fs');
+  fs.writeFileSync('_local/i18n-faltando-pf.json', JSON.stringify([...I18N_FALTA].sort(), null, 1));
+  console.log('SEM TRADUÇÃO: ' + I18N_FALTA.size + ' → _local/i18n-faltando-pf.json');
+}
 await b.close();
