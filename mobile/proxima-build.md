@@ -12,6 +12,7 @@ pra "Já compilado".
 
 ## Na fila
 
+- **"Você conheceu N% do mundo" sempre inteiro** (`TelaViagens.js` `fracaoDoMundo`, 13/10, o Lucas: a Natália via "5,6%", tem que ser "6%"). Só JS: pode ir por EAS Update. O site já está inteiro.
 - **Proteção das abas nativas** (`App.js` `ProtecaoDaAba`, 11/10, auditoria): se uma Tela*.js quebrar com dado inesperado do site, ela sai da frente e o site aparece no lugar, em vez de derrubar o app em todas as builds. Volta a tentar quando o site recarrega.
 - **Aviso nativo some no tempo certo** (`App.js` `tirarAviso` com useCallback): cada mensagem do site reiniciava os 3,5 s.
 - **Ainda não feito (da auditoria nativa):** "puxar pra atualizar" na Viagens nativa sem dados; chave dos cards com a foto (`TelaAmigos.js:447`, `TelaExplorar.js:379`, card da casa); `WKAppBoundDomains` pro app abrir sem internet (e o service worker rodar).

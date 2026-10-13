@@ -639,14 +639,15 @@ confere(AVISOS.some(a => a.tipo === 'comentario' && a.alvo === A.id && a.de === 
 // A recebe: feed e Atividade
 await ir(pa, `(async()=>{FRIENDS_DATA=null;goTo('friends');await loadFriends()})()`, 1800);
 const feedA = await ev(pa, () => FRIENDS_DATA.feedItems.map(i => i.tipo + ':' + (i.html || (i.spot && i.spot.name))));
-confere(feedA.some(x => /comentou.*Taberna.*Precisa reservar/.test(x)), 'feed de A mostra "comentou em Taberna"', feedA);
+// 13/10 (o Lucas): "Recente" é só spot. O comentário mora na Atividade.
+confere(feedA.every(x => x.startsWith('visita:')), 'Recente de A só tem spots (sem o comentário)', feedA);
 await ir(pa, `abrirAtividade()`, 1500);
 const ativA = await texto(pa, '#atCorpo');
 confere(/Precisa reservar/.test(ativA || ''), 'Atividade de A mostra o comentário de B', ativA);
-// A abre o comentário pelo feed e responde
-const iCom = await ev(pa, () => FRIENDS_DATA.feedItems.findIndex(i => i.spot_id));
-await ir(pa, `(async()=>{goTo('friends');await abrirComentarioDoFeed(${iCom})})()`, 1800);
-confere(await tela(pa) === 'place' && await ev(pa, () => S.curPlace && S.curPlace.name) === 'Taberna da Rua das Flores', 'A abre a própria ficha pelo comentário do feed', await tela(pa));
+// A abre o comentário pela Atividade e responde
+const iCom = await ev(pa, () => ATIV_TELA.findIndex(i => i.tipo === 'coment' && i.spot && i.spot.name === 'Taberna da Rua das Flores'));
+await ir(pa, `(async()=>{await abrirDaAtividade(${iCom})})()`, 1800);
+confere(await tela(pa) === 'place' && await ev(pa, () => S.curPlace && S.curPlace.name) === 'Taberna da Rua das Flores', 'A abre a própria ficha pelo comentário da Atividade', await tela(pa));
 await ate(() => ev(pa, () => !!document.getElementById('campo-placeComentarios')), 4000);
 await ate(() => ev(pa, () => /Precisa reservar/.test((document.getElementById('placeComentarios') || {}).innerText || '')), 3000);
 const fioA0 = await texto(pa, '#placeComentarios');
@@ -664,7 +665,7 @@ const fioB = await texto(pb, '#placeComentarios');
 confere(/Balcão sem reserva/.test(fioB || '') && /Ana/.test(fioB || ''), 'B vê a resposta de A com o nome dela', fioB);
 // feed de B: a resposta de A no spot de A também aparece como comentário?
 const feedB2 = await ev(pb, () => FRIENDS_DATA.feedItems.map(i => i.html || (i.spot && i.spot.name)));
-confere(feedB2.some(x => /Ana Teste<\/b> comentou.*Balcão/.test(x || '')), 'feed de B mostra a resposta de A', feedB2);
+confere(!feedB2.some(x => /comentou/.test(x || '')), 'Recente de B não mostra comentário (só spots)', feedB2);
 ['A', 'B'].forEach(n => { const e = errosDe(PAGINAS[n]); confere(!e.length, 'sem erro de JS no aparelho ' + n, e) });
 
 // ═══ JORNADA 3 · B salva spot de A, Planejar com A, montar, mandar ═══
@@ -696,7 +697,7 @@ confere(cardSalvo && cardSalvo.salvo === true && pacSalvo.dados.salvando === -1,
 // pela ficha: Ramiro (Quero ir de A) → abrir ficha do amigo e salvar
 await ir(pb, `(async()=>{await openFriend('${A.id}');const l=FRIEND.todos.filter(s=>s.name==='Cervejaria Ramiro');FRIEND_CITY_SPOTS=l;abrirSpotDoAmigo(0)})()`, 2000);
 confere(await tela(pb) === 'place', 'B abre a ficha do Ramiro de A', await tela(pb));
-await ir(pb, `setStatus('want')`, 2000);
+await ir(pb, `(async()=>{setStatus('want');await salvarPreviaEscolhida()})()`, 2000);
 const ramiroB = DB.spots.find(s => s.user_id === (B || {}).id && s.name === 'Cervejaria Ramiro');
 confere(ramiroB && ramiroB.status === 'want', 'B salva o Ramiro pela ficha', ramiroB);
 confere(ramiroB && ramiroB.from_user_id === A.id, 'Ramiro salvo pela ficha guarda from_user_id = A', ramiroB && ramiroB.from_user_id);
@@ -1198,7 +1199,7 @@ if (spB9 && amigos(A.id, B.id)) {
   confere(await tela(pk) === 'place', 'notificação de comentário no spot do AMIGO abre a ficha', await tela(pk));
 }
 await ir(pk, `(async()=>{goTo('dashboard');await aoTocarNotificacao({tipo:'pedido'})})()`, 1200);
-confere(await tela(pk) === 'friends', 'notificação de pedido abre Amigos', await tela(pk));
+confere(await tela(pk) === 'atividade', 'notificação de pedido abre a Atividade (onde os pedidos moram)', await tela(pk));
 // 11/10 (o Lucas): o card "Onde você mora" abre direto a lista de spots da cidade; voltar vai pra Viagens.
 await ir(pk, `(async()=>{document.querySelectorAll('.overlay.show').forEach(o=>closeOv(o.id));goTo('dashboard');await loadDashboard();await abrirCasa()})()`, 1500);
 const telaCasa = await tela(pk);

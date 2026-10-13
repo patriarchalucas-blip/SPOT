@@ -127,7 +127,8 @@ await passoDe('cidade: Quero ir (c2)', `setCityStatus('want')`);
 await passoDe('cidade: Fui (c2)', `setCityStatus('been')`);
 await passoDe('compartilhar cidade', `compartilharCidade()`, 1200);
 await passoDe('fechar folha 2', `closeOv('ov-compartilhar')`);
-await passoDe('planejar pela cidade', `plnDaEntrada(true)`, 1200);
+// 13/10: o Planejar saiu da tela da cidade; abre pelo Perfil com Lisboa.
+await passoDe('planejar Lisboa (pelo Perfil)', `(async()=>{const ids=await plnCarregarAmigos();plnAbrir({destinos:[{tipo:'cidade',nome:'Lisboa',pais:'Portugal'}],amigos:ids,volta:'profile'})})()`, 1500);
 await passoDe('ver lista juntada', `plnVerLista()`, 1200);
 await passoDe('ficha do lugar', `plnAbrirFicha(0)`);
 await passoDe('salvar Quero ir da ficha', `(async()=>{const i=PLN.vis.findIndex(g=>g.base.name==='Cervejaria Ramiro');plnAbrirFicha(i);await plnSalvar('want',null)})()`, 1500);
@@ -236,7 +237,7 @@ await passoDe('perfil sem próxima (vazio)', `(async()=>{goTo('profile');renderP
 await passoDe('explorar', `(async()=>{goTo('explore');loadExplore()})()`, 2500);
 await passoDe('explorar: digitar Mani', `(()=>{const c=document.getElementById('exploreCitySearch');c.value='Mani';c.focus();sugerirLugar('Mani')})()`, 1500);
 await passoDe('explorar: abrir spot sugerido', `escolherSpotSugerido(0)`, 1500);
-await passoDe('explorar: salvar como Quero ir', `setStatus('want')`, 2500);
+await passoDe('explorar: salvar como Quero ir', `(async()=>{setStatus('want');await salvarPreviaEscolhida()})()`, 2500);
 await passoDe('explorar: faixa some ao sair', `(()=>{goTo('explore')})()`, 800);
 console.log('  faixa:', await pg.evaluate(() => (document.getElementById('faixaSalvo') || {}).className));
 await passoDe('salvar da lista pública', `(async()=>{localStorage.setItem('spot_salvar_pendente','abcdefgh1234.11111111-2222-3333-4444-555555555555');await salvarSpotPendente()})()`, 1500);

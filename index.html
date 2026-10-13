@@ -404,6 +404,12 @@ input,textarea,select{font-size:max(16px,1em)!important}
 /* Ficha em modo prévia (lugar do Explorar ainda não salvo). */
 .fi-previa-dica{display:none;font-size:13px;font-weight:600;color:var(--ink2);margin:16px 0 8px}
 #place.previa .fi-previa-dica{display:block}
+/* Botão Salvar da prévia (13/10, o Lucas): tocar em Quero ir/Fui só escolhia
+   E salvava, sem nada dizendo que salvou — confundia. Agora escolhe, e salva aqui. */
+.fi-previa-salvar{display:none;width:100%;margin-top:12px;padding:14px;border:0;border-radius:var(--r-btn);background:var(--green);color:var(--on-green);font-family:inherit;font-size:17px;font-weight:600;cursor:pointer}
+.fi-previa-salvar:disabled{opacity:.6;cursor:default}
+#place.previa .fi-previa-salvar{display:block}
+#place.so-dele .fi-previa-salvar{display:none}
 #place.previa .fi-nota,#place.previa .fi-amigos,#place.previa .fi-mais,#place.previa #placeSubcatSection{display:none!important}
 .vg-casa{display:block;width:100%;height:150px;border:none;padding:0;cursor:pointer}
 .vg-nome-g{font-size:22px;letter-spacing:-.03em}
@@ -1838,6 +1844,9 @@ body.tem-apple #convite .btn-apple{display:flex}
    cima dela, e o verde marca so onde a pessoa esteve. */
 .wm-country{fill:#CBD3CD;stroke:none;transition:fill .4s}
 .wm-country.visited{fill:var(--green)}
+.am-mapa{display:none;margin:16px 20px 0;background:var(--map-bg);border-radius:var(--r-card);overflow:hidden;aspect-ratio:800/355}
+.am-mapa.pronto{display:block}
+.am-mapa svg{width:100%;height:100%;display:block}
 /* No mapa em tela cheia cada pais e um alvo; no mini do Inicio nao, que la
    o mapa inteiro abre esta tela. */
 #worldMapWrap .wm-country{cursor:pointer}
@@ -2829,6 +2838,8 @@ body.exm .exm-filtros{position:relative;z-index:1}
     <div class="am-linha" id="friendUser"></div>
   </div>
   <div class="friend-bio" id="friendBio" style="display:none"></div>
+  <!-- Mapa dele (13/10, o Lucas): os países onde o amigo foi, igual ao seu. -->
+  <div class="am-mapa" id="friendMapa" aria-hidden="true"></div>
   <div class="pln-entrada"><button class="pln-btn" id="friendPlanejar" onclick="plnDoAmigo()"></button></div>
   <div class="am-comum" id="friendComum" style="display:none" onclick="abrirEmComum()"></div>
   <!-- Cidades (desenho 2b + busca 3a/3b, 29/09): só os spots onde ele FOI. -->
@@ -2931,6 +2942,7 @@ body.exm .exm-filtros{position:relative;z-index:1}
       <button class="fi-st" id="t-been" onclick="setStatus('been')">Fui</button>
       <button class="fi-st" id="t-skip" onclick="setStatus('skip')">Não recomendo</button>
     </div>
+    <button class="fi-previa-salvar" id="fiPreviaSalvar" onclick="salvarPreviaEscolhida()">Salvar</button>
 
     <!-- UM CAMPO POR STATUS, e a pergunta muda junto. Antes eram dois campos
          (nota e avaliação) sempre visíveis, com um botão de salvar cada. -->
@@ -4787,7 +4799,8 @@ function renderProximaViagem(t,b){
       +'<span class="pf-row-txt"><b>'+esc(x.name||'')+'</b><span>'+esc(mlNomeDaCategoria(x.category))+(dica?' · <em>'+esc(dica)+'</em>':'')+'</span></span></button>';
   }).join('');
   b.innerHTML=h;
-  plnPintarEntrada('tripPlanejar',paisDaViagem(t),'');
+  // Planejar com amigos só no Perfil e no perfil do amigo (13/10, o Lucas: botão demais).
+  {const pe=document.getElementById('tripPlanejar');if(pe)pe.innerHTML=''}
   // "Ana foi 5★" pede os spots dos amigos (guardados 2 min, os mesmos do
   // Planejar). Chegando, redesenha uma vez.
   if(avs.length&&!PV_DELES){
@@ -7976,7 +7989,8 @@ function renderTripBody(){
   const{html,ordem}=cityCardsHTML(byCity,country,month,'openCityFromTrip','clima-');
   TRIP_CITY_ORDER=ordem;
   b.innerHTML=cab+html+semSpot;
-  plnPintarEntrada('tripPlanejar',ehCasa(t)?paisDaViagem(t):country,ehCasa(t)?t.name:'');
+  // Planejar com amigos só no Perfil e no perfil do amigo (13/10, o Lucas: botão demais).
+  {const pe=document.getElementById('tripPlanejar');if(pe)pe.innerHTML=''}
   pendurarClima(byCity,country,month,'clima-');
 }
 // ═══ TELA DA CIDADE (dedicada, aberta ao tocar num card acima) ═══
@@ -8057,7 +8071,8 @@ function openCityScreen(city){
   limparCredito('cityFotoCredito');
   fetchCityPhoto(city,paisDaViagem(S.curTrip)).then(url=>{if(url&&S.curCity===city){heroEl.style.backgroundImage=cssUrl(url);pintarCreditoCidade('cityFotoCredito',url)}});
   renderCityBody();
-  plnPintarEntrada('cityPlanejar',paisDaViagem(t),city);
+  // Planejar com amigos só no Perfil e no perfil do amigo (13/10, o Lucas: botão demais).
+  {const pe=document.getElementById('cityPlanejar');if(pe)pe.innerHTML=''}
   // Cidade sem nenhum spot nao tem o que mandar: o botao some em vez de
   // existir pra avisar que nao funciona.
   const sh=document.getElementById('cityShareBtn');
@@ -8794,8 +8809,9 @@ async function salvarCampoDaFicha(){
 }
 async function setStatus(s,save=true){
   if(!STATUS_ROTULO[s])return;
-  // Prévia do Explorar: o lugar ainda não é seu, e tocar no status é salvar.
-  if(save&&S.curPlace&&S.curPlace._previa)return salvarPreviaDoExplorar(s);
+  // Prévia: o lugar ainda não é seu. Tocar no status só ESCOLHE (13/10); quem
+  // salva é o botão Salvar logo abaixo.
+  if(save&&S.curPlace&&S.curPlace._previa){escolherNaPrevia(s);return}
   const spot=S.curPlace;
   const anterior=spot?spot.status:null;
   // GRAVA O QUE ESTÁ NO CAMPO ANTES DE TROCAR. Sem isto, escrever e tocar em
@@ -11165,9 +11181,23 @@ function abrirPreviaDoExplorar(i){
   if(p.photo_author&&p.photo_author.nome)pintarCreditoSpot('placeFotoCredito',{photo_author:p.photo_author.nome,photo_author_url:p.photo_author.url||''});
   desenharFichaDoLugar(s);
   montarCarrossel(s);
-  // Nenhum status marcado: ainda não é seu.
-  document.querySelectorAll('#place .fi-st').forEach(b=>b.classList.remove('on'));
+  // Ainda não é seu: Quero ir vem escolhido, e nada grava até o Salvar.
+  escolherNaPrevia('want');
   goTo('place');
+}
+let PREVIA_ESCOLHA='want';
+function escolherNaPrevia(s){
+  PREVIA_ESCOLHA=s;
+  document.querySelectorAll('#place .fi-st').forEach(b=>b.classList.toggle('on',b.id==='t-'+s));
+  const b=document.getElementById('fiPreviaSalvar');
+  if(b){b.disabled=false;b.textContent='Salvar'}
+}
+async function salvarPreviaEscolhida(){
+  const b=document.getElementById('fiPreviaSalvar');
+  if(!S.curPlace||!S.curPlace._previa||(b&&b.disabled))return;
+  if(b){b.disabled=true;b.textContent='Salvando…'}
+  try{await salvarPreviaDoExplorar(PREVIA_ESCOLHA)}
+  finally{if(b){b.disabled=false;b.textContent='Salvar'}}
 }
 async function salvarPreviaDoExplorar(status){
   const s=S.curPlace;if(!s||!s._previa)return;
@@ -12551,14 +12581,10 @@ function fmtD(d){const[y,m,day]=d.split('-');const ms=['Jan','Fev','Mar','Abr','
 // O efeito colateral: quem marcar muito território pode passar de 195. Por isso
 // a porcentagem é limitada a 100 em percentualDoMundo().
 const PAISES_NO_MUNDO=195;
-// "Você conheceu N% do mundo" (15a, 08/10). Só nesta frase: inteiro a partir
-// de 10%, uma casa abaixo disso, sem ",0". As outras telas seguem inteiras
-// (percentualDoMundo). Mesma regra em mobile/TelaViagens.js (fracaoDoMundo).
+// "Você conheceu N% do mundo" (15a, 08/10). SEMPRE INTEIRO (13/10, o Lucas: a
+// Natália via "5,6%", tem que ser "6%"). Mesma regra em mobile/TelaViagens.js.
 function fracaoDoMundo(n){
-  const pc=Math.min(100,(Number(n)||0)/PAISES_NO_MUNDO*100);
-  if(pc>=10)return Math.round(pc)+'%';
-  const t=pc.toFixed(1);
-  return (t.endsWith('.0')?t.slice(0,-2):t.replace('.',','))+'%';
+  return Math.round(Math.min(100,(Number(n)||0)/PAISES_NO_MUNDO*100))+'%';
 }
 function pintarFraseDoMundo(paises){
   const el=document.getElementById('dashMundoPct');
@@ -17604,6 +17630,8 @@ function novidadesNoFeed(items){
   return (items||[]).filter(i=>String(i.created_at||'')>visto).length;
 }
 function switchFriendsTab(aba){
+  // Pedidos moram na Atividade (13/10).
+  if(aba==='pedidos'){abrirAtividade();return}
   friendsTab=aba;
   // Abrir a aba JA e ter visto. Marca antes de desenhar pra o contador sumir
   // no mesmo toque, sem precisar sair e voltar.
@@ -17757,6 +17785,9 @@ async function loadFriends(daAba){
                 ...(nomeDoSpot[c.spot_id]?[{t:' em '},{t:nomeDoSpot[c.spot_id],forte:true}]:[]),
                 {t:': '+trecho}]});
     });
+    // "Recente" é só spot que o pessoal adicionou (13/10, o Lucas). Viagem
+    // planejada e comentário saem daqui; comentário no SEU spot segue na Atividade.
+    feedItems=feedItems.filter(i=>i.tipo==='visita');
     feedItems.sort((a,b)=>new Date(b.created_at)-new Date(a.created_at));
     feedItems=feedItems.slice(0,25);
   }
@@ -17876,11 +17907,10 @@ function darDadosDeAmigos(){
   // O ponto da aba Amigos acompanha a lista (aceitou/recusou, apaga na hora).
   falarComACasca({tipo:'pedidos',n:incoming.length});
 
-  // Mesma regra da tela web: "Pedidos" só existe quando há pedido — aba
-  // permanentemente vazia é ruído.
+  // Pedidos moram SÓ na Atividade (13/10, o Lucas). A aba "Pedidos" saiu.
   const novas=friendsTab==='recente'?0:novidadesNoFeed(feedItems);
   const abas=[{id:'recente',rotulo:'Recente',n:novas},{id:'amigos',rotulo:'Todos',n:0}];
-  if(incoming.length||outgoing.length||friendsTab==='pedidos')abas.push({id:'pedidos',rotulo:'Pedidos',n:incoming.length});
+  if(friendsTab==='pedidos')friendsTab='recente';
 
   const feed=(feedItems||[]).map((it,i)=>{
     const quem=pessoaPraTela(it.user_id,pmap);
@@ -17932,6 +17962,7 @@ function darDadosDeAmigos(){
 // Ações que a tela nativa dispara. Cada uma faz exatamente o que o toque na
 // versão web faz, e termina mandando os dados atualizados de volta.
 window.acaoDeAmigos=function(acao,valor){
+  if(acao==='aba'&&valor==='pedidos'){abrirAtividade();return}   // casca antiga: o link de pedidos vai pra Atividade
   if(acao==='aba'){switchFriendsTab(valor);darDadosDeAmigos();return}
   if(acao==='recarregar'){loadFriends();return}
   if(acao==='adicionar'){abrirAddFriend();return}
@@ -18180,7 +18211,6 @@ function renderFriendsTab(){
   // aparece e desaparece faz a barra pular de tamanho, e ninguém procura
   // pedido numa terceira aba.
   const abas=[['recente','Recente',novas],['amigos','Todos'+(friendIds.length?' · '+friendIds.length:''),0]];
-  if(friendsTab==='pedidos')abas.push(['pedidos','Pedidos',pendentes]);
   // SEM AMIGO NENHUM, a tela inteira é o vazio (desenho "Primeiro Acesso"):
   // sem abas, que só mostrariam duas vezes que não há nada.
   if(!friendIds.length&&friendsTab!=='pedidos'){
@@ -18494,8 +18524,23 @@ function renderFriendProfile(){
   if(todos.length)partes.push(plural(todos.length,'spot','spots'));
   document.getElementById('friendUser').textContent=partes.filter(Boolean).join(' · ');
   FRIEND.todos=todos;
+  pintarMapaDoAmigo([...paises]);
   pintarEmComum();
   pintarSpotsDoAmigo();
+}
+// O mapa do amigo: mesmos países do número do topo (paisesQueAViagemPinta).
+// Só olhar — tocar num país dele não marca nada no seu.
+async function pintarMapaDoAmigo(paises){
+  const w=document.getElementById('friendMapa');if(!w)return;
+  const alvo=FRIEND.id;
+  w.classList.remove('pronto');w.innerHTML='';
+  if(!paises.length)return;
+  if(!await carregarGeoMundo().catch(()=>false))return;
+  try{await carregarD3Geo()}catch(e){/* sem d3 cai na projeção simples */}
+  if(FRIEND.id!==alvo)return;
+  const{paths,vb}=gerarPathsMundo(new Set(paises.map(c=>geoFor(c)).filter(Boolean)));
+  w.innerHTML='<svg viewBox="'+vb.x+' '+vb.y+' '+vb.w+' '+Math.round(vb.h*0.845)+'" preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg">'+paths+'</svg>';
+  w.classList.add('pronto');
 }
 // Os spots onde ele já FOI que estão na SUA lista Quero ir. É o que o perfil
 // do amigo tem de mais útil: ele já testou o que você quer testar.

@@ -380,6 +380,17 @@ dívida e transferências entre os dois o Lucas conversa por fora (pedido dele).
 MÊS DE USO; Google cobra no dia 1 o mês anterior; dólar a 5,40 por decisão
 dele), `node ferramentas/gastos-cifrar.mjs`, commit + push do
 `gastos-dados.json`. Link público do Claude não existe na conta da Sólides.
+**Recibos:** arquivo em `_local/gastos/recibos/` + `recibos:[{arquivo,nome}]` no gasto; o script
+cifra em `gastos-recibos/<id>.bin` (mesma chave, sal fixo em `_local/gastos/sal.txt`).
+
+## Decisões de 13/10/2026 (o Lucas)
+
+- **Planejar com amigos SÓ no Perfil e no perfil do amigo** (saiu de país/cidade: botão demais).
+- **Pedidos SÓ na Atividade**; a aba "Pedidos" saiu (site e pacote da aba nativa).
+- **"Recente" = só spots** que os amigos adicionaram (sem viagem planejada nem comentário).
+- **Prévia de spot (Explorar/amigo): Quero ir/Fui só escolhe; quem grava é o botão Salvar.**
+- **"% do mundo" sempre inteiro** (site já; nativo na fila da build).
+- **Perfil do amigo mostra o mapa dele.** Perfil próprio: pedido pro Claude Design em Downloads.
 
 ## Custo e cotas (27/09/2026) — o Lucas disse: "isso não pode falhar"
 

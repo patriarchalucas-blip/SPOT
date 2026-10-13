@@ -16,6 +16,7 @@
   senha o arquivo é ilegível. Quem gera o arquivo é
   ferramentas/gastos-cifrar.mjs, a partir de _local/gastos/ (fora do git).
   Pra lançar um mês: editar _local/gastos/dados.json, rodar o script, push.
+  Recibos: /gastos-recibos/<id>.bin, cifrados com a mesma chave (ver o script).
 -->
 <style>
 :root {
@@ -72,6 +73,10 @@ h1, h2, p { margin: 0; }
 .sp-vazio { font-size: 15px; color: var(--ink2); background: var(--surface); border-radius: var(--r-card); padding: 16px 20px; }
 .sp-duas { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 22rem), 1fr)); gap: 32px; }
 .sp-rodape { font-size: 13px; color: var(--ink3); }
+.sp-recibos { display: flex; flex-wrap: wrap; gap: 4px 16px; margin-top: 6px; }
+.sp-recibo { appearance: none; background: none; border: 0; padding: 4px 0; font: 600 13px var(--f); color: var(--green); cursor: pointer; text-align: left; }
+.sp-recibo:disabled { color: var(--ink3); cursor: default; }
+.sp-recibo:focus-visible { outline: 2px solid var(--green); outline-offset: 2px; border-radius: 4px; }
 
 /* Senha */
 .tranca { min-height: 100vh; min-height: 100dvh; display: grid; place-items: center; padding: 24px 20px; }
@@ -164,7 +169,7 @@ h1, h2, p { margin: 0; }
   const lerSalva = () => { try { return localStorage.getItem(CHAVE) || ''; } catch (e) { return ''; } };
   const salvar = (s) => { try { s ? localStorage.setItem(CHAVE, s) : localStorage.removeItem(CHAVE); } catch (e) {} };
 
-  let CIFRADO = null, DADOS = null, MES = 'todos';
+  let CIFRADO = null, DADOS = null, MES = 'todos', CHAVE_AES = null;
 
   async function baixar() {
     if (CIFRADO) return CIFRADO;
@@ -180,6 +185,7 @@ h1, h2, p { margin: 0; }
     const chave = await crypto.subtle.deriveKey({ name: 'PBKDF2', hash: 'SHA-256', salt: b64(c.salt), iterations: c.iter },
       base, { name: 'AES-GCM', length: 256 }, false, ['decrypt']);
     const claro = await crypto.subtle.decrypt({ name: 'AES-GCM', iv: b64(c.iv) }, chave, b64(c.dados));
+    CHAVE_AES = chave;
     return JSON.parse(new TextDecoder().decode(claro));
   }
 
@@ -199,12 +205,44 @@ h1, h2, p { margin: 0; }
   $('form-senha').addEventListener('submit', (ev) => { ev.preventDefault(); tentar($('senha').value.trim(), $('lembrar').checked); });
   $('sair').addEventListener('click', () => { salvar(''); DADOS = null; $('senha').value = ''; $('painel').hidden = true; $('tranca').hidden = false; });
 
-  function linha({ ic, nome, meta, val, sub, fatia, decidir }) {
+  // Recibo (13/10): /gastos-recibos/<id>.bin = 12 bytes de IV + o arquivo,
+  // cifrado com a mesma chave dos dados. A janela abre NO TOQUE (senão o
+  // navegador bloqueia) e recebe o arquivo quando ele termina de decifrar.
+  async function abrirRecibo(r, botao) {
+    const janela = window.open('', '_blank');
+    const antes = botao.textContent; botao.disabled = true; botao.textContent = 'Abrindo…';
+    try {
+      const resp = await fetch('/gastos-recibos/' + r.id + '.bin', { cache: 'no-cache' });
+      if (!resp.ok) throw new Error('rede');
+      const tudo = new Uint8Array(await resp.arrayBuffer());
+      const claro = await crypto.subtle.decrypt({ name: 'AES-GCM', iv: tudo.slice(0, 12) }, CHAVE_AES, tudo.slice(12));
+      const url = URL.createObjectURL(new Blob([claro], { type: r.tipo || 'application/octet-stream' }));
+      if (janela) janela.location.href = url; else location.href = url;
+      setTimeout(() => URL.revokeObjectURL(url), 60000);
+      botao.textContent = antes;
+    } catch (e) {
+      if (janela) janela.close();
+      botao.textContent = 'Não abriu. Tente de novo.';
+      setTimeout(() => { botao.textContent = antes; }, 3000);
+    } finally { botao.disabled = false; }
+  }
+
+  function linha({ ic, nome, meta, val, sub, fatia, decidir, recibos }) {
     const l = el('div', 'sp-linha');
     l.appendChild(el('div', 'sp-ic', ic));
     const meio = el('div'); meio.style.minWidth = '0';
     meio.appendChild(el('div', 'sp-nome', nome));
     if (meta) meio.appendChild(el('div', 'sp-meta', meta));
+    if (recibos && recibos.length) {
+      const box = el('div', 'sp-recibos');
+      recibos.forEach((r, i) => {
+        const b = el('button', 'sp-recibo', recibos.length > 1 ? 'Ver recibo ' + (i + 1) : 'Ver recibo');
+        b.type = 'button'; b.title = r.nome || '';
+        b.addEventListener('click', () => abrirRecibo(r, b));
+        box.appendChild(b);
+      });
+      meio.appendChild(box);
+    }
     if (fatia != null) { const t = el('div', 'sp-trilho'); const i = el('i'); i.style.width = (fatia * 100).toFixed(1) + '%'; t.appendChild(i); meio.appendChild(t); }
     l.appendChild(meio);
     const dir = el('div', 'sp-dir');
@@ -277,7 +315,7 @@ h1, h2, p { margin: 0; }
     let grupo = '';
     lanc.forEach((g) => {
       if (MES === 'todos' && g.mes !== grupo) { grupo = g.mes; lc.appendChild(el('div', 'sp-grupo', longo(g.mes))); }
-      lc.appendChild(linha({ ic: g.servico.charAt(0), nome: g.servico, meta: [g.para_que, g.obs].filter(Boolean).join(' · '), val: brl.format(g.brl), sub: g.moeda === 'USD' ? usd.format(g.valor) : '' }));
+      lc.appendChild(linha({ ic: g.servico.charAt(0), nome: g.servico, meta: [g.para_que, g.obs].filter(Boolean).join(' · '), val: brl.format(g.brl), sub: g.moeda === 'USD' ? usd.format(g.valor) : '', recibos: g.recibos }));
     });
 
     // pela frente

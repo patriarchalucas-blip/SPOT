@@ -69,7 +69,7 @@ test('a proxima pagina entra no fim, sem repetir lugar, e para quando o Google p
   } finally { volta(); v2() }
 });
 
-test('a foto abre a pagina do lugar em previa, e tocar em Fui salva e abre o spot de verdade', async () => {
+test('a foto abre a pagina do lugar em previa; Fui so escolhe, o botao Salvar grava e abre o spot', async () => {
   A.avaliar("S.user={id:'eu',email:'l@x.z'};S.profile={};S.trips=[]");
   A.avaliar("EXPLORE.cat='food';EXPLORE.items=[{name:'Mocotó',address:'Av. X, 1 - Vila Medeiros, São Paulo - SP, Brasil',city:'São Paulo',country:'Brasil',rating:'4.6',phone:'(11) 2951-3056',website_url:'',maps_url:''}]");
   const gravados = []; let abriu = null;
@@ -84,7 +84,11 @@ test('a foto abre a pagina do lugar em previa, e tocar em Fui salva e abre o spo
     assert.strictEqual(A.avaliar('S.curPlace._previa'), true);
     assert.strictEqual(gravados.length, 0, 'abrir a previa nao pode gravar nada');
     const v = trocar(A, 'openPlace', (id) => { abriu = id });
-    try { await A.setStatus('been') } finally { v() }
+    try {
+      await A.setStatus('been');
+      assert.strictEqual(gravados.length, 0, 'tocar no status da previa nao pode gravar (13/10: quem salva e o botao)');
+      await A.salvarPreviaEscolhida();
+    } finally { v() }
     const spot = gravados.find(([t]) => t === 'spots');
     assert.ok(spot, 'nao salvou');
     assert.strictEqual(spot[1].status, 'been');

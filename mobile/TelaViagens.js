@@ -40,13 +40,10 @@ import { folgaDeRolagem } from './BarraDeAbas';
 // não é o tamanho de COUNTRIES (243), que inclui território não soberano.
 const PAISES_NO_MUNDO = 195;
 
-// "Você conheceu N% do mundo" (15a, 08/10): o anel saiu. Inteiro a partir de
-// 10%, uma casa abaixo disso, sem ",0". Mesma regra de fracaoDoMundo no site.
+// "Você conheceu N% do mundo" (15a, 08/10): o anel saiu. SEMPRE INTEIRO
+// (13/10, o Lucas: "5,6%" tem que ser "6%"). Mesma regra no site.
 function fracaoDoMundo(n) {
-  const pc = Math.min(100, ((Number(n) || 0) / PAISES_NO_MUNDO) * 100);
-  if (pc >= 10) return Math.round(pc) + '%';
-  const t = pc.toFixed(1);
-  return (t.endsWith('.0') ? t.slice(0, -2) : t.replace('.', ',')) + '%';
+  return Math.round(Math.min(100, ((Number(n) || 0) / PAISES_NO_MUNDO) * 100)) + '%';
 }
 
 // Sem onPress (continentes, desenho c1 de 05/10), a linha não é botão e
