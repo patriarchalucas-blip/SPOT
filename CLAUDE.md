@@ -281,16 +281,22 @@ ver `mobile/app-store/login-apple.md`. Pede um build novo que substitui a build 
   endereço escrito — a Barceloneta virava "Catalunha".
 - **Voltar do Android:** `window.voltarDoAndroid` (o site não usa histórico).
 
-## Banco em Oregon, plano Free, conta da Sólides (descoberto 08/10/2026)
+## Banco em Oregon, plano Free (descoberto 08/10/2026)
+
+**Saiu da conta da Sólides em 12/10/2026:** o projeto foi TRANSFERIDO (função
+"Transfer project" do Supabase) pra organização **"Spot"** (Free) da conta
+pessoal do Lucas, que entra com o GitHub pessoal (patriarchalucas@gmail.com,
+Owner). Mesmo projeto: endereço, chaves, usuários e configuração de login não
+mudaram — conferido depois (auth 200 com email/Google/Apple, REST com RLS,
+storage 200). Falta: tirar o e-mail da Sólides do Team da org nova.
 
 O projeto Supabase está em **us-west-2 (Oregon)**, plano **Free**, compute
-**nano**, **sem backup**, numa organização do e-mail da Sólides
-(lucas.patriarcha@solides.com.br). Medido de São Paulo: ~0,3 s mínimo por
+**nano**, **sem backup**. Medido de São Paulo: ~0,3 s mínimo por
 consulta só de distância, 0,7–1,5 s nas reais. O app fala com o banco DIRETO
 do celular (e as Functions rodam no Cloudflare GRU), então trazer pra São Paulo
 ajuda — diferente do projeto da Sólides (Apps Script nos EUA), onde piora.
 **Decisão do Lucas pendente** ("sei que o certo é migrar"): projeto novo em
-South America (São Paulo), numa conta com e-mail PESSOAL, Free ou Pro. Plano
+South America (São Paulo), na org pessoal "Spot", Free ou Pro. Plano
 de 8 etapas discutido em 08–09/10 (schema + dados + auth.users com senha +
 storage + reconfigurar Google/Apple/Resend + ensaio + virada de 30–60 min,
 todo mundo entra de novo uma vez). Falta pg_dump nesta máquina (é da Sólides).
