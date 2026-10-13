@@ -4521,10 +4521,12 @@ async function impEncontrar(){
   // Três de cada vez: rápido o bastante pra lista andar, sem rajada no Google.
   let prox=0;const idsVistos=new Set();
   const trabalhador=async()=>{
-    while(prox<IMP.cand.length&&!IMP.cancelado){
+    // Leitura refeita no meio (voltou no cadastro e mudou o texto): os
+    // trabalhadores da antiga param, senão misturavam lugares nas duas listas.
+    while(prox<IMP.cand.length&&!IMP.cancelado&&minha===IMP.leituraN){
       const c=IMP.cand[prox++];
       const res=await impProcurarUm(c);
-      if(IMP.cancelado)return;
+      if(IMP.cancelado||minha!==IMP.leituraN)return;
       IMP.feitos++;
       if(res.p&&!(res.p._id&&idsVistos.has(res.p._id))){
         if(res.p._id)idsVistos.add(res.p._id);
@@ -4536,7 +4538,7 @@ async function impEncontrar(){
     }
   };
   await Promise.all([trabalhador(),trabalhador(),trabalhador()]);
-  if(IMP.cancelado)return;
+  if(IMP.cancelado||minha!==IMP.leituraN)return;
   IMP.itens.sort((a,b)=>a.ordem-b.ordem);IMP.naoAchou.sort((a,b)=>a.ordem-b.ordem);
   IMP.etapa=IMP.itens.length||IMP.naoAchou.length?'revisar':'vazio';
   impPintar();
@@ -12949,7 +12951,7 @@ function onbDesenhar(){
       +'<p class="onb-sub">Notas, WhatsApp, Instagram: cole o texto e o Spot encontra os lugares. Você confere antes de salvar.</p>'
       +'<textarea id="onbImportar" class="imp-campo onb-importar" maxlength="'+IMP_MAX+'" placeholder="lisboa: taberna da rua das flores, pasteis de belem (amei!!)&#10;porto - majestic café" oninput="ONB.textoImportar=this.value;document.getElementById(\'onbSeguirImp\').textContent=this.value.trim()?\'Encontrar os lugares\':\'Continuar\'"></textarea>';
     const t=document.getElementById('onbImportar');if(t&&ONB.textoImportar)t.value=ONB.textoImportar;
-    pe.innerHTML='<button class="onb-btn" id="onbSeguirImp" onclick="onbIr(4)">'+(String(ONB.textoImportar||'').trim()?'Encontrar os lugares':'Continuar')+'</button>';
+    pe.innerHTML='<button class="onb-btn" id="onbSeguirImp" onclick="onbSeguirImportar()">'+(String(ONB.textoImportar||'').trim()?'Encontrar os lugares':'Continuar')+'</button>';
   }else if(n===4){
     corpo.innerHTML='<h1 class="onb-titulo">O Spot fica melhor com amigos</h1>'
       +'<p class="onb-sub">Você vê os lugares deles, eles veem os seus. Quem entrar pelo seu link já vira seu amigo.</p>'
@@ -13018,10 +13020,23 @@ function animarAnelDoOnboarding(paises){
   requestAnimationFrame(passo);
 }
 
+// 13/10 (o Lucas): a lista colada começa a ser lida NO TOQUE em "Encontrar os
+// lugares", atrás do cadastro, e não no "Começar a usar" — antes a pessoa
+// terminava o cadastro e ainda caía na tela de "Lendo suas notas". Agora, no
+// fim, a revisão já está pronta (ou quase). Voltou e mudou o texto: lê de novo.
+function onbSeguirImportar(){
+  const t=String(ONB.textoImportar||'').trim();
+  if(IMP.ligado&&t!==(ONB.impIniciado||'')){
+    if(ONB.impIniciado)IMP.cancelado=true;
+    ONB.impIniciado=t;
+    if(t){impAbrir(t);impEncontrar()}else goTo('dashboard');
+  }
+  onbIr(4);
+}
 function onbPular(){
   if(ONB.passo===2)return onbIr(3);
   if(ONB.passo===6){cvTeclado(false);return onbIr(3)}
-  if(ONB.passo===3)return onbIr(4);
+  if(ONB.passo===3){ONB.textoImportar='';return onbSeguirImportar()}
   if(ONB.passo===4)return onbIr(5);
 }
 
@@ -13621,8 +13636,10 @@ function talvezDicaDeStatus(){
 }
 
 function onbTerminar(){
-  const colado=String(ONB.textoImportar||'').trim();ONB.textoImportar='';
-  if(colado&&IMP.ligado)setTimeout(()=>{impAbrir(colado);impEncontrar()},400);
+  const colado=String(ONB.textoImportar||'').trim(),jaLendo=!!ONB.impIniciado;
+  ONB.textoImportar='';ONB.impIniciado='';
+  // Já lendo desde o passo da lista: a tela de importar está por baixo.
+  if(colado&&IMP.ligado&&!jaLendo)setTimeout(()=>{impAbrir(colado);impEncontrar()},400);
   marcarCadastroFeito();
   // Como o Spot funciona (09/10): logo depois do primeiro acesso, uma vez. O
   // pedido de notificação do iPhone espera o tutorial fechar — por cima dele,
