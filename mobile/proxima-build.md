@@ -12,6 +12,8 @@ pra "Já compilado".
 
 ## Na fila
 
+> **13/10/2026: foi por EAS Update** (canal production, runtime 1.0.4, update group `a7b3d614-9fcf-4b74-9afc-b6bac8ec3cf0`) tudo que era só JS desta lista: abas em inglês (idioma.js), "% do mundo" inteiro, ProtecaoDaAba, tirarAviso, toque na notificação com o pacote, aviso nativo no sistema F e o "Adicionar spot" a menos em Viagens. Quem está na 1.0.4 recebe na próxima abertura (ou na seguinte). A próxima BUILD ainda precisa levar isso tudo junto (já está no código).
+
 - **App em inglês nas abas nativas** (13/10, pedido do Lucas): `mobile/idioma.js` (`t()` + dicionário dos textos fixos), `t()` em TelaViagens/TelaAmigos/TelaExplorar/BarraDeAbas/App, e `App.js` ouve `{tipo:'idioma',lang}` do site. Só JS: pode ir por EAS Update. Os textos que o site manda nos pacotes já chegam traduzidos (i18n/motor.js) mesmo nas builds antigas; o que muda com a build é só o texto FIXO das abas (títulos, botões, vazios). Lint ok, `expo export` ok.
 - **"Você conheceu N% do mundo" sempre inteiro** (`TelaViagens.js` `fracaoDoMundo`, 13/10, o Lucas: a Natália via "5,6%", tem que ser "6%"). Só JS: pode ir por EAS Update. O site já está inteiro.
 - **Proteção das abas nativas** (`App.js` `ProtecaoDaAba`, 11/10, auditoria): se uma Tela*.js quebrar com dado inesperado do site, ela sai da frente e o site aparece no lugar, em vez de derrubar o app em todas as builds. Volta a tentar quando o site recarrega.
