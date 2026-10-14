@@ -11477,7 +11477,16 @@ function showNearbySuggestions(){
 function pickNearbyResult(i){
   const p=S_nearbyResults[i];if(!p)return;
   if(!S.addCat){S.addCat=categoriaDoLugar(p.types);p.icon=catIcon(S.addCat)}
+  // A pessoa ESTÁ aqui (o Lucas, 14/10: "vc já tem a loc do cara, pra que
+  // perguntar?"). Lugar que veio sem país não pode cair no "Em qual viagem?":
+  // vale o país dos vizinhos da mesma busca (todos a menos de 600 m) e, na
+  // falta, o de casa.
+  if(!p.country)p.country=paisDoEndereco(p.address)||paisDaVizinhanca(S_nearbyResults);
   pickPlace(p);
+}
+function paisDaVizinhanca(lista){
+  const v=(lista||[]).find(x=>x&&x.country);
+  return (v&&v.country)||(S.profile&&S.profile.home_country)||'';
 }
 
 // ═══ CHECK-IN POR PROXIMIDADE (estilo Foursquare/Swarm) ═══
@@ -11606,6 +11615,7 @@ function checkinAdd(){
   // ou uma nova, criada só ao salvar) e só pergunta quando nem o país se sabe.
   // 14/10 (o Lucas): aqui ainda havia uma regra própria, que perguntava "Em
   // qual viagem?" sempre que o país tinha zero ou duas viagens.
+  if(!place.country)place.country=paisDoEndereco(place.address)||paisDaVizinhanca([]);
   jumpToNoteSheet(null,'food',place,'been',true);
 }
 let searchTO;
