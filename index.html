@@ -10959,7 +10959,12 @@ function exmTalvezBuscarNaArea(){
     const passo=Math.pow(2,Math.round(Math.log2(bruto)));   // potência de 2: zoom parecido, mesma grade
     const baixo=x=>Math.floor(x/passo)*passo,alto=x=>Math.ceil(x/passo)*passo,fixo=x=>Number(x.toFixed(5));
     const rect={rectangle:{low:{latitude:fixo(baixo(sw.lat())),longitude:fixo(baixo(sw.lng()))},high:{latitude:fixo(alto(ne.lat())),longitude:fixo(alto(ne.lng()))}}};
-    EXM.areaChave=[sw.lat(),sw.lng(),ne.lat(),ne.lng()].join(',');   // não re-enquadra: a pessoa escolheu a vista
+    // Não re-enquadra: a pessoa escolheu a vista. A chave tem que ser a do
+    // retângulo BUSCADO (o arredondado), que é o que o exmPinos compara — com
+    // a vista crua (até 14/10) nunca batia, e todo arrasto terminava num zoom
+    // pra fora até a grade.
+    const rr=rect.rectangle;
+    EXM.areaChave=[rr.low.latitude,rr.low.longitude,rr.high.latitude,rr.high.longitude].join(',');
     EXM.amigosEnquadrados=-1;
     const cidade=(EXPLORE.lugar&&EXPLORE.lugar.cidade)||EXPLORE.city||'';
     runExplore('Nesta área',{nome:'Nesta área',tipo:'mapa',cidade,pais:'',area:rect});
@@ -11026,7 +11031,11 @@ function exmPinos(){
   // Enquadra a área da busca UMA vez por busca (arrastar o mapa depois não é desfeito).
   const r=EXPLORE.area&&EXPLORE.area.rectangle;
   const chave=r?[r.low.latitude,r.low.longitude,r.high.latitude,r.high.longitude].join(','):'';
-  const comPos=EXM.itens.filter(it=>(it.foram||it.querem)&&it.lat!=null);
+  // Da busca INTEIRA (todos), não de EXM.itens: no mapa EXM.itens é só o que
+  // está na tela, e a conta mudava a cada toque num pino (o panTo move a vista)
+  // — mudou a conta, re-enquadrava; re-enquadrou, mudava de novo. Era o
+  // "fica dando zoom e tirando o zoom" (14/10).
+  const comPos=todos.filter(it=>(it.foram||it.querem)&&it.lat!=null);
   const chaveAmigos=comPos.length;
   if(r&&(chave!==EXM.areaChave||(chaveAmigos&&chaveAmigos!==EXM.amigosEnquadrados&&EXPLORE.lugar&&EXPLORE.lugar.tipo==='area'))){
     EXM.areaChave=chave;EXM.amigosEnquadrados=chaveAmigos;
@@ -11592,17 +11601,12 @@ function checkinAdd(){
   CHECKIN.place=null;
   darDadosDeViagens();
   // Categoria já é sabida (check-in só busca comer/beber) e "Já fui" é o
-  // padrão óbvio — você está literalmente lá. Viagem: se só existir uma que
-  // bate com o país do lugar, nem pergunta; só pergunta quando é ambíguo
-  // (nenhuma viagem pro país, ou mais de uma).
-  if(ehDaCasa(p.city,p.country)){viagemDeCasa(p.country).then(v=>{if(v)jumpToNoteSheet(v,'food',place,'been')});return}
-  const candidatas=S.trips.filter(t=>((t.destinations&&t.destinations[0])||t.name)===p.country);
-  if(candidatas.length===1){
-    jumpToNoteSheet(candidatas[0],'food',place,'been');
-  }else{
-    S.explorePick=place;S.explorePickCat='food';S.explorePickStatus='been';
-    abrirEscolhaDeViagem();
-  }
+  // padrão óbvio — você está literalmente lá. A viagem sai do próprio lugar,
+  // como no +: sem viagem passada, o pickPlace decide (casa, viagem do país
+  // ou uma nova, criada só ao salvar) e só pergunta quando nem o país se sabe.
+  // 14/10 (o Lucas): aqui ainda havia uma regra própria, que perguntava "Em
+  // qual viagem?" sempre que o país tinha zero ou duas viagens.
+  jumpToNoteSheet(null,'food',place,'been',true);
 }
 let searchTO;
 let searchReqId=0;
