@@ -338,7 +338,7 @@ display_name/username; `delete_my_account` apaga denúncias contra a pessoa.
 
 ## Auditoria de 11/10/2026 (2ª rodada: app nativo, Amigos/feed, desempenho)
 
-**Migração 035 (`migrations/035_pontas_de_seguranca.sql`) — ESCRITA, FALTA RODAR:**
+**Migração 035 (`migrations/035_pontas_de_seguranca.sql`) — RODADA em 16/10/2026 (3/3 true):**
 `ha_bloqueio` só responde sobre quem pergunta; `fui_em`/`created_at` de spots
 decididos pelo banco em qualquer escrita; limites no perfil por GATILHO
 `profiles_nos_limites` (nome cortado em 60, bio em 300, @ `^[a-z0-9_]{3,30}$`
@@ -368,6 +368,39 @@ spot sem esperar o `loadDashboard`; comentários em 1 ida; Perfil desenhando da
 memória; spots dos amigos via RPC; índices em `spots(user_id)`, `spots(trip_id)`,
 `trips(user_id)`, `follows(following_id)` e `(select auth.uid())` nas políticas;
 pintar o cache antes de renovar o token; `sbFetch` renovando token em todo 403.
+
+## Pen test de 16/10/2026 (eu + 1 agente em paralelo, revisão defensiva)
+
+**Feito e no ar:**
+- **XSS armazenado via `category` (grave) — fechado.** A categoria do spot caía
+  num `onerror="...('+cat+')"` (string JS dentro de atributo HTML): o `esc()`
+  vira `&#39;` mas o navegador decodifica ANTES do JS rodar, então um `category`
+  gravado via API direta (o RLS de spots não checa o VALOR) com aspa+payload
+  escapava e executava no app de quem abrisse o spot (amigo vendo a cidade, ou
+  quem salvasse de uma lista `/l/`) — roubo de sessão. `catSegura()` força os 3
+  valores no render (mata linha já gravada torta) e no `salvarSpotDireto`; `CHECK
+  (category in ('food','hotel','experience'))` no banco é o backstop (rodado
+  16/10). Lição geral em [[spot-xss-esc-em-atributo-js]]: `esc()` NÃO basta pra
+  dado em string JS dentro de `on*=""` — tem que ser valor de lista fixa, uuid
+  ou `data-*`. Os ids de spot/usuário ali são uuid, por isso passam.
+- **Cópia antiga do app servida na web — fechado.** `/ferramentas/instagram/fonte/app-real/app`
+  (e `jornadas.mjs`, `demo.js`, prévias de dev) davam 200: app vencido falando
+  com o Supabase real e dividindo a sessão com o app. `_middleware.js` bloqueia
+  `/ferramentas`, `/_dev-previews`, `/_local`, `.mjs/.cjs` (conferido: 404).
+- **Busca raspava a cidade de todo mundo — fechado (036).** `search_profiles`
+  não mostra mais `home_city` de quem não é amigo aceito.
+
+**Pendente (o Lucas decide; nenhum é urgente):**
+- **Chaves velhas no histórico do Git:** `GAPI`/`UNSPLASH_KEY` antigas estão no
+  histórico público. Tirar do código NÃO invalida a chave — o Lucas precisa
+  confirmar no Google Cloud e no Unsplash que foram REVOGADAS/giradas.
+- **Cota paga drenável com contas descartáveis** (busca 5.000/mês global cabe em
+  ~4 contas; `place-photo` sem login). Segura no volume de hoje.
+- **`/api/erro` aceita POST sem login** (enche o log, até 8 pushes/dia no celular
+  do dono); montar a busca do Instagram no servidor (hoje o cliente manda o termo
+  → cache compartilhado 180 dias envenenável); cache de 10 min do login deixa
+  token revogado passar nos endpoints pagos; `/l/` revogado visível na borda por
+  até 5 min. (As 3 primeiras são do meu lado, rápidas, sem build.)
 
 ## Painel de gastos dos sócios (meuspot.app/gastos, 12/10/2026)
 
@@ -512,7 +545,7 @@ anon key devolve **200 + `confirmation_sent_at`** quando o SMTP está de pé, e
 
 ## Estado do banco (migrações aplicadas)
 
-001 a 034 já foram rodadas no Supabase (**034** = gatilho `follows_sem_troca` (UPDATE não troca os lados do pedido) + aceite checa bloqueio; rodada em 09/10/2026. **033** = `follows.accepted_at` + gatilho `follows_aceito_em`: a hora do ACEITE, que a Atividade usa no "agora são amigos" — antes era a do pedido e aceite tardio ficava escondido; rodada em 08/10/2026, 2/2 true. **032** = tabela `cidades_visitadas` (marcar cidade sem spot; dono escreve, amigo lê), `spots.fui_em` + gatilho (feed ordena pelo Fui, não pela criação), RPC `perfis_da_conversa(spot)` (nome de quem comentou sem ser amigo), `pending_request_profiles` com home_city/spots, `handle_new_user` usa o nome do Google/Apple em vez do começo do e-mail (e corrigiu os nomes antigos), pedido de amizade recusado no banco se houver bloqueio (`ha_bloqueio`); rodada em 06/10/2026, 8/8 true. **031** = `search_profiles` devolve `home_city` e `spots` (Fui fora de viagem privada) e põe conta com uso antes da vazia — três contas "Lucas Patriarcha" iguais na busca fizeram o pedido da Isabella ir pra conta errada; rodada em 06/10/2026, anon false/logado true. **030** = tabela `spot_fotos`: várias fotos suas por spot (até 10, no app), vê quem vê o spot, põe só o dono; rodada em 05/10/2026. **029** = `spots.tipo` (tipo do Google, monta "O melhor de cada tipo") + `profiles.ranking` jsonb (ordem arrastada e desempate do "Seus melhores"); rodada em 05/10/2026, 2/2 true. **028** = próximas viagens: trips.privada/proxima + RLS que esconde de amigo os Quero ir de viagem privada; rodada em 05/10/2026, 4/4 true. Efeito colateral esperado: consulta SEM login a trips/spots agora dá 401 "permission denied for function" em vez de []; o servidor usa a service key e não é afetado) — 001–025 conferidas coluna a coluna em
+001 a 036 já foram rodadas no Supabase (**036** = `search_profiles` esconde `home_city` de quem NÃO é amigo aceito — pen test 16/10, a busca raspava nome+@+cidade de todo mundo; rodada 16/10/2026, anon false/logado true. **035** rodada 16/10 (ver acima). Fora das migrações, o pen test de 16/10 também pôs `CHECK (category in ('food','hotel','experience'))` em `spots` — backstop do XSS armazenado via category, ver "Auditoria de 16/10". **034** = gatilho `follows_sem_troca` (UPDATE não troca os lados do pedido) + aceite checa bloqueio; rodada em 09/10/2026. **033** = `follows.accepted_at` + gatilho `follows_aceito_em`: a hora do ACEITE, que a Atividade usa no "agora são amigos" — antes era a do pedido e aceite tardio ficava escondido; rodada em 08/10/2026, 2/2 true. **032** = tabela `cidades_visitadas` (marcar cidade sem spot; dono escreve, amigo lê), `spots.fui_em` + gatilho (feed ordena pelo Fui, não pela criação), RPC `perfis_da_conversa(spot)` (nome de quem comentou sem ser amigo), `pending_request_profiles` com home_city/spots, `handle_new_user` usa o nome do Google/Apple em vez do começo do e-mail (e corrigiu os nomes antigos), pedido de amizade recusado no banco se houver bloqueio (`ha_bloqueio`); rodada em 06/10/2026, 8/8 true. **031** = `search_profiles` devolve `home_city` e `spots` (Fui fora de viagem privada) e põe conta com uso antes da vazia — três contas "Lucas Patriarcha" iguais na busca fizeram o pedido da Isabella ir pra conta errada; rodada em 06/10/2026, anon false/logado true. **030** = tabela `spot_fotos`: várias fotos suas por spot (até 10, no app), vê quem vê o spot, põe só o dono; rodada em 05/10/2026. **029** = `spots.tipo` (tipo do Google, monta "O melhor de cada tipo") + `profiles.ranking` jsonb (ordem arrastada e desempate do "Seus melhores"); rodada em 05/10/2026, 2/2 true. **028** = próximas viagens: trips.privada/proxima + RLS que esconde de amigo os Quero ir de viagem privada; rodada em 05/10/2026, 4/4 true. Efeito colateral esperado: consulta SEM login a trips/spots agora dá 401 "permission denied for function" em vez de []; o servidor usa a service key e não é afetado) — 001–025 conferidas coluna a coluna em
 23/09/2026, 026 rodada e conferida (`anon = false` nas duas) em 25/09/2026, **027**
 rodada em 27/09/2026 (5/5 "true" na conferência; RPCs novas recusam anon).
 **027** = cadastro não quebra com username repetido (`handle_new_user` com sufixo);
