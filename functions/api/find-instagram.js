@@ -49,13 +49,16 @@ export async function onRequestPost(context) {
     return json({ error: 'bad_request' }, 400);
   }
 
-  const query = String(body.query || '').trim();
-  if (!query) return json({ error: 'missing_query' }, 400);
-  // Nome e cidade separados: a query junta os dois e não dá pra saber onde um
-  // termina. Sem o nome isolado não dá pra conferir se o perfil é do lugar.
-  // Compatível com chamada antiga (só query): aí name cai pra query inteira.
-  const name = String(body.name || query).trim();
+  // Nome e cidade separados. A BUSCA É MONTADA AQUI, no servidor (pen test
+  // 16/10): antes o termo vinha pronto do cliente (body.query), que podia
+  // direcionar a busca pra um @ parecido e fixá-lo na memória compartilhada.
+  // Agora o cliente só diz O LUGAR; o escolherPerfil confere o resultado
+  // contra nome/cidade de qualquer jeito. body.query ainda é aceito como nome
+  // pra não quebrar chamada antiga, mas nunca mais vira o termo da busca.
+  const name = String(body.name || body.query || '').trim();
+  if (!name) return json({ error: 'missing_name' }, 400);
   const city = String(body.city || '').trim();
+  const query = (name + (city ? ' ' + city : '')).replace(/\s+/g, ' ').trim();
   // Site oficial que o Google Places já devolveu pro lugar, quando existe.
   const site = String(body.site || '').trim();
 

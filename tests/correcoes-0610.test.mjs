@@ -182,12 +182,25 @@ test('posicao: le os spots com o token de quem chama, nao com a chave de servico
 });
 
 // ── 11. Aviso de erro com texto fixo ─────────────────────────────────────────
-test('erro: o aviso no celular do dono nao leva a mensagem de quem chamou', async () => {
+test('erro: report AUTENTICADO avisa o dono com texto fixo, sem a mensagem de quem chamou', async () => {
   const env = { SPOT_KV: kvFalso(), SUPABASE_SERVICE_KEY: 's' };
   const corpos = [], espera = [];
-  await comFetch(async (u, opt) => { if (opt && opt.body) corpos.push(String(opt.body)); return new Response('[{"token":"ExponentPushToken[a]","user_id":"x"}]') },
-    () => erroPost({ request: new Request('https://x/api/erro', { method: 'POST', body: JSON.stringify({ msg: 'PIX GRATIS em golpe.co', tela: 'Perfil<b>' }) }), env, waitUntil: (p) => espera.push(p) }).then(() => Promise.all(espera)));
+  await comFetch(async (u, opt) => {
+    if (String(u).includes('/auth/v1/user')) return new Response(JSON.stringify({ id: UID }), { status: 200 });
+    if (opt && opt.body) corpos.push(String(opt.body));
+    return new Response('[{"token":"ExponentPushToken[a]","user_id":"x"}]');
+  }, () => erroPost({ request: new Request('https://x/api/erro', { method: 'POST', headers: { Authorization: 'Bearer ' + TK }, body: JSON.stringify({ msg: 'PIX GRATIS em golpe.co', tela: 'Perfil<b>' }) }), env, waitUntil: (p) => espera.push(p) }).then(() => Promise.all(espera)));
   const tudo = corpos.join(' ');
   assert.ok(tudo.includes("Erro novo no app"), tudo);
   assert.ok(!tudo.includes("PIX GRATIS"));
+});
+
+// Pen test 16/10: report ANÔNIMO é registrado, mas NÃO buzina o celular do dono
+// (senão qualquer um dispara aviso). Sem token, nenhum push sai.
+test('erro: report anonimo nao avisa o dono', async () => {
+  const env = { SPOT_KV: kvFalso(), SUPABASE_SERVICE_KEY: 's' };
+  const corpos = [], espera = [];
+  await comFetch(async (u, opt) => { if (opt && opt.body) corpos.push(String(opt.body)); return new Response('[{"token":"ExponentPushToken[a]","user_id":"x"}]') },
+    () => erroPost({ request: new Request('https://x/api/erro', { method: 'POST', body: JSON.stringify({ msg: 'erro qualquer', tela: 'Login' }) }), env, waitUntil: (p) => espera.push(p) }).then(() => Promise.all(espera)));
+  assert.ok(!corpos.join(' ').includes('Erro novo no app'), 'anonimo nao pode disparar aviso');
 });

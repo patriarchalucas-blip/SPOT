@@ -1,5 +1,6 @@
 import { lerKV, gravarKV } from './_kv.js';
 import { avisarDono } from './_aviso-dono.js';
+import { quemEsta } from './_auth.js';
 
 // Cloudflare Pages Function — o app CONTA OS PRÓPRIOS ERROS: /api/erro.
 //
@@ -23,6 +24,12 @@ import { avisarDono } from './_aviso-dono.js';
 // propósito — só tem erro técnico já limpo, e o código do app é público.
 
 const TETO_GRAVACOES_DIA = 300;
+// Reserva pra report ANÔNIMO (pen test 16/10): erro pode acontecer antes do
+// login (tela de entrar), então anônimo ainda é registrado — mas num bolso
+// próprio, pra um curl em laço sem conta não esgotar as 300 do dia e calar os
+// erros de verdade. E só report AUTENTICADO buzina o celular do dono: sem isso,
+// qualquer um dispara os avisos (já era texto fixo; agora nem o aviso sai).
+const TETO_ANON_DIA = 60;
 const TETO_AVISOS_DIA = 8;
 const MAX_ASSINATURAS = 150;
 const UM_MES = 60 * 60 * 24 * 31;
@@ -58,14 +65,21 @@ export async function onRequestPost(context) {
   const pilha = limparTexto(b.pilha, 900);
   const sistema = limparTexto(b.sistema, 40);
 
+  // Login opcional: não recusa report sem token (erro pré-login existe), mas
+  // separa anônimo de autenticado pra limitar o abuso.
+  const quem = await quemEsta(request, env);
+  const logado = !!(quem && quem.uid);
+
   const dia = new Date().toISOString().slice(0, 10);
   const chave = 'erros_' + dia;
   let d = {};
   try { d = JSON.parse((await lerKV(env, chave)) || '{}') || {} } catch (e) { d = {} }
   d.escritas = d.escritas || 0;
+  d.escritasAnon = d.escritasAnon || 0;
   d.avisos = d.avisos || 0;
   d.erros = d.erros || {};
   if (d.escritas >= TETO_GRAVACOES_DIA) return json({ ok: true, teto: true });
+  if (!logado && d.escritasAnon >= TETO_ANON_DIA) return json({ ok: true, teto: 'anon' });
 
   const sig = assinatura(msg, tela);
   const agora = new Date().toISOString();
@@ -82,7 +96,9 @@ export async function onRequestPost(context) {
     d.erros[sig] = { msg, tela, tipo, pilha, sistema, n: 1, app: onde === 'app' ? 1 : 0, primeiro: agora, ultimo: agora };
   }
   d.escritas++;
-  const novo = !ja && d.avisos < TETO_AVISOS_DIA;
+  if (!logado) d.escritasAnon++;
+  // Só report autenticado buzina o dono. Anônimo entra no registro (GET), calado.
+  const novo = logado && !ja && d.avisos < TETO_AVISOS_DIA;
   if (novo) d.avisos++;
   // gravarKV nunca levanta erro: devolve false quando o KV recusa (o teto
   // grátis de mil gravações por dia, no app inteiro). A resposta conta.

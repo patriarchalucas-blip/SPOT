@@ -3203,7 +3203,12 @@ body.exm .exm-filtros{position:relative;z-index:1}
       const sistema=(ua.match(/iPhone OS [\d_]+|Android [\d.]+|Mac OS X [\d_]+|Windows NT [\d.]+/)||[''])[0];
       const corpo=JSON.stringify({tipo,msg,pilha:limpar(pilha).slice(0,900),tela,sistema,
         onde:(window.ReactNativeWebView&&window.ReactNativeWebView.postMessage)?'app':'navegador'});
-      fetch('/api/erro',{method:'POST',headers:{'Content-Type':'application/json'},body:corpo,keepalive:true}).catch(()=>{});
+      // Token quando logado: o servidor só avisa o Lucas em erro autenticado
+      // (anônimo é registrado calado — pen test 16/10). Sem await: reportar
+      // erro não pode travar nem renovar sessão.
+      const hdr={'Content-Type':'application/json'};
+      try{if(S&&S.token)hdr.Authorization='Bearer '+S.token}catch(e){}
+      fetch('/api/erro',{method:'POST',headers:hdr,body:corpo,keepalive:true}).catch(()=>{});
     }catch(e){}
   };
   window.addEventListener('error',e=>reportarErro('erro',e.message||texto(e.error),e.error&&e.error.stack));
