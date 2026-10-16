@@ -28,6 +28,15 @@ const BLOQUEADOS = [
   // vai receber o Apple ID e o Team ID na hora do envio — não pode ficar
   // aberto na web esperando eu lembrar de bloquear depois.
   /^\/mobile(\/|$)/i,
+  // Bastidores (capturas, protótipos, scripts de teste). O pen test de 16/10
+  // achou uma CÓPIA ANTIGA do app em /ferramentas/instagram/fonte/app-real/app
+  // servindo 200: app vencido, sem o portão de "só no app", falando com o
+  // Supabase de verdade e dividindo o localStorage (a sessão) com o app real.
+  // Também jornadas.mjs, demo.js e as prévias de dev ficavam abertos.
+  /^\/ferramentas(\/|$)/i,
+  /^\/_dev-previews(\/|$)/i,
+  /^\/_local(\/|$)/i,
+  /\.(mjs|cjs)$/i,
   // Qualquer .sql, .toml ou .md em qualquer pasta. Lista por extensão em vez
   // de por nome para não depender de eu lembrar a cada arquivo novo: o site
   // não serve nenhum desses formatos, então bloquear todos é seguro.

@@ -3265,6 +3265,14 @@ function icon(n,c){return '<svg class="ic'+(c?' '+c:'')+'" viewBox="0 0 24 24" a
 // Regra: `esc()` em qualquer interpolação de dado dentro de template de HTML.
 const ESC_MAP={'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;','`':'&#96;'};
 function esc(v){return String(v==null?'':v).replace(/[&<>"'`]/g,function(c){return ESC_MAP[c]});}
+// catSegura: a categoria entra em alguns onerror="...('+cat+')..." — string JS
+// DENTRO de atributo HTML. Ali o esc() não basta: o navegador decodifica &#39;
+// de volta pra ' ANTES de o JS rodar, então um category gravado via API direta
+// (o RLS de spots não checa o valor) com ('),payload// escaparia da string e
+// executaria no app de quem abrisse o spot. A categoria só pode ser um de três
+// valores conhecidos; forçar isso no render fecha a brecha até pra linha já
+// gravada torta. Achado no pen test de 16/10. (A CHECK no banco é o backstop.)
+function catSegura(c){return (c==='food'||c==='hotel'||c==='experience')?c:'experience';}
 // safeUrl: só deixa passar http(s) ou caminho relativo. Bloqueia javascript:,
 // data: e vbscript: — website_url/maps_url vêm do Places e photo_url vem do
 // banco, ou seja podem ser qualquer string. Quem escapa pro atributo é o
@@ -7714,7 +7722,7 @@ function renderList(){
       const nota=s.my_rating?('★ '+fmtRating(s.my_rating)):(s.rating_google?('☆ '+fmtRating(s.rating_google)):'');
       // <img> em vez de background-image: só assim dá pra detectar foto quebrada
       // (referência do Google expirada) e disparar o auto-conserto
-      const thumb=s.photo_url?`<div class="lthumb"><img src="${escUrl(fotoNaLargura(s.photo_url,220))}" loading="lazy" decoding="async" style="width:100%;height:100%;object-fit:cover;border-radius:inherit" onerror="onSpotPhotoError(this,'${esc(s.id)}','${esc(s.category)}')"></div>`:`<div class="lthumb">${catIcon(s.category)}</div>`;
+      const thumb=s.photo_url?`<div class="lthumb"><img src="${escUrl(fotoNaLargura(s.photo_url,220))}" loading="lazy" decoding="async" style="width:100%;height:100%;object-fit:cover;border-radius:inherit" onerror="onSpotPhotoError(this,'${esc(s.id)}','${catSegura(s.category)}')"></div>`:`<div class="lthumb">${catIcon(s.category)}</div>`;
       const local=[cityOf(s),s._country].filter(Boolean).join(' · ');
       h+=`<div class="lrow" onclick="openSpotFromList(${i})"><span class="lrank">${i+1}</span>${thumb}<div class="lmain"><div class="lname">${esc(s.name)}</div><div class="lmeta">${esc(local)}</div></div><div class="lright">${nota?`<span class="lrating">${esc(nota)}</span>`:''}<div class="place-status"><span class="status-dot dot-${s.status==='been'?'been':'want'}"></span><span class="place-status-label">${s.status==='been'?'Fui':'Quero ir'}</span></div></div></div>`;
     });
@@ -8359,7 +8367,7 @@ function renderCityBody(){
     const bc=s.category==='food'?'bar-food':s.category==='hotel'?'bar-hotel':'bar-experience';
     const dot=s.status==='been'?'dot-been':'dot-want';
     const tag=spotTag(s);
-    const thumb=s.photo_url?`<div class="place-thumb"><img src="${escUrl(fotoNaLargura(s.photo_url,220))}" loading="lazy" decoding="async" style="width:100%;height:100%;object-fit:cover;border-radius:inherit" onerror="onSpotPhotoError(this,'${esc(s.id)}','${esc(s.category)}')"></div>`:`<div class="place-thumb" data-foto="${esc(s.id)}">${catIcon(s.category)}</div>`;
+    const thumb=s.photo_url?`<div class="place-thumb"><img src="${escUrl(fotoNaLargura(s.photo_url,220))}" loading="lazy" decoding="async" style="width:100%;height:100%;object-fit:cover;border-radius:inherit" onerror="onSpotPhotoError(this,'${esc(s.id)}','${catSegura(s.category)}')"></div>`:`<div class="place-thumb" data-foto="${esc(s.id)}">${catIcon(s.category)}</div>`;
     // Desenho 5a: o status sai da direita e vira a 1ª palavra da linha 2,
     // antes da nota. O nome ganha a largura toda.
     const nota=(foiNoSpot(s)?(s.my_review||s.my_note):(s.my_note||s.my_review))||'';
@@ -13461,6 +13469,7 @@ async function salvarSpotDireto(p,cat,status,avaliacao){
     if(status==='been'&&ja.status==='want'){const{error}=await dbUpdate('spots',ja.id,{status:'been'});if(!error)ja.status='been'}
     return ja;
   }
+  cat=catSegura(cat); // categoria vinda de lista pública/amigo não escapa dos 3 valores (pen test 16/10)
   const rec={user_id:S.user.id,trip_id:viagem.id,name:p.name,category:cat,my_note:'',
     city:cidade,address:p.address||'',photo_url:p.photo_url||'',
     place_type:catLabel(cat),rating_google:p.rating_google||'',status:status,
@@ -18955,7 +18964,7 @@ function friendSpotRowHTML(s,i){
   const dot=s.status==='been'?'dot-been':'dot-want';
   const fotoDoAmigo=s.photo_url||s._fotoVista||'';
   const thumb=fotoDoAmigo
-    ?'<div class="place-thumb"><img src="'+escUrl(fotoNaLargura(fotoDoAmigo,220))+'" loading="lazy" decoding="async" style="width:100%;height:100%;object-fit:cover;border-radius:inherit" onerror="'+(i==null?'thumbFallback(this,\''+esc(s.category)+'\')':'fotoDoAmigoFalhou(this,'+i+')')+'"></div>'
+    ?'<div class="place-thumb"><img src="'+escUrl(fotoNaLargura(fotoDoAmigo,220))+'" loading="lazy" decoding="async" style="width:100%;height:100%;object-fit:cover;border-radius:inherit" onerror="'+(i==null?'thumbFallback(this,\''+catSegura(s.category)+'\')':'fotoDoAmigoFalhou(this,'+i+')')+'"></div>'
     :'<div class="place-thumb">'+catIcon(s.category)+'</div>';
   const nota=s.my_rating?fmtRating(s.my_rating)+'★':''; // 06/10: "4,5★" como no resto
   const tag=spotTag(s);
