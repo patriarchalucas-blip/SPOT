@@ -12202,15 +12202,17 @@ function setAddRating(base,ev){
 // desabilitado sem explicacao e a forma mais rapida de fazer alguem achar que
 // o app travou — que e exatamente o que aconteceu com o "Criando...".
 function atualizarBotaoSalvar(){
-  const falta=addStatus==='been'&&!(addRating>0);
+  // 19/10 (o Lucas): Fui NÃO exige nota na hora. "Estava com a namorada,
+  // lembrei de marcar o restaurante antes de acabar; adiciono como fui e
+  // avalio depois." A nota é opcional aqui e entra pela ficha quando quiser.
   ['saveSpotBtn','saveAndAddBtn'].forEach(id=>{
     const b=document.getElementById(id);
     if(!b)return;
-    b.style.opacity=falta?'.45':'';
-    b.style.pointerEvents=falta?'none':'';
+    b.style.opacity='';
+    b.style.pointerEvents='';
   });
   const b=document.getElementById('saveSpotBtn');
-  if(b)b.textContent=falta?'Dê uma nota para salvar':'Salvar spot';
+  if(b)b.textContent='Salvar spot';
 }
 // Subcategoria escolhida na ficha de adicionar. Começa no palpite vindo dos
 // types do Places (o usuário só confirma) e '' quando o Google não deu pista.
@@ -12319,12 +12321,8 @@ async function resolverCidadeDoSpot(p,trip){
   const bruto=p.city||'';
   return comPrazo(canonizarCidade(bruto,p.country||''),3000,bruto);
 }async function saveSpot(addAnother){
-  // Trava de verdade, alem do botao apagado: se a interface deixar passar por
-  // qualquer motivo, o spot nao entra mudo no banco.
-  if(addStatus==='been'&&!(addRating>0)){
-    toast('Falta a nota','Quantas estrelas esse lugar merece?','alert');
-    return;
-  }
+  // Fui sem nota pode (19/10): a avaliação vem depois, pela ficha. A nota não
+  // trava mais o salvar.
   const note=document.getElementById('noteField').value.trim(); // optional now
   // Mesmo filtro do comentário: a nota vai ser lida pelos amigos.
   if(textoBarrado(note)){avisarConteudoBarrado();return}
@@ -12399,7 +12397,9 @@ async function resolverCidadeDoSpot(p,trip){
     rec.photo_author=p.photo_author.nome;
     if(p.photo_author.url)rec.photo_author_url=p.photo_author.url;
   }
-  if(addStatus==='been')rec.my_rating=addRating;
+  // Nota opcional: sem estrela, grava null (não 0, que parecia nota péssima) —
+  // mesma convenção da ficha (rateStar). A pessoa avalia depois.
+  if(addStatus==='been')rec.my_rating=addRating>0?addRating:null;
   // UM spot por lugar (feedback da Chu, 01/10): Alexanderplatz salvo três
   // vezes, e "Quero ir" + "Fui" do mesmo lugar viravam dois registros. Se o
   // lugar já está na lista, ATUALIZA o que existe — status, nota, frase —
@@ -12411,7 +12411,9 @@ async function resolverCidadeDoSpot(p,trip){
     // rebaixa — só acrescenta a frase. Subir de Quero ir pra Fui continua.
     const rebaixaria=addStatus==='want'&&(existente.status==='been'||existente.status==='skip');
     const patch=rebaixaria?{}:{status:addStatus};
-    if(addStatus==='been'){patch.my_rating=addRating;if(note)patch.my_review=note}
+    // Só grava a nota quando a pessoa de fato deu uma aqui — sem estrela não
+    // apaga a que o lugar já tinha (ela pode estar só promovendo pra Fui).
+    if(addStatus==='been'){if(addRating>0)patch.my_rating=addRating;if(note)patch.my_review=note}
     else if(note)patch[rebaixaria?'my_review':'my_note']=note;
     if(fotoPropria)patch.photo_url=fotoPropria;
     const r=Object.keys(patch).length?await dbUpdate('spots',existente.id,patch):null;
