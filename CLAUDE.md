@@ -369,6 +369,28 @@ memória; spots dos amigos via RPC; índices em `spots(user_id)`, `spots(trip_id
 `trips(user_id)`, `follows(following_id)` e `(select auth.uid())` nas políticas;
 pintar o cache antes de renovar o token; `sbFetch` renovando token em todo 403.
 
+## Aura Hackathon (Replit + Lucas Abreu) — o Lucas vai participar (19/10/2026)
+
+Imersão de 2 semanas, online, grátis. Portal: `aura-hackathon.replit.app`.
+- **21–27/out · Fase 1 (construção aberta):** entrada livre, sem seleção. Perfil
+  completo (o Lucas já mandou) destrava um **código individual de créditos da
+  Replit** no painel, a partir de 21/out. Lives abertas a todos.
+- **28/out · curadoria:** Lucas Abreu escolhe **20 projetos** pra seguir
+  (procura "substância: clareza de quem entendeu o problema"). Só os 20 pegam 2ª
+  leva de créditos, office hours (Google Meet) e vão à final.
+- **4/nov · final:** banca decide os vencedores.
+- Equipe de até 3 (líder + 2); dá pra convidar o **Jezler** como colaborador na
+  Fase 1. Cadastro do projeto no portal pede descrição, vídeo curto e link do app.
+
+**O encaixe, que define a estratégia:** o hackathon é "nasce e vai ao ar NA
+REPLIT" — link em `*.replit.app`. O Spot é nativo (App Store) e NÃO foi feito na
+Replit, então apontar pra App Store não compete pela curadoria. **Jogada
+acordada:** construir o **roteiro com IA como app web na Replit** (os dados do
+Spot por trás) — tem `*.replit.app` de verdade pra mostrar, tese forte ("o Spot
+já é real, isto é a próxima peça") e é a mesma feic que já estava na fila
+("Montar roteiro", rascunhada em 19/10 — ver "Próximos passos"). Rascunho do
+projeto no portal: Descrição e Tese já preenchidas; link e vídeo são da Fase 1.
+
 ## Pen test de 16/10/2026 (eu + 1 agente em paralelo, revisão defensiva)
 
 **Feito e no ar:**
