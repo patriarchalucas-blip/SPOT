@@ -134,7 +134,11 @@ body{font-family:'Inter Tight',sans-serif;background:var(--base);color:var(--ink
 .login-photo.active{opacity:1}
 .login-photo.has-photo.active{animation:slowzoom 6s ease-out forwards}
 @keyframes slowzoom{from{transform:scale(1.0)}to{transform:scale(1.08)}}
-.login-scrim{position:absolute;inset:0;z-index:1;background:linear-gradient(to bottom,rgba(0,0,0,0.3) 0%,rgba(0,0,0,0.1) 35%,rgba(0,0,0,0.55) 70%,rgba(0,0,0,0.92) 100%)}
+/* 2b: escurecido forte nos 300px de baixo (onde moram a marca e o botão) e um
+   leve no topo, só pra cidade e as barras lerem sobre foto clara. */
+.login-scrim{position:absolute;inset:0;z-index:1;background:
+  linear-gradient(to top,rgba(0,0,0,.6) 0,rgba(0,0,0,0) 300px),
+  linear-gradient(to bottom,rgba(0,0,0,.32) 0,rgba(0,0,0,0) 130px)}
 .login-inner{position:relative;z-index:2;height:100vh;padding:48px 20px 40px;display:flex;flex-direction:column;justify-content:space-between}
 .login-top{display:flex;justify-content:center;min-height:20px}
 .login-place-tag{font-size:13px;font-weight:500;color:rgba(245,245,243,.95);background:rgba(0,0,0,.34);
@@ -204,6 +208,52 @@ body.tem-apple .btn-apple{display:flex}
 .auth-error{background:rgba(0,0,0,.45);border:none;border-radius:var(--r-card);padding:12px 16px;font-size:14px;
   color:var(--base);display:none;-webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px)}
 .auth-error.show{display:block}
+/* ── LOGIN 2b (Claude Design, 20/10): só a marca na tela, caminhos na folha ── */
+#login .login-inner{padding:calc(44px + env(safe-area-inset-top,0px)) 20px calc(34px + env(safe-area-inset-bottom,0px))}
+#login .login-top{flex-direction:column;align-items:center;gap:14px;min-height:0}
+/* Cidade sem pílula, sem fundo, sem blur: texto claro com o ponto que pulsa. */
+#login .login-place-tag{background:none;-webkit-backdrop-filter:none;backdrop-filter:none;padding:0;border-radius:0;color:var(--base);font-weight:500}
+#login .photo-dots{margin:0}
+#login .login-bottom{gap:0}
+#login .login-wm{display:block;margin-bottom:28px}
+#login .login-entrar{min-height:52px;border-radius:var(--r-btn);background:var(--base);color:var(--ink);border:none;
+  font-family:'Inter Tight',sans-serif;font-size:16px;font-weight:600;cursor:pointer;width:100%}
+#login .login-entrar:active{opacity:.85}
+#login .login-legal{text-align:center;font-size:11px;line-height:1.4;color:rgba(245,245,243,.6);margin-top:14px;padding:0}
+#login .login-legal a{color:rgba(245,245,243,.82);text-decoration:underline;text-underline-offset:2px}
+/* A folha: scrim leve (o SPOT continua visível em cima), sem o blur do overlay. */
+.ov-login{background:rgba(0,0,0,.25);-webkit-backdrop-filter:none;backdrop-filter:none}
+.login-sheet{padding:12px 20px calc(34px + env(safe-area-inset-bottom,0px))}
+.login-vias,.login-email{display:flex;flex-direction:column;gap:8px}
+.via{min-height:52px;border-radius:var(--r-btn);border:none;display:flex;align-items:center;justify-content:center;gap:9px;
+  font-family:'Inter Tight',sans-serif;font-size:16px;font-weight:600;cursor:pointer}
+.via:active{opacity:.85}
+.via svg{width:18px;height:18px}
+.via-apple{background:var(--green);color:var(--on-green)}
+.via-apple svg path{fill:var(--on-green)}
+.via-surface{background:var(--surface);color:var(--ink)}
+.via-surface svg path{fill:var(--ink)}
+.le-topo{display:flex;align-items:center;justify-content:space-between;margin-bottom:4px}
+.le-tit{font-size:22px;font-weight:700;letter-spacing:-.03em;color:var(--ink)}
+.le-voltar{background:none;border:none;font-family:'Inter Tight',sans-serif;font-size:15px;color:var(--ink2);cursor:pointer}
+.le-campo{background:var(--surface);border:none;border-radius:var(--r-btn);min-height:52px;padding:0 18px;width:100%;
+  font-family:'Inter Tight',sans-serif;font-size:15px;color:var(--ink);outline:none}
+.le-campo::placeholder{color:var(--ink3)}
+.le-campo:focus{box-shadow:inset 0 0 0 2px var(--ink3)}
+.le-senha{position:relative;display:flex}
+.le-senha .le-campo{padding-right:84px}
+.le-mostrar{position:absolute;right:16px;top:50%;transform:translateY(-50%);background:none;border:none;
+  font-family:'Inter Tight',sans-serif;font-size:14px;color:var(--ink2);cursor:pointer}
+.le-entrar{min-height:52px;border-radius:var(--r-btn);border:none;background:var(--green);color:var(--on-green);
+  font-family:'Inter Tight',sans-serif;font-size:16px;font-weight:600;cursor:pointer;width:100%}
+.le-entrar:active{opacity:.85}
+.le-links{display:flex;align-items:center;justify-content:space-between;font-size:15px;color:var(--ink2);margin-top:4px}
+.le-links span{cursor:pointer}
+/* Erro: cinza, abaixo do botão, nunca vermelho (na folha clara o balão escuro
+   do login sobre foto não serve). */
+.login-sheet .auth-error{background:none;-webkit-backdrop-filter:none;backdrop-filter:none;padding:4px 0 0;
+  color:var(--ink3);font-size:14px}
+.login-moderacao{font-size:12px;color:var(--ink3);text-align:center;margin-top:16px;line-height:1.4}
 .ns-agora-nao{display:block;margin:4px auto 8px;padding:12px 20px;background:none;border:none;font:inherit;font-size:15px;font-weight:600;color:var(--ink3);cursor:pointer}
 .auth-err-acao{background:none;border:none;padding:0;font:inherit;font-weight:600;color:var(--base);text-decoration:underline;text-underline-offset:2px;cursor:pointer}
 
@@ -2590,7 +2640,7 @@ body.exm .exm-filtros{position:relative;z-index:1}
         <svg width="18" height="18" viewBox="0 0 24 24"><path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.07 5.07 0 01-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#fff"/><path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#fff"/><path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18A11 11 0 001 12c0 1.78.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#fff"/><path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#fff"/></svg>
         Continuar com Google
       </button>
-      <button class="btn-email-ghost" onclick="goTo('login');showEmailForm()">Entrar com email</button>
+      <button class="btn-email-ghost" onclick="goTo('login');abrirFolhaLogin();showEmailForm()">Entrar com email</button>
       <div class="login-legal" style="color:var(--ink3)">
         Ao continuar, você concorda com os <a href="/termos" target="_blank" rel="noopener">Termos de uso</a>
         e a <a href="/privacidade" target="_blank" rel="noopener">Política de privacidade</a>.
@@ -2610,42 +2660,43 @@ body.exm .exm-filtros{position:relative;z-index:1}
   <div class="login-inner">
     <div class="login-top">
       <div class="login-place-tag" id="loginPlaceTag"><span class="lpt-dot"></span>Dubrovnik, Croácia</div>
+      <div class="photo-dots" id="photoDots"></div>
     </div>
     <div class="login-bottom">
-      <div class="photo-dots" id="photoDots"></div>
-      <div class="brand-lockup">
-        <svg class="brand-wordmark" viewBox="3 77 273 76" height="44" role="img" aria-label="Spot"><text x="0" y="150" font-family="Cinzel" font-weight="500" font-size="100" letter-spacing="6" fill="#F5F5F3">SPOT</text></svg>
-      </div>
-      <div class="tagline">seus lugares · sua voz</div>
+      <svg class="brand-wordmark login-wm" viewBox="3 77 273 76" height="48" role="img" aria-label="Spot"><text x="0" y="150" font-family="Cinzel" font-weight="500" font-size="100" letter-spacing="6" fill="#F5F5F3">SPOT</text></svg>
       <div class="convite-faixa" id="conviteFaixa" style="display:none"><div class="ei" data-ic="users" style="color:inherit"></div><div class="convite-quem" id="conviteQuem"></div></div>
-      <div class="form-stack">
-        <div class="auth-error" id="authError"></div>
-        <div id="loginButtons">
-          <button class="btn-google btn-apple" onclick="signInApple()">
-            <svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true"><path d="M16.37 1.43c0 1.14-.49 2.27-1.18 3.08-.74.9-1.99 1.57-2.99 1.57-.12 0-.23-.02-.3-.03-.01-.06-.04-.22-.04-.39 0-1.15.57-2.27 1.21-2.98.8-.94 2.14-1.64 3.25-1.68.03.13.05.28.05.43zm4.56 15.71c-.03.07-.46 1.58-1.52 3.12-.94 1.34-1.94 2.71-3.43 2.71-1.52 0-1.9-.88-3.63-.88-1.7 0-2.3.91-3.67.91-1.38 0-2.33-1.26-3.43-2.8-1.29-1.82-2.32-4.63-2.32-7.28 0-4.28 2.8-6.55 5.55-6.55 1.45 0 2.68.95 3.6.95.87 0 2.22-1.01 3.9-1.01.61 0 2.89.06 4.37 2.19-.13.09-2.38 1.37-2.38 4.19 0 3.26 2.85 4.42 2.96 4.45z"/></svg>
-            Continuar com a Apple
-          </button>
-          <button class="btn-google" onclick="signInGoogle()">
-            <svg width="18" height="18" viewBox="0 0 24 24"><path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.07 5.07 0 01-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#fff"/><path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#fff"/><path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18A11 11 0 001 12c0 1.78.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#fff"/><path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#fff"/></svg>
-            Continuar com Google
-          </button>
-          <button class="btn-email-ghost" onclick="showEmailForm()">Entrar com email</button>
-        </div>
-        <div id="emailForm" style="display:none">
-          <input class="field" type="email" id="authEmail" placeholder="seu@email.com">
-          <input class="field" type="password" id="authPassword" placeholder="senha" autocomplete="current-password">
-          <button class="btn-primary" id="authBtn" onclick="handleAuth()">Entrar</button>
-          <div class="login-toggle" onclick="toggleAuthMode()"><span id="authToggleText">Não tem conta? <span>Cadastre-se</span></span></div>
-          <div class="login-toggle" id="linkEsqueci" onclick="pedirRecuperacao()"><span>Esqueci minha senha</span></div>
-          <div class="login-back" onclick="hideEmailForm()">← voltar</div>
-        </div>
-        <div class="login-legal">
-          Ao continuar, você concorda com os <a href="/termos" target="_blank" rel="noopener">Termos de uso</a>
-          e a <a href="/privacidade" target="_blank" rel="noopener">Política de privacidade</a>.<br>
-          O Spot não tolera conteúdo ofensivo nem usuários abusivos.
-        </div>
-      </div>
+      <button class="login-entrar" onclick="abrirFolhaLogin()">Entrar</button>
+      <div class="login-legal">Ao continuar, você aceita os <a href="/termos" target="_blank" rel="noopener">Termos</a> e a <a href="/privacidade" target="_blank" rel="noopener">Privacidade</a>.</div>
     </div>
+  </div>
+</div>
+
+<!-- Folha de entrar (E2, direção 2b do Claude Design): os caminhos a um toque
+     de "Entrar". A primeira tela fica só com a marca; aqui ficam Apple, Google
+     e email, e a frase de moderação (a tela onde a conta é de fato criada). -->
+<div class="overlay ov-login" id="ov-login" onclick="closeOut(event,'ov-login')">
+  <div class="sheet login-sheet">
+    <div class="sheet-handle"></div>
+    <div id="loginButtons" class="login-vias">
+      <button class="via via-apple" onclick="signInApple()">
+        <svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true"><path d="M16.37 1.43c0 1.14-.49 2.27-1.18 3.08-.74.9-1.99 1.57-2.99 1.57-.12 0-.23-.02-.3-.03-.01-.06-.04-.22-.04-.39 0-1.15.57-2.27 1.21-2.98.8-.94 2.14-1.64 3.25-1.68.03.13.05.28.05.43zm4.56 15.71c-.03.07-.46 1.58-1.52 3.12-.94 1.34-1.94 2.71-3.43 2.71-1.52 0-1.9-.88-3.63-.88-1.7 0-2.3.91-3.67.91-1.38 0-2.33-1.26-3.43-2.8-1.29-1.82-2.32-4.63-2.32-7.28 0-4.28 2.8-6.55 5.55-6.55 1.45 0 2.68.95 3.6.95.87 0 2.22-1.01 3.9-1.01.61 0 2.89.06 4.37 2.19-.13.09-2.38 1.37-2.38 4.19 0 3.26 2.85 4.42 2.96 4.45z"/></svg>
+        Continuar com a Apple
+      </button>
+      <button class="via via-surface" onclick="signInGoogle()">
+        <svg width="18" height="18" viewBox="0 0 24 24"><path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.07 5.07 0 01-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/><path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/><path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18A11 11 0 001 12c0 1.78.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/><path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/></svg>
+        Continuar com Google
+      </button>
+      <button class="via via-surface" onclick="showEmailForm()">Continuar com email</button>
+    </div>
+    <div id="emailForm" style="display:none" class="login-email">
+      <div class="le-topo"><span class="le-tit">Entrar com email</span><button type="button" class="le-voltar" onclick="hideEmailForm()">Voltar</button></div>
+      <input class="le-campo" type="email" id="authEmail" placeholder="Email" autocomplete="email">
+      <div class="le-senha"><input class="le-campo" type="password" id="authPassword" placeholder="Senha" autocomplete="current-password"><button type="button" class="le-mostrar" onclick="toggleSenhaLogin(this)">Mostrar</button></div>
+      <button class="le-entrar" id="authBtn" onclick="handleAuth()">Entrar</button>
+      <div class="le-links"><span id="authToggleText" onclick="toggleAuthMode()">Criar conta</span><span id="linkEsqueci" onclick="pedirRecuperacao()">Esqueci a senha</span></div>
+    </div>
+    <div class="auth-error" id="authError"></div>
+    <div class="login-moderacao">O Spot não tolera conteúdo ofensivo nem usuários abusivos.</div>
   </div>
 </div>
 
@@ -6180,13 +6231,13 @@ window.voltouDoLoginGoogle=async function(urlDeVolta){
 function toggleAuthMode(){
   authMode=authMode==='signin'?'signup':'signin';
   document.getElementById('authBtn').textContent=authMode==='signup'?'Criar conta':'Entrar';
-  document.getElementById('authToggleText').innerHTML=authMode==='signup'?'Já tem conta? <span>Entrar</span>':'Não tem conta? <span>Cadastre-se</span>';
+  document.getElementById('authToggleText').textContent=authMode==='signup'?'Entrar':'Criar conta';
   // No cadastro o campo avisa a exigência antes de a pessoa digitar, em vez de
   // só reclamar depois. E o autocomplete certo faz o gerenciador de senhas
   // oferecer uma senha nova em vez de tentar preencher a antiga.
   const campoPw=document.getElementById('authPassword');
   if(campoPw){
-    campoPw.placeholder=authMode==='signup'?'senha (8+ com letras e números)':'senha';
+    campoPw.placeholder=authMode==='signup'?'Senha (8+ com letras e números)':'Senha';
     campoPw.setAttribute('autocomplete',authMode==='signup'?'new-password':'current-password');
   }
 }
@@ -17614,14 +17665,28 @@ function initLoginSwipe(){
     if(e.clientX-r.left>r.width/2)nextLoginPhoto();else prevLoginPhoto();
   });
 }
+// A folha de login (E2): abre com os três caminhos; "email" troca por dentro
+// pelos campos, "Voltar" volta pros caminhos. Abrir sempre começa nos caminhos.
+function abrirFolhaLogin(){
+  hideEmailForm();
+  document.getElementById('ov-login').classList.add('show');
+  if(typeof avisarSeTemJanela==='function')avisarSeTemJanela();
+}
 function showEmailForm(){
   document.getElementById('loginButtons').style.display='none';
-  document.getElementById('emailForm').style.display='block';
+  document.getElementById('emailForm').style.display='flex';
+  setTimeout(()=>{const c=document.getElementById('authEmail');if(c)c.focus()},80);
 }
 function hideEmailForm(){
   document.getElementById('emailForm').style.display='none';
-  document.getElementById('loginButtons').style.display='block';
+  document.getElementById('loginButtons').style.display='flex';
   hideAuthErr();
+}
+function toggleSenhaLogin(btn){
+  const c=document.getElementById('authPassword');if(!c)return;
+  const mostrar=c.type==='password';
+  c.type=mostrar?'text':'password';
+  btn.textContent=mostrar?'Ocultar':'Mostrar';
 }
 
 // ═══ FRIENDS ═══
