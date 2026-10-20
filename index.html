@@ -6022,6 +6022,10 @@ async function init(){
         // cards entram conforme os dados chegam. Antes, esperava o carregamento
         // inteiro terminar antes de sair da tela de loading — o usuário ficava
         // olhando tela parada por todo o tempo das requisições.
+        // A folha de login é um overlay POR CIMA de todas as telas (20/10): a
+        // troca pro dashboard não a fecha sozinha, então ela ficava aberta por
+        // cima do app depois de entrar. Fecha na mão ao logar.
+        try{closeOv('ov-login')}catch(e){}
         goTo('dashboard');
         try{await loadDashboard()}catch(e){console.error('Dashboard error:',e)}
         if(NOTIF_PENDENTE){const d=NOTIF_PENDENTE;NOTIF_PENDENTE=null;ABA_PENDENTE='';try{window.aoTocarNotificacao(d)}catch(e){}}
