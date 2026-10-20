@@ -185,8 +185,8 @@ body{font-family:'Inter Tight',sans-serif;background:var(--base);color:var(--ink
    manda usar sobre fundo escuro (a foto do login), e é a única peça do app
    com cor fora das fichas — a regra deles vale mais que a nossa aqui.
    Escondido até o Supabase dizer que o provedor está ligado (temApple). */
-.btn-apple{display:none;background:#fff;color:#000}
-.btn-apple svg path{fill:#000}
+.btn-apple{display:none}
+.btn-apple svg path{fill:var(--ink)}
 body.tem-apple .btn-apple{display:flex}
 .btn-email-ghost{background:transparent;border:none;color:var(--base);font-size:15px;font-weight:600;
   font-family:'Inter Tight',sans-serif;cursor:pointer;width:100%;min-height:44px;padding:8px;
@@ -2601,7 +2601,7 @@ body.exm .exm-filtros{position:relative;z-index:1}
 
 <div class="screen" id="login">
   <div class="login-photos" id="loginPhotos">
-    <div class="login-photo active" style="background:linear-gradient(150deg,#0f2027,#203a43,#2c5364)"></div>
+    <div class="login-photo active" style="background:var(--photo-empty)"></div>
   </div>
   <div class="login-scrim"></div>
   <!-- Crédito do fotógrafo: exigência do Unsplash, e a tela de login é a que
@@ -17590,20 +17590,27 @@ function prevLoginPhoto(){restartLoginTimer();goToLoginPhoto(loginPhotoIdx-1)}
 function restartLoginTimer(){clearInterval(loginPhotoTimer);loginPhotoTimer=setInterval(rotateLoginPhoto,5000)}
 // Swipe handling on login photos
 function initLoginSwipe(){
-  const el=document.getElementById('loginPhotos');
+  // O detector fica na tela TODA (#login), não no #loginPhotos: aquele é a
+  // camada de baixo (z-index 0), coberta pelo scrim e pelo conteúdo, então o
+  // toque nunca chegava nele e o arrastar não rodava (20/10). Aqui o gesto que
+  // começa num botão/campo é ignorado — tap de botão tem dx≈0 e nem viraria
+  // swipe, mas o guard deixa explícito e protege o clique de desktop.
+  const el=document.getElementById('login');
   if(!el||el.dataset.swipeInit)return;
   el.dataset.swipeInit='1';
+  const emControle=t=>!!(t&&t.closest&&t.closest('button,input,a,.form-stack'));
   let startX=0,startY=0,tracking=false;
-  el.addEventListener('touchstart',e=>{startX=e.touches[0].clientX;startY=e.touches[0].clientY;tracking=true},{passive:true});
+  el.addEventListener('touchstart',e=>{startX=e.touches[0].clientX;startY=e.touches[0].clientY;tracking=!emControle(e.target)},{passive:true});
   el.addEventListener('touchend',e=>{
     if(!tracking)return;tracking=false;
     const dx=e.changedTouches[0].clientX-startX,dy=e.changedTouches[0].clientY-startY;
     if(Math.abs(dx)>40&&Math.abs(dx)>Math.abs(dy)){if(dx<0)nextLoginPhoto();else prevLoginPhoto()}
   },{passive:true});
-  // Also allow click on left/right half for desktop — only upper 60% to avoid the login buttons area
+  // Desktop: clique na metade esquerda/direita vira anterior/próxima — mas
+  // nunca sobre um botão ou campo.
   el.addEventListener('click',e=>{
+    if(emControle(e.target))return;
     const r=el.getBoundingClientRect();
-    if(e.clientY-r.top>r.height*0.6)return; // ignore clicks near buttons
     if(e.clientX-r.left>r.width/2)nextLoginPhoto();else prevLoginPhoto();
   });
 }
