@@ -36,6 +36,10 @@ test('lista publica: mais de 10 spots vira abas com categorias', () => {
 
 test('lista publica: foto de fora e rotulo da linha', () => {
   assert.strictEqual(fotoDoSpot('https://site-malicioso.com/x.jpg', 200), '');
+  // Formato com &s= (memória por lugar, 12/10) tem que carregar na lista pública.
+  assert.strictEqual(fotoDoSpot('/api/place-photo?ref=places%2Fabc%2Fphotos%2Fxyz&s=800x600.abc&w=400', 240), '/api/place-photo?ref=places%2Fabc%2Fphotos%2Fxyz&s=800x600.abc&w=240');
+  // Formato antigo (sem &s=) continua funcionando.
+  assert.strictEqual(fotoDoSpot('/api/place-photo?ref=places%2Fabc%2Fphotos%2Fxyz&w=400', 240), '/api/place-photo?ref=places%2Fabc%2Fphotos%2Fxyz&w=240');
   assert.strictEqual(esc('"><script>'), '&quot;&gt;&lt;script&gt;');
   assert.strictEqual(rotuloDoSpot({ category: 'experience', subcategory: 'passeio' }), 'Passeio');
   assert.strictEqual(rotuloDoSpot({ category: 'food', place_type: 'Comer & Beber' }), 'Gastronomia');

@@ -36,7 +36,10 @@ export function fotoDoSpot(u, largura) {
   const s = String(u || '');
   const m = s.match(/^https:\/\/places\.googleapis\.com\/v1\/(places\/[^/]+\/photos\/[^/]+)\/media\?/i);
   if (m) return '/api/place-photo?ref=' + encodeURIComponent(m[1]) + '&w=' + largura;
-  if (/^\/api\/place-photo\?ref=[^&]+&w=\d+$/.test(s)) return s.replace(/&w=\d+$/, '&w=' + largura);
+  // &s= entrou nas URLs de foto em 12/10 (memória por lugar): o ref pode vir
+  // seguido de &s=<tamanho.autor> antes do &w=. Sem aceitar isso aqui, todo
+  // spot salvo depois dessa data saía sem foto na lista pública.
+  if (/^\/api\/place-photo\?ref=[^&]+(?:&s=[^&]+)?&w=\d+$/.test(s)) return s.replace(/&w=\d+$/, '&w=' + largura);
   if (/^https:\/\/kzidnilsyrvauzgelsqd\.supabase\.co\/storage\//.test(s)) return s;
   return '';
 }
