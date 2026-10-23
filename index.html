@@ -2639,7 +2639,11 @@ body.exm #exploreCozinhas,body.exm #exploreBody{display:none!important}
 .exm-btn2{background:var(--surface);color:var(--ink)}
 .exm-btn:disabled{opacity:.6;cursor:default}
 /* Prévia (N6) */
-.exm-previa{padding:6px 20px 8px}
+.exm-previa{position:relative;padding:6px 20px 8px}
+.exm-pv-fechar{position:absolute;right:14px;top:0;width:36px;height:36px;border:none;border-radius:50%;background:var(--surface);color:var(--ink);
+  display:flex;align-items:center;justify-content:center;cursor:pointer}
+.exm-pv-fechar svg{width:16px;height:16px}
+.exm-pv-txt{padding-right:40px}
 .exm-pv-topo{display:flex;gap:14px;align-items:flex-start}
 .exm-pv-foto-w{flex:none;width:72px}
 .exm-pv-foto{position:relative;width:72px;height:72px;border-radius:18px;overflow:hidden;background-size:cover}
@@ -10847,6 +10851,10 @@ function exmCarregarDeles(){
 }
 
 // ── folha: peek 96 · média 300 · cheia · prévia (a altura do conteúdo) ──
+function exmMedirBarra(){
+  const n=document.querySelector('#explore .bottom-nav'),p=document.getElementById('exmPalco');
+  if(n&&p&&n.offsetHeight)p.style.marginBottom=n.offsetHeight+'px';
+}
 function exmAlturaDoPalco(){const p=document.getElementById('exmPalco');return p?p.clientHeight:600}
 function exmTopoDoCampo(){const t=document.getElementById('exmTopo');return t?t.offsetTop+t.offsetHeight:110}
 function exmTopoDa(parada){
@@ -10860,13 +10868,13 @@ function exmTopoDa(parada){
   return Math.max(0,H-EXM_PEEK);
 }
 function exmIrPara(parada,semAnimar){
-  EXM.parada=parada;
+  EXM.parada=parada;exmMedirBarra();
   const f=document.getElementById('exmFolha');if(!f)return;
   const t=exmTopoDa(parada);
   f.style.transition=semAnimar?'none':'transform .25s ease';
   f.style.transform='translateY('+t+'px)';
   document.getElementById('explore').classList.toggle('exm-cheia',parada==='cheia');
-  const aqui=document.getElementById('exmAqui');if(aqui)aqui.classList.toggle('on',EXM.buscarAqui&&parada!=='cheia');
+  const aqui=document.getElementById('exmAqui');if(aqui)aqui.classList.toggle('on',EXM.buscarAqui&&parada!=='cheia'&&parada!=='previa');
   // O mapa termina onde a folha começa (até a altura da prévia): o logo e os
   // dados do Google ficam sempre à vista (termos), e "centrar o pino" centra
   // no pedaço do mapa que aparece. Na folha cheia o mapa fica como estava.
@@ -11003,9 +11011,13 @@ function exmMontarTudo(){
   return l;
 }
 // O que a folha mostra é o que está NA TELA do mapa (país inteiro: tudo).
+// A vista é a que a PESSOA escolheu (arrastou, deu zoom) ou a que a busca
+// enquadrou — não a de cada pan que o próprio app faz. Antes, deslizar os
+// cards movia o mapa, a lista era refeita com o que ficou na tela, o card
+// trocava de lugar e o mapa andava de novo: um vai-e-volta sem fim (23/10).
 function exmNaTela(l){
   if(!EXM.mapa||EXPLORE.modoPais)return l;
-  const b=EXM.mapa.getBounds();if(!b)return l;
+  const b=EXM.vista||EXM.mapa.getBounds();if(!b)return l;
   return l.filter(it=>it.lat!=null&&b.contains({lat:it.lat,lng:it.lng}));
 }
 
@@ -11102,6 +11114,11 @@ function exmDesenhar(){
   exmPintarCampo();
   const corpo=document.getElementById('exmCorpo');
   const it=EXM.itens[EXM.sel];
+  const f=EXM.filtros;
+  const chave=[EXM.parada,EXM.sel>=0&&it?it.nome+it.lat:'',EXM.itens.map(x=>x.nome+':'+x.lat+':'+x.foram+':'+x.querem+':'+(x.meu?x.meu.status:'')+':'+(x.foto?1:0)).join('|'),
+    f.amigos,f.quero,f.aberto,EXPLORE.cat,EXPLORE.cozinha,EXPLORE_ESTADO,!!EXPLORE.cota,navigator.onLine,!!EXPLORE.carregandoMais,!!EXPLORE.fim,!!EXPLORE.modoPais].join('#');
+  if(chave===EXM.chaveFolha&&corpo.firstElementChild){exmPinos();return}
+  EXM.chaveFolha=chave;
   if(EXM.sel>=0&&it){corpo.innerHTML=exmPrevia(it,EXM.sel);hydrateIcons(corpo)}
   else if(EXPLORE.cota&&EXPLORE_ESTADO==='erro'){corpo.innerHTML=exmAvisoDeCota();if(EXM.parada!=='aviso')requestAnimationFrame(()=>exmIrPara('aviso'))}
   else if(EXM.parada==='cheia')corpo.innerHTML=exmLista();
@@ -11134,6 +11151,8 @@ function exmLigarCards(){
   row.addEventListener('scroll',()=>{clearTimeout(to);to=setTimeout(()=>{
     EXM.cardsScroll=row.scrollLeft;
     const i=Math.round(row.scrollLeft/252),it=EXM.itens[i];
+    // O pino do card da frente cresce: é assim que se vê qual card é qual pino.
+    if(it){EXM.foco=it.nome+'|'+it.lat;exmPinos()}
     if(it&&it.lat!=null&&EXM.mapa){EXM.pessoaMexeu=false;EXM.mapa.panTo({lat:it.lat,lng:it.lng})}
   },140)},{passive:true});
 }
@@ -11208,7 +11227,7 @@ function exmPrevia(it,i){
       +'<button class="exm-btn exm-btn2" onclick="exmAbrirFicha('+i+')">Abrir ficha</button></div>'
     :'<div class="exm-seg2"><button id="exmStWant" class="on" onclick="exmEscolher(\'want\')">Quero ir</button><button id="exmStBeen" onclick="exmEscolher(\'been\')">Fui</button></div>'
       +'<button class="exm-btn exm-salvar" id="exmSalvar" onclick="exmSalvar('+i+')">Salvar</button>';
-  return '<div class="exm-previa"><div class="exm-pv-topo"><div class="exm-pv-foto-w"><div class="exm-pv-foto" style="background-image:'+destGradient(it.nome)+'">'+exmFotoImg(it,i,200)+'</div>'
+  return '<div class="exm-previa"><button class="exm-pv-fechar" onclick="exmFecharPrevia()" aria-label="Fechar">'+icon('close')+'</button><div class="exm-pv-topo"><div class="exm-pv-foto-w"><div class="exm-pv-foto" style="background-image:'+destGradient(it.nome)+'">'+exmFotoImg(it,i,200)+'</div>'
     +(it.foto&&exmEhFotoDoGoogle(it.foto)?'<span class="exm-pv-cred">Foto: '+esc(it.autor||'Google')+'</span>':'')+'</div>'
     +'<div class="exm-pv-txt"><h3 onclick="exmAbrirFicha('+i+')">'+esc(it.nome)+'</h3><div class="exm-pv-sub">'+esc(sub)+'</div>'
     +(nota?'<div class="exm-pv-nota">'+exmNotaTxt(nota)+'</div>':'')+'</div></div>'
@@ -11351,7 +11370,7 @@ async function exmPrepararMapa(){
     await carregarMapaJS(chave);if(!window.google||!google.maps)return null;
     const semLugar=!window.__spotAqui&&!EXPLORE.city;
     EXM.mapa=new google.maps.Map(document.getElementById('exmMapa'),{
-      styles:ESTILO_DO_EXPLORAR,disableDefaultUI:true,gestureHandling:'greedy',clickableIcons:false,
+      styles:ESTILO_DO_EXPLORAR,disableDefaultUI:true,keyboardShortcuts:false,gestureHandling:'greedy',clickableIcons:false,
       center:semLugar?{lat:15,lng:-20}:{lat:-23.55,lng:-46.63},zoom:semLugar?2:12,backgroundColor:'#E4E8E4'});
     EXM.camada=exmCriarCamada();EXM.camada.setMap(EXM.mapa);
     EXM.mapa.addListener('click',()=>{
@@ -11359,13 +11378,15 @@ async function exmPrepararMapa(){
       if(c&&document.activeElement===c){exmCancelarBusca();return}
       if(EXM.sel>=0)exmFecharPrevia();
     });
-    EXM.mapa.addListener('idle',()=>{exmAgendar();exmTalvezOferecerBusca()});
+    EXM.mapa.addListener('idle',()=>{
+      if(EXM.gesto||EXM.renovarVista||!EXM.vista){EXM.vista=EXM.mapa.getBounds();EXM.gesto=false;EXM.renovarVista=false}
+      exmAgendar();exmTalvezOferecerBusca()});
     EXM.mapa.addListener('zoom_changed',()=>{EXM.chavePinos=''});
     // Só o gesto da pessoa conta: o enquadramento que o próprio app faz
     // (fitBounds, panTo do pino) não oferece busca nova.
-    EXM.mapa.addListener('dragstart',()=>{EXM.pessoaMexeu=true});
-    document.getElementById('exmMapa').addEventListener('wheel',()=>{EXM.pessoaMexeu=true},{passive:true});
-    document.getElementById('exmMapa').addEventListener('touchstart',e=>{if(e.touches.length>1)EXM.pessoaMexeu=true},{passive:true});
+    EXM.mapa.addListener('dragstart',()=>{EXM.pessoaMexeu=true;EXM.gesto=true});
+    document.getElementById('exmMapa').addEventListener('wheel',()=>{EXM.pessoaMexeu=true;EXM.gesto=true},{passive:true});
+    document.getElementById('exmMapa').addEventListener('touchstart',e=>{if(e.touches.length>1){EXM.pessoaMexeu=true;EXM.gesto=true}},{passive:true});
     exmIrPara(EXM.parada,true);
     exmDesenhar();
     return EXM.mapa;
@@ -11415,7 +11436,7 @@ function exmPinos(){
   const m=EXM.mapa,cam=EXM.camada;if(!m||!cam||!cam.el)return;
   const proj=cam.getProjection();if(!proj)return;
   const zoom=m.getZoom()||12;
-  const sel=EXM.itens[EXM.sel];
+  const sel=EXM.itens[EXM.sel]||(EXM.parada==='media'&&EXM.foco?EXM.itens.find(x=>x.nome+'|'+x.lat===EXM.foco):null);
   const nossos=EXM.todos.filter(it=>it.tipo!=='google');
   const google_=zoom>=13&&!EXPLORE.modoPais?EXM.todos.filter(it=>it.tipo==='google'&&it.lat!=null).slice(0,60):[];
   const chave=zoom+'#'+nossos.map(it=>it.nome+':'+it.lat+':'+it.foram+':'+it.querem+':'+(it.meu?it.meu.status:'')).join('|')
@@ -11447,6 +11468,7 @@ function exmAbrirGrupo(g){
     const c=document.getElementById('exploreCitySearch');if(c)c.value=g.cidade;
     return runExplore('');
   }
+  EXM.renovarVista=true;
   const b=new google.maps.LatLngBounds();g.itens.forEach(it=>{if(it.lat!=null)b.extend({lat:it.lat,lng:it.lng})});
   const ne=b.getNorthEast(),sw=b.getSouthWest();
   if(exmDistKm({lat:sw.lat(),lng:sw.lng()},{lat:ne.lat(),lng:ne.lng()})<0.3){EXM.mapa.setCenter(b.getCenter());EXM.mapa.setZoom(Math.max(15,(EXM.mapa.getZoom()||12)+2))}
@@ -11459,7 +11481,7 @@ function exmEnquadrar(nossos){
   const comPos=nossos.filter(it=>it.tipo==='amigo'&&it.lat!=null);
   const grande=EXPLORE.lugar&&EXPLORE.lugar.tipo==='area';
   if(chave===EXM.areaChave&&!(grande&&comPos.length&&comPos.length!==EXM.amigosEnquadrados))return;
-  EXM.areaChave=chave;EXM.amigosEnquadrados=comPos.length;
+  EXM.areaChave=chave;EXM.amigosEnquadrados=comPos.length;EXM.renovarVista=true;
   let b=new google.maps.LatLngBounds({lat:r.low.latitude,lng:r.low.longitude},{lat:r.high.latitude,lng:r.high.longitude});
   // Cidade grande ou país: onde os amigos foram, não o território inteiro.
   if(comPos.length&&grande&&!EXPLORE.modoPais){b=new google.maps.LatLngBounds();comPos.forEach(it=>b.extend({lat:it.lat,lng:it.lng}))}
@@ -11470,7 +11492,7 @@ async function exmRecentralizar(){
   let a=window.__spotAqui;
   if(!a){a=await posicaoSemPerguntar();if(a)window.__spotAqui=a}
   if(!a){toast('Sem localização','Libere a localização pra ver o que tem perto de você.','alert');return}
-  EXM.chavePinos='';
+  EXM.chavePinos='';EXM.renovarVista=true;
   if(EXM.mapa){EXM.mapa.panTo(a);EXM.mapa.setZoom(15)}
   exmAgendar();
 }
