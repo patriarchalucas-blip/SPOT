@@ -10231,9 +10231,11 @@ async function salvarDoExplorar(i,status,semFaixa){
   p._salvando=false;
   if(!data||data==='sem_pais'){renderExploreResults();toast('Não salvou',textoDaFalhaAoSalvar(data),'alert');return null}
   renderExploreResults();
-  // A faixa verde no lugar do aviso de 3 s (e6): fica até a pessoa sair.
-  await loadDashboard();
+  // Faixa verde JÁ, sem esperar o loadDashboard (salvar instantâneo, 23/10):
+  // o spot já entrou na lista local em salvarSpotDireto. A recarga + backfill
+  // rodam por trás, sem travar a confirmação.
   if(!semFaixa)mostrarFaixaSalvo(status,data);
+  Promise.resolve(loadDashboard()).catch(()=>{});
   return data;
 }
 // Resultado do Explorar vira card com foto, na mesma linguagem do feed.
@@ -12496,42 +12498,31 @@ async function resolverCidadeDoSpot(p,trip){
   }
   if(!error&&data){
     if(!atualizou){if(!t._spots)t._spots=[];t._spots.push(data)}
-    // A foto da folha da nota também entra em spot_fotos (06/10): é o que
-    // deixa ela ser tirada depois no carrossel. Falhar aqui não desfaz o spot.
+    // spot_fotos (a foto da nota entra no carrossel) vai POR TRÁS: não precisa
+    // dela pra confirmar, e falhar não desfaz o spot. A foto já está em
+    // rec.photo_url, então o spot aparece com ela mesmo sem esta linha.
     if(fotoPropria&&data.id){
-      try{await dbInsert('spot_fotos',{spot_id:data.id,url:fotoPropria});FOTOS_SUAS.delete(data.id)}catch(e){}
+      dbInsert('spot_fotos',{spot_id:data.id,url:fotoPropria}).then(()=>FOTOS_SUAS.delete(data.id)).catch(()=>{});
     }
-    // Antes de loadDashboard, que é quem dispara o backfill: assim a busca de
-    // Instagram deste spot é a primeira, não a última.
+    // O backfill de Instagram/foto deste spot é o primeiro quando o loadDashboard rodar.
     spotPrioritario=data.id;
-    // Com "Salvar e adicionar outro" a ficha não abre: o aviso curto fica.
-    // Sem ele, quem confirma é a faixa verde na ficha (logo abaixo).
     if(addAnother){
       if(atualizou)toast('Já estava na sua lista','Agora em '+({been:'Fui',want:'Quero ir',skip:'Não recomendo'}[data.status||addStatus]||'Quero ir')+' · '+p.name,'check');
       else toast(foiPraCasa?'Salvo em Onde você mora':(t!==S.addTrip?'Salvo em '+t.name:'Spot salvo'),note?`"${p.name} · ${note}"`:p.name,'check');
     }
     if(S.curTrip?.id===t.id){
       S.curTrip._spots=t._spots;
-      // O card de cidade na tela da viagem SEMPRE e redesenhado, mesmo com a
-      // tela da viagem escondida: quem adiciona de dentro da cidade e volta
-      // encontrava o contador antigo ("2 pra comer, 1 pra ficar") ate
-      // recarregar. Redesenhar um container escondido nao custa nada.
+      // O card de cidade na tela da viagem SEMPRE e redesenhado, mesmo escondido.
       renderTripBody();
       if(document.getElementById('city').classList.contains('active')){updateCityHeader();renderCityBody()}
     }
-    await loadDashboard();
-    // loadDashboard troca S.trips por objetos novos; a tela aberta seguia
-    // desenhando o objeto velho, sem o spot novo e com os que mudaram de viagem.
-    if(S.curTrip){
-      const novo=S.trips.find(x=>x.id===S.curTrip.id);
-      if(novo&&novo!==S.curTrip){S.curTrip=novo;
-        try{renderTripBody()}catch(e){}
-        if(document.getElementById('city').classList.contains('active')){try{updateCityHeader();renderCityBody()}catch(e){}}}
-    }
+    // ═══ SALVAR INSTANTÂNEO (23/10, trava que o Jezler sentiu) ═══
+    // O spot já está gravado e já entrou na lista local (t._spots acima). A
+    // confirmação — ficha + faixa verde, ou reabrir a busca — acontece JÁ,
+    // sem esperar o loadDashboard (que rebusca TUDO do banco em Oregon, 1-2s).
+    // O loadDashboard roda POR TRÁS, só pra reconciliar e disparar os backfills.
     if(addAnother){
-      // Mesma viagem, mesma categoria — só reabre a busca. É exatamente o
-      // caso de colar uma lista de restaurantes e ir adicionando um a um
-      // sem ter que refazer o "em qual viagem/categoria" a cada spot.
+      // Mesma viagem e categoria — só reabre a busca (colar lista, um a um).
       closeOv('ov-note');
       S.addCat=null;
       setTimeout(()=>{
@@ -12540,19 +12531,26 @@ async function resolverCidadeDoSpot(p,trip){
       },220);
     }else{
       closeOv('ov-note');
-      // Desenho B7/e6: depois de "Salvar spot", a ficha do spot salvo com a
-      // faixa verde — não a tela de onde a pessoa saiu, sem sinal nenhum.
+      // Depois de "Salvar spot": a ficha do spot salvo com a faixa verde.
       const tela=document.querySelector('.screen.active');
       let origem=tela&&['city','profile','explore','list','dashboard'].includes(tela.id)?tela.id:'trip';
-      // 06/10: salvo do feed/perfil de amigo/Atividade — o Voltar caía numa
-      // viagem velha ('trip'). Volta pra tela de onde saiu.
       if(tela&&['friends','friend','atividade','friendCity'].includes(tela.id)){telaAntesDaFicha=tela.id;origem='amigo'}
       const salvo=(S.trips||[]).reduce((a,v)=>a||(v._spots||[]).find(x=>x.id===data.id),null)||data;
       openPlace(salvo.id,origem);
       mostrarFaixaSalvo(salvo.status||addStatus,salvo);
-      // 10c (06/10): 1º spot com Fui num país → "passou por outras cidades?"
+      // 10c: 1º spot com Fui num país → "passou por outras cidades?"
       cvTalvezPerguntar(salvo);
     }
+    // Recarga por trás: o loadDashboard troca S.trips por objetos novos, então
+    // reconcilia a viagem aberta pra ela não ficar apontando pro objeto velho.
+    Promise.resolve(loadDashboard()).then(()=>{
+      if(S.curTrip){
+        const novo=S.trips.find(x=>x.id===S.curTrip.id);
+        if(novo&&novo!==S.curTrip){S.curTrip=novo;
+          try{renderTripBody()}catch(e){}
+          if(document.getElementById('city').classList.contains('active')){try{updateCityHeader();renderCityBody()}catch(e){}}}
+      }
+    }).catch(()=>{});
   }else{desfazerViagemCriadaAgora(t);toast('Não salvou',textoDaFalhaAoSalvar(null),'alert')} // 06/10: era a mensagem crua do banco
   btn.textContent='Salvar spot';btn2.textContent='Salvar e adicionar outro';btn.disabled=false;btn2.disabled=false;
 }
