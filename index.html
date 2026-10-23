@@ -10975,10 +10975,18 @@ function exmGruposDosAmigos(){
   deles.forEach(s=>{porId[s.id]=s});
   area.forEach(s=>{const v=porId[s.id];if(!v||(v.lat==null&&s.lat!=null))porId[s.id]=v?Object.assign(v,{lat:s.lat,lng:s.lng}):s});
   const perfisArea={};(AMIGOS_AREA.lugares||[]).forEach(g=>Object.assign(perfisArea,g.perfis||{}));
-  const chave=s=>normName(s.name)+'|'+(s.lat!=null&&s.lng!=null
-    ?Math.round(Number(s.lat)*1000)+','+Math.round(Number(s.lng)*1000):normName(cityOf(s)));
-  const por={};
-  Object.values(porId).forEach(s=>{if(!s||estaBloqueado(s.user_id))return;(por[chave(s)]=por[chave(s)]||[]).push(s)});
+  // Mesmo nome a até 150 m = o mesmo lugar (23/10: a posição de um vinha do
+  // Google e a do outro do servidor, e o arredondamento fazia dois pinos um
+  // em cima do outro). Sem posição, o mesmo nome na mesma cidade.
+  const por={},cent={},porNome=new Map();let nK=0;
+  Object.values(porId).forEach(s=>{if(!s||estaBloqueado(s.user_id))return;
+    const nm=normName(s.name),la=s.lat!=null?Number(s.lat):null,lo=s.lng!=null?Number(s.lng):null;
+    let k=null;
+    for(const kk of (porNome.get(nm)||[])){const c=cent[kk];
+      if(la!=null&&c.lat!=null?exmDistKm({lat:la,lng:lo},c)<0.15:mesmoLugar(cityOf(s),c.cidade)){k=kk;break}}
+    if(!k){k='k'+(nK++);cent[k]={nm,lat:la,lng:lo,cidade:cityOf(s)};if(!porNome.has(nm))porNome.set(nm,[]);porNome.get(nm).push(k)}
+    else if(cent[k].lat==null&&la!=null){cent[k].lat=la;cent[k].lng=lo}
+    (por[k]=por[k]||[]).push(s)});
   const grupos=Object.values(por).map(g=>{
     const perfis={};g.forEach(s=>{perfis[s.user_id]=plnPerfil(s.user_id)||perfisArea[s.user_id]||{}});
     const foram=[...new Set(g.filter(s=>s.status==='been'||s.status==='skip').map(s=>s.user_id))];
@@ -11428,6 +11436,8 @@ async function exmPrepararMapa(){
       center:semLugar?{lat:15,lng:-20}:{lat:-23.55,lng:-46.63},zoom:semLugar?2:12,backgroundColor:'#E4E8E4'});
     EXM.camada=exmCriarCamada();EXM.camada.setMap(EXM.mapa);
     EXM.mapa.addListener('click',()=>{
+      // O toque no pino não pode fechar a prévia que ele acabou de abrir.
+      if(Date.now()-(EXM.tocouPino||0)<600)return;
       const c=document.getElementById('exploreCitySearch');
       if(c&&document.activeElement===c){exmCancelarBusca();return}
       if(EXM.sel>=0)exmFecharPrevia();
@@ -11435,7 +11445,6 @@ async function exmPrepararMapa(){
     EXM.mapa.addListener('idle',()=>{
       if(EXM.gesto||EXM.renovarVista||!EXM.vista){EXM.vista=EXM.mapa.getBounds();EXM.gesto=false;EXM.renovarVista=false}
       exmAgendar();exmTalvezOferecerBusca()});
-    EXM.mapa.addListener('zoom_changed',()=>{EXM.chavePinos=''});
     // Só o gesto da pessoa conta: o enquadramento que o próprio app faz
     // (fitBounds, panTo do pino) não oferece busca nova.
     EXM.mapa.addListener('dragstart',()=>{EXM.pessoaMexeu=true;EXM.gesto=true});
@@ -11461,21 +11470,23 @@ function exmCriarCamada(){
 // Foto de pino que falhou (o link do Google vence): busca a ATUAL do lugar,
 // pelo mesmo caminho com teto do card — antes o card consertava e o pino
 // ficava com a inicial, com a foto bem ali embaixo (23/10).
-const EXM_PINO_IT=[];
+const EXM_PINO_IT=new Map(),EXM_FOTO_CONSERTO=new Set();
 function exmPinoFalhou(img,k){
   const box=img.parentNode;if(box)box.classList.add('sem');img.remove();
-  const it=EXM_PINO_IT[k];if(!it||it._fotoConsertada)return;
-  it._fotoConsertada=true;
+  const it=EXM_PINO_IT.get(k);if(!it)return;
+  const ck=normName(it.nome)+'|'+it.lat;if(EXM_FOTO_CONSERTO.has(ck))return;
+  EXM_FOTO_CONSERTO.add(ck);
   const alvo=it.g?it.g.capa:(it.s||{name:it.nome,city:it.cidade});
-  fotoParaVerComTeto(alvo).then(u=>{if(!u||u===it.foto)return;it.foto=u;if(it.g)it.g.foto=u;if(it.s)it.s._fotoVista=u;EXM.chavePinos='';exmAgendar()});
+  fotoParaVerComTeto(alvo).then(u=>{if(!u||u===it.foto)return;it.foto=u;if(it.g)it.g.foto=u;if(it.s)it.s._fotoVista=u;exmAgendar()});
 }
-function exmPinoHTML(it,escolhido){
+function exmPinoHTML(it,escolhido,id){
   const foi=it.foram>0||(it.meu&&it.meu.status!=='want');
   const ini=esc(String(it.nome||'?').trim().charAt(0).toUpperCase());
   const f=it.foto?safeUrl(fotoNaLargura(semChaveDoPlaces(it.foto),160)):'';
   // Carregando: disco claro; chegou, a foto; quebrou, a inicial. Nada busca foto aqui.
-  const k=EXM_PINO_IT.push(it)-1;
-  const foto=f?'<img src="'+escUrl(f)+'" alt="" decoding="async" onload="this.parentNode.classList.add(\'ok\')" onerror="exmPinoFalhou(this,'+k+')">':'';
+  EXM_PINO_IT.set(id,it);
+  // id é 'p' + número (exmIdDoPino): seguro dentro do onerror.
+  const foto=f?'<img src="'+escUrl(f)+'" alt="" decoding="async" onload="this.parentNode.classList.add(\'ok\')" onerror="exmPinoFalhou(this,\''+id+'\')">':'';
   return '<div class="exm-pin'+(foi?' foi':'')+(escolhido?' sel':'')+'"><div class="exm-pin-f'+(f?'':' sem')+'">'+foto+'<span>'+ini+'</span></div>'
     +(it.tipo==='amigo'?'<span class="exm-pin-avs">'+exmAvsDoItem(it,'exm-av18',3)+'</span>':'')+'</div>';
 }
@@ -11498,34 +11509,64 @@ function exmAgrupar(l,zoom,proj){
   });
   return gs;
 }
+// Os pinos NÃO são recriados a cada parada do mapa (23/10, o Lucas: "as
+// fotos estão oscilando", "clico no spot e não acontece nada"): cada pino tem
+// um id fixo; só troca o elemento quando o desenho dele muda. Recriar fazia a
+// foto recarregar (o disco cinza piscando) e o toque cair num elemento que já
+// tinha sido trocado.
+// O toque é lido do próprio dedo (pointerdown/pointerup): no iPhone o mapa do
+// Google segura o gesto e o "click" nem sempre chega.
+const EXM_PINO_ID=new Map();
+function exmIdDoPino(k){if(!EXM_PINO_ID.has(k))EXM_PINO_ID.set(k,EXM_PINO_ID.size+1);return EXM_PINO_ID.get(k)}
+function exmNovoPino(cam){
+  const el=document.createElement('div');el.className='exm-pos';
+  let p=null;
+  el.addEventListener('pointerdown',e=>{p={x:e.clientX,y:e.clientY,t:Date.now()}});
+  el.addEventListener('pointerup',e=>{
+    if(!p)return;const ok=Math.hypot(e.clientX-p.x,e.clientY-p.y)<12&&Date.now()-p.t<700;p=null;
+    if(!ok)return;e.stopPropagation();EXM.tocouPino=Date.now();el._ultimo=Date.now();if(el._fn)el._fn();
+  });
+  // Mouse e leitor de tela: o click, sem repetir o toque que acabou de rodar.
+  el.addEventListener('click',e=>{e.stopPropagation();if(Date.now()-(el._ultimo||0)<800)return;EXM.tocouPino=Date.now();if(el._fn)el._fn()});
+  cam.el.appendChild(el);
+  return el;
+}
 function exmPinos(){
   const m=EXM.mapa,cam=EXM.camada;if(!m||!cam||!cam.el)return;
   const proj=cam.getProjection();if(!proj)return;
-  const zoom=m.getZoom()||12;
+  const zoom=Math.round(m.getZoom()||12);
   const sel=EXM.itens[EXM.sel]||(EXM.parada==='media'&&EXM.foco?EXM.itens.find(x=>x.nome+'|'+x.lat===EXM.foco):null);
+  const ehSel=it=>!!sel&&sel.nome===it.nome&&sel.lat===it.lat;
   const nossos=EXM.todos.filter(it=>it.tipo!=='google');
   const google_=zoom>=11&&!EXPLORE.modoPais?EXM.todos.filter(it=>it.tipo==='google'&&it.lat!=null).slice(0,60):[];
-  const chave=zoom+'#'+nossos.map(it=>it.nome+':'+it.lat+':'+it.foram+':'+it.querem+':'+(it.meu?it.meu.status:'')+':'+(it.foto||'').slice(-24)).join('|')
-    +'#'+google_.map(it=>it.nome).join('|')+'#'+(sel?sel.nome+sel.lat:'')+'#'+(EXM.pessoaMexeu?'':EXM.areaChave);
-  if(chave!==EXM.chavePinos){
-    EXM.chavePinos=chave;
-    cam.el.innerHTML='';EXM.pinos=[];EXM_PINO_IT.length=0;
-    const add=(html,lat,lng,z,fn)=>{const el=document.createElement('div');el.className='exm-pos';el.style.zIndex=z;el.innerHTML=html;
-      el.addEventListener('click',e=>{e.stopPropagation();fn()});cam.el.appendChild(el);EXM.pinos.push({el,lat,lng})};
-    google_.forEach(it=>{const s=sel&&sel.nome===it.nome&&sel.lat===it.lat;
-      add('<div class="exm-dot'+(s?' sel':'')+'"></div>',it.lat,it.lng,s?900:1,()=>exmSelecionarItem(it))});
-    exmAgrupar(nossos,zoom,proj).forEach(g=>{
-      if(g.itens.length===1&&!EXPLORE.modoPais){const it=g.itens[0],s=!!sel&&sel.nome===it.nome&&sel.lat===it.lat;
-        add(exmPinoHTML(it,s),it.lat,it.lng,s?1000:100+it.foram*10+it.querem,()=>exmSelecionarItem(it));return}
-      const uids=[];g.itens.forEach(it=>{if(it.g)it.g.foram.concat(it.g.querem).forEach(u=>{if(!uids.includes(u))uids.push(u)})});
-      const perf={};g.itens.forEach(it=>{if(it.g)Object.assign(perf,it.g.perfis)});
-      const av=uids.slice(0,2).map(u=>exmAvatar(u,perf,'exm-av26')).join('');
-      add('<div class="exm-grupo">'+(av?'<span class="exm-grupo-avs">'+av+'</span>':'')+'<b>'+g.itens.length+'</b>'
-        +(EXPLORE.modoPais&&g.cidade?'<span>'+esc(g.cidade)+'</span>':'')+'</div>',g.lat,g.lng,500,()=>exmAbrirGrupo(g));
-    });
-    if(window.__spotAqui)add('<div class="exm-eu"></div>',window.__spotAqui.lat,window.__spotAqui.lng,50,()=>{});
-    cam.draw();
-  }
+  // O que tem que estar no mapa agora: id fixo + desenho.
+  const quer=[];
+  google_.forEach(it=>{const s=ehSel(it);
+    quer.push({id:'g'+exmIdDoPino('g|'+it.nome+'|'+it.lat),html:'<div class="exm-dot'+(s?' sel':'')+'"></div>',lat:it.lat,lng:it.lng,z:s?900:1,fn:()=>exmSelecionarItem(it)})});
+  exmAgrupar(nossos,zoom,proj).forEach(g=>{
+    if(g.itens.length===1&&!EXPLORE.modoPais){const it=g.itens[0],s=ehSel(it),id='p'+exmIdDoPino('p|'+it.nome+'|'+it.lat);
+      quer.push({id,html:exmPinoHTML(it,s,id),lat:it.lat,lng:it.lng,z:s?1000:100+it.foram*10+it.querem,fn:()=>exmSelecionarItem(it)});return}
+    const uids=[];g.itens.forEach(it=>{if(it.g)it.g.foram.concat(it.g.querem).forEach(u=>{if(!uids.includes(u))uids.push(u)})});
+    const perf={};g.itens.forEach(it=>{if(it.g)Object.assign(perf,it.g.perfis)});
+    const av=uids.slice(0,2).map(u=>exmAvatar(u,perf,'exm-av26')).join('');
+    quer.push({id:'c'+exmIdDoPino('c|'+g.itens.map(x=>x.nome+x.lat).sort().join(',')),
+      html:'<div class="exm-grupo">'+(av?'<span class="exm-grupo-avs">'+av+'</span>':'')+'<b>'+g.itens.length+'</b>'
+        +(EXPLORE.modoPais&&g.cidade?'<span>'+esc(g.cidade)+'</span>':'')+'</div>',lat:g.lat,lng:g.lng,z:500,fn:()=>exmAbrirGrupo(g)});
+  });
+  if(window.__spotAqui)quer.push({id:'eu',html:'<div class="exm-eu"></div>',lat:window.__spotAqui.lat,lng:window.__spotAqui.lng,z:50,fn:null});
+  // Reconcilia: mantém o elemento que já está certo, troca só o que mudou.
+  const antes=EXM.pinoEls||new Map(),agora=new Map();
+  quer.forEach(q=>{
+    let x=antes.get(q.id);
+    if(!x)x={el:exmNovoPino(cam),html:''};
+    if(x.html!==q.html){x.el.innerHTML=q.html;x.html=q.html}
+    x.el.style.zIndex=q.z;x.el._fn=q.fn;x.lat=q.lat;x.lng=q.lng;
+    agora.set(q.id,x);
+  });
+  antes.forEach((x,id)=>{if(!agora.has(id))x.el.remove()});
+  EXM.pinoEls=agora;
+  EXM.pinos=[...agora.values()];
+  cam.draw();
   exmEnquadrar(nossos);
 }
 // País: entrar na cidade (aí sim a busca paga). Grupo: aproxima até abrir.
@@ -11558,7 +11599,7 @@ async function exmRecentralizar(){
   let a=window.__spotAqui;
   if(!a){a=await posicaoSemPerguntar();if(a)window.__spotAqui=a}
   if(!a){toast('Sem localização','Libere a localização pra ver o que tem perto de você.','alert');return}
-  EXM.chavePinos='';EXM.renovarVista=true;
+  EXM.renovarVista=true;
   if(EXM.mapa){EXM.mapa.panTo(a);EXM.mapa.setZoom(15)}
   exmAgendar();
 }
