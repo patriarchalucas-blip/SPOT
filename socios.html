@@ -1,0 +1,172 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="robots" content="noindex, nofollow">
+<title>Central do Spot</title>
+<link rel="icon" href="/icon-180.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500&family=Inter+Tight:wght@400;500;600;700&display=swap">
+<!--
+  CENTRAL DOS SÓCIOS (meuspot.app/socios, 23/10/2026). Os links NÃO estão
+  neste arquivo: ficam em /socios-dados.json, cifrados (AES-GCM, chave da senha
+  por PBKDF2-SHA256, 600 mil voltas) — mesmo esquema do /gastos. O repositório é
+  público; sem a senha o arquivo é ilegível. Quem gera é
+  ferramentas/socios-cifrar.mjs, a partir de _local/socios/ (fora do git).
+  Pra mudar os links: editar _local/socios/dados.json, rodar o script, push.
+-->
+<style>
+:root {
+  --base: #F5F5F3; --surface: #E9E9E6; --ink: #111111; --ink2: #6B6B67; --ink3: #9A9A96;
+  --green: #0B3D2E; --on-green: #F5F5F3; --r-card: 14px; --r-btn: 10px;
+  --f: 'Inter Tight', 'Inter', system-ui, -apple-system, 'Segoe UI', sans-serif;
+  color-scheme: light;
+}
+* { box-sizing: border-box; }
+html, body { margin: 0; background: var(--base); color: var(--ink); font-family: var(--f); -webkit-font-smoothing: antialiased; }
+body { padding: env(safe-area-inset-top, 0px) 0 env(safe-area-inset-bottom, 0px); }
+h1, h2, p { margin: 0; }
+.sp { padding-block: 24px 48px; padding-inline: 20px; display: grid; gap: 32px; max-width: 720px; margin-inline: auto; }
+.sp-top { display: grid; gap: 20px; }
+.sp-brand { display: flex; align-items: center; gap: 12px; }
+.sp-brand img { width: 44px; height: 44px; border-radius: 12px; display: block; }
+.sp-brand svg { height: 26px; width: auto; display: block; }
+.sp-brand .sair { margin-left: auto; appearance: none; background: none; border: 0; font: 400 13px var(--f); color: var(--ink3); cursor: pointer; padding: 8px 0; }
+.sp-tit { display: flex; align-items: baseline; justify-content: space-between; gap: 8px 16px; flex-wrap: wrap; }
+.sp-tit h1 { font-size: clamp(26px, 5vw, 32px); font-weight: 600; letter-spacing: -0.02em; line-height: 1.1; }
+.sp-quando { font-size: 15px; color: var(--ink2); }
+
+.sp-grupos { display: grid; gap: 28px; }
+.sp-sec { display: grid; gap: 8px; min-width: 0; }
+.sp-sec h2 { font-size: 15px; font-weight: 600; color: var(--ink3); letter-spacing: 0; }
+.sp-lista { display: grid; gap: 4px; }
+.sp-item { display: grid; grid-template-columns: 48px minmax(0, 1fr) auto; gap: 14px; align-items: center; padding: 10px 0; color: inherit; text-decoration: none; }
+.sp-item:active { opacity: .6; }
+.sp-ic { width: 48px; height: 48px; border-radius: var(--r-card); background: var(--surface); display: grid; place-items: center; font-weight: 600; font-size: 17px; color: var(--green); }
+.sp-nome { font-size: 16px; font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.sp-meta { font-size: 13px; color: var(--ink2); margin-top: 2px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.sp-seta { font-size: 18px; color: var(--ink3); }
+.sp-rodape { font-size: 13px; color: var(--ink3); }
+
+/* Senha */
+.tranca { min-height: 100vh; min-height: 100dvh; display: grid; place-items: center; padding: 24px 20px; }
+.tranca form { width: 100%; max-width: 360px; display: grid; gap: 16px; }
+.tranca .sp-brand { justify-content: center; margin-bottom: 8px; }
+.tranca h1 { font-size: 22px; font-weight: 600; text-align: center; letter-spacing: -0.01em; }
+.tranca p { font-size: 15px; color: var(--ink2); text-align: center; }
+.tranca input[type=password] { width: 100%; font: 400 17px var(--f); padding: 14px 16px; border: 0; border-radius: var(--r-btn); background: var(--surface); color: var(--ink); }
+.tranca input[type=password]:focus-visible { outline: 2px solid var(--green); outline-offset: 2px; }
+.tranca label.lembrar { display: flex; align-items: center; gap: 8px; font-size: 15px; color: var(--ink2); justify-content: center; }
+.tranca button { font: 600 17px var(--f); padding: 14px; border: 0; border-radius: var(--r-btn); background: var(--green); color: var(--on-green); cursor: pointer; }
+.tranca button:disabled { opacity: .6; cursor: default; }
+.tranca .erro { color: var(--ink2); min-height: 1.4em; font-size: 15px; text-align: center; }
+[hidden] { display: none !important; }
+</style>
+</head>
+<body>
+
+<div class="tranca" id="tranca">
+  <form id="form-senha" autocomplete="on">
+    <div class="sp-brand">
+      <img src="/icon-180.png" alt="">
+      <svg viewBox="3 77 273 76" role="img" aria-label="Spot"><text x="0" y="150" font-family="Cinzel, serif" font-weight="500" font-size="100" letter-spacing="6" fill="#0B3D2E">SPOT</text></svg>
+    </div>
+    <h1>Central dos sócios</h1>
+    <p>Só pros sócios. Digite a senha pra abrir.</p>
+    <input type="text" name="username" value="socios" autocomplete="username" hidden>
+    <input type="password" id="senha" name="password" autocomplete="current-password" placeholder="Senha" required>
+    <label class="lembrar"><input type="checkbox" id="lembrar" checked> Lembrar neste aparelho</label>
+    <button type="submit" id="abrir">Abrir</button>
+    <div class="erro" id="erro" role="status"></div>
+  </form>
+</div>
+
+<main class="sp" id="painel" hidden>
+  <header class="sp-top">
+    <div class="sp-brand">
+      <img src="/icon-180.png" alt="">
+      <svg viewBox="3 77 273 76" role="img" aria-label="Spot"><text x="0" y="150" font-family="Cinzel, serif" font-weight="500" font-size="100" letter-spacing="6" fill="#0B3D2E">SPOT</text></svg>
+      <button class="sair" type="button" id="sair">Sair</button>
+    </div>
+    <div class="sp-tit">
+      <h1>Central dos sócios</h1>
+      <span class="sp-quando" id="sp-quando"></span>
+    </div>
+  </header>
+
+  <div class="sp-grupos" id="grupos"></div>
+  <p class="sp-rodape">Links privados dos sócios. Esta página não é indexada.</p>
+</main>
+
+<script>
+(() => {
+  const CHAVE = 'spot_socios_senha';
+  const $ = (id) => document.getElementById(id);
+  const el = (tag, cls, text) => { const e = document.createElement(tag); if (cls) e.className = cls; if (text != null) e.textContent = text; return e; };
+  const b64 = (s) => Uint8Array.from(atob(s), (c) => c.charCodeAt(0));
+  const lerSalva = () => { try { return localStorage.getItem(CHAVE) || ''; } catch (e) { return ''; } };
+  const salvar = (s) => { try { s ? localStorage.setItem(CHAVE, s) : localStorage.removeItem(CHAVE); } catch (e) {} };
+  let CIFRADO = null, DADOS = null;
+
+  async function baixar() {
+    if (CIFRADO) return CIFRADO;
+    const r = await fetch('/socios-dados.json', { cache: 'no-cache' });
+    if (!r.ok) throw new Error('rede');
+    CIFRADO = await r.json();
+    return CIFRADO;
+  }
+  async function abrir(senha) {
+    const c = await baixar();
+    const base = await crypto.subtle.importKey('raw', new TextEncoder().encode(senha), 'PBKDF2', false, ['deriveKey']);
+    const chave = await crypto.subtle.deriveKey({ name: 'PBKDF2', hash: 'SHA-256', salt: b64(c.salt), iterations: c.iter },
+      base, { name: 'AES-GCM', length: 256 }, false, ['decrypt']);
+    const claro = await crypto.subtle.decrypt({ name: 'AES-GCM', iv: b64(c.iv) }, chave, b64(c.dados));
+    return JSON.parse(new TextDecoder().decode(claro));
+  }
+  async function tentar(senha, lembrar) {
+    $('abrir').disabled = true; $('erro').textContent = 'Abrindo…';
+    try {
+      DADOS = await abrir(senha);
+      if (lembrar) salvar(senha);
+      $('tranca').hidden = true; $('painel').hidden = false; $('erro').textContent = '';
+      desenhar();
+    } catch (e) {
+      $('erro').textContent = e && e.message === 'rede' ? 'Sem conexão. Tente de novo.' : 'Senha errada.';
+      salvar('');
+    } finally { $('abrir').disabled = false; }
+  }
+  $('form-senha').addEventListener('submit', (ev) => { ev.preventDefault(); tentar($('senha').value.trim(), $('lembrar').checked); });
+  $('sair').addEventListener('click', () => { salvar(''); DADOS = null; $('senha').value = ''; $('painel').hidden = true; $('tranca').hidden = false; });
+
+  function desenhar() {
+    if (DADOS.atualizado) { const [a, m, d] = DADOS.atualizado.split('-'); $('sp-quando').textContent = 'Atualizado ' + d + '/' + m + '/' + a; }
+    const cont = $('grupos'); cont.innerHTML = '';
+    (DADOS.grupos || []).forEach((g) => {
+      const sec = el('section', 'sp-sec');
+      sec.appendChild(el('h2', null, g.nome));
+      const lista = el('div', 'sp-lista');
+      (g.itens || []).forEach((it) => {
+        const a = document.createElement('a');
+        a.className = 'sp-item'; a.href = it.url;
+        if (/^https?:/i.test(it.url)) { a.target = '_blank'; a.rel = 'noopener'; }
+        a.appendChild(el('div', 'sp-ic', (it.nome || '?').trim().charAt(0).toUpperCase()));
+        const txt = el('div');
+        txt.appendChild(el('div', 'sp-nome', it.nome || ''));
+        if (it.desc) txt.appendChild(el('div', 'sp-meta', it.desc));
+        a.appendChild(txt);
+        a.appendChild(el('span', 'sp-seta', '›'));
+        lista.appendChild(a);
+      });
+      sec.appendChild(lista);
+      cont.appendChild(sec);
+    });
+  }
+
+  const salva = lerSalva();
+  if (salva) { $('senha').value = salva; tentar(salva, true); }
+})();
+</script>
+</body>
+</html>
