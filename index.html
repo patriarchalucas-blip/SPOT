@@ -2670,7 +2670,11 @@ body.exm #exploreCozinhas,body.exm #exploreBody{display:none!important}
 /* Pinos (HTML numa camada só por cima do mapa) */
 .exm-camada{position:absolute;left:0;top:0}
 .exm-pos{position:absolute;transform:translate(-50%,-50%);cursor:pointer}
-.exm-dot{width:12px;height:12px;border-radius:50%;background:var(--green);outline:3px solid var(--base)}
+.exm-dot{width:12px;height:12px;border-radius:50%;background:var(--green);outline:3px solid var(--base);position:relative}
+/* Alvo de dedo: 36 px em volta do ponto de 12, sem aparecer. */
+.exm-dot::after{content:'';position:absolute;left:50%;top:50%;width:36px;height:36px;margin:-18px 0 0 -18px;border-radius:50%}
+/* "Você" não pega toque: ficava por cima do ponto ao lado e engolia o toque. */
+.exm-pos:has(.exm-eu){pointer-events:none}
 .exm-dot.sel{width:16px;height:16px}
 .exm-eu{position:relative;width:14px;height:14px;border-radius:50%;background:var(--ink)}
 .exm-eu::before{content:'';position:absolute;left:50%;top:50%;width:40px;height:40px;margin:-20px 0 0 -20px;border-radius:50%;background:rgba(0,0,0,.08)}
@@ -10913,6 +10917,7 @@ function exmAjustarMapa(baixo){
 function exmArrastar(){
   const f=document.getElementById('exmFolha'),corpo=document.getElementById('exmCorpo');
   let y0=null,x0=0,t0=0,arrastando=false,id=null,deAlca=false;
+  f.addEventListener('click',ev=>{if(Date.now()<(f._semCliqueAte||0)){ev.stopPropagation();ev.preventDefault()}},{capture:true});
   f.addEventListener('pointerdown',e=>{
     deAlca=!!e.target.closest('#exmPega');
     if(!deAlca&&EXM.parada==='cheia'&&corpo.scrollTop>2)return;
@@ -10938,8 +10943,10 @@ function exmArrastar(){
       if(deAlca&&Math.abs(d)<6){if(EXM.sel>=0){exmFecharPrevia();return}exmIrPara(EXM.parada==='peek'?'media':'peek');exmDesenhar()}
       return;
     }
-    // Arrastou: o "click" que vem junto não pode abrir nada.
-    f.addEventListener('click',ev=>{ev.stopPropagation();ev.preventDefault()},{capture:true,once:true});
+    // Arrastou: o "click" que o mouse manda junto não pode abrir nada. Só o
+    // que chega logo depois — no dedo esse click nem vem, e um bloqueio "até o
+    // próximo click" comia o toque seguinte, qualquer um (23/10).
+    f._semCliqueAte=Date.now()+350;
     if(EXM.sel>=0&&d>40){exmFecharPrevia();return}
     if(EXM.sel>=0&&d<-60){exmIrPara('previa');exmAbrirFicha(EXM.sel);return}
     if(EXM.sel>=0){exmIrPara('previa');return}
