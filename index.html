@@ -7076,6 +7076,13 @@ async function loadDashboard(){
   // Sem isto, abrir o app sem sinal mostra tela vazia — e com sinal ruim
   // mostra tela vazia até a consulta voltar.
   if(!S.trips.length)usarDadosLocais();
+  // Abertura de quem já usou o app: PINTA NA HORA com o que está no aparelho
+  // (cache), e a consulta abaixo atualiza por trás — em vez de o dashboard
+  // ficar vazio esperando o banco em Oregon (23/10, mesmo truque do salvar
+  // instantâneo). Em conta nova (sem cache) não há o que pintar: cai no fluxo
+  // normal. Tudo em try/catch: uma falha no desenho do cache nunca trava a
+  // carga de verdade.
+  if(S.trips.length){try{rebuildCityCanon();contarPlacar();renderTrips();darDadosDeViagens()}catch(e){}}
   const geoPronta=carregarGeoMundo().catch(()=>false);
   const [trips,allSpots,marcadas]=await Promise.all([
     dbGet('trips','user_id=eq.'+S.user.id+'&order=created_at.desc'),
@@ -15645,6 +15652,11 @@ async function loadProfile(){
   const name=nomeDeExibicao();
   document.getElementById('profName').textContent=name;
   document.getElementById('profAvatar').textContent=name.charAt(0).toUpperCase();
+  // Pinta o corpo do Perfil NA HORA com as viagens já em memória (quem chega
+  // aqui quase sempre veio do dashboard, que já carregou): o @ / bio / nº de
+  // amigos preenchem logo abaixo com o fetch. Sem isto, o Perfil fica em
+  // branco esperando o banco em Oregon (23/10, mesmo truque do salvar).
+  if(S.trips.length){try{renderPerfil()}catch(e){}}
   const p=await fetchOwnProfile(true);
   // A cidade onde mora vai ao lado do @ (desenho de 25/09).
   // Desenho de 05/10: "@lucas · 14 amigos". A cidade onde mora desceu pro rodapé.
