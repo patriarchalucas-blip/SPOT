@@ -424,6 +424,17 @@ projeto no portal: Descrição e Tese já preenchidas; link e vídeo são da Fas
   token revogado passar nos endpoints pagos; `/l/` revogado visível na borda por
   até 5 min. (As 3 primeiras são do meu lado, rápidas, sem build.)
 
+## Central dos sócios (meuspot.app/socios, 23/10/2026)
+
+Hub protegido por senha com links pro que importa aos sócios: os docs
+(Insights & decisões, Pauta pra conversa — Google Docs editáveis), o painel de
+gastos, e atalhos (repo, App Store, Supabase, hackathon). Mesmo esquema do
+`/gastos`: `socios.html` pede a senha e decifra `socios-dados.json` no navegador
+(AES-GCM/PBKDF2, **mesma senha do gastos: `spotbt@2026`**). Os links em claro,
+a senha e o sal ficam em `_local/socios/` (fora do git). **Mudar os links:**
+editar `_local/socios/dados.json`, `node ferramentas/socios-cifrar.mjs`, commit
++ push de `socios-dados.json`.
+
 ## Painel de gastos dos sócios (meuspot.app/gastos, 12/10/2026)
 
 Sócios: **Lucas Patriarcha** (paga tudo nos cartões dele) e **Lucas Jezler**,
