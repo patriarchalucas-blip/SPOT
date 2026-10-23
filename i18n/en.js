@@ -597,3 +597,36 @@ window.SPOT_EN_MODELOS = [
   });
   window.SPOT_EN_MODELOS = datas.concat(window.SPOT_EN_MODELOS);
 })();
+
+// Explorar no mapa v3 (23/10).
+Object.assign(window.SPOT_EN, {
+  'Limpar recentes': 'Clear recent', 'A busca acontece quando você escolhe.': 'Nothing is searched until you pick.',
+  'Comer': 'Eat', 'Ficar': 'Stay', 'Fazer': 'Do', 'Comer por aqui': 'Eat around here', 'Ficar por aqui': 'Stay around here', 'Fazer por aqui': 'Things to do around here',
+  'Para onde?': 'Where to?', 'Buscar aqui': 'Search here', 'Cancelar busca': 'Cancel search', 'Voltar pra minha localização': 'Back to my location',
+  'Na sua lista Quero ir': 'On your Wishlist', 'Mostrando o que já estava salvo': 'Showing what was already saved',
+  'Toque numa cidade para ver sugestões': 'Tap a city to see suggestions', 'Procurando por aqui…': 'Looking around here…',
+  'Não deu pra buscar agora': "Couldn't search right now", 'Comece por uma cidade': 'Start with a city',
+  'Nada por aqui ainda': 'Nothing around here yet', 'amplie o mapa': 'zoom out',
+  'Dos amigos': 'From friends', 'Filtros': 'Filters', 'Permitir': 'Allow', 'Seus spots': 'Your spots', 'Sugestões': 'Suggestions', 'Seus amigos': 'Your friends',
+  'Carregando mais…': 'Loading more…', 'Isso é tudo por aqui.': "That's all around here.", 'Amplie o mapa para ver mais.': 'Zoom out to see more.',
+  'Você usou as buscas do mês.': "You've used this month's searches.", 'O Spot usou as buscas do mês.': "Spot has used this month's searches.",
+  'Os spots dos seus amigos continuam no mapa.': "Your friends' spots stay on the map.", 'Ver spots de amigos': "See friends' spots",
+  'Abrir ficha': 'Open spot', 'Mostrar por aqui': 'Show around here', 'Só': 'Only', 'Cozinha': 'Cuisine',
+  'Escolher refaz a busca nesta área.': 'Choosing searches this area again.',
+  'Salvo em Quero ir': 'Saved to Wishlist', 'Salvo em Fui': 'Saved to Been',
+  'Você marcou Fui': 'You marked Been', 'Você marcou Quero ir': 'You marked Wishlist', 'Você marcou Não recomendo': "You marked Don't recommend",
+  'Não deu pra desfazer': "Couldn't undo",
+  'janeiro': 'January', 'fevereiro': 'February', 'março': 'March', 'abril': 'April', 'maio': 'May', 'junho': 'June',
+  'julho': 'July', 'agosto': 'August', 'setembro': 'September', 'outubro': 'October', 'novembro': 'November', 'dezembro': 'December'
+});
+window.SPOT_EN_MODELOS.push(
+  ['{x} têm spots por aqui', '{x} have spots around here', true],
+  ['{x} tem {n} spot por aqui', '{x} has {n} spot around here', true], ['{x} tem {n} spots por aqui', '{x} has {n} spots around here', true],
+  ['{n} spot bem avaliado por aqui', '{n} well-rated spot around here'], ['{n} spots bem avaliados por aqui', '{n} well-rated spots around here'],
+  ['Você tem {n} spot por aqui', 'You have {n} spot around here'], ['Você tem {n} spots por aqui', 'You have {n} spots around here'],
+  ['{n} cidade com spots de amigos', "{n} city with friends' spots"], ['{n} cidades com spots de amigos', "{n} cities with friends' spots"],
+  ['{n} amigo tem spots lá', '{n} friend has spots there'], ['{n} amigos têm spots lá', '{n} friends have spots there'],
+  ['As sugestões voltam em {x}', 'Suggestions come back in {x}', true],
+  ['Foto: {x}', 'Photo: {x}', true], ['{x} deu {n}★', '{x} gave it {n}★', true],
+  ['{x} também foi', '{x} also went', true], ['{x} também foram', '{x} also went', true], ['{x} foram', '{x} went', true]
+);

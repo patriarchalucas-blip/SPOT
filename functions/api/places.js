@@ -44,8 +44,10 @@ const CAP_MENSAL = 5000;
 const CAP_USUARIO = 1500;
 const TTL_BUSCA = 60 * 60 * 24 * 7;
 // A 1ª página do Explorar (06/10). Mais curto que a busca solta: é a lista
-// que muda com o "aberto agora" e a nota, e é a que mais se repete.
-const TTL_PAGINA_1 = 60 * 60 * 6;
+// que muda com a nota, e é a que mais se repete. 24 h desde o Explorar v3
+// (23/10): a abertura da aba é uma leva guardada por área, que não refaz
+// sozinha. "Aberto agora" é calculado no app, pelo horário que veio junto.
+const TTL_PAGINA_1 = 60 * 60 * 24;
 
 // Campos que o app usa hoje. Pedir além disso custa mais caro por requisição,
 // então o que não está aqui é descartado em vez de repassado.
