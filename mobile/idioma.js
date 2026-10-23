@@ -55,7 +55,7 @@ const EN = {
   'Adiciona alguém pelo username pra ver a atividade aqui': 'Add someone by username to see activity here',
   'Nada por aqui ainda': 'Nothing here yet', 'Seus amigos ainda não marcaram viagens nem spots': "Your friends haven't marked trips or spots yet",
   // Explorar
-  'Salvar em Quero ir': 'Save to Want to go', Fechar: 'Close', 'O que você quer comer?': 'What do you want to eat?',
+  'Salvar em Quero ir': 'Save to Wishlist', Fechar: 'Close', 'O que você quer comer?': 'What do you want to eat?',
   'Tendências por lugar': 'Trending by place', 'Cidade, bairro ou rua': 'City, neighborhood or street', Ir: 'Go',
   'Buscas recentes': 'Recent searches', 'Tipo de comida: ': 'Cuisine: ', Todas: 'All',
   'Busque um lugar pra ver o que seus amigos salvaram por lá.': 'Search a place to see what your friends saved there.',

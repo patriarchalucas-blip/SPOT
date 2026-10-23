@@ -16,7 +16,7 @@ function motor() {
 
 test('frases fixas, números e nomes', () => {
   const { tr } = motor();
-  assert.equal(tr('Quero ir'), 'Want to go');
+  assert.equal(tr('Quero ir'), 'Wishlist');
   assert.equal(tr('  Salvar spot '), '  Save spot ');            // espaços das pontas ficam
   assert.equal(tr('há 3 dias'), '3 days ago');
   assert.equal(tr('Ana foi 4,5★'), 'Ana went · 4.5★');            // decimal vira ponto

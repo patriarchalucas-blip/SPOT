@@ -36,7 +36,7 @@ Spot keeps the places you've been — with what YOU thought of them — and show
 Not reviews from strangers. Your list, and your friends' lists.
 
 SAVE A SPOT IN SECONDS
-Type the name of a restaurant, hotel or experience and Spot brings the address, photos, phone and hours. Mark it as "Been" or "Want to go", give it up to five stars and write the one tip that matters. The trip and the city are organized for you.
+Type the name of a restaurant, hotel or experience and Spot brings the address, photos, phone and hours. Mark it as "Been" or add it to your "Wishlist", give it up to five stars and write the one tip that matters. The trip and the city are organized for you.
 
 YOUR FRIENDS, NOT THE WHOLE INTERNET
 Friendship is by accepted request or invite link. There are no public profiles. In your feed you see the spots your friends have been to, with their photo, rating and note — and you save them to your list in one tap. Comment on a friend's spot to ask what they thought.
