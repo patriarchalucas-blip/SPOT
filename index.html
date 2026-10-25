@@ -2572,13 +2572,6 @@ body.exm #exploreCozinhas,body.exm #exploreBody{display:none!important}
 .ex-sg-amigos{color:var(--green)!important}
 .ex-sg-limpar{display:block;margin:2px 16px 8px;padding:6px 0;border:none;background:none;font:inherit;font-size:14px;color:var(--ink2);cursor:pointer}
 .ex-sg-pe{padding:6px 16px 10px;font-size:12px;color:var(--ink3)}
-.exm-aqui{position:absolute;left:50%;top:calc(env(safe-area-inset-top,0px) + 12px + 48px + 16px);z-index:5;transform:translate(-50%,-6px);
-  display:flex;align-items:center;gap:6px;height:36px;padding:0 14px;border:none;border-radius:18px;background:var(--base);color:var(--ink);
-  font:inherit;font-size:14px;font-weight:600;cursor:pointer;opacity:0;pointer-events:none;transition:opacity .2s,transform .2s}
-.exm-aqui.on{opacity:1;pointer-events:auto;transform:translate(-50%,0)}
-.exm-aqui svg{width:14px;height:14px}
-.exm-aqui.buscando{color:var(--ink2);pointer-events:none}
-#explore.exm-buscando .exm-aqui{display:none}
 /* Folha */
 .exm-folha{position:absolute;left:0;right:0;top:0;height:100%;z-index:4;touch-action:none;background:var(--base);border-radius:28px 28px 0 0;
   display:flex;flex-direction:column;will-change:transform;transition:opacity .15s}
@@ -10804,7 +10797,7 @@ var EXM_LIGADO=(function(){
 })();
 const EXM={mapa:null,camada:null,pinos:[],itens:[],todos:[],filtros:{amigos:false,quero:false,aberto:false},
   parada:'peek',sel:-1,selIt:null,selChave:null,areaChave:'',amigosEnquadrados:-1,agendado:false,montado:false,
-  pessoaMexeu:false,buscarAqui:false,googleVelho:false,deles:null,mapaBaixo:0,chavePinos:''};
+  pessoaMexeu:false,deles:null,mapaBaixo:0,chavePinos:''};
 const EXM_CAT={food:'Comer',hotel:'Ficar',experience:'Fazer'};
 const EXM_PEEK=96,EXM_MEDIA=300;
 
@@ -10821,7 +10814,6 @@ function exmMontar(){
   palco.className='exm-palco';palco.id='exmPalco';
   palco.innerHTML='<div class="exm-mapa" id="exmMapa"></div><div class="exm-veu" id="exmVeu"></div>'
     +'<div class="exm-topo" id="exmTopo"></div>'
-    +'<button class="exm-aqui" id="exmAqui" onclick="exmBuscarAqui()">'+icon('search')+'<span>Buscar aqui</span></button>'
     +'<div class="exm-folha" id="exmFolha"><div class="exm-pega" id="exmPega"><div class="exm-alca"></div></div>'
     +'<div class="exm-corpo" id="exmCorpo"></div></div>';
   tela.insertBefore(palco,document.querySelector('#explore .bottom-nav'));
@@ -10892,7 +10884,6 @@ function exmIrPara(parada,semAnimar){
   f.style.transition=semAnimar?'none':'transform .25s ease';
   f.style.transform='translateY('+t+'px)';
   document.getElementById('explore').classList.toggle('exm-cheia',parada==='cheia');
-  const aqui=document.getElementById('exmAqui');if(aqui)aqui.classList.toggle('on',EXM.buscarAqui&&parada!=='cheia'&&parada!=='previa');
   // O mapa termina onde a folha começa (até a altura da prévia): o logo e os
   // dados do Google ficam sempre à vista (termos), e "centrar o pino" centra
   // no pedaço do mapa que aparece. Na folha cheia o mapa fica como estava.
@@ -11376,58 +11367,44 @@ function exmTrocarCat(id){
   EXPLORE.cozinha='';setExploreCat(id);
 }
 
-// ── arrastou o mapa: "Buscar aqui" (só o toque busca) ──
-function exmTalvezOferecerBusca(){
+// ── arrastou o mapa: as sugestões de lá vêm SOZINHAS ──
+// O botão "Buscar aqui" saiu (25/10, o Lucas: "não vi utilidade, ainda não
+// entendi"). Parou o mapa num lugar novo, as sugestões dali chegam, como no
+// Explorar antigo. Travas de custo (cada busca do Google é paga): espera a
+// pessoa parar de mexer (900 ms); só quando ela SAIU da área já buscada (o
+// centro da tela fora dela, ou afastou tanto que ela virou um pedaço pequeno
+// da tela); só do zoom de bairro pra perto (13+); retângulo arredondado numa
+// grade, que o servidor guarda 24 h (vistas vizinhas não pagam de novo); no
+// máximo 25 por abertura do app. Nunca com a prévia aberta.
+let EXM_BUSCA_SOZINHA=null,EXM_BUSCAS_SOZINHAS=0;
+function exmTalvezBuscarAqui(){
+  clearTimeout(EXM_BUSCA_SOZINHA);
   if(!EXM.pessoaMexeu||!EXM.mapa)return;
-  const b=EXM.mapa.getBounds();if(!b)return;
-  const ne=b.getNorthEast(),sw=b.getSouthWest(),c=b.getCenter();
-  // País inteiro não oferece: o Google devolveria 20 lugares espalhados.
-  const longe=exmDistKm({lat:sw.lat(),lng:sw.lng()},{lat:ne.lat(),lng:ne.lng()})>60;
-  const r=EXPLORE.area&&EXPLORE.area.rectangle;
-  // Oferece quando a pessoa SAIU da área buscada (o centro da tela está fora
-  // dela) ou afastou tanto que ela virou um pedaço pequeno da tela. Um
-  // arrastinho dentro do bairro não oferece nada.
-  let saiu=!r;
-  if(r){
-    const fora=c.lat()<r.low.latitude||c.lat()>r.high.latitude||c.lng()<r.low.longitude||c.lng()>r.high.longitude;
-    const aTela=(ne.lat()-sw.lat())*(ne.lng()-sw.lng()),aBusca=(r.high.latitude-r.low.latitude)*(r.high.longitude-r.low.longitude);
-    saiu=fora||aBusca<aTela*0.35;
-  }
-  // Só num zoom em que as sugestões aparecem no mapa (pontos a partir do 11).
-  const oferecer=!longe&&saiu&&!EXPLORE.modoPais&&(EXM.mapa.getZoom()||0)>=11;
-  if(oferecer===EXM.buscarAqui)return;
-  // As sugestões que já vieram CONTINUAM no mapa (antes sumiam e o mapa
-  // ficava só com os amigos — 23/10, o Lucas: "não consigo ver outros spots").
-  EXM.buscarAqui=oferecer;
-  const a=document.getElementById('exmAqui');if(a)a.classList.toggle('on',oferecer&&EXM.parada!=='cheia'&&EXM.parada!=='previa');
-}
-// "Buscar aqui" fica "Buscando…" até o resultado chegar, e aí abre os cards
-// com o que veio (23/10, o Lucas: "o botão some e não acontece nada" — a
-// busca acontecia, mas no zoom de longe os pontos do Google não apareciam).
-async function exmBuscarAqui(){
-  if(!EXM.mapa||EXM.buscandoAqui)return;
-  const b=EXM.mapa.getBounds();if(!b)return;
-  const ne=b.getNorthEast(),sw=b.getSouthWest();
-  EXM.buscarAqui=false;EXM.pessoaMexeu=false;EXM.buscandoAqui=true;
-  const a=document.getElementById('exmAqui');
-  if(a){a.querySelector('span').textContent='Buscando…';a.classList.add('on','buscando')}
-  const c=document.getElementById('exploreCitySearch');if(c&&!c.value.trim())c.value='Nesta área';
-  // Retângulo arredondado PRA FORA numa grade (11/10, auditoria): vistas
-  // vizinhas caem na mesma chave e reaproveitam a busca guardada no servidor.
-  const bruto=Math.max(0.002,Math.max(ne.lat()-sw.lat(),ne.lng()-sw.lng())/8);
-  const passo=Math.pow(2,Math.round(Math.log2(bruto)));
-  const baixo=x=>Math.floor(x/passo)*passo,alto=x=>Math.ceil(x/passo)*passo,fixo=x=>Number(x.toFixed(5));
-  const rect={rectangle:{low:{latitude:fixo(baixo(sw.lat())),longitude:fixo(baixo(sw.lng()))},high:{latitude:fixo(alto(ne.lat())),longitude:fixo(alto(ne.lng()))}}};
-  const rr=rect.rectangle;
-  EXM.areaChave=[rr.low.latitude,rr.low.longitude,rr.high.latitude,rr.high.longitude].join(',');
-  EXM.amigosEnquadrados=-1;
-  const cidade=(EXPLORE.lugar&&EXPLORE.lugar.cidade)||EXPLORE.city||'';
-  try{await runExplore('Nesta área',{nome:'Nesta área',tipo:'mapa',cidade,pais:'',area:rect})}
-  finally{
-    EXM.buscandoAqui=false;
-    if(a){a.classList.remove('on','buscando');a.querySelector('span').textContent='Buscar aqui'}
-  }
-  EXM.sel=-1;exmIrPara('media');exmDesenhar();
+  EXM_BUSCA_SOZINHA=setTimeout(()=>{
+    const m=EXM.mapa,b=m.getBounds();if(!b||EXM.sel>=0||EXPLORE.modoPais)return;
+    if((m.getZoom()||0)<13||EXM_BUSCAS_SOZINHAS>=25)return;
+    const ne=b.getNorthEast(),sw=b.getSouthWest(),c=b.getCenter();
+    const r=EXPLORE.area&&EXPLORE.area.rectangle;
+    if(r){
+      const fora=c.lat()<r.low.latitude||c.lat()>r.high.latitude||c.lng()<r.low.longitude||c.lng()>r.high.longitude;
+      const aTela=(ne.lat()-sw.lat())*(ne.lng()-sw.lng()),aBusca=(r.high.latitude-r.low.latitude)*(r.high.longitude-r.low.longitude);
+      if(!fora&&aBusca>=aTela*0.35)return;
+    }
+    EXM_BUSCAS_SOZINHAS++;EXM.pessoaMexeu=false;
+    const bruto=Math.max(0.002,Math.max(ne.lat()-sw.lat(),ne.lng()-sw.lng())/8);
+    const passo=Math.pow(2,Math.round(Math.log2(bruto)));
+    const baixo=x=>Math.floor(x/passo)*passo,alto=x=>Math.ceil(x/passo)*passo,fixo=x=>Number(x.toFixed(5));
+    const rect={rectangle:{low:{latitude:fixo(baixo(sw.lat())),longitude:fixo(baixo(sw.lng()))},high:{latitude:fixo(alto(ne.lat())),longitude:fixo(alto(ne.lng()))}}};
+    const rr=rect.rectangle;
+    // A chave é a do retângulo buscado: o mapa não re-enquadra (a pessoa escolheu a vista).
+    EXM.areaChave=[rr.low.latitude,rr.low.longitude,rr.high.latitude,rr.high.longitude].join(',');
+    EXM.amigosEnquadrados=-1;EXM.buscaSozinha=true;
+    const campo=document.getElementById('exploreCitySearch');if(campo&&!campo.value.trim())campo.value='Nesta área';
+    const cidade=(EXPLORE.lugar&&EXPLORE.lugar.cidade)||EXPLORE.city||'';
+    // Por trás: as sugestões de antes ficam até as novas chegarem (sem piscar).
+    runExplore('Nesta área',{nome:'Nesta área',tipo:'mapa',cidade,pais:'',area:rect},{silencioso:true})
+      .finally(()=>{EXM.buscaSozinha=false});
+  },900);
 }
 
 // ── mapa ──
@@ -11451,7 +11428,7 @@ async function exmPrepararMapa(){
     });
     EXM.mapa.addListener('idle',()=>{
       if(EXM.gesto||EXM.renovarVista||!EXM.vista){EXM.vista=EXM.mapa.getBounds();EXM.gesto=false;EXM.renovarVista=false}
-      exmAgendar();exmTalvezOferecerBusca()});
+      exmAgendar();exmTalvezBuscarAqui()});
     // Só o gesto da pessoa conta: o enquadramento que o próprio app faz
     // (fitBounds, panTo do pino) não oferece busca nova.
     EXM.mapa.addListener('dragstart',()=>{EXM.pessoaMexeu=true;EXM.gesto=true});
@@ -11647,9 +11624,10 @@ async function exmAbrirInicial(){
 // Busca nova: a prévia fecha, os pontos do Google voltam, a folha no peek.
 function exmDepoisDeBuscar(){
   if(!EXM_LIGADO)return;
-  EXM.sel=-1;EXM.selIt=null;EXM.buscarAqui=false;EXM.pessoaMexeu=false;EXPLORE.cota=null;
+  // Busca sozinha (arrastou o mapa) não mexe na folha nem fecha nada.
+  if(EXM.buscaSozinha){EXM.pessoaMexeu=false;return}
+  EXM.sel=-1;EXM.selIt=null;EXM.pessoaMexeu=false;EXPLORE.cota=null;
   {const c=document.getElementById('exploreCitySearch');if(c&&document.activeElement===c)c.blur()}
-  const a=document.getElementById('exmAqui');if(a&&!EXM.buscandoAqui)a.classList.remove('on');
   if(EXM.parada==='previa'||EXM.parada==='cheia')exmIrPara('peek');
   exmPrepararMapa();
   exmCarregarDeles();
