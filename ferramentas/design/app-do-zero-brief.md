@@ -6,18 +6,18 @@ Até agora eu te mandei tela por tela, com listas do que estava errado, e você 
 Então agora vai só a ideia. **Esquece o app atual.** Me mostra como você faria o Spot se fosse começar hoje.
 
 ## O Spot em uma frase
-**Guarde os lugares onde você foi e quer ir, e descubra onde ir pelo que seus amigos indicam.**
+**Guarde os lugares onde você foi e quer ir, e descubra onde ir pelo que seus amigos indicam — do bar do seu bairro à viagem do ano.**
 
-É um "Letterboxd pra viagem": a pessoa salva restaurantes, hotéis e experiências, marca **Fui** ou **Quero ir**, dá nota e escreve a dica que importa ("peça o camarão"). Os amigos veem e usam isso pra decidir onde ir. A unidade se chama **spot**.
+É um "Letterboxd dos lugares", **pro dia a dia e pra viagem, no mesmo app**: onde jantar hoje perto de casa e o que a amiga indicou em Lisboa. A pessoa salva restaurantes, hotéis e experiências, marca **Fui** ou **Quero ir**, dá nota e escreve a dica que importa ("peça o camarão"). Os amigos veem e usam isso pra decidir onde ir. A unidade se chama **spot**.
 
 ## O que a pessoa faz (o que o app precisa fazer muito bem)
 1. **Salvar um spot** em 10 segundos: buscar pelo nome, ou "estou aqui agora" pela localização, ou colar uma lista do WhatsApp/Notas. Marcar Fui ou Quero ir, nota opcional.
-2. **Ver o que os amigos indicam** num lugar: abrir uma cidade (ou o mapa perto de mim) e ver os spots deles primeiro, com quem foi e o que disse.
-3. **Lembrar onde já foi**: países, cidades, os melhores spots de cada lugar. É o lado "coleção", que dá orgulho de mostrar.
+2. **Ver o que os amigos indicam** num lugar: perto de mim agora (o dia a dia) ou numa cidade pra onde vou, com os spots deles primeiro, quem foi e o que disse.
+3. **Lembrar onde já foi**: os melhores da sua cidade, e os países e cidades por onde passou. É o lado "coleção", que dá orgulho de mostrar.
 4. **Planejar a próxima viagem**: juntar os Quero ir de um destino e o que os amigos indicam lá.
 
 ## Referências pra olhar (o que pegar de cada)
-- **Beli:** como ranqueia e compara lugares; a sensação de lista pessoal que vale a pena montar.
+- **Beli:** avaliar vira jogo (gostei / ok / não gostei e "foi melhor que esse outro?", em vez de estrela); convite de amigos como parte da entrada; recomendação pelo seu gosto. É o concorrente mais parecido: só restaurante, e sem a dica escrita, que é o forte do Spot.
 - **Letterboxd:** o perfil como identidade e coleção; o diário.
 - **Mapstr / Corner:** salvar lugar rápido e ver tudo num mapa.
 - **Instagram / Strava:** o "+" central que todo mundo acha sem pensar.

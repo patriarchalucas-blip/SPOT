@@ -8,7 +8,7 @@ Este arquivo é lido automaticamente pelo Claude Code ao abrir esta pasta. Ele e
 
 ## O projeto
 
-App pessoal de viagem — "Letterboxd para viagem". Salva lugares (restaurante/hotel/experiência) com nota pessoal, marca "quero ir"/"já fui", avalia. Tagline: "seus lugares · sua voz". Caso de uso: viagem aos Bálcãs (Croácia + Montenegro + Bósnia) com grupo de 6 amigos. Lucas está pensando em profissionalizar isso como produto de verdade (não é urgente, é intenção de médio prazo).
+App de lugares pro DIA A DIA e pra VIAGEM — "Letterboxd dos lugares", do bar do bairro à viagem (o Lucas, 26/10: "não é só viagem"). Salva lugares (restaurante/hotel/experiência) com nota pessoal, marca "quero ir"/"já fui", avalia. Tagline: "seus lugares · sua voz". Caso de uso: viagem aos Bálcãs (Croácia + Montenegro + Bósnia) com grupo de 6 amigos. Lucas está pensando em profissionalizar isso como produto de verdade (não é urgente, é intenção de médio prazo).
 
 ## O Spot é SÓ o app (05/10/2026)
 
