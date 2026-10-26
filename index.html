@@ -11455,8 +11455,10 @@ function exmCriarCamada(){
 // pelo mesmo caminho com teto do card — antes o card consertava e o pino
 // ficava com a inicial, com a foto bem ali embaixo (23/10).
 const EXM_PINO_IT=new Map(),EXM_FOTO_CONSERTO=new Set();
+// A foto pode terminar de carregar com o pino já redesenhado (fora da tela):
+// sem pai, não há o que marcar (erro do registro, 23–25/10).
 function exmPinoFalhou(img,k){
-  const box=img.parentNode;if(box)box.classList.add('sem');img.remove();
+  const box=img.parentNode;if(!box)return;box.classList.add('sem');img.remove();
   const it=EXM_PINO_IT.get(k);if(!it)return;
   const ck=normName(it.nome)+'|'+it.lat;if(EXM_FOTO_CONSERTO.has(ck))return;
   EXM_FOTO_CONSERTO.add(ck);
@@ -11470,7 +11472,7 @@ function exmPinoHTML(it,escolhido,id){
   // Carregando: disco claro; chegou, a foto; quebrou, a inicial. Nada busca foto aqui.
   EXM_PINO_IT.set(id,it);
   // id é 'p' + número (exmIdDoPino): seguro dentro do onerror.
-  const foto=f?'<img src="'+escUrl(f)+'" alt="" decoding="async" onload="this.parentNode.classList.add(\'ok\')" onerror="exmPinoFalhou(this,\''+id+'\')">':'';
+  const foto=f?'<img src="'+escUrl(f)+'" alt="" decoding="async" onload="if(this.parentNode)this.parentNode.classList.add(\'ok\')" onerror="exmPinoFalhou(this,\''+id+'\')">':'';
   return '<div class="exm-pin'+(foi?' foi':'')+(escolhido?' sel':'')+'"><div class="exm-pin-f'+(f?'':' sem')+'">'+foto+'<span>'+ini+'</span></div>'
     +(it.tipo==='amigo'?'<span class="exm-pin-avs">'+exmAvsDoItem(it,'exm-av18',3)+'</span>':'')+'</div>';
 }

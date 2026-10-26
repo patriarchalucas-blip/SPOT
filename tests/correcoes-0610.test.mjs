@@ -3,7 +3,7 @@ import assert from 'node:assert';
 import { onRequestGet as paginaGet } from '../functions/l/[codigo].js';
 import { onRequestPost as listaPost } from '../functions/api/lista.js';
 import { onRequestPost as placesPost } from '../functions/api/places.js';
-import { onRequestPost as notificarPost } from '../functions/api/notificar.js';
+import { onRequestPost as notificarPost, onRequestGet as notificarGet } from '../functions/api/notificar.js';
 import { onRequestPost as posicaoPost } from '../functions/api/posicao.js';
 import { onRequestPost as erroPost } from '../functions/api/erro.js';
 import { semQueroIrPrivado } from '../functions/api/_privada.js';
@@ -145,6 +145,7 @@ test('notificar: "quer ser seu amigo", e sem envio de fato a marca anti-repetica
   const env = { SUPABASE_SERVICE_KEY: 's', SPOT_KV: kv };
   let enderecos = [];
   const enviados = [];
+  const pend = [];
   const f = async (u, opt) => {
     u = String(u);
     if (u.includes('/auth/v1/user')) return new Response(JSON.stringify({ id: 'eu' }), { status: 200 });
@@ -153,7 +154,7 @@ test('notificar: "quer ser seu amigo", e sem envio de fato a marca anti-repetica
     if (u.includes('exp.host')) { enviados.push(JSON.parse(opt.body)); return new Response('{"data":[{"status":"ok"}]}') }
     return new Response('[]');
   };
-  const pede = () => notificarPost({ request: new Request('https://x/api/notificar', { method: 'POST', headers: { Authorization: 'Bearer a.b.c' }, body: JSON.stringify({ tipo: 'pedido', alvo: '11111111-1111-1111-1111-111111111111' }) }), env, waitUntil: () => {} });
+  const pede = () => notificarPost({ request: new Request('https://x/api/notificar', { method: 'POST', headers: { Authorization: 'Bearer a.b.c' }, body: JSON.stringify({ tipo: 'pedido', alvo: '11111111-1111-1111-1111-111111111111' }) }), env, waitUntil: (p) => pend.push(p) }).then(async (r) => { await Promise.all(pend.splice(0)); return r });
   await comFetch(f, async () => {
     await pede();   // vínculo ainda não existe: nada sai
     assert.ok(![...kv.m.keys()].some((k) => k.startsWith('push_par_')));
@@ -164,6 +165,10 @@ test('notificar: "quer ser seu amigo", e sem envio de fato a marca anti-repetica
     await pede();
     assert.strictEqual(enviados.length, 1, 'depois de enviar, segura o repetido');
   });
+  // 26/10: cada tentativa deixa o resultado no registro do dia, sem id nem nome.
+  const g = await (await notificarGet({ request: new Request('https://x/api/notificar'), env })).json();
+  assert.deepStrictEqual(g.cont, { 'pedido:sem_vinculo_ou_aparelho': 1, 'pedido:enviado': 1, 'pedido:repetido': 1 });
+  assert.ok(!JSON.stringify(g).includes('1111') && !JSON.stringify(g).includes('Clara'));
 });
 
 // ── 7. Posição: só spot que o RLS deixa quem chama ver ──────────────────────

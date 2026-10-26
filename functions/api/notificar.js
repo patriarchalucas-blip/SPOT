@@ -55,7 +55,56 @@ const TEXTOS_EN = {
   convite: (nome) => ({ title: "You're friends", body: `${nome} joined Spot through your invite` })
 };
 
+// ═══ REGISTRO DO RESULTADO (26/10) ═══
+// A amizade com a Roberta não avisou o Lucas, e não dava pra saber onde
+// parou: o app pede o aviso nos três caminhos (pedido, aceite, convite), mas o
+// servidor não anotava o que aconteceu. Agora cada tentativa deixa o RESULTADO
+// (enviado, sem vínculo/sem aparelho, repetido, sem login, falha no Expo...)
+// num registro do dia, SEM id, nome ou texto de ninguém — só tipo, resultado e
+// hora. Ler: GET /api/notificar?dia=AAAA-MM-DD (público, como o /api/erro).
+function resultadoDe(d) {
+  if (!d) return 'sem_resposta';
+  if (d.enviados > 0) return 'enviado';
+  if (d.unauthorized) return 'sem_login';
+  if (d.capped) return 'teto';
+  if (d.motivo) return d.motivo;
+  if (d.erro) return 'falha_' + d.erro;
+  if (d.error) return d.error;
+  if (d.configured === false) return 'servidor_sem_chave';
+  if (d.ok) return 'ok';
+  return 'sem_vinculo_ou_aparelho';
+}
+async function registrar(env, tipo, d) {
+  const dia = new Date().toISOString().slice(0, 10);
+  const chave = 'push_log_' + dia;
+  let log = {};
+  try { log = JSON.parse((await lerKV(env, chave)) || '{}') || {} } catch (e) { log = {} }
+  log.cont = log.cont || {};
+  log.ult = log.ult || [];
+  const r = resultadoDe(d);
+  const k = (tipo || '?') + ':' + r;
+  log.cont[k] = (log.cont[k] || 0) + 1;
+  log.ult.unshift({ hora: new Date().toISOString().slice(11, 19), tipo: tipo || '?', resultado: r });
+  log.ult = log.ult.slice(0, 40);
+  await gravarKV(env, chave, JSON.stringify(log), 60 * 60 * 24 * 31);
+}
+export async function onRequestGet({ request, env }) {
+  const dia = new URL(request.url).searchParams.get('dia') || new Date().toISOString().slice(0, 10);
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(dia)) return json({ error: 'dia' }, 400);
+  let log = {};
+  try { log = JSON.parse((await lerKV(env, 'push_log_' + dia)) || '{}') || {} } catch (e) { log = {} }
+  return json(Object.assign({ dia }, log));
+}
 export async function onRequestPost(context) {
+  let tipo = '';
+  try { const b = await context.request.clone().json(); tipo = b && b.op === 'idioma' ? '' : (['pedido', 'aceite', 'comentario'].includes(b && b.tipo) ? b.tipo : 'outro') } catch (e) {}
+  const resp = await tratar(context);
+  if (tipo) {
+    try { const d = await resp.clone().json(); context.waitUntil(registrar(context.env, tipo, d)) } catch (e) {}
+  }
+  return resp;
+}
+async function tratar(context) {
   const { request, env } = context;
 
   let body;
