@@ -19820,7 +19820,20 @@ async function resgatarConvitePendente(){
   }
   if(status==='ok'){
     esquecerAmigosGuardados();toast('Vocês são amigos','Já dá pra ver as viagens um do outro.','users');
-    if(antes){const depois=await idsDosAmigos();(depois||[]).filter(id=>!antes.includes(id)).forEach(id=>avisar('aceite',id,{convite:true}))}
+    // Quem convidou: o amigo novo (depois − antes). Se a lista de ANTES não
+    // veio (logo depois de entrar na conta, a 1ª consulta às vezes falha), o
+    // aviso não saía, sem erro nenhum — a Roberta entrou pelo link do Lucas e
+    // ele não soube (26/10). Sem ela, vale a amizade aceita mais recente
+    // (accepted_at, migração 033): é a que o resgate acabou de criar.
+    let novos=null;
+    if(antes){const depois=await idsDosAmigos();if(depois)novos=depois.filter(id=>!antes.includes(id))}
+    if(!novos||!novos.length){
+      const l=await dbGet('follows','status=eq.accepted&or=(follower_id.eq.'+uid+',following_id.eq.'+uid+')&select=follower_id,following_id,accepted_at,created_at');
+      const quando=x=>Date.parse(x.accepted_at||x.created_at||'')||0;
+      const f=falhou(l)?null:(l||[]).slice().sort((a,b)=>quando(b)-quando(a))[0];
+      if(f&&Date.now()-quando(f)<5*60*1000)novos=[f.follower_id===uid?f.following_id:f.follower_id];
+    }
+    (novos||[]).forEach(id=>avisar('aceite',id,{convite:true}));
   }
 }
 

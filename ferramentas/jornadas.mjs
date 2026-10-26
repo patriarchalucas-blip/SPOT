@@ -166,7 +166,7 @@ const RPC = {
   redeem_invite: (u, { invite_code }) => { if (!u) return 'sem_sessao'; const i = DB.invites.find(x => x.code === invite_code && !x.revoked); if (!i) return 'invalido'; const dono = i.user_id;
     if (dono === u) return 'proprio_convite'; if (haBloqueio(u, dono)) return 'invalido'; if (amigos(u, dono)) return 'ja_amigos';
     const ex = DB.follows.find(f => (f.follower_id === u && f.following_id === dono) || (f.following_id === u && f.follower_id === dono));
-    if (ex) ex.status = 'accepted'; else DB.follows.push({ id: uuid(), follower_id: u, following_id: dono, status: 'accepted', created_at: agora() }); return 'ok' },
+    if (ex) { ex.status = 'accepted'; ex.accepted_at = agora() } else DB.follows.push({ id: uuid(), follower_id: u, following_id: dono, status: 'accepted', created_at: agora(), accepted_at: agora() }); return 'ok' },
 };
 
 // ── o que cada conta pediu (pra conferir avisos e erros) ──
@@ -1153,6 +1153,8 @@ confere(perguntaI && /Elisa Teste te convidou/.test(tituloI || ''), 'conta nova 
 confere(!amigos(I.id, E.id), 'sem o toque, ainda não são amigos');
 await ir(pi, 'window.responderPergunta(0)', 1800);
 confere(amigos(I.id, E.id), 'tocou em Adicionar: viram amigos');
+await espera(800);
+confere(AVISOS.some(x => x.tipo === 'aceite' && x.alvo === E.id && x.de === I.id && x.convite === true), 'quem convidou recebe o aviso de que a pessoa entrou pelo link', AVISOS.map(x => x.tipo + '→' + nomeDe(x.alvo)));
 // Outra conta nova pela mesma conexão, que diz "Agora não": nada acontece.
 const pj = await abrirAparelho('J', { casca: true });
 await carregar(pj);
