@@ -174,7 +174,7 @@ const AVISOS = [];        // /api/notificar
 const ERROS_APP = [];     // /api/erro (o app reporta os próprios erros)
 const RECUSAS = [];       // escrita que o RLS falso recusou
 const ESCRITAS = [];      // PATCH em spots (pra depurar)
-let CONVITE_CONEXAO = '', CONSULTAS_CONEXAO = 0;
+let CONVITE_CONEXAO = '', CONSULTAS_CONEXAO = 0, LISTA_CONEXAO = null;
 let FALHA_STORAGE = false;   // true = a foto do armazenamento falha ao abrir
 
 function quemE(headers) {
@@ -375,10 +375,17 @@ async function trataPedido(pg, r) {
     if (api === 'lugar') return responde(200, JSON.stringify(lugarResponde(r.postData())));
     if (api === 'place-photo' || api === 'city-photo' && metodo === 'GET' && /img=1/.test(u)) return responde(200, PNG1, 'image/png');
     if (api === 'importar') return responde(200, JSON.stringify(metodo === 'GET' ? { ligado: true } : { lugares: [] }));
-    if (api === 'lista') return responde(200, JSON.stringify({ codigo: 'abcdefgh1234' }));
+    // Lista pública aberta antes de instalar (26/10): LISTA_CONEXAO = { codigo, dono, spots }.
+    if (api === 'lista') {
+      let b = {}; try { b = JSON.parse(r.postData() || '{}') } catch (e) {}
+      const L = LISTA_CONEXAO;
+      if (b.op === 'resumo') return responde(200, JSON.stringify(L && b.codigo === L.codigo ? { titulo: 'Lisboa', pais: 'Portugal', dono: L.dono, spots: L.spots.map((s) => ({ id: s.id, name: s.name, category: s.category, city: s.city, status: 'been' })) } : { sumiu: true }));
+      if (b.op === 'spot') { const s = L && L.spots.find((x) => x.id === b.id); return responde(200, JSON.stringify(s ? { spot: s, pais: 'Portugal' } : { sumiu: true })) }
+      return responde(200, JSON.stringify({ codigo: 'abcdefgh1234' }));
+    }
     // Convite aberto no Safari antes de instalar (08/10): CONVITE_CONEXAO é o
     // que /c/<código> anotou pra conexão de quem chama.
-    if (api === 'convite-conexao') { CONSULTAS_CONEXAO++; return responde(200, JSON.stringify({ codigo: CONVITE_CONEXAO })) }
+    if (api === 'convite-conexao') { CONSULTAS_CONEXAO++; return responde(200, JSON.stringify({ codigo: CONVITE_CONEXAO, lista: (LISTA_CONEXAO && LISTA_CONEXAO.codigo) || '' })) }
     return responde(200, '{}');
   }
   if (/fonts\.(googleapis|gstatic)\.com|unsplash|googleusercontent|maps\.googleapis/.test(u)) return responde(200, '', 'text/plain');
@@ -1163,6 +1170,26 @@ const J = CONTAS['joao.teste@exemplo.test'];
 await ate(async () => (await janelas(pj)).includes('ov-pergunta'), 6000);
 await ir(pj, 'window.responderPergunta(-1)', 1200);
 confere(!amigos(J.id, E.id), '"Agora não" não cria amizade');
+// Lista pública aberta antes de instalar (26/10): "Elisa te mandou 2 spots de Lisboa".
+CONVITE_CONEXAO = '';
+LISTA_CONEXAO = { codigo: 'listaElisa12', dono: { id: E.id, nome: 'Elisa Teste', username: 'elisa' }, spots: [
+  { id: '0a0a0a0a-0000-4000-8000-000000000001', name: 'Cervejaria da Lista', category: 'food', city: 'Lisboa', address: 'Rua 1, 1000-001 Lisboa, Portugal', lat: 38.72, lng: -9.14 },
+  { id: '0a0a0a0a-0000-4000-8000-000000000002', name: 'Café da Lista', category: 'food', city: 'Lisboa', address: 'Rua 2, 1000-002 Lisboa, Portugal', lat: 38.71, lng: -9.13 }] };
+const pl = await abrirAparelho('L', { casca: true });
+await carregar(pl);
+await entrar(pl, 'lia.teste@exemplo.test', 'senhaL-teste-1', true);
+const Lc = CONTAS['lia.teste@exemplo.test'];
+await ate(async () => (await janelas(pl)).includes('ov-pergunta'), 6000);
+const tituloL = await texto(pl, '#perguntaTitulo');
+confere(/Elisa te mandou 2 spots de Lisboa/.test(tituloL || ''), 'conta nova vinda da lista vê a lista no app', tituloL);
+await ir(pl, 'window.responderPergunta(0)', 3000);
+const salvosL = DB.spots.filter((s) => s.user_id === Lc.id && /da Lista/.test(s.name));
+confere(salvosL.length === 2 && salvosL.every((s) => s.status === 'want' && s.from_user_id === E.id), 'salva os spots da lista em Quero ir, com quem indicou', salvosL.map((s) => s.name + ':' + s.status + ':' + (s.from_user_id === E.id)));
+await ate(async () => /Adicionar Elisa como amigo/.test((await texto(pl, '#perguntaTitulo')) || ''), 6000);
+await ir(pl, 'window.responderPergunta(0)', 1500);
+confere(DB.follows.some((f) => f.follower_id === Lc.id && f.following_id === E.id && f.status === 'pending'), 'depois, pede amizade a quem mandou a lista', null);
+confere(AVISOS.some((x) => x.tipo === 'pedido' && x.alvo === E.id && x.de === Lc.id), 'quem mandou a lista recebe o aviso do pedido', AVISOS.slice(-3));
+LISTA_CONEXAO = null;
 // Como o Spot funciona (09/10): fim do primeiro acesso abre o tutorial uma vez;
 // o pedido de notificação espera ele fechar.
 await limpaCasca(pj);

@@ -24,6 +24,13 @@ Então agora vai só a ideia. **Esquece o app atual.** Me mostra como você fari
 
 Não é pra copiar: é o nível de clareza e de vontade de abrir o app que eu quero.
 
+## Como o Spot cresce: a lista é o convite
+Não quero botão de "convide seus amigos". O convite é o **conteúdo indo na frente**: um amigo vai pra Chicago, eu mando "meus 12 spots de Chicago", chega uma **lista bonita** no WhatsApp, a pessoa quer salvar e baixa o app pra isso. (Quem instala por esse caminho já encontra a lista dentro do app e recebe a sugestão de adicionar quem mandou.)
+
+Então duas coisas precisam estar desenhadas como vitrine:
+- **A página da lista compartilhada** (abre no navegador, sem app): foto, nome, a nota e a dica de quem mandou, "indicado por Lucas", e um "Salvar no Spot" irresistível.
+- **Mandar uma lista** tem que ser óbvio no app: "Mandar meus spots de Chicago" a um toque da cidade, não escondido num menu.
+
 ## O teste que cada opção tem que passar
 Uma pessoa que nunca viu o app (minha mãe) tem que conseguir sozinha, sem perguntar:
 - adicionar um restaurante em que ela foi;
@@ -44,6 +51,7 @@ Uma pessoa que nunca viu o app (minha mãe) tem que conseguir sozinha, sem pergu
 3. **Descobrir**: uma cidade ou o mapa, com o que os amigos indicam.
 4. **Um spot aberto** (a ficha): foto, quem foi, a dica, salvar.
 5. **Você**: a sua coleção, países e cidades, os melhores.
+5b. **A lista compartilhada**, como quem recebe vê no WhatsApp e no navegador.
 6. **A barra de navegação**, e onde mora cada coisa.
 
 Mais: uma frase por direção dizendo **qual é a aposta dela** ("é um diário", "é um mapa", "é um feed de amigos").

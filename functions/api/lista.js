@@ -42,6 +42,7 @@ export async function onRequestPost(context) {
   let body;
   try { body = await request.json() } catch (e) { return json({ error: 'bad_request' }, 400) }
   if (body.op === 'spot') return umSpotDaLista(body, env);
+  if (body.op === 'resumo') return resumoDaLista(body, request, env);
   const cidades = limparCidades(body.cidades);
   const titulo = String(body.titulo || cidades[0] || '').replace(/[\u0000-\u001f]/g, ' ').trim().slice(0, 80);
   const pais = String(body.pais || '').replace(/[\u0000-\u001f]/g, ' ').trim().slice(0, 60);
@@ -153,6 +154,33 @@ async function umSpotDaLista(body, env) {
   // O país: o que a lista diz (lista de cidade guarda o país; lista de país
   // tem o país no título). Quem confere se é país de verdade é o app.
   return json({ spot: s, pais: dado.pais || dado.titulo || '' });
+}
+
+// "Lucas te mandou os spots de Chicago" (26/10): quem entrou no app vindo de
+// uma lista pública recebe, lá dentro, o que a página mostrava — pra salvar
+// tudo de uma vez — e quem mandou, pra virar amigo. Só com login (é a conta
+// nova perguntando), e nada além do que a página pública já mostra.
+async function resumoDaLista(body, request, env) {
+  const codigo = String(body.codigo || '');
+  if (!/^[A-Za-z0-9]{8,24}$/.test(codigo)) return json({ error: 'bad_request' }, 400);
+  const quem = await quemEsta(request, env);
+  if (!quem.permitir || !quem.uid) return json({ unauthorized: true }, 401);
+  if (!env.SPOT_KV || !env.SUPABASE_SERVICE_KEY) return json({ configured: false });
+  const dado = await lerLista(env, codigo);
+  if (!dado || dado.revogado || !dado.uid || !Array.isArray(dado.cidades) || !dado.cidades.length) return json({ sumiu: true });
+  const h = { apikey: env.SUPABASE_SERVICE_KEY, Authorization: 'Bearer ' + env.SUPABASE_SERVICE_KEY };
+  const lista = dado.cidades.map((c) => '"' + String(c).replace(/["\\]/g, '') + '"').join(',');
+  const [rs, rp, privadas] = await Promise.all([
+    fetch('https://kzidnilsyrvauzgelsqd.supabase.co/rest/v1/spots?select=id,name,category,city,status,photo_url,trip_id&user_id=eq.' + dado.uid
+      + '&status=in.(been,want)&city=in.(' + encodeURIComponent(lista) + ')&order=created_at.desc&limit=60', { headers: h }),
+    fetch('https://kzidnilsyrvauzgelsqd.supabase.co/rest/v1/profiles?select=id,display_name,username,avatar_url&id=eq.' + dado.uid, { headers: h }),
+    viagensPrivadas(env, dado.uid)
+  ]);
+  if (!rs.ok) return json({ error: 'banco' }, 502);
+  const spots = semQueroIrPrivado(await rs.json(), privadas).map((s) => ({ id: s.id, name: s.name, category: s.category, city: s.city, status: s.status, photo_url: s.photo_url }));
+  const p = rp.ok ? ((await rp.json())[0] || {}) : {};
+  return json({ titulo: dado.titulo || dado.cidades[0], pais: dado.pais || '', spots,
+    dono: { id: dado.uid, nome: p.display_name || dado.nome || p.username || '', username: p.username || '', avatar_url: p.avatar_url || '' } });
 }
 
 function json(obj, status) {

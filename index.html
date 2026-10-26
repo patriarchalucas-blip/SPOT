@@ -19709,6 +19709,29 @@ async function mostrarSpotPraSalvar(){
   const ic=document.querySelector('#conviteFaixa .ei');if(ic)ic.innerHTML=icon('bookmark');
   document.getElementById('conviteFaixa').style.display='flex';
 }
+// O spot da lista pública no formato do salvarSpotDireto. doUid: quem mandou
+// a lista (vira o "indicado por" do spot salvo).
+async function lugarDaListaPublica(r,doUid){
+  const s=r.spot;
+  const daLista=normalizeCountry(r.pais||'');
+  const pais=paisDoEndereco(s.address)||(COUNTRIES.some(c=>c.name===daLista)?daLista:'')||await comPrazo(paisPeloGoogle(s),4000,'');
+  const lugar={name:s.name,meta:s.address||'',address:s.address||'',city:s.city||'',country:pais,
+    subcat:s.subcategory||'',phone:s.phone||'',photo_url:s.photo_url||'',
+    photo_author:{nome:s.photo_author||'',url:s.photo_author_url||''},
+    rating_google:s.rating_google||'',website_url:s.website_url||'',maps_url:s.maps_url||'',
+    lat:s.lat!=null?Number(s.lat):null,lng:s.lng!=null?Number(s.lng):null,
+    price_level:s.price_level!=null?s.price_level:null};
+  if(doUid)lugar.from_user_id=doUid;
+  return lugar;
+}
+// Um spot da lista, salvo em Quero ir. true = salvou (ou já estava).
+async function salvarSpotDaLista(codigo,id,doUid){
+  const r=await spotDaListaPublica(codigo+'.'+id);
+  if(!r||!r.spot)return false;
+  if(statusNaMinhaLista({name:r.spot.name,city:r.spot.city}))return true;
+  const data=await salvarSpotDireto(await lugarDaListaPublica(r,doUid),r.spot.category||'food','want','');
+  return !!data&&data!=='sem_pais';
+}
 async function salvarSpotPendente(){
   let v=null;try{v=localStorage.getItem(SALVAR_GUARDADO)}catch(e){}
   if(!v)return;
@@ -19720,15 +19743,7 @@ async function salvarSpotPendente(){
   if(!r.spot){esquece();if(r.sumiu)toast('Esse spot não está mais na lista','Quem compartilhou pode ter tirado.','alert');return}
   const s=r.spot;
   if(statusNaMinhaLista({name:s.name,city:s.city})){esquece();toast('Já está na sua lista',s.name,'check');return}
-  const daLista=normalizeCountry(r.pais||'');
-  const pais=paisDoEndereco(s.address)||(COUNTRIES.some(c=>c.name===daLista)?daLista:'')||await comPrazo(paisPeloGoogle(s),4000,'');
-  const lugar={name:s.name,meta:s.address||'',address:s.address||'',city:s.city||'',country:pais,
-    subcat:s.subcategory||'',phone:s.phone||'',photo_url:s.photo_url||'',
-    photo_author:{nome:s.photo_author||'',url:s.photo_author_url||''},
-    rating_google:s.rating_google||'',website_url:s.website_url||'',maps_url:s.maps_url||'',
-    lat:s.lat!=null?Number(s.lat):null,lng:s.lng!=null?Number(s.lng):null,
-    price_level:s.price_level!=null?s.price_level:null};
-  const data=await salvarSpotDireto(lugar,s.category||'food','want','');
+  const data=await salvarSpotDireto(await lugarDaListaPublica(r),s.category||'food','want','');
   if(!data)return; // falha de gravação: tenta de novo no próximo login
   esquece();
   if(data==='sem_pais'){toast('Não deu pra salvar',s.name,'alert');return}
@@ -19844,31 +19859,80 @@ async function resgatarConvitePendente(){
 // pergunta. Uma vez por conta neste aparelho; nunca vira amizade sem o toque.
 async function conviteDaConexao(){
   if(!S.user)return;
-  let guardado=null;try{guardado=localStorage.getItem(CONVITE_GUARDADO)}catch(e){}
-  if(guardado)return;
   const criada=Date.parse(S.user.created_at||'');
   if(!criada||Date.now()-criada>48*3600*1000)return;
   const marca='spot_convite_conexao_'+S.user.id;
   try{if(localStorage.getItem(marca))return;localStorage.setItem(marca,'1')}catch(e){return}
-  let codigo='';
+  let codigo='',lista='';
   try{
     const tk=await ensureToken();if(!tk)return;
     const r=await fetch('/api/convite-conexao',{headers:{'Authorization':'Bearer '+tk}});
     if(!r.ok)return;
-    codigo=String((await r.json()).codigo||'');
+    const d=await r.json();
+    codigo=String(d.codigo||'');lista=String(d.lista||'');
   }catch(e){return}
-  if(!codigo)return;
+  let guardado=null;try{guardado=localStorage.getItem(CONVITE_GUARDADO)}catch(e){}
+  let virouAmigo=false;
+  if(codigo&&!guardado)virouAmigo=await perguntarConviteDaConexao(codigo);
+  // A lista pública aberta antes de instalar (26/10): "Lucas te mandou os spots
+  // de Chicago". É a vitrine que trouxe a pessoa — ela chega e a lista está lá.
+  if(lista)await listaDaConexao(lista,virouAmigo);
+}
+async function perguntarConviteDaConexao(codigo){
   const dono=await dbRpc('invite_owner',{invite_code:codigo});
-  if(falhou(dono)||!dono.length)return;
+  if(falhou(dono)||!dono.length)return false;
   const p=dono[0];
-  if(p.username&&S.profile&&p.username===S.profile.username)return; // o próprio convite
+  if(p.username&&S.profile&&p.username===S.profile.username)return false; // o próprio convite
   const nome=p.display_name||(p.username?'@'+p.username:'');
-  if(!nome)return;
+  if(!nome)return false;
   const sim=await perguntar(nome+' te convidou pro Spot','Adicionar como amigo? Vocês passam a ver os spots um do outro.',
     Object.assign([{rotulo:'Adicionar',valor:true}],{cancelar:'Agora não'}));
-  if(sim!==true)return;
+  if(sim!==true)return false;
   try{localStorage.setItem(CONVITE_GUARDADO,codigo)}catch(e){}
   await resgatarConvitePendente();
+  return true;
+}
+// A lista que a pessoa abriu no Safari: salvar tudo em Quero ir (com quem
+// indicou, from_user_id) e, se ainda não são amigos, pedir amizade a quem
+// mandou. Pergunta antes das duas coisas; nada acontece sem o toque.
+async function listaDaConexao(codigo,jaVirouAmigo){
+  let r=null;
+  try{
+    const tk=await ensureToken();if(!tk)return;
+    const resp=await fetch('/api/lista',{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+tk},
+      body:JSON.stringify({op:'resumo',codigo})});
+    if(!resp.ok)return;
+    r=await resp.json();
+  }catch(e){return}
+  if(!r||!Array.isArray(r.spots)||!r.spots.length||!r.dono||r.dono.id===S.user.id)return;
+  const primeiro=String(r.dono.nome||'').trim().split(/\s+/)[0]||(r.dono.username?'@'+r.dono.username:'Um amigo');
+  const novos=r.spots.filter(s=>!statusNaMinhaLista({name:s.name,city:s.city}));
+  if(novos.length){
+    const n=novos.length;
+    const sim=await perguntar(primeiro+' te mandou '+(n===1?'1 spot':n+' spots')+' de '+r.titulo,
+      'Salvar '+(n===1?'em':'todos em')+' Quero ir? Entram na sua lista com a indicação de '+primeiro+'.',
+      Object.assign([{rotulo:n===1?'Salvar':'Salvar os '+n,valor:true}],{cancelar:'Agora não'}));
+    if(sim===true){
+      let salvos=0;
+      for(const s of novos.slice(0,40)){
+        try{if(await salvarSpotDaLista(codigo,s.id,r.dono.id))salvos++}catch(e){}
+      }
+      if(salvos)toast(salvos===1?'Salvo em Quero ir':salvos+' spots salvos em Quero ir',r.titulo+' · indicação de '+primeiro,'check');
+      else toast('Não deu pra salvar agora','Abre o link da lista de novo pra tentar.','alert');
+      Promise.resolve(loadDashboard()).catch(()=>{});
+    }
+  }
+  if(jaVirouAmigo)return;
+  // Já são amigos, ou já existe pedido entre os dois: não pergunta.
+  const vinculo=await dbGet('follows','or=(and(follower_id.eq.'+S.user.id+',following_id.eq.'+r.dono.id+'),and(follower_id.eq.'+r.dono.id+',following_id.eq.'+S.user.id+'))&select=id');
+  if(falhou(vinculo)||vinculo.length)return;
+  const quer=await perguntar('Adicionar '+primeiro+' como amigo?','Vocês passam a ver os spots um do outro.',
+    Object.assign([{rotulo:'Adicionar',valor:true}],{cancelar:'Agora não'}));
+  if(quer!==true)return;
+  const{error}=await dbInsert('follows',{follower_id:S.user.id,following_id:r.dono.id,status:'pending'});
+  if(error){toast('Pedido não enviado','Confere a conexão e tenta de novo.','alert');return}
+  avisar('pedido',r.dono.id);
+  toast('Pedido enviado','Assim que '+primeiro+' aceitar, vocês veem os spots um do outro.','send');
 }
 
 // ═══ BUSCAR PESSOA ═══

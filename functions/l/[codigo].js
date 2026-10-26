@@ -1,4 +1,5 @@
-import { lerKV } from '../api/_kv.js';
+import { lerKV, gravarKV } from '../api/_kv.js';
+import { chaveDaConexao, ehRobo, TTL_CONVITE_CONEXAO } from '../api/_convite-conexao.js';
 import { viagensPrivadas, semQueroIrPrivado } from '../api/_privada.js';
 
 // Cloudflare Pages Function — a LISTA PÚBLICA de spots: meuspot.app/l/<código>.
@@ -243,6 +244,12 @@ export async function onRequestGet(context) {
   if (dado && dado.revogado) return paginaQueSumiu(origem, 410);
   if (!dado || !dado.uid || !Array.isArray(dado.cidades) || !dado.cidades.length) return paginaQueSumiu(origem, 404);
 
+  // Anota "esta conexão abriu a lista X" por 2 h (ver _convite-conexao.js):
+  // quem instala o app e entra pela mesma conexão recebe a lista lá dentro.
+  if (!ehRobo(request) && typeof context.waitUntil === 'function') {
+    const chave = await chaveDaConexao(request, 'lista');
+    if (chave) context.waitUntil(gravarKV(env, chave, codigo, TTL_CONVITE_CONEXAO));
+  }
   const sb = (caminho) => fetch(SB_URL + caminho, { headers: { apikey: env.SUPABASE_SERVICE_KEY, Authorization: 'Bearer ' + env.SUPABASE_SERVICE_KEY } });
   const lista = dado.cidades.map((c) => '"' + String(c).replace(/["\\]/g, '') + '"').join(',');
   const [rs, rp, privadas] = await Promise.all([

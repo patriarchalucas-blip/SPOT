@@ -13,13 +13,17 @@ export async function onRequestGet(context) {
   const quem = await quemEsta(request, env);
   if (!quem.permitir || !quem.uid) return json({ codigo: '' }, 401);
   const chave = await chaveDaConexao(request);
-  if (!chave || !env.SPOT_KV) return json({ codigo: '' });
+  if (!chave || !env.SPOT_KV) return json({ codigo: '', lista: '' });
   // Só conta NOVA (até 48 h), conferido AQUI (09/10, auditoria): a regra
   // existia só no app, e qualquer conta antiga na mesma conexão (rede da
   // operadora, Wi-Fi do escritório) pegava o código do convite de alguém.
-  if (!(await contaNova(request))) return json({ codigo: '' });
+  if (!(await contaNova(request))) return json({ codigo: '', lista: '' });
   const codigo = await lerKV(env, chave);
-  return json({ codigo: /^[A-Za-z0-9_-]{4,64}$/.test(codigo || '') ? codigo : '' });
+  // A lista pública aberta por esta conexão (26/10), se houver.
+  const chaveLista = await chaveDaConexao(request, 'lista');
+  const lista = chaveLista ? await lerKV(env, chaveLista) : '';
+  return json({ codigo: /^[A-Za-z0-9_-]{4,64}$/.test(codigo || '') ? codigo : '',
+    lista: /^[A-Za-z0-9]{8,24}$/.test(lista || '') ? lista : '' });
 }
 
 // A data de criação da conta, pelo próprio Supabase com o token de quem chama.

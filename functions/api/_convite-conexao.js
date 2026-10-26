@@ -21,11 +21,15 @@
 
 export const TTL_CONVITE_CONEXAO = 2 * 60 * 60;
 
-export async function chaveDaConexao(request) {
+// tipo 'lista' (26/10): a LISTA PÚBLICA (/l/) usa o mesmo truque — quem
+// recebeu "os spots do Lucas em Chicago", instalou e entrou encontra a lista
+// no app. Chave separada: abrir uma lista não pode virar convite de amizade.
+export async function chaveDaConexao(request, tipo) {
   const ip = request.headers.get('CF-Connecting-IP') || '';
   if (!ip) return null;
-  const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode('spot-convite|' + ip));
-  return 'convite_con_' + [...new Uint8Array(buf)].map((b) => b.toString(16).padStart(2, '0')).join('').slice(0, 32);
+  const lista = tipo === 'lista';
+  const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode((lista ? 'spot-lista|' : 'spot-convite|') + ip));
+  return (lista ? 'lista_con_' : 'convite_con_') + [...new Uint8Array(buf)].map((b) => b.toString(16).padStart(2, '0')).join('').slice(0, 32);
 }
 
 // O robô do WhatsApp (e afins) também abre /c/ pra montar a prévia — do
