@@ -57,7 +57,11 @@ export const FONTES_INICIAIS = [
   { id: 'yt:UCP_vl0ReyC4nKz2LvuI8KXw', tipo: 'youtube', canal: 'UCP_vl0ReyC4nKz2LvuI8KXw', nome: 'Onde o Bruno Come', cidades: ['São Paulo'] },
   { id: 'yt:UCTTKtO5pU4OC7dqxG2bZflw', tipo: 'youtube', canal: 'UCTTKtO5pU4OC7dqxG2bZflw', nome: 'Gaba', cidades: ['São Paulo'] },
   { id: 'yt:UCKPNGvNmpWwlYF58egvP5Rg', tipo: 'youtube', canal: 'UCKPNGvNmpWwlYF58egvP5Rg', nome: 'Caio Pra Dentro', cidades: [] },
-  { id: 'yt:UC92stP3p40WmY-6-8X14zbQ', tipo: 'youtube', canal: 'UC92stP3p40WmY-6-8X14zbQ', nome: 'Mohamad Hindi', cidades: ['Rio de Janeiro'], busca: 'rio de janeiro', soComACidade: true },
+  // A série "Favoritos da cidade" do Mohamad Hindi: cada episódio é um chef
+  // dizendo onde come (cada chef = uma voz). Pela PLAYLIST, não pelo canal: o
+  // canal é quase todo receita, e a busca de vídeos antigos não responde a
+  // pedido vindo do servidor; o feed da playlist responde.
+  { id: 'yt:pl:PLpUs89aC5iYRU79N54mFHNZG_HAZU4Y5Q', tipo: 'youtube', playlist: 'PLpUs89aC5iYRU79N54mFHNZG_HAZU4Y5Q', nome: 'Favoritos da cidade (Rio)', cidades: ['Rio de Janeiro'] },
   { id: 'pg:thesummerhunter-rio', tipo: 'pagina', url: 'https://thesummerhunter.com/rio-de-janeiro-miniguia-novidades-2026/', nome: 'The Summer Hunter', cidades: ['Rio de Janeiro'] },
   { id: 'pg:timeout-rio', tipo: 'pagina', url: 'https://www.timeout.com/pt/rio-de-janeiro/restaurantes', nome: 'Time Out Rio', cidades: ['Rio de Janeiro'] }
 ];
@@ -297,11 +301,11 @@ async function videosDoCanal(env, f) {
   // uma 2ª tentativa resolve quase sempre.
   let xml = '';
   for (let i = 0; i < 3 && !xml.includes('<entry>'); i++) {
-    try { const r = await fetch('https://www.youtube.com/feeds/videos.xml?channel_id=' + f.canal); xml = r.ok ? await r.text() : '' } catch (e) {}
+    try { const r = await fetch('https://www.youtube.com/feeds/videos.xml?' + (f.playlist ? 'playlist_id=' + f.playlist : 'channel_id=' + f.canal)); xml = r.ok ? await r.text() : '' } catch (e) {}
   }
   // Feed fora: a página de vídeos do canal dá os ids, e a de cada vídeo a
   // descrição (só dos que ainda não foram lidos).
-  if (!xml.includes('<entry>')) {
+  if (!xml.includes('<entry>') && f.canal) {
     try {
       const h = await (await fetch('https://www.youtube.com/channel/' + f.canal + '/videos', { headers: { 'User-Agent': 'Mozilla/5.0', 'Accept-Language': 'pt-BR' } })).text();
       const ids = [...new Set([...h.matchAll(/"(?:contentId|videoId)":"([A-Za-z0-9_-]{11})"/g)].map((m) => m[1]))].slice(0, 15);
@@ -323,7 +327,7 @@ async function videosDoCanal(env, f) {
     });
   }
   // 1ª vez com "busca": vídeos antigos do canal sobre a cidade. Uma vez só.
-  if (f.busca && !(await lerKV(env, 'hs_busca_feita_' + f.id))) {
+  if (f.busca && f.canal && !(await lerKV(env, 'hs_busca_feita_' + f.id))) {
     try {
       const h = await (await fetch('https://www.youtube.com/channel/' + f.canal + '/search?query=' + encodeURIComponent(f.busca),
         { headers: { 'User-Agent': 'Mozilla/5.0', 'Accept-Language': 'pt-BR' } })).text();
@@ -578,6 +582,13 @@ async function fonteDoEndereco(endereco, cidades) {
   if (u.protocol !== 'https:') return null;
   const cid = (Array.isArray(cidades) ? cidades : []).map(cidadeDaLista).filter(Boolean);
   if (/(^|\.)youtube\.com$|(^|\.)youtu\.be$/.test(u.hostname)) {
+    // Link de playlist (…/playlist?list=PL… ou um vídeo dentro dela): a fonte é a playlist.
+    const lista = (u.searchParams.get('list') || '').match(/^PL[A-Za-z0-9_-]{10,40}$/);
+    if (lista) {
+      let nome = '';
+      try { nome = desescapar(((await (await fetch('https://www.youtube.com/feeds/videos.xml?playlist_id=' + lista[0])).text()).match(/<title>([^<]{1,80})/) || [])[1] || '') } catch (e) {}
+      return { id: 'yt:pl:' + lista[0], tipo: 'youtube', playlist: lista[0], nome: nome || 'Playlist do YouTube', cidades: cid };
+    }
     let canal = (u.pathname.match(/\/channel\/(UC[A-Za-z0-9_-]{22})/) || [])[1];
     let nome = '';
     if (!canal) {
