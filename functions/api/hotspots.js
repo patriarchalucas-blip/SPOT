@@ -138,6 +138,7 @@ export async function onRequestPost(context) {
     return json({ ok: true, lugares: n, porCidade: r.listas.map((l) => [l.cidade, l.lugares.length]), novosVideos: r.novosVideos, buscas: r.buscas,
       log: r.log.length, porFonte: r.porFonte, citacoes: r.citacoes, validas: r.validas });
   }
+  if (op === 'previa') return json(await previa(env));
   if (op === 'publicar') {
     if (!dono && !ehHoraDePublicar(new Date())) return json({ ok: true, pulou: 'fora_da_hora' });
     return json(await publicar(env, !!dono));
@@ -509,6 +510,59 @@ export function categoriaPelosTipos(types, primario) {
   if (t.some((x) => HOSPEDAGEM.has(x))) return 'hotel';
   if (t.some((x) => COMIDA.has(x) || /_restaurant$|_bar$|_shop$/.test(x))) return 'food';
   return 'experience';
+}
+
+// ─────────────────────────── prévia da newsletter ───────────────────────────
+
+// O que a newsletter mostra de cada lugar da lista da semana: foto, faixa de
+// preço, site e mapa, do Google. Nunca quem indicou (isso é só da página do
+// dono). Aberta sem login: a lista vira pública na sexta de qualquer jeito, e o
+// detalhe de cada lugar é buscado no Google UMA vez e guardado 30 dias — chamar
+// de novo não gasta nada. Os tirados pelo dono não aparecem.
+async function previa(env) {
+  const semana = await lerJSON(env, 'hs_semana');
+  if (!semana) return { listas: [] };
+  const tirados = new Set(semana.tirados || []);
+  const listas = [];
+  for (const l of semana.listas) {
+    const lugares = l.lugares.filter((x) => !tirados.has(x.chave) && x.g && x.g.id);
+    await emLotes(lugares, 6, async (x) => { x.det = await detalheDoLugar(env, x.g.id) });
+    listas.push({
+      cidade: l.cidade,
+      lugares: lugares.map((x) => ({
+        nome: x.g.nome || x.nome, endereco: x.g.endereco || '', bairro: x.bairro || '', tipo: x.g.tipo || '',
+        foto: x.g.foto ? '/api/place-photo?ref=' + encodeURIComponent(x.g.foto.ref) + (x.g.foto.s ? '&s=' + x.g.foto.s : '') + '&w=800' : '',
+        maps: x.g.maps || '', site: (x.det && x.det.site) || '', preco: (x.det && x.det.preco) || null,
+        precoDe: (x.det && x.det.precoDe) || null, precoAte: (x.det && x.det.precoAte) || null, novo: !!x.novo
+      }))
+    });
+  }
+  return { criada: semana.criada, listas };
+}
+
+const NIVEL = { PRICE_LEVEL_INEXPENSIVE: 1, PRICE_LEVEL_MODERATE: 2, PRICE_LEVEL_EXPENSIVE: 3, PRICE_LEVEL_VERY_EXPENSIVE: 4 };
+async function detalheDoLugar(env, id) {
+  if (!/^[A-Za-z0-9_-]{3,300}$/.test(id) || !env.GOOGLE_PLACES_KEY) return null;
+  const k = 'hs_det_' + id;
+  const guardado = await lerJSON(env, k);
+  if (guardado) return guardado;
+  let d = null;
+  try {
+    const r = await fetch('https://places.googleapis.com/v1/places/' + id + '?languageCode=pt-BR', {
+      headers: { 'X-Goog-Api-Key': env.GOOGLE_PLACES_KEY, 'X-Goog-FieldMask': 'priceLevel,priceRange,websiteUri' }
+    });
+    if (r.ok) d = await r.json();
+  } catch (e) {}
+  if (!d) return null;
+  const pr = d.priceRange || {};
+  const det = {
+    preco: NIVEL[d.priceLevel] || null,
+    precoDe: pr.startPrice ? Number(pr.startPrice.units) || null : null,
+    precoAte: pr.endPrice ? Number(pr.endPrice.units) || null : null,
+    site: /^https:\/\//.test(d.websiteUri || '') ? d.websiteUri : ''
+  };
+  await gravarKV(env, k, JSON.stringify(det), 60 * 60 * 24 * 30);
+  return det;
 }
 
 // ─────────────────────────── publicar ───────────────────────────

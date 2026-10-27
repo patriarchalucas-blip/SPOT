@@ -131,6 +131,26 @@ test('hotspots: vídeo lido semanas atrás continua contando quando sai do feed'
   assert.deepStrictEqual(rio.map((x) => [x.nome, x.n]), [["Galeto Sat's", 2]]);
 });
 
+test('hotspots: a prévia da newsletter abre sem login, traz foto/preço/site e nunca quem indicou', async () => {
+  const w = mundo({ logado: DONO });
+  await comFetch(w.fetchFalso, () => post(w.env, { op: 'rodar' }, true));
+  let detalhes = 0;
+  const f2 = async (u, init) => {
+    if (String(u).includes('places.googleapis.com/v1/places/gSats')) { detalhes++; return resp({ priceLevel: 'PRICE_LEVEL_MODERATE', priceRange: { startPrice: { units: '60' }, endPrice: { units: '100' } }, websiteUri: 'https://galetosats.com.br' }) }
+    return w.fetchFalso(u, init);
+  };
+  const r = await comFetch(f2, async () => (await post(w.env, { op: 'previa' })).json());
+  const rio = r.listas.find((l) => l.cidade === 'Rio de Janeiro').lugares;
+  assert.strictEqual(rio[0].nome, "Galeto Sat's");
+  assert.strictEqual(rio[0].preco, 2);
+  assert.deepStrictEqual([rio[0].precoDe, rio[0].precoAte], [60, 100]);
+  assert.strictEqual(rio[0].site, 'https://galetosats.com.br');
+  assert.ok(rio[0].foto.startsWith('/api/place-photo?ref='));
+  assert.ok(!JSON.stringify(r).includes('Ana') && !JSON.stringify(r).includes('Bia'), 'quem indicou não sai');
+  await comFetch(f2, () => post(w.env, { op: 'previa' }));
+  assert.strictEqual(detalhes, 1, 'o detalhe do Google é buscado uma vez só');
+});
+
 test('hotspots: GET e tirar são só do dono', async () => {
   const w = mundo({ logado: '00000000-0000-0000-0000-000000000099' });
   const g = await comFetch(w.fetchFalso, () => onRequestGet({ env: w.env, request: new Request('https://x/api/hotspots', { headers: { Authorization: 'Bearer ' + TK } }) }));
