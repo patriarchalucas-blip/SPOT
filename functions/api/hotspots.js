@@ -119,14 +119,20 @@ export async function onRequestPost(context) {
   if (op === 'rodar') {
     if (!dono) {
       const ultima = parseInt((await lerKV(env, 'hs_ultima_rodada')) || '0', 10);
-      if (Date.now() - ultima < ESPERA_RODADA_MS) return json({ ok: true, pulou: 'cedo' });
+      // Rodada que saiu VAZIA (fonte fora do ar, YouTube recusando) pode
+      // tentar de novo depois de 1 hora, sem esperar a semana.
+      const sem = await lerJSON(env, 'hs_semana');
+      const vazia = sem && sem.listas && sem.listas.every((l) => !l.lugares.length);
+      const espera = vazia ? 3600 * 1000 : ESPERA_RODADA_MS;
+      if (Date.now() - ultima < espera) return json({ ok: true, pulou: 'cedo' });
     }
     const r = await rodar(env);
     if (dono || !r.ok) return json(r);
     const n = (r.listas || []).reduce((a, l) => a + l.lugares.length, 0);
     await avisarDono(env, 'Hotspots da semana prontos', n + ' lugares pra olhar. Se não mexer, sai sexta às 17h.', 'hotspots');
     // Pra quem não é o dono, só números: a lista (e quem indicou) não sai daqui.
-    return json({ ok: true, lugares: n, porCidade: r.listas.map((l) => [l.cidade, l.lugares.length]), novosVideos: r.novosVideos, buscas: r.buscas, log: r.log.length });
+    return json({ ok: true, lugares: n, porCidade: r.listas.map((l) => [l.cidade, l.lugares.length]), novosVideos: r.novosVideos, buscas: r.buscas,
+      log: r.log.length, porFonte: r.porFonte, citacoes: r.citacoes, validas: r.validas });
   }
   if (op === 'publicar') {
     if (!dono && !ehHoraDePublicar(new Date())) return json({ ok: true, pulou: 'fora_da_hora' });
@@ -193,30 +199,51 @@ async function rodar(env) {
   let novosVideos = 0;
 
   // 1+2. cada fonte: os itens (vídeo ou página) que ainda não foram lidos
-  const lidos = [];   // [{f, it, lido}]
   const faltam = [];  // [{f, it}] ainda não lidos pela IA
+  const porFonte = [];  // [itens vistos agora, já lidos antes] — só números
+  const vistos = new Map();  // fonte -> [{chave, data}] que o feed mostrou hoje
   for (const f of fontes) {
     let itens = [];
-    try { itens = await itensDaFonte(env, f) } catch (e) { log.push(f.nome + ': falhou ao ler'); continue }
+    try { itens = await itensDaFonte(env, f) } catch (e) { log.push(f.nome + ': falhou ao ler'); porFonte.push([0, 0]); continue }
+    let jaLidos = 0;
+    vistos.set(f.id, itens.map((it) => ({ chave: it.chave, data: it.data })));
     for (const it of itens) {
-      const lido = await lerJSON(env, 'hs_item_' + it.chave);
-      if (lido) lidos.push({ f, it, lido });
+      if (await lerKV(env, 'hs_item_' + it.chave)) jaLidos++;
       else if (faltam.length < MAX_VIDEOS_NOVOS && valeLer(it, f, Date.now())) faltam.push({ f, it });
     }
+    porFonte.push([itens.length, jaLidos]);
   }
   // A IA lê de 6 em 6 ao mesmo tempo: 60 vídeos em ~1 min em vez de 5.
+  const novosPorFonte = new Map();
   await emLotes(faltam, 6, async ({ f, it }) => {
     novosVideos++;
     const ext = await extrair(env, it, f);
     if (!ext) { log.push(f.nome + ': a IA não leu "' + it.titulo.slice(0, 40) + '"'); return }
-    const lido = { data: it.data, publi: ext.publi, lugares: ext.lugares, titulo: it.titulo.slice(0, 120) };
+    const lido = { data: it.data, publi: ext.publi || ehPubliPeloTexto(it.texto), lugares: ext.lugares, titulo: it.titulo.slice(0, 120) };
     await gravarKV(env, 'hs_item_' + it.chave, JSON.stringify(lido), ANO * 2);
-    lidos.push({ f, it, lido });
+    if (!novosPorFonte.has(f.id)) novosPorFonte.set(f.id, []);
+    novosPorFonte.get(f.id).push({ chave: it.chave, data: it.data });
   });
+  // O ÍNDICE de cada fonte: tudo que já foi lido dela. A conta é sobre o
+  // índice, não sobre o que o feed mostra hoje — o feed só traz os 15 últimos,
+  // e um vídeo de 2 meses atrás continua valendo dentro da janela.
   const citacoes = [];
-  for (const { f, it, lido } of lidos) {
-    if (lido.publi || ehPubliPeloTexto(it.texto)) continue;
-    for (const l of lido.lugares || []) citacoes.push(Object.assign({}, l, { data: lido.data || it.data, fonte: f.id, cidadesDaFonte: f.cidades || [] }));
+  const limite = new Date(Date.now() - JANELA_DIAS * 86400000).toISOString().slice(0, 10);
+  for (const f of fontes) {
+    const antes = (await lerJSON(env, 'hs_idx_' + f.id)) || [];
+    const cand = antes.concat(vistos.get(f.id) || [], novosPorFonte.get(f.id) || [])
+      .filter((x, i, a) => a.findIndex((y) => y.chave === x.chave) === i);
+    const idx = [];
+    for (const x of cand) {
+      const lido = await lerJSON(env, 'hs_item_' + x.chave);
+      if (!lido) continue;
+      const data = lido.data || x.data;
+      if (data && data < limite) continue;
+      idx.push({ chave: x.chave, data });
+      if (lido.publi) continue;
+      for (const l of lido.lugares || []) citacoes.push(Object.assign({}, l, { data, fonte: f.id, cidadesDaFonte: f.cidades || [] }));
+    }
+    if (idx.length !== antes.length) await gravarKV(env, 'hs_idx_' + f.id, JSON.stringify(idx), ANO * 2);
   }
 
   // 3. achar no Google o que ainda não foi achado (só o que pode contar)
@@ -248,7 +275,7 @@ async function rodar(env) {
     semana.tirados = anterior.tirados.filter((t) => chaves.has(t));
   }
   await gravarKV(env, 'hs_semana', JSON.stringify(semana), ANO);
-  return { ok: true, listas, log, novosVideos, buscas };
+  return { ok: true, listas, log, novosVideos, buscas, porFonte, citacoes: citacoes.length, validas: validas.length };
 }
 
 // Itens de uma fonte: [{chave, titulo, texto, data}]
@@ -301,12 +328,15 @@ async function videosDoCanal(env, f) {
       const h = await (await fetch('https://www.youtube.com/channel/' + f.canal + '/search?query=' + encodeURIComponent(f.busca),
         { headers: { 'User-Agent': 'Mozilla/5.0', 'Accept-Language': 'pt-BR' } })).text();
       const ids = [...new Set([...h.matchAll(/"videoId":"([A-Za-z0-9_-]{11})"/g)].map((m) => m[1]))].slice(0, 30);
+      let achou = 0;
       for (const id of ids) {
-        if (itens.some((x) => x.chave === 'yt_' + id) || await lerKV(env, 'hs_item_yt_' + id)) continue;
+        if (itens.some((x) => x.chave === 'yt_' + id) || await lerKV(env, 'hs_item_yt_' + id)) { achou++; continue }
         const v = await videoPelaPagina(id);
-        if (v) itens.push(v);
+        if (v) { itens.push(v); achou++ }
       }
-      await gravarKV(env, 'hs_busca_feita_' + f.id, '1', ANO * 10);
+      // Só dá a busca por feita se ela trouxe algo: YouTube recusando (página
+      // de consentimento, erro) tenta de novo na próxima rodada.
+      if (achou) await gravarKV(env, 'hs_busca_feita_' + f.id, '1', ANO * 10);
     } catch (e) {}
   }
   return itens;
@@ -315,9 +345,8 @@ async function videosDoCanal(env, f) {
 async function videoPelaPagina(id) {
   try {
     const h = await (await fetch('https://www.youtube.com/watch?v=' + id, { headers: { 'User-Agent': 'Mozilla/5.0', 'Accept-Language': 'pt-BR' } })).text();
-    const m = h.match(/var ytInitialPlayerResponse = (\{.*?\});(?:var|<\/script>)/s);
-    if (!m) return null;
-    const p = JSON.parse(m[1]);
+    const p = jsonDepoisDe(h, 'ytInitialPlayerResponse = ');
+    if (!p) return null;
     const d = p.videoDetails || {}, mf = (p.microformat || {}).playerMicroformatRenderer || {};
     return { chave: 'yt_' + id, titulo: d.title || '', texto: d.shortDescription || '', data: String(mf.uploadDate || '').slice(0, 10) };
   } catch (e) { return null }
@@ -580,6 +609,23 @@ async function sbEscrever(env, metodo, caminho, corpo) {
     });
     return r.ok ? await r.json().catch(() => null) : null;
   } catch (e) { return null }
+}
+// O objeto JSON que começa logo depois de `marca`, contando chaves (o fim da
+// atribuição muda de página pra página: `;var`, `;</script>`, `;window`...).
+export function jsonDepoisDe(h, marca) {
+  const i = h.indexOf(marca);
+  if (i < 0) return null;
+  const ini = h.indexOf('{', i);
+  if (ini < 0) return null;
+  let prof = 0, emTexto = false, escapa = false;
+  for (let j = ini; j < h.length; j++) {
+    const c = h[j];
+    if (emTexto) { if (escapa) escapa = false; else if (c === '\\') escapa = true; else if (c === '"') emTexto = false; continue }
+    if (c === '"') emTexto = true;
+    else if (c === '{') prof++;
+    else if (c === '}' && --prof === 0) { try { return JSON.parse(h.slice(ini, j + 1)) } catch (e) { return null } }
+  }
+  return null;
 }
 async function emLotes(itens, n, fn) {
   for (let i = 0; i < itens.length; i += n) await Promise.all(itens.slice(i, i + n).map(fn));

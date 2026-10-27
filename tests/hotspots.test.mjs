@@ -1,7 +1,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert';
 import { onRequestPost, onRequestGet, pontuar, citacoesValidas, cidadeDaLista, ehPubliPeloTexto,
-  ehHoraDePublicar, lugarDoGoogle, spotDoHotspot, categoriaPelosTipos } from '../functions/api/hotspots.js';
+  ehHoraDePublicar, lugarDoGoogle, spotDoHotspot, categoriaPelosTipos, jsonDepoisDe } from '../functions/api/hotspots.js';
 
 // O robô dos Hotspots (26/10/2026). Nada sai pra rede: YouTube, IA, Google,
 // Supabase e KV são falsos.
@@ -120,6 +120,17 @@ test('hotspots: o dono roda de novo sem gastar a IA nem o Google com o que já l
   assert.strictEqual(w.chamadas.google, g);
 });
 
+test('hotspots: vídeo lido semanas atrás continua contando quando sai do feed', async () => {
+  const w = mundo({ logado: DONO });
+  await comFetch(w.fetchFalso, () => post(w.env, { op: 'rodar' }, true));
+  // Agora o feed do Rio só mostra o vídeo da Bia (o da Ana "saiu").
+  const f2 = async (u, init) => String(u).includes('CANAL_RIO') && String(u).includes('feeds')
+    ? new Response(feed([{ id: 'v2aaaaaaaaa', titulo: 'Favoritos do chef Bia', desc: 'lista' }])) : w.fetchFalso(u, init);
+  const r = await comFetch(f2, async () => (await post(w.env, { op: 'rodar' }, true)).json());
+  const rio = r.listas.find((l) => l.cidade === 'Rio de Janeiro').lugares;
+  assert.deepStrictEqual(rio.map((x) => [x.nome, x.n]), [["Galeto Sat's", 2]]);
+});
+
 test('hotspots: GET e tirar são só do dono', async () => {
   const w = mundo({ logado: '00000000-0000-0000-0000-000000000099' });
   const g = await comFetch(w.fetchFalso, () => onRequestGet({ env: w.env, request: new Request('https://x/api/hotspots', { headers: { Authorization: 'Bearer ' + TK } }) }));
@@ -155,6 +166,7 @@ test('hotspots: publicar fora de sexta 17h não faz nada; o dono publica e o tir
 });
 
 test('hotspots: peças', () => {
+  assert.deepStrictEqual(jsonDepoisDe('x var ytInitialPlayerResponse = {"a":{"b":"}{"}};window.y=1', 'ytInitialPlayerResponse = '), { a: { b: '}{' } });
   assert.strictEqual(cidadeDaLista('rio'), 'Rio de Janeiro');
   assert.strictEqual(cidadeDaLista('SAO PAULO'), 'São Paulo');
   assert.strictEqual(cidadeDaLista('Lisboa'), '');
