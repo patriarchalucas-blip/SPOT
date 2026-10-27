@@ -1,0 +1,31 @@
+# O agendador dos Hotspots (26/10/2026). As Functions do Cloudflare Pages não
+# têm horário marcado, então o GitHub chama as duas operações do robô
+# (functions/api/hotspots.js) na hora certa. Não precisa de segredo: as duas se
+# protegem sozinhas — "rodar" não roda de novo antes de 6 dias e "publicar" só
+# faz algo sexta depois das 17h, uma vez por semana.
+#
+#   quinta 23h (Brasília) = sexta 02h UTC  -> rodar (e avisa o Lucas no celular)
+#   sexta 17h  (Brasília) = sexta 20h UTC  -> publicar
+# O GitHub às vezes atrasa o agendamento em alguns minutos; por isso a
+# publicação tem uma 2ª chamada às 20h30 UTC (a 1ª que chegar publica).
+
+name: Hotspots
+
+on:
+  schedule:
+    - cron: '0 2 * * 5'
+    - cron: '5 20 * * 5'
+    - cron: '35 20 * * 5'
+  workflow_dispatch:
+
+jobs:
+  chamar:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Rodar ou publicar
+        run: |
+          if [ "$(date -u +%H)" -lt 12 ]; then OP=rodar; else OP=publicar; fi
+          [ "${{ github.event_name }}" = "workflow_dispatch" ] && OP=rodar
+          echo "op: $OP"
+          curl -sS --max-time 600 -X POST https://meuspot.app/api/hotspots \
+            -H 'Content-Type: application/json' -d "{\"op\":\"$OP\"}"

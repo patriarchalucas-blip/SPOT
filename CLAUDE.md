@@ -42,7 +42,7 @@ Nenhuma chave da Anthropic está no projeto ainda — e **não pode** ir direto 
 **Como conferir que nenhuma vazou:** `grep -n "const GAPI\|UNSPLASH_KEY" index.html`
 tem que voltar vazio. Os únicos `/api/` que o client chama são `city-photo`,
 `place-photo`, `places`, `climate`, `find-instagram`, `notificar`, `mapa`,
-`mapa-chave`, `lugar` (sugestões e detalhe do Explorar), `apple` (guardar/revogar o "Entrar com a Apple") e `denuncia-aviso` (notificação no celular do moderador quando
+`mapa-chave`, `lugar` (sugestões e detalhe do Explorar), `hotspots` (só o dono: a página de aprovar), `apple` (guardar/revogar o "Entrar com a Apple") e `denuncia-aviso` (notificação no celular do moderador quando
 chega denúncia — sem isso o "respondemos em até 24 h" era promessa no escuro).
 
 ## Banco de dados (Supabase)
@@ -277,6 +277,7 @@ ver `mobile/app-store/login-apple.md`. Pede um build novo que substitui a build 
   - **Viagens**: placar países · cidades · continentes; "Onde você mora" em card; lista em linhas; "+ Adicionar" = só cidade/país, entra como viagem feita. Cidade: segmentado Fui | Quero ir. Fundo das telas = --base.
   - **Amigos**: busca "Buscar amigo ou @" (sem amigo, procura no Spot), "De {cidade}", e a tela **Atividade** (pedidos + Quero ir no que você indicou / também foi / comentou).
   - **Lista geral (Melhores/A–Z) saiu do site**; a tela fica no código só porque o placar nativo da build 19 ainda abre ela.
+- **Robô dos Hotspots (26/10):** `functions/api/hotspots.js`. Quinta 23h (GitHub Actions, `.github/workflows/hotspots.yml`, sem segredo: as ops se protegem sozinhas) lê as fontes (canais do YouTube pela descrição; páginas de guia), a IA (Haiku) separa lugar + QUEM indicou (+ próprio/negativo/publi), acha no Google 1x (KV `hs_g_`, 1 ano), conta vozes diferentes com peso pro recente e monta a lista de SP e Rio (KV `hs_semana`; ≥2 vozes, 12 por cidade). Avisa o dono no celular; página de aprovar em Ajustes → "Hotspots da semana" (só aparece pro dono, tabela `moderadores`): Tirar/Voltar, Publicar agora, Buscar novidades, Fontes (colar link). Sexta 17h publica sozinho: viagem "Hotspots em <cidade>" na conta `oqms_previa`, spots Quero ir com nota neutra, sem nome de ninguém. Instagram fica fora (pede login). **Falta:** a parte que o USUÁRIO vê (tela/aviso "Hotspots em São Paulo" pra quem mora lá) e esconder `oqms_previa` da busca de pessoas.
 - **Cidade sem localidade no Google** (praia, parque): `cidadeDoEndereco` tira do
   endereço escrito — a Barceloneta virava "Catalunha".
 - **Voltar do Android:** `window.voltarDoAndroid` (o site não usa histórico).
