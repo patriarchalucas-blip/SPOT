@@ -39,6 +39,10 @@ const MODELO = 'claude-haiku-4-5';
 const CONTA_FONTE = 'oqms_previa';
 const CIDADES = ['São Paulo', 'Rio de Janeiro'];
 const POR_CIDADE = 12;           // lugares por lista
+// Mira de 5 (o Lucas, 27/10: "4 é muito pouco"): com menos de 5 lugares de 2+
+// vozes, a lista completa com as indicações mais recentes de UMA voz, marcadas
+// (umaVoz) pra página de aprovar mostrar e o dono decidir se ficam.
+const MINIMO_POR_CIDADE = 5;
 const MIN_VOZES = 2;
 const JANELA_DIAS = 180;         // o que conta
 const ESPERA_RODADA_MS = 6 * 24 * 3600 * 1000;
@@ -272,7 +276,7 @@ async function rodar(env) {
 
   // 4. contar e montar
   const anterior = await lerJSON(env, 'hs_semana');
-  const listas = CIDADES.map((cidade) => ({ cidade, lugares: pontuar(validas, cidade, Date.now()).slice(0, POR_CIDADE) }));
+  const listas = CIDADES.map((cidade) => ({ cidade, lugares: montarLista(validas, cidade, Date.now()) }));
   const semana = { criada: Date.now(), listas, tirados: [], log };
   // Lugar tirado na semana passada continua tirado se voltar (o Lucas já disse não).
   if (anterior && anterior.tirados) {
@@ -431,7 +435,18 @@ export function cidadeDaLista(c) {
 // O coração: agrupa por lugar (o id do Google; sem ele, o nome), conta vozes
 // DIFERENTES e dá peso ao recente — a lista de sexta tem que ter novidade,
 // não só os consagrados.
-export function pontuar(citacoes, cidade, agora) {
+export function montarLista(validas, cidade, agora) {
+  const lugares = pontuar(validas, cidade, agora).slice(0, POR_CIDADE);
+  if (lugares.length >= MINIMO_POR_CIDADE) return lugares;
+  const ja = new Set(lugares.map((x) => x.chave));
+  const extra = pontuar(validas, cidade, agora, 1)
+    .filter((x) => x.n === 1 && x.g && !ja.has(x.chave))
+    .slice(0, MINIMO_POR_CIDADE - lugares.length)
+    .map((x) => Object.assign({}, x, { umaVoz: true }));
+  return lugares.concat(extra);
+}
+
+export function pontuar(citacoes, cidade, agora, minVozes) {
   const grupos = new Map();
   for (const c of citacoes) {
     if (c.cidade !== cidade) continue;
@@ -448,7 +463,7 @@ export function pontuar(citacoes, cidade, agora) {
     if (c.data && (!gr.primeira || c.data < gr.primeira)) gr.primeira = c.data;
   }
   return [...grupos.values()]
-    .filter((g) => g.vozes.size >= MIN_VOZES)
+    .filter((g) => g.vozes.size >= (minVozes || MIN_VOZES))
     .map((g) => {
       const vozes = [...g.vozes.values()];
       return {

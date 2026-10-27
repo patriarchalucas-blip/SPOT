@@ -16200,7 +16200,7 @@ function pintarHotspots(){
     lista.innerHTML=!l||!l.lugares.length?'<p class="hs-vazio">Nenhum lugar com 2 vozes ou mais nesta cidade ainda. Mais fontes ajudam.</p>'
       :l.lugares.map((x,i)=>{
         const fora=tirados.has(x.chave);
-        const meta=[x.bairro||((x.endereco||'').split(' - ')[1]||'').split(',')[0],x.n+' vozes: '+x.vozes.join(', ')].filter(Boolean).map(esc).join(' · ')
+        const meta=[x.bairro||((x.endereco||'').split(' - ')[1]||'').split(',')[0],(x.umaVoz?'1 voz, completa os 5: ':x.n+' vozes: ')+x.vozes.join(', ')].filter(Boolean).map(esc).join(' · ')
           +(x.novo?' · <span class="hs-novo">novo</span>':'')+(x.g?'':' · não achei no Google (não sai)');
         return '<div class="hs-linha'+(fora?' fora':'')+'"><span class="hs-n">'+(i+1)+'</span><span class="hs-t"><span class="hs-nome">'+esc(x.nome)+'</span>'
           +'<div class="hs-meta">'+meta+'</div></span>'

@@ -64,6 +64,7 @@ function mundo(opts) {
       const titulo = (JSON.parse(corpo).messages[0].content.match(/Título: (.*)/) || [])[1];
       return resp({ stop_reason: 'end_turn', content: [{ type: 'text', text: JSON.stringify(LEITURA[titulo] || { publi: false, lugares: [] }) }] });
     }
+    if (u.includes('places.googleapis.com/v1/places/')) return resp({});
     if (u.includes('places:searchText')) {
       chamadas.google++;
       const q = JSON.parse(corpo).textQuery.toLowerCase().replace(/'/g, '');
@@ -93,14 +94,14 @@ test('hotspots: a rodada cruza as vozes, tira o próprio e o publi, e não mostr
   const r = await comFetch(w.fetchFalso, async () => (await post(w.env, { op: 'rodar' })).json());
   assert.strictEqual(r.ok, true);
   assert.strictEqual(r.listas, undefined, 'pra quem não é dono, só números');
-  assert.deepStrictEqual(r.porCidade, [['São Paulo', 0], ['Rio de Janeiro', 1]]);
+  assert.deepStrictEqual(r.porCidade, [['São Paulo', 0], ['Rio de Janeiro', 3]]);
   const semana = JSON.parse(w.env.SPOT_KV.m.get('hs_semana'));
   const rio = semana.listas.find((l) => l.cidade === 'Rio de Janeiro').lugares;
   // Galeto (Ana + Bia, grafias diferentes, mesmo lugar no Google) entra.
   // Bar da Frente: Ana + Caio só no vídeo publi -> 1 voz, fica de fora.
   // Restaurante da Ana: Ana é a dona -> só Bia conta -> fora.
-  assert.deepStrictEqual(rio.map((x) => x.nome), ["Galeto Sat's"]);
-  assert.strictEqual(rio[0].n, 2);
+  // Mira de 5: depois do único de 2 vozes, completa com os de 1 voz, marcados.
+  assert.deepStrictEqual(rio.map((x) => [x.nome, x.n, !!x.umaVoz]), [["Galeto Sat's", 2, false], ["Bar da Frente", 1, true], ["Restaurante da Ana", 1, true]]);
   assert.ok(rio[0].novo);
   assert.strictEqual(w.chamadas.ia, 4);
 
@@ -128,7 +129,7 @@ test('hotspots: vídeo lido semanas atrás continua contando quando sai do feed'
     ? new Response(feed([{ id: 'v2aaaaaaaaa', titulo: 'Favoritos do chef Bia', desc: 'lista' }])) : w.fetchFalso(u, init);
   const r = await comFetch(f2, async () => (await post(w.env, { op: 'rodar' }, true)).json());
   const rio = r.listas.find((l) => l.cidade === 'Rio de Janeiro').lugares;
-  assert.deepStrictEqual(rio.map((x) => [x.nome, x.n]), [["Galeto Sat's", 2]]);
+  assert.deepStrictEqual([rio[0].nome, rio[0].n], ["Galeto Sat's", 2]);
 });
 
 test('hotspots: a prévia da newsletter abre sem login, traz foto/preço/site e nunca quem indicou', async () => {
@@ -146,7 +147,7 @@ test('hotspots: a prévia da newsletter abre sem login, traz foto/preço/site e 
   assert.deepStrictEqual([rio[0].precoDe, rio[0].precoAte], [60, 100]);
   assert.strictEqual(rio[0].site, 'https://galetosats.com.br');
   assert.ok(rio[0].foto.startsWith('/api/place-photo?ref='));
-  assert.ok(!JSON.stringify(r).includes('Ana') && !JSON.stringify(r).includes('Bia'), 'quem indicou não sai');
+  assert.ok(!JSON.stringify(r).includes('"vozes"') && !JSON.stringify(r).includes('Bia'), 'quem indicou não sai');
   await comFetch(f2, () => post(w.env, { op: 'previa' }));
   assert.strictEqual(detalhes, 1, 'o detalhe do Google é buscado uma vez só');
 });
@@ -176,7 +177,7 @@ test('hotspots: publicar fora de sexta 17h não faz nada; o dono publica e o tir
   const r = await comFetch(w.fetchFalso, async () => (await post(w.env, { op: 'publicar' }, true)).json());
   assert.strictEqual(r.ok, true);
   const ins = w.chamadas.escritas.find((e) => e.metodo === 'POST' && e.u.includes('/spots'));
-  assert.deepStrictEqual(ins.corpo.map((s) => s.name), ["Galeto Sat's"], 'o tirado não entra');
+  assert.deepStrictEqual(ins.corpo.map((s) => s.name), ["Galeto Sat's", "Restaurante da Ana"], 'o tirado (Bar da Frente) não entra');
   assert.strictEqual(ins.corpo[0].user_id, FONTE);
   assert.strictEqual(ins.corpo[0].status, 'want');
   assert.ok(!/Ana|Bia|Canal/.test(ins.corpo[0].my_note), 'nenhum nome de quem indicou');
