@@ -432,7 +432,9 @@ Hub protegido por senha com links pro que importa aos sócios: os docs
 gastos, e atalhos (repo, App Store, Supabase, hackathon). Mesmo esquema do
 `/gastos`: `socios.html` pede a senha e decifra `socios-dados.json` no navegador
 (AES-GCM/PBKDF2, **mesma senha do gastos**, que mora só em `_local/` — NUNCA
-escrever a senha neste arquivo: o repositório é público). Os links em claro,
+escrever a senha neste arquivo: o repositório é público). **PENDENTE (28/10):
+trocar a senha** — ela ficou escrita aqui até 28/10 e continua no histórico do
+git; o Lucas escolhe a nova, eu cifro de novo os dois painéis. Os links em claro,
 a senha e o sal ficam em `_local/socios/` (fora do git). **Mudar os links:**
 editar `_local/socios/dados.json`, `node ferramentas/socios-cifrar.mjs`, commit
 + push de `socios-dados.json`.
