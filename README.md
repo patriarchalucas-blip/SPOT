@@ -94,4 +94,4 @@ Mais de 290 testes das rotas do servidor e da lógica do app. Antes de cada publ
 
 ---
 
-Feito por Lucas Patriarcha e Lucas Jezler.
+Feito por Lucas Patriarcha.
