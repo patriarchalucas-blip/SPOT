@@ -414,9 +414,11 @@ projeto no portal: Descrição e Tese já preenchidas; link e vídeo são da Fas
   não mostra mais `home_city` de quem não é amigo aceito.
 
 **Pendente (o Lucas decide; nenhum é urgente):**
-- **Chaves velhas no histórico do Git:** `GAPI`/`UNSPLASH_KEY` antigas estão no
-  histórico público. Tirar do código NÃO invalida a chave — o Lucas precisa
-  confirmar no Google Cloud e no Unsplash que foram REVOGADAS/giradas.
+- **Chaves velhas no histórico do Git:** a do Google ("Maps Platform API Key",
+  sem restrição, 33 APIs, era a do servidor) foi APAGADA em 28/10/2026; o
+  servidor usa a "Chave de API 4" (só Places API New) e a velha responde "API
+  key expired". A do Unsplash continua ativa (o Unsplash não regera chave: só
+  criando app novo) — o Lucas adiou, risco só de cota, sem custo.
 - **Cota paga drenável com contas descartáveis** (busca 5.000/mês global cabe em
   ~4 contas; `place-photo` sem login). Segura no volume de hoje.
 - **`/api/erro` aceita POST sem login** (enche o log, até 8 pushes/dia no celular
