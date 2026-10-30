@@ -10333,7 +10333,9 @@ async function paginaDoExplorar(token){
   // Cota do mês estourada não é "nada encontrado" (11/10, auditoria).
   if(resp&&resp.capped){const e=new Error('cota');e.cota=true;e.escopo=resp.escopo||'global';throw e}
   // Busca que FALHOU (rede, 5xx) não é 'nada encontrado' (11/10, auditoria).
-  if(resp&&resp.ok===false)throw new Error('busca falhou');
+  // O motivo vai junto (29/10): "busca falhou" sozinho no registro de erros
+  // não dizia se era rede, sessão ou servidor.
+  if(resp&&resp.ok===false)throw new Error('busca falhou ('+(resp.motivo||resp.status||'?')+')');
   const data=await resp.json();
   const places=((data&&data.places)||[]).filter(p=>p.rating&&p.userRatingCount&&!isIrrelevantPlace(p));
   places.sort((a,b)=>notaDoExplorar(b)-notaDoExplorar(a));
@@ -11837,13 +11839,22 @@ async function googlePlaces(op,opts){
   let corpo={};
   try{corpo=JSON.parse((opts&&opts.body)||'{}')}catch(e){}
   let motivo='';
-  try{
-    const tk=await ensureToken();
-    const r=await fetch('/api/places',{
+  // UMA segunda tentativa (29/10): uma busca no Explorar falhou no iPhone sem
+  // chegar ao servidor — rede piscando ou token vencido no meio. Sem sessão,
+  // a segunda vai com token renovado; rede, depois de 800 ms. O resto (400,
+  // 404, 5xx) não muda tentando de novo.
+  const pedir=async(force)=>{
+    const tk=await ensureToken(force);
+    return fetch('/api/places',{
       method:'POST',
       headers:Object.assign({'Content-Type':'application/json'},tk?{'Authorization':'Bearer '+tk}:{}),
       body:JSON.stringify(Object.assign({op,fields:mask},corpo))
     });
+  };
+  try{
+    let r;
+    try{r=await pedir(false)}catch(e){await new Promise(ok=>setTimeout(ok,800));r=await pedir(false)}
+    if(r.status===401)r=await pedir(true);
     if(r.ok){
       const d=await r.json().catch(()=>null);
       // `capped` NÃO cai pro direto: o teto existe justamente pra segurar o
@@ -11855,7 +11866,7 @@ async function googlePlaces(op,opts){
     else if(r.status===404)motivo='function_nao_publicada';
     else if(r.status===401)motivo='sem_sessao';
     else if(r.status===400)motivo='payload_recusado';  // bug meu: quero ver no console
-    else return{ok:false,status:r.status,json:async()=>({places:[]})};
+    else return{ok:false,status:r.status,motivo:'status_'+r.status,json:async()=>({places:[]})};
   }catch(e){motivo='rede'}
   // AQUI existia um plano B que chamava o Google DIRETO, com a chave vinda do
   // navegador. Ele nasceu de quando o servidor ainda nao tinha chave propria
@@ -11867,7 +11878,7 @@ async function googlePlaces(op,opts){
   // Sem plano B, busca com o servidor fora falha — e e isso mesmo. Busca que
   // falha a pessoa tenta de novo; chave vazada nao tem volta.
   console.warn('places: servidor nao respondeu ('+motivo+')');
-  return{ok:false,status:0,json:async()=>({places:[]})};
+  return{ok:false,status:0,motivo,json:async()=>({places:[]})};
 }
 function placePhotoUrl(p,largura){
   const ph=p&&p.photos&&p.photos[0];
