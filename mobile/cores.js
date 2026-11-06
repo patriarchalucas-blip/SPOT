@@ -16,16 +16,19 @@
 // alguma, vá lá ver.
 
 // ── as do sistema novo ────────────────────────────────────────────────────
-export const BASE = '#F5F5F3';        // fundo da página e da barra de abas
-export const SURFACE = '#E9E9E6';     // blocos secundários: ações, campos
-export const INK = '#111111';
-export const INK2 = '#6B6B67';
-export const INK3 = '#9A9A96';
-export const GREEN = '#0B3D2E';       // ÚNICO acento
-export const ON_GREEN = '#F5F5F3';
-export const PHOTO_EMPTY = '#6E7F73'; // fundo de quando não há foto
-export const MAP_BG = '#E4E8E4';
-export const MAP_LAND = '#CBD3CD';
+// Redesenho 06/11 (a noite verde, igual ao site): fundo verde-noite, texto
+// quase branco, UM destaque, o branco quente. GREEN continua sendo o NOME do
+// destaque (por isso mente: hoje é claro), pra nenhum lugar de uso mudar.
+export const BASE = '#072019';        // fundo da página e da barra de abas
+export const SURFACE = '#1A312A';     // blocos secundários (branco a 8% sobre o fundo)
+export const INK = '#F5F5F3';
+export const INK2 = '#9BA4A0';
+export const INK3 = '#61716C';
+export const GREEN = '#F2EDE3';       // ÚNICO destaque: o branco quente
+export const ON_GREEN = '#0C1714';
+export const PHOTO_EMPTY = '#2F5C4C'; // fundo de quando não há foto
+export const MAP_BG = '#0B2A21';
+export const MAP_LAND = '#2C4A41';
 
 // ── as pontes: nome velho, cor nova ───────────────────────────────────────
 export const ESCURO = BASE;           // era o fundo escuro; hoje é o claro
@@ -47,8 +50,10 @@ export const ATIVO_FUNDO = 'transparent'; // a aba ativa é cor, não pastilha
 // Cada peso é uma FAMÍLIA registrada em App.js, não um fontWeight: no React
 // Native, fontWeight não combina com fontFamily de fonte carregada — no iOS
 // ele é simplesmente ignorado.
-export const DISPLAY = 'Inter Tight Bold';
-export const CORPO = 'Inter Tight';
+// 06/11: Archivo. DISPLAY (títulos e números) é a condensada, como no site.
+export const DISPLAY = 'Archivo Condensada';
+export const CORPO = 'Archivo';
+export const NEGRITO = 'Archivo Bold';   // nome e rótulo em negrito, largura normal
 // MEDIO e FORTE existiam pros dois numeros grandes (contador de paises e
 // placar). No site numero e peso 700, entao os dois apontam pro Bold e os
 // arquivos de 500 e 600 saem do pacote: eram 618KB sem uso proprio.

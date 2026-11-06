@@ -483,7 +483,7 @@ const e = StyleSheet.create({
   // A folha. O escurecido de fora é o mesmo das outras folhas do app.
   scrim: { flex: 1, backgroundColor: 'rgba(17,17,17,0.35)' },
   folha: { backgroundColor: BASE, borderTopLeftRadius: 28, borderTopRightRadius: 28, paddingTop: 12 },
-  alca: { width: 36, height: 4, borderRadius: 2, backgroundColor: '#CFCFCB', alignSelf: 'center', marginBottom: 16 },
+  alca: { width: 36, height: 4, borderRadius: 2, backgroundColor: 'rgba(245,245,243,0.2)', alignSelf: 'center', marginBottom: 16 },
   folhaCab: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'baseline', paddingHorizontal: 20, marginBottom: 16 },
   folhaTitulo: { fontSize: 20, fontWeight: '700', letterSpacing: -0.4, color: INK },
   folhaTipos: { fontSize: 14, color: INK3 },

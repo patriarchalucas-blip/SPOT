@@ -100,8 +100,8 @@ export default function BarraDeAbas({ ativa, aoTocar, margemDeBaixo, pontos }) {
             ficaria embaixo dele e não teria efeito nenhum. */}
         {Platform.OS === 'ios' ? (
           <>
-            <BlurView intensity={30} tint="light" style={StyleSheet.absoluteFill} />
-            <View style={[StyleSheet.absoluteFill, { backgroundColor: 'rgba(245,245,243,0.85)' }]} />
+            <BlurView intensity={30} tint="dark" style={StyleSheet.absoluteFill} />
+            <View style={[StyleSheet.absoluteFill, { backgroundColor: 'rgba(7,32,25,0.85)' }]} />
           </>
         ) : (
           <View style={[StyleSheet.absoluteFill, { backgroundColor: BASE }]} />

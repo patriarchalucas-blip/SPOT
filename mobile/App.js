@@ -61,8 +61,10 @@ import { useFonts } from 'expo-font';
 // nao combina com fontFamily de fonte carregada: no iOS ele e ignorado, e a
 // familia registrada e que manda. Por isso 'Inter Tight SemiBold' e um nome,
 // nao um peso.
-import { InterTight_400Regular } from '@expo-google-fonts/inter-tight/400Regular';
-import { InterTight_700Bold } from '@expo-google-fonts/inter-tight/700Bold';
+// Redesenho 06/11: Archivo, igual ao site. Títulos e números na Archivo
+// CONDENSADA (o font-stretch 68% do site). Arquivos estáticos tirados do
+// Google Fonts (licença OFL), em assets/fontes: o pacote
+// @expo-google-fonts/archivo não tem a largura condensada.
 import { Cinzel_500Medium } from '@expo-google-fonts/cinzel/500Medium';
 import * as Notifications from 'expo-notifications';
 import * as Device from 'expo-device';
@@ -229,8 +231,9 @@ function ehFluxoDeLogin(url) {
 // aqui): num app de iPhone, a fonte do sistema e a escolha certa pra corpo de
 // texto, e as tres de cima e que carregam a marca.
 const FONTES = {
-  'Inter Tight': InterTight_400Regular,
-  'Inter Tight Bold': InterTight_700Bold,
+  Archivo: require('./assets/fontes/Archivo-400.ttf'),
+  'Archivo Bold': require('./assets/fontes/Archivo-700.ttf'),
+  'Archivo Condensada': require('./assets/fontes/Archivo-Condensada-700.ttf'),
   Cinzel: Cinzel_500Medium,
 };
 
@@ -622,7 +625,7 @@ function Conteudo() {
   if (semRede) {
     return (
       <>
-        <StatusBar style="dark" />
+        <StatusBar style="light" />
         <SafeAreaView style={estilo.fundo}>
           <ScrollView
             contentContainerStyle={estilo.centro}
@@ -643,7 +646,7 @@ function Conteudo() {
 
   return (
     <>
-      <StatusBar style="dark" />
+      <StatusBar style="light" />
       <SafeAreaView style={estilo.fundo} edges={['top', 'left', 'right']}>
         <View style={estilo.pilha}>
           <WebView
@@ -805,7 +808,7 @@ const estilo = StyleSheet.create({
     paddingVertical: 7,
     paddingHorizontal: 16,
   },
-  faixaSemSinalTxt: { color: BASE, fontSize: 12, textAlign: 'center', fontFamily: 'Inter Tight' },
+  faixaSemSinalTxt: { color: BASE, fontSize: 12, textAlign: 'center', fontFamily: 'Archivo' },
   // O mesmo aviso do site (.toast, 09/10): tinta, raio 14, sem borda e sem
   // sombra; erro não ganha cor própria.
   aviso: { position: 'absolute', left: 0, right: 0, bottom: 94, alignItems: 'center', paddingHorizontal: 20 },
@@ -818,8 +821,8 @@ const estilo = StyleSheet.create({
     paddingHorizontal: 16,
   },
   avisoErro: {},
-  avisoTitulo: { color: BASE, fontSize: 15, fontFamily: 'Inter Tight Bold', marginBottom: 2 },
-  avisoTexto: { color: 'rgba(245,245,243,0.72)', fontSize: 14, lineHeight: 19.6, fontFamily: 'Inter Tight' },
+  avisoTitulo: { color: BASE, fontSize: 15, fontFamily: 'Archivo Bold', marginBottom: 2 },
+  avisoTexto: { color: 'rgba(12,23,20,0.72)', fontSize: 14, lineHeight: 19.6, fontFamily: 'Archivo' },
   // Empilha a barra por cima do WebView em vez de dividir a tela: o site
   // continua ocupando a altura inteira e a barra flutua, exatamente como a
   // .bottom-nav do CSS faz hoje.

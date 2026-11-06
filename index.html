@@ -2367,7 +2367,7 @@ body.na-casca.tour-rodando .bottom-nav{display:flex}
 .onb-pular{background:none;border:none;padding:0;color:var(--green);font:600 15px 'Archivo',sans-serif;cursor:pointer}
 .onb-corpo{flex:1;min-height:0;overflow-y:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none;padding:32px 20px 16px}
 .onb-corpo::-webkit-scrollbar{display:none}
-.onb-titulo{font-size:30px;font-weight:700;letter-spacing:-.04em;line-height:1.08;color:var(--ink);margin:0 0 8px;font-stretch:68%;letter-spacing:0}
+.onb-titulo{font-size:52px;font-weight:700;letter-spacing:-.04em;line-height:1;color:var(--ink);margin:0 0 8px;font-stretch:68%;letter-spacing:0}
 .onb-sub{font-size:15px;line-height:1.45;color:var(--ink2);margin:0 0 24px}
 .onb-campo{display:flex;align-items:center;gap:10px;height:52px;padding:0 16px;background:var(--surface);border-radius:var(--r-card);color:var(--ink2);font-size:18px}
 .onb-campo input{flex:1;min-width:0;border:none;background:none;outline:none;font:16px 'Archivo',sans-serif;color:var(--ink)}
@@ -2771,6 +2771,23 @@ body.exm #exploreCozinhas,body.exm #exploreBody{display:none!important}
 .fi-campo{font-size:16px;color:var(--ink)}
 /* Folhas de baixo: mesmo verde do fundo, sem borda */
 .sheet{background:#0A2A21}
+/* Rosto de quem não tem foto: inicial clara sobre cor sóbria */
+.pln-av,.avatar,.amg-avatar,.coment-av,.sp-av,.fd-av,.feed-avatar,.profile-avatar,.cv-avatar,.am-av{color:#F5F5F3;background-color:#2F5C4C;border-color:transparent}
+.profile-avatar,.cv-avatar,.am-av{border-radius:50%}
+.conv-bloco{background:rgba(245,245,243,.07);border-radius:20px}
+.conv-tit{color:var(--ink);font-stretch:68%;font-size:24px}
+.conv-txt{color:var(--ink2)}
+.conv-btn{background:var(--green);color:var(--on-green);border-radius:22px}
+/* Perfil do amigo (quadro "Perfil do amigo"): rosto ao lado do nome, mapa
+   de borda a borda, Planejar juntos em pílula clara */
+#friend .am-cab{display:grid;grid-template-columns:76px 1fr;column-gap:16px;align-items:center;padding:8px 20px 0}
+#friend .am-av{grid-row:1/4;width:76px;height:76px;font-size:30px}
+#friend .am-nome{font-size:40px}
+#friend .am-mapa{margin:20px 0 0;border-radius:0;background:transparent}
+#friend .pln-entrada{padding:0 20px}
+#friend .pln-btn{background:var(--green);color:var(--on-green);border-radius:22px;height:44px;margin-top:16px}
+.am-comum{background:rgba(245,245,243,.07);border-radius:20px}
+.am-cid-titulo{font-stretch:68%;font-size:28px}
 /* Atividade (quadro "Atividade (o sino)") */
 .at-topo{display:block;padding:52px 20px 0}
 .at-topo h1{text-align:left;font-size:52px;font-weight:700;line-height:1;margin:12px 0 0}
@@ -2789,6 +2806,18 @@ body.exm #exploreCozinhas,body.exm #exploreBody{display:none!important}
 .at-quando{display:block;margin-top:2px;font-size:13px;color:var(--ink3)}
 .at-foto{width:48px;height:48px;border-radius:12px}
 .sheet-handle{background:rgba(245,245,243,.2)}
+/* Login (quadro "Login"): botões em pílula, o principal claro */
+#login .login-entrar{background:var(--green);color:var(--on-green);border-radius:27px;min-height:54px;font-weight:600}
+.via,.le-campo,.le-entrar{border-radius:27px;min-height:54px}
+.via-surface{background:rgba(245,245,243,.12)}
+/* Ajustes (quadro "Ajustes"): linhas em bloco claro, Sair em pílula,
+   Excluir em cinza no fim. Sem linha divisória. */
+#ov-editperfil .sheet-title{font-stretch:68%;font-size:40px;font-weight:700}
+#ov-editperfil .prof-linha{border:none!important;background:rgba(245,245,243,.06);border-radius:16px;margin-bottom:6px;padding-left:14px;padding-right:14px}
+#ov-editperfil .prof-sair{background:none;color:var(--ink3)}
+.nt-input,.note-input{background:rgba(245,245,243,.08);border:none;color:var(--ink)}
+/* Botões grandes do app inteiro: pílula */
+.btn-primario,.action-btn,.sheet-cta,.onb-btn,.exm-btn,.pf-bt{border-radius:27px}
 </style>
 </head>
 <body>
@@ -3298,7 +3327,7 @@ body.exm #exploreCozinhas,body.exm #exploreBody{display:none!important}
 <div class="tour-acoes"><span class="tour-n" id="tourN"></span><button class="tour-pular" id="tourPular" onclick="fecharTutorial()">Pular</button><button class="tour-prox" id="tourProx" onclick="tourAvancar()">Próximo</button></div></div>
 </div>
 
-<div class="overlay" id="ov-editperfil" onclick="closeOut(event,'ov-editperfil')"><div class="sheet"><button class="sheet-close" onclick="closeOv('ov-editperfil')" data-ic="close" aria-label="Fechar"></button><div class="sheet-handle"></div><div class="sheet-title">Configurações</div>
+<div class="overlay" id="ov-editperfil" onclick="closeOut(event,'ov-editperfil')"><div class="sheet"><button class="sheet-close" onclick="closeOv('ov-editperfil')" data-ic="close" aria-label="Fechar"></button><div class="sheet-handle"></div><div class="sheet-title">Ajustes</div>
 <div class="prof-linha" onclick="document.getElementById('avatarFileInput').click()"><span class="pl-ic" data-ic="user"></span><span class="pl-txt">Trocar foto de perfil</span><span class="pl-seta">›</span></div>
 <div class="prof-linha" onclick="closeOv('ov-editperfil');abrirCidadeDeCasa()"><span class="pl-ic" data-ic="pin"></span><span class="pl-txt">Onde moro<span class="pl-valor" id="cfgCidade"></span></span><span class="pl-seta">›</span></div>
 <div class="prof-linha" onclick="closeOv('ov-editperfil');openVisitedCountryPicker()"><span class="pl-ic" data-ic="globe"></span><span class="pl-txt">Países que já visitei</span><span class="pl-seta">›</span></div>
@@ -13565,7 +13594,7 @@ async function talvezAbrirBoasVindas(){
   if(S.user.user_metadata&&S.user.user_metadata.onboarding_done)return;
   if(p.home_city)return;
   if((S.trips||[]).length)return;
-  Object.assign(ONB,{passo:0,cidade:null,cidades:[],paises:new Set(),busca:'',
+  Object.assign(ONB,{passo:1,cidade:null,cidades:[],paises:new Set(),busca:'',
     cat:'food',lugares:[],lugar:null,nota:'',localOk:false,ocupado:false,soCidade:false,salvo:null,paisesGravados:{}});
   onbDesenhar();
   showOv('ov-onb');
@@ -13586,7 +13615,9 @@ function onbTopo(){
   if(!n)return'';
   if(ONB.soCidade)return '<button class="onb-voltar" onclick="fecharCidadeDeCasa()" aria-label="Voltar">'+icon('back')+'</button>';
   const antes=n===6?2:(n===3&&onbTemCidades())?6:n-1;
-  const voltar=(n<5||n===6)
+  // A boas-vindas saiu (redesenho 06/11: o login já faz esse papel), então a
+  // cidade, que é o 1º passo, não tem pra onde voltar.
+  const voltar=((n<5&&n>1)||n===6)
     ?'<button class="onb-voltar" onclick="onbIr('+antes+')" aria-label="Voltar">'+icon('back')+'</button>'
     :'<span class="onb-voltar"></span>';
   const naBarra=n===6?2:n;
@@ -13611,15 +13642,14 @@ function onbDesenhar(){
     pe.innerHTML='<button class="onb-btn" onclick="onbIr(1)">Começar</button>';
     onbPintarMapa([]);
   }else if(n===1){
-    corpo.innerHTML='<h1 class="onb-titulo">Em que cidade você mora?</h1>'
-      +'<p class="onb-sub">É o ponto de partida do Explorar: o que seus amigos marcaram perto de você.</p>'
+    corpo.innerHTML='<h1 class="onb-titulo">Onde você mora</h1>'
       +'<label class="onb-campo">'+icon('search')+'<input id="onbCidade" type="text" placeholder="Buscar cidade" autocomplete="off" oninput="onbBuscarCidade(this.value)"></label>'
       +'<div id="onbCidadeRes"></div>';
     const c=document.getElementById('onbCidade');if(c&&ONB.busca)c.value=ONB.busca;
     onbListarCidades();
     pe.innerHTML='<button class="onb-btn" id="onbSeguir" onclick="onbSalvarCidade()"'+(ONB.cidade?'':' disabled')+'>'+(ONB.soCidade?'Salvar':'Continuar')+'</button>';
   }else if(n===2){
-    corpo.innerHTML='<h1 class="onb-titulo">Onde você já esteve?</h1>'
+    corpo.innerHTML='<h1 class="onb-titulo">Onde você já esteve</h1>'
       +'<div class="onb-mapa-card"><div class="onb-mapa" id="onbMapa"></div><div class="onb-mapa-n" id="onbMapaN"></div></div>'
       +'<label class="onb-campo">'+icon('search')+'<input id="onbPais" type="text" placeholder="Buscar país" autocomplete="off" oninput="onbListarPaises(this.value)"></label>'
       +'<div id="onbPaises"></div>';
@@ -13631,20 +13661,17 @@ function onbDesenhar(){
     // fica vazia enquanto isso: os dois usam os mesmos ids.
     const f=document.getElementById('cvFolha');if(f)f.innerHTML='';
     cvZerar('onb','');
-    corpo.innerHTML='<h1 class="onb-titulo">E as cidades?</h1>'
-      +'<p class="onb-sub">Dos países que você marcou. Contam no seu mapa mesmo sem spot.</p>'
+    corpo.innerHTML='<h1 class="onb-titulo">Cidades</h1>'
       +cvCampoHTML()+'<div class="cv-sel" id="cvSel"></div><div class="cv-lista" id="cvLista"></div>';
     pe.innerHTML='<button class="onb-btn" id="cvSalvar" onclick="cvSalvar()">Continuar</button>';
     cvPintar();
   }else if(n===3){
-    corpo.innerHTML='<h1 class="onb-titulo">Tem lugares anotados no celular?</h1>'
-      +'<p class="onb-sub">Notas, WhatsApp, Instagram: cole o texto e o Spot encontra os lugares. Você confere antes de salvar.</p>'
+    corpo.innerHTML='<h1 class="onb-titulo">Lugares anotados</h1>'
       +'<textarea id="onbImportar" class="imp-campo onb-importar" maxlength="'+IMP_MAX+'" placeholder="lisboa: taberna da rua das flores, pasteis de belem (amei!!)&#10;porto - majestic café" oninput="ONB.textoImportar=this.value;document.getElementById(\'onbSeguirImp\').textContent=this.value.trim()?\'Encontrar os lugares\':\'Continuar\'"></textarea>';
     const t=document.getElementById('onbImportar');if(t&&ONB.textoImportar)t.value=ONB.textoImportar;
     pe.innerHTML='<button class="onb-btn" id="onbSeguirImp" onclick="onbSeguirImportar()">'+(String(ONB.textoImportar||'').trim()?'Encontrar os lugares':'Continuar')+'</button>';
   }else if(n===4){
-    corpo.innerHTML='<h1 class="onb-titulo">O Spot fica melhor com amigos</h1>'
-      +'<p class="onb-sub">Você vê os lugares deles, eles veem os seus. Quem entrar pelo seu link já vira seu amigo.</p>'
+    corpo.innerHTML='<h1 class="onb-titulo">Amigos</h1>'
       +'<button class="onb-btn" id="onbConvite" onclick="onbConvidar()">'+icon('share')+'Compartilhar convite</button>'
       +'<div class="onb-rotulo">Já está no Spot?</div>'
       +'<label class="onb-campo">'+icon('search')+'<input id="onbPessoa" type="text" placeholder="Buscar pelo nome ou @" autocomplete="off" autocapitalize="off" oninput="buscarPessoas(this.value,\'onbPessoas\',\'onbPessoa\')"></label>'
@@ -13654,7 +13681,7 @@ function onbDesenhar(){
     const nome=String((S.profile&&S.profile.display_name)||'').trim().split(/\s+/)[0]||'';
     // 11b (07/10, Claude Design): mapa, anel "do mundo" e até 4 continentes.
     const nomes=visitedCountryNames();
-    const titulo='<h1 class="onb-titulo onbf-titulo">Seu mapa está pronto'+(nome?', '+esc(nome):'')+'.</h1>';
+    const titulo='<h1 class="onb-titulo onbf-titulo">Seu mapa'+(nome?', '+esc(nome):'')+'</h1>';
     corpo.innerHTML='<div class="onb-mapa onb-mapa-sangra onbf-mapa" id="onbMapa"></div>'
       +(nomes.length
         ?'<div class="onbf-topo">'+anelDoOnboarding(nomes.length)
