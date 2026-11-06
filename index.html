@@ -66,24 +66,28 @@
 <!-- 11/10: conexão aberta cedo com as fontes (a folha de estilos delas segura o 1º desenho). -->
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500&family=Inter+Tight:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500&family=Archivo:wdth,wght@62..125,400..700&display=swap" rel="stylesheet">
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 /* ═══ TOKENS — base escura ═══
    --surface = base da página · --white = elevado (cards/sheet/nav) · --dark = recesso (inputs/wells)
    Raio: uma escala só (--r cards/superfícies · --r-sm controles · --r-pill chips), nunca valores soltos */
 :root{
-/* Direcao F. Uma cor de acento so, nenhuma borda, nenhuma sombra. */
---base:#F5F5F3;      /* fundo da pagina e da nav */
---surface:#E9E9E6;   /* blocos secundarios: acoes, campos, segmentado */
---map-bg:#E4E8E4;    /* fundo do mapa */
---map-dot:#C8CFC9;   /* trama de pontos do mapa */
---ink:#111111;
---ink2:#6B6B67;
---ink3:#9A9A96;
---green:#0B3D2E;     /* UNICO acento: paises visitados, botao, nav ativa */
---on-green:#F5F5F3;
---photo-empty:#6E7F73;
+/* Redesenho de 06/11 (branch redesenho): a noite verde. Fundo #072019,
+   texto quase branco, UM destaque: o branco quente #F2EDE3 (o --green virou
+   o nome do destaque, por isso as regras antigas ja saem certas). Fonte
+   Archivo; titulos condensados (font-stretch 68%). */
+--base:#072019;      /* fundo da pagina e da nav */
+--surface:#1A312A;   /* blocos secundarios: acoes, campos, segmentado (= branco a 8% sobre o fundo) */
+--map-bg:#0B2A21;    /* fundo do mapa */
+--map-dot:#2C4A41;   /* trama de pontos do mapa */
+--ink:#F5F5F3;
+--ink2:#9BA4A0;
+--ink3:#61716C;
+--green:#F2EDE3;     /* UNICO destaque (branco quente): paises visitados, botao, nav ativa */
+--on-green:#0C1714;
+--photo-empty:#2F5C4C;
+--grad-topo:linear-gradient(180deg,#0B3D2E 0,#0A3528 200px,#092D22 420px,#08261D 640px,#072019 900px);
 --r-photo:18px; --r-card:14px; --r-btn:10px; --r-sheet:28px;
 
 /* PONTES. Os nomes de antes apontam pro sistema novo, entao todo o CSS
@@ -96,7 +100,7 @@
 --white:var(--surface);
 --dark:var(--base);
 --border:transparent;      /* mata as 68 bordas de 1px de uma vez */
---mono:'Inter Tight',sans-serif;  /* a mono sai do app inteiro */
+--mono:'Archivo',sans-serif;  /* a mono sai do app inteiro */
 --shadow-sm:none; --shadow-md:none; --shadow-lg:none;
 --shadow-terra:none; --shadow-inset:none;
 /* A UNICA sombra do app, e ela existe por um motivo medido: o card do
@@ -107,7 +111,9 @@
 --r:var(--r-card); --r-sm:var(--r-btn); --r-pill:100px;
 }
 html{background:var(--base)}
-body{font-family:'Inter Tight',sans-serif;background:var(--base);color:var(--ink);max-width:430px;margin:0 auto;min-height:100vh}
+body{font-family:'Archivo',sans-serif;background:var(--base) var(--grad-topo) no-repeat;color:var(--ink);max-width:430px;margin:0 auto;min-height:100vh;color-scheme:dark}
+/* Títulos na Archivo condensada (redesenho 06/11) */
+h1,h2,.cond{font-stretch:68%}
 
 /* SCREENS */
 .screen{display:none;flex-direction:column;min-height:100vh}
@@ -122,7 +128,7 @@ body{font-family:'Inter Tight',sans-serif;background:var(--base);color:var(--ink
 
 /* LOADING */
 #loading{background:var(--dark);align-items:center;justify-content:center}
-.splash-wm{font-family:'Inter Tight',sans-serif;font-size:48px;color:#fff;letter-spacing:-2px}
+.splash-wm{font-family:'Archivo',sans-serif;font-size:48px;color:#fff;letter-spacing:-2px}
 .splash-wm em{font-style:italic;color:rgba(255,255,255,0.4)}
 .spinner{display:inline-block;width:20px;height:20px;border:2px solid rgba(255,255,255,0.2);border-top-color:rgba(255,255,255,0.6);border-radius:50%;animation:spin .6s linear infinite;margin-top:20px}
 @keyframes spin{to{transform:rotate(360deg)}}
@@ -156,7 +162,7 @@ body{font-family:'Inter Tight',sans-serif;background:var(--base);color:var(--ink
 .tagline{font-size:15px;color:rgba(245,245,243,.72);margin-bottom:28px}
 .form-stack{display:flex;flex-direction:column;gap:12px}
 .field{background:rgba(245,245,243,.14);border:none;border-radius:var(--r-card);padding:16px 18px;font-size:15px;
-  font-family:'Inter Tight',sans-serif;color:#fff;outline:none;width:100%;-webkit-backdrop-filter:blur(10px);
+  font-family:'Archivo',sans-serif;color:#fff;outline:none;width:100%;-webkit-backdrop-filter:blur(10px);
   backdrop-filter:blur(10px);margin-bottom:2px}
 /* Campo preenchido pelo navegador vinha azul-claro com texto preto — cor do
    Chrome, não nossa, e numa tela azul-petróleo ela entra como corpo estranho.
@@ -177,10 +183,10 @@ body{font-family:'Inter Tight',sans-serif;background:var(--base);color:var(--ink
 .field::placeholder{color:rgba(255,255,255,.55)}
 .field:focus{box-shadow:inset 0 0 0 2px rgba(245,245,243,.45)}
 .btn-primary{background:var(--base);color:var(--ink);border:none;border-radius:var(--r-card);min-height:52px;
-  font-family:'Inter Tight',sans-serif;font-size:15px;font-weight:600;cursor:pointer;width:100%;margin-top:4px}
+  font-family:'Archivo',sans-serif;font-size:15px;font-weight:600;cursor:pointer;width:100%;margin-top:4px}
 .btn-primary:active{opacity:.85}.btn-primary:disabled{opacity:.5}
 .btn-google{background:var(--base);border:none;border-radius:var(--r-card);min-height:52px;color:var(--ink);
-  font-family:'Inter Tight',sans-serif;font-size:15px;font-weight:600;cursor:pointer;width:100%;display:flex;
+  font-family:'Archivo',sans-serif;font-size:15px;font-weight:600;cursor:pointer;width:100%;display:flex;
   align-items:center;justify-content:center;gap:10px;margin-bottom:8px}
 .btn-google:active{opacity:.85}
 /* O G do Google era branco chapado; sobre fundo claro ele sumia. */
@@ -193,7 +199,7 @@ body{font-family:'Inter Tight',sans-serif;background:var(--base);color:var(--ink
 .btn-apple svg path{fill:var(--ink)}
 body.tem-apple .btn-apple{display:flex}
 .btn-email-ghost{background:transparent;border:none;color:var(--base);font-size:15px;font-weight:600;
-  font-family:'Inter Tight',sans-serif;cursor:pointer;width:100%;min-height:44px;padding:8px;
+  font-family:'Archivo',sans-serif;cursor:pointer;width:100%;min-height:44px;padding:8px;
   text-decoration:underline;text-underline-offset:3px}
 .login-toggle{text-align:center;font-size:13px;color:rgba(255,255,255,0.6);cursor:pointer;margin-top:8px}
 /* Aceite dos termos na própria tela de entrada. A diretriz 1.2 da Apple não
@@ -217,7 +223,7 @@ body.tem-apple .btn-apple{display:flex}
 #login .login-bottom{gap:0}
 #login .login-wm{display:block;margin-bottom:28px}
 #login .login-entrar{min-height:52px;border-radius:var(--r-btn);background:var(--base);color:var(--ink);border:none;
-  font-family:'Inter Tight',sans-serif;font-size:16px;font-weight:600;cursor:pointer;width:100%}
+  font-family:'Archivo',sans-serif;font-size:16px;font-weight:600;cursor:pointer;width:100%}
 #login .login-entrar:active{opacity:.85}
 #login .login-legal{text-align:center;font-size:11px;line-height:1.4;color:rgba(245,245,243,.6);margin-top:14px;padding:0}
 #login .login-legal a{color:rgba(245,245,243,.82);text-decoration:underline;text-underline-offset:2px}
@@ -226,7 +232,7 @@ body.tem-apple .btn-apple{display:flex}
 .login-sheet{padding:12px 20px calc(34px + env(safe-area-inset-bottom,0px))}
 .login-vias,.login-email{display:flex;flex-direction:column;gap:8px}
 .via{min-height:52px;border-radius:var(--r-btn);border:none;display:flex;align-items:center;justify-content:center;gap:9px;
-  font-family:'Inter Tight',sans-serif;font-size:16px;font-weight:600;cursor:pointer}
+  font-family:'Archivo',sans-serif;font-size:16px;font-weight:600;cursor:pointer}
 .via:active{opacity:.85}
 .via svg{width:18px;height:18px}
 .via-apple{background:var(--green);color:var(--on-green)}
@@ -235,17 +241,17 @@ body.tem-apple .btn-apple{display:flex}
 .via-surface svg path{fill:var(--ink)}
 .le-topo{display:flex;align-items:center;justify-content:space-between;margin-bottom:4px}
 .le-tit{font-size:22px;font-weight:700;letter-spacing:-.03em;color:var(--ink)}
-.le-voltar{background:none;border:none;font-family:'Inter Tight',sans-serif;font-size:15px;color:var(--ink2);cursor:pointer}
+.le-voltar{background:none;border:none;font-family:'Archivo',sans-serif;font-size:15px;color:var(--ink2);cursor:pointer}
 .le-campo{background:var(--surface);border:none;border-radius:var(--r-btn);min-height:52px;padding:0 18px;width:100%;
-  font-family:'Inter Tight',sans-serif;font-size:15px;color:var(--ink);outline:none}
+  font-family:'Archivo',sans-serif;font-size:15px;color:var(--ink);outline:none}
 .le-campo::placeholder{color:var(--ink3)}
 .le-campo:focus{box-shadow:inset 0 0 0 2px var(--ink3)}
 .le-senha{position:relative;display:flex}
 .le-senha .le-campo{padding-right:84px}
 .le-mostrar{position:absolute;right:16px;top:50%;transform:translateY(-50%);background:none;border:none;
-  font-family:'Inter Tight',sans-serif;font-size:14px;color:var(--ink2);cursor:pointer}
+  font-family:'Archivo',sans-serif;font-size:14px;color:var(--ink2);cursor:pointer}
 .le-entrar{min-height:52px;border-radius:var(--r-btn);border:none;background:var(--green);color:var(--on-green);
-  font-family:'Inter Tight',sans-serif;font-size:16px;font-weight:600;cursor:pointer;width:100%}
+  font-family:'Archivo',sans-serif;font-size:16px;font-weight:600;cursor:pointer;width:100%}
 .le-entrar:active{opacity:.85}
 .le-links{display:flex;align-items:center;justify-content:space-between;font-size:15px;color:var(--ink2);margin-top:4px}
 .le-links span{cursor:pointer}
@@ -324,17 +330,17 @@ input,textarea,select{font-size:max(16px,1em)!important}
 .placar-col{flex:1;min-width:0;display:grid;grid-template-columns:repeat(3,1fr);align-items:end;gap:14px}
 .mundo-frase{display:flex;flex-direction:column;gap:0;margin:20px 20px 0}
 .mf-1{font-size:14px;font-weight:400;line-height:1.3;color:var(--ink2)}
-.mf-2{font-size:30px;font-weight:700;letter-spacing:-.04em;line-height:1.05;color:var(--green)}
+.mf-2{font-size:30px;font-weight:700;letter-spacing:-.04em;line-height:1.05;color:var(--green);font-stretch:68%;letter-spacing:0}
 .pc-item{flex:1;min-width:0;display:flex;flex-direction:column;align-items:flex-start;gap:1px;
   background:none;border:none;padding:0;cursor:pointer;text-align:left}
 .pc-item:active{opacity:.6}
-.pc-n{font-size:26px;font-weight:700;letter-spacing:-.04em;color:var(--ink);line-height:1.05}
+.pc-n{font-size:26px;font-weight:700;letter-spacing:-.04em;color:var(--ink);line-height:1.05;font-stretch:68%;letter-spacing:0}
 .pc-r{display:flex;align-items:center;gap:3px;font-size:13px;color:var(--ink2);white-space:nowrap}
 .pc-seta{font-style:normal;font-size:12px;color:var(--ink3)}
 .sc-item{background:none;border:none;padding:0;cursor:pointer;text-align:left;
   display:flex;flex-direction:column;gap:2px;min-height:44px;justify-content:flex-end}
 .sc-item:active{opacity:.6}
-.sc-n{font-size:28px;font-weight:700;letter-spacing:-.04em;color:var(--ink);line-height:1}
+.sc-n{font-size:28px;font-weight:700;letter-spacing:-.04em;color:var(--ink);line-height:1;font-stretch:68%;letter-spacing:0}
 .sc-hero .sc-n{font-size:44px}
 .sc-r{font-size:14px;color:var(--ink2);display:flex;align-items:center;gap:3px}
 .sc-seta{font-style:normal;font-size:12px;color:var(--ink3)}
@@ -445,7 +451,7 @@ input,textarea,select{font-size:max(16px,1em)!important}
 .am-busca{margin-top:12px;background:var(--base)}
 .am-convite{background:var(--base);border-radius:var(--r-card);padding:16px;margin:8px 0 24px}
 .am-convite .l-meta{margin:6px 0 0;line-height:1.4}
-.am-reenviar{display:block;background:none;border:none;padding:12px 0 0;color:var(--green);font:600 15px 'Inter Tight',sans-serif;cursor:pointer;text-align:left}
+.am-reenviar{display:block;background:none;border:none;padding:12px 0 0;color:var(--green);font:600 15px 'Archivo',sans-serif;cursor:pointer;text-align:left}
 .am-rotulo{font-size:13px;font-weight:600;color:var(--ink2);margin-bottom:12px}
 /* Perfil: card tracejado no fim do trilho. O tracejado é do desenho, e é a
    única borda da tela: ele diz "espaço vazio", que superfície não diz. */
@@ -475,7 +481,7 @@ input,textarea,select{font-size:max(16px,1em)!important}
 .vg-vazio{font-size:15px;line-height:1.45;color:var(--ink2);margin:0 0 4px}
 /* Mapa em branco (rodada 1): três passos numerados, sem placar zerado. */
 .mapa-branco{margin:24px 20px 0}
-.mb-titulo{font-size:24px;font-weight:700;letter-spacing:-.03em;line-height:1.15;color:var(--ink)}
+.mb-titulo{font-size:24px;font-weight:700;letter-spacing:-.03em;line-height:1.15;color:var(--ink);font-stretch:68%;letter-spacing:0}
 .mb-sub{font-size:15px;line-height:1.45;color:var(--ink2);margin:8px 0 12px}
 .mb-passo{display:flex;align-items:center;gap:14px;width:100%;padding:12px 0;border:none;background:none;text-align:left;cursor:pointer;font-family:inherit}
 .mb-passo .l-nome,.mb-passo .l-meta{display:block}
@@ -489,7 +495,7 @@ input,textarea,select{font-size:max(16px,1em)!important}
 .dash-top>*{position:relative;z-index:1}
 .dash-hello{font-size:14px;color:var(--ink3);margin-bottom:5px}
 .dash-email{font-size:12.5px;color:var(--ink3);margin-top:9px;cursor:pointer}
-.dash-name{font-family:'Inter Tight',sans-serif;font-weight:400;font-size:34px;color:var(--ink);letter-spacing:-.015em;line-height:1.05}
+.dash-name{font-family:'Archivo',sans-serif;font-weight:400;font-size:34px;color:var(--ink);letter-spacing:-.015em;line-height:1.05}
 .avatar{width:40px;height:40px;border-radius:50%;background:var(--green);display:flex;align-items:center;justify-content:center;font-size:16px;color:var(--dark);font-weight:600;cursor:pointer;flex-shrink:0;box-shadow:var(--shadow-sm),0 0 0 2px var(--surface)}
 /* No Dashboard o scorecard fica POR CIMA do mapa, e com fundo translúcido o
    mapa aparecia através dele — dava pra ver a Patagônia dentro do card
@@ -519,7 +525,7 @@ input,textarea,select{font-size:max(16px,1em)!important}
 .checkin-q{flex:1;min-width:0;font-size:15px;color:var(--on-green);line-height:1.35}
 .checkin-q span{color:var(--on-green);font-weight:600}
 .checkin-add{flex-shrink:0;border:none;border-radius:var(--r-btn);min-height:36px;padding:0 14px;
-  background:var(--base);color:var(--green);font-family:'Inter Tight',sans-serif;font-size:14px;
+  background:var(--base);color:var(--green);font-family:'Archivo',sans-serif;font-size:14px;
   font-weight:600;cursor:pointer}
 .checkin-add:active{opacity:.85}
 .checkin-x{flex-shrink:0;width:30px;height:30px;border:none;background:none;color:var(--on-green);opacity:.6;
@@ -551,7 +557,7 @@ input,textarea,select{font-size:max(16px,1em)!important}
   color:var(--ink);cursor:pointer;display:flex;align-items:center;justify-content:center;margin-bottom:16px}
 .list-back:active{opacity:.7}
 .list-back svg{width:20px;height:20px}
-.list-title{font-size:34px;font-weight:700;letter-spacing:-.04em;color:var(--ink);line-height:1.05}
+.list-title{font-size:34px;font-weight:700;letter-spacing:-.04em;color:var(--ink);line-height:1.05;font-stretch:68%;letter-spacing:0}
 .list-kicker{font-size:15px;color:var(--ink2);margin-top:4px}
 /* "Quem já foi" abre o Explorar. A ordem é a tese do app: o que gente que
    você conhece achou vem ANTES do que o Google acha. */
@@ -612,7 +618,7 @@ input,textarea,select{font-size:max(16px,1em)!important}
 .coment-titulo{font-size:20px;font-weight:700;letter-spacing:-.03em;color:var(--ink);margin-bottom:14px}
 .coment-item{display:flex;gap:12px;padding:0 0 18px;border-top:none}
 .av-foto{background-size:cover!important;background-position:center!important;color:transparent!important}
-.coment-av{width:30px;height:30px;border-radius:50%;flex-shrink:0;background:var(--green);color:#fff;
+.coment-av{width:30px;height:30px;border-radius:50%;flex-shrink:0;background:var(--green);color:var(--on-green);
   display:flex;align-items:center;justify-content:center;font-family:var(--mono);font-size:11px}
 .coment-corpo{flex:1;min-width:0}
 .coment-topo{display:flex;align-items:center;gap:8px}
@@ -764,11 +770,11 @@ input,textarea,select{font-size:max(16px,1em)!important}
 .pln-dest b{flex:1;min-width:0;font-weight:400;text-align:left}
 .pln-dest small{flex:none;font-size:14px;color:var(--ink3)}
 .pln-dest span svg{width:18px;height:18px;color:var(--ink3)}
-.pln-linha .pln-check{flex:none;margin-top:20px;background:none;padding:0;border-color:#CFCFCB;cursor:pointer}
+.pln-linha .pln-check{flex:none;margin-top:20px;background:none;padding:0;border-color:rgba(245,245,243,.3);cursor:pointer}
 .pln-linha .pln-check.on{background:var(--green);border-color:var(--green)}
 .pln-off .pln-foto,.pln-off .pln-t{opacity:.45}
 .pln-pronto{margin-top:32px}
-.pln-pronto h1{margin:0;font-size:38px;font-weight:700;letter-spacing:-.04em;line-height:1.05;color:var(--green)}
+.pln-pronto h1{margin:0;font-size:38px;font-weight:700;letter-spacing:-.04em;line-height:1.05;color:var(--green);font-stretch:68%;letter-spacing:0}
 .pln-viagem{display:flex;align-items:center;gap:12px;width:100%;min-height:56px;margin-top:8px;padding:0;border:none;background:none;font:inherit;text-align:left;color:var(--ink);cursor:pointer}
 .pln-viagem b{flex:1;font-size:17px;font-weight:600}
 .pln-viagem span{font-size:14px;color:var(--ink2)}
@@ -790,7 +796,7 @@ input,textarea,select{font-size:max(16px,1em)!important}
 #place.previa .fi-cat{display:none}
 /* a3: Viagens sem nenhum spot */
 .vg-primeiro{padding:8px 0 24px}
-.vg-primeiro h2{margin:0;font-size:26px;font-weight:700;letter-spacing:-.03em}
+.vg-primeiro h2{margin:0;font-size:26px;font-weight:700;letter-spacing:-.03em;font-stretch:68%;letter-spacing:0}
 .vg-primeiro p{margin:6px 0 0;font-size:15px;line-height:1.45;color:var(--ink2)}
 .vg-primeiro .vg-nota{margin-top:10px;font-size:14px;color:var(--ink3)}
 /* Planejar v2 */
@@ -814,7 +820,7 @@ input,textarea,select{font-size:max(16px,1em)!important}
 .pln-rodape:empty{display:none}
 .pln-rodape .exm-btn:disabled{opacity:.35}
 .pln-avs-m{margin-top:8px}
-.pln-titulo{margin:12px 0 0;font-size:30px;font-weight:700;letter-spacing:-.04em;line-height:1.05;color:var(--green);overflow-wrap:anywhere}
+.pln-titulo{margin:12px 0 0;font-size:30px;font-weight:700;letter-spacing:-.04em;line-height:1.05;color:var(--green);overflow-wrap:anywhere;font-stretch:68%;letter-spacing:0}
 .pln-sub{margin:6px 0 0;font-size:15px;color:var(--ink2)}
 .pln-aviso{margin-top:20px;padding:14px 16px;border-radius:14px;background:var(--surface);font-size:15px;line-height:1.4;color:var(--ink)}
 .pln-aviso span{color:var(--ink2)}
@@ -836,7 +842,7 @@ input,textarea,select{font-size:max(16px,1em)!important}
 .pln-querem{font-size:14px;line-height:1.45;color:var(--ink2)}
 .pln-foram+.pln-querem{margin-top:0}
 .pln-t>.pln-querem:nth-child(2){margin-top:3px}
-.pln-vazio h2{margin:40px 0 8px;font-size:26px;font-weight:700;letter-spacing:-.03em;line-height:1.1}
+.pln-vazio h2{margin:40px 0 8px;font-size:26px;font-weight:700;letter-spacing:-.03em;line-height:1.1;font-stretch:68%;letter-spacing:0}
 .pln-vazio p{margin:0 0 24px;font-size:15px;line-height:1.45;color:var(--ink2)}
 .pln-folha-corpo{padding:4px 20px calc(28px + env(safe-area-inset-bottom,0px))}
 .pln-folha-corpo h3{margin:0 44px 14px 0;font-size:22px;font-weight:700;letter-spacing:-.03em}
@@ -856,7 +862,7 @@ input,textarea,select{font-size:max(16px,1em)!important}
 .pln-mapa{display:block;margin-top:14px;text-align:center;font-size:15px;color:var(--ink2);text-decoration:none;min-height:44px;line-height:44px}
 /* Importar notas (handoff "crescimento", fluxo 2, 30/09) */
 .imp-corpo{padding:4px 20px 140px;display:flex;flex-direction:column;min-height:calc(100vh - 60px)}
-.imp-titulo{margin:12px 0 0;font-size:26px;font-weight:700;letter-spacing:-.03em;line-height:1.1}
+.imp-titulo{margin:12px 0 0;font-size:26px;font-weight:700;letter-spacing:-.03em;line-height:1.1;font-stretch:68%;letter-spacing:0}
 .imp-sub{margin:6px 0 0;font-size:15px;line-height:1.45;color:var(--ink2)}
 .imp-campo{flex:1;min-height:280px;margin-top:20px;padding:16px;border:none;border-radius:var(--r-card);background:var(--surface);font:inherit;font-size:16px;line-height:1.5;color:var(--ink);resize:none;outline:none}
 .imp-campo::placeholder{color:var(--ink3)}
@@ -874,7 +880,7 @@ input,textarea,select{font-size:max(16px,1em)!important}
 .imp-cidade small{font-size:14px;font-weight:400;color:var(--ink3)}
 .imp-linha{display:flex;align-items:center;gap:12px;min-height:64px;padding:6px 0}
 .imp-linha.off .imp-foto,.imp-linha.off .imp-t,.imp-linha.off .imp-seg{opacity:.45}
-.imp-linha .pln-check{border-color:#CFCFCB;background:none;padding:0;cursor:pointer}
+.imp-linha .pln-check{border-color:rgba(245,245,243,.3);background:none;padding:0;cursor:pointer}
 .imp-linha .pln-check.on{background:var(--green);border-color:var(--green)}
 .imp-foto{flex:none;width:52px;height:52px;border-radius:12px;overflow:hidden;background:var(--photo-empty);display:flex;align-items:center;justify-content:center;color:var(--on-green)}
 .imp-foto.g{width:60px;height:60px}
@@ -893,7 +899,7 @@ input,textarea,select{font-size:max(16px,1em)!important}
 .imp-nao-buscar{color:var(--green);font-weight:600}
 .imp-nao-ignorar{color:var(--ink2)}
 .imp-pronto{margin:auto 0;padding:40px 0}
-.imp-pronto h1{margin:0 0 24px;font-size:38px;font-weight:700;letter-spacing:-.04em;line-height:1.05;color:var(--green)}
+.imp-pronto h1{margin:0 0 24px;font-size:38px;font-weight:700;letter-spacing:-.04em;line-height:1.05;color:var(--green);font-stretch:68%;letter-spacing:0}
 .imp-cid,.imp-alt{display:flex;align-items:center;gap:14px;width:100%;min-height:72px;padding:6px 0;border:none;background:none;font:inherit;text-align:left;color:var(--ink);cursor:pointer}
 .imp-cid .imp-t b{font-size:17px}
 .imp-cid .imp-t span{font-size:14px;color:var(--ink2)}
@@ -1002,7 +1008,7 @@ html.cv-digitando #cvSalvar{display:none}
 .cv-ficha-nota{margin:0;font-size:14px;line-height:1.45;color:var(--ink2);text-align:center}
 .cvp{padding:4px 20px 24px}
 .cvp-kicker{font-size:14px;font-weight:600;color:var(--green)}
-.cvp h2{margin:6px 0 8px;font-size:24px;font-weight:700;letter-spacing:-.03em;line-height:1.15;color:var(--ink)}
+.cvp h2{margin:6px 0 8px;font-size:24px;font-weight:700;letter-spacing:-.03em;line-height:1.15;color:var(--ink);font-stretch:68%;letter-spacing:0}
 .cvp p{margin:0 0 16px;font-size:15px;line-height:1.45;color:var(--ink2)}
 .cvp-chips{display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin-bottom:24px}
 .cvp-chip{height:44px;padding:0 16px;border:none;border-radius:10px;background:var(--surface);font:inherit;font-size:16px;font-weight:500;color:var(--ink);cursor:pointer}
@@ -1017,7 +1023,7 @@ html.cv-digitando #cvSalvar{display:none}
 .coz-atual i{font-style:normal;font-size:14px;color:var(--ink2)}
 .coz-conta{font-size:14px;color:var(--ink3)}
 .coz-sheet{padding:12px 0 calc(34px + env(safe-area-inset-bottom,0px));overflow:hidden}
-.coz-alca{width:36px;height:4px;border-radius:2px;background:#CFCFCB;margin:0 auto 16px}
+.coz-alca{width:36px;height:4px;border-radius:2px;background:rgba(245,245,243,.2);margin:0 auto 16px}
 .coz-cab{display:flex;justify-content:space-between;align-items:baseline;padding:0 20px 16px}
 .coz-cab h2{margin:0;font-size:20px;font-weight:700;letter-spacing:-.02em;color:var(--ink)}
 .coz-cab span{font-size:14px;color:var(--ink3)}
@@ -1114,7 +1120,7 @@ html.cv-digitando #cvSalvar{display:none}
   width:min(430px, 100%);
   height:calc(56px + env(safe-area-inset-bottom, 0px));
   padding-bottom:env(safe-area-inset-bottom, 0px);
-  background:rgba(245,245,243,.92);
+  background:rgba(7,32,25,.72);
   -webkit-backdrop-filter:blur(20px);
   backdrop-filter:blur(20px);
   display:flex;align-items:center;z-index:40;
@@ -1156,7 +1162,7 @@ body.na-casca .bottom-nav{display:none}
 .trip-float{display:none}
 .trip-hero-content{position:absolute;inset:0;padding:0 20px 20px;display:flex;flex-direction:column;
   justify-content:flex-end;background:linear-gradient(to top,rgba(0,0,0,.55),transparent 55%)}
-.back-btn{position:absolute;top:18px;left:20px;width:36px;height:36px;background:rgba(245,245,243,.92);
+.back-btn{position:absolute;top:18px;left:20px;width:36px;height:36px;background:rgba(7,32,25,.72);
   border:none;border-radius:50%;color:var(--ink);cursor:pointer;display:flex;align-items:center;
   justify-content:center;z-index:2}
 .back-btn:active{opacity:.7}
@@ -1164,7 +1170,7 @@ body.na-casca .bottom-nav{display:none}
 /* Espelho do voltar, do outro lado da capa. Mesma forma e mesmo tamanho: sao
    os dois unicos controles sobre a foto, e formas diferentes ali brigariam. */
 .hero-share{position:absolute;top:18px;right:20px;width:36px;height:36px;
-  background:rgba(245,245,243,.92);border:none;border-radius:50%;color:var(--ink);
+  background:rgba(7,32,25,.72);border:none;border-radius:50%;color:var(--ink);
   cursor:pointer;display:flex;align-items:center;justify-content:center;z-index:2}
 .hero-share:active{opacity:.7}
 .hero-share svg{width:19px;height:19px}
@@ -1172,7 +1178,7 @@ body.na-casca .bottom-nav{display:none}
   font-size:14px;font-weight:500;color:var(--ink3);text-align:center}
 .btn-texto:active{opacity:.6}
 .trip-hero-label{font-size:13px;font-weight:500;color:rgba(255,255,255,.85);margin-bottom:4px}
-.trip-hero-name{font-size:34px;font-weight:700;letter-spacing:-.04em;color:#fff;line-height:1.05}
+.trip-hero-name{font-size:34px;font-weight:700;letter-spacing:-.04em;color:#fff;line-height:1.05;font-stretch:68%;letter-spacing:0}
 .trip-hero-meta{font-size:13px;color:rgba(255,255,255,.7);margin-top:6px}
 /* Abas de categoria — agora vivem na tela PRÓPRIA de cada cidade, não
    mais fixas no topo da viagem inteira (a viagem mostra cards de cidade,
@@ -1211,7 +1217,7 @@ body.na-casca .bottom-nav{display:none}
 .city-card-tirar svg{width:16px;height:16px}
 .city-section{margin-bottom:26px}
 .city-header{display:flex;align-items:center;gap:10px;margin-bottom:12px;padding-top:16px}
-.city-name-text{font-family:'Inter Tight',sans-serif;font-weight:400;font-size:21px;color:var(--ink);letter-spacing:-.01em}
+.city-name-text{font-family:'Archivo',sans-serif;font-weight:400;font-size:21px;color:var(--ink);letter-spacing:-.01em}
 .city-count{margin-left:auto;font-size:13px;color:var(--ink3)}
 
 /* Filtros de tipo e de situacao: aba de texto, nao pilula. */
@@ -1252,7 +1258,7 @@ body.na-casca .bottom-nav{display:none}
 /* Credito do autor da foto. O Google exige que ele apareca junto da foto do
    lugar (Termos da Google Maps Platform), e o Unsplash exige o mesmo pras
    fotos de cidade. Fica discreto em cima da imagem, canto inferior direito. */
-.foto-credito{position:absolute;right:20px;bottom:8px;z-index:3;font-family:'Inter Tight',sans-serif;
+.foto-credito{position:absolute;right:20px;bottom:8px;z-index:3;font-family:'Archivo',sans-serif;
   font-size:10px;color:rgba(255,255,255,.45);max-width:60%;text-align:right;line-height:1.3;pointer-events:auto}
 .foto-credito a{color:inherit;text-decoration:none}
 .foto-credito:empty{display:none}
@@ -1263,12 +1269,12 @@ body.na-casca .bottom-nav{display:none}
 #place .foto-credito{position:static;font-size:10px;color:var(--ink3);max-width:none;text-align:left;
   padding:10px 0 0;opacity:.75}
 #place .foto-credito a{text-decoration:underline;text-underline-offset:2px}
-.hero-back{position:absolute;top:18px;left:20px;width:36px;height:36px;background:rgba(245,245,243,.92);
+.hero-back{position:absolute;top:18px;left:20px;width:36px;height:36px;background:rgba(7,32,25,.72);
   border:none;border-radius:50%;color:var(--ink);cursor:pointer;display:flex;align-items:center;
   justify-content:center;z-index:2}
 .hero-back:active{opacity:.7}
 .hero-back svg{width:20px;height:20px}
-.hero-photo-btn{position:absolute;bottom:18px;right:20px;width:36px;height:36px;background:rgba(245,245,243,.92);
+.hero-photo-btn{position:absolute;bottom:18px;right:20px;width:36px;height:36px;background:rgba(7,32,25,.72);
   border:none;border-radius:50%;color:var(--ink);cursor:pointer;display:flex;align-items:center;
   justify-content:center;z-index:2}
 .hero-photo-btn:active{opacity:.7}
@@ -1282,7 +1288,7 @@ body.na-casca .bottom-nav{display:none}
 .chip-want,.chip-been{background:var(--green);color:var(--on-green)}
 .hero-bottom{position:absolute;bottom:0;left:0;right:0;padding:0 20px 20px;z-index:2}
 .hero-type{font-size:13px;font-weight:500;color:rgba(255,255,255,.85);margin-bottom:4px}
-.hero-name{font-size:34px;font-weight:700;letter-spacing:-.04em;color:#fff;line-height:1.05}
+.hero-name{font-size:34px;font-weight:700;letter-spacing:-.04em;color:#fff;line-height:1.05;font-stretch:68%;letter-spacing:0}
 .d-section{padding:24px 20px 0}
 .sec-label{font-size:20px;font-weight:700;letter-spacing:-.03em;color:var(--ink);margin-bottom:14px}
 .sec-pequeno{font-size:15px;font-weight:600;letter-spacing:0;color:var(--ink2);margin-bottom:10px}
@@ -1327,7 +1333,7 @@ body.na-casca .bottom-nav{display:none}
    verde, vermelho) — tres acentos pra escolher entre tres palavras. */
 .status-toggle{display:flex;background:var(--surface);border-radius:var(--r-card);padding:4px;gap:4px}
 .toggle-btn{flex:1;min-height:44px;border:none;border-radius:var(--r-btn);background:transparent;
-  font-family:'Inter Tight',sans-serif;font-size:14px;font-weight:600;color:var(--ink2);cursor:pointer;text-align:center}
+  font-family:'Archivo',sans-serif;font-size:14px;font-weight:600;color:var(--ink2);cursor:pointer;text-align:center}
 .toggle-btn.sel-want,.toggle-btn.sel-been,.toggle-btn.sel-skip{background:var(--base);color:var(--ink)}
 .stars-row{display:flex;gap:4px}
 /* A estrela e um alvo de toque de 44px com o desenho de 18 no meio: o
@@ -1343,14 +1349,14 @@ body.na-casca .bottom-nav{display:none}
    aqui a estrela saía com 13px e meia estrela era um alvo de 11px (29/09). */
 .star-btn svg,.star-btn svg.ic{width:28px;height:28px}
 .review-area{width:100%;background:var(--surface);border:none;border-radius:var(--r-card);padding:16px;
-  font-size:15px;font-family:'Inter Tight',sans-serif;color:var(--ink);resize:none;outline:none;line-height:1.5}
+  font-size:15px;font-family:'Archivo',sans-serif;color:var(--ink);resize:none;outline:none;line-height:1.5}
 .review-area::placeholder{color:var(--ink3)}
 .action-btn{display:block;width:100%;min-height:48px;background:var(--green);color:var(--on-green);border:none;
-  border-radius:var(--r-card);padding:0 18px;font-family:'Inter Tight',sans-serif;font-size:14px;font-weight:600;
+  border-radius:var(--r-card);padding:0 18px;font-family:'Archivo',sans-serif;font-size:14px;font-weight:600;
   cursor:pointer;margin-top:14px;margin-bottom:0}
 .action-btn:active{opacity:.85}
 .reserve-btn{display:block;text-align:center;width:100%;box-sizing:border-box;background:var(--surface);
-  color:var(--ink);border:none;border-radius:var(--r-card);padding:14px;font-family:'Inter Tight',sans-serif;
+  color:var(--ink);border:none;border-radius:var(--r-card);padding:14px;font-family:'Archivo',sans-serif;
   font-size:14px;font-weight:600;text-decoration:none;margin-top:12px}
 .reserve-btn:active{opacity:.7}
 .req-card{display:flex;align-items:center;gap:10px;padding:10px 0}
@@ -1360,7 +1366,7 @@ body.na-casca .bottom-nav{display:none}
 /* flex-shrink:0 + nowrap: sem isso, avatar + nome + dois botões numa linha de
    375px espremiam os botões até o "Recusar" deformar. O nome é que cede
    espaço (tem ellipsis), não os botões. */
-.req-btn{border:none;border-radius:var(--r-btn);min-height:40px;padding:0 14px;font-family:'Inter Tight',sans-serif;
+.req-btn{border:none;border-radius:var(--r-btn);min-height:40px;padding:0 14px;font-family:'Archivo',sans-serif;
   font-size:14px;font-weight:600;cursor:pointer;flex-shrink:0;white-space:nowrap}
 .req-btn:active{opacity:.8}
 .req-accept{background:var(--green);color:var(--on-green)}
@@ -1378,7 +1384,7 @@ body.na-casca .bottom-nav{display:none}
    igual à de pedido recebido — é a mesma coisa vista de outro ângulo. */
 .busca-res{margin-top:12px;max-height:46vh;overflow-y:auto;-webkit-overflow-scrolling:touch}
 .busca-dica{font-size:13.5px;color:var(--ink3);padding:12px 2px;line-height:1.5}
-.busca-user{font-family:'Inter Tight',sans-serif;font-size:11.5px;color:var(--ink3);margin-top:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.busca-user{font-family:'Archivo',sans-serif;font-size:11.5px;color:var(--ink3);margin-top:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 /* "pedido enviado" é ESTADO, não botão: fundo surface e texto ink2, do mesmo
    tamanho do "Adicionar" ao lado — em 10.5px ele parecia nota de rodapé. */
 .busca-estado{font-size:14px;font-weight:600;color:var(--ink2);background:var(--surface);
@@ -1483,7 +1489,7 @@ body.na-casca .bottom-nav{display:none}
    uma faixa solta acima da lista pra virar aba própria. */
 .am-topo{display:flex;align-items:center;justify-content:space-between;gap:14px;
   padding:calc(18px + env(safe-area-inset-top,0px)) 20px 0;flex:none}
-.am-titulo{font-size:34px;font-weight:700;margin:0;letter-spacing:-.04em;color:var(--ink);line-height:1.05}
+.am-titulo{font-size:34px;font-weight:700;margin:0;letter-spacing:-.04em;color:var(--ink);line-height:1.05;font-stretch:68%;letter-spacing:0}
 .am-add{width:36px;height:36px;flex:none;border-radius:50%;border:none;background:var(--surface);
   color:var(--ink);display:flex;align-items:center;justify-content:center;cursor:pointer}
 .am-add:active{opacity:.7}
@@ -1584,10 +1590,10 @@ body.na-casca .bottom-nav{display:none}
 /* Excluir perde o vermelho e o sublinhado: acao destrutiva nao precisa
    gritar, precisa estar longe do polegar e escrita por extenso. */
 .delete-link{display:block;width:100%;background:none;border:none;color:var(--ink3);font-size:14px;
-  font-family:'Inter Tight',sans-serif;cursor:pointer;padding:16px 8px;margin:8px 0 110px}
+  font-family:'Archivo',sans-serif;cursor:pointer;padding:16px 8px;margin:8px 0 110px}
 .delete-link:active{opacity:.6}
 .secondary-link{display:block;width:100%;background:none;border:none;color:var(--ink2);font-size:14px;
-  font-weight:500;font-family:'Inter Tight',sans-serif;cursor:pointer;padding:14px 8px}
+  font-weight:500;font-family:'Archivo',sans-serif;cursor:pointer;padding:14px 8px}
 /* 24px na horizontal como todo conteudo de ficha. Sem isso o texto do aviso
    de pais trocado encostava na borda — o titulo alinhado e a frase colada na
    lateral, que foi o desalinhamento que o Lucas viu no print. */
@@ -1654,7 +1660,7 @@ body.na-casca .bottom-nav{display:none}
 .pn-item{background:none;border:none;padding:0;cursor:pointer;text-align:left;
   display:flex;flex-direction:column;gap:2px;min-height:44px;justify-content:flex-end}
 .pn-item:active{opacity:.6}
-.pn-n{font-size:28px;font-weight:700;letter-spacing:-.04em;color:var(--ink);line-height:1}
+.pn-n{font-size:28px;font-weight:700;letter-spacing:-.04em;color:var(--ink);line-height:1;font-stretch:68%;letter-spacing:0}
 .pn-r{font-size:13px;color:var(--ink2)}
 .prof-email{font-size:13px;color:var(--ink3);text-align:center;margin-top:22px}
 /* ═══ PERFIL DE AMIGO (só leitura) ═══ */
@@ -1706,7 +1712,7 @@ body.na-casca .bottom-nav{display:none}
   background:var(--surface);color:var(--ink);display:flex;align-items:center;justify-content:center;
   border:3px solid var(--base)}
 .avatar-edit-badge svg{width:13px;height:13px}
-.profile-name{font-size:30px;font-weight:700;letter-spacing:-.04em;color:var(--ink);line-height:1.05}
+.profile-name{font-size:30px;font-weight:700;letter-spacing:-.04em;color:var(--ink);line-height:1.05;font-stretch:68%;letter-spacing:0}
 /* A bio desceu pra linha própria: ao lado do @usuário ela era cortada em
    qualquer nome de duas palavras. Margem direita 40 pra não virar bloco. */
 .profile-bio{display:block;margin:10px 40px 0 0;font-size:16px;line-height:1.45;color:var(--ink2)}
@@ -1792,7 +1798,7 @@ body.na-casca .bottom-nav{display:none}
 .fi-topo-veu{position:absolute;left:0;right:0;top:0;height:30%;
   background:linear-gradient(to bottom,rgba(0,0,0,.35),transparent)}
 .fi-redondo{position:absolute;top:18px;width:40px;height:40px;border:none;border-radius:50%;
-  background:rgba(245,245,243,.92);color:var(--ink);display:flex;align-items:center;
+  background:rgba(7,32,25,.72);color:var(--ink);display:flex;align-items:center;
   justify-content:center;cursor:pointer;z-index:2}
 .fi-redondo:active{opacity:.7}
 .fi-redondo svg{width:20px;height:20px}
@@ -1801,7 +1807,7 @@ body.na-casca .bottom-nav{display:none}
 .fi-corpo{padding:20px 20px 0}
 .fi-tipo{font-size:13px;font-weight:500;color:var(--ink2)}
 .fi-nome{margin:4px 0 0;font-size:30px;font-weight:700;letter-spacing:-.04em;
-  line-height:1.05;color:var(--ink)}
+  line-height:1.05;color:var(--ink);font-stretch:68%;letter-spacing:0}
 .fi-servico{display:flex;align-items:center;gap:8px;margin-top:10px;font-size:14px;color:var(--ink2);flex-wrap:wrap}
 .fi-servico .fi-aberto{font-weight:600;color:var(--green)}
 .fi-servico .fi-fechado{color:var(--ink3)}
@@ -1879,7 +1885,7 @@ body.na-casca .bottom-nav{display:none}
 .cv-rot{font-size:13px;color:var(--ink2)}
 .cv-nome{font-size:20px;font-weight:700;letter-spacing:-.03em;color:var(--ink)}
 .cv-titulo{margin-top:20px;font-size:28px;font-weight:700;letter-spacing:-.04em;
-  line-height:1.15;color:var(--ink)}
+  line-height:1.15;color:var(--ink);font-stretch:68%;letter-spacing:0}
 .cv-texto{margin-top:12px;font-size:15px;line-height:1.5;color:var(--ink2)}
 .cv-fotos{display:flex;gap:8px;margin-top:20px}
 .cv-foto{width:96px;height:96px;border-radius:var(--r-card);background:var(--photo-empty);
@@ -1919,7 +1925,7 @@ body.tem-apple #convite .btn-apple{display:flex}
    manchinhas verdes flutuando nele, sem contorno de continente nenhum pra
    dizer onde elas ficavam. A trama de pontos e o MAR; a terra e solida por
    cima dela, e o verde marca so onde a pessoa esteve. */
-.wm-country{fill:#CBD3CD;stroke:none;transition:fill .4s}
+.wm-country{fill:#2C4A41;stroke:#0B2A21;stroke-width:.4;transition:fill .4s}
 .wm-country.visited{fill:var(--green)}
 .am-mapa{display:none;margin:16px 20px 0;background:var(--map-bg);border-radius:var(--r-card);overflow:hidden;aspect-ratio:800/355}
 .am-mapa.pronto{display:block}
@@ -2001,13 +2007,13 @@ body.tem-apple #convite .btn-apple{display:flex}
 .pv-virou-topo{display:flex;align-items:center;gap:14px;margin-bottom:12px}
 .pv-virou-foto{flex:none;width:64px;height:64px;border-radius:var(--r-card);background:var(--photo-empty) center/cover no-repeat}
 .pv-virou-sub{font-size:15px;color:var(--ink2)}
-.pv-virou h2{margin:2px 0 0;font-size:26px;font-weight:700;letter-spacing:-.035em;line-height:1.1;color:var(--green)}
+.pv-virou h2{margin:2px 0 0;font-size:26px;font-weight:700;letter-spacing:-.035em;line-height:1.1;color:var(--green);font-stretch:68%;letter-spacing:0}
 .pv-virou p{margin:0 0 10px;font-size:15px;line-height:1.5;color:var(--ink2)}
 .pv-virou .pf-bt2{background:var(--surface)}
 .vg-meta.vg-chegou{font-weight:600}
 /* Seus spots (8a–8d) */
 .ss-topo{padding:12px 20px 0}
-.ss-tit{margin:6px 0 2px;font-size:38px;font-weight:700;letter-spacing:-.045em;color:var(--green)}
+.ss-tit{margin:6px 0 2px;font-size:38px;font-weight:700;letter-spacing:-.045em;color:var(--green);font-stretch:68%;letter-spacing:0}
 .ss-sub{margin-bottom:16px;font-size:15px;color:var(--ink2)}
 .ss-busca{display:flex;align-items:center;gap:12px;margin-bottom:12px}
 .ss-busca label{flex:1;height:44px}
@@ -2056,7 +2062,7 @@ body.tem-apple #convite .btn-apple{display:flex}
 #profile .pv5-av{width:36px;height:36px;border-radius:11px;font-size:15px}
 .pv5-nome{font-size:17px;font-weight:600;color:var(--ink)}
 .pv5-ajustes{border:none;background:none;padding:0;font:inherit;font-size:15px;color:var(--ink2);cursor:pointer}
-.pv5-tit{margin:24px 0 12px;font-size:24px;font-weight:700;letter-spacing:-.03em;color:var(--ink)}
+.pv5-tit{margin:24px 0 12px;font-size:24px;font-weight:700;letter-spacing:-.03em;color:var(--ink);font-stretch:68%;letter-spacing:0}
 .pv5-cab{display:flex;align-items:baseline;justify-content:space-between}
 .pv5-mandar{display:flex;align-items:center;gap:6px;border:none;background:none;padding:0;font:inherit;font-size:15px;font-weight:600;color:var(--green);cursor:pointer}
 .pv5-mandar svg{width:16px;height:16px}
@@ -2085,7 +2091,7 @@ body.tem-apple #convite .btn-apple{display:flex}
 .pv5-abas i{font-style:normal;font-weight:400;font-size:14px;color:var(--ink3);margin-left:5px}
 .tp-linha,.to-linha{display:flex;align-items:center;gap:12px;width:100%;padding:6px 0;border:none;background:none;text-align:left;font:inherit;cursor:pointer}
 .tp-linha:active{opacity:.6}
-.tp-n{flex:none;width:30px;font-size:26px;font-weight:700;color:var(--green);letter-spacing:-.02em}
+.tp-n{flex:none;width:30px;font-size:26px;font-weight:700;color:var(--green);letter-spacing:-.02em;font-stretch:68%;letter-spacing:0}
 .tp-foto{flex:none;width:56px;height:56px;border-radius:var(--r-card);background:var(--photo-empty) center/cover no-repeat}
 .tp-1 .tp-n{font-size:34px}
 .tp-1 .tp-foto{width:72px;height:72px}
@@ -2095,7 +2101,7 @@ body.tem-apple #convite .btn-apple{display:flex}
 .tp-empate b{font-size:16px;font-weight:600;color:var(--ink)}
 .tp-empate span span{font-size:14px;color:var(--ink2);line-height:1.4}
 .tp-empate i{font-style:normal;color:var(--ink3)}
-.tp-pouco{margin:4px 0 6px;font-size:26px;font-weight:700;letter-spacing:-.03em;color:var(--green)}
+.tp-pouco{margin:4px 0 6px;font-size:26px;font-weight:700;letter-spacing:-.03em;color:var(--green);font-stretch:68%;letter-spacing:0}
 .tp-pouco-txt{margin:0 0 14px;font-size:15px;line-height:1.45;color:var(--ink2)}
 .pv5-vercid{width:auto;padding:0 18px}
 .tp-semnota{display:flex;gap:12px;margin:0 0 16px}
@@ -2121,13 +2127,13 @@ body.tem-apple #convite .btn-apple{display:flex}
 .to-linha.arrastando{position:relative;z-index:2;opacity:.9}
 .to-alca{flex:none;padding:10px 4px 10px 12px;font-size:22px;color:var(--ink3);cursor:grab;touch-action:none;user-select:none}
 .at-topo.tt-topo{display:flex;justify-content:space-between}
-.tt-tit{margin:4px 0 4px;font-size:38px;font-weight:700;letter-spacing:-.04em;color:var(--green)}
+.tt-tit{margin:4px 0 4px;font-size:38px;font-weight:700;letter-spacing:-.04em;color:var(--green);font-stretch:68%;letter-spacing:0}
 .tt-sub{margin-bottom:16px;font-size:15px;color:var(--ink2)}
 .de-topo{display:flex;justify-content:space-between;align-items:center;padding:18px 20px 0}
 .de-fechar{border:none;background:none;padding:0;font:inherit;font-size:16px;color:var(--ink2);cursor:pointer}
 .de-topo span{font-size:15px;color:var(--ink3)}
 .de-corpo{padding:24px 20px 0}
-.de-tit{margin:0 0 6px;font-size:32px;font-weight:700;letter-spacing:-.04em;color:var(--green)}
+.de-tit{margin:0 0 6px;font-size:32px;font-weight:700;letter-spacing:-.04em;color:var(--green);font-stretch:68%;letter-spacing:0}
 .de-sub{margin:0 0 20px;font-size:15px;color:var(--ink2)}
 .de-par{display:grid;grid-template-columns:1fr 1fr;gap:12px}
 .de-card{display:flex;flex-direction:column;gap:2px;border:none;background:none;padding:0;text-align:left;font:inherit;cursor:pointer}
@@ -2141,7 +2147,7 @@ body.tem-apple #convite .btn-apple{display:flex}
 .tc-todas{flex:none;width:52px;height:52px;border-radius:var(--r-card);background:var(--green);color:var(--base);display:flex;align-items:center;justify-content:center;font-size:20px}
 .tc-foto{flex:none;width:52px;height:52px;border-radius:var(--r-card);background:var(--photo-empty) center/cover no-repeat}
 .mt-corpo{padding:4px 20px 8px}
-.mt-tit{margin:0 0 4px;font-size:24px;font-weight:700;letter-spacing:-.03em;color:var(--green)}
+.mt-tit{margin:0 0 4px;font-size:24px;font-weight:700;letter-spacing:-.03em;color:var(--green);font-stretch:68%;letter-spacing:0}
 .mt-sub{margin:0 0 16px;font-size:15px;color:var(--ink2)}
 .mt-previa{margin:14px 0 6px;padding:14px 16px;border-radius:var(--r-card);background:var(--surface);font:inherit;font-size:15px;line-height:1.5;color:var(--ink);white-space:pre-wrap;max-height:34vh;overflow-y:auto}
 .mt-copiar{background:var(--surface)}
@@ -2338,13 +2344,13 @@ body.na-casca.tour-rodando .bottom-nav{display:flex}
 .onb-barra{flex:1;display:flex;gap:6px}
 .onb-barra i{flex:1;height:3px;border-radius:2px;background:var(--surface)}
 .onb-barra i.on{background:var(--green)}
-.onb-pular{background:none;border:none;padding:0;color:var(--green);font:600 15px 'Inter Tight',sans-serif;cursor:pointer}
+.onb-pular{background:none;border:none;padding:0;color:var(--green);font:600 15px 'Archivo',sans-serif;cursor:pointer}
 .onb-corpo{flex:1;min-height:0;overflow-y:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none;padding:32px 20px 16px}
 .onb-corpo::-webkit-scrollbar{display:none}
-.onb-titulo{font-size:30px;font-weight:700;letter-spacing:-.04em;line-height:1.08;color:var(--ink);margin:0 0 8px}
+.onb-titulo{font-size:30px;font-weight:700;letter-spacing:-.04em;line-height:1.08;color:var(--ink);margin:0 0 8px;font-stretch:68%;letter-spacing:0}
 .onb-sub{font-size:15px;line-height:1.45;color:var(--ink2);margin:0 0 24px}
 .onb-campo{display:flex;align-items:center;gap:10px;height:52px;padding:0 16px;background:var(--surface);border-radius:var(--r-card);color:var(--ink2);font-size:18px}
-.onb-campo input{flex:1;min-width:0;border:none;background:none;outline:none;font:16px 'Inter Tight',sans-serif;color:var(--ink)}
+.onb-campo input{flex:1;min-width:0;border:none;background:none;outline:none;font:16px 'Archivo',sans-serif;color:var(--ink)}
 .onb-campo input::placeholder{color:var(--ink3)}
 .onb-linha{display:flex;align-items:center;gap:14px;padding:12px 0;cursor:pointer}
 .onb-linha .l-ic,.onb-cartao .l-ic{width:28px;flex:none;display:flex;justify-content:center;font-size:18px;color:var(--ink)}
@@ -2367,7 +2373,7 @@ body.na-casca.tour-rodando .bottom-nav{display:flex}
 .onbf-anel{position:relative;width:120px;height:120px;flex:none}
 .onbf-anel svg{width:120px;height:120px;display:block}
 .onbf-pct{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center}
-.onbf-pct b{font-size:30px;font-weight:700;letter-spacing:-.04em;line-height:1;color:var(--ink)}
+.onbf-pct b{font-size:30px;font-weight:700;letter-spacing:-.04em;line-height:1;color:var(--ink);font-stretch:68%;letter-spacing:0}
 .onbf-pct span{font-size:13px;color:var(--ink2);margin-top:4px}
 .onbf-txt{min-width:0}
 .onbf-titulo{font-size:28px;line-height:1.05;text-wrap:balance;margin:0 0 6px}
@@ -2377,16 +2383,16 @@ body.na-casca.tour-rodando .bottom-nav{display:flex}
 .onbf-linha span+span{font-size:15px;font-weight:400;color:var(--ink2)}
 @keyframes onbfEntra{from{opacity:0}to{opacity:1}}
 @media (prefers-reduced-motion: reduce){.onbf-linha{animation:none}}
-.onb-btn{width:100%;height:52px;border:none;border-radius:var(--r-card);background:var(--green);color:var(--on-green);font:600 16px 'Inter Tight',sans-serif;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px}
+.onb-btn{width:100%;height:52px;border:none;border-radius:var(--r-card);background:var(--green);color:var(--on-green);font:600 16px 'Archivo',sans-serif;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px}
 .onb-btn:disabled{background:var(--surface);color:var(--ink3);cursor:default}
-.onb-link{display:block;width:100%;background:none;border:none;padding:16px 0 4px;color:var(--ink2);font:600 15px 'Inter Tight',sans-serif;cursor:pointer}
+.onb-link{display:block;width:100%;background:none;border:none;padding:16px 0 4px;color:var(--ink2);font:600 15px 'Archivo',sans-serif;cursor:pointer}
 .onb-rotulo{font-size:15px;font-weight:600;color:var(--ink);margin:32px 0 12px}
 .onb-chips{display:flex;flex-wrap:wrap;gap:8px;margin:12px 0 8px}
-.onb-chip{height:40px;padding:0 14px;border:none;border-radius:var(--r-btn);background:var(--surface);color:var(--ink);font:600 14px 'Inter Tight',sans-serif;cursor:pointer}
+.onb-chip{height:40px;padding:0 14px;border:none;border-radius:var(--r-btn);background:var(--surface);color:var(--ink);font:600 14px 'Archivo',sans-serif;cursor:pointer}
 .onb-chip.on{background:var(--green);color:var(--on-green)}
 .onb-lugar{display:flex;align-items:center;gap:14px;padding:12px;background:var(--surface);border-radius:var(--r-card);margin-bottom:12px}
 .onb-lugar-foto{width:56px;height:56px;flex:none;border-radius:var(--r-card);background:var(--photo-empty) center/cover;display:flex;align-items:center;justify-content:center;color:var(--on-green);font-size:22px}
-.onb-nota{width:100%;box-sizing:border-box;border:none;outline:none;resize:none;background:var(--surface);border-radius:var(--r-card);padding:14px 16px;font:16px/1.4 'Inter Tight',sans-serif;color:var(--ink)}
+.onb-nota{width:100%;box-sizing:border-box;border:none;outline:none;resize:none;background:var(--surface);border-radius:var(--r-card);padding:14px 16px;font:16px/1.4 'Archivo',sans-serif;color:var(--ink)}
 .onb-nota::placeholder{color:var(--ink3)}
 .onb-cartao{display:flex;gap:12px;padding:16px;background:var(--surface);border-radius:var(--r-card);margin-top:16px}
 .sheet{background:var(--base);border-radius:var(--r-sheet) var(--r-sheet) 0 0;width:100%;max-width:430px;
@@ -2406,15 +2412,15 @@ body.na-casca.tour-rodando .bottom-nav{display:flex}
    exatamente aquela cor, e ai todo pais parecia selecionado. */
 .dest-check{margin-left:auto;width:22px;height:22px;border-radius:50%;border:1.5px solid var(--border);flex:none;display:flex;align-items:center;justify-content:center;color:transparent}
 .dest-check svg{width:14px;height:14px}
-.dest-result.on .dest-check{background:var(--terra);border-color:var(--terra);color:#fff}
+.dest-result.on .dest-check{background:var(--terra);border-color:var(--terra);color:var(--on-green)}
 .dest-result.ja{opacity:.45;pointer-events:none}
-.dest-ja-tag{margin-left:auto;font-family:'Inter Tight',sans-serif;font-size:10px;color:var(--ink3)}
+.dest-ja-tag{margin-left:auto;font-family:'Archivo',sans-serif;font-size:10px;color:var(--ink3)}
 .sheet::-webkit-scrollbar{display:none}
 @keyframes slideUp{from{transform:translateY(100%)}to{transform:translateY(0)}}
 /* A alca nao arrasta nada — era decoracao imitando folha de iOS. Vira so
    o respiro do topo. */
 .sheet-handle{height:20px}
-.sheet-title{font-size:24px;font-weight:700;letter-spacing:-.03em;color:var(--ink);padding:0 20px 18px;line-height:1.1}
+.sheet-title{font-size:24px;font-weight:700;letter-spacing:-.03em;color:var(--ink);padding:0 20px 18px;line-height:1.1;font-stretch:68%;letter-spacing:0}
 .sheet-close{position:absolute;top:16px;right:20px;width:36px;height:36px;background:var(--surface);border:none;
   border-radius:50%;cursor:pointer;display:flex;align-items:center;justify-content:center;color:var(--ink);z-index:2}
 .sheet-close:active{opacity:.7}
@@ -2455,7 +2461,7 @@ body.na-casca.tour-rodando .bottom-nav{display:flex}
 .search-field{position:relative}
 .search-field .si{position:absolute;left:14px;top:14px;font-size:15px;pointer-events:none}
 .search-input{width:100%;background:var(--surface);border:none;border-radius:var(--r-card);
-  padding:15px 16px 15px 44px;font-size:15px;font-family:'Inter Tight',sans-serif;color:var(--ink);outline:none}
+  padding:15px 16px 15px 44px;font-size:15px;font-family:'Archivo',sans-serif;color:var(--ink);outline:none}
 .search-input::placeholder{color:var(--ink3)}
 .search-field .si{color:var(--ink3)}
 .search-field .si svg{width:18px;height:18px}
@@ -2479,14 +2485,14 @@ body.na-casca.tour-rodando .bottom-nav{display:flex}
 .note-place-meta{font-size:13px;color:var(--ink2);margin-top:2px}
 .note-wrap{padding:0 20px}
 .note-input{width:100%;background:var(--surface);border:none;border-radius:var(--r-card);padding:16px;
-  font-size:15px;font-family:'Inter Tight',sans-serif;color:var(--ink);resize:none;outline:none;line-height:1.5}
+  font-size:15px;font-family:'Archivo',sans-serif;color:var(--ink);resize:none;outline:none;line-height:1.5}
 .note-input::placeholder{color:var(--ink3)}
 .note-input.error{box-shadow:inset 0 0 0 2px var(--ink3)}
 .note-hint{font-size:12px;color:var(--ink3);padding:8px 20px 0}
 /* 06/10: segmentado do sistema (trilho --surface, escolhida --base), não pílula verde cheia. */
 .status-choice{display:flex;gap:4px;margin:4px 20px 0;padding:4px;background:var(--surface);border-radius:var(--r-btn)}
 .status-opt{flex:1;background:transparent;border:none;border-radius:8px;padding:12px;cursor:pointer;
-  display:flex;flex-direction:column;align-items:center;gap:8px;font-family:'Inter Tight',sans-serif}
+  display:flex;flex-direction:column;align-items:center;gap:8px;font-family:'Archivo',sans-serif}
 .status-opt:active{opacity:.7}
 .status-opt.active{background:var(--base)}
 .so-emoji{color:var(--ink3);display:flex}
@@ -2496,7 +2502,7 @@ body.na-casca.tour-rodando .bottom-nav{display:flex}
 .note-label{font-size:14px;font-weight:600;color:var(--ink2);padding:18px 20px 8px}
 #addStars{padding:0 24px}
 .sheet-cta{display:block;width:calc(100% - 40px);min-height:48px;margin:20px 20px 28px;background:var(--green);
-  color:var(--on-green);border:none;border-radius:var(--r-card);padding:0 18px;font-family:'Inter Tight',sans-serif;
+  color:var(--on-green);border:none;border-radius:var(--r-card);padding:0 18px;font-family:'Archivo',sans-serif;
   font-size:14px;font-weight:600;cursor:pointer}
 .sheet-cta:active{opacity:.85}
 /* Uma escolha por botao, empilhadas. O confirm do navegador so tem duas; o
@@ -2510,7 +2516,7 @@ body.na-casca.tour-rodando .bottom-nav{display:flex}
 .nt-label{font-size:14px;font-weight:600;color:var(--ink2);padding:0 20px 8px}
 .nt-wrap{padding:0 20px 16px}
 .nt-input{width:100%;min-height:48px;background:var(--surface);border:none;border-radius:var(--r-card);
-  padding:14px 16px;font-size:15px;font-family:'Inter Tight',sans-serif;color:var(--ink);outline:none}
+  padding:14px 16px;font-size:15px;font-family:'Archivo',sans-serif;color:var(--ink);outline:none}
 .nt-input:focus{box-shadow:inset 0 0 0 2px var(--ink3)}
 .nt-input::placeholder{color:var(--ink3)}
 .dates-row{display:flex;gap:10px;padding:0 24px 16px}
@@ -2524,7 +2530,7 @@ body.na-casca.tour-rodando .bottom-nav{display:flex}
 .dest-name{font-size:15px;font-weight:500;color:var(--ink)}
 .dest-region{font-size:12px;color:var(--ink3);margin-top:2px}
 .selected-dests{display:flex;flex-wrap:wrap;gap:8px;padding:0 24px 16px}
-.sel-dest-chip{display:flex;align-items:center;gap:7px;background:var(--terra);color:#fff;border-radius:var(--r-pill);padding:7px 13px;font-size:13px;font-weight:500}
+.sel-dest-chip{display:flex;align-items:center;gap:7px;background:var(--terra);color:var(--on-green);border-radius:var(--r-pill);padding:7px 13px;font-size:13px;font-weight:500}
 .sel-dest-chip button{background:none;border:none;color:rgba(255,255,255,0.7);cursor:pointer;font-size:14px;padding:0;line-height:1}
 /* O aviso vira o inverso da pagina: tinta cheia com texto claro. Sobre um
    fundo claro, um retangulo quase da mesma cor com sombra nao se destaca. */
@@ -2536,14 +2542,14 @@ body.na-casca.tour-rodando .bottom-nav{display:flex}
 .toast-icon{width:20px;height:20px;flex-shrink:0;color:var(--base);margin-top:1px;opacity:.7}
 .toast-body{flex:1;min-width:0}
 .toast-title{font-size:15px;font-weight:600;margin-bottom:2px;color:var(--base)}
-.toast-msg{font-family:'Inter Tight',sans-serif;font-size:14px;color:rgba(245,245,243,.72);line-height:1.4}
+.toast-msg{font-family:'Archivo',sans-serif;font-size:14px;color:rgba(245,245,243,.72);line-height:1.4}
 .toast-msg:empty{display:none}
 
 /* ═══ RECORTE DE FOTO (avatar quadrado, spot 3:2) — arrasta antes de subir,
    pra nunca cortar o rosto sem o usuário poder escolher onde ═══ */
 .cropper-overlay{position:fixed;inset:0;background:rgba(11,22,32,.96);z-index:500;display:none;flex-direction:column;align-items:center;justify-content:center;gap:22px}
 .cropper-overlay.show{display:flex}
-.cropper-hint{color:var(--ink3);font-family:'Inter Tight',sans-serif;font-size:11px;}
+.cropper-hint{color:var(--ink3);font-family:'Archivo',sans-serif;font-size:11px;}
 .cropper-stage{position:relative;overflow:hidden;background:#000;touch-action:none;cursor:grab;box-shadow:0 12px 40px rgba(0,0,0,.5)}
 .cropper-stage:active{cursor:grabbing}
 .cropper-stage img{position:absolute;top:0;left:0;user-select:none;-webkit-user-drag:none;pointer-events:none;max-width:none}
@@ -2599,7 +2605,7 @@ body.exm #exploreCozinhas,body.exm #exploreBody{display:none!important}
 #explore.exm-buscando .exm-folha{opacity:0;pointer-events:none}
 #explore.exm-cheia .exm-corpo{touch-action:pan-y}
 .exm-pega{flex:none;cursor:grab;touch-action:none;padding:10px 0 4px}
-.exm-alca{width:36px;height:4px;border-radius:2px;background:#CFCFCB;margin:0 auto}
+.exm-alca{width:36px;height:4px;border-radius:2px;background:rgba(245,245,243,.2);margin:0 auto}
 .exm-corpo{flex:1;min-height:0;overflow-y:auto;touch-action:none;-webkit-overflow-scrolling:touch;padding:0 0 24px;overscroll-behavior:contain}
 .exm-peek{display:flex;align-items:center;gap:12px;min-height:58px;padding:6px 20px 0;cursor:pointer}
 .exm-peek-avs,.exm-avs16,.exm-grupo-avs{display:flex;flex:none}
@@ -2726,7 +2732,7 @@ body.exm #exploreCozinhas,body.exm #exploreBody{display:none!important}
 <body>
 
 <div class="screen active" id="loading">
-  <div style="text-align:center"><svg class="brand-wordmark" viewBox="3 77 273 76" height="46" role="img" aria-label="Spot"><text x="0" y="150" font-family="Cinzel" font-weight="500" font-size="100" letter-spacing="6" fill="#0B3D2E">SPOT</text></svg><div class="spinner" style="margin-top:20px"></div></div>
+  <div style="text-align:center"><svg class="brand-wordmark" viewBox="3 77 273 76" height="46" role="img" aria-label="Spot"><text x="0" y="150" font-family="Cinzel" font-weight="500" font-size="100" letter-spacing="6" fill="#F2EDE3">SPOT</text></svg><div class="spinner" style="margin-top:20px"></div></div>
 </div>
 
 <!-- PÁGINA DO CONVITE. Quem abre um link caía na tela de entrada comum, que
@@ -2826,7 +2832,7 @@ body.exm #exploreCozinhas,body.exm #exploreBody{display:none!important}
     <div class="dash-mapa" id="dashMapa" aria-hidden="true"></div>
     <div class="dash-mapa-fade"></div>
     <div class="dash-topo-linha">
-      <svg class="dash-wordmark" viewBox="3 77 273 76" role="img" aria-label="Spot"><text x="0" y="150" font-family="Cinzel" font-weight="500" font-size="100" letter-spacing="6" fill="#0B3D2E">SPOT</text></svg>
+      <svg class="dash-wordmark" viewBox="3 77 273 76" role="img" aria-label="Spot"><text x="0" y="150" font-family="Cinzel" font-weight="500" font-size="100" letter-spacing="6" fill="#F2EDE3">SPOT</text></svg>
       <div class="dash-topo-acoes">
         <!-- 07/10: o Adicionar ficava no FIM da tela, depois de todas as viagens. -->
         <button class="dash-mais" onclick="adicionarDoTopo()" data-ic="plus" aria-label="Adicionar"></button>
@@ -3325,6 +3331,9 @@ body.exm #exploreCozinhas,body.exm #exploreBody{display:none!important}
   try{
     const host=String((location&&location.hostname)||'');
     if(!/(^|\.)meuspot\.app$|\.pages\.dev$/.test(host))return;
+    // Prévia do redesenho (06/11): o branch `redesenho` vira um endereço
+    // próprio da Cloudflare, aberto no Safari pra testar antes de ir pro app.
+    if(/^redesenho\./.test(host))return;
     if(window.ReactNativeWebView||window.enderecoDeVoltaDoLogin)return;
     const h=String(location.hash||''),q=String(location.search||'');
     if(/type=(recovery|signup|invite|magiclink|email_change)|access_token=|error_description=/.test(h+q))return;
@@ -3337,7 +3346,7 @@ body.exm #exploreCozinhas,body.exm #exploreBody{display:none!important}
     const texto=veioDeLink?'Instale o Spot e depois toque no link de novo na conversa.<br>'+veioDeLink
       :'Seus lugares e os dos seus amigos ficam no app.<br>Baixe na App Store pra entrar.';
     document.documentElement.innerHTML='<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Spot</title>'
-      +'<style>body{margin:0;min-height:100vh;display:grid;place-items:center;background:#F5F5F3;color:#111;font-family:"Inter Tight",system-ui,-apple-system,sans-serif;text-align:center;padding:24px;box-sizing:border-box}'
+      +'<style>body{margin:0;min-height:100vh;display:grid;place-items:center;background:#F5F5F3;color:#111;font-family:"Archivo",system-ui,-apple-system,sans-serif;text-align:center;padding:24px;box-sizing:border-box}'
       +'img{width:88px;height:88px;border-radius:20px}h1{margin:20px 0 8px;font-size:26px;letter-spacing:-.03em}p{margin:0 0 24px;color:#6B6B67;font-size:16px;line-height:1.45}'
       +'a{display:inline-block;padding:14px 22px;border-radius:10px;background:#0B3D2E;color:#F5F5F3;font-weight:600;text-decoration:none}</style></head>'
       +'<body><div><img src="/icon-192.png" alt=""><h1>'+titulo+'</h1><p>'+texto+'</p>'
@@ -13518,7 +13527,7 @@ function onbDesenhar(){
   const n=ONB.passo;
   if(n===0){
     corpo.innerHTML='<div class="onb-mapa onb-mapa-sangra" id="onbMapa"></div>'
-      +'<svg class="onb-marca" viewBox="3 77 273 76" height="30" role="img" aria-label="Spot"><text x="0" y="150" font-family="Cinzel" font-weight="500" font-size="100" letter-spacing="6" fill="#0B3D2E">SPOT</text></svg>'
+      +'<svg class="onb-marca" viewBox="3 77 273 76" height="30" role="img" aria-label="Spot"><text x="0" y="150" font-family="Cinzel" font-weight="500" font-size="100" letter-spacing="6" fill="#F2EDE3">SPOT</text></svg>'
       +'<h1 class="onb-titulo">Os lugares que valem a viagem.</h1>'
       +'<p class="onb-sub">Guarde onde você foi, o que quer conhecer e veja as dicas de quem você confia. Vamos montar seu mapa: leva um minuto.</p>';
     pe.innerHTML='<button class="onb-btn" onclick="onbIr(1)">Começar</button>';
@@ -13601,7 +13610,7 @@ function fatiaDoMundo(paises){
 }
 function anelDoOnboarding(paises){
   return '<div class="onbf-anel"><svg viewBox="0 0 120 120" aria-hidden="true">'
-    +'<circle cx="60" cy="60" r="'+ONBF_R+'" fill="none" stroke="#E2E2DE" stroke-width="12"/>'
+    +'<circle cx="60" cy="60" r="'+ONBF_R+'" fill="none" stroke="rgba(245,245,243,.14)" stroke-width="12"/>'
     +'<circle id="onbfArco" cx="60" cy="60" r="'+ONBF_R+'" fill="none" stroke="var(--green)" stroke-width="12" stroke-linecap="round"'
     +' transform="rotate(-90 60 60)" stroke-dasharray="'+(ONBF_VOLTA*fatiaDoMundo(paises))+' '+ONBF_VOLTA+'"/></svg>'
     +'<div class="onbf-pct"><b id="onbfPct">'+(percentualDoMundo(paises)||'0%')+'</b><span>do mundo</span></div></div>';
