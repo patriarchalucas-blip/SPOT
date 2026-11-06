@@ -45,7 +45,6 @@ const POR_CIDADE = 12;           // lugares por lista
 const MINIMO_POR_CIDADE = 5;
 const MIN_VOZES = 2;
 const JANELA_DIAS = 180;         // o que conta
-const ESPERA_RODADA_MS = 6 * 24 * 3600 * 1000;
 const MAX_VIDEOS_NOVOS = 80;     // por rodada: freio contra fonte que despeja centenas
 const MAX_BUSCAS_GOOGLE = 150;   // por rodada
 const ANO = 60 * 60 * 24 * 365;
@@ -66,6 +65,8 @@ export const FONTES_INICIAIS = [
   // canal é quase todo receita, e a busca de vídeos antigos não responde a
   // pedido vindo do servidor; o feed da playlist responde.
   { id: 'yt:pl:PLpUs89aC5iYRU79N54mFHNZG_HAZU4Y5Q', tipo: 'youtube', playlist: 'PLpUs89aC5iYRU79N54mFHNZG_HAZU4Y5Q', nome: 'Favoritos da cidade (Rio)', cidades: ['Rio de Janeiro'] },
+  // A mesma série, de SP (05/11): São Paulo saía com 0 por falta de 2ª voz.
+  { id: 'yt:pl:PLpUs89aC5iYTtOrgd9ad7byC6nIPxgySL', tipo: 'youtube', playlist: 'PLpUs89aC5iYTtOrgd9ad7byC6nIPxgySL', nome: 'Favoritos da cidade (SP)', cidades: ['São Paulo'] },
   { id: 'pg:thesummerhunter-rio', tipo: 'pagina', url: 'https://thesummerhunter.com/rio-de-janeiro-miniguia-novidades-2026/', nome: 'The Summer Hunter', cidades: ['Rio de Janeiro'] },
   { id: 'pg:timeout-rio', tipo: 'pagina', url: 'https://www.timeout.com/pt/rio-de-janeiro/restaurantes', nome: 'Time Out Rio', cidades: ['Rio de Janeiro'] }
 ];
@@ -131,10 +132,14 @@ export async function onRequestPost(context) {
       // tentar de novo depois de 1 hora, sem esperar a semana.
       const sem = await lerJSON(env, 'hs_semana');
       const vazia = sem && sem.listas && sem.listas.every((l) => !l.lugares.length);
-      const espera = vazia ? 3600 * 1000 : ESPERA_RODADA_MS;
-      if (Date.now() - ultima < espera) return json({ ok: true, pulou: 'cedo' });
+      // Uma rodada AUTOMÁTICA por semana (05/11). Antes a trava contava 6 dias
+      // desde QUALQUER rodada: o "Buscar novidades" do dono na terça (27/10)
+      // barrou a de sexta (30/10) e a lista ficou parada.
+      const ja = (await lerKV(env, 'hs_rodada_auto')) === semanaDe(Date.now());
+      if (vazia ? Date.now() - ultima < 3600 * 1000 : ja) return json({ ok: true, pulou: 'cedo' });
     }
     const r = await rodar(env);
+    if (!dono && r.ok) await gravarKV(env, 'hs_rodada_auto', semanaDe(Date.now()), ANO);
     if (dono || !r.ok) return json(r);
     const n = (r.listas || []).reduce((a, l) => a + l.lugares.length, 0);
     await avisarDono(env, 'Hotspots da semana prontos', n + ' lugares pra olhar. Se não mexer, sai sexta às 17h.', 'hotspots');
@@ -186,6 +191,14 @@ async function ehDono(request, env) {
 // Sexta, 17h em Brasília (UTC-3, sem horário de verão desde 2019) = 20h UTC.
 export function ehHoraDePublicar(agora) {
   return agora.getUTCDay() === 5 && agora.getUTCHours() >= 20;
+}
+
+// A semana do robô começa na sexta (UTC), o dia da rodada: devolve a data
+// dessa sexta. Atraso do agendador (a de 30/10 rodou 6h depois) cai na mesma.
+export function semanaDe(ms) {
+  const d = new Date(ms);
+  const voltar = (d.getUTCDay() - 5 + 7) % 7;
+  return new Date(ms - voltar * 86400000).toISOString().slice(0, 10);
 }
 
 async function estado(env) {
@@ -308,11 +321,13 @@ async function videosDoCanal(env, f) {
   for (let i = 0; i < 3 && !xml.includes('<entry>'); i++) {
     try { const r = await fetch('https://www.youtube.com/feeds/videos.xml?' + (f.playlist ? 'playlist_id=' + f.playlist : 'channel_id=' + f.canal)); xml = r.ok ? await r.text() : '' } catch (e) {}
   }
-  // Feed fora: a página de vídeos do canal dá os ids, e a de cada vídeo a
-  // descrição (só dos que ainda não foram lidos).
-  if (!xml.includes('<entry>') && f.canal) {
+  // Feed fora: a página de vídeos do canal (ou a da playlist) dá os ids, e a
+  // de cada vídeo a descrição (só dos que ainda não foram lidos). Em 05/11 o
+  // feed dava 404 pra TODO canal, e a playlist do Rio ficava sem nada.
+  if (!xml.includes('<entry>') && (f.canal || f.playlist)) {
     try {
-      const h = await (await fetch('https://www.youtube.com/channel/' + f.canal + '/videos', { headers: { 'User-Agent': 'Mozilla/5.0', 'Accept-Language': 'pt-BR' } })).text();
+      const pagina = f.playlist ? 'https://www.youtube.com/playlist?list=' + f.playlist : 'https://www.youtube.com/channel/' + f.canal + '/videos';
+      const h = await (await fetch(pagina, { headers: { 'User-Agent': 'Mozilla/5.0', 'Accept-Language': 'pt-BR' } })).text();
       const ids = [...new Set([...h.matchAll(/"(?:contentId|videoId)":"([A-Za-z0-9_-]{11})"/g)].map((m) => m[1]))].slice(0, 15);
       for (const id of ids) {
         if (await lerKV(env, 'hs_item_yt_' + id)) { itens.push({ chave: 'yt_' + id, titulo: '', texto: '', data: '' }); continue }
@@ -656,6 +671,11 @@ async function fonteDoEndereco(endereco, cidades) {
     if (lista) {
       let nome = '';
       try { nome = desescapar(((await (await fetch('https://www.youtube.com/feeds/videos.xml?playlist_id=' + lista[0])).text()).match(/<title>([^<]{1,80})/) || [])[1] || '') } catch (e) {}
+      // Feed fora: o título da página da playlist ("Nome - YouTube").
+      if (!nome || /error|not found/i.test(nome)) {
+        nome = '';
+        try { nome = desescapar(((await (await fetch('https://www.youtube.com/playlist?list=' + lista[0], { headers: { 'User-Agent': 'Mozilla/5.0', 'Accept-Language': 'pt-BR' } })).text()).match(/<title>([^<]{1,100}?) - YouTube<\/title>/) || [])[1] || '') } catch (e) {}
+      }
       return { id: 'yt:pl:' + lista[0], tipo: 'youtube', playlist: lista[0], nome: nome || 'Playlist do YouTube', cidades: cid };
     }
     let canal = (u.pathname.match(/\/channel\/(UC[A-Za-z0-9_-]{22})/) || [])[1];

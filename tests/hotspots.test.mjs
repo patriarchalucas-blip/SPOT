@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert';
-import { onRequestPost, onRequestGet, pontuar, citacoesValidas, cidadeDaLista, ehPubliPeloTexto,
+import { onRequestPost, onRequestGet, semanaDe, pontuar, citacoesValidas, cidadeDaLista, ehPubliPeloTexto,
   ehHoraDePublicar, lugarDoGoogle, spotDoHotspot, categoriaPelosTipos, jsonDepoisDe } from '../functions/api/hotspots.js';
 
 // O robô dos Hotspots (26/10/2026). Nada sai pra rede: YouTube, IA, Google,
@@ -105,10 +105,28 @@ test('hotspots: a rodada cruza as vozes, tira o próprio e o publi, e não mostr
   assert.ok(rio[0].novo);
   assert.strictEqual(w.chamadas.ia, 4);
 
-  // Segunda rodada antes de 6 dias, sem ser o dono: não faz nada.
+  // Segunda rodada automática na mesma semana: não faz nada.
   const r2 = await comFetch(w.fetchFalso, async () => (await post(w.env, { op: 'rodar' })).json());
   assert.strictEqual(r2.pulou, 'cedo');
   assert.strictEqual(w.chamadas.ia, 4);
+});
+
+test('hotspots: rodada do dono no meio da semana não barra a automática de sexta', async () => {
+  const w = mundo({ logado: DONO });
+  await comFetch(w.fetchFalso, () => post(w.env, { op: 'rodar' }, true));
+  // O dono rodou; a automática ainda não rodou nesta semana.
+  w.env.SPOT_KV.m.delete('hs_rodada_auto');
+  const anon = mundo({});
+  anon.env.SPOT_KV = w.env.SPOT_KV;
+  const r = await comFetch(anon.fetchFalso, async () => (await post(anon.env, { op: 'rodar' })).json());
+  assert.notStrictEqual(r.pulou, 'cedo');
+  assert.strictEqual(r.ok, true);
+});
+
+test('hotspots: a semana do robô começa na sexta', () => {
+  assert.strictEqual(semanaDe(Date.parse('2026-10-30T08:00:00Z')), '2026-10-30');
+  assert.strictEqual(semanaDe(Date.parse('2026-11-05T23:00:00Z')), '2026-10-30');
+  assert.strictEqual(semanaDe(Date.parse('2026-11-06T02:00:00Z')), '2026-11-06');
 });
 
 test('hotspots: o dono roda de novo sem gastar a IA nem o Google com o que já leu', async () => {
