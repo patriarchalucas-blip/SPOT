@@ -6,7 +6,7 @@ Anexos: `Spot - Claude Design - CONTEXTO (projeto novo).md`, `estrutura.md` e `v
 
 Os sócios testaram várias versões e decidiram rever o visual do app inteiro:
 
-- **Fundo escuro no app todo.** O fundo claro `#F5F5F3` cansa. Candidatos: grafite (`#17191C`), ardósia, um cinza azulado (`#121820`), ou preto. Preto puro com verde-escuro por cima não funcionou.
+- **Fundo escuro no app todo, em degradê vertical bem discreto**, como o do Whoop (print anexo), só que um pouco mais escuro: cinza-azulado escuro no topo (perto de `#262B31`) indo a quase preto embaixo (perto de `#0F1114`). É leve: quem olha vê "cinza-escuro", não "degradê". Isso substitui a regra antiga de "nenhum gradiente". Preto puro com verde-escuro por cima não funcionou.
 - **A fonte pode mudar no app inteiro.** A Inter Tight não agradou. As que chegaram mais perto foram as condensadas: **Archivo** (eixo de largura, condensada nos números e títulos) e **Barlow / Barlow Condensed**. Pode propor outra.
 - **A cor de destaque está aberta.** O `#0B3D2E` some no escuro. Um verde mais vivo foi o que mais agradou, mas ainda não é o certo. Teste tons de verde e, se fizer sentido, outra família de cor. Lembre que a cor muda a identidade (ícone na App Store, marca SPOT).
 - **Referência: o app Whoop.** Não as cores, e sim a experiência: número grande, anel de progresso, letra condensada, tela que parece moderna e leve de navegar.
