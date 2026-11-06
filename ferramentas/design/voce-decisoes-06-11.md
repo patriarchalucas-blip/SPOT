@@ -35,3 +35,15 @@ Quadros "Hotspots · Para você · capa (nova)" e "Hotspots · Amigos" no mesmo 
 - O que os amigos salvaram, do mais novo pro mais antigo, **sem "Hoje"/"Ontem"**.
 - Card: foto grande (219) com a inicial de quem indicou e "+" pra salvar; nome e cidade; "Ana foi ★★★★★" ou "Rafa quer ir"; a dica entre aspas. Nunca "Não recomendo".
 - **Coração** (curtir) com contagem, à direita da linha "Ana foi". No app pede tabela nova e uma linha na Atividade: **"Rafa curtiu seu spot Cervejaria Ramiro"**.
+
+# Aba + (Salvar um spot): decisões de 06/11/2026
+
+Quadro "+ · Salvar um spot" (interativo) no mesmo canvas.
+
+1. **Primeiro o lugar, nada mais.** Folha "Salvar um spot" com:
+   - **Você está aqui**: uma **fileira que rola pro lado** com TODOS os lugares próximos, do mais perto pro mais longe (foto, nome, distância). **Tocar = adicionar** (sem botão por item). Mesma altura com 3 ou 30 lugares (rua movimentada). **X** fecha o bloco quando nenhum é o certo.
+   - Busca "Buscar pelo nome" e "Colar uma lista do WhatsApp ou Notas".
+2. **Depois de escolher o lugar:** foto grande + nome, e os dois botões grandes **Já fui · Quero ir**, **nenhum marcado** (o tocado fica claro). O Salvar só aparece depois de escolher.
+   - Já fui: estrelas (no app, meia estrela) + "Não recomendo" + dica + quem vê (padrão "Amigos veem").
+   - Quero ir: dica + quem vê (padrão "Só eu vejo").
+- **Fora:** segmentado Fui · Quero ir no topo ("já confunde"), escolher o status antes do lugar, lista vertical de 3 lugares próximos, o rótulo "Este" (virou "Adicionar" e depois o toque no cartão).
