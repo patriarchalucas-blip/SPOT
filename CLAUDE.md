@@ -364,11 +364,16 @@ atualiza; toque em notificação com o app fechado guarda o pacote até o login
 middleware + `no-cache`** (304 em vez de 348 KB a cada abertura); preconnect das
 fontes; mensagens técnicas trocadas.
 
-**Pendente (ideias de desempenho que pedem migração ou mais cuidado):** salvar
-spot sem esperar o `loadDashboard`; comentários em 1 ida; Perfil desenhando da
-memória; spots dos amigos via RPC; índices em `spots(user_id)`, `spots(trip_id)`,
-`trips(user_id)`, `follows(following_id)` e `(select auth.uid())` nas políticas;
-pintar o cache antes de renovar o token; `sbFetch` renovando token em todo 403.
+**Pendente (ideias de desempenho que pedem migração ou mais cuidado):** Perfil
+desenhando da memória; spots dos amigos via RPC; `(select auth.uid())` nas
+políticas; pintar o cache antes de renovar o token; `sbFetch` renovando token em
+todo 403. (Feitos: salvar spot sem esperar o `loadDashboard`; índices na 037;
+comentários em 1 ida — 06/11, `amigosEmCache`.)
+
+**Capa de cidade com foto do Google morta (06/11):** o link do Places às vezes
+expira antes dos 30 dias do cache (Roma e Rio davam 404). `city-photo.js`
+confere a foto guardada (`fotoMorta`) e escolhe de novo; o app testa a guardada
+no aparelho (`fotoAbre`) antes de usar.
 
 ## Aura Hackathon (Replit + Lucas Abreu) — o Lucas vai participar (19/10/2026)
 
