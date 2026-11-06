@@ -47,3 +47,19 @@ Quadro "+ · Salvar um spot" (interativo) no mesmo canvas.
    - Já fui: estrelas (no app, meia estrela) + "Não recomendo" + dica + quem vê (padrão "Amigos veem").
    - Quero ir: dica + quem vê (padrão "Só eu vejo").
 - **Fora:** segmentado Fui · Quero ir no topo ("já confunde"), escolher o status antes do lugar, lista vertical de 3 lugares próximos, o rótulo "Este" (virou "Adicionar" e depois o toque no cartão).
+
+# Aba 5: Listas (no lugar da Oficina) · 06/11/2026
+
+A Oficina (só planos de viagem) foi reprovada: vazia, ela não serve pra nada. A aba vira **Listas** (ícone: 4 quadradinhos).
+
+- **Toda lista pode ser compartilhada**: quem é convidado adiciona junto. Dois tipos:
+  - **Uma viagem**: presa a um destino, data opcional ("Portugal em março", com aviãozinho no nome).
+  - **Uma lista**: um tema ("Pra ir com a Nati", "Bares pra sexta").
+- **Tela cheia**: "Dos seus spots" (automáticas: Quero ir, Nota 5, Bares, Cafés), "Suas listas" (+ "Nova lista"), "Dos amigos". Capas em **mosaico de 4 fotos**, grade de 2 colunas.
+- **Por dentro de uma lista compartilhada**: nome, quem está + convidar, botão Adicionar, filtro Todos · Quero ir · Já fomos, cada spot com **quem pôs** ("Nati pôs") e **coração** pro outro curtir.
+- **Criar**: dois botões grandes "Uma viagem" / "Uma lista"; depois destino ou nome, "Quando" (opcional, só viagem), "Com quem" (bolinhas dos amigos, toque marca), Criar.
+- **Vazia (conta nova)**: 3 capas de exemplo em leque (Pra ir com a Nati no meio), a frase "Junte spots numa lista e chame quem vai com você." e o botão "Criar minha primeira lista". É a única frase explicativa permitida, aprovada.
+- **Fora:** "Tema", "Do seu Spot" (virou "Dos seus spots"), seções "Pra começar" e capas vazias com 0 spots no estado vazio.
+
+# Explorar · 06/11/2026
+Desenhado no visual novo (mapa escuro, amigos como pinos de foto, Google em pontos, folha "Perto de você"). O Lucas: "não sei se curti, mas blz — Explorar não é um problema visual hoje". Sem mudança decidida.
