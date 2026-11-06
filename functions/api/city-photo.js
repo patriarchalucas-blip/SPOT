@@ -93,6 +93,12 @@ export async function onRequestPost(context) {
   // novo, uma vez: a do Google é a de um usuário qualquer e o link expira.
   let guardado = null;
   try { guardado = cached ? JSON.parse(cached) : null } catch (e) {}
+  // FOTO DO GOOGLE QUE MORREU ANTES DOS 30 DIAS (06/11): o link do Places às
+  // vezes expira antes, e a capa de Roma e do Rio ficou vazia em produção,
+  // com o registro ainda válido. Confere no /api/place-photo (que responde da
+  // borda/KV quando a foto já foi vista, sem gastar nada) e, morta, escolhe de
+  // novo como se não houvesse cache. Só 400/404 conta como morta.
+  if (guardado && guardado.fonte === 'google' && guardado.url && await fotoMorta(request, guardado.url)) guardado = null;
   // Só uma vez: se cair no Google de novo, fica marcado (reescolhido) e não
   // gasta cota a cada abertura.
   if (guardado && !(ehPais && guardado.fonte === 'google' && !guardado.reescolhido)) return responder(context, guardado);
@@ -241,6 +247,13 @@ export function fotoServe(f, query) {
   if (cita(palavras)) return true;
   return palavras.length >= 3 && cita(palavras.slice(0, -1));
 }
+async function fotoMorta(request, caminho) {
+  try {
+    const r = await fetch(new URL(caminho, request.url), { redirect: 'manual' });
+    return r.status === 404 || r.status === 400;
+  } catch (e) { return false }
+}
+
 // A foto que o Google tem do próprio lugar (o resultado que é cidade, região,
 // país ou ponto natural). Passa pelo /api/place-photo, que esconde a chave.
 // O crédito do autor é exigência do Google, igual à do Unsplash.

@@ -15968,6 +15968,12 @@ async function fetchCityPhoto(entrada,pais){
   }
   return'';
 }
+// Abre a imagem de verdade. Demorou demais (rede lenta) conta como viva:
+// esquecer uma foto boa por causa de 3G custaria uma busca paga à toa.
+function fotoAbre(url){
+  return new Promise(ok=>{const im=new Image(),t=setTimeout(()=>ok(true),8000);
+    im.onload=()=>{clearTimeout(t);ok(true)};im.onerror=()=>{clearTimeout(t);ok(navigator.onLine===false)};im.src=url});
+}
 async function buscarFotoDe(query,extra){
   if(!query)return'';
   const pedido=query;
@@ -15975,7 +15981,11 @@ async function buscarFotoDe(query,extra){
   // Return cached (persisted) result if we have it — inclui negativos, pra não reconsultar toda hora
   if(cityPhotoCache[query]!==undefined){
     const c=cityPhotoCache[query];
-    if(c&&c.exp&&Date.now()<c.exp)return c.url||'';
+    // Foto do Google guardada que morreu antes dos 30 dias (06/11: Roma e Rio
+    // ficaram com a capa vazia): testa abrir; morta, esquece e pede de novo.
+    // O navegador guarda a imagem baixada, então mostrar depois é imediato.
+    if(c&&c.exp&&Date.now()<c.exp&&c.url&&/^\/api\/place-photo/.test(c.url)&&!(await fotoAbre(c.url))){delete cityPhotoCache[query];savePhotoCache()}
+    else if(c&&c.exp&&Date.now()<c.exp)return c.url||'';
     if(typeof c==='string')return c; // formato antigo (positivo, sem expiração)
   }
   // Se a cota estourou há pouco, não martela de novo — usa gradiente
