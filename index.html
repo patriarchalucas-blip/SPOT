@@ -198,7 +198,7 @@ h1,h2,.cond{font-stretch:68%}
 .btn-apple{display:none}
 .btn-apple svg path{fill:var(--ink)}
 body.tem-apple .btn-apple{display:flex}
-.btn-email-ghost{background:transparent;border:none;color:var(--base);font-size:15px;font-weight:600;
+.btn-email-ghost{background:transparent;border:none;color:#F5F5F3;font-size:15px;font-weight:600;
   font-family:'Archivo',sans-serif;cursor:pointer;width:100%;min-height:44px;padding:8px;
   text-decoration:underline;text-underline-offset:3px}
 .login-toggle{text-align:center;font-size:13px;color:rgba(255,255,255,0.6);cursor:pointer;margin-top:8px}
@@ -212,13 +212,13 @@ body.tem-apple .btn-apple{display:flex}
 .login-toggle span span{color:#fff;text-decoration:underline}
 .login-back{text-align:center;font-size:13px;color:rgba(255,255,255,0.5);cursor:pointer;margin-top:14px}
 .auth-error{background:rgba(0,0,0,.45);border:none;border-radius:var(--r-card);padding:12px 16px;font-size:14px;
-  color:var(--base);display:none;-webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px)}
+  color:#F5F5F3;display:none;-webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px)}
 .auth-error.show{display:block}
 /* ── LOGIN 2b (Claude Design, 20/10): só a marca na tela, caminhos na folha ── */
 #login .login-inner{padding:calc(44px + env(safe-area-inset-top,0px)) 20px calc(34px + env(safe-area-inset-bottom,0px))}
 #login .login-top{flex-direction:column;align-items:center;gap:14px;min-height:0}
 /* Cidade sem pílula, sem fundo, sem blur: texto claro com o ponto que pulsa. */
-#login .login-place-tag{background:none;-webkit-backdrop-filter:none;backdrop-filter:none;padding:0;border-radius:0;color:var(--base);font-weight:500}
+#login .login-place-tag{background:none;-webkit-backdrop-filter:none;backdrop-filter:none;padding:0;border-radius:0;color:#F5F5F3;font-weight:500}
 #login .photo-dots{margin:0}
 #login .login-bottom{gap:0}
 #login .login-wm{display:block;margin-bottom:28px}
@@ -261,7 +261,7 @@ body.tem-apple .btn-apple{display:flex}
   color:var(--ink3);font-size:14px}
 .login-moderacao{font-size:12px;color:var(--ink3);text-align:center;margin-top:16px;line-height:1.4}
 .ns-agora-nao{display:block;margin:4px auto 8px;padding:12px 20px;background:none;border:none;font:inherit;font-size:15px;font-weight:600;color:var(--ink3);cursor:pointer}
-.auth-err-acao{background:none;border:none;padding:0;font:inherit;font-weight:600;color:var(--base);text-decoration:underline;text-underline-offset:2px;cursor:pointer}
+.auth-err-acao{background:none;border:none;padding:0;font:inherit;font-weight:600;color:#F5F5F3;text-decoration:underline;text-underline-offset:2px;cursor:pointer}
 
 /* DASHBOARD */
 /* Fundo da página é --base (sistema F; desenho de 05/10). Era --surface,
@@ -930,6 +930,26 @@ input,textarea,select{font-size:max(16px,1em)!important}
 .cid-nome{font-size:17px;font-weight:600;letter-spacing:-.02em;color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .cid-linha{margin-top:2px;font-size:14px;color:var(--ink2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .st-fui{color:var(--green);font-weight:600}
+/* ── Cidade, redesenho 06/11 (quadro "Cidade · viagem") ── */
+#city .cat-tabs-wrap,#city #citySubcatFilter,#city #cityLabel,#city #cityMeta,#city .btn-solto{display:none!important}
+#city .trip-hero{height:380px}
+#city .trip-hero-name{font-size:64px;line-height:.9}
+#city .cid-seg{padding:22px 20px 6px}
+.cid-pilulas{display:flex;gap:8px;align-items:center}
+.pil{height:34px;padding:0 14px;border:0;border-radius:17px;background:rgba(245,245,243,.08);color:rgba(245,245,243,.82);font:inherit;font-size:14px;font-weight:600;display:flex;align-items:center;gap:6px;cursor:pointer}
+.pil i{font-style:normal;font-weight:500;opacity:.55}
+.pil.on{background:var(--green);color:var(--on-green)}
+.pil-mais{margin-left:auto;width:34px;height:34px;border:0;border-radius:17px;background:rgba(245,245,243,.08);color:var(--ink);display:grid;place-items:center;cursor:pointer}
+.pil-mais svg{width:15px;height:15px}
+#city .cid-row{padding:6px 0}
+#city .cid-row .place-thumb{width:64px;height:64px}
+#city .cid-nome{font-size:16px}
+#city .cid-linha{font-size:13px}
+.cid-nota{flex:none;display:flex;align-items:center;gap:4px;font-stretch:68%;font-size:24px;font-weight:700;color:var(--ink)}
+.cid-nota svg{width:14px;height:14px}
+.cid-nota svg *{fill:var(--green);stroke:none}
+.cid-nr{flex:none;font-size:13px;color:var(--ink3)}
+#city .trip-body{padding-bottom:120px}
 .st-quero{color:var(--ink3)}
 /* Sugestões de lugar enquanto digita (27/09): "Itapura" é a cidade ou a rua. */
 #exploreCitySearch{padding-right:40px}
@@ -2187,7 +2207,7 @@ body.tem-apple #convite .btn-apple{display:flex}
 .fi-slide{flex:0 0 100%;height:100%;scroll-snap-align:start;scroll-snap-stop:always;background:var(--photo-empty) center/cover no-repeat}
 .fi-slide:first-child{background:transparent}
 .fi-carro::after{content:"";position:absolute;inset:0;pointer-events:none;background:linear-gradient(to top,rgba(0,0,0,.55),transparent 40%)}
-.fi-cont,.fi-google{position:absolute;bottom:14px;z-index:1;font-size:13px;color:var(--base);pointer-events:none}
+.fi-cont,.fi-google{position:absolute;bottom:14px;z-index:1;font-size:13px;color:#F5F5F3;pointer-events:none}
 .fi-cont{right:20px;font-weight:600}
 .fi-carro.esperando .fi-cont,.fi-carro.esperando .fi-google{visibility:hidden} /* 06/10: até a capa carregar */
 .fi-google{left:20px;opacity:0;transition:opacity .2s}
@@ -2198,8 +2218,8 @@ body.tem-apple #convite .btn-apple{display:flex}
 .fi-ver-faixa{position:absolute;inset:0;display:flex;overflow-x:auto;scroll-snap-type:x mandatory;scrollbar-width:none;overscroll-behavior-x:none}
 .fi-ver-faixa::-webkit-scrollbar{display:none}
 .fi-ver-slide{flex:0 0 100%;height:100%;scroll-snap-align:start;scroll-snap-stop:always;background:center/contain no-repeat}
-.fi-ver-cont{position:absolute;top:calc(22px + env(safe-area-inset-top));left:0;right:0;z-index:1;text-align:center;font-size:13px;font-weight:600;color:var(--base);pointer-events:none}
-.fi-ver-x{position:absolute;top:calc(12px + env(safe-area-inset-top));right:16px;z-index:2;width:40px;height:40px;border:none;border-radius:50%;background:rgba(245,245,243,.16);color:var(--base);display:flex;align-items:center;justify-content:center;cursor:pointer}
+.fi-ver-cont{position:absolute;top:calc(22px + env(safe-area-inset-top));left:0;right:0;z-index:1;text-align:center;font-size:13px;font-weight:600;color:#F5F5F3;pointer-events:none}
+.fi-ver-x{position:absolute;top:calc(12px + env(safe-area-inset-top));right:16px;z-index:2;width:40px;height:40px;border:none;border-radius:50%;background:rgba(245,245,243,.16);color:#F5F5F3;display:flex;align-items:center;justify-content:center;cursor:pointer}
 .fi-ver-x svg{width:20px;height:20px}
 /* Ficha única (e3–e5, C10, C12) */
 .fi-lista-rot{display:none;align-items:baseline;justify-content:space-between;margin:16px 0 8px;font-size:15px;font-weight:600;color:var(--ink)}
@@ -2266,7 +2286,7 @@ body.tem-apple #convite .btn-apple{display:flex}
 .conv-dica{font-size:11.5px;color:var(--ink3);text-align:center;margin-top:10px;line-height:1.5}
 /* faixa de quem convidou, na tela de login */
 .convite-faixa{display:flex;align-items:center;gap:11px;background:rgba(245,245,243,.14);border:none;
-  border-radius:var(--r-card);padding:12px 14px;margin-bottom:18px;color:var(--base)}
+  border-radius:var(--r-card);padding:12px 14px;margin-bottom:18px;color:#F5F5F3}
 .convite-quem{font-size:14px;color:inherit;line-height:1.4}
 .convite-quem b{font-weight:600}
 .country-chips{display:block;margin-top:4px}
@@ -2634,9 +2654,9 @@ body.exm #exploreCozinhas,body.exm #exploreBody{display:none!important}
 .exm-card-foto{position:relative;height:150px;border-radius:18px;overflow:hidden;background-size:cover}
 .exm-card-foto img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
 .exm-card-foto::after{content:'';position:absolute;inset:0;background:linear-gradient(to top,rgba(0,0,0,.55),transparent 55%)}
-.exm-card-foto b{position:absolute;left:14px;right:14px;bottom:12px;z-index:1;font-size:17px;font-weight:600;letter-spacing:-.02em;color:var(--base);
+.exm-card-foto b{position:absolute;left:14px;right:14px;bottom:12px;z-index:1;font-size:17px;font-weight:600;letter-spacing:-.02em;color:#F5F5F3;
   white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.exm-cred{position:absolute;right:10px;top:8px;z-index:1;font-size:9px;color:var(--base);opacity:.85;max-width:60%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.exm-cred{position:absolute;right:10px;top:8px;z-index:1;font-size:9px;color:#F5F5F3;opacity:.85;max-width:60%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .exm-card-quem{display:flex;align-items:center;gap:8px;margin-top:8px;font-size:13px;color:var(--ink2);white-space:nowrap;overflow:hidden}
 .exm-card-quem span:last-child{overflow:hidden;text-overflow:ellipsis}
 .exm-rot{padding:4px 20px 10px;font-size:13px;color:var(--ink3)}
@@ -2727,6 +2747,48 @@ body.exm #exploreCozinhas,body.exm #exploreBody{display:none!important}
 .exf-ck.on{background:var(--green)}
 .exf-ck svg{width:14px;height:14px}
 .exf-nota{margin:12px 0 0;font-size:13px;color:var(--ink3)}
+
+/* ═══ REDESENHO 06/11 — por cima de tudo (branch redesenho) ═══
+   Regras do canvas aprovado: escolha ligada = pílula branco quente com texto
+   escuro; desligada = branco a 8%. Nada de segmentado com fundo "base". */
+.pf-seg,.fi-status{background:none;padding:0;gap:8px;height:auto;border-radius:0}
+.pf-op,.fi-st{flex:1;height:44px;border-radius:22px;background:rgba(245,245,243,.08);color:rgba(245,245,243,.82);font-weight:600}
+.pf-op.on,.fi-st.on{background:var(--green);color:var(--on-green)}
+.pf-op.on i{color:inherit;opacity:.55}
+.cat-tab{color:var(--ink3)}
+.cat-tab.active{color:var(--ink)}
+/* Ficha do spot (quadro "Ficha do spot") */
+.fi-foto{height:420px}
+.fi-redondo{background:rgba(7,32,25,.55);color:#F5F5F3}
+.fi-nome{font-size:40px;line-height:.95;margin-top:6px}
+.fi-corpo{padding-top:18px}
+.fi-acoes{grid-template-columns:repeat(4,1fr);gap:4px;margin-top:28px}
+.fi-ac{height:auto;background:none;gap:8px;padding:0}
+.fi-ac svg{width:52px;height:52px;padding:16px;box-sizing:border-box;border-radius:50%;background:rgba(245,245,243,.08)}
+.fi-ac span{font-size:12px;font-weight:500;color:var(--ink2)}
+.fi-end{background:rgba(245,245,243,.06);border-radius:20px}
+.fi-amcab .section-title{font-stretch:68%;font-size:28px;font-weight:700;letter-spacing:0}
+.fi-campo{font-size:16px;color:var(--ink)}
+/* Folhas de baixo: mesmo verde do fundo, sem borda */
+.sheet{background:#0A2A21}
+/* Atividade (quadro "Atividade (o sino)") */
+.at-topo{display:block;padding:52px 20px 0}
+.at-topo h1{text-align:left;font-size:52px;font-weight:700;line-height:1;margin:12px 0 0}
+.at-pedidos{display:flex;gap:10px;overflow-x:auto;margin:20px -20px 0;padding:0 20px;scrollbar-width:none}
+.at-pedidos::-webkit-scrollbar{display:none}
+.atp{flex:none;width:150px;border-radius:20px;background:rgba(245,245,243,.07);padding:16px 12px 12px;box-sizing:border-box;display:flex;flex-direction:column;align-items:center;gap:4px;text-align:center}
+.atp .pln-av.g{width:60px;height:60px;font-size:22px;margin-bottom:4px}
+.atp-nome{font-size:15px;font-weight:600;max-width:100%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.atp-meta{font-size:12px;color:var(--ink2);max-width:100%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.atp-bt{display:flex;gap:6px;width:100%;margin-top:8px}
+.atp .at-aceitar{flex:1;height:34px;border-radius:17px;font-size:14px}
+.atp-x{flex:none;width:34px;height:34px;border:0;border-radius:17px;background:rgba(245,245,243,.08);color:var(--ink);display:grid;place-items:center;cursor:pointer}
+.atp-x svg{width:14px;height:14px}
+.atp-cancelar{flex:1;height:34px;border:0;border-radius:17px;background:rgba(245,245,243,.08);color:var(--ink2);font:inherit;font-size:14px;font-weight:600;cursor:pointer}
+.at-pils{display:flex;gap:8px;margin:24px 0 8px}
+.at-quando{display:block;margin-top:2px;font-size:13px;color:var(--ink3)}
+.at-foto{width:48px;height:48px;border-radius:12px}
+.sheet-handle{background:rgba(245,245,243,.2)}
 </style>
 </head>
 <body>
@@ -6008,6 +6070,7 @@ function detalheDoPedido(p){
   const n=Number(p.spots)||0;
   return [p.username?'@'+p.username:'',p.home_city?'Mora em '+p.home_city:'',n?n+(n===1?' spot':' spots'):''].filter(Boolean).join(' · ');
 }
+let ATIV_ABA='spots';
 function pintarAtividade(){
   const box=document.getElementById('atCorpo');if(!box)return;
   const d=FRIENDS_DATA||{};
@@ -6016,14 +6079,17 @@ function pintarAtividade(){
   const out=(d.outgoing||[]).filter(r=>!estaBloqueado(r.following_id));
   const av=(id)=>plnAvatar(id,'g');
   let h='';
+  // Redesenho 06/11 (quadro Atividade): pedidos em cartões que rolam pro lado,
+  // no topo; embaixo, pílulas Seus spots · Amigos (Listas entra quando as
+  // listas compartilhadas existirem).
   if(inc.length||out.length){
-    h+='<div class="at-sec">Pedidos</div>';
-    // O @ embaixo (06/10): com nome repetido, é o que diz quem está pedindo.
-    const arroba=p=>{const t=detalheDoPedido(p);return t?'<span class="busca-user" style="display:block">'+esc(t)+'</span>':''};
-    h+=inc.map(r=>'<div class="at-linha">'+av(r.follower_id)+'<div class="at-txt"><b>'+esc(friendName(pmap[r.follower_id]))+'</b> quer adicionar você'+arroba(pmap[r.follower_id])+'</div>'
-      +'<button class="at-aceitar" onclick="respondRequest(\''+esc(r.id)+'\',true)">Aceitar</button><button class="at-recusar" onclick="respondRequest(\''+esc(r.id)+'\',false)">Recusar</button></div>').join('');
-    h+=out.map(r=>'<div class="at-linha">'+av(r.following_id)+'<div class="at-txt">Pedido enviado pra <b>'+esc(friendName(pmap[r.following_id]))+'</b></div>'
-      +'<button class="at-recusar" onclick="cancelRequest(\''+esc(r.id)+'\')">Cancelar</button></div>').join('');
+    const arroba=p=>{const t=detalheDoPedido(p);return t?'<span class="atp-meta">'+esc(t)+'</span>':''};
+    h+='<div class="at-pedidos">'
+      +inc.map(r=>'<div class="atp">'+plnAvatar(r.follower_id,'g')+'<span class="atp-nome">'+esc(friendName(pmap[r.follower_id]))+'</span>'+arroba(pmap[r.follower_id])
+        +'<span class="atp-bt"><button class="at-aceitar" onclick="respondRequest(\''+esc(r.id)+'\',true)">Aceitar</button><button class="atp-x" onclick="respondRequest(\''+esc(r.id)+'\',false)" aria-label="Recusar">'+icon('close')+'</button></span></div>').join('')
+      +out.map(r=>'<div class="atp">'+plnAvatar(r.following_id,'g')+'<span class="atp-nome">'+esc(friendName(pmap[r.following_id]))+'</span><span class="atp-meta">Pedido enviado</span>'
+        +'<span class="atp-bt"><button class="atp-cancelar" onclick="cancelRequest(\''+esc(r.id)+'\')">Cancelar</button></span></div>').join('')
+      +'</div>';
   }
   const itens=ATIV.itens;
   ATIV_TELA=itens||[];
@@ -6050,12 +6116,17 @@ function pintarAtividade(){
       :it.tipo==='tambem'?nome+' também foi em '+spot+(trecho?' e disse:'+trecho:'')
       :nome+' comentou em '+spot+':'+trecho;
     const foto=it.spot.photo_url?' style="background-image:'+cssUrl(fotoNaLargura(it.spot.photo_url,120))+'"':'';
-    return '<button class="at-linha at-evento" onclick="abrirDaAtividade('+i+')">'+av(it.user_id)+'<span class="at-txt">'+txt+'</span><span class="at-foto"'+foto+'></span></button>';
+    return '<button class="at-linha at-evento" onclick="abrirDaAtividade('+i+')">'+av(it.user_id)+'<span class="at-txt">'+txt+'<span class="at-quando">'+esc(timeAgo(it.quando))+'</span></span><span class="at-foto"'+foto+'></span></button>';
   };
-  const novos=[],antigos=[];
-  itens.forEach((it,i)=>{(new Date(it.quando).getTime()>=semana?novos:antigos).push(linha(it,i))});
-  if(novos.length)h+='<div class="at-sec">Esta semana</div>'+novos.join('');
-  if(antigos.length)h+='<div class="at-sec">Antes</div>'+antigos.join('');
+  // Uma lista por assunto, sem "Esta semana / Antes" (o Lucas: separação ruim).
+  const spots=[],amigos=[];
+  itens.forEach((it,i)=>{(it.tipo==='amizade'?amigos:spots).push(linha(it,i))});
+  if(ATIV_ABA==='amigos'&&!amigos.length&&spots.length)ATIV_ABA='spots';
+  const pil=(k,rot,n)=>'<button class="pil'+(ATIV_ABA===k?' on':'')+'" onclick="ATIV_ABA=\''+k+'\';pintarAtividade()">'+rot+'</button>';
+  h+='<div class="at-pils">'+pil('spots','Seus spots')+pil('amigos','Amigos')+'</div>';
+  const lista=ATIV_ABA==='amigos'?amigos:spots;
+  h+=lista.length?lista.join(''):'<div class="at-vazio">'+(ATIV_ABA==='amigos'?'Nada de amigos por aqui ainda.':'Nada nos seus spots ainda.')+'</div>';
+  void semana;
   box.innerHTML=h;
   hydrateIcons(box);
 }
@@ -8499,7 +8570,7 @@ function abrirStatusDaCidade(){
 function spotsDaCidade(){
   const t = S.curTrip;
   if(!t || !S.curCity) return [];
-  return spotsDaViagem(t).filter(sp => cityOf(sp) === S.curCity && sp.category === curCityCat);
+  return spotsDaViagem(t).filter(sp => cityOf(sp) === S.curCity);   // redesenho 06/11: sem abas de categoria, uma lista só
 }
 // FUI | QUERO IR (desenho c2, 05/10): segmentado com contagem, sempre que a
 // categoria tem spot. Abre em Fui; se a categoria só tem Quero ir, abre em
@@ -8525,9 +8596,11 @@ function renderCityStatusFilter(){
     if(curCityStatus==='want'&&!quero)curCityStatus='been';
   }
   box.className = 'cid-seg'; box.style.cssText = '';
-  box.innerHTML = '<div class="pf-seg">'
-    +'<button class="pf-op'+(curCityStatus==='been'?' on':'')+'" onclick="setCityStatus(\'been\')">Fui'+(fui?'<i>'+fui+'</i>':'')+'</button>'
-    +'<button class="pf-op'+(curCityStatus==='want'?' on':'')+'" onclick="setCityStatus(\'want\')">Quero ir'+(quero?'<i>'+quero+'</i>':'')+'</button></div>';
+  // Redesenho 06/11 (quadro Cidade): duas pílulas e o + no fim da linha.
+  box.innerHTML = '<div class="cid-pilulas">'
+    +'<button class="pil'+(curCityStatus==='been'?' on':'')+'" onclick="setCityStatus(\'been\')">Fui<i>'+fui+'</i></button>'
+    +'<button class="pil'+(curCityStatus==='want'?' on':'')+'" onclick="setCityStatus(\'want\')">Quero ir<i>'+quero+'</i></button>'
+    +'<button class="pil-mais" onclick="addSpotToCurrentCity()" aria-label="Adicionar spot">'+icon('plus')+'</button></div>';
 }
 // Spot sem foto na tela da cidade: busca a foto atual do lugar na hora e
 // grava (healSpotPhoto). Antes só um preenchimento em segundo plano tentava,
@@ -8583,7 +8656,12 @@ function renderCityBody(){
     const st=s.status==='skip'?'<span class="st-quero">Não recomendo</span>'
       :(s.status==='been'&&s.my_rating?'<span class="st-fui">'+esc(fmtRating(s.my_rating))+'★</span>':(dica?'<span class="st-fui">'+esc(dica)+'</span>':''));
     const estrelas='';
-    h+=`<div class="cid-row" onclick="openPlace('${esc(s.id)}','city')">${thumb}<div class="cid-txt"><div class="cid-nome">${esc(s.name)}</div><div class="cid-linha">${st}${estrelas}${nota?(st?' · ':'')+esc(nota):''}</div></div></div>`;
+    // Redesenho 06/11 (quadro Cidade): linha 2 = tipo · dica/frase; a nota
+    // vai pra direita, grande e condensada. Não recomendo também na direita.
+    const meta=[spotTag(s),dica||nota].filter(Boolean).join(' · ');
+    const dir=s.status==='skip'?'<span class="cid-nr">Não recomendo</span>'
+      :(s.status==='been'&&s.my_rating?'<span class="cid-nota">'+icon('star')+esc(fmtRating(s.my_rating))+'</span>':'');
+    h+=`<div class="cid-row" onclick="openPlace('${esc(s.id)}','city')">${thumb}<div class="cid-txt"><div class="cid-nome">${esc(s.name)}</div>${meta?'<div class="cid-linha">'+esc(meta)+'</div>':''}</div>${dir}</div>`;
   });
   b.innerHTML=h;
   buscarFotosDaCidade(spots);
