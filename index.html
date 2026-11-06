@@ -2801,7 +2801,7 @@ body.exm #exploreCozinhas,body.exm #exploreBody{display:none!important}
 .atp .at-aceitar{flex:1;height:34px;border-radius:17px;font-size:14px}
 .atp-x{flex:none;width:34px;height:34px;border:0;border-radius:17px;background:rgba(245,245,243,.08);color:var(--ink);display:grid;place-items:center;cursor:pointer}
 .atp-x svg{width:14px;height:14px}
-.atp-cancelar{flex:1;height:34px;border:0;border-radius:17px;background:rgba(245,245,243,.08);color:var(--ink2);font:inherit;font-size:14px;font-weight:600;cursor:pointer}
+.atp-cancelar{flex:1;height:34px;padding:0;border:0;border-radius:17px;background:rgba(245,245,243,.08);color:var(--ink2);font:inherit;font-size:14px;font-weight:600;cursor:pointer}
 .at-pils{display:flex;gap:8px;margin:24px 0 8px}
 .at-quando{display:block;margin-top:2px;font-size:13px;color:var(--ink3)}
 .at-foto{width:48px;height:48px;border-radius:12px}
@@ -6117,7 +6117,7 @@ function pintarAtividade(){
       +inc.map(r=>'<div class="atp">'+plnAvatar(r.follower_id,'g')+'<span class="atp-nome">'+esc(friendName(pmap[r.follower_id]))+'</span>'+arroba(pmap[r.follower_id])
         +'<span class="atp-bt"><button class="at-aceitar" onclick="respondRequest(\''+esc(r.id)+'\',true)">Aceitar</button><button class="atp-x" onclick="respondRequest(\''+esc(r.id)+'\',false)" aria-label="Recusar">'+icon('close')+'</button></span></div>').join('')
       +out.map(r=>'<div class="atp">'+plnAvatar(r.following_id,'g')+'<span class="atp-nome">'+esc(friendName(pmap[r.following_id]))+'</span><span class="atp-meta">Pedido enviado</span>'
-        +'<span class="atp-bt"><button class="atp-cancelar" onclick="cancelRequest(\''+esc(r.id)+'\')">Cancelar</button></span></div>').join('')
+        +'<span class="atp-bt"><button class="at-recusar atp-cancelar" onclick="cancelRequest(\''+esc(r.id)+'\')">Cancelar</button></span></div>').join('')
       +'</div>';
   }
   const itens=ATIV.itens;
