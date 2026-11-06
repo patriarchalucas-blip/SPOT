@@ -6255,7 +6255,7 @@ async function signInOAuth(provedor){
   if(!sb)return;
 
   if(!naCasca()){
-    const{error}=await sb.auth.signInWithOAuth({provider:provedor,options:{redirectTo:window.location.origin}});
+    const{error}=await sb.auth.signInWithOAuth({provider:provedor,options:{redirectTo:window.location.origin+'/'}});   // com a barra: casa com "https://.../**" da lista do Supabase (06/11, prévia)
     if(error)showAuthErr(error.message);
     return;
   }
