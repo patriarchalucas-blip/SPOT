@@ -14809,10 +14809,35 @@ async function garantirPerfilDaOrigem(s,depois){
   }catch(e){}
 }
 
+// Amigos aceitos, guardados 2 min: abrir várias conversas seguidas não repete
+// a consulta. Falhou: null (quem chama cai no caminho antigo, que confere).
+let AMIGOS_CACHE=null;
+async function amigosEmCache(){
+  if(!S.user)return null;
+  if(AMIGOS_CACHE&&AMIGOS_CACHE.uid===S.user.id&&Date.now()-AMIGOS_CACHE.t<120000)return AMIGOS_CACHE.ids;
+  const uid=S.user.id;
+  try{
+    const r=await dbGet('follows','status=eq.accepted&or=(follower_id.eq.'+uid+',following_id.eq.'+uid+')');
+    if(!Array.isArray(r)||falhou(r))return null;
+    const ids=new Set(r.map(x=>x.follower_id===uid?x.following_id:x.follower_id));
+    AMIGOS_CACHE={uid,t:Date.now(),ids};return ids;
+  }catch(e){return null}
+}
 async function carregarComentarios(spotId){
   if(!spotId)return[];
-  const lista=await dbGet('spot_comments','spot_id=eq.'+encodeURIComponent(spotId)+'&order=created_at.asc');
+  // 06/11: comentários, nomes de quem comentou e a lista de amigos saem JUNTOS
+  // (uma ida só ao banco, que fica em Oregon). Antes eram até três em fila.
+  // perfis_da_conversa (032) traz nome e @ de todo mundo da conversa; quem não
+  // é amigo fica marcado _conversa (o nome não abre o perfil, que não carrega).
+  const [lista,daConversa,amigos]=await Promise.all([
+    dbGet('spot_comments','spot_id=eq.'+encodeURIComponent(spotId)+'&order=created_at.asc'),
+    S.user?dbRpc('perfis_da_conversa',{p_spot:spotId}).catch(()=>null):null,
+    amigosEmCache()]);
   COMENTARIOS[spotId]=lista||[];
+  if(Array.isArray(daConversa)&&!falhou(daConversa)&&amigos){
+    const meu=S.user&&S.user.id;
+    daConversa.forEach(p=>{if(p&&p.id)COMENT_PERFIS[p.id]=(p.id===meu||amigos.has(p.id))?p:Object.assign({},p,{_conversa:true})});
+  }
   // Nome e avatar de quem comentou. So busca quem ainda nao esta em maos.
   const faltando=[...new Set((lista||[]).map(c=>c.user_id))].filter(id=>!COMENT_PERFIS[id]);
   if(faltando.length){
