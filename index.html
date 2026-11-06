@@ -278,7 +278,7 @@ body.tem-apple .btn-apple{display:flex}
    numa coluna de 390px tem 173px de altura — a proporcao dele e 800x355.
    Reservar 440px deixava 260px de trama vazia em volta de tres paises.
    Agora a area e o mapa mais o espaco do scorecard, e mais nada. */
-.dash-mapa-area{position:relative;background:var(--map-bg);overflow:hidden}
+.dash-mapa-area{position:relative;background:transparent;overflow:hidden}
 /* A faixa da marca fica ACIMA do mapa, nao em cima dele: o logotipo caia
    sobre o Canada e o avatar sobre o Japao, e num perfil com muitos paises
    os dois ficavam em cima de pais pintado. */
@@ -2816,6 +2816,34 @@ body.exm #exploreCozinhas,body.exm #exploreBody{display:none!important}
 #ov-editperfil .prof-linha{border:none!important;background:rgba(245,245,243,.06);border-radius:16px;margin-bottom:6px;padding-left:14px;padding-right:14px}
 #ov-editperfil .prof-sair{background:none;color:var(--ink3)}
 .nt-input,.note-input{background:rgba(245,245,243,.08);border:none;color:var(--ink)}
+/* Você (quadro "Você · mapa"): anel ao lado dos números, sem caixa; Em casa
+   em foto grande; viagens em fileira de fotos só com o nome. */
+#dashMundo{display:none}
+.placar-card{background:none!important;box-shadow:none!important;padding:0!important;margin:24px 20px 0;gap:22px}
+.vc-anel{position:relative;width:100px;height:100px;flex:none}
+.vc-anel svg{width:100%;height:100%;display:block}
+.vc-anel-tx{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center}
+.vc-anel-tx b{font-stretch:68%;font-size:36px;font-weight:700;line-height:.9;color:var(--green)}
+.vc-anel-tx span{font-size:11px;color:var(--ink2);margin-top:4px}
+.pc-n{font-stretch:68%;font-size:46px!important;line-height:.9}
+.dash-mais{background:rgba(7,32,25,.55)}
+.vc-cab{display:flex;align-items:baseline;justify-content:space-between;margin:36px 0 14px}
+.vc-tit{margin:0;font-stretch:68%;font-size:28px;font-weight:700}
+.vc-mais{border:0;background:none;padding:0;font:inherit;font-size:13px;font-weight:600;color:var(--green);cursor:pointer}
+.vc-casa{position:relative;display:block;width:100%;height:190px;border:0;padding:0;border-radius:22px;overflow:hidden;cursor:pointer;text-align:left}
+.vc-casa-foto,.vc-via-foto{position:absolute;inset:0;background:var(--photo-empty) center/cover no-repeat}
+.vc-veu{position:absolute;inset:0;background:linear-gradient(to top,rgba(0,0,0,.55),transparent 55%)}
+.vc-casa-nome{position:absolute;left:18px;bottom:16px;font-stretch:68%;font-size:40px;font-weight:700;line-height:.95;color:#F5F5F3}
+.vc-minis{position:absolute;right:14px;bottom:14px;display:flex}
+.vc-minis span{width:34px;height:34px;border-radius:50%;background:center/cover;box-shadow:0 0 0 2px rgba(7,32,25,.8)}
+.vc-minis span+span{margin-left:-10px}
+.vc-pils{display:flex;gap:8px;overflow-x:auto;margin:0 -20px 14px;padding:0 20px;scrollbar-width:none}
+.vc-pils::-webkit-scrollbar{display:none}
+.vc-pils .pil{flex:none}
+.vc-trilho{display:flex;gap:10px;overflow-x:auto;margin:0 -20px;padding:0 20px 8px;scrollbar-width:none}
+.vc-trilho::-webkit-scrollbar{display:none}
+.vc-via{position:relative;flex:none;width:150px;height:196px;border:0;padding:0;border-radius:20px;overflow:hidden;cursor:pointer;text-align:left}
+.vc-via b{position:absolute;left:14px;right:14px;bottom:12px;font-stretch:68%;font-size:24px;font-weight:700;line-height:1;color:#F5F5F3}
 /* Botões grandes do app inteiro: pílula */
 .btn-primario,.action-btn,.sheet-cta,.onb-btn,.exm-btn,.pf-bt{border-radius:27px}
 </style>
@@ -2927,6 +2955,7 @@ body.exm #exploreCozinhas,body.exm #exploreBody{display:none!important}
       <div class="dash-topo-acoes">
         <!-- 07/10: o Adicionar ficava no FIM da tela, depois de todas as viagens. -->
         <button class="dash-mais" onclick="adicionarDoTopo()" data-ic="plus" aria-label="Adicionar"></button>
+        <button class="dash-mais" onclick="abrirAtividade()" data-ic="bell" aria-label="Atividade"></button>
         <div class="avatar" id="dashAvatar" onclick="goTo('profile');loadProfile()" role="button" tabindex="0" aria-label="Abrir seu perfil">?</div>
       </div>
     </div>
@@ -2934,6 +2963,8 @@ body.exm #exploreCozinhas,body.exm #exploreBody{display:none!important}
     <!-- 15a (08/10): o anel saiu; a porcentagem virou frase entre o mapa e o placar. -->
     <div class="mundo-frase" id="dashMundo"><span class="mf-1">Você conheceu</span><span class="mf-2" id="dashMundoPct"></span></div>
     <div class="placar-card" id="dashPlacar">
+      <!-- Redesenho 06/11 (quadro Você): o anel "% do mundo" volta, ao lado dos números. -->
+      <div class="vc-anel"><svg viewBox="0 0 104 104" aria-hidden="true"><circle cx="52" cy="52" r="46" fill="none" stroke="rgba(245,245,243,.14)" stroke-width="7"/><circle id="dashAnelArco" cx="52" cy="52" r="46" fill="none" stroke="#F2EDE3" stroke-width="7" stroke-linecap="round" stroke-dasharray="0 289" transform="rotate(-90 52 52)"/></svg><span class="vc-anel-tx"><b id="dashAnelPct">0%</b><span>do mundo</span></span></div>
       <div class="placar-col">
         <button class="pc-item" onclick="openList('countries')">
           <span class="pc-n" id="dashPaisesN">0</span><span class="pc-r">países<i class="pc-seta">›</i></span>
@@ -3520,6 +3551,7 @@ compass:'<circle cx="12" cy="12" r="9"/><path d="M15.5 8.5l-2.2 5.2-5.2 2.2 2.2-
 pin:'<path d="M12 21c4-4.4 6-7.7 6-10.5a6 6 0 1 0-12 0C6 13.3 8 16.6 12 21Z"/><circle cx="12" cy="10.5" r="2.2"/>',
 city:'<path d="M3 21V9l6-2.5v14.5"/><path d="M9 21V11l8-3v13"/><path d="M17 21V13l4 1.5V21"/><path d="M3 21h18"/>',
 star:'<path d="M12 4l2.35 4.76 5.25.76-3.8 3.7.9 5.23L12 16.24 7.3 18.45l.9-5.23-3.8-3.7 5.25-.76L12 4Z"/>',
+bell:'<path d="M6.5 16.5h11l-1.3-1.8V10.5a4.2 4.2 0 0 0-8.4 0v4.2l-1.3 1.8Z"/><path d="M10.2 19a1.9 1.9 0 0 0 3.6 0"/>',
 bookmark:'<path d="M6.5 4h11a1 1 0 0 1 1 1v15l-6.5-4.3L5.5 20V5a1 1 0 0 1 1-1Z"/>',
 check:'<path d="M5 12.5l4.5 4.5L19 7.5"/>',
 suitcase:'<rect x="4" y="8" width="16" height="12" rx="2.2"/><path d="M9 8V5.5a1.5 1.5 0 0 1 1.5-1.5h3A1.5 1.5 0 0 1 15 5.5V8"/><path d="M9.5 8v12M14.5 8v12"/>',
@@ -7613,10 +7645,19 @@ function cardDeCasa(){
   const pais=(S.profile&&S.profile.home_country)||'';
   // Desenho c1 (05/10): bloco próprio, antes do título "Viagens", e fora da
   // lista — a cidade onde mora não é uma viagem.
-  return '<div class="vg-rot">Onde você mora</div>'
-    +'<button class="vg-casa2" onclick="abrirCasa()">'
-    +'<span class="vg-casa2-foto" id="casaFoto" style="background-image:'+(FOTO_DE_CASA?cssUrl(FOTO_DE_CASA):destGradient(pais))+'"></span>'
-    +'<span class="pf-row-txt"><b>'+esc(r.cidade)+'</b><span>'+esc(r.meta)+'</span></span><span class="vg-l-seta">›</span>'
+  // Redesenho 06/11 (quadro Você): "Em casa" + foto grande só com o nome, e as
+  // fotos dos 3 últimos spots no canto. Sem legenda embaixo (o Lucas: "odeio
+  // esses rodapés").
+  const casa=(S.trips||[]).find(ehCasa);
+  const c=cidadeDeCasa();
+  const spots=(casa?spotsDaViagem(casa):allSpotsFlat().filter(s=>mesmoLugar(cityOf(s),c)))
+    .filter(s=>s.photo_url).sort((a,b)=>String(b.created_at||'').localeCompare(String(a.created_at||''))).slice(0,3);
+  const n=(casa?spotsDaViagem(casa):allSpotsFlat().filter(s=>mesmoLugar(cityOf(s),c))).length;
+  return '<div class="vc-cab"><h2 class="vc-tit">Em casa</h2>'+(n?'<button class="vc-mais" onclick="abrirCasa()">Ver os '+n+'</button>':'')+'</div>'
+    +'<button class="vc-casa" onclick="abrirCasa()">'
+    +'<span class="vc-casa-foto" id="casaFoto" style="background-image:'+(FOTO_DE_CASA?cssUrl(FOTO_DE_CASA):destGradient(pais))+'"></span>'
+    +'<span class="vc-veu"></span><b class="vc-casa-nome">'+esc(r.cidade)+'</b>'
+    +(spots.length?'<span class="vc-minis">'+spots.map(s=>'<span style="background-image:'+cssUrl(fotoNaLargura(s.photo_url,120))+'"></span>').join('')+'</span>':'')
     +'</button>';
 }
 // A foto da cidade de casa chega em segundo plano, como a das viagens.
@@ -7745,7 +7786,7 @@ function renderTrips(){
   // Onde você mora vem ANTES das viagens, e fica mesmo sem viagem nenhuma.
   const casa=cardDeCasa();
   if(casa)pintarFotoDeCasa();
-  const titulo='<div class="pf-cab vg-cab"><h2 class="pf-tit">Viagens<span class="pf-n">'+(visibleTrips.length||'')+'</span></h2><button class="pf-nova" onclick="abrirAdicionarViagem()">+ Adicionar</button></div>';
+  const titulo='<div class="vc-cab"><h2 class="vc-tit">Viagens</h2><button class="vc-mais" onclick="abrirAdicionarViagem()">+ Adicionar</button></div>';
   if(!visibleTrips.length&&!allSpotsFlat().length){
     // a3 (handoff 01/10): conta sem nenhum spot. O "Colar uma lista" só
     // aparece com a IA ligada no servidor.
@@ -7763,15 +7804,14 @@ function renderTrips(){
   }
 
   const{groups,ordem}=regioesComViagem();
-  // Continente que sumiu (viagem apagada) não pode deixar a tela vazia.
-  if(!REGIAO_ATIVA||!groups[REGIAO_ATIVA])REGIAO_ATIVA=ordem[0];
-  const trips=groups[REGIAO_ATIVA]||[];
-
-  // Continentes viram ABAS DE TEXTO. A pilula colorida e o mesmo cacoete do
-  // painel de indicadores: enfeite carregando informacao que o texto ja da.
-  let h=casa+titulo+'<nav class="cont-abas">';
-  h+=ordem.map(r=>'<button class="cont-aba'+(r===REGIAO_ATIVA?' on':'')
-    +'" onclick="trocarRegiao(\''+esc(r)+'\')">'+esc(r)+' · '+groups[r].length+'</button>').join('');
+  // Redesenho 06/11 (quadro Você): pílulas Todas · Europa · Américas…, com a
+  // contagem apagada ao lado. "Todas" é o padrão.
+  if(REGIAO_ATIVA!=='__todas'&&!groups[REGIAO_ATIVA])REGIAO_ATIVA='__todas';
+  const trips=REGIAO_ATIVA==='__todas'?visibleTrips:(groups[REGIAO_ATIVA]||[]);
+  let h=casa+titulo+'<nav class="vc-pils">';
+  h+='<button class="pil'+(REGIAO_ATIVA==='__todas'?' on':'')+'" onclick="trocarRegiao(\'__todas\')">Todas<i>'+visibleTrips.length+'</i></button>';
+  h+=ordem.map(r=>'<button class="pil'+(r===REGIAO_ATIVA?' on':'')
+    +'" onclick="trocarRegiao(\''+esc(r)+'\')">'+esc(r)+'<i>'+groups[r].length+'</i></button>').join('');
   h+='</nav>';
 
   // De carrossel pra MOSAICO. O carrossel escondia as viagens fora da tela
@@ -7794,7 +7834,11 @@ function renderTrips(){
   const ordenadas=trips.slice().sort((a,b)=>nSpots(b)-nSpots(a));
   // Linhas (desenho c1, 05/10): foto, país, "2 cidades · 14 spots", ›. O
   // mosaico mostrava 4 viagens por tela; a linha mostra o dobro.
-  h+='<div class="vg-lista">'+ordenadas.map(linhaDeViagem).join('')+'</div>';
+  // Redesenho 06/11: fileira de fotos que rola pro lado, só o nome por cima.
+  h+='<div class="vc-trilho">'+ordenadas.map(t=>{
+    const destino=(t.destinations&&t.destinations[0])||t.name;
+    return '<button class="vc-via" onclick="openTrip(\''+esc(t.id)+'\')"><span class="vc-via-foto" id="tcbg-'+esc(t.id)+'" style="background-image:'+destGradient(destino)+'"></span><span class="vc-veu"></span><b>'+esc(t.name)+'</b></button>';
+  }).join('')+'</div>';
   // O "Adicionar" do fim da lista saiu (09/10, o Lucas): repetia o "+" do topo,
   // que abre a mesma folha (spot, cidades ou países).
   // Colar uma lista continua à mão depois do primeiro acesso (05/10).
@@ -13323,6 +13367,9 @@ function fracaoDoMundo(n){
 function pintarFraseDoMundo(paises){
   const el=document.getElementById('dashMundoPct');
   if(el)el.textContent=fracaoDoMundo(paises)+' do mundo';
+  const pct=document.getElementById('dashAnelPct'),arco=document.getElementById('dashAnelArco');
+  if(pct)pct.textContent=fracaoDoMundo(paises);
+  if(arco){const f=Math.min(1,(Number(paises)||0)/PAISES_NO_MUNDO),v=2*Math.PI*46;arco.setAttribute('stroke-dasharray',(paises>0?Math.max(f*v,6):0)+' '+v)}
 }
 // SEMPRE INTEIRO, sem casa decimal (pedido do Lucas, 22/09/2026). Eu tinha
 // posto uma casa abaixo de 10% achando que "0,5%" dizia mais que "1%" — mas
