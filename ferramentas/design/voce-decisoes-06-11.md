@@ -20,3 +20,18 @@ Canvas: https://claude.ai/artifact/37Ttr1ukJn4YpXADnypeCN, quadro "Você · mapa
 - Conteúdo: silhueta + nome · **foto fina do país** (120 de altura, ex.: Brasil = Cristo Redentor) · **amigos que foram** + "N spots deles que você não salvou" · **básico**: capital, habitantes, fuso, língua, moeda, US$ 1 vale.
 - **Fora, não voltar:** frase "você foi em 2023" embaixo do nome, frase de descrição, suas cidades e seus números no país, spots soltos (Maní no card do Brasil não diz nada), botão "Ver país".
 - No app: câmbio atualizado por serviço de cotação; população e foto escolhidas por nós.
+
+# Aba Hotspots: decisões de 06/11/2026
+
+Quadros "Hotspots · Para você · capa (nova)" e "Hotspots · Amigos" no mesmo canvas. Mesmo fundo verde, branco quente e Archivo da Você.
+
+## Para você (versão capa, aprovada)
+- O **1º lugar é a capa**: foto de ponta a ponta (520 de altura), escurecida em cima e embaixo. As abas Para você · Amigos ficam por cima da foto.
+- No pé da foto: "Nº 1 da semana · São Paulo" (13/600, branco quente), o nome bem grande (64, condensada) e "tipo · bairro".
+- Abaixo: categorias em pílula (Gastronomia · Experiência) e a lista do 2º ao 5º (número condensado em branco quente, foto 68, nome, tipo · bairro).
+- **Fora:** data ("Sexta, 6 de novembro"), título "Hotspots de São Paulo", a seta pra trocar de cidade (a cidade segue onde a pessoa está; tocar no nome troca), título "Hotspots da semana" em cima da foto.
+
+## Amigos
+- O que os amigos salvaram, do mais novo pro mais antigo, **sem "Hoje"/"Ontem"**.
+- Card: foto grande (219) com a inicial de quem indicou e "+" pra salvar; nome e cidade; "Ana foi ★★★★★" ou "Rafa quer ir"; a dica entre aspas. Nunca "Não recomendo".
+- **Coração** (curtir) com contagem, à direita da linha "Ana foi". No app pede tabela nova e uma linha na Atividade: **"Rafa curtiu seu spot Cervejaria Ramiro"**.
