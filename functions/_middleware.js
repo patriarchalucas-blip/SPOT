@@ -57,6 +57,21 @@ export async function onRequest(context) {
     });
   }
 
+  // PRÉVIA DE BRANCH (06/11, redesenho): o ambiente "Preview" da Cloudflare
+  // não tem as chaves nem o KV — só a produção tem. Em vez de copiar segredo
+  // pra lá, a prévia pede as /api/ ao servidor de produção, servidor a
+  // servidor (sem CORS). Só quando falta o KV, então produção nunca passa aqui.
+  const u = new URL(context.request.url);
+  if (!context.env.SPOT_KV && /\.spotted-38b\.pages\.dev$/.test(u.hostname) && u.pathname.startsWith('/api/')) {
+    const r = context.request;
+    return fetch('https://meuspot.app' + u.pathname + u.search, {
+      method: r.method,
+      headers: r.headers,
+      body: r.method === 'GET' || r.method === 'HEAD' ? undefined : await r.arrayBuffer(),
+      redirect: 'manual',
+    });
+  }
+
   const resp = await context.next();
   return comImpressaoDigital(context.request, resp);
 }
