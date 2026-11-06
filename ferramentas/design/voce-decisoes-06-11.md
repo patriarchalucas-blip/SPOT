@@ -63,3 +63,18 @@ A Oficina (só planos de viagem) foi reprovada: vazia, ela não serve pra nada. 
 
 # Explorar · 06/11/2026
 Desenhado no visual novo (mapa escuro, amigos como pinos de foto, Google em pontos, folha "Perto de você"). O Lucas: "não sei se curti, mas blz — Explorar não é um problema visual hoje". Sem mudança decidida.
+
+# Telas que saem das abas · 06/11/2026
+
+Mesmo canvas, faixa "Telas que saem das abas". Todas aprovadas.
+
+- **Atividade (o sino)**: pedidos de amizade em cards no topo (Aceitar / ×); pílulas **Seus spots · Listas · Amigos** com ponto onde há novidade; linha = "**quem** fez **onde**" + tempo + foto. Vazia: 3 exemplos apagados + "Quando seus amigos curtirem ou salvarem seus spots, aparece aqui." + "Chamar amigos". **Fora:** separar "Novas/Antes", misturar aceite de amizade com curtida.
+- **Ficha do spot**: foto 420 que troca no toque; Quero ir / Já fui; meia estrela; Ligar · Rota · Cardápio · Instagram; seção **"Amigos"** (cards com nota, frase, coração e Responder) + "Rafa e Téo querem ir"; **Conversa N** com curtir e responder comentário; "Tirar dos meus spots" em cinza.
+- **Perfil do amigo**: Planejar juntos + ✓ Amigos; mapa dele; anel % do mundo + países/cidades/spots; Em comum; Em casa; Viagens. Cartões só com o nome.
+- **Amigos**: Convidar; busca por nome ou @; Sugestões (Adicionar → Enviado); Seus amigos com 3 fotos dos últimos spots.
+- **Cidade/viagem**: foto com o nome; pílulas Fui N | Quero ir N + "+"; nota ou rostos dos amigos à direita; "Excluir viagem".
+- **Ajustes**: grupos Conta · Preferências · Privacidade · Sobre; Sair; "Apagar conta" em cinza.
+- **Login**: foto, SPOT em Cinzel, Apple (claro) · Google · e-mail; termos numa linha.
+- **Primeiro acesso**: Onde você mora (obrigatório) → países (mapa + número ABAIXO) → cidades desses países → lugares anotados (só com IA) → Amigos → "Seu mapa, Lucas" com anel e continentes. A boas-vindas saiu: o login já faz esse papel.
+
+**Regras que valeram em todas:** nada de frase informal em título ("Quem foi", "por sua causa"); cartão de foto só com o nome; texto nunca por cima do mapa.
