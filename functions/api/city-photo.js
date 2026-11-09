@@ -105,6 +105,9 @@ export async function onRequestPost(context) {
   // Re-escolha que falha (sem login, teto, Unsplash fora) devolve a foto que
   // já havia, em vez de nenhuma (09/10).
   const ouGuardado = (resp) => guardado ? responder(context, guardado) : resp;
+  // App com as fotos pausadas (cota) pede só o que já está guardado (09/11):
+  // nada aqui embaixo, que é o que gasta.
+  if (body.soGuardado === true) return ouGuardado(json({ url: '' }));
 
   // Daqui pra baixo gasta cota de verdade — só pra quem está logado, ou para
   // uma das cidades fixas da tela de entrada (ver CIDADES_DA_ENTRADA).

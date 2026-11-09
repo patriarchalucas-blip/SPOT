@@ -4691,6 +4691,21 @@ async function impProcurarUm(c){
 }
 
 // ── 2a → 2b ──
+// Corta o texto em partes de até ~50 itens. Só corta numa linha de CIDADE:
+// título que não é item ("- ", "•", "[x]") e não termina em ":" (que é
+// categoria: "Restaurantes:"). Sem linha assim por perto, corta onde der.
+function impPartes(texto){
+  const linhas=String(texto).split(/\r?\n/);
+  const ehItem=l=>/^\s*([-•*]|\d+[.)]|\[[ xX]\])/.test(l);
+  const ehCidade=l=>{const t=l.trim();return t&&!ehItem(l)&&!/:\s*$/.test(t)};
+  const partes=[];let atual=[],itens=0;
+  for(const l of linhas){
+    if(itens>=50&&ehCidade(l)||itens>=80||atual.join('\n').length>6000){partes.push(atual.join('\n'));atual=[];itens=0}
+    atual.push(l);if(ehItem(l))itens++;
+  }
+  if(atual.join('').trim())partes.push(atual.join('\n'));
+  return partes.length?partes:[texto];
+}
 async function impEncontrar(){
   const campo=document.getElementById('impTexto');
   const texto=String((campo&&campo.value)||IMP.texto||'').trim();
@@ -4700,11 +4715,27 @@ async function impEncontrar(){
   IMP.etapa='lendo';IMP.cancelado=false;impPintar();
   // Leitura cancelada e começada de novo: a resposta da antiga não vale.
   const minha=IMP.leituraN=(IMP.leituraN||0)+1;
+  // LISTA GRANDE EM PARTES (09/11): o servidor lê até 100 lugares por vez; a
+  // lista de viagens do Lucas tinha ~200 e a leitura nunca voltava (ficava em
+  // "Lendo suas notas…"). Corta no começo de uma CIDADE, pra cada parte saber
+  // de onde são os lugares, e lê duas partes ao mesmo tempo.
   let d=null;
   try{
     const tk=await ensureToken();
-    const r=await comPrazo(fetch('/api/importar',{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+tk},body:JSON.stringify({texto})}),90000,null);
-    d=r?await r.json().catch(()=>null):null;
+    const partes=impPartes(texto);
+    const ler=async parte=>{
+      const r=await comPrazo(fetch('/api/importar',{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+tk},body:JSON.stringify({texto:parte})}),90000,null);
+      return r?await r.json().catch(()=>null):null;
+    };
+    const res=[];let prox=0;
+    const um=async()=>{while(prox<partes.length){const i=prox++;res[i]=await ler(partes[i])}};
+    await Promise.all([um(),um()]);
+    if(res.some(x=>x&&x.capped))d={capped:true};
+    else{
+      const ok=res.filter(x=>x&&Array.isArray(x.lugares));
+      d=ok.length?{lugares:[].concat(...ok.map(x=>x.lugares))}:null;
+      if(ok.length<res.length&&ok.length)toast('Parte da lista não foi lida','Os lugares das outras partes estão aqui. Cole o resto de novo depois.','alert');
+    }
   }catch(e){d=null}
   if(IMP.cancelado||minha!==IMP.leituraN)return;
   if(d&&d.capped){IMP.etapa='colar';impPintar();toast('Limite de importações do mês','Tenta de novo no mês que vem, ou adicione um por um.','alert');return}
@@ -16014,7 +16045,10 @@ async function buscarFotoDe(query,extra){
     if(typeof c==='string')return c; // formato antigo (positivo, sem expiração)
   }
   // Se a cota estourou há pouco, não martela de novo — usa gradiente
-  if(Date.now()<unsplashBlockedUntil)return'';
+  // Pausa de fotos (cota) NÃO pode esconder as fotos que o servidor já tem
+  // guardadas: essas não custam nada (09/11, Reino Unido e Hungria sem capa no
+  // iPhone do Lucas com a foto no servidor). Pausado, pede só o guardado.
+  const soGuardado=Date.now()<unsplashBlockedUntil;
   // Passa por /api/city-photo em vez de chamar o Unsplash direto. Dois motivos:
   // a chave sai do navegador (ela funciona de qualquer origem, então quem
   // copiasse do código usava a cota), e o cache passa a ser COMPARTILHADO no
@@ -16026,7 +16060,7 @@ async function buscarFotoDe(query,extra){
     const resp=await fetch('/api/city-photo',{
       method:'POST',
       headers:Object.assign({'Content-Type':'application/json'},tk?{'Authorization':'Bearer '+tk}:{}),
-      body:JSON.stringify(Object.assign({query:pedido},extra||{}))
+      body:JSON.stringify(Object.assign({query:pedido},extra||{},soGuardado?{soGuardado:true}:{}))
     });
     if(!resp.ok)return'';
     const d=await resp.json();
@@ -16052,7 +16086,7 @@ async function buscarFotoDe(query,extra){
     // Foto do Google (/api/place-photo) expira: no aparelho, vale 30 dias e
     // pede de novo (09/10). A do Unsplash é permanente.
     if(url){cityPhotoCache[query]=/^\/api\/place-photo/.test(url)?{url,exp:Date.now()+30*864e5}:url;savePhotoCache()}
-    else{cityPhotoCache[query]={url:'',exp:Date.now()+60*60*1000};savePhotoCache()} // sem resultado: não retenta por 1h
+    else if(!soGuardado){cityPhotoCache[query]={url:'',exp:Date.now()+60*60*1000};savePhotoCache()} // sem resultado: não retenta por 1h (pausado não conta: só não havia guardado)
     return url;
   }catch(e){return''}
 }
