@@ -2910,6 +2910,36 @@ body.exm #exploreCozinhas,body.exm #exploreBody{display:none!important}
 .fic-pe{display:flex;align-items:center;gap:14px;margin-top:auto}
 /* Botões grandes do app inteiro: pílula */
 .btn-primario,.action-btn,.sheet-cta,.onb-btn,.exm-btn,.pf-bt{border-radius:27px}
+/* ═══ HOTSPOTS (redesenho 06/11: "Para você · capa" e "Amigos") ═══ */
+.hv-capa{position:relative;height:520px;background:#2F5C4C center/cover no-repeat;cursor:pointer}
+.hv-capa::before{content:"";position:absolute;inset:0;background:linear-gradient(to bottom,rgba(0,0,0,.45),transparent 30%,transparent 50%,rgba(0,0,0,.7))}
+.hv-abas{position:relative;z-index:2;display:flex;gap:20px;padding:56px 20px 0}
+.hv-abas button{border:0;background:none;padding:0 0 6px;font:inherit;font-size:15px;font-weight:600;color:rgba(245,245,243,.6);cursor:pointer}
+.hv-abas button.on{color:var(--ink);box-shadow:inset 0 -2px 0 var(--ink)}
+.hv-sem-capa{padding-bottom:8px}
+.hv-pe{position:absolute;z-index:2;left:20px;right:20px;bottom:24px;color:var(--green)}
+.hv-pe small{display:block;font-size:13px;font-weight:600}
+.hv-pe small button{border:0;background:none;padding:0;font:inherit;color:inherit;text-decoration:underline;text-underline-offset:3px;cursor:pointer}
+.hv-pe b{display:block;margin:6px 0 4px;font-stretch:68%;font-size:64px;line-height:.95;font-weight:700;color:var(--ink)}
+.hv-pe span{font-size:14px;color:rgba(245,245,243,.85)}
+.hv-pils{display:flex;gap:8px;padding:20px 20px 4px;overflow-x:auto}
+.hv-linha{display:flex;align-items:center;gap:14px;padding:10px 20px;cursor:pointer}
+.hv-num{width:28px;flex:none;font-stretch:68%;font-size:30px;font-weight:700;color:var(--green)}
+.hv-foto{width:68px;height:68px;flex:none;border-radius:14px;background:#2F5C4C center/cover no-repeat}
+.hv-txt{min-width:0;display:flex;flex-direction:column;gap:3px}
+.hv-txt b{font-size:16px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.hv-txt span{font-size:13px;color:var(--ink2)}
+.hv-am{padding:12px 20px 0;display:flex;flex-direction:column;gap:28px}
+.hv-card{cursor:pointer}
+.hv-card-foto{position:relative;height:219px;border-radius:18px;background:#2F5C4C center/cover no-repeat}
+.hv-card-foto .pln-av{position:absolute;left:12px;bottom:12px}
+.hv-salvar{position:absolute;right:12px;bottom:12px;width:36px;height:36px;border:0;border-radius:18px;background:var(--green);color:var(--on-green);display:grid;place-items:center;cursor:pointer}
+.hv-card h3{margin:12px 0 2px;font-size:17px;font-weight:600}
+.hv-card .hv-cid{font-size:13px;color:var(--ink2)}
+.hv-quem{display:flex;align-items:center;gap:8px;margin-top:8px;font-size:14px;font-weight:600}
+.hv-quem .fd-estrelas{color:var(--green)}
+.hv-quem .coment-curtir{margin-left:auto}
+.hv-dica{margin:6px 0 0;font-size:14px;color:var(--ink2)}
 </style>
 </head>
 <body>
@@ -3303,6 +3333,11 @@ body.exm #exploreCozinhas,body.exm #exploreBody{display:none!important}
   <div style="height:120px"></div>
   <div class="bottom-nav"></div>
 </div>
+<div class="screen" id="hotspots">
+  <div id="hsCorpo"></div>
+  <div style="height:120px"></div>
+  <div class="bottom-nav"></div>
+</div>
 <div class="overlay" id="ov-novalista" onclick="closeOut(event,'ov-novalista')"><div class="sheet"><button class="sheet-close" onclick="closeOv('ov-novalista')" data-ic="close" aria-label="Fechar"></button><div class="sheet-handle"></div><div id="lsNova"></div></div></div>
 <div class="overlay" id="ov-poralista" onclick="closeOut(event,'ov-poralista')"><div class="sheet sheet-fixa"><button class="sheet-close" onclick="closeOv('ov-poralista')" data-ic="close" aria-label="Fechar"></button><div class="sheet-handle"></div><div id="lsPor"></div></div></div>
 
@@ -3635,6 +3670,7 @@ city:'<path d="M3 21V9l6-2.5v14.5"/><path d="M9 21V11l8-3v13"/><path d="M17 21V1
 star:'<path d="M12 4l2.35 4.76 5.25.76-3.8 3.7.9 5.23L12 16.24 7.3 18.45l.9-5.23-3.8-3.7 5.25-.76L12 4Z"/>',
 grade:'<rect x="4.5" y="4.5" width="6" height="6" rx="1.5"/><rect x="13.5" y="4.5" width="6" height="6" rx="1.5"/><rect x="4.5" y="13.5" width="6" height="6" rx="1.5"/><rect x="13.5" y="13.5" width="6" height="6" rx="1.5"/>',
 heart:'<path d="M12 19.5s-7-4.3-7-9.6A4 4 0 0 1 12 7.6a4 4 0 0 1 7 2.3c0 5.3-7 9.6-7 9.6Z"/>',
+fire:'<path d="M12 20c-3.3 0-6-2.4-6-5.7 0-3 2-4.6 3.3-6.6.6 1.6 1.5 2.4 2.5 2.7C12 7.8 12.6 5.6 14.3 4c.2 2.6 1.4 3.9 2.6 5.5.8 1.2 1.1 2.4 1.1 4.8C18 17.6 15.3 20 12 20Z"/>',
 bell:'<path d="M6.5 16.5h11l-1.3-1.8V10.5a4.2 4.2 0 0 0-8.4 0v4.2l-1.3 1.8Z"/><path d="M10.2 19a1.9 1.9 0 0 0 3.6 0"/>',
 bookmark:'<path d="M6.5 4h11a1 1 0 0 1 1 1v15l-6.5-4.3L5.5 20V5a1 1 0 0 1 1-1Z"/>',
 check:'<path d="M5 12.5l4.5 4.5L19 7.5"/>',
@@ -15354,16 +15390,18 @@ function avisarConteudoBarrado(){
 }
 
 // ═══ BARRA DE BAIXO DO REDESENHO (06/11) ═══
-// Você · + · Explorar · Listas (Hotspots entra quando a aba existir). Amigos
+// Você · + · Explorar · Listas (Hotspots entra quando a aba existir). Só
+// ícone, sem nome embaixo (o Lucas, 09/11: "não é pra ter nome as abas"). Amigos
 // e Perfil saíram da barra: Amigos é o ícone no topo da Você, Perfil é o
 // rosto. Dentro do app quem desenha a barra é a casca; esta vale pro site.
-const ABA_DA_TELA={dashboard:'voce',trip:'voce',city:'voce',list:'voce',mapaMundi:'voce',explore:'explorar',listas:'listas',lista:'listas'};
+const ABA_DA_TELA={dashboard:'voce',trip:'voce',city:'voce',list:'voce',mapaMundi:'voce',explore:'explorar',listas:'listas',lista:'listas',hotspots:'hotspots'};
 function barraNova(){
   document.querySelectorAll('.screen').forEach(sc=>{
     const nav=sc.querySelector(':scope > .bottom-nav');if(!nav)return;
     const ativa=ABA_DA_TELA[sc.id]||'';
-    const it=(k,ic,rot,acao)=>'<div class="nav-item'+(ativa===k?' active':'')+'" onclick="'+acao+'"><div class="nav-icon" data-ic="'+ic+'"></div><div class="nav-label">'+rot+'</div></div>';
+    const it=(k,ic,rot,acao)=>'<div class="nav-item'+(ativa===k?' active':'')+'" role="button" aria-label="'+rot+'" onclick="'+acao+'"><div class="nav-icon" data-ic="'+ic+'"></div></div>';
     nav.innerHTML=it('voce','user','Você',"goTo('dashboard');loadDashboard()")
+      +it('hotspots','fire','Hotspots','hsAbrir()')
       +'<div class="nav-item nav-mais" onclick="adicionarDoTopo()"><div class="nav-icon" data-ic="plus"></div></div>'
       +it('explorar','search','Explorar',"goTo('explore');loadExplore()")
       +it('listas','grade','Listas','lsAbrir()');
@@ -15371,6 +15409,102 @@ function barraNova(){
   });
 }
 if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',barraNova);else barraNova();
+// ═══ HOTSPOTS (redesenho 06/11) ═══
+// Para você: a lista da semana JÁ PUBLICADA (/api/hotspots op vitrine), a
+// cidade segue onde a pessoa mora (Rio ou São Paulo; tocar no nome troca).
+// Amigos: o que os amigos salvaram, do mais novo pro mais antigo.
+const HSV={aba:'voce',dados:null,cidade:'',cat:'',amigos:null,erro:false};
+async function hsAbrir(){
+  goTo('hotspots');hsPintar();
+  if(!HSV.dados){
+    try{
+      const pedir=op=>fetch('/api/hotspots',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({op})}).then(r=>r.json());
+      let d=await comPrazo(pedir('vitrine'),15000);
+      // Servidor de antes da vitrine (a prévia do redesenho fala com o de
+      // produção): cai na prévia da newsletter, que é a mesma lista.
+      if(d&&d.error==='op')d=await comPrazo(pedir('previa'),15000);
+      HSV.dados=d&&Array.isArray(d.listas)?d:{listas:[]};HSV.erro=false;
+    }catch(e){HSV.erro=true}
+  }
+  if(!HSV.cidade){
+    const casa=normName((S.profile&&S.profile.home_city)||'');
+    const l=(HSV.dados&&HSV.dados.listas)||[];
+    HSV.cidade=(l.find(x=>normName(x.cidade)===casa)||l.find(x=>/s.o paulo/i.test(x.cidade))||l[0]||{}).cidade||'';
+  }
+  hsPintar();
+}
+function hsAba(a){HSV.aba=a;hsPintar();if(a==='amigos'&&!HSV.amigos)hsCarregarAmigos()}
+function hsTrocarCidade(){
+  const l=(HSV.dados&&HSV.dados.listas)||[];if(l.length<2)return;
+  const i=l.findIndex(x=>x.cidade===HSV.cidade);HSV.cidade=l[(i+1)%l.length].cidade;HSV.cat='';hsPintar();
+}
+function hsCat(c){HSV.cat=HSV.cat===c?'':c;hsPintar()}
+const HS_CAT={food:'Gastronomia',experience:'Experiência',hotel:'Hospedagem'};
+function hsLugares(){
+  const l=((HSV.dados&&HSV.dados.listas)||[]).find(x=>x.cidade===HSV.cidade);
+  return l?l.lugares:[];
+}
+function hsAbas(){
+  return '<div class="hv-abas"><button class="'+(HSV.aba==='voce'?'on':'')+'" onclick="hsAba(\'voce\')">Para você</button>'
+    +'<button class="'+(HSV.aba==='amigos'?'on':'')+'" onclick="hsAba(\'amigos\')">Amigos</button></div>';
+}
+function hsPintar(){
+  const c=document.getElementById('hsCorpo');if(!c)return;
+  if(HSV.aba==='amigos'){c.innerHTML='<div class="hv-sem-capa">'+hsAbas()+'</div>'+hsPintarAmigos();hydrateIcons(c);return}
+  if(HSV.erro){c.innerHTML='<div class="hv-sem-capa">'+hsAbas()+'</div><div class="at-vazio">Não carregou. Confere a conexão.<br><button class="btn-primario" style="margin-top:16px" onclick="HSV.dados=null;hsAbrir()">Tentar de novo</button></div>';return}
+  if(!HSV.dados){c.innerHTML='<div class="hv-sem-capa">'+hsAbas()+'</div><div class="at-vazio">Carregando...</div>';return}
+  const todos=hsLugares();
+  if(!todos.length){c.innerHTML='<div class="hv-sem-capa">'+hsAbas()+'</div><div class="at-vazio">A lista da semana sai sexta às 17h.</div>';return}
+  const cats=[...new Set(todos.map(x=>x.categoria))].filter(k=>HS_CAT[k]);
+  const lista=HSV.cat?todos.filter(x=>x.categoria===HSV.cat):todos;
+  const meta=x=>esc([hsTipo(x.tipo),x.bairro].filter(Boolean).join(' · '));
+  const n1=todos[0],iDe=x=>todos.indexOf(x);
+  let h='<div class="hv-capa" style="background-image:'+(n1.foto?esc(cssUrl(n1.foto)):'none')+'" onclick="hsAbrirLugar(0)">'+hsAbas()
+    +'<div class="hv-pe"><small>Nº 1 da semana · '+(((HSV.dados.listas||[]).length>1)?'<button onclick="event.stopPropagation();hsTrocarCidade()">'+esc(HSV.cidade)+'</button>':esc(HSV.cidade))+'</small>'
+    +'<b>'+esc(n1.nome)+'</b><span>'+meta(n1)+'</span></div></div>';
+  if(cats.length>1)h+='<div class="hv-pils">'+cats.map(k=>'<button class="pil'+(HSV.cat===k?' on':'')+'" onclick="hsCat(\''+k+'\')">'+HS_CAT[k]+'</button>').join('')+'</div>';
+  h+=lista.filter(x=>x!==n1).map(x=>{const i=iDe(x);
+    return '<div class="hv-linha" onclick="hsAbrirLugar('+i+')"><span class="hv-num">'+(i+1)+'</span>'
+      +'<span class="hv-foto"'+(x.foto?' style="background-image:'+esc(cssUrl(fotoNaLargura(x.foto,240)))+'"':'')+'></span>'
+      +'<span class="hv-txt"><b>'+esc(x.nome)+'</b><span>'+meta(x)+'</span></span></div>'}).join('');
+  c.innerHTML=h;hydrateIcons(c);
+}
+function hsTipo(t){return (t&&TIPO_ROTULO[t])||''}
+function hsAbrirLugar(i){
+  const x=hsLugares()[i];if(!x)return;
+  const meu=meuSpotIgual(x.nome,HSV.cidade);
+  if(meu){openPlace(meu.id,'hotspots');return}
+  EXPLORE.avulso={name:x.nome,address:x.endereco||'',city:HSV.cidade,country:'Brasil',subcat:'',phone:'',
+    photo_url:x.foto||'',photo_author:{nome:'',url:''},rating:'',website_url:x.site||'',maps_url:x.maps||'',
+    lat:null,lng:null,price_level:x.preco||null,tipo:x.tipo||'',_cat:x.categoria||'food'};
+  abrirPreviaDoExplorar('avulso');
+}
+async function hsCarregarAmigos(){
+  try{
+    const l=await plnSpotsDeles();
+    HSV.amigos=(l||[]).filter(s=>s.status==='been'||s.status==='want')
+      .sort((a,b)=>String(b.fui_em||b.created_at||'').localeCompare(String(a.fui_em||a.created_at||''))).slice(0,40);
+    await carregarCurtidasDeSpot(HSV.amigos.map(s=>s.id));
+  }catch(e){HSV.amigos=[]}
+  if(HSV.aba==='amigos')hsPintar();
+}
+function hsPintarAmigos(){
+  if(!HSV.amigos)return '<div class="at-vazio">Carregando...</div>';
+  if(!HSV.amigos.length)return '<div class="at-vazio">Quando seus amigos salvarem spots, eles aparecem aqui.</div>';
+  return '<div class="hv-am">'+HSV.amigos.map((s,i)=>{
+    const quem=esc(plnPrimeiro(s.user_id)),cs=CURT_SPOT[s.id]||{n:0,meu:false};
+    const foto=s._fotoVista||s.photo_url;
+    return '<div class="hv-card" onclick="hsAbrirDoAmigo('+i+')">'
+      +'<div class="hv-card-foto"'+(foto?' style="background-image:'+esc(cssUrl(fotoNaLargura(foto,800)))+'"':'')+'>'+plnAvatar(s.user_id,'p')
+      +'<button class="hv-salvar" onclick="event.stopPropagation();hsAbrirDoAmigo('+i+')" aria-label="Salvar">'+icon('plus')+'</button></div>'
+      +'<h3>'+esc(s.name)+'</h3><span class="hv-cid">'+esc(cityOf(s)||s.city||'')+'</span>'
+      +'<div class="hv-quem">'+(s.status==='been'?quem+' foi '+estrelasHTML(s.my_rating,14):quem+' quer ir')
+      +'<button class="coment-curtir'+(cs.meu?' on':'')+'" onclick="event.stopPropagation();curtirSpot(\''+esc(s.id)+'\',hsPintar)" aria-label="Curtir">'+icon('heart')+(cs.n?'<i>'+cs.n+'</i>':'')+'</button></div>'
+      +(s.my_review?'<p class="hv-dica">“'+esc(s.my_review)+'”</p>':'')
+      +'</div>';
+  }).join('')+'</div>';
+}
+function hsAbrirDoAmigo(i){const s=(HSV.amigos||[])[i];if(s)abrirFichaDoSpotDeAmigo(s)}
 // ═══ LISTAS (038, redesenho 06/11) ═══
 // Tabelas listas / lista_membros / lista_spots. Toda lista pode ser
 // compartilhada: quem está nela vê e põe spots; só o dono chama gente (amigo

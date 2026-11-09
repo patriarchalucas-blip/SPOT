@@ -389,6 +389,8 @@ async function trataPedido(pg, r) {
     if (api === 'places') return responde(200, JSON.stringify(placesResponde(r.postData())));
     if (api === 'lugar') return responde(200, JSON.stringify(lugarResponde(r.postData())));
     if (api === 'place-photo' || api === 'city-photo' && metodo === 'GET' && /img=1/.test(u)) return responde(200, PNG1, 'image/png');
+    // Hotspots da semana (vitrine pública): duas cidades, 3 lugares em SP.
+    if (api === 'hotspots') return responde(200, JSON.stringify({ listas: [{ cidade: 'São Paulo', lugares: [{ id: 'g1', categoria: 'food', nome: 'Bar do Teste', bairro: 'Pinheiros', tipo: 'bar', foto: '' }, { id: 'g2', categoria: 'food', nome: 'Cantina Dois', bairro: 'Bixiga', tipo: '', foto: '' }, { id: 'g3', categoria: 'experience', nome: 'Museu Três', bairro: 'Centro', tipo: '', foto: '' }] }, { cidade: 'Rio de Janeiro', lugares: [{ id: 'g4', categoria: 'food', nome: 'Boteco Rio', bairro: 'Botafogo', tipo: '', foto: '' }] }] }));
     if (api === 'importar') return responde(200, JSON.stringify(metodo === 'GET' ? { ligado: true } : { lugares: [] }));
     // Lista pública aberta antes de instalar (26/10): LISTA_CONEXAO = { codigo, dono, spots }.
     if (api === 'lista') {
@@ -1301,6 +1303,18 @@ if (l10) {
     confere(!DB.spot_curtidas.some(c => c.spot_id === spA10.id && c.user_id === B.id), 'B descurte');
   }
 }
+// Hotspots (redesenho): a lista da semana e o que os amigos salvaram.
+await ir(pb, `(async()=>{document.querySelectorAll('.overlay.show').forEach(o=>closeOv(o.id));await hsAbrir()})()`, 1500);
+const hs10 = await texto(pb, '#hsCorpo');
+confere(/Nº 1 da semana/.test(hs10 || '') && /Bar do Teste[\s\S]*Cantina Dois|Boteco Rio/.test(hs10 || ''), 'Hotspots mostra a lista da semana', hs10);
+try { await pb.screenshot({ path: process.env.TEMP + '/jornada-hotspots.png' }) } catch (e) {}
+await ir(pb, `hsTrocarCidade()`, 400);
+const hsb10 = await texto(pb, '#hsCorpo') || '';
+confere(/Boteco Rio/.test(hs10 || '') ? /Bar do Teste/.test(hsb10) : /Boteco Rio/.test(hsb10), 'tocar na cidade troca de cidade', hsb10);
+await ir(pb, `hsAba('amigos')`, 2000);
+const hsa10 = await texto(pb, '#hsCorpo');
+confere(!spA10 || (hsa10 || '').includes(spA10.name), 'Hotspots · Amigos mostra o spot de A', hsa10);
+try { await pb.screenshot({ path: process.env.TEMP + '/jornada-hotspots-amigos.png' }) } catch (e) {}
 ['A', 'B'].forEach(n => { const e = errosDe(PAGINAS[n]); confere(!e.length, 'sem erro de JS no aparelho ' + n + ' (listas)', e) });
 
 // ═══ fim ═══
