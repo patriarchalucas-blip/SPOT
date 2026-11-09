@@ -31,9 +31,9 @@ import {
   View,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import Svg, { Path } from 'react-native-svg';
+import Svg, { Circle, Path } from 'react-native-svg';
 import MapaMundi from './MapaMundi';
-import { BASE, SURFACE, INK, INK2, INK3, GREEN, ON_GREEN, MAP_BG, PHOTO_EMPTY } from './cores';
+import { BASE, SURFACE, INK, INK2, INK3, GREEN, ON_GREEN, PHOTO_EMPTY, DISPLAY, CORPO, NEGRITO } from './cores';
 import { folgaDeRolagem } from './BarraDeAbas';
 import { t } from './idioma';
 
@@ -175,6 +175,7 @@ function CardDeViagem({ t, grande, altura, aoAbrir }) {
 const LINHA = 118;
 const FOLGA = 8;
 
+// eslint-disable-next-line no-unused-vars -- o mosaico saiu no redesenho (06/11); fica até a fileira ser aprovada no iPhone
 function Mosaico({ viagens, acao }) {
   const abrir = (t) => () => acao('abrir', t.id);
   const [destaque, ...resto] = viagens;
@@ -208,6 +209,27 @@ function Mosaico({ viagens, acao }) {
           </View>
         </View>
       ))}
+    </View>
+  );
+}
+
+// O anel "% do mundo" (redesenho 06/11). Mesmo desenho do site (.vc-anel):
+// raio 46 num quadro de 104, traço 7, começa às 12h. País tem mínimo visível.
+function Anel({ paises }) {
+  const volta = 2 * Math.PI * 46;
+  const f = Math.min(1, (Number(paises) || 0) / PAISES_NO_MUNDO);
+  const arco = paises > 0 ? Math.max(f * volta, 6) : 0;
+  return (
+    <View style={e.anel}>
+      <Svg width={100} height={100} viewBox="0 0 104 104">
+        <Circle cx={52} cy={52} r={46} fill="none" stroke="rgba(245,245,243,0.14)" strokeWidth={7} />
+        <Circle cx={52} cy={52} r={46} fill="none" stroke={GREEN} strokeWidth={7} strokeLinecap="round"
+          strokeDasharray={arco + ' ' + volta} transform="rotate(-90 52 52)" />
+      </Svg>
+      <View style={e.anelTx} pointerEvents="none">
+        <Text style={e.anelPct}>{fracaoDoMundo(paises)}</Text>
+        <Text style={e.anelRot}>{t('do mundo')}</Text>
+      </View>
     </View>
   );
 }
@@ -254,6 +276,18 @@ export default function TelaViagens({ dados, ocupado, acao }) {
                 <Path d="M12 5.5v13M5.5 12h13" stroke={INK} strokeWidth={1.8} strokeLinecap="round" />
               </Svg>
             </Pressable>
+            {/* Redesenho 06/11: o sino da Atividade, como no canvas. */}
+            <Pressable
+              onPress={() => acao('atividade')}
+              style={({ pressed }) => [e.mais, pressed && { opacity: 0.6 }]}
+              accessibilityRole="button"
+              accessibilityLabel={t("Atividade")}
+            >
+              <Svg width={22} height={22} viewBox="0 0 24 24">
+                <Path d="M6.5 16.5h11l-1.3-1.8V10.5a4.2 4.2 0 0 0-8.4 0v4.2l-1.3 1.8Z" stroke={INK} strokeWidth={1.8} strokeLinejoin="round" fill="none" />
+                <Path d="M10.2 19a1.9 1.9 0 0 0 3.6 0" stroke={INK} strokeWidth={1.8} strokeLinecap="round" fill="none" />
+              </Svg>
+            </Pressable>
             <Pressable
               onPress={() => acao('perfil')}
               accessibilityRole="button"
@@ -286,11 +320,10 @@ export default function TelaViagens({ dados, ocupado, acao }) {
           bloco. Escolha do Lucas entre três saídas testadas. */}
       {d.placar !== false ? (
       <>
-      <View style={e.frase}>
-        <Text style={e.frase1}>{t("Você conheceu")}</Text>
-        <Text style={e.frase2}>{fracaoDoMundo(d.paises) + t(' do mundo')}</Text>
-      </View>
+      {/* Redesenho 06/11 (quadro Você): o anel "% do mundo" ao lado dos
+          números, sem caixa em volta. */}
       <View style={e.placar}>
+        <Anel paises={d.paises} />
         <View style={e.placarCol}>
           <LinhaDoPlacar n={d.paises} rotulo={t("países")} onPress={() => acao('mapa')} />
           <LinhaDoPlacar n={d.cidades} rotulo={t("cidades")} onPress={() => acao('lista', 'cities')} />
@@ -314,13 +347,35 @@ export default function TelaViagens({ dados, ocupado, acao }) {
           cidade de casa não é viagem. */}
       {d.casa ? (
         <View style={e.corpo}>
-          <Text style={e.secaoTitulo}>{t("Onde você mora")}</Text>
-          <CardDeViagem
-            t={{ nome: d.casa.cidade, meta: d.casa.meta, foto: d.casa.foto }}
-            grande
-            altura={150}
-            aoAbrir={() => acao('casa')}
-          />
+          <View style={e.cab}>
+            <Text style={e.secaoTitulo}>{t("Em casa")}</Text>
+            {d.casa.n ? (
+              <Pressable onPress={() => acao('casa')} accessibilityRole="button">
+                <Text style={e.cabMais}>{t('Ver os ') + d.casa.n}</Text>
+              </Pressable>
+            ) : null}
+          </View>
+          {/* Foto grande só com o nome (o Lucas: "odeio esses rodapés") e as
+              fotos dos 3 últimos spots no canto. */}
+          <Pressable
+            onPress={() => acao('casa')}
+            style={({ pressed }) => [e.casa, pressed && { opacity: 0.85 }]}
+            accessibilityRole="button"
+            accessibilityLabel={d.casa.cidade}
+          >
+            {d.casa.foto ? <Image source={{ uri: d.casa.foto }} style={StyleSheet.absoluteFill} resizeMode="cover" /> : null}
+            <View style={e.veu1} pointerEvents="none" />
+            <View style={e.veu2} pointerEvents="none" />
+            <View style={e.veu3} pointerEvents="none" />
+            <Text style={e.casaNome} numberOfLines={1}>{d.casa.cidade}</Text>
+            {(d.casa.minis || []).length ? (
+              <View style={e.minis} pointerEvents="none">
+                {d.casa.minis.map((u, i) => (
+                  <Image key={u + i} source={{ uri: u }} style={[e.mini, i > 0 && { marginLeft: -10 }]} />
+                ))}
+              </View>
+            ) : null}
+          </Pressable>
         </View>
       ) : null}
 
@@ -364,14 +419,20 @@ export default function TelaViagens({ dados, ocupado, acao }) {
         </View>
       ) : (
         <View style={e.corpo}>
-          <Text style={e.secaoTitulo}>{t("Viagens")}</Text>
+          <View style={e.cab}>
+            <Text style={e.secaoTitulo}>{t("Viagens")}</Text>
+            <Pressable onPress={() => acao('novoLugar')} accessibilityRole="button">
+              <Text style={e.cabMais}>{t("+ Adicionar")}</Text>
+            </Pressable>
+          </View>
 
-          {/* Continente: aba de texto, não pílula colorida. A ativa é tinta
-              com um traço embaixo — pastilha preenchida saiu do app inteiro. */}
+          {/* Redesenho 06/11: pílulas Todas · Europa · Américas…, a ligada no
+              branco quente; as viagens numa fileira de fotos só com o nome. */}
           <ScrollView
             horizontal
             showsHorizontalScrollIndicator={false}
-            contentContainerStyle={e.abas}
+            style={e.foraDaMargem}
+            contentContainerStyle={e.pilulas}
           >
             {(d.regioes || []).map((r) => {
               const on = r.nome === d.regiao;
@@ -379,17 +440,41 @@ export default function TelaViagens({ dados, ocupado, acao }) {
                 <Pressable
                   key={r.nome}
                   onPress={() => acao('regiao', r.nome)}
-                  style={({ pressed }) => [e.aba, on && e.abaOn, pressed && { opacity: 0.6 }]}
+                  style={({ pressed }) => [e.pil, on && e.pilOn, pressed && { opacity: 0.6 }]}
                   accessibilityRole="tab"
                   accessibilityState={{ selected: on }}
                 >
-                  <Text style={[e.abaTxt, on && e.abaTxtOn]}>{r.nome} · {r.n}</Text>
+                  <Text style={[e.pilTxt, on && e.pilTxtOn]}>{r.nome}</Text>
+                  <Text style={[e.pilN, on && e.pilTxtOn]}>{r.n}</Text>
                 </Pressable>
               );
             })}
           </ScrollView>
 
-          {viagens.length ? <Mosaico viagens={viagens} acao={acao} /> : null}
+          {viagens.length ? (
+            <ScrollView
+              horizontal
+              showsHorizontalScrollIndicator={false}
+              style={e.foraDaMargem}
+              contentContainerStyle={e.trilho}
+            >
+              {viagens.map((v) => (
+                <Pressable
+                  key={v.id}
+                  onPress={() => acao('abrir', v.id)}
+                  style={({ pressed }) => [e.via, pressed && { opacity: 0.85 }]}
+                  accessibilityRole="button"
+                  accessibilityLabel={v.nome}
+                >
+                  {v.foto ? <Image source={{ uri: v.foto }} style={StyleSheet.absoluteFill} resizeMode="cover" /> : null}
+                  <View style={e.veu1} pointerEvents="none" />
+                  <View style={e.veu2} pointerEvents="none" />
+                  <View style={e.veu3} pointerEvents="none" />
+                  <Text style={e.viaNome} numberOfLines={2}>{v.nome}</Text>
+                </Pressable>
+              ))}
+            </ScrollView>
+          ) : null}
           {/* O "Adicionar spot" do fim da lista saiu (09/10, o Lucas): repetia
               o "+" do topo. Fica só no vazio e no "Seu primeiro spot". */}
         </View>
@@ -403,7 +488,7 @@ const e = StyleSheet.create({
   centro: { alignItems: 'center', justifyContent: 'center' },
 
   // .dash-mapa-area — a altura nasce do mapa, não de um número escolhido.
-  mapaArea: { backgroundColor: MAP_BG, overflow: 'hidden' },
+  mapaArea: { overflow: 'hidden' },
   topoLinha: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -426,22 +511,8 @@ const e = StyleSheet.create({
   avatarTxt: { fontSize: 16, color: ON_GREEN, fontWeight: '600' },
 
   // .placar-card
-  placar: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 20,
-    marginHorizontal: 20,
-    marginTop: 16,
-    backgroundColor: SURFACE,
-    borderRadius: 14,
-    paddingVertical: 16,
-    paddingHorizontal: 18,
-    shadowColor: '#111111',
-    shadowOpacity: 0.07,
-    shadowRadius: 13,
-    shadowOffset: { width: 0, height: 5 },
-    elevation: 3,
-  },
+  // Redesenho 06/11: sem caixa e sem sombra; o anel ao lado dos números.
+  placar: { flexDirection: 'row', alignItems: 'center', gap: 22, marginHorizontal: 20, marginTop: 24 },
   // 15a: a frase entre o mapa e o placar. 20 acima, 16 abaixo (marginTop do placar).
   frase: { marginTop: 20, marginHorizontal: 20 },
   frase1: { fontSize: 14, lineHeight: 18, color: INK2 },
@@ -450,8 +521,8 @@ const e = StyleSheet.create({
   // (29/09). Lado a lado eles se comparam; empilhados viravam uma lista.
   placarCol: { flex: 1, minWidth: 0, flexDirection: 'row', alignItems: 'flex-end', gap: 14 },
   pcItem: { flex: 1, minWidth: 0, alignItems: 'flex-start' },
-  pcN: { fontSize: 26, fontWeight: '700', letterSpacing: -1, color: INK, lineHeight: 28 },
-  pcR: { fontSize: 13, color: INK2 },
+  pcN: { fontFamily: DISPLAY, fontSize: 46, color: INK, lineHeight: 46 },
+  pcR: { fontFamily: CORPO, fontSize: 12, color: INK2 },
   pcSeta: { fontSize: 12, color: INK3 },
 
   convite: { fontSize: 12.5, color: INK3, maxWidth: 230, lineHeight: 18, marginTop: 14, marginHorizontal: 20 },
@@ -479,8 +550,8 @@ const e = StyleSheet.create({
   checkinX: { width: 30, height: 30, alignItems: 'center', justifyContent: 'center', opacity: 0.6 },
 
   // .dash-body
-  corpo: { paddingHorizontal: 20, paddingTop: 32 },
-  secaoTitulo: { fontSize: 20, fontWeight: '700', letterSpacing: -0.6, color: INK, marginBottom: 10 },
+  corpo: { paddingHorizontal: 20, paddingTop: 36 },
+  secaoTitulo: { fontFamily: DISPLAY, fontSize: 28, lineHeight: 30, color: INK },
 
   // .cont-aba
   abas: { gap: 18, paddingRight: 20 },
@@ -530,4 +601,26 @@ const e = StyleSheet.create({
   secundarioTxt: { color: INK },
   primeiroTitulo: { fontSize: 26, fontWeight: '700', letterSpacing: -0.8, lineHeight: 30, color: INK, marginBottom: 6 },
   primeiroNota: { fontSize: 14, lineHeight: 20, color: INK3, marginTop: 10 },
+
+  // ── Redesenho 06/11 (quadro Você). Valores do CSS .vc-* do site. ──
+  anel: { width: 100, height: 100 },
+  anelTx: { position: 'absolute', left: 0, top: 0, right: 0, bottom: 0, alignItems: 'center', justifyContent: 'center' },
+  anelPct: { fontFamily: DISPLAY, fontSize: 36, lineHeight: 36, color: GREEN },
+  anelRot: { fontFamily: CORPO, fontSize: 11, color: INK2, marginTop: 2 },
+  cab: { flexDirection: 'row', alignItems: 'baseline', justifyContent: 'space-between', marginBottom: 14 },
+  cabMais: { fontFamily: NEGRITO, fontSize: 13, color: GREEN },
+  casa: { height: 190, borderRadius: 22, overflow: 'hidden', backgroundColor: PHOTO_EMPTY },
+  casaNome: { position: 'absolute', left: 18, right: 120, bottom: 14, fontFamily: DISPLAY, fontSize: 40, lineHeight: 42, color: '#F5F5F3' },
+  minis: { position: 'absolute', right: 14, bottom: 14, flexDirection: 'row' },
+  mini: { width: 34, height: 34, borderRadius: 17, borderWidth: 2, borderColor: 'rgba(7,32,25,0.8)' },
+  foraDaMargem: { marginHorizontal: -20 },
+  pilulas: { gap: 8, paddingHorizontal: 20, marginBottom: 14 },
+  pil: { height: 34, paddingHorizontal: 14, borderRadius: 17, backgroundColor: 'rgba(245,245,243,0.08)', flexDirection: 'row', alignItems: 'center', gap: 6 },
+  pilOn: { backgroundColor: GREEN },
+  pilTxt: { fontFamily: NEGRITO, fontSize: 14, color: 'rgba(245,245,243,0.82)' },
+  pilN: { fontFamily: CORPO, fontSize: 14, color: 'rgba(245,245,243,0.45)' },
+  pilTxtOn: { color: ON_GREEN },
+  trilho: { gap: 10, paddingHorizontal: 20 },
+  via: { width: 150, height: 196, borderRadius: 20, overflow: 'hidden', backgroundColor: PHOTO_EMPTY },
+  viaNome: { position: 'absolute', left: 14, right: 14, bottom: 12, fontFamily: DISPLAY, fontSize: 24, lineHeight: 25, color: '#F5F5F3' },
 });

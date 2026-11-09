@@ -7892,14 +7892,16 @@ function darDadosDeViagens(){
   if(!S.user||!DADOS_DA_CONTA||(CARGA_FALHOU_SEM_DADOS&&!S.trips.length)){falarComACasca({tipo:'viagens',pronto:false});return}
   const visiveis=S.trips.filter(naAbaViagens);
   const{groups,ordem}=regioesComViagem();
-  const regiao=(REGIAO_ATIVA&&groups[REGIAO_ATIVA])?REGIAO_ATIVA:ordem[0];
+  // Redesenho 06/11: 'Todas' é a pílula padrão (REGIAO_ATIVA='__todas').
+  const todas=!REGIAO_ATIVA||REGIAO_ATIVA==='__todas'||!groups[REGIAO_ATIVA];
+  const regiao=todas?'Todas':REGIAO_ATIVA;
   // Mesma ordem do mosaico do site: o destaque (card do dobro do tamanho) vai
   // pra viagem com MAIS SPOTS, não pra primeira da lista — que vem em
   // created_at.desc e pode ser uma viagem vazia e sem foto. Ordenar AQUI, e
   // não no nativo, mantém a regra num lugar só. Copiar antes de ordenar: o
   // vetor é do agrupamento, e ordenar no lugar muda o que a tela web usa.
   const nSpotsDe=t=>(t._spots||[]).length;
-  const daRegiao=(groups[regiao]||[]).slice().sort((a,b)=>nSpotsDe(b)-nSpotsDe(a));
+  const daRegiao=(todas?visiveis:(groups[regiao]||[])).slice().sort((a,b)=>nSpotsDe(b)-nSpotsDe(a));
 
   // A faixa de check-in existia so no HTML, entao a tela nativa nunca soube
   // dela: quem usa o app pelas abas nativas simplesmente nunca era
@@ -7924,7 +7926,12 @@ function darDadosDeViagens(){
       nome:String((S.profile&&S.profile.display_name)||'').trim().split(/\s+/)[0]||''
     },
     casa:(function(){const r=resumoDeCasa();if(!r)return null;
-      return{cidade:r.cidade,meta:r.meta,foto:FOTO_DE_CASA?fotoPraCasca(safeUrl(FOTO_DE_CASA)):'',
+      // minis (06/11): fotos dos 3 últimos spots, no canto do card de casa.
+      const casaT=(S.trips||[]).find(ehCasa),cc=cidadeDeCasa();
+      const deCasa=casaT?spotsDaViagem(casaT):allSpotsFlat().filter(x=>mesmoLugar(cityOf(x),cc));
+      const minis=deCasa.filter(x=>x.photo_url).sort((a,b)=>String(b.created_at||'').localeCompare(String(a.created_at||'')))
+        .slice(0,3).map(x=>fotoPraCasca(safeUrl(fotoNaLargura(x.photo_url,120))));
+      return{cidade:r.cidade,meta:r.meta,minis,n:deCasa.length,foto:FOTO_DE_CASA?fotoPraCasca(safeUrl(FOTO_DE_CASA)):'',
         cores:coresDoGradiente((S.profile&&S.profile.home_country)||'')}})(),
     primeiro:!allSpotsFlat().length&&!visiveis.length?{ia:!!(typeof IMP!=='undefined'&&IMP.ligado)}:null,
     vazioTexto:(S.profile&&S.profile.home_city)
@@ -7935,7 +7942,7 @@ function darDadosDeViagens(){
     // de pintar o país errado.
     mapa:visitedCountryNames().map(geoFor).filter(Boolean),
     regiao:regiao||'',
-    regioes:ordem.map(r=>({nome:r,n:groups[r].length})),
+    regioes:[{nome:'Todas',n:visiveis.length}].concat(ordem.map(r=>({nome:r,n:groups[r].length}))),
     viagensDaRegiao:daRegiao.map(t=>{
       const destino=(t.destinations&&t.destinations[0])||t.name;
       const el=document.getElementById('tcbg-'+t.id);
@@ -7968,7 +7975,8 @@ window.darDadosDeViagens=darDadosDeViagens;
 function abrirMeusSpots(){abrirSeusSpots('dashboard')}
 window.acaoDeViagens=function(acao,valor){
   if(acao==='lista'&&valor==='spots'){abrirMeusSpots();return}
-  if(acao==='regiao'){trocarRegiao(valor);darDadosDeViagens();return}
+  if(acao==='regiao'){trocarRegiao(valor==='Todas'?'__todas':valor);darDadosDeViagens();return}
+  if(acao==='atividade'){abrirAtividade();return}
   if(acao==='abrir'){openTrip(valor);return}
   if(acao==='lista'){openList(valor);return}
   if(acao==='perfil'){goTo('profile');loadProfile();return}
