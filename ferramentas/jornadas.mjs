@@ -50,7 +50,7 @@ let B = null;   // nasce no cadastro (jornada 1)
 
 // ═══ banco ═══
 const agora = () => new Date().toISOString();
-const DB = { profiles: [], trips: [], spots: [], follows: [], spot_comments: [], spot_fotos: [], cidades_visitadas: [], bloqueios: [], invites: [], push_tokens: [], denuncias: [] };
+const DB = { profiles: [], trips: [], spots: [], follows: [], spot_comments: [], spot_fotos: [], cidades_visitadas: [], bloqueios: [], invites: [], push_tokens: [], denuncias: [], listas: [], lista_membros: [], lista_spots: [], spot_curtidas: [], comentario_curtidas: [] };
 DB.profiles.push({ id: A.id, display_name: 'Ana Teste', username: 'anateste', home_city: 'São Paulo', home_country: 'Brasil', avatar_url: null, bio: '', created_at: '2026-09-01T10:00:00Z' });
 DB.trips.push({ id: uuid(), user_id: A.id, name: 'São Paulo', destinations: ['Brasil'], dates: '__casa__', status: 'planning', initial_city: 'São Paulo', privada: false, proxima: false, created_at: '2026-09-01T10:00:00Z' });
 
@@ -87,8 +87,20 @@ const RLS = {
   invites: { ver: (u, r) => r.user_id === u, por: (u, r) => r.user_id === u, mudar: (u, r) => r.user_id === u, tirar: (u, r) => r.user_id === u },
   push_tokens: { ver: (u, r) => r.user_id === u, por: (u, r) => r.user_id === u, mudar: (u, r) => r.user_id === u, tirar: (u, r) => r.user_id === u },
   denuncias: { ver: (u, r) => r.autor_id === u, por: (u, r) => r.autor_id === u },
+  // 038 (listas e curtidas): as mesmas regras do SQL.
+  listas: { ver: (u, r) => r.dono_id === u || souDaLista(u, r.id), por: (u, r) => r.dono_id === u, mudar: (u, r) => r.dono_id === u, depois: (u, r) => r.dono_id === u, tirar: (u, r) => r.dono_id === u },
+  lista_membros: { ver: (u, r) => souDaLista(u, r.lista_id),
+    por: (u, r) => (r.papel === 'dono' && r.user_id === u && donoDaLista(u, r.lista_id)) || ((r.papel || 'membro') === 'membro' && donoDaLista(u, r.lista_id) && amigos(u, r.user_id) && !haBloqueio(u, r.user_id)),
+    tirar: (u, r) => r.papel === 'membro' && (r.user_id === u || donoDaLista(u, r.lista_id)) },
+  lista_spots: { ver: (u, r) => souDaLista(u, r.lista_id), por: (u, r) => r.posto_por === u && souDaLista(u, r.lista_id) && (!r.spot_id || (DB.spots.find(x => x.id === r.spot_id) || {}).user_id === u),
+    tirar: (u, r) => r.posto_por === u || donoDaLista(u, r.lista_id) },
+  spot_curtidas: { ver: (u, r) => spotVisivel(u, DB.spots.find(x => x.id === r.spot_id)), por: (u, r) => r.user_id === u && spotVisivel(u, DB.spots.find(x => x.id === r.spot_id)), tirar: (u, r) => r.user_id === u },
+  comentario_curtidas: { ver: (u, r) => { const c = DB.spot_comments.find(x => x.id === r.comentario_id); return !!c && spotVisivel(u, DB.spots.find(x => x.id === c.spot_id)) },
+    por: (u, r) => { const c = DB.spot_comments.find(x => x.id === r.comentario_id); return r.user_id === u && !!c && spotVisivel(u, DB.spots.find(x => x.id === c.spot_id)) }, tirar: (u, r) => r.user_id === u },
 };
-const UNICOS = { follows: ['follower_id', 'following_id'], bloqueios: ['bloqueador_id', 'bloqueado_id'], cidades_visitadas: ['user_id', 'chave'], profiles: ['id'] };
+function souDaLista(u, l) { return DB.lista_membros.some(m => m.lista_id === l && m.user_id === u) }
+function donoDaLista(u, l) { return DB.listas.some(x => x.id === l && x.dono_id === u) }
+const UNICOS = { spot_curtidas: ['spot_id', 'user_id'], comentario_curtidas: ['comentario_id', 'user_id'], lista_membros: ['lista_id', 'user_id'], follows: ['follower_id', 'following_id'], bloqueios: ['bloqueador_id', 'bloqueado_id'], cidades_visitadas: ['user_id', 'chave'], profiles: ['id'] };
 const PADRAO = {
   spot_fotos: u => ({ user_id: u }),   // default auth.uid() (030)
   trips: () => ({ privada: false, proxima: false, status: 'planning', dates: '', destinations: [] }),
@@ -221,6 +233,8 @@ function restResponde(metodo, tabela, qs, corpoTxt, headers) {
       novas.push(r);
     }
     DB[tabela].push(...novas);
+    // gatilho lista_poe_dono (038)
+    if (tabela === 'listas') novas.forEach(l => DB.lista_membros.push({ lista_id: l.id, user_id: l.dono_id, papel: 'dono', created_at: agora() }));
     if (tabela === 'bloqueios') novas.forEach(b => { DB.follows = DB.follows.filter(f => !((f.follower_id === b.bloqueador_id && f.following_id === b.bloqueado_id) || (f.follower_id === b.bloqueado_id && f.following_id === b.bloqueador_id))) });
     return /return=representation/.test(prefer) ? j(201, novas) : j(201);
   }
@@ -236,6 +250,7 @@ function restResponde(metodo, tabela, qs, corpoTxt, headers) {
     const alvo = DB[tabela].filter(r => pol.ver && pol.ver(u, r) && pol.tirar && pol.tirar(u, r) && q.filtra(r));
     DB[tabela] = DB[tabela].filter(r => !alvo.includes(r));
     if (tabela === 'trips') DB.spots = DB.spots.filter(s => !alvo.some(t => t.id === s.trip_id));
+    if (tabela === 'listas') { DB.lista_membros = DB.lista_membros.filter(m => !alvo.some(l => l.id === m.lista_id)); DB.lista_spots = DB.lista_spots.filter(m => !alvo.some(l => l.id === m.lista_id)) }
     if (tabela === 'spots') { DB.spot_comments = DB.spot_comments.filter(c => !alvo.some(s => s.id === c.spot_id)); DB.spot_fotos = DB.spot_fotos.filter(c => !alvo.some(s => s.id === c.spot_id)) }
     return /return=representation/.test(prefer) ? j(200, alvo) : j(204);
   }
@@ -1252,6 +1267,41 @@ if (telaCasa === 'city') {
   confere(await tela(pk) === 'dashboard', 'voltar da cidade aberta pela casa leva pra Viagens', await tela(pk));
 }
 ['I', 'J', 'K'].forEach(n => { const e = errosDe(PAGINAS[n]); confere(!e.length, 'sem erro de JS no aparelho ' + n, e) });
+
+// ═══ 10 listas compartilhadas e curtidas (038, redesenho) ═══
+JORNADA = '10 listas e curtidas';
+console.log('\n── ' + JORNADA);
+if (!amigos(A.id, B.id)) DB.follows.push({ id: uuid(), follower_id: A.id, following_id: B.id, status: 'accepted', created_at: agora(), accepted_at: agora() });
+const spA10 = DB.spots.find(s => s.user_id === A.id && !s.trip_id || s.user_id === A.id);
+const spB10 = DB.spots.find(s => s.user_id === B.id);
+await ir(pa, `(async()=>{document.querySelectorAll('.overlay.show').forEach(o=>closeOv(o.id));PLN_AMIGOS.t=0;await lsAbrir();LS2.nova={tipo:'tema',nome:'Pra ir com a B',quando:'',com:new Set(['${B.id}'])};await lsCriar()})()`, 2500);
+const l10 = DB.listas.find(l => l.dono_id === A.id && l.nome === 'Pra ir com a B');
+confere(!!l10, 'A cria a lista "Pra ir com a B"', DB.listas);
+confere(l10 && DB.lista_membros.some(m => m.lista_id === l10.id && m.user_id === A.id && m.papel === 'dono'), 'A entra como dono');
+confere(l10 && DB.lista_membros.some(m => m.lista_id === l10.id && m.user_id === B.id), 'B foi chamada na criação');
+confere(await tela(pa) === 'lista', 'criar abre a lista', await tela(pa));
+if (l10 && spA10) {
+  await ir(pa, `lsPor('${spA10.id}')`, 1500);
+  confere(DB.lista_spots.some(x => x.lista_id === l10.id && x.spot_id === spA10.id && x.posto_por === A.id), 'A põe um spot dela', DB.lista_spots);
+}
+if (l10) {
+  await ir(pb, `(async()=>{document.querySelectorAll('.overlay.show').forEach(o=>closeOv(o.id));await lsAbrir();await lsVer('${l10.id}')})()`, 2000);
+  const txt10 = await texto(pb, '#lsDetalhe');
+  confere(/Pra ir com a B/.test(txt10 || '') && (!spA10 || txt10.includes(spA10.name)), 'B vê a lista e o spot que A pôs', txt10);
+  confere(/pôs/.test(txt10 || ''), 'a linha diz quem pôs', txt10);
+  try { await pb.screenshot({ path: process.env.TEMP + '/jornada-lista.png' }); await ir(pb, `lsAbrir()`, 1200); await pb.screenshot({ path: process.env.TEMP + '/jornada-listas.png' }); await ir(pb, `lsVer('${l10.id}')`, 800) } catch (e) {}
+  if (spB10) {
+    await ir(pb, `lsPor('${spB10.id}')`, 1500);
+    confere(DB.lista_spots.some(x => x.lista_id === l10.id && x.posto_por === B.id), 'B põe um spot dela na lista de A');
+  }
+  if (spA10) {
+    await ir(pb, `curtirSpot('${spA10.id}',lsPintarDetalhe)`, 1200);
+    confere(DB.spot_curtidas.some(c => c.spot_id === spA10.id && c.user_id === B.id), 'B curte o spot de A pela lista');
+    await ir(pb, `curtirSpot('${spA10.id}',lsPintarDetalhe)`, 1200);
+    confere(!DB.spot_curtidas.some(c => c.spot_id === spA10.id && c.user_id === B.id), 'B descurte');
+  }
+}
+['A', 'B'].forEach(n => { const e = errosDe(PAGINAS[n]); confere(!e.length, 'sem erro de JS no aparelho ' + n + ' (listas)', e) });
 
 // ═══ fim ═══
 await fim();
