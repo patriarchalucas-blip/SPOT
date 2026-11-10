@@ -112,8 +112,7 @@ h1, h2, p { margin: 0; }
 .ac-tabela .ac-num { text-align: right; white-space: nowrap; }
 .ac-menos { color: var(--green); }
 .ac-saldo { font-weight: 600; }
-.ac-so-cel { display: none; }
-@media (max-width: 520px) { .ac-tabela th:first-child, .ac-data { display: none; } .ac-so-cel { display: block; } .ac-tabela table { font-size: 14px; } }
+
 .ac-h3 { margin: 0; font-size: 15px; font-weight: 600; color: var(--ink2); }
 .ac-mais { appearance: none; background: none; border: 0; padding: 8px 0; font: 600 14px var(--f); color: var(--green); cursor: pointer; text-align: left; }
 @media (max-width: 520px) { .ac-nums { grid-template-columns: 1fr 1fr; } .ac-nums > div:last-child { grid-column: 1 / -1; } }
@@ -174,7 +173,7 @@ h1, h2, p { margin: 0; }
     <p class="sp-nota">Desde o começo, meio a meio. Não muda com o mês escolhido lá em cima.</p>
     <div class="ac-resumo" id="ac-resumo"></div>
     <div class="ac-tabela"><table>
-      <thead><tr><th>Data</th><th>O quê</th><th class="ac-num">Valor</th><th class="ac-num">Falta</th></tr></thead>
+      <thead><tr><th>Transferências do Lucas Jezler</th><th class="ac-num">Valor</th></tr></thead>
       <tbody id="ac-extrato"></tbody>
     </table></div>
     <button type="button" class="ac-mais" id="ac-mais" hidden></button>
@@ -396,36 +395,23 @@ h1, h2, p { margin: 0; }
     const barra = el('div', 'ac-barra'); const i = el('i'); i.style.width = (frac * 100).toFixed(1) + '%'; barra.appendChild(i); rs.appendChild(barra);
     rs.appendChild(el('div', 'ac-pe', pct.format(frac) + ' acertado'));
 
-    // EXTRATO (10/11, 2ª versão): uma linha por acontecimento, como extrato de
-    // banco. A metade dos gastos de um mês entra no ÚLTIMO dia dele (o mês em
-    // curso entra hoje, "até agora"); cada Pix entra no dia dele. Saldo corrido.
-    const hojeISO = new Date().toISOString().slice(0, 10);
-    const fimDoMes = (m) => { const [y, mm] = m.split('-').map(Number); const f = new Date(Date.UTC(y, mm, 0)).toISOString().slice(0, 10); return f > hojeISO ? hojeISO : f; };
-    const eventos = [];
-    [...new Set(gastos.map((g) => g.mes))].forEach((m) => {
-      const gm = gastos.filter((g) => g.mes === m);
-      const emCurso = hojeISO.slice(0, 7) === m;
-      eventos.push({ data: fimDoMes(m), ordem: 0, desc: 'Metade dos gastos de ' + ML[+m.split('-')[1] - 1] + (emCurso ? ' (até agora)' : ''),
-        meta: 'Gasto do mês ' + brl.format(r2(gm.reduce((x, g) => x + g.brl, 0))), valor: r2(gm.reduce((x, g) => x + efeito(g), 0)) });
-    });
-    transf.forEach((t) => eventos.push({ data: t.data, ordem: 1, desc: 'Pix de ' + SOCIO[t.de], meta: t.obs || '', valor: r2(efeitoT(t)), recibos: t.recibos }));
-    eventos.sort((x, y) => x.data.localeCompare(y.data) || x.ordem - y.ordem);
-    let corrido = 0; eventos.forEach((e) => { corrido = r2(corrido + e.valor); e.saldo = corrido; });
-    eventos.reverse();
+    // TRANSFERÊNCIAS (10/11, 3ª versão, o Lucas): só quando e quanto o Jezler
+    // transferiu. Mais nova em cima; total embaixo.
     const dataBR = (d) => d.split('-').reverse().join('/');
     const tb = $('ac-extrato'); tb.replaceChildren();
-    (AC_TUDO ? eventos : eventos.slice(0, 8)).forEach((e) => {
+    const ver = AC_TUDO ? transf : transf.slice(0, 10);
+    if (!transf.length) { const tr = el('tr'); const td = el('td', 'sp-meta', 'Nenhuma transferência ainda.'); td.colSpan = 2; tr.appendChild(td); tb.appendChild(tr); }
+    ver.forEach((t) => {
       const tr = el('tr');
-      tr.appendChild(el('td', 'ac-data', dataBR(e.data)));
-      const td = el('td'); td.appendChild(el('div', 'ac-desc', e.desc)); td.appendChild(el('div', 'sp-meta ac-so-cel', dataBR(e.data))); if (e.meta) td.appendChild(el('div', 'sp-meta', e.meta));
-      if (e.recibos && e.recibos.length) { const bx = el('div', 'sp-recibos'); e.recibos.forEach((r) => { const bb = el('button', 'sp-recibo', 'Ver comprovante'); bb.type = 'button'; bb.addEventListener('click', () => abrirRecibo(r, bb)); bx.appendChild(bb); }); td.appendChild(bx); }
+      const td = el('td'); td.appendChild(el('div', 'ac-desc', dataBR(t.data)));
+      if (t.obs) td.appendChild(el('div', 'sp-meta', t.obs));
+      if (t.recibos && t.recibos.length) { const bx = el('div', 'sp-recibos'); t.recibos.forEach((r) => { const bb = el('button', 'sp-recibo', 'Ver comprovante'); bb.type = 'button'; bb.addEventListener('click', () => abrirRecibo(r, bb)); bx.appendChild(bb); }); td.appendChild(bx); }
       tr.appendChild(td);
-      tr.appendChild(el('td', 'ac-num' + (e.valor < 0 ? ' ac-menos' : ''), (e.valor < 0 ? '− ' : '+ ') + brl.format(Math.abs(e.valor))));
-      tr.appendChild(el('td', 'ac-num ac-saldo', brl.format(e.saldo)));
+      tr.appendChild(el('td', 'ac-num ac-saldo', brl.format(t.valor)));
       tb.appendChild(tr);
     });
-    const mais = $('ac-mais'); mais.hidden = eventos.length <= 8;
-    mais.textContent = AC_TUDO ? 'Ver menos' : 'Ver o extrato inteiro (' + eventos.length + ')';
+    const mais = $('ac-mais'); mais.hidden = transf.length <= 10;
+    mais.textContent = AC_TUDO ? 'Ver menos' : 'Ver as ' + transf.length;
     mais.onclick = () => { AC_TUDO = !AC_TUDO; acerto(gastos); };
   }
 
