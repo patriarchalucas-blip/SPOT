@@ -73,6 +73,10 @@ export async function onRequestGet(context) {
   const { request, env } = context;
   const url = new URL(request.url);
 
+  // MEDIÇÃO (10/11/2026): de onde vem o gasto de foto. Só números somados,
+  // sem lugar nem pessoa — por isso aberta.
+  if (url.searchParams.get('medicao') === '1') return json(await lerMedicao(env));
+
   const ref = url.searchParams.get('ref') || '';
   if (!REF_OK.test(ref)) return vazio(400);
 
@@ -119,9 +123,11 @@ export async function onRequestGet(context) {
   // por dia, pro app inteiro) a cada ref. A borda não tem teto de gravação.
   // O 'X' antigo no KV ainda é lido abaixo até vencer (10 min).
   const etiquetaFalha = new Request(url.origin + '/_foto/' + chave + '/falha');
+  const ctxMed = { context, env, largura, temS: !!chaveFixa, lugar: ref.split('/')[1], request };
+  amostrar(ctxMed, 'pedidos');
   try {
     const naBorda = await borda.match(etiqueta);
-    if (naBorda) return naBorda;
+    if (naBorda) { amostrar(ctxMed, 'borda'); return naBorda }
     if (await borda.match(etiquetaFalha)) return vazio(404);   // falha conhecida, não retenta agora
   } catch (e) { /* borda fora: segue pro KV */ }
 
@@ -132,7 +138,7 @@ export async function onRequestGet(context) {
       for (const k of chaveFixa ? [chaveFixa, chave] : [chave]) {
         const guardado = await kv.get(k);
         if (guardado === 'X') { if (k === chave) return vazio(404); continue; }  // falha conhecida, não retenta agora
-        if (guardado) return pelaBorda(context, borda, etiqueta, redirecionar(comTamanho(guardado, largura, webp)));
+        if (guardado) { amostrar(ctxMed, k === chaveFixa ? 'kv_lugar' : 'kv_codigo'); return pelaBorda(context, borda, etiqueta, redirecionar(comTamanho(guardado, largura, webp))) }
       }
     } catch (e) { /* KV fora: segue e resolve */ }
   }
@@ -177,6 +183,8 @@ export async function onRequestGet(context) {
   } catch (e) {
     return vazio(502); // rede falhou: não guarda falha, não é resposta do Google
   }
+  // Cada ida ao Google é o que o Google cobra: conta uma por uma.
+  context.waitUntil(contarGoogle(ctxMed, r.status));
 
   const destino = r.headers.get('Location') || '';
   if (!destino || !/^https:\/\/[a-z0-9-]+\.googleusercontent\.com\//i.test(destino)) {
@@ -237,4 +245,71 @@ function vazio(status) {
 async function hash(s) {
   const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(s));
   return [...new Uint8Array(buf)].map(b => b.toString(16).padStart(2, '0')).join('').slice(0, 32);
+}
+
+// ─────────────────────────── medição ───────────────────────────
+// Um resumo por dia no KV (fotomed_<dia>), aproximado: duas fotos ao mesmo
+// tempo podem perder uma conta. Pedidos e acertos de memória são contados por
+// amostra (1 em 10, já multiplicado); as idas ao Google, todas.
+//   pedidos/borda/kv_lugar/kv_codigo — quantas vezes o app pediu foto e quantas
+//     a memória respondeu (da borda, pela foto do lugar, pelo código antigo)
+//   google — idas pagas; sem_s — endereço sem o `s` (gravado antes de 12/10
+//     ou montado por alguma tela que não manda), que não usa a memória por lugar
+//   repetido — lugar que já tinha ido ao Google nos últimos 35 dias (a memória
+//     deveria ter evitado)
+//   larg — largura pedida (lista 220–240, ficha 800, capa 1200+), pra saber a tela
+//   destino — <img> (image) ou checagem por script (empty)
+//   pagina — de onde a foto foi pedida (/, /l/, /c/)
+function hoje() { return new Date(Date.now() - 3 * 3600 * 1000).toISOString().slice(0, 10) }
+function faixa(w) { return w <= 260 ? 'ate260' : w <= 500 ? 'ate500' : w <= 900 ? 'ate900' : 'maior' }
+function paginaDe(request) {
+  try { const r = new URL(request.headers.get('Referer') || ''); return r.pathname.startsWith('/l/') ? '/l/' : r.pathname.startsWith('/c/') ? '/c/' : r.pathname === '/' ? '/' : 'outra' } catch (e) { return 'sem' }
+}
+async function somar(env, mexer) {
+  const kv = env.SPOT_KV; if (!kv) return;
+  const k = 'fotomed_' + hoje();
+  try {
+    const d = JSON.parse((await kv.get(k)) || '{}');
+    mexer(d);
+    await kv.put(k, JSON.stringify(d), { expirationTtl: 60 * 60 * 24 * 60 });
+  } catch (e) {}
+}
+const mais = (o, k, n) => { o[k] = (o[k] || 0) + (n || 1) };
+function amostrar(m, campo) {
+  if (Math.random() >= 0.1) return;
+  try { m.context.waitUntil(somar(m.env, (d) => mais(d, campo, 10))) } catch (e) {}
+}
+async function contarGoogle(m, status) {
+  const kv = m.env.SPOT_KV;
+  let repetido = false;
+  if (kv) {
+    const kl = 'fotomed_l_' + (await hash(m.lugar));
+    try { repetido = !!(await kv.get(kl)); await kv.put(kl, '1', { expirationTtl: 60 * 60 * 24 * 35 }) } catch (e) {}
+  }
+  const destino = m.request.headers.get('Sec-Fetch-Dest') || 'sem';
+  const pagina = paginaDe(m.request);
+  await somar(m.env, (d) => {
+    mais(d, 'google');
+    if (!m.temS) mais(d, 'sem_s');
+    if (repetido) mais(d, 'repetido');
+    if (status >= 400) mais(d, 'google_falhou');
+    d.larg = d.larg || {}; mais(d.larg, faixa(m.largura));
+    d.destino = d.destino || {}; mais(d.destino, destino);
+    d.pagina = d.pagina || {}; mais(d.pagina, pagina);
+  });
+}
+async function lerMedicao(env) {
+  const kv = env.SPOT_KV; if (!kv) return { erro: 'sem_kv' };
+  const dias = [];
+  for (let i = 0; i < 21; i++) {
+    const dia = new Date(Date.now() - 3 * 3600 * 1000 - i * 86400000).toISOString().slice(0, 10);
+    const v = await kv.get('fotomed_' + dia);
+    if (v) { try { dias.push(Object.assign({ dia }, JSON.parse(v))) } catch (e) {} }
+  }
+  const mes = new Date().toISOString().slice(0, 7);
+  const ant = new Date(Date.now() - 31 * 86400000).toISOString().slice(0, 7);
+  return { dias, contador_do_mes: { [mes]: Number(await kv.get('placephoto_count_' + mes)) || 0, [ant]: Number(await kv.get('placephoto_count_' + ant)) || 0 } };
+}
+function json(o) {
+  return new Response(JSON.stringify(o), { headers: { 'Content-Type': 'application/json', 'Cache-Control': 'no-store' } });
 }
