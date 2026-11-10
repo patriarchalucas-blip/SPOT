@@ -15423,7 +15423,7 @@ async function hsAbrir(){
       // Servidor de antes da vitrine (a prévia do redesenho fala com o de
       // produção): cai na prévia da newsletter, que é a mesma lista.
       if(d&&d.error==='op')d=await comPrazo(pedir('previa'),15000);
-      HSV.dados=d&&Array.isArray(d.listas)?d:{listas:[]};HSV.erro=false;
+      HSV.dados=d&&Array.isArray(d.listas)?{...d,listas:d.listas.filter(x=>x.lugares&&x.lugares.length)}:{listas:[]};HSV.erro=false;
     }catch(e){HSV.erro=true}
   }
   if(!HSV.cidade){
@@ -15454,7 +15454,7 @@ function hsPintar(){
   if(HSV.erro){c.innerHTML='<div class="hv-sem-capa">'+hsAbas()+'</div><div class="at-vazio">Não carregou. Confere a conexão.<br><button class="btn-primario" style="margin-top:16px" onclick="HSV.dados=null;hsAbrir()">Tentar de novo</button></div>';return}
   if(!HSV.dados){c.innerHTML='<div class="hv-sem-capa">'+hsAbas()+'</div><div class="at-vazio">Carregando...</div>';return}
   const todos=hsLugares();
-  if(!todos.length){c.innerHTML='<div class="hv-sem-capa">'+hsAbas()+'</div><div class="at-vazio">A lista da semana sai sexta às 17h.</div>';return}
+  if(!todos.length){c.innerHTML='<div class="hv-sem-capa">'+hsAbas()+'</div><div class="at-vazio" style="padding:0 20px">A lista da semana sai sexta às 17h.</div>';return}
   const cats=[...new Set(todos.map(x=>x.categoria))].filter(k=>HS_CAT[k]);
   const lista=HSV.cat?todos.filter(x=>x.categoria===HSV.cat):todos;
   const meta=x=>esc([hsTipo(x.tipo),x.bairro].filter(Boolean).join(' · '));
