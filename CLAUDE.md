@@ -282,7 +282,7 @@ ver `mobile/app-store/login-apple.md`. Pede um build novo que substitui a build 
   endereço escrito — a Barceloneta virava "Catalunha".
 - **Voltar do Android:** `window.voltarDoAndroid` (o site não usa histórico).
 
-## Banco em Oregon, plano Free (descoberto 08/10/2026)
+## Banco em Oregon — plano **Pro desde 10/11/2026** (backup diário de 7 dias; US$ 25/mês no cartão do Lucas, lançado no /gastos). Antes era Free, sem backup (descoberto 08/10/2026)
 
 **Saiu da conta da Sólides em 12/10/2026:** o projeto foi TRANSFERIDO (função
 "Transfer project" do Supabase) pra organização **"Spot"** (Free) da conta
