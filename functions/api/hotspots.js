@@ -148,6 +148,9 @@ export async function onRequestPost(context) {
       log: r.log.length, porFonte: r.porFonte, citacoes: r.citacoes, validas: r.validas });
   }
   if (op === 'previa') return json(await previa(env));
+  // A aba Hotspots do app: só a lista JÁ PUBLICADA (a da semana em curso o
+  // dono ainda pode mexer até sexta 17h). Aberta sem login, como a prévia.
+  if (op === 'vitrine') return json(await vitrine(env));
   if (op === 'publicar') {
     if (!dono && !ehHoraDePublicar(new Date())) return json({ ok: true, pulou: 'fora_da_hora' });
     return json(await publicar(env, !!dono));
@@ -560,6 +563,7 @@ async function previa(env) {
     listas.push({
       cidade: l.cidade,
       lugares: lugares.map((x) => ({
+        id: x.g.id, categoria: ['food', 'hotel', 'experience'].includes(x.g.categoria) ? x.g.categoria : 'food',
         nome: x.g.nome || x.nome, endereco: x.g.endereco || '', bairro: x.bairro || '', tipo: x.g.tipo || '',
         foto: x.g.foto ? '/api/place-photo?ref=' + encodeURIComponent(x.g.foto.ref) + (x.g.foto.s ? '&s=' + x.g.foto.s : '') + '&w=800' : '',
         maps: x.g.maps || '', site: (x.det && x.det.site) || '', preco: (x.det && x.det.preco) || null,
@@ -568,6 +572,18 @@ async function previa(env) {
     });
   }
   return { criada: semana.criada, listas };
+}
+
+// A lista publicada. Publicação de antes da vitrine existir (até 09/11): se a
+// semana guardada é a mesma que foi publicada, monta agora e guarda.
+async function vitrine(env) {
+  const guardada = await lerJSON(env, 'hs_vitrine');
+  if (guardada) return guardada;
+  const [semana, pub] = await Promise.all([lerJSON(env, 'hs_semana'), lerJSON(env, 'hs_publicada')]);
+  if (!semana || !pub || pub.semana !== semana.criada) return { listas: [] };
+  const v = await previa(env);
+  await gravarKV(env, 'hs_vitrine', JSON.stringify(v), ANO);
+  return v;
 }
 
 const NIVEL = { PRICE_LEVEL_INEXPENSIVE: 1, PRICE_LEVEL_MODERATE: 2, PRICE_LEVEL_EXPENSIVE: 3, PRICE_LEVEL_VERY_EXPENSIVE: 4 };
@@ -625,6 +641,8 @@ async function publicar(env, forcar) {
     resultado.push({ cidade: lista.cidade, entraram: entrar.length, sairam: sair.length, total: lugares.length });
   }
   await gravarKV(env, 'hs_publicada', JSON.stringify({ semana: semana.criada, em: Date.now(), resultado }), ANO);
+  // O que a aba Hotspots mostra até a próxima publicação.
+  await gravarKV(env, 'hs_vitrine', JSON.stringify(await previa(env)), ANO);
   return { ok: true, resultado };
 }
 
