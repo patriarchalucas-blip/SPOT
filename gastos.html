@@ -102,7 +102,18 @@ h1, h2, p { margin: 0; }
 .ac-barra { height: 6px; border-radius: 3px; background: var(--base); overflow: hidden; }
 .ac-barra i { display: block; height: 100%; background: var(--green); border-radius: 3px; }
 .ac-pe { font-size: 13px; color: var(--ink2); }
-.sp-duas > .sp-sec { align-content: start; }
+.ac-tabela { overflow-x: auto; }
+.ac-tabela table { width: 100%; border-collapse: collapse; font-size: 15px; }
+.ac-tabela th { text-align: left; font-size: 13px; font-weight: 600; color: var(--ink2); padding: 0 12px 8px 0; }
+.ac-tabela td { padding: 12px 12px 12px 0; vertical-align: top; }
+.ac-tabela th:last-child, .ac-tabela td:last-child { padding-right: 0; }
+.ac-data { white-space: nowrap; color: var(--ink2); }
+.ac-desc { font-weight: 600; }
+.ac-tabela .ac-num { text-align: right; white-space: nowrap; }
+.ac-menos { color: var(--green); }
+.ac-saldo { font-weight: 600; }
+.ac-so-cel { display: none; }
+@media (max-width: 520px) { .ac-tabela th:first-child, .ac-data { display: none; } .ac-so-cel { display: block; } .ac-tabela table { font-size: 14px; } }
 .ac-h3 { margin: 0; font-size: 15px; font-weight: 600; color: var(--ink2); }
 .ac-mais { appearance: none; background: none; border: 0; padding: 8px 0; font: 600 14px var(--f); color: var(--green); cursor: pointer; text-align: left; }
 @media (max-width: 520px) { .ac-nums { grid-template-columns: 1fr 1fr; } .ac-nums > div:last-child { grid-column: 1 / -1; } }
@@ -162,10 +173,11 @@ h1, h2, p { margin: 0; }
     <h2>Acerto de contas</h2>
     <p class="sp-nota">Desde o começo, meio a meio. Não muda com o mês escolhido lá em cima.</p>
     <div class="ac-resumo" id="ac-resumo"></div>
-    <div class="sp-duas">
-      <div class="sp-sec"><h3 class="ac-h3">Por mês</h3><div class="sp-lista" id="ac-meses"></div></div>
-      <div class="sp-sec"><h3 class="ac-h3" id="ac-transf-tit">Transferências</h3><div class="sp-lista" id="ac-transf"></div></div>
-    </div>
+    <div class="ac-tabela"><table>
+      <thead><tr><th>Data</th><th>O quê</th><th class="ac-num">Valor</th><th class="ac-num">Falta</th></tr></thead>
+      <tbody id="ac-extrato"></tbody>
+    </table></div>
+    <button type="button" class="ac-mais" id="ac-mais" hidden></button>
   </section>
 
   <section class="sp-sec">
@@ -361,7 +373,7 @@ h1, h2, p { margin: 0; }
   // padrão o Jezler). O saldo é sempre "quanto o Jezler deve ao Patriarcha";
   // negativo vira o contrário.
   const SOCIO = { patriarcha: 'Lucas Patriarcha', jezler: 'Lucas Jezler' };
-  let AC_TODOS_MESES = false, AC_TODAS_TRANSF = false;
+  let AC_TUDO = false;
   function acerto(gastos) {
     const transf = (DADOS.transferencias || []).map((t) => ({ ...t, valor: r2(Number(t.valor)), de: t.de || 'jezler' }))
       .sort((a, b) => b.data.localeCompare(a.data));
@@ -384,43 +396,37 @@ h1, h2, p { margin: 0; }
     const barra = el('div', 'ac-barra'); const i = el('i'); i.style.width = (frac * 100).toFixed(1) + '%'; barra.appendChild(i); rs.appendChild(barra);
     rs.appendChild(el('div', 'ac-pe', pct.format(frac) + ' acertado'));
 
-    // por mês: gasto do mês, parte dele, Pix do mês e o saldo ACUMULADO até ali
-    const mesesG = gastos.map((g) => g.mes), mesesT = transf.map((t) => t.data.slice(0, 7));
-    const meses = [...new Set([...mesesG, ...mesesT])].sort();
-    let acum = 0;
-    const linhas = meses.map((m) => {
-      const gm = gastos.filter((g) => g.mes === m), tm = transf.filter((t) => t.data.slice(0, 7) === m);
-      const p = r2(gm.reduce((s, g) => s + efeito(g), 0)), t = r2(-tm.reduce((s, x) => s + efeitoT(x), 0));
-      acum = r2(acum + p - t);
-      return { m, gasto: r2(gm.reduce((s, g) => s + g.brl, 0)), p, t, acum };
-    }).reverse();
-    const bm = $('ac-meses'); bm.replaceChildren();
-    const ver = AC_TODOS_MESES ? linhas : linhas.slice(0, 6);
-    ver.forEach((x) => bm.appendChild(linha({
-      ic: curto(x.m).split('/')[0], nome: longo(x.m),
-      meta: 'Gasto ' + brl.format(x.gasto) + ' · parte dele ' + brl.format(x.p) + (x.t ? ' · Pix ' + brl.format(x.t) : ''),
-      val: brl.format(Math.abs(x.acum)), sub: x.acum === 0 ? 'em dia' : x.acum > 0 ? 'faltando até aqui' : 'a mais até aqui',
-    })));
-    if (linhas.length > 6) {
-      const b = el('button', 'ac-mais', AC_TODOS_MESES ? 'Ver menos' : 'Ver os ' + linhas.length + ' meses');
-      b.type = 'button'; b.addEventListener('click', () => { AC_TODOS_MESES = !AC_TODOS_MESES; acerto(gastos); });
-      bm.appendChild(b);
-    }
-
-    // transferências
-    $('ac-transf-tit').textContent = 'Transferências' + (transf.length ? ' · ' + transf.length : '');
-    const bt = $('ac-transf'); bt.replaceChildren();
-    if (!transf.length) bt.appendChild(el('p', 'sp-vazio', 'Nenhuma transferência ainda.'));
+    // EXTRATO (10/11, 2ª versão): uma linha por acontecimento, como extrato de
+    // banco. A metade dos gastos de um mês entra no ÚLTIMO dia dele (o mês em
+    // curso entra hoje, "até agora"); cada Pix entra no dia dele. Saldo corrido.
+    const hojeISO = new Date().toISOString().slice(0, 10);
+    const fimDoMes = (m) => { const [y, mm] = m.split('-').map(Number); const f = new Date(Date.UTC(y, mm, 0)).toISOString().slice(0, 10); return f > hojeISO ? hojeISO : f; };
+    const eventos = [];
+    [...new Set(gastos.map((g) => g.mes))].forEach((m) => {
+      const gm = gastos.filter((g) => g.mes === m);
+      const emCurso = hojeISO.slice(0, 7) === m;
+      eventos.push({ data: fimDoMes(m), ordem: 0, desc: 'Metade dos gastos de ' + ML[+m.split('-')[1] - 1] + (emCurso ? ' (até agora)' : ''),
+        meta: 'Gasto do mês ' + brl.format(r2(gm.reduce((x, g) => x + g.brl, 0))), valor: r2(gm.reduce((x, g) => x + efeito(g), 0)) });
+    });
+    transf.forEach((t) => eventos.push({ data: t.data, ordem: 1, desc: 'Pix de ' + SOCIO[t.de], meta: t.obs || '', valor: r2(efeitoT(t)), recibos: t.recibos }));
+    eventos.sort((x, y) => x.data.localeCompare(y.data) || x.ordem - y.ordem);
+    let corrido = 0; eventos.forEach((e) => { corrido = r2(corrido + e.valor); e.saldo = corrido; });
+    eventos.reverse();
     const dataBR = (d) => d.split('-').reverse().join('/');
-    (AC_TODAS_TRANSF ? transf : transf.slice(0, 5)).forEach((t) => bt.appendChild(linha({
-      ic: 'Pix', nome: dataBR(t.data), meta: [SOCIO[t.de] + ' → ' + SOCIO[t.de === 'jezler' ? 'patriarcha' : 'jezler'], t.obs].filter(Boolean).join(' · '),
-      val: brl.format(t.valor), recibos: t.recibos,
-    })));
-    if (transf.length > 5) {
-      const b = el('button', 'ac-mais', AC_TODAS_TRANSF ? 'Ver menos' : 'Ver as ' + transf.length);
-      b.type = 'button'; b.addEventListener('click', () => { AC_TODAS_TRANSF = !AC_TODAS_TRANSF; acerto(gastos); });
-      bt.appendChild(b);
-    }
+    const tb = $('ac-extrato'); tb.replaceChildren();
+    (AC_TUDO ? eventos : eventos.slice(0, 8)).forEach((e) => {
+      const tr = el('tr');
+      tr.appendChild(el('td', 'ac-data', dataBR(e.data)));
+      const td = el('td'); td.appendChild(el('div', 'ac-desc', e.desc)); td.appendChild(el('div', 'sp-meta ac-so-cel', dataBR(e.data))); if (e.meta) td.appendChild(el('div', 'sp-meta', e.meta));
+      if (e.recibos && e.recibos.length) { const bx = el('div', 'sp-recibos'); e.recibos.forEach((r) => { const bb = el('button', 'sp-recibo', 'Ver comprovante'); bb.type = 'button'; bb.addEventListener('click', () => abrirRecibo(r, bb)); bx.appendChild(bb); }); td.appendChild(bx); }
+      tr.appendChild(td);
+      tr.appendChild(el('td', 'ac-num' + (e.valor < 0 ? ' ac-menos' : ''), (e.valor < 0 ? '− ' : '+ ') + brl.format(Math.abs(e.valor))));
+      tr.appendChild(el('td', 'ac-num ac-saldo', brl.format(e.saldo)));
+      tb.appendChild(tr);
+    });
+    const mais = $('ac-mais'); mais.hidden = eventos.length <= 8;
+    mais.textContent = AC_TUDO ? 'Ver menos' : 'Ver o extrato inteiro (' + eventos.length + ')';
+    mais.onclick = () => { AC_TUDO = !AC_TUDO; acerto(gastos); };
   }
 
   let largura = window.innerWidth;
