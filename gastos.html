@@ -91,6 +91,21 @@ h1, h2, p { margin: 0; }
 .tranca button:disabled { opacity: .6; cursor: default; }
 .tranca .erro { color: var(--ink2); min-height: 1.4em; font-size: 15px; text-align: center; }
 [hidden] { display: none !important; }
+
+/* Acerto de contas (10/11): cresce com o tempo, então resumo em cima e as
+   duas listas cortadas em poucas linhas, com "Ver todos". */
+.ac-resumo { background: var(--surface); border-radius: 18px; padding: 20px 24px; display: grid; gap: 16px; }
+.ac-nums { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; align-items: end; }
+.ac-k { font-size: 13px; color: var(--ink2); }
+.ac-v { font-size: clamp(20px, 4vw, 26px); font-weight: 600; letter-spacing: -0.01em; margin-top: 4px; white-space: nowrap; }
+.ac-v.forte { font-size: clamp(26px, 6vw, 38px); color: var(--green); }
+.ac-barra { height: 6px; border-radius: 3px; background: var(--base); overflow: hidden; }
+.ac-barra i { display: block; height: 100%; background: var(--green); border-radius: 3px; }
+.ac-pe { font-size: 13px; color: var(--ink2); }
+.sp-duas > .sp-sec { align-content: start; }
+.ac-h3 { margin: 0; font-size: 15px; font-weight: 600; color: var(--ink2); }
+.ac-mais { appearance: none; background: none; border: 0; padding: 8px 0; font: 600 14px var(--f); color: var(--green); cursor: pointer; text-align: left; }
+@media (max-width: 520px) { .ac-nums { grid-template-columns: 1fr 1fr; } .ac-nums > div:last-child { grid-column: 1 / -1; } }
 </style>
 </head>
 <body>
@@ -144,9 +159,13 @@ h1, h2, p { margin: 0; }
   </div>
 
   <section class="sp-sec">
-    <h2>Entre os sócios</h2>
-    <p class="sp-nota">Desde o começo, sem filtro de mês. O Lucas Patriarcha paga tudo; o Lucas Jezler transfere a metade dele.</p>
-    <div class="sp-lista" id="sp-socios"></div>
+    <h2>Acerto de contas</h2>
+    <p class="sp-nota">Desde o começo, meio a meio. Não muda com o mês escolhido lá em cima.</p>
+    <div class="ac-resumo" id="ac-resumo"></div>
+    <div class="sp-duas">
+      <div class="sp-sec"><h3 class="ac-h3">Por mês</h3><div class="sp-lista" id="ac-meses"></div></div>
+      <div class="sp-sec"><h3 class="ac-h3" id="ac-transf-tit">Transferências</h3><div class="sp-lista" id="ac-transf"></div></div>
+    </div>
   </section>
 
   <section class="sp-sec">
@@ -324,16 +343,7 @@ h1, h2, p { margin: 0; }
       lc.appendChild(linha({ ic: g.servico.charAt(0), nome: g.servico, meta: [g.para_que, g.obs].filter(Boolean).join(' · '), val: brl.format(g.brl), sub: g.moeda === 'USD' ? usd.format(g.valor) : '', recibos: g.recibos }));
     });
 
-    // entre os sócios (10/11): sempre o total desde o começo
-    const so = $('sp-socios'); so.replaceChildren();
-    const metade = r2(gastos.reduce((s, g) => s + g.brl, 0) / 2);
-    const transf = (DADOS.transferencias || []).map((t) => ({ ...t, valor: r2(Number(t.valor)) }));
-    const pago = r2(transf.reduce((s, t) => s + t.valor, 0));
-    const dataBR = (d) => d.split('-').reverse().join('/');
-    so.appendChild(linha({ ic: 'J', nome: 'Parte do Lucas Jezler', meta: 'Metade de tudo que foi gasto', val: brl.format(metade) }));
-    transf.forEach((t) => so.appendChild(linha({ ic: '↗', nome: 'Pix do Lucas Jezler', meta: [dataBR(t.data), t.obs].filter(Boolean).join(' · '), val: '− ' + brl.format(t.valor), recibos: t.recibos })));
-    const falta = r2(metade - pago);
-    so.appendChild(linha({ ic: '=', nome: falta >= 0 ? 'Falta o Lucas Jezler transferir' : 'O Lucas Jezler transferiu a mais', val: brl.format(Math.abs(falta)), sub: 'Transferido até agora: ' + brl.format(pago) }));
+    acerto(gastos);
 
     // pela frente
     const fr = $('sp-frente'); fr.replaceChildren();
@@ -344,6 +354,73 @@ h1, h2, p { margin: 0; }
     })));
 
     $('sp-rodape').textContent = DADOS.atualizado ? 'Atualizado em ' + DADOS.atualizado + '.' : '';
+  }
+
+  // ACERTO DE CONTAS (10/11). Meio a meio. Cada gasto tem quem pagou
+  // (`pago_por`, padrão o Patriarcha) e cada transferência quem mandou (`de`,
+  // padrão o Jezler). O saldo é sempre "quanto o Jezler deve ao Patriarcha";
+  // negativo vira o contrário.
+  const SOCIO = { patriarcha: 'Lucas Patriarcha', jezler: 'Lucas Jezler' };
+  let AC_TODOS_MESES = false, AC_TODAS_TRANSF = false;
+  function acerto(gastos) {
+    const transf = (DADOS.transferencias || []).map((t) => ({ ...t, valor: r2(Number(t.valor)), de: t.de || 'jezler' }))
+      .sort((a, b) => b.data.localeCompare(a.data));
+    const efeito = (g) => (g.pago_por === 'jezler' ? -1 : 1) * g.brl / 2;        // + = Jezler deve
+    const efeitoT = (t) => (t.de === 'jezler' ? -1 : 1) * t.valor;
+    const parte = r2(gastos.reduce((s, g) => s + efeito(g), 0));
+    const pago = r2(-transf.reduce((s, t) => s + efeitoT(t), 0));
+    const saldo = r2(parte - pago);
+    const deve = saldo >= 0 ? 'jezler' : 'patriarcha';
+
+    // resumo
+    const rs = $('ac-resumo'); rs.replaceChildren();
+    const nums = el('div', 'ac-nums');
+    const num = (k, v, forte) => { const d = el('div'); d.appendChild(el('div', 'ac-k', k)); d.appendChild(el('div', 'ac-v' + (forte ? ' forte' : ''), v)); return d; };
+    nums.appendChild(num('Parte do Lucas Jezler', brl.format(parte)));
+    nums.appendChild(num('Já transferido', brl.format(pago)));
+    nums.appendChild(num(saldo === 0 ? 'Contas em dia' : deve === 'jezler' ? 'Falta transferir' : 'O Patriarcha deve', brl.format(Math.abs(saldo)), true));
+    rs.appendChild(nums);
+    const frac = parte > 0 ? Math.min(1, Math.max(0, pago / parte)) : 1;
+    const barra = el('div', 'ac-barra'); const i = el('i'); i.style.width = (frac * 100).toFixed(1) + '%'; barra.appendChild(i); rs.appendChild(barra);
+    rs.appendChild(el('div', 'ac-pe', pct.format(frac) + ' acertado'));
+
+    // por mês: gasto do mês, parte dele, Pix do mês e o saldo ACUMULADO até ali
+    const mesesG = gastos.map((g) => g.mes), mesesT = transf.map((t) => t.data.slice(0, 7));
+    const meses = [...new Set([...mesesG, ...mesesT])].sort();
+    let acum = 0;
+    const linhas = meses.map((m) => {
+      const gm = gastos.filter((g) => g.mes === m), tm = transf.filter((t) => t.data.slice(0, 7) === m);
+      const p = r2(gm.reduce((s, g) => s + efeito(g), 0)), t = r2(-tm.reduce((s, x) => s + efeitoT(x), 0));
+      acum = r2(acum + p - t);
+      return { m, gasto: r2(gm.reduce((s, g) => s + g.brl, 0)), p, t, acum };
+    }).reverse();
+    const bm = $('ac-meses'); bm.replaceChildren();
+    const ver = AC_TODOS_MESES ? linhas : linhas.slice(0, 6);
+    ver.forEach((x) => bm.appendChild(linha({
+      ic: curto(x.m).split('/')[0], nome: longo(x.m),
+      meta: 'Gasto ' + brl.format(x.gasto) + ' · parte dele ' + brl.format(x.p) + (x.t ? ' · Pix ' + brl.format(x.t) : ''),
+      val: brl.format(Math.abs(x.acum)), sub: x.acum === 0 ? 'em dia' : x.acum > 0 ? 'faltando até aqui' : 'a mais até aqui',
+    })));
+    if (linhas.length > 6) {
+      const b = el('button', 'ac-mais', AC_TODOS_MESES ? 'Ver menos' : 'Ver os ' + linhas.length + ' meses');
+      b.type = 'button'; b.addEventListener('click', () => { AC_TODOS_MESES = !AC_TODOS_MESES; acerto(gastos); });
+      bm.appendChild(b);
+    }
+
+    // transferências
+    $('ac-transf-tit').textContent = 'Transferências' + (transf.length ? ' · ' + transf.length : '');
+    const bt = $('ac-transf'); bt.replaceChildren();
+    if (!transf.length) bt.appendChild(el('p', 'sp-vazio', 'Nenhuma transferência ainda.'));
+    const dataBR = (d) => d.split('-').reverse().join('/');
+    (AC_TODAS_TRANSF ? transf : transf.slice(0, 5)).forEach((t) => bt.appendChild(linha({
+      ic: 'Pix', nome: dataBR(t.data), meta: [SOCIO[t.de] + ' → ' + SOCIO[t.de === 'jezler' ? 'patriarcha' : 'jezler'], t.obs].filter(Boolean).join(' · '),
+      val: brl.format(t.valor), recibos: t.recibos,
+    })));
+    if (transf.length > 5) {
+      const b = el('button', 'ac-mais', AC_TODAS_TRANSF ? 'Ver menos' : 'Ver as ' + transf.length);
+      b.type = 'button'; b.addEventListener('click', () => { AC_TODAS_TRANSF = !AC_TODAS_TRANSF; acerto(gastos); });
+      bt.appendChild(b);
+    }
   }
 
   let largura = window.innerWidth;
