@@ -144,6 +144,12 @@ h1, h2, p { margin: 0; }
   </div>
 
   <section class="sp-sec">
+    <h2>Entre os sócios</h2>
+    <p class="sp-nota">Desde o começo, sem filtro de mês. O Lucas Patriarcha paga tudo; o Lucas Jezler transfere a metade dele.</p>
+    <div class="sp-lista" id="sp-socios"></div>
+  </section>
+
+  <section class="sp-sec">
     <h2>Pela frente</h2>
     <p class="sp-nota">O que já vai ser cobrado e o que depende de decisão.</p>
     <div class="sp-lista" id="sp-frente"></div>
@@ -317,6 +323,17 @@ h1, h2, p { margin: 0; }
       if (MES === 'todos' && g.mes !== grupo) { grupo = g.mes; lc.appendChild(el('div', 'sp-grupo', longo(g.mes))); }
       lc.appendChild(linha({ ic: g.servico.charAt(0), nome: g.servico, meta: [g.para_que, g.obs].filter(Boolean).join(' · '), val: brl.format(g.brl), sub: g.moeda === 'USD' ? usd.format(g.valor) : '', recibos: g.recibos }));
     });
+
+    // entre os sócios (10/11): sempre o total desde o começo
+    const so = $('sp-socios'); so.replaceChildren();
+    const metade = r2(gastos.reduce((s, g) => s + g.brl, 0) / 2);
+    const transf = (DADOS.transferencias || []).map((t) => ({ ...t, valor: r2(Number(t.valor)) }));
+    const pago = r2(transf.reduce((s, t) => s + t.valor, 0));
+    const dataBR = (d) => d.split('-').reverse().join('/');
+    so.appendChild(linha({ ic: 'J', nome: 'Parte do Lucas Jezler', meta: 'Metade de tudo que foi gasto', val: brl.format(metade) }));
+    transf.forEach((t) => so.appendChild(linha({ ic: '↗', nome: 'Pix do Lucas Jezler', meta: [dataBR(t.data), t.obs].filter(Boolean).join(' · '), val: '− ' + brl.format(t.valor), recibos: t.recibos })));
+    const falta = r2(metade - pago);
+    so.appendChild(linha({ ic: '=', nome: falta >= 0 ? 'Falta o Lucas Jezler transferir' : 'O Lucas Jezler transferiu a mais', val: brl.format(Math.abs(falta)), sub: 'Transferido até agora: ' + brl.format(pago) }));
 
     // pela frente
     const fr = $('sp-frente'); fr.replaceChildren();
