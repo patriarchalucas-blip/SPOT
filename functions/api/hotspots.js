@@ -580,10 +580,31 @@ async function vitrine(env) {
   const guardada = await lerJSON(env, 'hs_vitrine');
   if (guardada) return guardada;
   const [semana, pub] = await Promise.all([lerJSON(env, 'hs_semana'), lerJSON(env, 'hs_publicada')]);
-  if (!semana || !pub || pub.semana !== semana.criada) return { listas: [] };
-  const v = await previa(env);
-  await gravarKV(env, 'hs_vitrine', JSON.stringify(v), ANO);
+  let v;
+  if (semana && pub && pub.semana === semana.criada) v = await previa(env);
+  else v = await vitrineDasViagens(env); // já rodou outra busca depois: lê o que está publicado
+  if (v.listas.some((l) => l.lugares.length)) await gravarKV(env, 'hs_vitrine', JSON.stringify(v), ANO);
   return v;
+}
+// O que está publicado de fato: as viagens "Hotspots em <cidade>" da conta-fonte.
+async function vitrineDasViagens(env) {
+  if (!env.SUPABASE_SERVICE_KEY) return { listas: [] };
+  const [conta] = await sbGet(env)('/rest/v1/profiles?select=id&username=eq.' + CONTA_FONTE);
+  if (!conta) return { listas: [] };
+  const trips = await sbGet(env)('/rest/v1/trips?select=id,name&user_id=eq.' + conta.id + '&name=like.Hotspots%20em%20*');
+  const listas = [];
+  for (const t of trips || []) {
+    const spots = await sbGet(env)('/rest/v1/spots?select=name,address,category,tipo,maps_url,photo_url,created_at&trip_id=eq.' + t.id + '&order=created_at.asc');
+    listas.push({
+      cidade: t.name.replace(/^Hotspots em /, ''),
+      lugares: (spots || []).map((x) => ({
+        id: '', categoria: ['food', 'hotel', 'experience'].includes(x.category) ? x.category : 'food',
+        nome: x.name, endereco: x.address || '', bairro: '', tipo: x.tipo || '',
+        foto: String(x.photo_url || '').replace(/&w=\d+/, '&w=800'), maps: x.maps_url || '', site: '', preco: null, precoDe: null, precoAte: null, novo: false
+      }))
+    });
+  }
+  return { listas };
 }
 
 const NIVEL = { PRICE_LEVEL_INEXPENSIVE: 1, PRICE_LEVEL_MODERATE: 2, PRICE_LEVEL_EXPENSIVE: 3, PRICE_LEVEL_VERY_EXPENSIVE: 4 };
