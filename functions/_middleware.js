@@ -64,9 +64,16 @@ export async function onRequest(context) {
   const u = new URL(context.request.url);
   if (!context.env.SPOT_KV && /\.spotted-38b\.pages\.dev$/.test(u.hostname) && u.pathname.startsWith('/api/')) {
     const r = context.request;
+    // As fotos (place-photo) recusam pedido de outro endereço: troca o
+    // Origin/Referer da prévia pelo da produção.
+    const h = new Headers(r.headers);
+    for (const k of ['Origin', 'Referer']) {
+      const v = h.get(k);
+      if (v) { try { const o = new URL(v); h.set(k, 'https://meuspot.app' + (k === 'Referer' ? o.pathname + o.search : '')) } catch (e) { h.delete(k) } }
+    }
     return fetch('https://meuspot.app' + u.pathname + u.search, {
       method: r.method,
-      headers: r.headers,
+      headers: h,
       body: r.method === 'GET' || r.method === 'HEAD' ? undefined : await r.arrayBuffer(),
       redirect: 'manual',
     });
