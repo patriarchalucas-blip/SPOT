@@ -12,3 +12,9 @@ mobile/build.ps1
 # e uma credencial publicada, e quem a tiver envia app em nome da conta.
 # Ela vive no gerenciador de senhas do Lucas e nos servidores da Expo.
 *.p8
+
+# Chaves pra testar na maquina (Anthropic, Google). O repositorio e PUBLICO:
+# arquivo de chave commitado aqui e chave publicada.
+.dev.vars
+.env
+.env.*
