@@ -399,6 +399,18 @@ expira antes dos 30 dias do cache (Roma e Rio davam 404). `city-photo.js`
 confere a foto guardada (`fotoMorta`) e escolhe de novo; o app testa a guardada
 no aparelho (`fotoAbre`) antes de usar.
 
+**Fotos de spot morrendo (11/11): 97 de 161 spots do Lucas sem foto.** Três
+buracos no `place-photo.js`, todos fechados no servidor (vale pra toda tela,
+nativa inclusive): (1) o link do CDN guardado 30 dias vencia antes — agora é
+conferido com HEAD (grátis) antes de usar; (2) o CÓDIGO da foto gravado no spot
+vence — Google responde 400/404 e o servidor pede a foto ATUAL do lugar
+(`fotoAtualDoLugar`, KV `fotolugar_<id>`); (3) às vezes o Google aceita o código
+velho e entrega link que já nasce morto — também conferido. Etiqueta da borda
+`/_foto3/`; redirecionamento 1 h no celular. 61 spots ainda tinham o endereço
+direto do Google com a chave antiga dentro: convertidos no banco. Conferido:
+586/586 fotos de spot abrindo. No app, capa guardada no formato antigo (só o
+link do Google) era usada sem teste e ficava vazia pra sempre: agora é esquecida.
+
 ## Aura Hackathon (Replit + Lucas Abreu) — o Lucas vai participar (19/10/2026)
 
 Imersão de 2 semanas, online, grátis. Portal: `aura-hackathon.replit.app`.
