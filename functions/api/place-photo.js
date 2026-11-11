@@ -115,8 +115,11 @@ export async function onRequestGet(context) {
   // diferente em cada um. É um endereço inventado, que nunca é servido: serve
   // só de etiqueta.
   const borda = caches.default;
+  // '/_foto2/' (11/11): a borda guardava redirecionamento pra link do Google
+  // já vencido; trocar a etiqueta faz toda foto passar uma vez pela
+  // conferência do KV abaixo.
   const etiqueta = new Request(
-    url.origin + '/_foto/' + (chaveFixa || chave) + '/' + largura + (webp ? '/webp' : '/jpeg')
+    url.origin + '/_foto3/' + (chaveFixa || chave) + '/' + largura + (webp ? '/webp' : '/jpeg')
   );
   // A FALHA mora só na borda (06/10). Gravada no KV, qualquer um sem login
   // inventando refs no formato certo gastava uma gravação do KV grátis (mil
@@ -138,6 +141,14 @@ export async function onRequestGet(context) {
       for (const k of chaveFixa ? [chaveFixa, chave] : [chave]) {
         const guardado = await kv.get(k);
         if (guardado === 'X') { if (k === chave) return vazio(404); continue; }  // falha conhecida, não retenta agora
+        // O LINK DO GOOGLE VENCE ANTES DOS 30 DIAS (11/11): guardado morto
+        // mandava todo mundo pra um 403 do Google até o KV expirar — vários
+        // spots sem foto de uma vez. Confere antes de usar (o CDN do Google
+        // não cobra); morto, esquece e segue: o próximo da lista ou o Google.
+        if (guardado && !(await linkVivo(comTamanho(guardado, 100, false)))) {
+          try { await kv.delete(k) } catch (e) {}
+          continue;
+        }
         if (guardado) { amostrar(ctxMed, k === chaveFixa ? 'kv_lugar' : 'kv_codigo'); return pelaBorda(context, borda, etiqueta, redirecionar(comTamanho(guardado, largura, webp))) }
       }
     } catch (e) { /* KV fora: segue e resolve */ }
@@ -186,7 +197,18 @@ export async function onRequestGet(context) {
   // Cada ida ao Google é o que o Google cobra: conta uma por uma.
   context.waitUntil(contarGoogle(ctxMed, r.status));
 
-  const destino = r.headers.get('Location') || '';
+  let destino = r.headers.get('Location') || '';
+  // O CÓDIGO DA FOTO VENCEU (11/11): o Google troca esses códigos e o que
+  // ficou gravado no spot morre — 97 de 161 spots do Lucas sem foto. O lugar
+  // continua o mesmo (está no próprio ref): pede a foto ATUAL dele, uma vez, e
+  // guarda por lugar. Vale pra todo mundo e toda tela, nativa inclusive.
+  // E às vezes o Google ACEITA o código velho mas manda pra um link que já
+  // nasce morto (403 no CDN) — 11 de 586 spots em 11/11. Confere também.
+  let nasceuMorto = false;
+  if (destino && !(await linkVivo(comTamanho(semTamanho(destino), 100, false)))) { destino = ''; nasceuMorto = true }
+  if (!destino && (nasceuMorto || r.status === 400 || r.status === 404)) {
+    destino = await fotoAtualDoLugar(context, env, ref.split('/')[1]) || '';
+  }
   if (!destino || !/^https:\/\/[a-z0-9-]+\.googleusercontent\.com\//i.test(destino)) {
     // Só "a foto não existe" (400/404) é guardado como falha. Cota esgotada
     // (429), chave recusada (403) ou Google fora (5xx) é passageiro: gravar 'X'
@@ -219,6 +241,50 @@ function semTamanho(u) {
   return i > j ? u.slice(0, i) : u;
 }
 
+// A foto de agora de um lugar: o endereço do CDN da 1ª foto que o Google
+// devolve pra ele. Guardada por lugar (30 dias, conferida antes de usar); 'X'
+// = o lugar não tem foto (1 dia, pra não perguntar de novo a cada abertura).
+export async function fotoAtualDoLugar(context, env, lugar, buscar = fetch) {
+  if (!/^[A-Za-z0-9_-]{1,120}$/.test(lugar || '')) return '';
+  const kv = env.SPOT_KV, k = 'fotolugar_' + lugar;
+  if (kv) {
+    try {
+      const g = await kv.get(k);
+      if (g === 'X') return '';
+      if (g && await linkVivo(g + '=w100', buscar)) return g + '=s1600';
+    } catch (e) {}
+  }
+  let nome = '';
+  try {
+    const d = await buscar('https://places.googleapis.com/v1/places/' + lugar + '?key=' + env.GOOGLE_PLACES_KEY,
+      { headers: { 'X-Goog-FieldMask': 'photos' } });
+    if (!d.ok) return '';   // cota, chave, Google fora: passageiro, não marca
+    const j = await d.json();
+    nome = ((j.photos || [])[0] || {}).name || '';
+  } catch (e) { return '' }
+  if (!nome || !REF_OK.test(nome)) {
+    if (kv) { try { await kv.put(k, 'X', { expirationTtl: 60 * 60 * 24 }) } catch (e) {} }
+    return '';
+  }
+  let m;
+  try { m = await buscar('https://places.googleapis.com/v1/' + nome + '/media?maxWidthPx=1600&key=' + env.GOOGLE_PLACES_KEY, { redirect: 'manual' }) }
+  catch (e) { return '' }
+  const destino = m.headers.get('Location') || '';
+  if (!/^https:\/\/[a-z0-9-]+\.googleusercontent\.com\//i.test(destino)) return '';
+  if (!(await linkVivo(semTamanho(destino) + '=w100', buscar))) return '';
+  if (kv) { try { await kv.put(k, semTamanho(destino), { expirationTtl: TTL_OK }) } catch (e) {} }
+  return destino;
+}
+
+// Só "não existe/proibido" conta como morto. Rede falhando ou o Google lento
+// não podem apagar foto boa (aí ela fica como estava).
+export async function linkVivo(u, buscar = fetch) {
+  try {
+    const r = await buscar(u, { method: 'HEAD' });
+    return !(r.status === 403 || r.status === 404 || r.status === 410);
+  } catch (e) { return true }
+}
+
 function comTamanho(base, largura, webp) {
   return base + '=w' + largura + (webp ? '-rw' : '');
 }
@@ -230,7 +296,9 @@ function redirecionar(destino) {
       Location: destino,
       // O navegador guarda o redirecionamento, então rolar a lista de novo
       // nem chega a bater aqui.
-      'Cache-Control': 'public, max-age=21600',
+      // 1 h, não 6 (11/11): se o link do Google vencer, o celular não fica
+      // preso nele a tarde inteira.
+      'Cache-Control': 'public, max-age=3600',
       // A resposta muda conforme o Accept (WebP ou JPEG): sem isto um cache
       // no meio do caminho entregaria WebP pra quem não aceita.
       Vary: 'Accept'
