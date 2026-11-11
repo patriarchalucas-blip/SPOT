@@ -1,0 +1,31 @@
+# Ronda das fotos (11/11/2026): todo dia às 5h de Brasília abre toda foto do
+# app — abrir já cura a vencida (ver ferramentas/ronda-fotos.mjs). Se alguma
+# continuar quebrada, o robô falha e o GitHub avisa o Lucas por e-mail.
+# O log só mostra números (o repositório é público).
+#
+# Segredo: SUPABASE_SERVICE_KEY_SP (a mesma chave do Cloudflare), em
+# Settings → Secrets and variables → Actions.
+
+name: Ronda das fotos
+
+on:
+  schedule:
+    - cron: '0 8 * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  ronda:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Abrir todas as fotos
+        env:
+          SUPABASE_SERVICE_KEY_SP: ${{ secrets.SUPABASE_SERVICE_KEY_SP }}
+        run: node ferramentas/ronda-fotos.mjs
