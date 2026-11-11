@@ -373,7 +373,7 @@ async function trataPedido(pg, r) {
     if (api === 'erro') { let b = {}; try { b = JSON.parse(r.postData() || '{}') } catch (e) {} ERROS_APP.push(Object.assign({ aparelho: pg.__nome }, b)); return responde(200, '{}') }
     if (api === 'places') return responde(200, JSON.stringify(placesResponde(r.postData())));
     if (api === 'lugar') return responde(200, JSON.stringify(lugarResponde(r.postData())));
-    if (api === 'place-photo' || api === 'city-photo' && metodo === 'GET' && /img=1/.test(u)) return responde(200, PNG1, 'image/png');
+    if (api === 'place-photo' || api === 'foto' || api === 'city-photo' && metodo === 'GET' && /img=1/.test(u)) return responde(200, PNG1, 'image/png');
     if (api === 'importar') return responde(200, JSON.stringify(metodo === 'GET' ? { ligado: true } : { lugares: [] }));
     // Lista pública aberta antes de instalar (26/10): LISTA_CONEXAO = { codigo, dono, spots }.
     if (api === 'lista') {
