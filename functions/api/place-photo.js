@@ -115,8 +115,11 @@ export async function onRequestGet(context) {
   // diferente em cada um. É um endereço inventado, que nunca é servido: serve
   // só de etiqueta.
   const borda = caches.default;
+  // '/_foto2/' (11/11): a borda guardava redirecionamento pra link do Google
+  // já vencido; trocar a etiqueta faz toda foto passar uma vez pela
+  // conferência do KV abaixo.
   const etiqueta = new Request(
-    url.origin + '/_foto/' + (chaveFixa || chave) + '/' + largura + (webp ? '/webp' : '/jpeg')
+    url.origin + '/_foto2/' + (chaveFixa || chave) + '/' + largura + (webp ? '/webp' : '/jpeg')
   );
   // A FALHA mora só na borda (06/10). Gravada no KV, qualquer um sem login
   // inventando refs no formato certo gastava uma gravação do KV grátis (mil
@@ -138,6 +141,14 @@ export async function onRequestGet(context) {
       for (const k of chaveFixa ? [chaveFixa, chave] : [chave]) {
         const guardado = await kv.get(k);
         if (guardado === 'X') { if (k === chave) return vazio(404); continue; }  // falha conhecida, não retenta agora
+        // O LINK DO GOOGLE VENCE ANTES DOS 30 DIAS (11/11): guardado morto
+        // mandava todo mundo pra um 403 do Google até o KV expirar — vários
+        // spots sem foto de uma vez. Confere antes de usar (o CDN do Google
+        // não cobra); morto, esquece e segue: o próximo da lista ou o Google.
+        if (guardado && !(await linkVivo(comTamanho(guardado, 100, false)))) {
+          try { await kv.delete(k) } catch (e) {}
+          continue;
+        }
         if (guardado) { amostrar(ctxMed, k === chaveFixa ? 'kv_lugar' : 'kv_codigo'); return pelaBorda(context, borda, etiqueta, redirecionar(comTamanho(guardado, largura, webp))) }
       }
     } catch (e) { /* KV fora: segue e resolve */ }
@@ -219,6 +230,15 @@ function semTamanho(u) {
   return i > j ? u.slice(0, i) : u;
 }
 
+// Só "não existe/proibido" conta como morto. Rede falhando ou o Google lento
+// não podem apagar foto boa (aí ela fica como estava).
+export async function linkVivo(u, buscar = fetch) {
+  try {
+    const r = await buscar(u, { method: 'HEAD' });
+    return !(r.status === 403 || r.status === 404 || r.status === 410);
+  } catch (e) { return true }
+}
+
 function comTamanho(base, largura, webp) {
   return base + '=w' + largura + (webp ? '-rw' : '');
 }
@@ -230,7 +250,9 @@ function redirecionar(destino) {
       Location: destino,
       // O navegador guarda o redirecionamento, então rolar a lista de novo
       // nem chega a bater aqui.
-      'Cache-Control': 'public, max-age=21600',
+      // 1 h, não 6 (11/11): se o link do Google vencer, o celular não fica
+      // preso nele a tarde inteira.
+      'Cache-Control': 'public, max-age=3600',
       // A resposta muda conforme o Accept (WebP ou JPEG): sem isto um cache
       // no meio do caminho entregaria WebP pra quem não aceita.
       Vary: 'Accept'

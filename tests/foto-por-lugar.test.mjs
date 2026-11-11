@@ -13,7 +13,13 @@ function ambiente() {
     put: async (r, resp) => { borda.set(r.url, resp) },
   } };
   let chamadasAoGoogle = 0;
-  globalThis.fetch = async (u) => {
+  const mortos = new Set();
+  globalThis.fetch = async (u, o) => {
+    // Conferência do link guardado (11/11): o CDN do Google, grátis — não conta.
+    if (o && o.method === 'HEAD') {
+      assert.match(String(u), /^https:\/\/lh3\.googleusercontent\.com\//);
+      return new Response(null, { status: [...mortos].some((m) => String(u).startsWith(m)) ? 403 : 200 });
+    }
     chamadasAoGoogle++;
     assert.match(String(u), /^https:\/\/places\.googleapis\.com\/v1\/places\//);
     return new Response(null, { status: 302, headers: { Location: 'https://lh3.googleusercontent.com/foto-do-lugar=s1600' } });
@@ -29,8 +35,27 @@ function ambiente() {
     await Promise.all(espera);
     return r;
   };
-  return { pedir, google: () => chamadasAoGoogle };
+  return { pedir, google: () => chamadasAoGoogle, matar: (prefixo) => mortos.add(prefixo) };
 }
+
+test('link do Google guardado que venceu: busca de novo em vez de mandar pro 403', async () => {
+  const { pedir, google, matar } = ambiente();
+  const ref = encodeURIComponent('places/ChIJlugar/photos/X');
+  assert.equal((await pedir('ref=' + ref + '&w=400')).status, 302);
+  assert.equal(google(), 1);
+  matar('https://lh3.googleusercontent.com/foto-do-lugar');
+  const r = await pedir('ref=' + ref + '&w=400');
+  assert.equal(r.status, 302);
+  assert.equal(google(), 2, 'link morto tem que ir ao Google buscar um novo');
+});
+
+test('link guardado vivo não gasta nada', async () => {
+  const { pedir, google } = ambiente();
+  const ref = encodeURIComponent('places/ChIJlugar/photos/Y');
+  await pedir('ref=' + ref + '&w=400');
+  await pedir('ref=' + ref + '&w=800');
+  assert.equal(google(), 1);
+});
 
 const foto = { widthPx: 4032, heightPx: 3024, authorAttributions: [{ displayName: 'Ana', uri: 'https://maps.google.com/maps/contrib/123' }] };
 

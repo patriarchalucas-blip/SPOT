@@ -16054,7 +16054,14 @@ async function buscarFotoDe(query,extra){
     // O navegador guarda a imagem baixada, então mostrar depois é imediato.
     if(c&&c.exp&&Date.now()<c.exp&&c.url&&/^\/api\/place-photo/.test(c.url)&&!(await fotoAbre(c.url))){delete cityPhotoCache[query];savePhotoCache()}
     else if(c&&c.exp&&Date.now()<c.exp)return c.url||'';
-    if(typeof c==='string')return c; // formato antigo (positivo, sem expiração)
+    // Formato antigo (só o link, sem validade). Link do Google nesse formato
+    // nunca passava pelo teste acima e ficava morto pra sempre (11/11: capas
+    // de São Paulo, Reino Unido e Hungria vazias com a foto no servidor):
+    // esquece e pede de novo — o servidor já tem, não custa busca.
+    if(typeof c==='string'){
+      if(c&&!/^\/api\/place-photo/.test(c))return c;
+      delete cityPhotoCache[query];savePhotoCache();
+    }
   }
   // Se a cota estourou há pouco, não martela de novo — usa gradiente
   // Pausa de fotos (cota) NÃO pode esconder as fotos que o servidor já tem
