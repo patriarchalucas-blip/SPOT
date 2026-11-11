@@ -12,6 +12,10 @@ on:
   schedule:
     - cron: '0 8 * * *'
   workflow_dispatch:
+  # Roda também quando a própria ronda muda (só no main), pra conferir na hora.
+  push:
+    branches: [main]
+    paths: ['ferramentas/ronda-fotos.mjs', '.github/workflows/ronda-fotos.yml']
 
 permissions:
   contents: read
