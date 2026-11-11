@@ -3,10 +3,9 @@
 //   1) servidor local na porta 8935 servindo a pasta do repo;
 //   2) node ferramentas/pente-fino.mjs  → tem que terminar com ERROS (0).
 // Prints de cada passo em %TEMP%/pente-*.png.
-import { createRequire } from 'module';
-const require = createRequire('C:/Users/lucas.patriarcha_sol/Downloads/Spot-20260923T193028Z-1-001/Spot/ferramentas/capturas-loja/');
-const puppeteer = require('puppeteer-core');
-const OUT = process.env.TEMP + '/pente-';
+import { carregarPuppeteer, acharChrome, TEMP } from './_base-de-teste.mjs';
+const puppeteer = carregarPuppeteer();
+const OUT = TEMP + '/pente-';
 
 const EU = '00000000-0000-0000-0000-0000000000e1', ANA = '00000000-0000-0000-0000-0000000000a1', RAFA = '00000000-0000-0000-0000-0000000000b1';
 const DB = {
@@ -67,7 +66,7 @@ const gPlace = (n, c) => ({ id: 'g' + n, displayName: { text: n }, formattedAddr
   // 3 fotos por lugar: o carrossel da ficha (05/10) precisa delas pra montar.
   photos: [1, 2, 3].map(k => ({ name: 'places/g' + n.replace(/W/g, '') + '/photos/p' + k, authorAttributions: [{ displayName: 'Autor ' + k }] })) });
 
-const b = await puppeteer.launch({ executablePath: 'C:/Program Files/Google/Chrome/Application/chrome.exe' });
+const b = await puppeteer.launch({ executablePath: acharChrome() });
 const pg = await b.newPage(); await pg.setViewport({ width: 390, height: 844, deviceScaleFactor: 1 });
 // Língua (13/10): o Chrome do teste é em inglês. IDIOMA=en roda o app em inglês
 // e no fim lista o que ficou sem tradução.

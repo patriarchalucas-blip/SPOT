@@ -1,0 +1,8 @@
+{
+  "name": "spot-ferramentas-de-navegador",
+  "private": true,
+  "description": "O puppeteer-core que os testes de navegador (pente-fino, jornadas) e as capturas usam. Instalar: npm install --prefix ferramentas/capturas-loja",
+  "dependencies": {
+    "puppeteer-core": "25.12.0"
+  }
+}

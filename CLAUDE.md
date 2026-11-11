@@ -550,7 +550,15 @@ cifra em `gastos-recibos/<id>.bin` (mesma chave, sal fixo em `_local/gastos/sal.
    antes de todo push. Desde 06/10, também `node ferramentas/pente-fino.mjs` (ERROS (0)) e
    `node ferramentas/jornadas.mjs` (FALHAS (0)): duas contas no mesmo banco falso que imita
    o RLS — pedido, aceite, comentário, Planejar, bloqueio, troca de conta. Os dois pedem o
-   servidor estático local na porta 8935.
+   servidor estático local na porta 8935. **Desde 11/11/2026, um comando só faz tudo:
+   `node ferramentas/antes-de-subir.mjs`** (instala o puppeteer-core se faltar, sobe o
+   servidor na 8935, roda os três e diz "Pode subir" ou não). Roda em qualquer clone: o
+   caminho da máquina do Patriarcha saiu dos testes (`ferramentas/_base-de-teste.mjs` acha
+   a raiz, o puppeteer e o Chrome). **O Jezler (sócio, colaborador `ljezler` no GitHub)
+   sobe direto no main, sem aprovação do Patriarcha** — decisão dele, 11/11; por isso este
+   comando é a única trava: sempre `git pull` antes de mexer e o comando antes do push.
+   Chave pra testar na máquina só em variável de ambiente ou `.dev.vars`/`.env` (estão no
+   `.gitignore`; o repositório é público).
 
 ## Próximos passos discutidos (não construídos ainda, sem ordem de prioridade fechada)
 

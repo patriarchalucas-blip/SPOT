@@ -13,7 +13,7 @@ const http = require('http'), fs = require('fs'), path = require('path');
 const { spawn } = require('child_process');
 const { pngRGB } = require(__dirname + '/png-sem-alfa.cjs');
 
-const APP = 'C:/Users/lucas.patriarcha_sol/Downloads/Spot';
+const APP = path.resolve(__dirname, '..').replace(/\\/g, '/');
 const SAIDA = APP + '/mobile/app-store/capturas';
 const PORTA = 8932;
 const tipos = {

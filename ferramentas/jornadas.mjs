@@ -21,11 +21,9 @@
 // Duas asserções dependem do relógio (memória de 2 min do Planejar): antes do
 // conserto falham quase sempre; numa máquina muito lenta podem passar.
 // Nada sai pra internet além do que o próprio Chrome pede (fontes, mapa).
-import { createRequire } from 'module';
 import crypto from 'crypto';
-const RAIZ = 'C:/Users/lucas.patriarcha_sol/Downloads/Spot-20260923T193028Z-1-001/Spot/';
-const require = createRequire(RAIZ + 'ferramentas/capturas-loja/');
-const puppeteer = require('puppeteer-core');
+import { carregarPuppeteer, acharChrome } from './_base-de-teste.mjs';
+const puppeteer = carregarPuppeteer();
 const SITE = process.env.SPOT_SITE || 'http://localhost:8935';
 const VERBOSO = !!process.env.VERBOSO;
 
@@ -312,7 +310,7 @@ function lugarResponde(corpoTxt) {
 const PNG1 = Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==', 'base64');
 
 // ═══ o navegador ═══
-const br = await puppeteer.launch({ executablePath: 'C:/Program Files/Google/Chrome/Application/chrome.exe', args: ['--no-first-run'] });
+const br = await puppeteer.launch({ executablePath: acharChrome(), args: ['--no-first-run'] });
 const PAGINAS = {};
 const I18N_FALTA = new Set();
 async function abrirAparelho(nome, { casca }) {
