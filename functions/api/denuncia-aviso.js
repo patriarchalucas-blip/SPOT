@@ -26,7 +26,7 @@ import { lerKV, gravarKV } from './_kv.js';
 // 2. O texto é fixo. Nada que o denunciante escreveu (o detalhe) vai pra tela
 //    de bloqueio — só o tipo e o motivo, que vêm de uma lista fechada do app.
 // 3. Teto por pessoa por hora, no KV.
-const SB_URL = 'https://kzidnilsyrvauzgelsqd.supabase.co';
+const SB_URL = 'https://hkbynilmpsfamsqochnk.supabase.co';
 const EXPO = 'https://exp.host/--/api/v2/push/send';
 const MODERADOR_PADRAO = 'patriarchalucas@gmail.com';
 const TETO_POR_PESSOA = 10;
@@ -44,7 +44,7 @@ export async function onRequestPost(context) {
 
   const quem = await quemEsta(request, env);
   if (!quem.permitir || !quem.uid) return json({ enviados: 0, unauthorized: true }, 401);
-  if (!env.SUPABASE_SERVICE_KEY) return json({ enviados: 0, configured: false });
+  if (!env.SUPABASE_SERVICE_KEY_SP) return json({ enviados: 0, configured: false });
 
   if (env.SPOT_KV) {
     try {
@@ -56,7 +56,7 @@ export async function onRequestPost(context) {
   }
 
   const sb = (caminho) => fetch(SB_URL + caminho, {
-    headers: { apikey: env.SUPABASE_SERVICE_KEY, Authorization: 'Bearer ' + env.SUPABASE_SERVICE_KEY }
+    headers: { apikey: env.SUPABASE_SERVICE_KEY_SP, Authorization: 'Bearer ' + env.SUPABASE_SERVICE_KEY_SP }
   }).then((r) => (r.ok ? r.json() : [])).catch(() => []);
 
   // 1. a denúncia existe, é de quem chamou e acabou de ser feita

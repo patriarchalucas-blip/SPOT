@@ -33,7 +33,7 @@ test('privada: regra igual a da 028 (want + viagem privada some; Fui fica; sem s
 });
 
 test('privada: a pagina /l/ nao mostra Quero ir de viagem "So eu vejo"', async () => {
-  const env = { SUPABASE_SERVICE_KEY: 'k', SPOT_KV: kvFalso([['lista_abcdefgh1234', JSON.stringify({ uid: UID, cidades: ['Lisboa'], titulo: 'Lisboa', pais: 'Portugal' })]]) };
+  const env = { SUPABASE_SERVICE_KEY_SP: 'k', SPOT_KV: kvFalso([['lista_abcdefgh1234', JSON.stringify({ uid: UID, cidades: ['Lisboa'], titulo: 'Lisboa', pais: 'Portugal' })]]) };
   let pediuTrip = false;
   const r = await comFetch(async (u) => {
     u = String(u);
@@ -55,7 +55,7 @@ test('privada: a pagina /l/ nao mostra Quero ir de viagem "So eu vejo"', async (
 });
 
 test('privada: "Salvar no meu Spot" nao entrega Quero ir de viagem privada', async () => {
-  const env = { SUPABASE_SERVICE_KEY: 'k', SPOT_KV: kvFalso([['lista_abcdefgh1234', JSON.stringify({ uid: 'u1', cidades: ['Lisboa'], titulo: 'Lisboa' })]]) };
+  const env = { SUPABASE_SERVICE_KEY_SP: 'k', SPOT_KV: kvFalso([['lista_abcdefgh1234', JSON.stringify({ uid: 'u1', cidades: ['Lisboa'], titulo: 'Lisboa' })]]) };
   const id = '11111111-2222-3333-4444-555555555555';
   const d = await comFetch(async (u) => {
     u = String(u);
@@ -142,7 +142,7 @@ test('places: o contador global grava por amostragem (1 em 4, somando 4)', async
 // ── 4. Pedido de amizade: texto neutro e marca só depois de enviar ──────────
 test('notificar: "quer ser seu amigo", e sem envio de fato a marca anti-repeticao nao e gravada', async () => {
   const kv = kvFalso();
-  const env = { SUPABASE_SERVICE_KEY: 's', SPOT_KV: kv };
+  const env = { SUPABASE_SERVICE_KEY_SP: 's', SPOT_KV: kv };
   let enderecos = [];
   const enviados = [];
   const pend = [];
@@ -173,7 +173,7 @@ test('notificar: "quer ser seu amigo", e sem envio de fato a marca anti-repetica
 
 // ── 7. Posição: só spot que o RLS deixa quem chama ver ──────────────────────
 test('posicao: le os spots com o token de quem chama, nao com a chave de servico', async () => {
-  const env = { SUPABASE_SERVICE_KEY: 'SERVICO', GOOGLE_PLACES_KEY: 'g', SPOT_KV: kvFalso() };
+  const env = { SUPABASE_SERVICE_KEY_SP: 'SERVICO', GOOGLE_PLACES_KEY: 'g', SPOT_KV: kvFalso() };
   let leitura = null; let patch = 0;
   await comFetch(async (u, opt) => {
     u = String(u);
@@ -188,7 +188,7 @@ test('posicao: le os spots com o token de quem chama, nao com a chave de servico
 
 // ── 11. Aviso de erro com texto fixo ─────────────────────────────────────────
 test('erro: report AUTENTICADO avisa o dono com texto fixo, sem a mensagem de quem chamou', async () => {
-  const env = { SPOT_KV: kvFalso(), SUPABASE_SERVICE_KEY: 's' };
+  const env = { SPOT_KV: kvFalso(), SUPABASE_SERVICE_KEY_SP: 's' };
   const corpos = [], espera = [];
   await comFetch(async (u, opt) => {
     if (String(u).includes('/auth/v1/user')) return new Response(JSON.stringify({ id: UID }), { status: 200 });
@@ -203,7 +203,7 @@ test('erro: report AUTENTICADO avisa o dono com texto fixo, sem a mensagem de qu
 // Pen test 16/10: report ANÔNIMO é registrado, mas NÃO buzina o celular do dono
 // (senão qualquer um dispara aviso). Sem token, nenhum push sai.
 test('erro: report anonimo nao avisa o dono', async () => {
-  const env = { SPOT_KV: kvFalso(), SUPABASE_SERVICE_KEY: 's' };
+  const env = { SPOT_KV: kvFalso(), SUPABASE_SERVICE_KEY_SP: 's' };
   const corpos = [], espera = [];
   await comFetch(async (u, opt) => { if (opt && opt.body) corpos.push(String(opt.body)); return new Response('[{"token":"ExponentPushToken[a]","user_id":"x"}]') },
     () => erroPost({ request: new Request('https://x/api/erro', { method: 'POST', body: JSON.stringify({ msg: 'erro qualquer', tela: 'Login' }) }), env, waitUntil: (p) => espera.push(p) }).then(() => Promise.all(espera)));

@@ -121,7 +121,7 @@ test('bug 4: link de app e de compartilhar nao viram @ do Instagram', () => {
 
 test('bug 5: a foto de perfil e conferida no banco, nao fica na copia velha do aparelho', async () => {
   A.avaliar(`S.user={id:'${EU}'};S.profile={id:'${EU}',display_name:'Chu',avatar_url:''}`); // copia guardada: sem foto
-  const v1 = trocar(A, 'dbGet', async () => [{ id: EU, display_name: 'Chu', avatar_url: 'https://kzidnilsyrvauzgelsqd.supabase.co/storage/v1/object/public/uploads/x/avatar-1.jpg' }]);
+  const v1 = trocar(A, 'dbGet', async () => [{ id: EU, display_name: 'Chu', avatar_url: 'https://hkbynilmpsfamsqochnk.supabase.co/storage/v1/object/public/uploads/x/avatar-1.jpg' }]);
   const v2 = trocar(A, 'guardarDadosLocais', () => {});
   try {
     await A.refreshAvatars('Chu');

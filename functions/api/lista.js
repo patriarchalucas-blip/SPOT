@@ -136,13 +136,13 @@ const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 async function umSpotDaLista(body, env) {
   const codigo = String(body.codigo || ''), id = String(body.id || '');
   if (!/^[A-Za-z0-9]{8,24}$/.test(codigo) || !UUID.test(id)) return json({ error: 'bad_request' }, 400);
-  if (!env.SPOT_KV || !env.SUPABASE_SERVICE_KEY) return json({ configured: false });
+  if (!env.SPOT_KV || !env.SUPABASE_SERVICE_KEY_SP) return json({ configured: false });
   let dado = null;
   try { dado = JSON.parse((await lerKV(env, 'lista_' + codigo)) || 'null') } catch (e) {}
   if (!dado || dado.revogado || !dado.uid || !Array.isArray(dado.cidades)) return json({ sumiu: true });
-  const r = await fetch('https://kzidnilsyrvauzgelsqd.supabase.co/rest/v1/spots?select=name,category,subcategory,city,address,photo_url,photo_author,photo_author_url,maps_url,website_url,phone,lat,lng,rating_google,price_level,status,trip_id'
+  const r = await fetch('https://hkbynilmpsfamsqochnk.supabase.co/rest/v1/spots?select=name,category,subcategory,city,address,photo_url,photo_author,photo_author_url,maps_url,website_url,phone,lat,lng,rating_google,price_level,status,trip_id'
     + '&id=eq.' + id + '&user_id=eq.' + dado.uid + '&status=in.(been,want)',
-    { headers: { apikey: env.SUPABASE_SERVICE_KEY, Authorization: 'Bearer ' + env.SUPABASE_SERVICE_KEY } });
+    { headers: { apikey: env.SUPABASE_SERVICE_KEY_SP, Authorization: 'Bearer ' + env.SUPABASE_SERVICE_KEY_SP } });
   if (!r.ok) return json({ error: 'banco' }, 502);
   // Quero ir de viagem "Só eu vejo" não sai daqui (06/10): a página não mostra,
   // e o id não pode ser adivinhado pra contornar.
@@ -165,15 +165,15 @@ async function resumoDaLista(body, request, env) {
   if (!/^[A-Za-z0-9]{8,24}$/.test(codigo)) return json({ error: 'bad_request' }, 400);
   const quem = await quemEsta(request, env);
   if (!quem.permitir || !quem.uid) return json({ unauthorized: true }, 401);
-  if (!env.SPOT_KV || !env.SUPABASE_SERVICE_KEY) return json({ configured: false });
+  if (!env.SPOT_KV || !env.SUPABASE_SERVICE_KEY_SP) return json({ configured: false });
   const dado = await lerLista(env, codigo);
   if (!dado || dado.revogado || !dado.uid || !Array.isArray(dado.cidades) || !dado.cidades.length) return json({ sumiu: true });
-  const h = { apikey: env.SUPABASE_SERVICE_KEY, Authorization: 'Bearer ' + env.SUPABASE_SERVICE_KEY };
+  const h = { apikey: env.SUPABASE_SERVICE_KEY_SP, Authorization: 'Bearer ' + env.SUPABASE_SERVICE_KEY_SP };
   const lista = dado.cidades.map((c) => '"' + String(c).replace(/["\\]/g, '') + '"').join(',');
   const [rs, rp, privadas] = await Promise.all([
-    fetch('https://kzidnilsyrvauzgelsqd.supabase.co/rest/v1/spots?select=id,name,category,city,status,photo_url,trip_id&user_id=eq.' + dado.uid
+    fetch('https://hkbynilmpsfamsqochnk.supabase.co/rest/v1/spots?select=id,name,category,city,status,photo_url,trip_id&user_id=eq.' + dado.uid
       + '&status=in.(been,want)&city=in.(' + encodeURIComponent(lista) + ')&order=created_at.desc&limit=60', { headers: h }),
-    fetch('https://kzidnilsyrvauzgelsqd.supabase.co/rest/v1/profiles?select=id,display_name,username,avatar_url&id=eq.' + dado.uid, { headers: h }),
+    fetch('https://hkbynilmpsfamsqochnk.supabase.co/rest/v1/profiles?select=id,display_name,username,avatar_url&id=eq.' + dado.uid, { headers: h }),
     viagensPrivadas(env, dado.uid)
   ]);
   if (!rs.ok) return json({ error: 'banco' }, 502);

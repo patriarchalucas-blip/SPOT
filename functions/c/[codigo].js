@@ -22,8 +22,8 @@
 import { gravarKV } from '../api/_kv.js';
 import { chaveDaConexao, ehRobo, TTL_CONVITE_CONEXAO } from '../api/_convite-conexao.js';
 
-const SB_URL = 'https://kzidnilsyrvauzgelsqd.supabase.co';
-const SB_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imt6aWRuaWxzeXJ2YXV6Z2Vsc3FkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODEyODE5NDAsImV4cCI6MjA5Njg1Nzk0MH0.BMgiP_lTe8mCfe0eSPNUCksXatOntuWAhcqGtR8hco4';
+const SB_URL = 'https://hkbynilmpsfamsqochnk.supabase.co';
+const SB_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhrYnluaWxtcHNmYW1zcW9jaG5rIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTQzOTk5MzMsImV4cCI6MjEwOTk3NTkzM30.63EpS9BjqpzocGbdD8uJ_BXiQd5kFawgdzI4KbCW_Lg';
 
 // O texto vai pra dentro de um atributo HTML. Sem escapar, um nome com aspas
 // fecha o atributo e o resto da etiqueta vira marcação — e nome é texto que

@@ -72,7 +72,7 @@ test('criar lista: com login, guarda o nome que o app mandou (sem ReferenceError
 test('salvar da lista: so devolve spot que esta na lista, e nunca a nota de quem fez', async () => {
   const kv = new Map([['lista_abcdefgh1234', JSON.stringify({ uid: 'u1', cidades: ['Lisboa'], titulo: 'Lisboa', pais: 'Portugal' })],
     ['lista_revogadaaa12', JSON.stringify({ revogado: true })]]);
-  const env = { SUPABASE_SERVICE_KEY: 'k', SPOT_KV: { get: async (k) => kv.get(k) ?? null, put: async () => {}, delete: async () => {} } };
+  const env = { SUPABASE_SERVICE_KEY_SP: 'k', SPOT_KV: { get: async (k) => kv.get(k) ?? null, put: async () => {}, delete: async () => {} } };
   const id = '11111111-2222-3333-4444-555555555555';
   let pedido = '';
   const orig = globalThis.fetch;

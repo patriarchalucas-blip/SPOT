@@ -12,7 +12,7 @@ const SPOT = '22222222-2222-2222-2222-222222222222';
 function montar(comentarioExiste, donoDoSpot) {
   const kv = new Map();
   const env = {
-    SUPABASE_SERVICE_KEY: 's',
+    SUPABASE_SERVICE_KEY_SP: 's',
     SPOT_KV: { get: async (k) => (kv.has(k) ? kv.get(k) : null), put: async (k, v) => { kv.set(k, v) } }
   };
   const enviados = [];

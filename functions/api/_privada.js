@@ -9,7 +9,7 @@
 // (A outra metade da 028, "viagem privada sem Fui some", já está coberta:
 // numa viagem assim todo spot é Quero ir, e todos saem por esta regra.)
 
-const SB_URL = 'https://kzidnilsyrvauzgelsqd.supabase.co';
+const SB_URL = 'https://hkbynilmpsfamsqochnk.supabase.co';
 
 // Os ids das viagens privadas do dono. null = não deu pra saber (banco fora,
 // coluna ausente): aí quem chama trata TODO Quero ir com viagem como privado.
@@ -17,7 +17,7 @@ const SB_URL = 'https://kzidnilsyrvauzgelsqd.supabase.co';
 export async function viagensPrivadas(env, uid) {
   try {
     const r = await fetch(SB_URL + '/rest/v1/trips?select=id&privada=is.true&user_id=eq.' + uid,
-      { headers: { apikey: env.SUPABASE_SERVICE_KEY, Authorization: 'Bearer ' + env.SUPABASE_SERVICE_KEY } });
+      { headers: { apikey: env.SUPABASE_SERVICE_KEY_SP, Authorization: 'Bearer ' + env.SUPABASE_SERVICE_KEY_SP } });
     if (!r.ok) return null;
     const d = await r.json();
     return Array.isArray(d) ? new Set(d.map((t) => String(t.id))) : null;

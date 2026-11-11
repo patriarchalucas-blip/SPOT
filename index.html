@@ -3972,9 +3972,21 @@ document.addEventListener('focusin',function(e){
   vv.addEventListener('scroll',medir);
   medir();
 })();
-const SB_URL='https://kzidnilsyrvauzgelsqd.supabase.co';
-const SB_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imt6aWRuaWxzeXJ2YXV6Z2Vsc3FkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODEyODE5NDAsImV4cCI6MjA5Njg1Nzk0MH0.BMgiP_lTe8mCfe0eSPNUCksXatOntuWAhcqGtR8hco4';
+const SB_URL='https://hkbynilmpsfamsqochnk.supabase.co';
+const SB_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhrYnluaWxtcHNmYW1zcW9jaG5rIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTQzOTk5MzMsImV4cCI6MjEwOTk3NTkzM30.63EpS9BjqpzocGbdD8uJ_BXiQd5kFawgdzI4KbCW_Lg';
 let sb;
+// O banco mudou de Oregon (kzidnilsyrvauzgelsqd) pra São Paulo em 11/11/2026.
+// O SDK guarda a sessão com o nome do projeto, então sem isto todo mundo
+// cairia na tela de entrar. As sessões foram copiadas junto com o banco: a
+// guardada passa pro nome novo com o token de acesso dado como vencido
+// (expires_at 0), e o SDK renova no banco novo antes da 1ª requisição — o
+// token velho foi assinado pela chave de Oregon e daria 401.
+try{
+  const velha='sb-kzidnilsyrvauzgelsqd-auth-token',nova='sb-hkbynilmpsfamsqochnk-auth-token';
+  const v=localStorage.getItem(velha);
+  if(v&&!localStorage.getItem(nova)){const s=JSON.parse(v);if(s&&s.refresh_token){s.expires_at=0;localStorage.setItem(nova,JSON.stringify(s))}}
+  if(v)localStorage.removeItem(velha);
+}catch(e){}
 try{sb=supabase.createClient(SB_URL,SB_KEY)}catch(e){console.error(e)}
 
 const S={user:null,trips:[],cidadesMarcadas:[],curTrip:null,curPlace:null,curCity:null,addTrip:null,addCat:null,selPlace:null,pendingPlace:null,searchResults:[],token:null,profile:null};
