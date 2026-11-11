@@ -53,7 +53,9 @@ test('link do Google guardado que venceu: busca de novo em vez de mandar pro 403
   matar('https://lh3.googleusercontent.com/foto-do-lugar');
   const r = await pedir('ref=' + ref + '&w=400');
   assert.equal(r.status, 302);
-  assert.equal(google(), 2, 'link morto tem que ir ao Google buscar um novo');
+  assert.ok(google() > 1, 'link morto tem que ir ao Google buscar um novo');
+  // O Google (falso) devolve o mesmo link morto pro código: cai na foto atual do lugar.
+  assert.equal(r.headers.get('Location'), 'https://lh3.googleusercontent.com/foto-atual=w400-rw');
 });
 
 test('código da foto vencido: usa a foto atual do lugar, e a 2ª vez sai da memória', async () => {
@@ -66,6 +68,14 @@ test('código da foto vencido: usa a foto atual do lugar, e a 2ª vez sai da mem
   const r2 = await pedir('ref=' + ref + '&w=800');
   assert.equal(r2.status, 302);
   assert.equal(google(), antes, 'curada uma vez, não paga de novo');
+});
+
+test('Google aceita o código velho mas o link nasce morto: usa a foto atual do lugar', async () => {
+  const { pedir, matar } = ambiente();
+  matar('https://lh3.googleusercontent.com/foto-do-lugar');
+  const r = await pedir('ref=' + encodeURIComponent('places/ChIJlugar/photos/QUALQUER') + '&w=400');
+  assert.equal(r.status, 302);
+  assert.equal(r.headers.get('Location'), 'https://lh3.googleusercontent.com/foto-atual=w400-rw');
 });
 
 test('link guardado vivo não gasta nada', async () => {

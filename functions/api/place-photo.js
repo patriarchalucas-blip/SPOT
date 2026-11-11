@@ -202,7 +202,11 @@ export async function onRequestGet(context) {
   // ficou gravado no spot morre — 97 de 161 spots do Lucas sem foto. O lugar
   // continua o mesmo (está no próprio ref): pede a foto ATUAL dele, uma vez, e
   // guarda por lugar. Vale pra todo mundo e toda tela, nativa inclusive.
-  if (!destino && (r.status === 400 || r.status === 404)) {
+  // E às vezes o Google ACEITA o código velho mas manda pra um link que já
+  // nasce morto (403 no CDN) — 11 de 586 spots em 11/11. Confere também.
+  let nasceuMorto = false;
+  if (destino && !(await linkVivo(comTamanho(semTamanho(destino), 100, false)))) { destino = ''; nasceuMorto = true }
+  if (!destino && (nasceuMorto || r.status === 400 || r.status === 404)) {
     destino = await fotoAtualDoLugar(context, env, ref.split('/')[1]) || '';
   }
   if (!destino || !/^https:\/\/[a-z0-9-]+\.googleusercontent\.com\//i.test(destino)) {
@@ -267,6 +271,7 @@ export async function fotoAtualDoLugar(context, env, lugar, buscar = fetch) {
   catch (e) { return '' }
   const destino = m.headers.get('Location') || '';
   if (!/^https:\/\/[a-z0-9-]+\.googleusercontent\.com\//i.test(destino)) return '';
+  if (!(await linkVivo(semTamanho(destino) + '=w100', buscar))) return '';
   if (kv) { try { await kv.put(k, semTamanho(destino), { expirationTtl: TTL_OK }) } catch (e) {} }
   return destino;
 }
