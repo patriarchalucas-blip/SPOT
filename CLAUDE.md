@@ -30,7 +30,8 @@ há área de teste — ver Dívida técnica 4.
 
 ### Credenciais
 ```
-Supabase URL:      https://kzidnilsyrvauzgelsqd.supabase.co
+Supabase URL:      https://hkbynilmpsfamsqochnk.supabase.co   (São Paulo, desde 11/11/2026)
+                   o antigo, Oregon, era kzidnilsyrvauzgelsqd — ver "Banco em São Paulo"
 Supabase anon key: no <script> do index.html — é PÚBLICA por desenho, quem
                    protege os dados é o RLS (migração 008)
 Google Places:     NÃO está no client. Vive como env var no Cloudflare,
@@ -282,25 +283,48 @@ ver `mobile/app-store/login-apple.md`. Pede um build novo que substitui a build 
   endereço escrito — a Barceloneta virava "Catalunha".
 - **Voltar do Android:** `window.voltarDoAndroid` (o site não usa histórico).
 
-## Banco em Oregon — plano **Pro desde 10/11/2026** (backup diário de 7 dias; US$ 25/mês no cartão do Lucas, lançado no /gastos). Antes era Free, sem backup (descoberto 08/10/2026)
+## Banco em São Paulo desde 11/11/2026 — projeto `hkbynilmpsfamsqochnk` (sa-east-1, Micro), org "Spot", plano **Pro** (backup diário de 7 dias; US$ 25/mês no cartão do Lucas, lançado no /gastos)
 
-**Saiu da conta da Sólides em 12/10/2026:** o projeto foi TRANSFERIDO (função
-"Transfer project" do Supabase) pra organização **"Spot"** (Free) da conta
-pessoal do Lucas, que entra com o GitHub pessoal (patriarchalucas@gmail.com,
-Owner). Mesmo projeto: endereço, chaves, usuários e configuração de login não
-mudaram — conferido depois (auth 200 com email/Google/Apple, REST com RLS,
-storage 200). Falta: tirar o e-mail da Sólides do Team da org nova.
+**A virada (11/11/2026, 16:37 UTC):** o Supabase não troca região de projeto;
+foi projeto NOVO + cópia. Oregon (`kzidnilsyrvauzgelsqd`, us-west-2) ficou de
+pé, intacto, como plano B — **apagar só com o Lucas**, depois de uns dias (cada
+projeto Micro custa ~US$ 10/mês por hora de uso; o Pro cobre um). Também
+apagar o token "migracao" da conta Supabase. Ninguém salvou nada em Oregon na
+janela da troca (conferido).
+- **Como foi copiado** (`_local/migracao/`, fora do git, com a cópia de Oregon):
+  o roteiro EXATO do `supabase db dump --dry-run` (CLI 3.1) rodado com o
+  pg_dump 17 portátil da EDB (o CLI local pede Docker). No pg_dump de Windows
+  `--quote-all-identifier` tem que virar `--quote-all-identifiers` (não aceita
+  abreviação). O dump do CLI deixa de fora auth/storage: o gatilho
+  `on_auth_user_created` e as 4 políticas do bucket `uploads` foram recriados à
+  mão (`extras.sql`). Fotos (17) copiadas pela API de storage, conferidas byte a
+  byte; 19 links de foto no banco reescritos (`links.sql`).
+- **Pegadinha que pegou:** o projeto novo dá EXECUTE/ALL pra `anon` em toda
+  função e tabela criada (privilégio padrão + "Automatically expose new tables").
+  O pg_dump não revoga o que o padrão deu, então funções e tabelas que Oregon
+  tinha fechado (`moderadores`, `spot_fotos`, `cidades_visitadas`, as RPCs)
+  nasceram abertas. Corrigido copiando as permissões exatas (`permissoes.sql`) e
+  comparando 335 pontos entre os bancos (linhas, RLS, políticas, grants,
+  funções, gatilhos, índices): idênticos. **Migração nova: escrever o REVOKE
+  de anon/public explicitamente** — o padrão deste projeto abre.
+- **Sessões:** copiadas com o banco; renovam no projeto novo (testado com conta
+  de teste criada em Oregon). O `index.html` leva a sessão guardada de
+  `sb-kzidnilsyrvauzgelsqd-auth-token` pra `sb-hkbynilmpsfamsqochnk-auth-token`
+  com `expires_at` 0, então ninguém precisou entrar de novo.
+- **Configuração de login copiada pela Management API**; a API devolve senha só
+  como hash, então a chave do Resend é NOVA e o Google ganhou um 2º client
+  secret. Google Cloud tem as DUAS URLs de callback (a de Oregon pode sair
+  quando Oregon for apagado).
+- **Cloudflare:** as Functions leem `SUPABASE_SERVICE_KEY_SP` (nome novo, pra
+  virada não depender de trocar a chave na hora). A `SUPABASE_SERVICE_KEY`
+  antiga ainda está lá e é de Oregon: pode sair junto com Oregon.
+- **Conferir o banco sem pedir SQL ao Lucas:** `pg/pgsql/bin/psql` portátil +
+  Session pooler (`_local/migracao-sao-paulo.env`; a senha tem `@`, codificar)
+  ou a Management API (`POST /v1/projects/{ref}/database/query` com o token).
 
-O projeto Supabase está em **us-west-2 (Oregon)**, plano **Free**, compute
-**nano**, **sem backup**. Medido de São Paulo: ~0,3 s mínimo por
-consulta só de distância, 0,7–1,5 s nas reais. O app fala com o banco DIRETO
-do celular (e as Functions rodam no Cloudflare GRU), então trazer pra São Paulo
-ajuda — diferente do projeto da Sólides (Apps Script nos EUA), onde piora.
-**Decisão do Lucas pendente** ("sei que o certo é migrar"): projeto novo em
-South America (São Paulo), na org pessoal "Spot", Free ou Pro. Plano
-de 8 etapas discutido em 08–09/10 (schema + dados + auth.users com senha +
-storage + reconfigurar Google/Apple/Resend + ensaio + virada de 30–60 min,
-todo mundo entra de novo uma vez). Falta pg_dump nesta máquina (é da Sólides).
+**Antes (histórico):** saiu da conta da Sólides em 12/10/2026 por "Transfer
+project" pra org pessoal "Spot" (falta tirar o e-mail da Sólides do Team).
+Oregon dava ~0,3 s mínimo por consulta só de distância, 0,7–1,5 s nas reais.
 
 ## Auditoria de 09/10/2026 (3 agentes: viagens/spots, Explorar/fotos/custo, perfil/privacidade)
 
