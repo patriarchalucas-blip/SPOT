@@ -119,7 +119,7 @@ export async function onRequestGet(context) {
   // já vencido; trocar a etiqueta faz toda foto passar uma vez pela
   // conferência do KV abaixo.
   const etiqueta = new Request(
-    url.origin + '/_foto2/' + (chaveFixa || chave) + '/' + largura + (webp ? '/webp' : '/jpeg')
+    url.origin + '/_foto3/' + (chaveFixa || chave) + '/' + largura + (webp ? '/webp' : '/jpeg')
   );
   // A FALHA mora só na borda (06/10). Gravada no KV, qualquer um sem login
   // inventando refs no formato certo gastava uma gravação do KV grátis (mil
