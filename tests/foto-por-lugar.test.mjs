@@ -14,6 +14,7 @@ function ambiente() {
   } };
   let chamadasAoGoogle = 0;
   const mortos = new Set();
+  const codigosMortos = new Set(['CODIGO_VENCIDO']);
   globalThis.fetch = async (u, o) => {
     // Conferência do link guardado (11/11): o CDN do Google, grátis — não conta.
     if (o && o.method === 'HEAD') {
@@ -22,6 +23,12 @@ function ambiente() {
     }
     chamadasAoGoogle++;
     assert.match(String(u), /^https:\/\/places\.googleapis\.com\/v1\/places\//);
+    // Detalhe do lugar (11/11): a foto atual dele.
+    if (/\/v1\/places\/[^/?]+\?key=/.test(String(u))) {
+      return new Response(JSON.stringify({ photos: [{ name: String(u).match(/places\/([^/?]+)/)[0] + '/photos/ATUAL' }] }), { status: 200 });
+    }
+    if ([...codigosMortos].some((c) => String(u).includes(c))) return new Response('{}', { status: 400 });
+    if (String(u).includes('/photos/ATUAL/')) return new Response(null, { status: 302, headers: { Location: 'https://lh3.googleusercontent.com/foto-atual=s1600' } });
     return new Response(null, { status: 302, headers: { Location: 'https://lh3.googleusercontent.com/foto-do-lugar=s1600' } });
   };
   const env = { GOOGLE_PLACES_KEY: 'k', SPOT_KV: {
@@ -47,6 +54,18 @@ test('link do Google guardado que venceu: busca de novo em vez de mandar pro 403
   const r = await pedir('ref=' + ref + '&w=400');
   assert.equal(r.status, 302);
   assert.equal(google(), 2, 'link morto tem que ir ao Google buscar um novo');
+});
+
+test('código da foto vencido: usa a foto atual do lugar, e a 2ª vez sai da memória', async () => {
+  const { pedir, google } = ambiente();
+  const ref = encodeURIComponent('places/ChIJlugar/photos/CODIGO_VENCIDO');
+  const r1 = await pedir('ref=' + ref + '&w=400');
+  assert.equal(r1.status, 302);
+  assert.equal(r1.headers.get('Location'), 'https://lh3.googleusercontent.com/foto-atual=w400-rw');
+  const antes = google();
+  const r2 = await pedir('ref=' + ref + '&w=800');
+  assert.equal(r2.status, 302);
+  assert.equal(google(), antes, 'curada uma vez, não paga de novo');
 });
 
 test('link guardado vivo não gasta nada', async () => {

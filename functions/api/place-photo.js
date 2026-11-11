@@ -197,7 +197,14 @@ export async function onRequestGet(context) {
   // Cada ida ao Google é o que o Google cobra: conta uma por uma.
   context.waitUntil(contarGoogle(ctxMed, r.status));
 
-  const destino = r.headers.get('Location') || '';
+  let destino = r.headers.get('Location') || '';
+  // O CÓDIGO DA FOTO VENCEU (11/11): o Google troca esses códigos e o que
+  // ficou gravado no spot morre — 97 de 161 spots do Lucas sem foto. O lugar
+  // continua o mesmo (está no próprio ref): pede a foto ATUAL dele, uma vez, e
+  // guarda por lugar. Vale pra todo mundo e toda tela, nativa inclusive.
+  if (!destino && (r.status === 400 || r.status === 404)) {
+    destino = await fotoAtualDoLugar(context, env, ref.split('/')[1]) || '';
+  }
   if (!destino || !/^https:\/\/[a-z0-9-]+\.googleusercontent\.com\//i.test(destino)) {
     // Só "a foto não existe" (400/404) é guardado como falha. Cota esgotada
     // (429), chave recusada (403) ou Google fora (5xx) é passageiro: gravar 'X'
@@ -228,6 +235,40 @@ function semTamanho(u) {
   const i = u.lastIndexOf('=');
   const j = u.lastIndexOf('/');
   return i > j ? u.slice(0, i) : u;
+}
+
+// A foto de agora de um lugar: o endereço do CDN da 1ª foto que o Google
+// devolve pra ele. Guardada por lugar (30 dias, conferida antes de usar); 'X'
+// = o lugar não tem foto (1 dia, pra não perguntar de novo a cada abertura).
+export async function fotoAtualDoLugar(context, env, lugar, buscar = fetch) {
+  if (!/^[A-Za-z0-9_-]{1,120}$/.test(lugar || '')) return '';
+  const kv = env.SPOT_KV, k = 'fotolugar_' + lugar;
+  if (kv) {
+    try {
+      const g = await kv.get(k);
+      if (g === 'X') return '';
+      if (g && await linkVivo(g + '=w100', buscar)) return g + '=s1600';
+    } catch (e) {}
+  }
+  let nome = '';
+  try {
+    const d = await buscar('https://places.googleapis.com/v1/places/' + lugar + '?key=' + env.GOOGLE_PLACES_KEY,
+      { headers: { 'X-Goog-FieldMask': 'photos' } });
+    if (!d.ok) return '';   // cota, chave, Google fora: passageiro, não marca
+    const j = await d.json();
+    nome = ((j.photos || [])[0] || {}).name || '';
+  } catch (e) { return '' }
+  if (!nome || !REF_OK.test(nome)) {
+    if (kv) { try { await kv.put(k, 'X', { expirationTtl: 60 * 60 * 24 }) } catch (e) {} }
+    return '';
+  }
+  let m;
+  try { m = await buscar('https://places.googleapis.com/v1/' + nome + '/media?maxWidthPx=1600&key=' + env.GOOGLE_PLACES_KEY, { redirect: 'manual' }) }
+  catch (e) { return '' }
+  const destino = m.headers.get('Location') || '';
+  if (!/^https:\/\/[a-z0-9-]+\.googleusercontent\.com\//i.test(destino)) return '';
+  if (kv) { try { await kv.put(k, semTamanho(destino), { expirationTtl: TTL_OK }) } catch (e) {} }
+  return destino;
 }
 
 // Só "não existe/proibido" conta como morto. Rede falhando ou o Google lento
