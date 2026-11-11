@@ -388,7 +388,7 @@ async function trataPedido(pg, r) {
     if (api === 'erro') { let b = {}; try { b = JSON.parse(r.postData() || '{}') } catch (e) {} ERROS_APP.push(Object.assign({ aparelho: pg.__nome }, b)); return responde(200, '{}') }
     if (api === 'places') return responde(200, JSON.stringify(placesResponde(r.postData())));
     if (api === 'lugar') return responde(200, JSON.stringify(lugarResponde(r.postData())));
-    if (api === 'place-photo' || api === 'city-photo' && metodo === 'GET' && /img=1/.test(u)) return responde(200, PNG1, 'image/png');
+    if (api === 'place-photo' || api === 'foto' || api === 'city-photo' && metodo === 'GET' && /img=1/.test(u)) return responde(200, PNG1, 'image/png');
     // Hotspots da semana (vitrine pública): duas cidades, 3 lugares em SP.
     if (api === 'hotspots') return responde(200, JSON.stringify({ listas: [{ cidade: 'São Paulo', lugares: [{ id: 'g1', categoria: 'food', nome: 'Bar do Teste', bairro: 'Pinheiros', tipo: 'bar', foto: '' }, { id: 'g2', categoria: 'food', nome: 'Cantina Dois', bairro: 'Bixiga', tipo: '', foto: '' }, { id: 'g3', categoria: 'experience', nome: 'Museu Três', bairro: 'Centro', tipo: '', foto: '' }] }, { cidade: 'Rio de Janeiro', lugares: [{ id: 'g4', categoria: 'food', nome: 'Boteco Rio', bairro: 'Botafogo', tipo: '', foto: '' }] }] }));
     if (api === 'importar') return responde(200, JSON.stringify(metodo === 'GET' ? { ligado: true } : { lugares: [] }));

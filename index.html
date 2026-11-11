@@ -3780,7 +3780,18 @@ function safeUrl(v){
   if(!s)return'';
   if(/^(?:[a-z][a-z0-9+.-]*:|\/\/)/i.test(s)&&!/^https?:\/\//i.test(s))return'';
   // Depois da checagem de esquema, nunca antes: a validacao olha o que veio.
-  return semChaveDoPlaces(s);
+  return paraExibir(semChaveDoPlaces(s));
+}
+// Foto do Google é EXIBIDA por /api/foto (11/11/2026), o mesmo servidor do
+// /api/place-photo com outro endereço. Motivo: o celular guarda o
+// redirecionamento de cada foto por horas, e os guardados antes da cura no
+// servidor apontavam pra links do Google mortos — a foto seguia cinza mesmo
+// com o servidor certo. Endereço novo = nada guardado. Só na hora de mostrar:
+// o que vai pro banco continua /api/place-photo (a /l/, a capa e o servidor
+// conferem esse formato).
+function paraExibir(u){
+  const s=String(u||'');
+  return s.indexOf('/api/place-photo?')===0?'/api/foto?'+s.slice(17):s.replace(/^(https:\/\/[^/]+)\/api\/place-photo\?/,'$1/api/foto?');
 }
 function escUrl(v){return esc(safeUrl(v));}
 // url('...') de CSS é outro contexto: o navegador decodifica a entidade HTML
@@ -11457,7 +11468,7 @@ function exmAgendar(){
   requestAnimationFrame(()=>{EXM.agendado=false;try{exmDesenhar()}catch(e){console.error('exm',e)}});
 }
 function exmNotaTxt(n){return n?esc(fmtRating(n))+'<i>★</i>':''}
-function exmEhFotoDoGoogle(u){return /place-photo|googleusercontent|places\.googleapis/.test(String(u||''))}
+function exmEhFotoDoGoogle(u){return /place-photo|\/api\/foto\?|googleusercontent|places\.googleapis/.test(String(u||''))}
 // Crédito da foto junto da foto (termos do Google). Foto sua, sem crédito.
 function exmCredito(it){
   if(!it.foto||!exmEhFotoDoGoogle(it.foto))return '';
@@ -16722,7 +16733,7 @@ async function buscarFotoDe(query,extra){
     // Foto do Google guardada que morreu antes dos 30 dias (06/11: Roma e Rio
     // ficaram com a capa vazia): testa abrir; morta, esquece e pede de novo.
     // O navegador guarda a imagem baixada, então mostrar depois é imediato.
-    if(c&&c.exp&&Date.now()<c.exp&&c.url&&/^\/api\/place-photo/.test(c.url)&&!(await fotoAbre(c.url))){delete cityPhotoCache[query];savePhotoCache()}
+    if(c&&c.exp&&Date.now()<c.exp&&c.url&&/^\/api\/place-photo/.test(c.url)&&!(await fotoAbre(paraExibir(c.url)))){delete cityPhotoCache[query];savePhotoCache()}
     else if(c&&c.exp&&Date.now()<c.exp)return c.url||'';
     // Formato antigo (só o link, sem validade). Link do Google nesse formato
     // nunca passava pelo teste acima e ficava morto pra sempre (11/11: capas
