@@ -7,6 +7,11 @@
 // O repositório é público e o log também: aqui só saem NÚMEROS. Nada de
 // endereço, id de spot ou de pessoa.
 //
+// Roda nos EUA (GitHub), e isso já pegou o que o Brasil não via: em 11/11 as
+// 13 fotos subidas pelas pessoas davam "Not found" no cache do Supabase de lá
+// (no daqui, não). Regravar o arquivo no mesmo lugar (upsert) limpa o cache
+// em toda região.
+//
 // Uso: SUPABASE_SERVICE_KEY_SP=... node ferramentas/ronda-fotos.mjs
 const SB = 'https://hkbynilmpsfamsqochnk.supabase.co';
 const SITE = 'https://meuspot.app';
