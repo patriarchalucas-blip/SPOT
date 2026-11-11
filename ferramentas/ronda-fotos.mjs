@@ -45,8 +45,13 @@ async function abre(u) {
       r = await fetch(r1.headers.get('location'), { redirect: 'follow' });
     }
     const tipo = r.headers.get('content-type') || '';
-    await r.arrayBuffer();
-    return r.ok && tipo.startsWith('image/') ? '' : onde + ' ' + r.status;
+    const corpo = new TextDecoder().decode((await r.arrayBuffer()).slice(0, 300));
+    if (r.ok && tipo.startsWith('image/')) return '';
+    // Erro do armazenamento vem em JSON genérico ({"error":"...","message":"..."}):
+    // só os campos de erro, sem endereço nenhum.
+    let det = '';
+    try { const j = JSON.parse(corpo); det = ' ' + [j.error, j.message, j.statusCode].filter(Boolean).join('/').replace(/[^\w /.-]/g, '').slice(0, 80) } catch (e) {}
+    return onde + ' ' + r.status + det;
   } catch (e) { return 'rede'; }
 }
 const espera = (ms) => new Promise((ok) => setTimeout(ok, ms));
