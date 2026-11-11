@@ -73,7 +73,7 @@ import { onRequestPost } from '../functions/api/find-instagram.js';
 function ambiente(kvInicial) {
   const kv = new Map(Object.entries(kvInicial || {}));
   const env = {
-    BRAVE_API_KEY: 'x', SUPABASE_SERVICE_KEY: 's',
+    BRAVE_API_KEY: 'x', SUPABASE_SERVICE_KEY_SP: 's',
     SPOT_KV: { get: async (k) => (kv.has(k) ? kv.get(k) : null), put: async (k, v) => { kv.set(k, v) } }
   };
   return { env, kv };

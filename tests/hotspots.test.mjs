@@ -74,7 +74,7 @@ function mundo(opts) {
     throw new Error('fetch inesperado ' + u);
   };
   const env = {
-    SPOT_KV: kvFalso(o.kv), ANTHROPIC_API_KEY: 'a', GOOGLE_PLACES_KEY: 'g', SUPABASE_SERVICE_KEY: 's'
+    SPOT_KV: kvFalso(o.kv), ANTHROPIC_API_KEY: 'a', GOOGLE_PLACES_KEY: 'g', SUPABASE_SERVICE_KEY_SP: 's'
   };
   env.SPOT_KV.m.set('hs_fontes', JSON.stringify([
     { id: 'yt:CANAL_RIO', tipo: 'youtube', canal: 'CANAL_RIO', nome: 'Canal Rio', cidades: [] },

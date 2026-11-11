@@ -25,7 +25,7 @@ import { lerKV, gravarKV } from './_kv.js';
 //
 // Teto por remetente pra um laço não virar metralhadora.
 const TETO_POR_PESSOA = 60;   // avisos por hora, por quem envia
-const SB_URL = 'https://kzidnilsyrvauzgelsqd.supabase.co';
+const SB_URL = 'https://hkbynilmpsfamsqochnk.supabase.co';
 const EXPO = 'https://exp.host/--/api/v2/push/send';
 
 // Lista fechada. `nome` é o display_name de quem enviou, já escapado de nada
@@ -136,7 +136,7 @@ async function tratar(context) {
   if (!quem.permitir || !quem.uid) return json({ enviados: 0, unauthorized: true }, 401);
   if (quem.uid === alvo) return json({ enviados: 0, motivo: 'voce_mesmo' });
 
-  if (!env.SUPABASE_SERVICE_KEY) return json({ enviados: 0, configured: false });
+  if (!env.SUPABASE_SERVICE_KEY_SP) return json({ enviados: 0, configured: false });
 
   // teto por remetente
   if (env.SPOT_KV) {
@@ -172,8 +172,8 @@ async function tratar(context) {
     const r = await fetch(SB_URL + '/rest/v1/rpc/enderecos_para_avisar', {
       method: 'POST',
       headers: {
-        apikey: env.SUPABASE_SERVICE_KEY,
-        Authorization: 'Bearer ' + env.SUPABASE_SERVICE_KEY,
+        apikey: env.SUPABASE_SERVICE_KEY_SP,
+        Authorization: 'Bearer ' + env.SUPABASE_SERVICE_KEY_SP,
         'Content-Type': 'application/json'
       },
       body: JSON.stringify({ de: quem.uid, para: alvo, tipo })
@@ -233,7 +233,7 @@ async function tratar(context) {
 // notificação sai genérica. Devolve { nome, resposta }.
 async function nomeDoSpotComentado(env, spotId, de, para) {
   try {
-    const h = { apikey: env.SUPABASE_SERVICE_KEY, Authorization: 'Bearer ' + env.SUPABASE_SERVICE_KEY };
+    const h = { apikey: env.SUPABASE_SERVICE_KEY_SP, Authorization: 'Bearer ' + env.SUPABASE_SERVICE_KEY_SP };
     const desde = new Date(Date.now() - 10 * 60 * 1000).toISOString();
     const [c] = await (await fetch(SB_URL + '/rest/v1/spot_comments?select=id&spot_id=eq.' + spotId
       + '&user_id=eq.' + de + '&created_at=gte.' + encodeURIComponent(desde) + '&limit=1', { headers: h })).json();
@@ -254,7 +254,7 @@ async function nomeDoSpotComentado(env, spotId, de, para) {
 async function nomeDe(env, uid) {
   try {
     const r = await fetch(SB_URL + '/rest/v1/profiles?select=display_name,username&id=eq.' + uid, {
-      headers: { apikey: env.SUPABASE_SERVICE_KEY, Authorization: 'Bearer ' + env.SUPABASE_SERVICE_KEY }
+      headers: { apikey: env.SUPABASE_SERVICE_KEY_SP, Authorization: 'Bearer ' + env.SUPABASE_SERVICE_KEY_SP }
     });
     const d = await r.json();
     const p = (Array.isArray(d) && d[0]) || {};
@@ -270,7 +270,7 @@ async function apagarEnderecos(env, tokens) {
     const lista = tokens.map((t) => '"' + t.replace(/"/g, '') + '"').join(',');
     await fetch(SB_URL + '/rest/v1/push_tokens?token=in.(' + encodeURIComponent(lista) + ')', {
       method: 'DELETE',
-      headers: { apikey: env.SUPABASE_SERVICE_KEY, Authorization: 'Bearer ' + env.SUPABASE_SERVICE_KEY }
+      headers: { apikey: env.SUPABASE_SERVICE_KEY_SP, Authorization: 'Bearer ' + env.SUPABASE_SERVICE_KEY_SP }
     });
   } catch (e) { /* limpeza é higiene, não pode falhar a chamada */ }
 }

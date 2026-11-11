@@ -4,7 +4,7 @@
 // código (que o app resgata com redeem_invite, só depois que a pessoa
 // confirmar) ou nada.
 import { quemEsta, SB_ANON } from './_auth.js';
-const SB_URL = 'https://kzidnilsyrvauzgelsqd.supabase.co';
+const SB_URL = 'https://hkbynilmpsfamsqochnk.supabase.co';
 import { lerKV } from './_kv.js';
 import { chaveDaConexao } from './_convite-conexao.js';
 

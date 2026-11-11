@@ -20,7 +20,7 @@ import { viagensPrivadas, semQueroIrPrivado } from '../api/_privada.js';
 // "Lucas guarda os spots no Spot"), diferente do desenho, que usava "do"/"dele".
 // A prévia do WhatsApp sai daqui (o robô dele não roda JavaScript).
 
-const SB_URL = 'https://kzidnilsyrvauzgelsqd.supabase.co';
+const SB_URL = 'https://hkbynilmpsfamsqochnk.supabase.co';
 // O convite leva direto à App Store (app aprovado e no ar desde 01/10/2026).
 // O ?ct= marca de onde veio o download no painel da Apple.
 const LOJA = 'https://apps.apple.com/br/app/spot-seus-lugares/id6814856044';
@@ -41,7 +41,7 @@ export function fotoDoSpot(u, largura) {
   // seguido de &s=<tamanho.autor> antes do &w=. Sem aceitar isso aqui, todo
   // spot salvo depois dessa data saía sem foto na lista pública.
   if (/^\/api\/place-photo\?ref=[^&]+(?:&s=[^&]+)?&w=\d+$/.test(s)) return s.replace(/&w=\d+$/, '&w=' + largura);
-  if (/^https:\/\/kzidnilsyrvauzgelsqd\.supabase\.co\/storage\//.test(s)) return s;
+  if (/^https:\/\/hkbynilmpsfamsqochnk\.supabase\.co\/storage\//.test(s)) return s;
   return '';
 }
 // O rótulo da linha: o tipo de experiência ("Passeio"), senão o tipo gravado
@@ -238,7 +238,7 @@ export async function onRequestGet(context) {
   const { params, request, env } = context;
   const codigo = String(params.codigo || '');
   const origem = new URL(request.url).origin;
-  if (!/^[A-Za-z0-9]{8,24}$/.test(codigo) || !env.SUPABASE_SERVICE_KEY) return paginaQueSumiu(origem, 404);
+  if (!/^[A-Za-z0-9]{8,24}$/.test(codigo) || !env.SUPABASE_SERVICE_KEY_SP) return paginaQueSumiu(origem, 404);
   let dado = null;
   try { dado = JSON.parse((await lerKV(env, 'lista_' + codigo)) || 'null') } catch (e) {}
   if (dado && dado.revogado) return paginaQueSumiu(origem, 410);
@@ -250,7 +250,7 @@ export async function onRequestGet(context) {
     const chave = await chaveDaConexao(request, 'lista');
     if (chave) context.waitUntil(gravarKV(env, chave, codigo, TTL_CONVITE_CONEXAO));
   }
-  const sb = (caminho) => fetch(SB_URL + caminho, { headers: { apikey: env.SUPABASE_SERVICE_KEY, Authorization: 'Bearer ' + env.SUPABASE_SERVICE_KEY } });
+  const sb = (caminho) => fetch(SB_URL + caminho, { headers: { apikey: env.SUPABASE_SERVICE_KEY_SP, Authorization: 'Bearer ' + env.SUPABASE_SERVICE_KEY_SP } });
   const lista = dado.cidades.map((c) => '"' + String(c).replace(/["\\]/g, '') + '"').join(',');
   const [rs, rp, privadas] = await Promise.all([
     sb('/rest/v1/spots?select=id,name,category,subcategory,place_type,status,my_rating,my_review,photo_url,maps_url,address,city,created_at,trip_id&user_id=eq.' + dado.uid
@@ -260,7 +260,7 @@ export async function onRequestGet(context) {
   ]);
   const spots = semQueroIrPrivado(rs.ok ? await rs.json() : [], privadas);
   const perfil = rp.ok ? ((await rp.json())[0] || {}) : {};
-  const avatar = /^https:\/\/kzidnilsyrvauzgelsqd\.supabase\.co\/storage\//.test(String(perfil.avatar_url || '')) ? perfil.avatar_url : '';
+  const avatar = /^https:\/\/hkbynilmpsfamsqochnk\.supabase\.co\/storage\//.test(String(perfil.avatar_url || '')) ? perfil.avatar_url : '';
   // O nome: o do perfil; senão o que o app mandou ao criar o link (o do login
   // do Google — o perfil de muita gente só tem o username, e a prévia saía
   // 'Os spots de patriarchalucas'); o username só em último caso.

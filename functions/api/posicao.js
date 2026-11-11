@@ -18,7 +18,7 @@ import { lerKV, gravarKV } from './_kv.js';
 // TRAVAS: só logado; até 20 spots por chamada; teto por pessoa e do mês;
 // spot que o Google não achou fica marcado por 30 dias pra não gastar de novo.
 
-const SB_URL = 'https://kzidnilsyrvauzgelsqd.supabase.co';
+const SB_URL = 'https://hkbynilmpsfamsqochnk.supabase.co';
 const TETO_PESSOA = 600;
 const TETO_MES = 5000;
 const POR_CHAMADA = 20;
@@ -45,10 +45,10 @@ export async function onRequestPost(context) {
   // Sem uid não há teto por pessoa (06/10): o "deixa passar" do _auth.js
   // pra Supabase fora do ar virava gasto pago sem dono. Aqui, recusa.
   if (!quem.permitir || !quem.uid) return json({ unauthorized: true }, 401);
-  if (!env.GOOGLE_PLACES_KEY || !env.SUPABASE_SERVICE_KEY) return json({ configured: false });
+  if (!env.GOOGLE_PLACES_KEY || !env.SUPABASE_SERVICE_KEY_SP) return json({ configured: false });
 
   const sb = (caminho, opcoes) => fetch(SB_URL + caminho, Object.assign({
-    headers: Object.assign({ apikey: env.SUPABASE_SERVICE_KEY, Authorization: 'Bearer ' + env.SUPABASE_SERVICE_KEY,
+    headers: Object.assign({ apikey: env.SUPABASE_SERVICE_KEY_SP, Authorization: 'Bearer ' + env.SUPABASE_SERVICE_KEY_SP,
       'Content-Type': 'application/json' }, (opcoes && opcoes.headers) || {})
   }, opcoes && { method: opcoes.method, body: opcoes.body }));
 

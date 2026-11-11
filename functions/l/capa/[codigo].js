@@ -15,14 +15,14 @@ import { viagensPrivadas, semQueroIrPrivado } from '../../api/_privada.js';
 // sem nenhuma, a imagem padrão do site. Quero ir de viagem "Só eu vejo" não
 // entra (06/10): a foto dele na prévia já contava pra onde a pessoa vai.
 
-const SB_URL = 'https://kzidnilsyrvauzgelsqd.supabase.co';
+const SB_URL = 'https://hkbynilmpsfamsqochnk.supabase.co';
 
 export async function onRequestGet(context) {
   const { params, request, env } = context;
   const codigo = String(params.codigo || '');
   const origem = new URL(request.url).origin;
   const padrao = () => fetch(origem + '/compartilhar-v3.png');
-  if (!/^[A-Za-z0-9]{8,24}$/.test(codigo) || !env.SUPABASE_SERVICE_KEY) return padrao();
+  if (!/^[A-Za-z0-9]{8,24}$/.test(codigo) || !env.SUPABASE_SERVICE_KEY_SP) return padrao();
 
   const borda = caches.default;
   const etiqueta = new Request(origem + '/_capa/' + codigo);
@@ -35,7 +35,7 @@ export async function onRequestGet(context) {
   const lista = dado.cidades.map((c) => '"' + String(c).replace(/["\\]/g, '') + '"').join(',');
   const [r, privadas] = await Promise.all([fetch(SB_URL + '/rest/v1/spots?select=photo_url,status,my_rating,trip_id&user_id=eq.' + dado.uid
     + '&status=in.(been,want)&photo_url=not.is.null&city=in.(' + encodeURIComponent(lista) + ')&limit=40',
-    { headers: { apikey: env.SUPABASE_SERVICE_KEY, Authorization: 'Bearer ' + env.SUPABASE_SERVICE_KEY } }),
+    { headers: { apikey: env.SUPABASE_SERVICE_KEY_SP, Authorization: 'Bearer ' + env.SUPABASE_SERVICE_KEY_SP } }),
     viagensPrivadas(env, dado.uid)]);
   const spots = semQueroIrPrivado(r.ok ? await r.json() : [], privadas);
   spots.sort((a, b) => (b.status === 'been') - (a.status === 'been') || (Number(b.my_rating) || 0) - (Number(a.my_rating) || 0));

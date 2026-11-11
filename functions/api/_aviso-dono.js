@@ -4,7 +4,7 @@
 // manda pela Expo. Texto sempre montado aqui no servidor, nunca vindo do app.
 //
 // Nunca derruba quem chamou: qualquer falha devolve false e pronto.
-const SB_URL = 'https://kzidnilsyrvauzgelsqd.supabase.co';
+const SB_URL = 'https://hkbynilmpsfamsqochnk.supabase.co';
 const EXPO = 'https://exp.host/--/api/v2/push/send';
 const DONO_PADRAO = 'patriarchalucas@gmail.com';
 
@@ -21,9 +21,9 @@ export async function acharDono(sb, env) {
 
 export async function avisarDono(env, title, corpo, tipo) {
   try {
-    if (!env || !env.SUPABASE_SERVICE_KEY) return false;
+    if (!env || !env.SUPABASE_SERVICE_KEY_SP) return false;
     const sb = (caminho) => fetch(SB_URL + caminho, {
-      headers: { apikey: env.SUPABASE_SERVICE_KEY, Authorization: 'Bearer ' + env.SUPABASE_SERVICE_KEY }
+      headers: { apikey: env.SUPABASE_SERVICE_KEY_SP, Authorization: 'Bearer ' + env.SUPABASE_SERVICE_KEY_SP }
     }).then((r) => (r.ok ? r.json() : [])).catch(() => []);
     const dono = await acharDono(sb, env);
     if (!dono) return false;

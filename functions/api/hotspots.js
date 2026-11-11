@@ -34,7 +34,7 @@ import { idDaFoto } from './place-photo.js';
 // novo antes de 6 dias, "publicar" só faz algo sexta depois das 17h e uma vez
 // por semana. Chamar à toa não gasta nada a mais.
 
-const SB_URL = 'https://kzidnilsyrvauzgelsqd.supabase.co';
+const SB_URL = 'https://hkbynilmpsfamsqochnk.supabase.co';
 const MODELO = 'claude-haiku-4-5';
 const CONTA_FONTE = 'oqms_previa';
 const CIDADES = ['São Paulo', 'Rio de Janeiro'];
@@ -184,7 +184,7 @@ export async function onRequestPost(context) {
 }
 
 async function ehDono(request, env) {
-  if (!env.SUPABASE_SERVICE_KEY) return false;
+  if (!env.SUPABASE_SERVICE_KEY_SP) return false;
   const quem = await quemEsta(request, env);
   if (!quem.permitir || !quem.uid) return false;
   const dono = await acharDono(sbGet(env), env);
@@ -210,7 +210,7 @@ async function estado(env) {
     semana: await lerJSON(env, 'hs_semana'),
     publicada: await lerJSON(env, 'hs_publicada'),
     ultima_rodada: parseInt((await lerKV(env, 'hs_ultima_rodada')) || '0', 10) || null,
-    ligado: !!(env.ANTHROPIC_API_KEY && env.GOOGLE_PLACES_KEY && env.SUPABASE_SERVICE_KEY)
+    ligado: !!(env.ANTHROPIC_API_KEY && env.GOOGLE_PLACES_KEY && env.SUPABASE_SERVICE_KEY_SP)
   };
 }
 
@@ -588,7 +588,7 @@ async function vitrine(env) {
 }
 // O que está publicado de fato: as viagens "Hotspots em <cidade>" da conta-fonte.
 async function vitrineDasViagens(env) {
-  if (!env.SUPABASE_SERVICE_KEY) return { listas: [] };
+  if (!env.SUPABASE_SERVICE_KEY_SP) return { listas: [] };
   const [conta] = await sbGet(env)('/rest/v1/profiles?select=id&username=eq.' + CONTA_FONTE);
   if (!conta) return { listas: [] };
   const trips = await sbGet(env)('/rest/v1/trips?select=id,name&user_id=eq.' + conta.id + '&name=like.Hotspots%20em%20*');
@@ -642,7 +642,7 @@ async function publicar(env, forcar) {
   if (!semana) return { ok: false, error: 'sem_lista' };
   const pub = await lerJSON(env, 'hs_publicada');
   if (!forcar && pub && pub.semana === semana.criada) return { ok: true, pulou: 'ja_publicada' };
-  if (!env.SUPABASE_SERVICE_KEY) return { ok: false, error: 'sem_chave' };
+  if (!env.SUPABASE_SERVICE_KEY_SP) return { ok: false, error: 'sem_chave' };
   const [conta] = await sbGet(env)('/rest/v1/profiles?select=id&username=eq.' + CONTA_FONTE);
   if (!conta) return { ok: false, error: 'sem_conta_fonte' };
   const tirados = new Set(semana.tirados || []);
@@ -736,14 +736,14 @@ async function fonteDoEndereco(endereco, cidades) {
 
 function sbGet(env) {
   return (caminho) => fetch(SB_URL + caminho, {
-    headers: { apikey: env.SUPABASE_SERVICE_KEY, Authorization: 'Bearer ' + env.SUPABASE_SERVICE_KEY }
+    headers: { apikey: env.SUPABASE_SERVICE_KEY_SP, Authorization: 'Bearer ' + env.SUPABASE_SERVICE_KEY_SP }
   }).then((r) => (r.ok ? r.json() : [])).catch(() => []);
 }
 async function sbEscrever(env, metodo, caminho, corpo) {
   try {
     const r = await fetch(SB_URL + caminho, {
       method: metodo,
-      headers: { apikey: env.SUPABASE_SERVICE_KEY, Authorization: 'Bearer ' + env.SUPABASE_SERVICE_KEY, 'Content-Type': 'application/json', Prefer: 'return=representation' },
+      headers: { apikey: env.SUPABASE_SERVICE_KEY_SP, Authorization: 'Bearer ' + env.SUPABASE_SERVICE_KEY_SP, 'Content-Type': 'application/json', Prefer: 'return=representation' },
       body: corpo ? JSON.stringify(corpo) : undefined
     });
     return r.ok ? await r.json().catch(() => null) : null;

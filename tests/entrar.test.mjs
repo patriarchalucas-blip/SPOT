@@ -6,7 +6,7 @@ import { destinoPermitido, onRequestGet } from '../functions/entrar.js';
 // endereço do Supabase. É um redirecionamento: tem que recusar qualquer
 // destino que não seja a autorização do NOSSO projeto.
 
-const OK = 'https://kzidnilsyrvauzgelsqd.supabase.co/auth/v1/authorize?provider=google&redirect_to=spot%3A%2F%2Fauth';
+const OK = 'https://hkbynilmpsfamsqochnk.supabase.co/auth/v1/authorize?provider=google&redirect_to=spot%3A%2F%2Fauth';
 
 test('passa o login do nosso Supabase', () => {
   assert.strictEqual(destinoPermitido(OK), OK);
@@ -15,8 +15,8 @@ test('passa o login do nosso Supabase', () => {
 test('recusa qualquer outro destino', () => {
   for (const u of [
     'https://site-falso.com/auth/v1/authorize?x=1',
-    'https://kzidnilsyrvauzgelsqd.supabase.co.site-falso.com/auth/v1/authorize?x=1',
-    'https://kzidnilsyrvauzgelsqd.supabase.co/auth/v1/admin?x=1',
+    'https://hkbynilmpsfamsqochnk.supabase.co.site-falso.com/auth/v1/authorize?x=1',
+    'https://hkbynilmpsfamsqochnk.supabase.co/auth/v1/admin?x=1',
     'https://outroprojeto.supabase.co/auth/v1/authorize?x=1',
     'javascript:alert(1)', '', null
   ]) assert.strictEqual(destinoPermitido(u), null, String(u));
