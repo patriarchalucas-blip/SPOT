@@ -33,14 +33,23 @@ function comoOAppAbre(u) {
   return s;
 }
 
+// Devolve '' quando abriu, ou o MOTIVO (só tipo e números: o log é público):
+// "nosso 404" = o nosso servidor não achou foto; "google 403" = o servidor
+// mandou pro CDN do Google e o Google recusou; "outro 403" = storage etc.
 async function abre(u) {
   try {
-    const r = await fetch(u, { headers: { Referer: SITE + '/' }, redirect: 'follow' });
+    const r1 = await fetch(u, { headers: { Referer: SITE + '/' }, redirect: 'manual' });
+    let r = r1, onde = /\/api\/foto\?/.test(u) ? 'nosso' : 'outro';
+    if (r1.status >= 300 && r1.status < 400) {
+      onde = /googleusercontent\.com/.test(r1.headers.get('location') || '') ? 'google' : 'outro';
+      r = await fetch(r1.headers.get('location'), { redirect: 'follow' });
+    }
     const tipo = r.headers.get('content-type') || '';
     await r.arrayBuffer();
-    return r.ok && tipo.startsWith('image/');
-  } catch (e) { return false; }
+    return r.ok && tipo.startsWith('image/') ? '' : onde + ' ' + r.status;
+  } catch (e) { return 'rede'; }
 }
+const espera = (ms) => new Promise((ok) => setTimeout(ok, ms));
 
 const [spots, perfis, fotos] = await Promise.all([
   lista('/rest/v1/spots?select=photo_url&photo_url=not.is.null'),
@@ -57,13 +66,23 @@ const fila = [...todas];
 await Promise.all(Array.from({ length: 6 }, async () => {
   while (fila.length) {
     const u = fila.shift();
-    if (await abre(u)) ok++; else ruins.push(u);
+    if (!(await abre(u))) ok++; else ruins.push(u);
   }
 }));
-// 2ª tentativa: a 1ª pode ter acabado de curar (ou o Google estava lento).
+// 2ª tentativa, devagar: a 1ª pode ter acabado de curar, ou o Google pode ter
+// barrado o robô por pedir rápido (celular nenhum pede 6 fotos por vez sem parar).
+await espera(20000);
 let curadas = 0;
-const restam = [];
-for (const u of ruins) { if (await abre(u)) curadas++; else restam.push(u); }
-
-console.log(`fotos: ${todas.length} · abriram ${ok + curadas} · curadas na 2ª tentativa ${curadas} · quebradas ${restam.length}`);
-if (restam.length) process.exit(1);
+const motivos = {};
+for (const u of ruins) {
+  await espera(1500);
+  const m = await abre(u);
+  if (!m) curadas++; else motivos[m] = (motivos[m] || 0) + 1;
+}
+const quebradas = Object.values(motivos).reduce((a, b) => a + b, 0);
+const resumo = `fotos: ${todas.length} · abriram ${ok + curadas} · curadas na 2ª tentativa ${curadas} · quebradas ${quebradas}`
+  + (quebradas ? ' · ' + Object.entries(motivos).map(([k, v]) => k + ': ' + v).join(', ') : '');
+console.log(resumo);
+// Aparece no resumo da execução (público, só números) — dá pra ler sem login.
+if (process.env.GITHUB_ACTIONS) console.log((quebradas ? '::error::' : '::notice::') + resumo);
+if (quebradas) process.exit(1);
