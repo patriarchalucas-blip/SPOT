@@ -192,8 +192,13 @@ async function ehDono(request, env) {
 }
 
 // Sexta, 17h em Brasília (UTC-3, sem horário de verão desde 2019) = 20h UTC.
+// A janela vai até sábado 9h (12h UTC): o agendador do GitHub atrasa HORAS —
+// em 06/11 a chamada das 17h chegou às 21h (sábado 00h UTC), caiu fora da
+// janela e a lista da semana não saiu. Publicar duas vezes não acontece
+// ("ja_publicada").
 export function ehHoraDePublicar(agora) {
-  return agora.getUTCDay() === 5 && agora.getUTCHours() >= 20;
+  const d = agora.getUTCDay(), h = agora.getUTCHours();
+  return (d === 5 && h >= 20) || (d === 6 && h < 12);
 }
 
 // A semana do robô começa na sexta (UTC), o dia da rodada: devolve a data

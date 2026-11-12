@@ -7305,6 +7305,9 @@ window.aoTocarNotificacao=async function(d){
   // INTEIRO e aplica depois do login (11/10, auditoria) — antes só sobrava a
   // aba, e o spot do comentário se perdia.
   if(!S.user){NOTIF_PENDENTE=d;ABA_PENDENTE='friends';return}
+  // "Hotspots da semana prontos" (só o dono recebe): abre a página de aprovar.
+  // Antes caía na aba Amigos, que não tem nada a ver com o aviso (11/11).
+  if(d.tipo==='hotspots'){window.irParaAba('dashboard');try{abrirHotspots()}catch(e){}return}
   if(d.tipo==='comentario'&&/^[0-9a-f-]{36}$/i.test(String(d.spot||''))){
     try{
       const l=await dbGet('spots','id=eq.'+d.spot+'&select=*');

@@ -16,6 +16,7 @@ on:
     - cron: '0 2 * * 5'
     - cron: '5 20 * * 5'
     - cron: '35 20 * * 5'
+    - cron: '35 23 * * 5'
   workflow_dispatch:
 
 jobs:
@@ -24,7 +25,10 @@ jobs:
     steps:
       - name: Rodar ou publicar
         run: |
-          if [ "$(date -u +%H)" -lt 12 ]; then OP=rodar; else OP=publicar; fi
+          # A operação sai de QUAL horário disparou, não do relógio: em 06/11 o
+          # GitHub atrasou a publicação das 17h pra depois da meia-noite UTC, o
+          # relógio dizia "madrugada" e saiu "rodar" no lugar de "publicar".
+          if [ "${{ github.event.schedule }}" = "0 2 * * 5" ]; then OP=rodar; else OP=publicar; fi
           [ "${{ github.event_name }}" = "workflow_dispatch" ] && OP=rodar
           echo "op: $OP"
           curl -sS --max-time 600 -X POST https://meuspot.app/api/hotspots \
