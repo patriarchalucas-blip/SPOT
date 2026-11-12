@@ -21,6 +21,25 @@ const TETO_PESSOA = 1500;
 const MEMORIA_SUGESTAO = 60 * 60 * 24 * 7;
 const MEMORIA_DETALHE = 60 * 60 * 24 * 30;   // o Google permite guardar coordenada por 30 dias
 const CAMPOS_DETALHE = 'id,displayName,location,viewport,types,addressComponents';
+// BUSCA DE SPOT PELO NOME (11/11/2026). A lista do "Adicionar spot" usava a
+// busca de texto do Google: US$ 32 por mil, 5.000 grátis. A sugestão custa
+// US$ 2,83 por mil, com 10.000 grátis — e é o pedido que cresce com o número
+// de pessoas (cada pausa ao digitar é um). A foto de cada resultado vem do
+// detalhe pedindo SÓ `photos`, que o Google não cobra (faixa "IDs Only"; é o
+// mesmo pedido de fotoAtualDoLugar no place-photo.js). Se isto falhar ou vier
+// vazio, o app volta sozinho pra busca de texto: o pior caso é o de antes.
+const MEMORIA_BUSCA = 60 * 60 * 24 * 7;
+const MEMORIA_FOTO = 60 * 60 * 24 * 3;
+
+// Onde procurar primeiro. Arredondado a ~0,1° (uns 10 km), como no places.js:
+// posição exata de ninguém entra na chave, e a mesma cidade reaproveita.
+export function centroDaBusca(centro, raio) {
+  if (!centro || centro.latitude == null || centro.longitude == null) return null;
+  const la = Math.round(Number(centro.latitude) * 10) / 10, ln = Math.round(Number(centro.longitude) * 10) / 10;
+  if (!Number.isFinite(la) || !Number.isFinite(ln) || Math.abs(la) > 90 || Math.abs(ln) > 180) return null;
+  const r = Number(raio);
+  return { center: { latitude: la, longitude: ln }, radius: Number.isFinite(r) ? Math.min(50000, Math.max(1000, Math.round(r))) : 30000 };
+}
 
 export function limparTexto(t) {
   return String(t || '').replace(/[\u0000-\u001f]/g, ' ').replace(/\s+/g, ' ').trim().slice(0, 80);
@@ -32,13 +51,15 @@ export async function onRequestPost(context) {
   let body;
   try { body = await request.json() } catch (e) { return json({ error: 'bad_request' }, 400) }
   const op = String(body.op || '');
-  if (op !== 'sugerir' && op !== 'detalhe') return json({ error: 'op_invalida' }, 400);
+  if (op !== 'sugerir' && op !== 'detalhe' && op !== 'buscar') return json({ error: 'op_invalida' }, 400);
 
-  const texto = op === 'sugerir' ? limparTexto(body.texto) : '';
+  const texto = op !== 'detalhe' ? limparTexto(body.texto) : '';
+  const area = op === 'buscar' ? centroDaBusca(body.centro, body.raio) : null;
   const id = op === 'detalhe' ? String(body.id || '') : '';
   // Token de sessão do Google (11/10): só formato seguro; fora da chave do cache.
   const sessao = /^[A-Za-z0-9-]{8,64}$/.test(String(body.sessao || '')) ? String(body.sessao) : '';
   if (op === 'sugerir' && texto.length < 3) return json({ sugestoes: [] });
+  if (op === 'buscar' && texto.length < 3) return json({ places: [] });
   if (op === 'detalhe' && !idValido(id)) return json({ error: 'id_invalido' }, 400);
 
   const quem = await quemEsta(request, env);
@@ -50,8 +71,9 @@ export async function onRequestPost(context) {
   // A versão na chave descarta a memória de formato velho: sug2 (05/10) ganhou
   // o grupo de spots; sug3 (05/10, onboarding) passou a levar o tipo de cada
   // sugestão. Mudou o formato da resposta, sobe o número.
-  const chave = op === 'sugerir'
-    ? 'lugar_sug3_' + (await hash(texto.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '')))
+  const semAcento = texto.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '');
+  const chave = op === 'sugerir' ? 'lugar_sug3_' + (await hash(semAcento))
+    : op === 'buscar' ? 'lugar_bus1_' + (await hash(semAcento + '|' + (area ? area.center.latitude + ',' + area.center.longitude + ',' + area.radius : '')))
     : 'lugar_det_' + (await hash(id));
   const guardado = await lerKV(env, chave);
   if (guardado) { try { return json(JSON.parse(guardado)) } catch (e) {} }
@@ -72,12 +94,13 @@ export async function onRequestPost(context) {
 
   let resposta;
   try {
-    resposta = op === 'sugerir' ? await sugerir(env, texto, sessao) : await detalhe(env, id, sessao);
+    resposta = op === 'sugerir' ? await sugerir(env, texto, sessao)
+      : op === 'buscar' ? await buscar(env, texto, area) : await detalhe(env, id, sessao);
   } catch (e) {
     return json({ erro_rede: true });
   }
   if (!resposta) return json({ erro: true });   // falha do Google: não guarda
-  await gravarKV(env, chave, JSON.stringify(resposta), op === 'sugerir' ? MEMORIA_SUGESTAO : MEMORIA_DETALHE);
+  await gravarKV(env, chave, JSON.stringify(resposta), op === 'sugerir' ? MEMORIA_SUGESTAO : op === 'buscar' ? MEMORIA_BUSCA : MEMORIA_DETALHE);
   return json(resposta);
 }
 
@@ -148,6 +171,46 @@ export function organizarSpots(lista, filtrarAqui) {
       };
     })
     .filter((x) => idValido(x.id) && x.titulo);
+}
+
+// Devolve no MESMO formato da busca de texto ({places:[...]}), pra lista do
+// app não saber a diferença. Sem token de sessão de propósito: sessão que
+// termina num detalhe com campo pago sobe pra faixa mais cara do Google.
+async function buscar(env, texto, area) {
+  const pedir = (comTipo) => fetch('https://places.googleapis.com/v1/places:autocomplete', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', 'X-Goog-Api-Key': env.GOOGLE_PLACES_KEY },
+    body: JSON.stringify(Object.assign({ input: texto, languageCode: 'pt-BR' },
+      comTipo ? { includedPrimaryTypes: ['establishment'] } : {}, area ? { locationBias: { circle: area } } : {}))
+  });
+  let r = await pedir(true), filtrarAqui = false;
+  if (r.status === 400) { r = await pedir(false); filtrarAqui = true }
+  if (!r.ok) return null;
+  const d = await r.json().catch(() => null);
+  if (!d) return null;
+  const spots = organizarSpots(d.suggestions, filtrarAqui);
+  const fotos = await Promise.all(spots.map((s) => fotosDoLugar(env, s.id)));
+  return { places: spots.map((s, i) => ({ id: s.id, displayName: { text: s.titulo }, formattedAddress: s.sub, types: s.tipos, photos: fotos[i] })) };
+}
+
+// A 1ª foto do lugar, pelo id. Pedir só `photos` não é cobrado; guardada 3
+// dias por lugar (o código da foto vence, e o place-photo.js já cura o vencido).
+async function fotosDoLugar(env, id) {
+  const k = 'lugar_ft1_' + (await hash(id));
+  const g = await lerKV(env, k);
+  if (g) { try { return JSON.parse(g) } catch (e) {} }
+  try {
+    const r = await fetch('https://places.googleapis.com/v1/places/' + encodeURIComponent(id),
+      { headers: { 'X-Goog-Api-Key': env.GOOGLE_PLACES_KEY, 'X-Goog-FieldMask': 'photos' } });
+    if (!r.ok) return [];   // passageiro: não guarda
+    const p = await r.json().catch(() => null);
+    const ph = p && (p.photos || [])[0];
+    const a = ph && (ph.authorAttributions || [])[0];
+    const lista = ph && ph.name ? [{ name: String(ph.name).slice(0, 600), widthPx: ph.widthPx, heightPx: ph.heightPx,
+      authorAttributions: a ? [{ displayName: String(a.displayName || '').slice(0, 120), uri: String(a.uri || '').slice(0, 300) }] : [] }] : [];
+    await gravarKV(env, k, JSON.stringify(lista), lista.length ? MEMORIA_FOTO : 60 * 60 * 24);
+    return lista;
+  } catch (e) { return [] }
 }
 
 async function detalhe(env, id, sessao) {

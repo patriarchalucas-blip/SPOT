@@ -2470,6 +2470,7 @@ body.na-casca.tour-rodando .bottom-nav{display:flex}
 .sr-name{font-size:14.5px;font-weight:500;color:var(--ink)}
 .sr-meta{font-size:12px;color:var(--ink3);margin-top:3px}
 .search-loading{text-align:center;padding:32px;color:var(--ink3);font-size:14px}
+.search-mais{text-align:center;padding:16px 20px 24px;color:var(--ink2);font-size:14px;font-weight:600;cursor:pointer}
 .search-nearby-label{font-family:var(--mono);font-size:10.5px;color:var(--terra);padding:14px 24px 6px}
 .note-place-row{display:flex;align-items:center;gap:12px;padding:0 20px 20px}
 .note-place-icon{width:56px;height:56px;border-radius:var(--r-card);background:var(--surface);border:none;
@@ -12324,6 +12325,16 @@ function seguirComDigitado(){
   pickPlace({name:termo,meta:'',address:'',icon:catIcon(cat),city:'',country:'',
     types:[],primaryType:'',lat:null,lng:null,rating_google:'',manual:true});
 }
+// Spot pelo nome, pela sugestão do Google (11/11): /api/lugar op 'buscar'
+// devolve no formato da busca de texto ({places}). null = não deu (servidor
+// antigo, teto, rede) — quem chama cai na busca de texto.
+async function buscarSpotsPeloNome(texto,centro){
+  const c=centro&&centro.locationBias&&centro.locationBias.circle;
+  const d=await pedirLugar(Object.assign({op:'buscar',texto},c?{centro:c.center,raio:c.radius}:{}));
+  return d&&Array.isArray(d.places)?d.places:null;
+}
+// "Ver mais resultados": a sugestão traz até 5; a busca de texto, até 10.
+function buscaCompleta(){S.buscaCompletaDe=S.termoDigitado;searchPlaces(S.termoDigitado)}
 function searchPlaces(v){
   clearTimeout(searchTO);const r=document.getElementById('searchResults');
   const termo=String(v||'').trim();
@@ -12337,24 +12348,36 @@ function searchPlaces(v){
   const myReqId=++searchReqId;
   searchTO=setTimeout(async()=>{
     try{
-      const resp=await googlePlaces('searchText',{
-        method:'POST',
-        headers:{'Content-Type':'application/json','X-Goog-FieldMask':CAMPOS_DA_LISTA},
-        // Cidade marcada sem spot (06/10): sem coordenada pra centrar, o nome
-        // dela vai no texto. Mesma busca, nenhuma consulta a mais.
-        body:JSON.stringify(Object.assign({textQuery:termo+(S.buscarEm&&!contemComoPalavra(termo,S.buscarEm.cidade)?' '+S.buscarEm.cidade:''),languageCode:'pt-BR',maxResultCount:10},centroDaBusca()))
-      });
+      // Cidade marcada sem spot (06/10): sem coordenada pra centrar, o nome
+      // dela vai no texto. Mesma busca, nenhuma consulta a mais.
+      const texto=termo+(S.buscarEm&&!contemComoPalavra(termo,S.buscarEm.cidade)?' '+S.buscarEm.cidade:'');
+      // PRIMEIRO A BUSCA BARATA (11/11): a sugestão do Google custa 11x menos
+      // que a busca de texto e é o pedido que cresce com o número de pessoas.
+      // Veio vazia ou falhou, ou a pessoa pediu "Ver mais resultados": a busca
+      // de texto de sempre.
+      let achados=S.buscaCompletaDe===termo?null:await buscarSpotsPeloNome(texto,centroDaBusca());
       if(myReqId!==searchReqId)return; // busca mais nova já foi disparada, ignora essa resposta atrasada
-      const data=await resp.json();
-      if(myReqId!==searchReqId)return;
+      const barata=!!(achados&&achados.length);
+      if(!barata){
+        const resp=await googlePlaces('searchText',{
+          method:'POST',
+          headers:{'Content-Type':'application/json','X-Goog-FieldMask':CAMPOS_DA_LISTA},
+          body:JSON.stringify(Object.assign({textQuery:texto,languageCode:'pt-BR',maxResultCount:10},centroDaBusca()))
+        });
+        if(myReqId!==searchReqId)return;
+        achados=(await resp.json()).places;
+        if(myReqId!==searchReqId)return;
+      }
+      const data={places:achados};
+      const mais=barata?'<div class="search-mais" onclick="buscaCompleta()">Ver mais resultados</div>':'';
       // Google não achou nada (um Airbnb, casa de amigo, pousada fora do Maps):
       // não trava — a pessoa segue com o que digitou.
       if(!data.places||!data.places.length){r.innerHTML=linhaDigitado(termo);return}
       // Cidade, estado, país, rua: não é spot (Joinville salvo dentro de Joinville, 01/10).
       const lugares=data.places.filter(p=>!naoEhSpot(p));
-      if(!lugares.length){r.innerHTML='<div class="search-loading">Isso é uma cidade ou região. Busque um lugar dentro dela.</div>'+linhaDigitado(termo);return}
+      if(!lugares.length){r.innerHTML='<div class="search-loading">Isso é uma cidade ou região. Busque um lugar dentro dela.</div>'+linhaDigitado(termo)+mais;return}
       const cabem=lugares.filter(p=>lugarCabeNaCategoria(p.types,S.addCat));
-      if(!cabem.length){r.innerHTML='<div class="search-loading">'+(S.addCat==='food'?'Isso é hospedagem: salve em Hospedagem.':S.addCat==='hotel'?'Isso é gastronomia: salve em Gastronomia.':'Nenhum resultado')+'</div>'+linhaDigitado(termo);return}
+      if(!cabem.length){r.innerHTML='<div class="search-loading">'+(S.addCat==='food'?'Isso é hospedagem: salve em Hospedagem.':S.addCat==='hotel'?'Isso é gastronomia: salve em Gastronomia.':'Nenhum resultado')+'</div>'+linhaDigitado(termo)+mais;return}
       // A lista só precisa de nome e endereço. O resto chega quando a pessoa
       // escolher — ver pickSearchResult().
       S.searchResults=cabem.map(p=>{
@@ -12373,7 +12396,7 @@ function searchPlaces(v){
         // Já está na lista: o status aparece na hora (Alexanderplatz salvo três vezes, 01/10).
         const ja=statusNaMinhaLista({name:p.name,city:p.city});
         return '<div class="search-result" onclick="pickSearchResult('+i+')">'+thumb+'<div><div class="sr-name">'+esc(p.name)+(ja?' <span class="sr-ja">'+esc(ja)+'</span>':'')+'</div><div class="sr-meta">'+esc(p.address.substring(0,50)+(p.rating_google?' · '+p.rating_google:''))+'</div></div></div>';
-      }).join('');
+      }).join('')+mais;
       // As 4 de cima vêm NA HORA (23/10, o Lucas: "demora demais pra trazer a
       // foto"): a busca já só acontece depois de 450 ms sem digitar, e esperar
       // mais 700 ms deixava a lista sem foto por mais de 1 s. As de baixo
@@ -14029,11 +14052,16 @@ function onbBuscarLugar(v){
   onbBuscaTO=setTimeout(async function(){
     const meu=++onbReq;
     try{
-      const r=await googlePlaces('searchText',{
-        headers:{'X-Goog-FieldMask':CAMPOS_DA_LISTA},
-        body:JSON.stringify({textQuery:t,languageCode:'pt-BR',maxResultCount:6})
-      });
-      const d=await r.json();
+      // A busca barata primeiro (11/11); vazia ou com falha, a de texto.
+      let d={places:await buscarSpotsPeloNome(t,null)};
+      if(meu!==onbReq)return;
+      if(!d.places||!d.places.length){
+        const r=await googlePlaces('searchText',{
+          headers:{'X-Goog-FieldMask':CAMPOS_DA_LISTA},
+          body:JSON.stringify({textQuery:t,languageCode:'pt-BR',maxResultCount:6})
+        });
+        d=await r.json();
+      }
       if(meu!==onbReq)return;
       ONB.lugares=((d&&d.places)||[]).map(p=>{const a=p.formattedAddress||'';
         return{id:p.id||'',name:(p.displayName&&p.displayName.text)||'',address:a,meta:a,city:extractCityFromAddr(a)}});

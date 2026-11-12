@@ -301,7 +301,7 @@ window.SPOT_EN = {
   'Adicionar sua foto': 'Add your photo', 'Sua avaliação': 'Your review', 'Sua nota': 'Your rating', '(opcional)': '(optional)',
   'Por que esse lugar te chamou atenção?': 'Why did this place catch your eye?', 'Salvar spot': 'Save spot', 'Salvar e adicionar outro': 'Save and add another',
   'Separar em spots': 'Split into spots', 'Parece uma lista. O Spot separa cada lugar.': 'Looks like a list. Spot splits each place.',
-  'Nenhum resultado': 'No results', 'Nenhum resultado. Tente outro nome.': 'No results. Try another name.',
+  'Nenhum resultado': 'No results', 'Ver mais resultados': 'See more results','Nenhum resultado. Tente outro nome.': 'No results. Try another name.',
   'Isso é uma cidade ou região. Busque um lugar dentro dela.': "That's a city or region. Search for a place in it.",
   'Isso é hospedagem: salve em Hospedagem.': "That's a stay: save it under Stays.", 'Isso é gastronomia: salve em Gastronomia.': "That's food: save it under Food & Drink.",
   'Erro na busca. Tente novamente.': 'Search error. Try again.', 'Dê uma nota para salvar': 'Rate it to save', 'Aparece em': 'Shows in',

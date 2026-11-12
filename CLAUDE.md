@@ -517,6 +517,18 @@ cifra em `gastos-recibos/<id>.bin` (mesma chave, sal fixo em `_local/gastos/sal.
   700 ms depois de a pessoa parar de digitar, e só a visível. NÃO medido ainda
   qual dos dois pesava mais: conferir o relatório do Google (Faturamento →
   Relatórios, SKU) uma semana depois de 12/10.
+- **Busca do Adicionar spot pela sugestão (11/11/2026):** era a busca de texto
+  (US$ 32/mil, 5.000 grátis), o pedido que cresce com o número de pessoas. Agora
+  `/api/lugar` op `buscar` usa o Autocomplete (US$ 2,83/mil, 10.000 grátis) e
+  devolve no formato da busca de texto; a foto vem do detalhe pedindo SÓ
+  `photos` (não cobrado). Vazio/falha → o app cai sozinho na busca de texto;
+  "Ver mais resultados" chama a de texto de propósito. Preços conferidos na
+  tabela do Google em 11/11: campo `rating`/telefone/horário/preço joga a busca
+  na faixa Enterprise (US$ 35/mil, só 1.000 grátis) — o Explorar e a ficha
+  pedem esses campos. **Falta conferir no faturamento** que o SKU de Text
+  Search caiu e que o detalhe só-foto segue sem cobrança. Próximos, se
+  precisar: guardar o id do Google no spot (as buscas de manutenção por nome
+  viram detalhe por id) e o check-in por perto (searchNearby, sem cache).
 - **Aviso no celular do Lucas** em 50/80/100% das cotas de Instagram e de fotos
   (`functions/api/_aviso-dono.js`, acha o dono pela tabela `moderadores`).
 
