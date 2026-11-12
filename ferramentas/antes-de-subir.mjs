@@ -19,9 +19,11 @@ import { spawn, spawnSync } from 'child_process';
 import fs from 'fs';
 import http from 'http';
 import path from 'path';
+import { fileURLToPath } from 'url';
 import { RAIZ, PASTA_DO_PUPPETEER } from './_base-de-teste.mjs';
 
 const PORTA = 8935;
+const LIMITE_MIN = 10;   // por teste; o mais demorado leva uns 4 numa máquina lenta
 const TIPOS = {
   '.html': 'text/html; charset=utf-8', '.js': 'text/javascript; charset=utf-8', '.mjs': 'text/javascript; charset=utf-8',
   '.css': 'text/css; charset=utf-8', '.json': 'application/json; charset=utf-8', '.png': 'image/png', '.jpg': 'image/jpeg',
@@ -62,6 +64,13 @@ function subirServidor() {
   });
 }
 
+// Para o teste E o Chrome que ele abriu. No Windows, matar só o node deixa o
+// Chrome dele aberto, gastando a máquina na tentativa seguinte.
+function matar(p) {
+  if (process.platform === 'win32') spawnSync('taskkill', ['/pid', String(p.pid), '/T', '/F'], { stdio: 'ignore' });
+  else p.kill('SIGKILL');
+}
+
 // Roda um comando mostrando a saída ao vivo e devolvendo-a inteira, pra
 // conferir a linha final ("ERROS (0)") — o pente-fino sai com 0 mesmo com erro.
 function rodar(nome, args) {
@@ -72,8 +81,30 @@ function rodar(nome, args) {
     const junta = (d) => { const t = d.toString(); saida += t; process.stdout.write(t) };
     p.stdout.on('data', junta);
     p.stderr.on('data', junta);
-    p.on('close', (codigo) => ok({ codigo, saida }));
+    // Teste de navegador pode travar (Chrome que não responde, máquina
+    // ocupada): sem teto, o comando ficava parado pra sempre sem dizer nada.
+    const teto = setTimeout(() => { saida += '\n[travou: passou de ' + LIMITE_MIN + ' min]'; console.log('\n[travou: passou de ' + LIMITE_MIN + ' min — parei este teste]'); matar(p) }, LIMITE_MIN * 60000);
+    p.on('close', (codigo) => { clearTimeout(teto); ok({ codigo, saida, travou: saida.includes('[travou:') }) });
   });
+}
+
+// Teste de navegador. O resultado que vale é a linha final ("ERROS (0)").
+// Quando o teste NÃO chega nela — o Chrome fechou, a página se soltou, travou —
+// não é o app que falhou, é a máquina do teste: tenta mais uma vez, e o resumo
+// diz que foi na 2ª. Na branch redesenho as jornadas quebraram assim em 3 de 5
+// rodadas completas em 11/11/2026 (sozinhas passam; causa não achada).
+// Resultado de verdade (ERROS/FALHAS acima de 0) nunca é repetido.
+async function deNavegador(titulo, nome, arquivo, linhaFinal, rotulo) {
+  let r, n, tentativa = 0;
+  do {
+    tentativa++;
+    r = await rodar(titulo + (tentativa > 1 ? '  (2ª tentativa: a 1ª não chegou ao fim)' : ''), [arquivo]);
+    n = (r.saida.match(linhaFinal) || [])[1];
+  } while (n === undefined && tentativa < 2);
+  const passou = r.codigo === 0 && n === '0';
+  const texto = n !== undefined ? rotulo + ' (' + n + ')' + (tentativa > 1 ? ' — na 2ª tentativa; a 1ª não chegou ao fim' : '')
+    : r.travou ? 'travou nas duas tentativas' : 'quebrou antes do fim nas duas tentativas — veja o erro acima';
+  return [nome, passou, texto];
 }
 
 if (process.argv.includes('--servidor')) {
@@ -87,22 +118,27 @@ if (process.argv.includes('--servidor')) {
     if (i.status !== 0) { console.error('\nA instalação falhou. Confira a internet e rode de novo.'); process.exit(1) }
   }
 
+  // O servidor roda em OUTRO processo (este mesmo arquivo com --servidor), não
+  // dentro deste. Embutido aqui, a rodada completa quebrou duas vezes na branch
+  // redesenho com a página recarregando no meio do teste; com o servidor à
+  // parte, passou (11/11/2026). A causa exata não foi achada: a configuração
+  // que passa é esta.
   let meu = null;
-  if (!await jaTemServidor()) meu = await subirServidor();
+  if (!await jaTemServidor()) {
+    meu = spawn(process.execPath, [fileURLToPath(import.meta.url), '--servidor'], { cwd: RAIZ, stdio: 'ignore' });
+    let subiu = false;
+    for (let i = 0; i < 40 && !subiu; i++) { await new Promise((r) => setTimeout(r, 250)); subiu = await jaTemServidor() }
+    if (!subiu) { console.error('\nO servidor local não subiu na porta ' + PORTA + '. Veja se outra coisa está usando a porta.'); meu.kill(); process.exit(1) }
+  }
 
   const resultado = [];
   const t = await rodar('1/3  node --test', ['--test']);
   resultado.push(['node --test', t.codigo === 0, t.codigo === 0 ? '0 falhas' : 'tem teste falhando']);
 
-  const p = await rodar('2/3  pente-fino', ['ferramentas/pente-fino.mjs']);
-  const erros = (p.saida.match(/ERROS \((\d+)\)/) || [])[1];
-  resultado.push(['pente-fino', p.codigo === 0 && erros === '0', erros === undefined ? 'não chegou ao fim' : 'ERROS (' + erros + ')']);
+  resultado.push(await deNavegador('2/3  pente-fino', 'pente-fino', 'ferramentas/pente-fino.mjs', /ERROS \((\d+)\)/, 'ERROS'));
+  resultado.push(await deNavegador('3/3  jornadas (uns 2 minutos)', 'jornadas', 'ferramentas/jornadas.mjs', /FALHAS \((\d+)\)/, 'FALHAS'));
 
-  const j = await rodar('3/3  jornadas (uns 2 minutos)', ['ferramentas/jornadas.mjs']);
-  const falhas = (j.saida.match(/FALHAS \((\d+)\)/) || [])[1];
-  resultado.push(['jornadas', j.codigo === 0 && falhas === '0', falhas === undefined ? 'não chegou ao fim' : 'FALHAS (' + falhas + ')']);
-
-  if (meu) meu.close();
+  if (meu) meu.kill();
   console.log('\n━━━ RESUMO ━━━');
   for (const [nome, passou, texto] of resultado) console.log((passou ? '  ✔ ' : '  ✖ ') + nome.padEnd(12) + texto);
   const tudo = resultado.every((r) => r[1]);
