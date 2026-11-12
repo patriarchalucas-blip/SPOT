@@ -38,7 +38,7 @@ const SB_URL = 'https://hkbynilmpsfamsqochnk.supabase.co';
 const MODELO = 'claude-haiku-4-5';
 const CONTA_FONTE = 'oqms_previa';
 const CIDADES = ['São Paulo', 'Rio de Janeiro'];
-const POR_CIDADE = 12;           // lugares por lista
+const POR_CIDADE = 5;            // lugares por lista (o Lucas, 11/11: "5 tá suficiente"; era 12)
 // Mira de 5 (o Lucas, 27/10: "4 é muito pouco"): com menos de 5 lugares de 2+
 // vozes, a lista completa com as indicações mais recentes de UMA voz, marcadas
 // (umaVoz) pra página de aprovar mostrar e o dono decidir se ficam.
