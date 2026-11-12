@@ -1,7 +1,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert';
 import { onRequestPost, onRequestGet, semanaDe, pontuar, citacoesValidas, cidadeDaLista, ehPubliPeloTexto,
-  ehHoraDePublicar, lugarDoGoogle, spotDoHotspot, categoriaPelosTipos, jsonDepoisDe } from '../functions/api/hotspots.js';
+  ehHoraDePublicar, lugarDoGoogle, spotDoHotspot, categoriaPelosTipos, jsonDepoisDe, FONTES_DEPOIS } from '../functions/api/hotspots.js';
 
 // O robô dos Hotspots (26/10/2026). Nada sai pra rede: YouTube, IA, Google,
 // Supabase e KV são falsos.
@@ -79,6 +79,9 @@ function mundo(opts) {
   env.SPOT_KV.m.set('hs_fontes', JSON.stringify([
     { id: 'yt:CANAL_RIO', tipo: 'youtube', canal: 'CANAL_RIO', nome: 'Canal Rio', cidades: [] },
     { id: 'yt:CANAL_SP', tipo: 'youtube', canal: 'CANAL_SP', nome: 'Canal SP', cidades: ['São Paulo'] }]));
+  // As fontes que o código ganhou depois (11/11) contam como já oferecidas, pra
+  // cada teste rodar só com as duas falsas; o teste delas desliga isto.
+  if (!o.semOferecer) env.SPOT_KV.m.set('hs_fontes_oferecidas', JSON.stringify(FONTES_DEPOIS.map((f) => f.id)));
   return { env, chamadas, fetchFalso };
 }
 async function comFetch(f, corpo) {
@@ -237,4 +240,18 @@ test('hotspots: peças', () => {
   const s = spotDoHotspot({ n: 3, nome: 'X', g: { nome: 'X', categoria: 'food', endereco: 'Rua', maps: 'm' } }, 'u', 't', 'Rio de Janeiro');
   assert.strictEqual(s.category, 'food');
   assert.strictEqual(s.my_note, 'Citado por 3 vozes da cena nas últimas semanas.');
+});
+
+test('hotspots: fonte que o código ganhou depois entra uma vez; a que o dono tira não volta', async () => {
+  const w = mundo({ logado: DONO, semOferecer: true });
+  const ver = () => comFetch(w.fetchFalso, async () => (await onRequestGet({ env: w.env, request: new Request('https://x/api/hotspots', { headers: { Authorization: 'Bearer ' + TK } }) })).json());
+  const e1 = await ver();
+  assert.strictEqual(e1.fontes.length, 2 + FONTES_DEPOIS.length);
+  assert.ok(e1.fontes.some((f) => f.id === 'yt:CANAL_SP'), 'as que já estavam ficam');
+  const tirada = FONTES_DEPOIS[0].id;
+  const e2 = await comFetch(w.fetchFalso, async () => (await post(w.env, { op: 'fonte_tirar', id: tirada }, true)).json());
+  assert.ok(!e2.fontes.some((f) => f.id === tirada));
+  const e3 = await ver();
+  assert.strictEqual(e3.fontes.length, 1 + FONTES_DEPOIS.length, 'não volta nem duplica');
+  assert.strictEqual(new Set(FONTES_DEPOIS.map((f) => f.id)).size, FONTES_DEPOIS.length);
 });
