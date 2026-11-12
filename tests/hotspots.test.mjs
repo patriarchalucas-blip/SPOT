@@ -214,6 +214,10 @@ test('hotspots: peças', () => {
   assert.strictEqual(ehHoraDePublicar(new Date('2026-10-30T20:05:00Z')), true);
   assert.strictEqual(ehHoraDePublicar(new Date('2026-10-30T19:59:00Z')), false);
   assert.strictEqual(ehHoraDePublicar(new Date('2026-10-29T21:00:00Z')), false);
+  // 06/11: o GitHub chamou com 4h de atraso (sábado 00h UTC) e a lista não saiu.
+  assert.strictEqual(ehHoraDePublicar(new Date('2026-11-07T00:01:50Z')), true);
+  assert.strictEqual(ehHoraDePublicar(new Date('2026-11-07T12:00:00Z')), false);
+  assert.strictEqual(ehHoraDePublicar(new Date('2026-11-06T08:53:00Z')), false, 'sexta de manhã é a hora da busca');
   assert.strictEqual(lugarDoGoogle({ id: 'x', formattedAddress: 'Curitiba - PR' }, 'Rio de Janeiro'), null, 'homônimo em outra cidade');
   assert.strictEqual(categoriaPelosTipos(['point_of_interest'], 'japanese_restaurant'), 'food');
   assert.strictEqual(categoriaPelosTipos(['hotel']), 'hotel');
