@@ -15439,7 +15439,15 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
 // Para você: a lista da semana JÁ PUBLICADA (/api/hotspots op vitrine), a
 // cidade segue onde a pessoa mora (Rio ou São Paulo; tocar no nome troca).
 // Amigos: o que os amigos salvaram, do mais novo pro mais antigo.
-const HSV={aba:'voce',dados:null,cidade:'',cat:'',amigos:null,erro:false};
+// Sem lista publicada pra cidade onde a pessoa mora (11/11, Lucas e Jezler):
+// a aba é SÓ o feed dos amigos — sem "Para você", sem lista de outra cidade.
+// Quem decide é a lista que o servidor devolve, não uma relação de cidades
+// aqui: cidade nova publicada passa a aparecer sozinha pra quem mora nela.
+const HSV={aba:'voce',dados:null,cidade:'',cat:'',amigos:null,erro:false,soAmigos:false,casa:null};
+function hsListaDeCasa(){
+  const casa=normName((S.profile&&S.profile.home_city)||'');
+  return casa?((HSV.dados&&HSV.dados.listas)||[]).find(x=>normName(x.cidade)===casa)||null:null;
+}
 async function hsAbrir(){
   goTo('hotspots');hsPintar();
   if(!HSV.dados){
@@ -15452,12 +15460,15 @@ async function hsAbrir(){
       HSV.dados=d&&Array.isArray(d.listas)?{...d,listas:d.listas.filter(x=>x.lugares&&x.lugares.length)}:{listas:[]};HSV.erro=false;
     }catch(e){HSV.erro=true}
   }
-  if(!HSV.cidade){
-    const casa=normName((S.profile&&S.profile.home_city)||'');
-    const l=(HSV.dados&&HSV.dados.listas)||[];
-    HSV.cidade=(l.find(x=>normName(x.cidade)===casa)||l.find(x=>/s.o paulo/i.test(x.cidade))||l[0]||{}).cidade||'';
-  }
+  // Mudou a cidade onde mora (ou trocou de conta): decide de novo.
+  const casa=normName((S.profile&&S.profile.home_city)||'');
+  if(casa!==HSV.casa){HSV.casa=casa;HSV.cidade='';HSV.cat=''}
+  const deCasa=hsListaDeCasa(),eraSo=HSV.soAmigos;
+  HSV.soAmigos=!deCasa;
+  if(HSV.soAmigos)HSV.aba='amigos';
+  else{if(eraSo)HSV.aba='voce';if(!HSV.cidade)HSV.cidade=deCasa.cidade}
   hsPintar();
+  if(HSV.aba==='amigos'&&!HSV.amigos)hsCarregarAmigos();
 }
 function hsAba(a){HSV.aba=a;hsPintar();if(a==='amigos'&&!HSV.amigos)hsCarregarAmigos()}
 function hsTrocarCidade(){
@@ -15471,14 +15482,18 @@ function hsLugares(){
   return l?l.lugares:[];
 }
 function hsAbas(){
+  if(HSV.soAmigos)return '';
   return '<div class="hv-abas"><button class="'+(HSV.aba==='voce'?'on':'')+'" onclick="hsAba(\'voce\')">Para você</button>'
     +'<button class="'+(HSV.aba==='amigos'?'on':'')+'" onclick="hsAba(\'amigos\')">Amigos</button></div>';
 }
 function hsPintar(){
   const c=document.getElementById('hsCorpo');if(!c)return;
+  if(HSV.soAmigos){c.innerHTML='<div class="ls-topo"><h1 class="ls-tit">Amigos</h1></div>'+hsPintarAmigos();hydrateIcons(c);return}
   if(HSV.aba==='amigos'){c.innerHTML='<div class="hv-sem-capa">'+hsAbas()+'</div>'+hsPintarAmigos();hydrateIcons(c);return}
   if(HSV.erro){c.innerHTML='<div class="hv-sem-capa">'+hsAbas()+'</div><div class="at-vazio">Não carregou. Confere a conexão.<br><button class="btn-primario" style="margin-top:16px" onclick="HSV.dados=null;hsAbrir()">Tentar de novo</button></div>';return}
-  if(!HSV.dados){c.innerHTML='<div class="hv-sem-capa">'+hsAbas()+'</div><div class="at-vazio">Carregando...</div>';return}
+  // Antes da lista chegar não se sabe se a pessoa tem "Para você": sem abas,
+  // pra elas não aparecerem e sumirem em quem mora onde não há lista.
+  if(!HSV.dados){c.innerHTML='<div class="at-vazio" style="padding:56px 20px 0">Carregando...</div>';return}
   const todos=hsLugares();
   if(!todos.length){c.innerHTML='<div class="hv-sem-capa">'+hsAbas()+'</div><div class="at-vazio" style="padding:0 20px">A lista da semana sai sexta às 17h.</div>';return}
   const cats=[...new Set(todos.map(x=>x.categoria))].filter(k=>HS_CAT[k]);

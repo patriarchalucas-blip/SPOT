@@ -1313,6 +1313,15 @@ await ir(pb, `hsAba('amigos')`, 2000);
 const hsa10 = await texto(pb, '#hsCorpo');
 confere(!spA10 || (hsa10 || '').includes(spA10.name), 'Hotspots · Amigos mostra o spot de A', hsa10);
 try { await pb.screenshot({ path: process.env.TEMP + '/jornada-hotspots-amigos.png' }) } catch (e) {}
+// Mora onde não há lista publicada: a aba é só o feed dos amigos, sem "Para
+// você" e sem a lista de outra cidade. Voltando pra cidade com lista, volta.
+await ir(pb, `(async()=>{window._casaDeAntes=S.profile.home_city;S.profile.home_city='Curitiba';await hsAbrir()})()`, 2000);
+const hsc10 = await texto(pb, '#hsCorpo') || '';
+confere(!/Para você|Nº 1 da semana|Bar do Teste|Boteco Rio/.test(hsc10) && /Amigos/.test(hsc10) && (!spA10 || hsc10.includes(spA10.name)), 'sem Hotspots na cidade: só o feed dos amigos', hsc10);
+try { await pb.screenshot({ path: process.env.TEMP + '/jornada-hotspots-sem-lista.png' }) } catch (e) {}
+await ir(pb, `(async()=>{S.profile.home_city=window._casaDeAntes;await hsAbrir()})()`, 1500);
+const hsd10 = await texto(pb, '#hsCorpo') || '';
+confere(/Para você/.test(hsd10) && /Nº 1 da semana/.test(hsd10), 'cidade com lista: Para você volta', hsd10);
 ['A', 'B'].forEach(n => { const e = errosDe(PAGINAS[n]); confere(!e.length, 'sem erro de JS no aparelho ' + n + ' (listas)', e) });
 
 // ═══ fim ═══
