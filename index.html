@@ -2852,32 +2852,125 @@ body.exm #exploreCozinhas,body.exm #exploreBody{display:none!important}
 .ls-topo{display:flex;align-items:baseline;justify-content:space-between;padding:56px 20px 0}
 .ls-tit{margin:0;font-stretch:68%;font-size:52px;font-weight:700;line-height:1}
 #lsCorpo{padding:0 20px}
-.ls-sec{margin:28px 0 12px}
-.ls-grade{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:18px 12px}
-.ls-card{display:flex;flex-direction:column;gap:6px;border:0;background:none;padding:0;text-align:left;color:var(--ink);font:inherit;cursor:pointer;min-width:0}
-.ls-card b{font-size:15px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.ls-card>span:last-child{font-size:12px;color:var(--ink2)}
-.ls-mos{display:grid;grid-template-columns:1fr 1fr;gap:2px;aspect-ratio:1;border-radius:16px;overflow:hidden;background:rgba(245,245,243,.06)}
-.ls-mos span{background:#2F5C4C center/cover no-repeat}
-.ls-quem{display:flex;align-items:center}
-.ls-quem .pln-av{width:20px;height:20px;font-size:9px;margin-right:-6px;box-shadow:0 0 0 2px var(--base)}
-.ls-quem em{font-style:normal;margin-left:12px}
+/* Listas V4 (13/11): pilhas, prateleiras, busca e filtro */
+.ls-topo{align-items:center}
+.lp-mais{width:44px;height:44px;flex:none;border:0;border-radius:22px;background:var(--green);color:var(--on-green);display:grid;place-items:center;cursor:pointer}
+.lp-mais svg{width:20px;height:20px}
+.lp-cab{padding:0 20px}
+.lp-abas{display:flex;gap:22px;margin-top:22px}
+.lp-abas button{border:0;background:none;padding:0 0 8px;font:inherit;font-size:17px;font-weight:600;color:var(--ink3);cursor:pointer}
+.lp-abas button[aria-pressed="true"]{color:var(--ink);box-shadow:inset 0 -2px 0 var(--green)}
+.lp-busca{margin-top:14px;height:48px;border-radius:24px;background:var(--surface);display:flex;align-items:center;gap:10px;padding:0 16px;color:var(--ink2)}
+.lp-busca>span{display:grid;place-items:center;flex:none}
+.lp-busca>span svg{width:19px;height:19px}
+.lp-busca input{flex:1;min-width:0;border:0;background:none;outline:0;color:var(--ink);font:inherit;font-size:16px}
+.lp-busca input::placeholder{color:var(--ink3)}
+.lp-busca input::-webkit-search-cancel-button{display:none}
+.lp-limpar{border:0;background:none;padding:6px;color:var(--ink2);display:grid;place-items:center;cursor:pointer}
+.lp-limpar svg{width:16px;height:16px}
+.lp-pils{display:flex;flex-wrap:wrap;gap:8px;margin-top:14px}
+.lp-pils button{height:34px;padding:0 14px;border:0;border-radius:17px;background:var(--surface);color:var(--ink);opacity:.85;font:inherit;font-size:14px;font-weight:600;cursor:pointer}
+.lp-pils button[aria-pressed="true"]{background:var(--green);color:var(--on-green);opacity:1}
+.lp-sec{margin-top:30px}
+.lp-h2{margin:0;padding:0 20px;font-stretch:68%;font-size:26px;font-weight:700;display:flex;align-items:center;gap:10px}
+.lp-h2 .pln-av{width:30px;height:30px;font-size:13px;border:0;font-stretch:100%}
+/* prateleira: desliza pro lado; a pilha cortada na borda avisa que tem mais */
+.lp-prat{display:flex;gap:30px;overflow-x:auto;padding:22px 20px 8px 38px;scroll-snap-type:x proximity;scrollbar-width:none;-webkit-overflow-scrolling:touch}
+.lp-prat::-webkit-scrollbar{display:none}
+.lp-prat .lp-item{flex:none;width:124px;scroll-snap-align:center}
+.lp-grade{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:40px 10px;margin-top:34px;padding:0 20px}
+/* a pilha: a foto mais nova fica por cima, reta; as de trás saem tortas */
+.lp-item{display:flex;flex-direction:column;align-items:center;gap:14px;border:0;background:none;padding:0;min-width:0;text-align:center;color:var(--ink);font:inherit;cursor:pointer}
+.lp-pilha{position:relative;display:block;width:132px;height:132px}
+.lp-prat .lp-pilha{width:124px;height:124px}
+.lp-f{position:absolute;inset:0;border-radius:18px;background:#2F5C4C center/cover no-repeat;box-shadow:0 0 0 4px var(--base)}
+.lp-f.lp-t2{transform:translate(-13.6%,4.5%) rotate(var(--g0))}
+.lp-f.lp-t1{transform:translate(13.6%,2.3%) rotate(var(--g1))}
+.lp-selo{position:absolute;right:-12px;top:-12px;width:38px;height:38px;border-radius:50%;background:var(--green);color:var(--on-green);display:grid;place-items:center;box-shadow:0 0 0 4px var(--base)}
+.lp-nome{display:block;font-size:17px;font-weight:600;line-height:1.2}
+.lp-sub{display:block;font-size:13px;color:var(--ink2);margin-top:3px}
+.lp-item:active .lp-pilha{transform:scale(.97)}
+.lp-todas{margin:26px 20px 0;width:calc(100% - 40px);height:54px;border:0;border-radius:27px;background:var(--surface);color:var(--ink);display:flex;align-items:center;justify-content:space-between;padding:0 22px;font:inherit;font-size:16px;font-weight:600;cursor:pointer}
+.lp-todas span{color:var(--ink2);font-weight:500}
+.lp-nada{margin:40px 20px 0;font-size:15px;color:var(--ink2);line-height:1.5}
+.lp-voltar{margin:26px 20px 0;border:0;background:none;padding:0;display:flex;align-items:center;gap:6px;font:inherit;font-size:15px;font-weight:600;color:var(--ink2);cursor:pointer}
+.lp-voltar svg{width:18px;height:18px}
+/* a lista aberta */
+.lp-lista{padding:0 20px}
+.lp-nomeh{display:flex;align-items:center;gap:12px;line-height:.96;margin-top:10px}
+.lp-nomeh .lp-selo{position:static;box-shadow:none;flex:none}
+.lp-chips{display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin-top:16px}
+.lp-chip{height:34px;padding:0 12px;border:0;border-radius:17px;background:var(--surface);color:var(--ink);font:inherit;font-size:13px;font-weight:600;display:flex;align-items:center;gap:6px}
+button.lp-chip{cursor:pointer}
+.lp-chip svg{width:14px;height:14px}
+.lp-gente{display:flex;align-items:center;padding-left:6px}
+.lp-gente .pln-av{width:30px;height:30px;font-size:12px;margin-left:-6px;border-color:var(--base)}
+.lp-add{margin-top:22px;width:100%;height:54px;border:0;border-radius:27px;background:var(--green);color:var(--on-green);font:inherit;font-size:16px;font-weight:600;display:flex;align-items:center;justify-content:center;gap:8px;cursor:pointer}
+.lp-add svg{width:18px;height:18px}
+.lp-bloco{margin-top:30px}
+.lp-bloco .lp-h2{padding:0;font-size:24px;margin-bottom:4px}
+.lp-lista .lp-nada{margin:30px 0 0}
+.lp-dica{margin:22px 0 0;font-size:13px;color:var(--ink2)}
+.lp-linha{display:flex;align-items:center;gap:14px;padding:8px 0}
+.lp-foto{flex:none;width:60px;height:60px;border-radius:14px;background:#2F5C4C center/cover no-repeat}
+.lp-tx{flex:1;min-width:0}
+.lp-tx b{display:block;font-size:16px;font-weight:600}
+.lp-sub2{display:block;font-size:13px;color:var(--ink2);margin-top:2px}
+/* marcar que foi: arrasta a linha pra esquerda; a nota entra na hora */
+.lp-arr{position:relative;border-radius:16px;overflow:hidden;margin:0 -12px}
+.lp-atras{position:absolute;inset:0;display:none;align-items:center;gap:8px;padding:0 22px;font-size:15px;font-weight:600;background:var(--surface)}
+.lp-atras svg{width:18px;height:18px}
+.lp-arr.indo:not(.pra-dir) .lp-dir{display:flex;justify-content:flex-end}
+.lp-arr.indo.pra-dir .lp-esq{display:flex;justify-content:flex-start}
+.lp-arr.vai:not(.pra-dir) .lp-dir{background:var(--green);color:var(--on-green)}
+.lp-frente{position:relative;padding:8px 12px;touch-action:pan-y;user-select:none;-webkit-user-select:none}
+.lp-arr.indo .lp-frente{background:#0A3023}
+.lp-estl{display:flex;gap:2px;margin-top:6px}
+.lp-estl button{width:30px;height:30px;border:0;background:none;padding:0;display:grid;place-items:center;color:var(--ink3);cursor:pointer}
+.lp-estl button.on{color:var(--green)}
+.lp-estl button.on path{fill:currentColor}
+.lp-nt{margin-left:auto;flex:none;border:0;background:none;color:var(--ink);padding:0 0 0 8px;font:inherit;font-stretch:68%;font-size:32px;font-weight:700;line-height:1;font-variant-numeric:tabular-nums;cursor:pointer}
+@media (prefers-reduced-motion:no-preference){
+  .lp-pilha{transition:transform .12s}
+  .lp-frente{transition:transform .18s}
+  @keyframes lp-pop{0%{transform:scale(1)}45%{transform:scale(1.12)}100%{transform:scale(1)}}
+  @keyframes lp-sobe{from{opacity:0;transform:translateY(6px) scale(.7)}to{opacity:1;transform:none}}
+  .lp-arr.novo .lp-foto{animation:lp-pop .4s ease-out}
+  .lp-arr.novo .lp-estl button{animation:lp-sobe .28s ease-out backwards}
+  .lp-arr.novo .lp-estl button:nth-child(2){animation-delay:.05s}.lp-arr.novo .lp-estl button:nth-child(3){animation-delay:.1s}
+  .lp-arr.novo .lp-estl button:nth-child(4){animation-delay:.15s}.lp-arr.novo .lp-estl button:nth-child(5){animation-delay:.2s}
+}
+/* folha de adicionar e calendário */
+.lp-porbusca{margin:0 20px}
+.lp-rot{margin:18px 20px 4px;font-size:13px;color:var(--ink2)}
+#lsPorLista .ls-linha{padding:6px 20px}
+.lp-mais2{margin-left:auto;flex:none;width:32px;height:32px;border-radius:16px;background:var(--surface);display:grid;place-items:center}
+.lp-mais2 svg{width:16px;height:16px}
+.lp-pino{display:grid!important;place-items:center;color:var(--ink)}
+.lp-pino svg{width:22px;height:22px}
+.lp-nada-folha{margin:18px 20px 0;font-size:14px}
+.lp-cal{padding:0 20px}
+.lp-cal .lp-pils{margin-top:0}
+.lp-cal-top{display:flex;align-items:center;justify-content:space-between;margin-top:14px}
+.lp-cal-top b{font-size:17px;font-weight:600}
+.lp-cal-top button{width:40px;height:40px;border:0;border-radius:20px;background:var(--surface);color:var(--ink);display:grid;place-items:center;cursor:pointer}
+.lp-cal-sem,.lp-cal-g{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));touch-action:pan-y}
+.lp-cal-sem span{text-align:center;font-size:12px;color:var(--ink3);padding:14px 0 6px}
+.lp-cal-g button{height:44px;border:0;background:none;color:var(--ink);font:inherit;font-size:15px;font-weight:500;font-variant-numeric:tabular-nums;cursor:pointer}
+.lp-cal-g button.meio{background:var(--surface)}
+.lp-cal-g button.ponta{background:var(--green);color:var(--on-green);font-weight:700;border-radius:22px}
+.lp-cal-res{margin:14px 0 0;min-height:20px;text-align:center;font-size:14px;color:var(--ink2)}
+#lsQuandoBt[disabled]{opacity:.4}
+.lp-semdata{margin:-8px auto 24px}
 .ls-vazio{text-align:center;padding:40px 0}
 .ls-vazio p{margin:24px auto;max-width:260px;font-size:16px;line-height:1.4;color:var(--ink2)}
 .ls-leque{position:relative;height:150px}
 .ls-falsa{position:absolute;top:10px;left:50%;width:110px;height:130px;margin-left:-55px;border-radius:16px;background:rgba(245,245,243,.08)}
 .ls-f0{transform:rotate(-12deg) translateX(-70px)}.ls-f2{transform:rotate(12deg) translateX(70px)}.ls-f1{background:rgba(245,245,243,.14);z-index:1}
-.ls-cab{padding:0 20px 8px;display:flex;flex-direction:column;gap:12px}
-.ls-quando{font-size:14px;color:var(--ink2)}
-.ls-membros{display:flex;align-items:center;gap:6px}
-.ls-membros .pln-av.g{width:36px;height:36px;font-size:14px}
 .ls-linha{display:flex;align-items:center;gap:14px;width:100%;box-sizing:border-box;border:0;background:none;color:var(--ink);font:inherit;text-align:left;cursor:pointer;padding:6px 0}
 .ls-linha .place-thumb{display:block;flex:none;width:64px;height:64px;border-radius:14px;background-color:#2F5C4C}
 .ls-linha .cid-txt{display:flex;flex-direction:column;gap:3px;flex:1;min-width:0}
 .ls-linha .cid-nome,.ls-linha .cid-linha{display:block}
-#lsDetalhe .ls-linha{padding:6px 20px}
-.ls-tirar{flex:none;width:32px;height:32px;border:0;border-radius:16px;background:rgba(245,245,243,.08);color:var(--ink3);display:grid;place-items:center;cursor:pointer}
-.ls-tirar svg{width:12px;height:12px}
 .ls-apagar{display:block;margin:28px auto 0;border:0;background:none;font:inherit;font-size:15px;color:var(--ink3);cursor:pointer}
 .ls-tipos{display:grid;gap:10px;margin-top:8px}
 .ls-tipo{display:flex;flex-direction:column;gap:4px;padding:20px;border:0;border-radius:20px;background:rgba(245,245,243,.07);color:var(--ink);text-align:left;font:inherit;cursor:pointer}
@@ -3323,7 +3416,12 @@ body.exm #exploreCozinhas,body.exm #exploreBody{display:none!important}
      quem vai junto. Quadros "Listas", "Lista compartilhada", "Criar" e
      "Listas · vazia" do canvas. -->
 <div class="screen" id="listas">
-  <div class="ls-topo"><h1 class="ls-tit">Listas</h1><button class="vc-mais" onclick="lsAbrirNova()">+ Nova lista</button></div>
+  <div class="ls-topo"><h1 class="ls-tit">Listas</h1><button class="lp-mais" onclick="lsAbrirNova()" data-ic="plus" aria-label="Nova lista"></button></div>
+  <div class="lp-cab" id="lsCab" style="display:none">
+    <div class="lp-abas"><button data-aba="suas" aria-pressed="true" onclick="lsAba('suas')">Suas</button><button data-aba="amigos" aria-pressed="false" onclick="lsAba('amigos')">Amigos</button></div>
+    <label class="lp-busca"><span data-ic="search"></span><input id="lsQ" type="search" placeholder="Buscar lista ou spot" autocomplete="off" autocorrect="off" spellcheck="false" aria-label="Buscar lista ou spot" oninput="LS2.q=this.value;LS2.todas=false;lsPintar()"><button class="lp-limpar" id="lsLimpar" style="display:none" onclick="event.preventDefault();lsLimpar()" data-ic="close" aria-label="Limpar busca"></button></label>
+    <div class="lp-pils"><button data-f="tudo" aria-pressed="true" onclick="lsFiltro('tudo')">Tudo</button><button data-f="viagens" aria-pressed="false" onclick="lsFiltro('viagens')">Viagens</button><button data-f="listas" aria-pressed="false" onclick="lsFiltro('listas')">Listas</button></div>
+  </div>
   <div id="lsCorpo"></div>
   <div style="height:120px"></div>
   <div class="bottom-nav"></div>
@@ -3340,6 +3438,7 @@ body.exm #exploreCozinhas,body.exm #exploreBody{display:none!important}
   <div class="bottom-nav"></div>
 </div>
 <div class="overlay" id="ov-novalista" onclick="closeOut(event,'ov-novalista')"><div class="sheet"><button class="sheet-close" onclick="closeOv('ov-novalista')" data-ic="close" aria-label="Fechar"></button><div class="sheet-handle"></div><div id="lsNova"></div></div></div>
+<div class="overlay" id="ov-lsquando" onclick="closeOut(event,'ov-lsquando')"><div class="sheet"><button class="sheet-close" onclick="closeOv('ov-lsquando')" data-ic="close" aria-label="Fechar"></button><div class="sheet-handle"></div><div id="lsQuando"></div></div></div>
 <div class="overlay" id="ov-poralista" onclick="closeOut(event,'ov-poralista')"><div class="sheet sheet-fixa"><button class="sheet-close" onclick="closeOv('ov-poralista')" data-ic="close" aria-label="Fechar"></button><div class="sheet-handle"></div><div id="lsPor"></div></div></div>
 
 <div class="screen" id="place">
@@ -8346,7 +8445,7 @@ function backFromPlace(){
   // Spot de amigo aberto da SUA ficha ("Ana foi"): volta pra sua ficha.
   if(S.curPlace&&S.curPlace._voltarPara){openPlace(S.curPlace._voltarPara,S.placeOriginAntes||'trip');return}
   // Aberto de um amigo (perfil, cidade, Explorar, Atividade): volta pra lá.
-  if(S.placeOrigin==='amigo'){goTo(telaAntesDaFicha||'friends',true);return}
+  if(S.placeOrigin==='amigo'){goTo(telaAntesDaFicha||'friends',true);if(telaAntesDaFicha==='lista')lsPintarDetalhe();return}
   // Aberto pela estante: voltar tem que devolver pro Perfil, nao jogar
   // numa viagem que a pessoa nem sabia que estava aberta.
   if(S.placeOrigin==='profile'){goTo('profile');loadProfile();return}
@@ -13430,7 +13529,10 @@ async function resolverCidadeDoSpot(p,trip){
     // confirmação — ficha + faixa verde, ou reabrir a busca — acontece JÁ,
     // sem esperar o loadDashboard (que rebusca TUDO do banco em Oregon, 1-2s).
     // O loadDashboard roda POR TRÁS, só pra reconciliar e disparar os backfills.
-    if(addAnother){
+    if(lsEsperaNovo()){
+      closeOv('ov-note');
+      lsEntrouNovo(data);
+    }else if(addAnother){
       // Mesma viagem e categoria — só reabre a busca (colar lista, um a um).
       closeOv('ov-note');
       S.addCat=null;
@@ -15578,7 +15680,26 @@ function hsAbrirDoAmigo(i){const s=(HSV.amigos||[])[i];if(s)abrirFichaDoSpotDeAm
 // Tabelas listas / lista_membros / lista_spots. Toda lista pode ser
 // compartilhada: quem está nela vê e põe spots; só o dono chama gente (amigo
 // aceito) e renomeia. Cada spot da lista guarda quem pôs ("Nati pôs").
-const LS2={listas:[],membros:{},spots:{},atual:null,carregou:false,nova:null,filtroPor:''};
+// V4 (13/11, migração 039): pilhas com busca e filtro, viagem com data no
+// calendário, um Adicionar só, Fui arrastando a linha. Roteiro: ainda não.
+const LS2={listas:[],membros:{},spots:{},atual:null,carregou:false,nova:null,filtroPor:'',
+  aba:'suas',filtro:'tudo',q:'',todas:false,poeDepois:null,novo:null,renota:null,arrastou:0};
+const LS_GIROS=[[-9,7],[8,-6],[-7,9],[6,-8],[-8,6],[9,-7]];
+const LS_MES3=['jan','fev','mar','abr','mai','jun','jul','ago','set','out','nov','dez'];
+const LS_MESES=['janeiro','fevereiro','março','abril','maio','junho','julho','agosto','setembro','outubro','novembro','dezembro'];
+const LS_AVIAO='<svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" role="img" aria-label="Viagem"><path d="M10.5 13.5 3 11l1.5-1.5 8 .5 4-4c.8-.8 2.2-.8 3 0s.8 2.2 0 3l-4 4 .5 8L14.5 22 12 14.5l-3 3V20l-1.5 1.5-1-3.5-3.5-1L4.5 15.5H7l3.5-2z"/></svg>';
+const LS_EST='<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round" aria-hidden="true"><path d="M12 2.8l2.8 5.9 6.4.8-4.7 4.4 1.2 6.4L12 17.2l-5.700 3.100 1.200-6.400-4.700-4.400 6.400-.800z"/></svg>';
+// Data da viagem (039): data_ini/data_fim em AAAA-MM-DD. Lista antiga só tem
+// o `quando` escrito à mão, que continua aparecendo.
+function lsData(iso){if(!iso)return null;const p=String(iso).slice(0,10).split('-').map(Number);return p.length===3&&p[0]?new Date(p[0],p[1]-1,p[2]):null}
+function lsIso(d){return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0')}
+function lsQuando(l){
+  const a=lsData(l.data_ini);if(!a)return l.quando||'';
+  const b=lsData(l.data_fim)||a,ano=' '+b.getFullYear();
+  if(+a===+b)return a.getDate()+' '+LS_MES3[a.getMonth()]+ano;
+  if(a.getMonth()===b.getMonth()&&a.getFullYear()===b.getFullYear())return a.getDate()+'–'+b.getDate()+' '+LS_MES3[b.getMonth()]+ano;
+  return a.getDate()+' '+LS_MES3[a.getMonth()]+(a.getFullYear()!==b.getFullYear()?' '+a.getFullYear():'')+' – '+b.getDate()+' '+LS_MES3[b.getMonth()]+ano;
+}
 async function lsAbrir(){
   goTo('listas');
   const c=document.getElementById('lsCorpo');
@@ -15602,68 +15723,265 @@ async function lsCarregar(){
   // nomes de quem está nas listas (amigos já vêm do Planejar)
   try{await plnCarregarAmigos()}catch(e){}
 }
-// Capa = mosaico de 4 fotos (as mais novas). Sem foto, a cor de fundo.
-function lsMosaico(fotos){
-  const f=(fotos||[]).filter(Boolean).slice(0,4);
-  return '<span class="ls-mos">'+[0,1,2,3].map(i=>'<span'+(f[i]?' style="background-image:'+cssUrl(fotoNaLargura(f[i],240))+'"':'')+'></span>').join('')+'</span>';
+// ── A aba (V4, 13/11): cada lista é uma pilha de até 3 fotos; viagem leva o
+// selo e a data. Viagens e Recentes deslizam pro lado. Em Listas só entra
+// viagem em planejamento: a que já teve Fui (feita_em) sai daqui.
+function lsFotoCss(u,w){return u?' style="background-image:'+esc(cssUrl(fotoNaLargura(u,w)))+'"':''}
+function lsPilha(l){
+  const f=(LS2.spots[l.id]||[]).map(x=>x.foto).filter(Boolean).slice(0,3);
+  let h=0;for(const ch of String(l.id))h=(h*31+ch.charCodeAt(0))>>>0;
+  const g=LS_GIROS[h%LS_GIROS.length];
+  // a da frente (reta) é a mais nova; as duas de trás saem tortas
+  return '<span class="lp-pilha" style="--g0:'+g[0]+'deg;--g1:'+g[1]+'deg">'
+    +[2,1,0].map(k=>'<span class="lp-f'+(k?' lp-t'+k:'')+'"'+lsFotoCss(f[k],300)+'></span>').join('')
+    +(l.tipo==='viagem'?'<span class="lp-selo">'+LS_AVIAO+'</span>':'')+'</span>';
 }
+function lsItem(l,sub){
+  const s=sub!==undefined?sub:(l.tipo==='viagem'?(l.feita_em?'Viagem feita':lsQuando(l)):'');
+  return '<button class="lp-item" onclick="lsVer(\''+esc(l.id)+'\')">'+lsPilha(l)
+    +'<span><span class="lp-nome">'+esc(l.nome)+'</span>'+(s?'<span class="lp-sub">'+esc(s)+'</span>':'')+'</span></button>';
+}
+function lsAba(a){LS2.aba=a;LS2.todas=false;lsPintar();const t=document.getElementById('listas');if(t)t.scrollTop=0}
+function lsFiltro(f){LS2.filtro=f;LS2.todas=false;lsPintar()}
+function lsLimpar(){LS2.q='';const i=document.getElementById('lsQ');if(i){i.value='';i.focus()}lsPintar()}
 function lsPintar(){
   const c=document.getElementById('lsCorpo');if(!c)return;
-  if(LS2.erro){c.innerHTML='<div class="at-vazio">Não carregou. Confere a conexão.<br><button class="btn-primario" style="margin-top:16px" onclick="lsAbrir()">Tentar de novo</button></div>';return}
-  const meus=allSpotsFlat();
-  const quero=meus.filter(s=>s.status==='want'),cinco=meus.filter(s=>Number(s.my_rating)>=5);
-  const auto=(rot,lista,acao)=>lista.length?'<button class="ls-card" onclick="'+acao+'">'+lsMosaico(lista.map(s=>s.photo_url))+'<b>'+rot+'</b><span>'+lista.length+(lista.length===1?' spot':' spots')+'</span></button>':'';
-  let h='';
-  const autos=auto('Quero ir',quero,"abrirSeusSpots('listas')")+auto('Nota 5',cinco,"abrirSeusSpots('listas')");
-  if(autos)h+='<h2 class="vc-tit ls-sec">Dos seus spots</h2><div class="ls-grade">'+autos+'</div>';
-  const minhas=LS2.listas.filter(l=>l.dono_id===S.user.id),deles=LS2.listas.filter(l=>l.dono_id!==S.user.id);
-  const card=l=>{
-    const sp=LS2.spots[l.id]||[],ms=(LS2.membros[l.id]||[]).filter(m=>m.user_id!==S.user.id);
-    return '<button class="ls-card" onclick="lsVer(\''+esc(l.id)+'\')">'+lsMosaico(sp.map(x=>x.foto))
-      +'<b>'+(l.tipo==='viagem'?'✈ ':'')+esc(l.nome)+'</b>'
-      +'<span class="ls-quem">'+ms.slice(0,3).map(m=>plnAvatar(m.user_id,'p')).join('')+'<em>'+sp.length+(sp.length===1?' spot':' spots')+'</em></span></button>';
-  };
+  const cab=document.getElementById('lsCab');
+  if(LS2.erro){if(cab)cab.style.display='none';c.innerHTML='<div class="at-vazio">Não carregou. Confere a conexão.<br><button class="btn-primario" style="margin-top:16px" onclick="lsAbrir()">Tentar de novo</button></div>';return}
   if(!LS2.listas.length){
     // O vazio aprovado (quadro "Listas · vazia"): a única frase explicativa
     // permitida na aba.
-    h+='<div class="ls-vazio"><div class="ls-leque">'+[0,1,2].map(i=>'<span class="ls-falsa ls-f'+i+'"></span>').join('')+'</div>'
+    if(cab)cab.style.display='none';
+    c.innerHTML='<div class="ls-vazio"><div class="ls-leque">'+[0,1,2].map(i=>'<span class="ls-falsa ls-f'+i+'"></span>').join('')+'</div>'
       +'<p>Junte spots numa lista e chame quem vai com você.</p>'
       +'<button class="btn-primario btn-largo" onclick="lsAbrirNova()">Criar minha primeira lista</button></div>';
+    return;
+  }
+  if(cab){
+    cab.style.display='';
+    cab.querySelectorAll('[data-aba]').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.aba===LS2.aba)));
+    cab.querySelectorAll('[data-f]').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.f===LS2.filtro)));
+    const x=document.getElementById('lsLimpar');if(x)x.style.display=LS2.q?'':'none';
+  }
+  const eu=S.user.id,viagem=l=>l.tipo==='viagem';
+  const base=LS2.listas.filter(l=>LS2.aba==='suas'?l.dono_id===eu:l.dono_id!==eu);
+  const ativas=base.filter(l=>!l.feita_em);
+  const porFiltro=ls=>LS2.filtro==='viagens'?ls.filter(viagem):LS2.filtro==='listas'?ls.filter(l=>!viagem(l)):ls;
+  const grade=ls=>'<div class="lp-grade">'+ls.map(l=>lsItem(l)).join('')+'</div>';
+  const prat=ls=>'<div class="lp-prat">'+ls.map(l=>lsItem(l)).join('')+'</div>';
+  const nada=t=>'<p class="lp-nada">'+t+'</p>';
+  const q=normName(LS2.q);
+  let h='';
+  if(q){
+    // procura no nome da lista e nos spots de dentro dela
+    const achou=porFiltro(base).map(l=>{
+      const sp=(LS2.spots[l.id]||[]).filter(x=>normName(x.nome).includes(q));
+      return (normName(l.nome).includes(q)||sp.length)?{l,sp}:null}).filter(Boolean);
+    h=achou.length?'<div class="lp-grade">'+achou.map(a=>lsItem(a.l,a.sp.length?'tem '+a.sp[0].nome:undefined)).join('')+'</div>'
+      :nada('Nenhuma lista nem spot com “'+esc(LS2.q)+'”.');
+  }else if(LS2.aba==='amigos'){
+    // uma prateleira por amigo
+    const ls=porFiltro(ativas),donos=[...new Set(ls.map(l=>l.dono_id))];
+    h=donos.map(d=>'<section class="lp-sec"><h2 class="lp-h2">'+plnAvatar(d,'p')+esc(plnPrimeiro(d)||'Amigo')+'</h2>'+prat(ls.filter(l=>l.dono_id===d))+'</section>').join('')
+      ||nada(LS2.filtro==='tudo'?'Quando um amigo chamar você pra uma lista, ela aparece aqui.':'Nenhuma lista de amigo assim.');
+  }else if(LS2.filtro!=='tudo'){
+    const ls=porFiltro(ativas);
+    h=ls.length?grade(ls):nada(LS2.filtro==='viagens'?'Nenhuma viagem em planejamento.':'Nenhuma lista ainda.');
+  }else if(LS2.todas){
+    h='<button class="lp-voltar" onclick="LS2.todas=false;lsPintar()">'+icon('back')+'Todas as listas</button>'+grade(base);
   }else{
-    if(minhas.length)h+='<h2 class="vc-tit ls-sec">Suas listas</h2><div class="ls-grade">'+minhas.map(card).join('')+'</div>';
-    if(deles.length)h+='<h2 class="vc-tit ls-sec">Dos amigos</h2><div class="ls-grade">'+deles.map(card).join('')+'</div>';
+    const vs=ativas.filter(viagem),ts=ativas.filter(l=>!viagem(l));
+    if(vs.length)h+='<section class="lp-sec"><h2 class="lp-h2">Viagens</h2>'+prat(vs)+'</section>';
+    if(ts.length)h+='<section class="lp-sec"><h2 class="lp-h2">Recentes</h2>'+prat(ts.slice(0,8))+'</section>';
+    if(!vs.length&&!ts.length)h+=nada(base.length?'Nenhuma lista em aberto.':'Você ainda não criou uma lista.');
+    // só aparece quando a tela não mostra tudo: muita lista, ou viagem já feita
+    if(ts.length>8||base.length>ativas.length)h+='<button class="lp-todas" onclick="LS2.todas=true;lsPintar();document.getElementById(\'listas\').scrollTop=0">Todas as listas<span>'+base.length+'</span></button>';
   }
   c.innerHTML=h;hydrateIcons(c);
 }
+// ── A lista aberta ──
 async function lsVer(id){
-  LS2.atual=id;goTo('lista');lsPintarDetalhe();
+  LS2.atual=id;LS2.novo=null;LS2.renota=null;goTo('lista');lsPintarDetalhe();
   const sp=LS2.spots[id]||[];
   await carregarCurtidasDeSpot(sp.map(x=>x.spot_id).filter(Boolean));
   if(LS2.atual===id)lsPintarDetalhe();
 }
+function lsNotaTxt(n){return String(n).replace('.',',')}
+// A linha de um spot. O spot é SEU: arrastar pra esquerda marca (ou desfaz) o
+// Fui, e as estrelas entram na própria linha. Pode tirar (você pôs, ou a
+// lista é sua): arrastar pra direita.
+function lsLinha(l,x,meus){
+  const eu=S.user.id,dono=l.dono_id===eu,outro=x.posto_por!==eu;
+  const meu=x.spot_id?meus.get(x.spot_id):null;
+  const foi=!!(meu&&meu.status==='been'),nota=foi?(Number(meu.my_rating)||0):0;
+  let meio='<span class="lp-tx"><b>'+esc(x.nome)+'</b>';
+  if(outro)meio+='<span class="lp-sub2">'+esc((plnPrimeiro(x.posto_por)||'Alguém')+' pôs')+'</span>';
+  else if(foi&&(!nota||LS2.renota===x.id)){
+    meio+='<span class="lp-estl">';
+    for(let i=1;i<=5;i++)meio+='<button onclick="event.stopPropagation();lsNota(\''+esc(x.id)+'\','+i+')" aria-label="'+i+(i===1?' estrela':' estrelas')+'"'+(i<=nota?' class="on"':'')+'>'+LS_EST+'</button>';
+    meio+='</span>';
+  }
+  meio+='</span>';
+  const cs=x.spot_id&&outro?(CURT_SPOT[x.spot_id]||{n:0,meu:false}):null;
+  const fim=cs?'<button class="coment-curtir'+(cs.meu?' on':'')+'" onclick="event.stopPropagation();curtirSpot(\''+esc(x.spot_id)+'\',lsPintarDetalhe)" aria-label="Curtir">'+icon('heart')+(cs.n?'<i>'+cs.n+'</i>':'')+'</button>'
+    :(nota&&LS2.renota!==x.id?'<button class="lp-nt" onclick="event.stopPropagation();lsRenota(\''+esc(x.id)+'\')" aria-label="Nota '+lsNotaTxt(nota)+', trocar">'+lsNotaTxt(nota)+'</button>':'');
+  const podeTirar=!outro||dono;
+  const linha='<span class="lp-foto"'+lsFotoCss(x.foto,220)+'></span>'+meio+fim;
+  if(!meu&&!podeTirar)return '<div class="lp-linha lp-solta">'+linha+'</div>';
+  return '<div class="lp-arr'+(LS2.novo===x.id?' novo':'')+'" data-ls="'+esc(x.id)+'" data-fui="'+(meu?1:0)+'" data-tira="'+(podeTirar?1:0)+'">'
+    +'<div class="lp-atras lp-esq">Tirar</div><div class="lp-atras lp-dir">'+(foi?'Desfazer':icon('check')+'Fui')+'</div>'
+    +'<div class="lp-linha lp-frente"'+(meu?' onclick="lsAbrirSpot(\''+esc(meu.id)+'\')"':'')+'>'+linha+'</div></div>';
+}
 function lsPintarDetalhe(){
   const box=document.getElementById('lsDetalhe');const l=LS2.listas.find(x=>x.id===LS2.atual);if(!box||!l)return;
-  const sp=LS2.spots[l.id]||[],ms=LS2.membros[l.id]||[],dono=l.dono_id===S.user.id;
-  let h='<div class="ls-cab"><h1 class="ls-tit">'+(l.tipo==='viagem'?'✈ ':'')+esc(l.nome)+'</h1>'
-    +(l.quando?'<span class="ls-quando">'+esc(l.quando)+'</span>':'')
-    +'<div class="ls-membros">'+ms.map(m=>plnAvatar(m.user_id,'g')).join('')
-    +(dono?'<button class="pil-mais" onclick="lsChamar()" aria-label="Chamar alguém">'+icon('plus')+'</button>':'')+'</div>'
-    +'<button class="btn-primario btn-largo" onclick="lsAbrirPor()">Adicionar spot</button></div>';
-  if(!sp.length)h+='<div class="at-vazio">Nenhum spot ainda. Toque em Adicionar spot.</div>';
-  else h+=sp.map(x=>{
-    const cs=x.spot_id?(CURT_SPOT[x.spot_id]||{n:0,meu:false}):null;
-    const quem=x.posto_por===S.user.id?'Você pôs':((plnPrimeiro(x.posto_por)||'Alguém')+' pôs');
-    const podeTirar=x.posto_por===S.user.id||dono;
-    return '<div class="cid-row ls-linha"><span class="place-thumb"'+(x.foto?' style="background:center/cover url('+escUrl(fotoNaLargura(x.foto,220))+')"':'')+'></span>'
-      +'<span class="cid-txt"><span class="cid-nome">'+esc(x.nome)+'</span><span class="cid-linha">'+esc([x.cidade,quem].filter(Boolean).join(' · '))+'</span></span>'
-      +(cs&&x.posto_por!==S.user.id?'<button class="coment-curtir'+(cs.meu?' on':'')+'" onclick="curtirSpot(\''+esc(x.spot_id)+'\',lsPintarDetalhe)" aria-label="Curtir">'+icon('heart')+(cs.n?'<i>'+cs.n+'</i>':'')+'</button>':'')
-      +(podeTirar?'<button class="ls-tirar" onclick="lsTirar(\''+esc(x.id)+'\')" aria-label="Tirar da lista">'+icon('close')+'</button>':'')
-      +'</div>';
-  }).join('');
-  h+=dono?'<button class="ls-apagar" onclick="lsApagar()">Apagar lista</button>':'<button class="ls-apagar" onclick="lsSair()">Sair da lista</button>';
+  const eu=S.user.id,sp=LS2.spots[l.id]||[],ms=LS2.membros[l.id]||[],dono=l.dono_id===eu,viagem=l.tipo==='viagem';
+  const meus=new Map(allSpotsFlat().map(s=>[s.id,s]));
+  const qd=lsQuando(l);
+  let chips='';
+  if(!dono)chips+='<span class="lp-chip">de '+esc(plnPrimeiro(l.dono_id)||'amigo')+'</span>';
+  if(viagem){
+    if(dono&&!l.feita_em)chips+='<button class="lp-chip" onclick="lsAbrirQuando()">'+(qd?esc(qd):icon('plus')+'Data')+'</button>';
+    else if(qd)chips+='<span class="lp-chip">'+esc(qd)+'</span>';
+  }
+  const outros=ms.filter(m=>m.user_id!==eu);
+  if(outros.length)chips+='<span class="lp-gente">'+outros.map(m=>plnAvatar(m.user_id,'p')).join('')+'</span>';
+  if(dono)chips+='<button class="lp-chip" onclick="lsChamar()">'+icon('plus')+'Amigo</button>';
+  let h='<div class="lp-lista"><h1 class="ls-tit lp-nomeh">'+esc(l.nome)+(viagem?'<span class="lp-selo">'+LS_AVIAO+'</span>':'')+'</h1>'
+    +(chips?'<div class="lp-chips">'+chips+'</div>':'')
+    +'<button class="lp-add" onclick="lsAbrirPor()">'+icon('plus')+'Adicionar spot</button>';
+  if(!sp.length)h+='<p class="lp-nada">Nenhum spot ainda.</p>';
+  else if(viagem){
+    // os blocos da viagem são as categorias do app; bloco vazio não aparece
+    h+=['food','hotel','experience'].map(cat=>{
+      const ss=sp.filter(x=>catSegura(x.categoria)===cat);
+      return ss.length?'<section class="lp-bloco"><h2 class="lp-h2">'+catLabel(cat)+'</h2>'+ss.map(x=>lsLinha(l,x,meus)).join('')+'</section>':'';
+    }).join('');
+  }else h+='<section class="lp-bloco">'+sp.map(x=>lsLinha(l,x,meus)).join('')+'</section>';
+  if(sp.some(x=>x.spot_id&&meus.has(x.spot_id)))h+='<p class="lp-dica">Arraste um spot pra esquerda quando você for. Pra direita, ele sai da lista.</p>';
+  h+='</div>'+(dono?'<button class="ls-apagar" onclick="lsApagar()">Apagar lista</button>':'<button class="ls-apagar" onclick="lsSair()">Sair da lista</button>');
   box.innerHTML=h;hydrateIcons(box);
 }
-// Criar (quadro "Criar"): Uma viagem / Uma lista → nome, quando, com quem.
+function lsAbrirSpot(id){
+  if(Date.now()-LS2.arrastou<350)return; // o toque que termina um arrasto não abre a ficha
+  telaAntesDaFicha='lista';openPlace(id,'amigo');
+}
+// O spot de verdade (allSpotsFlat devolve cópias: mexer nelas não muda nada).
+function lsMeuSpot(id){for(const t of (S.trips||[])){const s=(t._spots||[]).find(x=>x.id===id);if(s)return s}return null}
+// Fui (ou desfaz). Pinta antes de gravar, e volta atrás se o banco recusar.
+async function lsFui(id){
+  const l=LS2.listas.find(x=>x.id===LS2.atual);if(!l)return;
+  const x=(LS2.spots[l.id]||[]).find(y=>y.id===id);if(!x||!x.spot_id)return;
+  const s=lsMeuSpot(x.spot_id);if(!s)return;
+  const antes=s.status,vai=antes==='been'?'want':'been';
+  s.status=vai;LS2.novo=vai==='been'?id:null;LS2.renota=null;lsPintarDetalhe();
+  const{error}=await dbUpdate('spots',s.id,{status:vai});
+  if(error){s.status=antes;LS2.novo=null;lsPintarDetalhe();toast('Não salvou',error.message||'Confere a conexão e tenta de novo.','alert');return}
+  // primeiro Fui numa viagem em planejamento: ela vira viagem feita e sai da aba
+  if(vai==='been'&&l.tipo==='viagem'&&!l.feita_em){
+    l.feita_em=new Date().toISOString();
+    dbRpc('lista_feita',{l:l.id});
+    toast(l.nome+' virou viagem feita','Ela saiu da aba Listas.','check');
+  }
+  try{conferirViagensQueViraram();atualizarPlacar()}catch(e){}
+}
+async function lsNota(id,n){
+  const x=(LS2.spots[LS2.atual]||[]).find(y=>y.id===id);if(!x)return;
+  const s=lsMeuSpot(x.spot_id);if(!s)return;
+  const antes=s.my_rating;
+  s.my_rating=n;LS2.novo=null;LS2.renota=null;lsPintarDetalhe();
+  const{error}=await dbUpdate('spots',s.id,{my_rating:n});
+  if(error){s.my_rating=antes;lsPintarDetalhe();toast('Não salvou',error.message||'Confere a conexão e tenta de novo.','alert')}
+}
+function lsRenota(id){LS2.renota=id;LS2.novo=null;lsPintarDetalhe()}
+// Arrasto da linha: esquerda = Fui, direita = tirar da lista.
+let LS_AR=null;
+document.addEventListener('pointerdown',e=>{
+  const f=e.target.closest&&e.target.closest('.lp-frente');
+  if(!f||e.target.closest('button'))return;
+  LS_AR={f,cx:f.parentElement,x:e.clientX,y:e.clientY,dx:0,ok:false};
+});
+document.addEventListener('pointermove',e=>{
+  const a=LS_AR;if(!a)return;
+  const dx=e.clientX-a.x,dy=e.clientY-a.y;
+  if(!a.ok){
+    if(Math.abs(dx)<8)return;
+    if(Math.abs(dy)>Math.abs(dx)){LS_AR=null;return}
+    a.ok=true;a.f.style.transition='none';a.cx.classList.add('indo');
+    try{a.f.setPointerCapture(e.pointerId)}catch(_){}
+  }
+  const esq=a.cx.dataset.fui==='1'?-130:0,dir=a.cx.dataset.tira==='1'?130:0;
+  a.dx=Math.max(esq,Math.min(dir,dx));
+  a.f.style.transform='translateX('+a.dx+'px)';
+  a.cx.classList.toggle('pra-dir',a.dx>0);
+  a.cx.classList.toggle('vai',Math.abs(a.dx)>70);
+});
+function lsSoltar(cancelou){
+  const a=LS_AR;if(!a)return;LS_AR=null;
+  a.f.style.transition='';a.f.style.transform='';
+  if(a.ok)LS2.arrastou=Date.now();
+  if(a.ok&&!cancelou&&a.dx<-70){lsFui(a.cx.dataset.ls);return}
+  if(a.ok&&!cancelou&&a.dx>70){lsTirar(a.cx.dataset.ls);return}
+  setTimeout(()=>a.cx.classList.remove('indo','vai','pra-dir'),200);
+}
+document.addEventListener('pointerup',()=>lsSoltar(false));
+document.addEventListener('pointercancel',()=>lsSoltar(true));
+// ── Quando: ida e volta no calendário. O ano troca num toque; o mês, pelas
+// setas ou arrastando pro lado.
+const LSQ={ini:null,fim:null,ano:0,mes:0,toque:null,ligado:false};
+function lsAbrirQuando(){
+  const l=LS2.listas.find(x=>x.id===LS2.atual);if(!l)return;
+  const a=lsData(l.data_ini),b=lsData(l.data_fim),ref=a||new Date();
+  LSQ.ini=a?+a:null;LSQ.fim=b?+b:(a?+a:null);LSQ.ano=ref.getFullYear();LSQ.mes=ref.getMonth();
+  const box=document.getElementById('lsQuando');
+  if(box&&!LSQ.ligado){
+    LSQ.ligado=true;
+    box.addEventListener('touchstart',e=>{const p=e.changedTouches&&e.changedTouches[0];LSQ.toque=p?[p.clientX,p.clientY]:null},{passive:true});
+    box.addEventListener('touchend',e=>{const p=e.changedTouches&&e.changedTouches[0];if(!LSQ.toque||!p)return;
+      const dx=p.clientX-LSQ.toque[0],dy=p.clientY-LSQ.toque[1];LSQ.toque=null;
+      if(Math.abs(dx)>45&&Math.abs(dx)>Math.abs(dy)*1.5)lsMes(dx<0?1:-1)},{passive:true});
+  }
+  lsPintarQuando();showOv('ov-lsquando');
+}
+function lsMes(n){LSQ.mes+=n;if(LSQ.mes<0){LSQ.mes=11;LSQ.ano--}if(LSQ.mes>11){LSQ.mes=0;LSQ.ano++}lsPintarQuando()}
+function lsAno(a){LSQ.ano=a;lsPintarQuando()}
+function lsDia(ts){
+  if(!LSQ.ini||LSQ.fim){LSQ.ini=ts;LSQ.fim=null}else if(ts>=LSQ.ini)LSQ.fim=ts;else LSQ.ini=ts;
+  lsPintarQuando();
+}
+function lsPintarQuando(){
+  const box=document.getElementById('lsQuando');const l=LS2.listas.find(x=>x.id===LS2.atual);if(!box||!l)return;
+  const y=LSQ.ano,m=LSQ.mes,prim=new Date(y,m,1).getDay(),tot=new Date(y,m+1,0).getDate();
+  let g='';
+  for(let i=0;i<prim;i++)g+='<span></span>';
+  for(let d=1;d<=tot;d++){
+    const ts=+new Date(y,m,d),cl=(ts===LSQ.ini||ts===LSQ.fim)?'ponta':(LSQ.ini&&LSQ.fim&&ts>LSQ.ini&&ts<LSQ.fim?'meio':'');
+    g+='<button onclick="lsDia('+ts+')"'+(cl?' class="'+cl+'"':'')+'>'+d+'</button>';
+  }
+  const n=LSQ.ini&&LSQ.fim?Math.round((LSQ.fim-LSQ.ini)/864e5)+1:0;
+  const res=!LSQ.ini?'Toque no dia da ida':!LSQ.fim?'Agora o dia da volta'
+    :lsQuando({data_ini:lsIso(new Date(LSQ.ini)),data_fim:lsIso(new Date(LSQ.fim))})+' · '+n+(n===1?' dia':' dias');
+  const hoje=new Date().getFullYear(),anos=[hoje,hoje+1,hoje+2];
+  if(!anos.includes(y)){anos.push(y);anos.sort()}
+  const seta=d=>'<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="'+d+'"/></svg>';
+  box.innerHTML='<div class="sheet-title">Quando</div><div class="lp-cal">'
+    +'<div class="lp-pils">'+anos.map(a=>'<button onclick="lsAno('+a+')" aria-pressed="'+(a===y)+'">'+a+'</button>').join('')+'</div>'
+    +'<div class="lp-cal-top"><button onclick="lsMes(-1)" aria-label="Mês anterior">'+seta('M15 5l-7 7 7 7')+'</button><b>'+LS_MESES[m]+' '+y+'</b><button onclick="lsMes(1)" aria-label="Próximo mês">'+seta('M9 5l7 7-7 7')+'</button></div>'
+    +'<div class="lp-cal-sem">'+['D','S','T','Q','Q','S','S'].map(s=>'<span>'+s+'</span>').join('')+'</div><div class="lp-cal-g">'+g+'</div>'
+    +'<p class="lp-cal-res">'+esc(res)+'</p></div>'
+    +'<button class="sheet-cta" id="lsQuandoBt" onclick="lsSalvarQuando()"'+(LSQ.ini?'':' disabled')+'>Salvar</button>'
+    +(l.data_ini?'<button class="ls-apagar lp-semdata" onclick="lsSalvarQuando(true)">Tirar a data</button>':'');
+}
+async function lsSalvarQuando(tirar){
+  const l=LS2.listas.find(x=>x.id===LS2.atual);if(!l||(!tirar&&!LSQ.ini))return;
+  const novo=tirar?{data_ini:null,data_fim:null,quando:null}
+    :{data_ini:lsIso(new Date(LSQ.ini)),data_fim:lsIso(new Date(LSQ.fim||LSQ.ini)),quando:null};
+  const bt=document.getElementById('lsQuandoBt');if(bt)bt.disabled=true;
+  const{error}=await dbUpdate('listas',l.id,novo);
+  if(error){if(bt)bt.disabled=false;toast('Não salvou','Tenta de novo em alguns segundos.','alert');return}
+  Object.assign(l,novo);closeOv('ov-lsquando');lsPintarDetalhe();
+}
+// Criar (quadro "Criar"): Uma viagem / Uma lista → nome e com quem. A data da
+// viagem é posta depois, dentro dela, no calendário.
 async function lsAbrirNova(){
   LS2.nova={tipo:null,nome:'',quando:'',com:new Set()};
   lsPintarNova();showOv('ov-novalista');
@@ -15682,7 +16000,6 @@ function lsPintarNova(){
   box.innerHTML='<div class="sheet-title">'+(n.tipo==='viagem'?'Uma viagem':'Uma lista')+'</div>'
     +'<label class="nt-label">'+(n.tipo==='viagem'?'Para onde':'Nome')+'</label>'
     +'<input class="nt-input" id="lsNome" maxlength="80" placeholder="'+(n.tipo==='viagem'?'Portugal':'Pra ir com a Nati')+'" value="'+esc(n.nome)+'" oninput="LS2.nova.nome=this.value">'
-    +(n.tipo==='viagem'?'<label class="nt-label">Quando</label><input class="nt-input" id="lsQuando" maxlength="60" placeholder="Março" value="'+esc(n.quando)+'" oninput="LS2.nova.quando=this.value">':'')
     +(amigos.length?'<label class="nt-label">Com quem</label><div class="ls-com">'+amigos.map(p=>'<button class="ls-pessoa'+(n.com.has(p.id)?' on':'')+'" onclick="lsMarcar(\''+esc(p.id)+'\')">'+plnAvatar(p.id,'g')+'<span>'+esc(String(friendName(p)).split(' ')[0])+'</span></button>').join('')+'</div>':'')
     +'<button class="sheet-cta" id="lsCriarBt" onclick="lsCriar()">Criar</button>';
   hydrateIcons(box);
@@ -15719,29 +16036,55 @@ async function lsChamarUm(uid){
   if(error){toast('Não chamou','Tenta de novo em alguns segundos.','alert');return}
   closeOv('ov-novalista');await lsCarregar();lsPintarDetalhe();
 }
-// Pôr spot: os SEUS spots (a política só aceita spot próprio), com busca.
-function lsAbrirPor(){LS2.filtroPor='';lsPintarPor();showOv('ov-poralista')}
-function lsPintarPor(){
+// Adicionar spot: UM caminho só. Os seus spots entram num toque (a política
+// só aceita spot próprio); lugar que você nunca salvou segue pela busca de
+// sempre do app e cai na lista quando for salvo (lsEntrouNovo).
+function lsAbrirPor(){
+  const l=LS2.listas.find(x=>x.id===LS2.atual);if(!l)return;
+  LS2.filtroPor='';
   const box=document.getElementById('lsPor');if(!box)return;
+  box.innerHTML='<div class="sheet-title">Adicionar em '+esc(l.nome)+'</div>'
+    +'<label class="am-cid-busca lp-porbusca"><span class="am-cid-lupa" data-ic="search"></span><input id="lsBusca" type="text" autocomplete="off" placeholder="Buscar spot ou lugar novo" oninput="LS2.filtroPor=this.value;lsPintarPor()"></label>'
+    +'<div class="lista-rolante" id="lsPorLista"></div>';
+  hydrateIcons(box);lsPintarPor();showOv('ov-poralista');
+}
+function lsPintarPor(){
+  const box=document.getElementById('lsPorLista');if(!box)return;
   const ja=new Set((LS2.spots[LS2.atual]||[]).map(x=>x.spot_id));
-  const q=normName(LS2.filtroPor||'');
+  const txt=String(LS2.filtroPor||'').trim(),q=normName(txt);
   const meus=allSpotsFlat().filter(s=>!ja.has(s.id)&&(!q||normName(s.name).includes(q)||normName(cityOf(s)||'').includes(q))).slice(0,60);
-  box.innerHTML='<div class="sheet-title">Adicionar spot</div>'
-    +'<label class="am-cid-busca"><span class="am-cid-lupa" data-ic="search"></span><input id="lsBusca" type="text" placeholder="Buscar nos seus spots" value="'+esc(LS2.filtroPor||'')+'" oninput="LS2.filtroPor=this.value;lsPintarPor();setTimeout(()=>{const i=document.getElementById(\'lsBusca\');if(i){i.focus();i.setSelectionRange(i.value.length,i.value.length)}},0)"></label>'
-    +'<div class="lista-rolante">'+(meus.length?meus.map(s=>'<button class="cid-row ls-linha" onclick="lsPor(\''+esc(s.id)+'\')"><span class="place-thumb"'+(s.photo_url?' style="background:center/cover url('+escUrl(fotoNaLargura(s.photo_url,220))+')"':'')+'></span><span class="cid-txt"><span class="cid-nome">'+esc(s.name)+'</span><span class="cid-linha">'+esc(cityOf(s)||'')+'</span></span></button>').join('')
-      :'<div class="at-vazio">Nenhum spot seu com esse nome.</div>')+'</div>';
-  hydrateIcons(box);
+  const mais='<span class="lp-mais2">'+icon('plus')+'</span>';
+  let h=meus.length?'<p class="lp-rot">Dos seus spots</p>'+meus.map(s=>'<button class="ls-linha" onclick="lsPor(\''+esc(s.id)+'\')"><span class="place-thumb"'+(s.photo_url?' style="background:center/cover url('+escUrl(fotoNaLargura(s.photo_url,220))+')"':'')+'></span><span class="cid-txt"><span class="cid-nome">'+esc(s.name)+'</span><span class="cid-linha">'+esc(cityOf(s)||'')+'</span></span>'+mais+'</button>').join(''):'';
+  // o que a pessoa digitou sempre vira uma opção de lugar novo
+  h+=txt.length>=2?'<p class="lp-rot">Lugar novo</p><button class="ls-linha" onclick="lsBuscarNovo()"><span class="place-thumb lp-pino">'+icon('search')+'</span><span class="cid-txt"><span class="cid-nome">'+esc(txt)+'</span><span class="cid-linha">Buscar esse lugar</span></span>'+mais+'</button>'
+    :'<p class="lp-nada lp-nada-folha">Não achou? Digite o nome de qualquer lugar.</p>';
+  box.innerHTML=h;hydrateIcons(box);
+}
+function lsBuscarNovo(){
+  const txt=String(LS2.filtroPor||'').trim();if(!txt)return;
+  LS2.poeDepois=LS2.atual;
+  closeOv('ov-poralista');
+  S.addTrip=null;abrirBuscaDeSpot();
+  const i=document.getElementById('placeSearch');if(i)i.value=txt;
+  searchPlaces(txt);
+}
+// O spot novo acabou de ser salvo pelo caminho normal: entra na lista que pediu.
+function lsEsperaNovo(){return !!(LS2.poeDepois&&LS2.poeDepois===LS2.atual&&document.getElementById('lista').classList.contains('active'))}
+async function lsEntrouNovo(spot){
+  LS2.poeDepois=null;
+  if(spot&&spot.id)await lsPor(spot.id);
 }
 async function lsPor(spotId){
   const s=allSpotsFlat().find(x=>x.id===spotId);if(!s)return;
+  const l=LS2.listas.find(x=>x.id===LS2.atual);
   const{error}=await dbInsert('lista_spots',{lista_id:LS2.atual,spot_id:s.id,posto_por:S.user.id,nome:s.name,cidade:cityOf(s)||null,foto:s.photo_url||null,categoria:catSegura(s.category)});
   if(error){toast('Não pôs','Tenta de novo em alguns segundos.','alert');return}
   await lsCarregar();lsPintarDetalhe();lsPintarPor();
-  toast('Na lista',s.name,'check');
+  toast(s.name,l?'Entrou em '+l.nome:'','check');
 }
 async function lsTirar(id){
   const{error}=await dbDelete('lista_spots',id);
-  if(error){toast('Não tirou','Tenta de novo em alguns segundos.','alert');return}
+  if(error){lsPintarDetalhe();toast('Não tirou','Tenta de novo em alguns segundos.','alert');return}
   await lsCarregar();lsPintarDetalhe();
 }
 async function lsApagar(){

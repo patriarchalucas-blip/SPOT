@@ -91,7 +91,7 @@ const RLS = {
     por: (u, r) => (r.papel === 'dono' && r.user_id === u && donoDaLista(u, r.lista_id)) || ((r.papel || 'membro') === 'membro' && donoDaLista(u, r.lista_id) && amigos(u, r.user_id) && !haBloqueio(u, r.user_id)),
     tirar: (u, r) => r.papel === 'membro' && (r.user_id === u || donoDaLista(u, r.lista_id)) },
   lista_spots: { ver: (u, r) => souDaLista(u, r.lista_id), por: (u, r) => r.posto_por === u && souDaLista(u, r.lista_id) && (!r.spot_id || (DB.spots.find(x => x.id === r.spot_id) || {}).user_id === u),
-    tirar: (u, r) => r.posto_por === u || donoDaLista(u, r.lista_id) },
+    mudar: (u, r) => souDaLista(u, r.lista_id), tirar: (u, r) => r.posto_por === u || donoDaLista(u, r.lista_id) },
   spot_curtidas: { ver: (u, r) => spotVisivel(u, DB.spots.find(x => x.id === r.spot_id)), por: (u, r) => r.user_id === u && spotVisivel(u, DB.spots.find(x => x.id === r.spot_id)), tirar: (u, r) => r.user_id === u },
   comentario_curtidas: { ver: (u, r) => { const c = DB.spot_comments.find(x => x.id === r.comentario_id); return !!c && spotVisivel(u, DB.spots.find(x => x.id === c.spot_id)) },
     por: (u, r) => { const c = DB.spot_comments.find(x => x.id === r.comentario_id); return r.user_id === u && !!c && spotVisivel(u, DB.spots.find(x => x.id === c.spot_id)) }, tirar: (u, r) => r.user_id === u },
@@ -159,6 +159,8 @@ function projeta(l, select) {
 const semAcento = s => String(s || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
 const spotsPublicos = id => DB.spots.filter(s => s.user_id === id && s.status === 'been' && !viagemPrivada(s.trip_id)).length;
 const RPC = {
+  // 039: qualquer pessoa da lista marca a viagem como feita, uma vez só.
+  lista_feita: (u, { l }) => { const x = DB.listas.find(y => y.id === l); if (!x || !souDaLista(u, l) || x.tipo !== 'viagem' || x.feita_em) return false; x.feita_em = agora(); return true },
   search_profiles: (u, { termo }) => { const t = semAcento(String(termo || '').trim()); if (t.length < 3) return [];
     return DB.profiles.filter(p => p.id !== u && (semAcento(p.username).startsWith(t) || semAcento(p.display_name).includes(t)) && !haBloqueio(u, p.id))
       .map(p => ({ id: p.id, display_name: p.display_name, username: p.username, avatar_url: p.avatar_url, home_city: p.home_city, spots: spotsPublicos(p.id), exato: semAcento(p.username) === t }))
@@ -1300,6 +1302,37 @@ if (l10) {
     await ir(pb, `curtirSpot('${spA10.id}',lsPintarDetalhe)`, 1200);
     confere(!DB.spot_curtidas.some(c => c.spot_id === spA10.id && c.user_id === B.id), 'B descurte');
   }
+}
+// V4 das Listas (039): viagem com data, Fui pela lista, viagem feita sai da aba.
+await ir(pa, `(async()=>{document.querySelectorAll('.overlay.show').forEach(o=>closeOv(o.id));await lsAbrir();LS2.nova={tipo:'viagem',nome:'Portugal V4',quando:'',com:new Set()};await lsCriar()})()`, 2500);
+const v10 = DB.listas.find(l => l.dono_id === A.id && l.nome === 'Portugal V4');
+confere(!!v10 && v10.tipo === 'viagem', 'A cria a viagem "Portugal V4"', v10);
+if (v10 && spA10) {
+  await ir(pa, `(async()=>{lsAbrirQuando();lsAno(2027);LSQ.mes=2;lsDia(+new Date(2027,2,12));lsDia(+new Date(2027,2,18));await lsSalvarQuando()})()`, 1500);
+  confere(v10.data_ini === '2027-03-12' && v10.data_fim === '2027-03-18', 'o calendário grava ida e volta', v10);
+  confere(/12–18 mar 2027/.test(await texto(pa, '#lsDetalhe') || ''), 'a viagem mostra a data', await texto(pa, '#lsDetalhe'));
+  await ir(pa, `lsPor('${spA10.id}')`, 1500);
+  await ir(pa, `lsAbrir()`, 1200);
+  confere(/Portugal V4/.test(await texto(pa, '#lsCorpo') || ''), 'viagem em planejamento aparece em Listas', await texto(pa, '#lsCorpo'));
+  try { await pa.screenshot({ path: process.env.TEMP + '/jornada-listas-v4.png' }) } catch (e) {}
+  await ir(pa, `(async()=>{LS2.q='${String(spA10.name).slice(0, 4).replace(/'/g, '')}';lsPintar()})()`, 400);
+  confere(/Portugal V4/.test(await texto(pa, '#lsCorpo') || ''), 'a busca acha a lista pelo spot de dentro', await texto(pa, '#lsCorpo'));
+  await ir(pa, `(async()=>{LS2.q='';await lsVer('${v10.id}')})()`, 1200);
+  const linha10 = DB.lista_spots.find(x => x.lista_id === v10.id && x.spot_id === spA10.id);
+  const antes10 = spA10.status, nota10 = spA10.my_rating;
+  if (antes10 === 'been') { spA10.status = 'want'; await ir(pa, `(async()=>{lsMeuSpot('${spA10.id}').status='want';lsPintarDetalhe()})()`, 300) }
+  await ir(pa, `lsFui('${linha10.id}')`, 1500);
+  confere(spA10.status === 'been', 'arrastar (lsFui) marca o spot como Fui', spA10);
+  confere(!!v10.feita_em, 'primeiro Fui: a viagem vira feita', v10);
+  await ir(pa, `lsNota('${linha10.id}',4)`, 1200);
+  confere(Number(spA10.my_rating) === 4, 'a nota dada na linha grava', spA10.my_rating);
+  try { await pa.screenshot({ path: process.env.TEMP + '/jornada-lista-v4.png' }) } catch (e) {}
+  await ir(pa, `lsAbrir()`, 1200);
+  confere(!/Portugal V4/.test(await texto(pa, '#lsCorpo') || ''), 'viagem feita sai da aba Listas', await texto(pa, '#lsCorpo'));
+  await ir(pa, `(async()=>{await lsVer('${v10.id}');await lsTirar('${linha10.id}')})()`, 1500);
+  confere(!DB.lista_spots.some(x => x.id === linha10.id), 'tirar o spot da lista');
+  spA10.status = antes10; spA10.my_rating = nota10;
+  await ir(pa, `(async()=>{const s=lsMeuSpot('${spA10.id}');if(s){s.status='${antes10}';s.my_rating=${nota10 == null ? 'null' : Number(nota10)}}})()`, 200);
 }
 // Hotspots (redesenho): a lista da semana e o que os amigos salvaram.
 await ir(pb, `(async()=>{document.querySelectorAll('.overlay.show').forEach(o=>closeOv(o.id));await hsAbrir()})()`, 1500);
