@@ -2940,6 +2940,28 @@ button.lp-chip{cursor:pointer}
   .lp-arr.novo .lp-estl button:nth-child(2){animation-delay:.05s}.lp-arr.novo .lp-estl button:nth-child(3){animation-delay:.1s}
   .lp-arr.novo .lp-estl button:nth-child(4){animation-delay:.15s}.lp-arr.novo .lp-estl button:nth-child(5){animation-delay:.2s}
 }
+/* roteiro */
+.lp-vistas{margin-top:26px}
+.lp-diah{justify-content:space-between;align-items:baseline}
+.lp-diah small{font-size:14px;font-weight:500;font-stretch:100%;color:var(--ink2)}
+.lp-tirardia{border:0;background:none;padding:0;font:inherit;font-size:14px;font-weight:500;font-stretch:100%;color:var(--ink3);cursor:pointer}
+.lp-turno{display:flex;align-items:center;gap:14px;width:100%;padding:7px 0;border:0;background:none;color:var(--ink);font:inherit;text-align:left;cursor:pointer}
+.lp-turno i{font-style:normal;width:58px;flex:none;font-size:13px;color:var(--ink2)}
+.lp-turno .lp-foto{width:52px;height:52px;border-radius:12px}
+.lp-turno b{flex:1;min-width:0;font-size:16px;font-weight:600}
+.lp-turno.falta b{font-size:15px;font-weight:500;color:var(--ink3)}
+.lp-perto{margin-left:72px;font-size:12px;color:var(--ink3);padding:1px 0}
+.lp-sec2{display:block;margin-top:22px;width:100%;height:50px;border:0;border-radius:25px;background:var(--surface);color:var(--ink);font:inherit;font-size:15px;font-weight:600;cursor:pointer}
+.lp-sec2f{margin:18px 20px 24px;width:calc(100% - 40px)}
+.lp-dias{display:flex;align-items:center;justify-content:space-between;padding:0 20px;margin-top:6px}
+.lp-dias span{font-stretch:68%;font-size:64px;font-weight:700;line-height:1;text-align:center}
+.lp-dias small{display:block;font-size:14px;font-weight:500;font-stretch:100%;color:var(--ink2);margin-top:4px}
+.lp-dias button{width:52px;height:52px;border:0;border-radius:26px;background:var(--surface);color:var(--ink);display:grid;place-items:center;cursor:pointer}
+.lp-dias button svg{width:20px;height:20px}
+.lp-mvg{margin:18px 0 8px;font-size:13px;color:var(--ink2)}
+.lp-mvg+.lp-pils{margin-top:0}
+.lp-vagal{padding:6px 20px}
+#lsRotBt[disabled]{opacity:.4}
 /* folha de adicionar e calendário */
 .lp-porbusca{margin:0 20px}
 .lp-rot{margin:18px 20px 4px;font-size:13px;color:var(--ink2)}
@@ -3439,6 +3461,7 @@ button.lp-chip{cursor:pointer}
 </div>
 <div class="overlay" id="ov-novalista" onclick="closeOut(event,'ov-novalista')"><div class="sheet"><button class="sheet-close" onclick="closeOv('ov-novalista')" data-ic="close" aria-label="Fechar"></button><div class="sheet-handle"></div><div id="lsNova"></div></div></div>
 <div class="overlay" id="ov-lsquando" onclick="closeOut(event,'ov-lsquando')"><div class="sheet"><button class="sheet-close" onclick="closeOv('ov-lsquando')" data-ic="close" aria-label="Fechar"></button><div class="sheet-handle"></div><div id="lsQuando"></div></div></div>
+<div class="overlay" id="ov-lsrot" onclick="closeOut(event,'ov-lsrot')"><div class="sheet"><button class="sheet-close" onclick="closeOv('ov-lsrot')" data-ic="close" aria-label="Fechar"></button><div class="sheet-handle"></div><div id="lsRot"></div></div></div>
 <div class="overlay" id="ov-poralista" onclick="closeOut(event,'ov-poralista')"><div class="sheet sheet-fixa"><button class="sheet-close" onclick="closeOv('ov-poralista')" data-ic="close" aria-label="Fechar"></button><div class="sheet-handle"></div><div id="lsPor"></div></div></div>
 
 <div class="screen" id="place">
@@ -15681,9 +15704,10 @@ function hsAbrirDoAmigo(i){const s=(HSV.amigos||[])[i];if(s)abrirFichaDoSpotDeAm
 // compartilhada: quem está nela vê e põe spots; só o dono chama gente (amigo
 // aceito) e renomeia. Cada spot da lista guarda quem pôs ("Nati pôs").
 // V4 (13/11, migração 039): pilhas com busca e filtro, viagem com data no
-// calendário, um Adicionar só, Fui arrastando a linha. Roteiro: ainda não.
+// calendário, um Adicionar só, Fui arrastando a linha, roteiro à mão por dia
+// e turno. Roteiro com IA: ainda não.
 const LS2={listas:[],membros:{},spots:{},atual:null,carregou:false,nova:null,filtroPor:'',
-  aba:'suas',filtro:'tudo',q:'',todas:false,poeDepois:null,novo:null,renota:null,arrastou:0};
+  aba:'suas',filtro:'tudo',q:'',todas:false,poeDepois:null,novo:null,renota:null,arrastou:0,vista:'roteiro',vaga:null};
 const LS_GIROS=[[-9,7],[8,-6],[-7,9],[6,-8],[-8,6],[9,-7]];
 const LS_MES3=['jan','fev','mar','abr','mai','jun','jul','ago','set','out','nov','dez'];
 const LS_MESES=['janeiro','fevereiro','março','abril','maio','junho','julho','agosto','setembro','outubro','novembro','dezembro'];
@@ -15801,7 +15825,7 @@ function lsPintar(){
 }
 // ── A lista aberta ──
 async function lsVer(id){
-  LS2.atual=id;LS2.novo=null;LS2.renota=null;goTo('lista');lsPintarDetalhe();
+  LS2.atual=id;LS2.novo=null;LS2.renota=null;LS2.vista='roteiro';goTo('lista');lsPintarDetalhe();
   const sp=LS2.spots[id]||[];
   await carregarCurtidasDeSpot(sp.map(x=>x.spot_id).filter(Boolean));
   if(LS2.atual===id)lsPintarDetalhe();
@@ -15845,11 +15869,15 @@ function lsPintarDetalhe(){
   }
   const outros=ms.filter(m=>m.user_id!==eu);
   if(outros.length)chips+='<span class="lp-gente">'+outros.map(m=>plnAvatar(m.user_id,'p')).join('')+'</span>';
+  if(viagem&&dono&&!l.feita_em&&!l.roteiro_dias)chips+='<button class="lp-chip" onclick="lsAbrirRoteiro()">Roteiro</button>';
   if(dono)chips+='<button class="lp-chip" onclick="lsChamar()">'+icon('plus')+'Amigo</button>';
   let h='<div class="lp-lista"><h1 class="ls-tit lp-nomeh">'+esc(l.nome)+(viagem?'<span class="lp-selo">'+LS_AVIAO+'</span>':'')+'</h1>'
     +(chips?'<div class="lp-chips">'+chips+'</div>':'')
     +'<button class="lp-add" onclick="lsAbrirPor()">'+icon('plus')+'Adicionar spot</button>';
-  if(!sp.length)h+='<p class="lp-nada">Nenhum spot ainda.</p>';
+  const rot=!!(viagem&&l.roteiro_dias),noRot=rot&&LS2.vista!=='lista';
+  if(rot)h+='<div class="lp-abas lp-vistas"><button aria-pressed="'+!noRot+'" onclick="lsVista(\'lista\')">Lista</button><button aria-pressed="'+noRot+'" onclick="lsVista(\'roteiro\')">Roteiro</button></div>';
+  if(noRot)h+=lsRoteiroHTML(l,sp,dono);
+  else if(!sp.length)h+='<p class="lp-nada">Nenhum spot ainda.</p>';
   else if(viagem){
     // os blocos da viagem são as categorias do app; bloco vazio não aparece
     h+=['food','hotel','experience'].map(cat=>{
@@ -15857,7 +15885,7 @@ function lsPintarDetalhe(){
       return ss.length?'<section class="lp-bloco"><h2 class="lp-h2">'+catLabel(cat)+'</h2>'+ss.map(x=>lsLinha(l,x,meus)).join('')+'</section>':'';
     }).join('');
   }else h+='<section class="lp-bloco">'+sp.map(x=>lsLinha(l,x,meus)).join('')+'</section>';
-  if(sp.some(x=>x.spot_id&&meus.has(x.spot_id)))h+='<p class="lp-dica">Arraste um spot pra esquerda quando você for. Pra direita, ele sai da lista.</p>';
+  if(!noRot&&sp.some(x=>x.spot_id&&meus.has(x.spot_id)))h+='<p class="lp-dica">Arraste um spot pra esquerda quando você for. Pra direita, ele sai da lista.</p>';
   h+='</div>'+(dono?'<button class="ls-apagar" onclick="lsApagar()">Apagar lista</button>':'<button class="ls-apagar" onclick="lsSair()">Sair da lista</button>');
   box.innerHTML=h;hydrateIcons(box);
 }
@@ -15925,6 +15953,163 @@ function lsSoltar(cancelou){
 }
 document.addEventListener('pointerup',()=>lsSoltar(false));
 document.addEventListener('pointercancel',()=>lsSoltar(true));
+// ── Roteiro à mão (V4, 039): cada dia tem quatro turnos. O número de dias
+// mora na lista (roteiro_dias, só o dono muda); o dia e o turno de cada spot
+// moram em lista_spots (qualquer pessoa da lista mexe). Spot sem dia fica em
+// "Se der tempo". O roteiro com IA entra depois, nesta mesma tela.
+const LS_TURNOS=['Manhã','Almoço','Tarde','Jantar'];
+const LS_DSEM=['dom','seg','ter','qua','qui','sex','sáb'];
+const LSR={modo:'',dias:3,id:null,d:1,k:0};
+function lsCoord(x){const s=x.spot_id?lsMeuSpot(x.spot_id):null;return s&&s.lat!=null&&s.lng!=null?[Number(s.lat),Number(s.lng)]:null}
+function lsKm(a,b){
+  const R=6371,r=Math.PI/180,dy=(b[0]-a[0])*r,dx=(b[1]-a[1])*r;
+  const h=Math.sin(dy/2)**2+Math.cos(a[0]*r)*Math.cos(b[0]*r)*Math.sin(dx/2)**2;
+  return 2*R*Math.asin(Math.sqrt(h));
+}
+function lsAndar(km){return km<1?(Math.max(1,Math.round(km*20))*50)+' m a pé':km.toFixed(1).replace('.',',')+' km'}
+function lsDiaData(l,d){
+  const a=lsData(l.data_ini);if(!a)return'';
+  a.setDate(a.getDate()+d-1);
+  return ' · '+LS_DSEM[a.getDay()]+' '+a.getDate()+'/'+String(a.getMonth()+1).padStart(2,'0');
+}
+function lsNoRoteiro(l,x){return !!(x.dia&&x.dia<=l.roteiro_dias)}
+function lsVista(v){LS2.vista=v;lsPintarDetalhe()}
+function lsRoteiroHTML(l,sp,dono){
+  const n=l.roteiro_dias,mais='<span class="lp-mais2">'+icon('plus')+'</span>';
+  let h='<p class="lp-dica">Toque num spot pra mudar de dia ou de turno.</p>';
+  for(let d=1;d<=n;d++){
+    let antes=null;
+    h+='<section class="lp-bloco"><h2 class="lp-h2 lp-diah"><span>Dia '+d+'<small>'+esc(lsDiaData(l,d))+'</small></span>'
+      +(dono&&n>1?'<button class="lp-tirardia" onclick="lsTirarDia('+d+')">Tirar dia</button>':'')+'</h2>';
+    for(let k=0;k<4;k++){
+      const x=sp.find(y=>y.dia===d&&y.turno===k);
+      if(!x){h+='<button class="lp-turno falta" onclick="lsVaga('+d+','+k+')"><i>'+LS_TURNOS[k]+'</i><b>'+(k%2?'Falta um '+LS_TURNOS[k].toLowerCase():'Livre')+'</b>'+mais+'</button>';continue}
+      const c=lsCoord(x);
+      if(antes&&c)h+='<div class="lp-perto">'+lsAndar(lsKm(antes,c))+'</div>';
+      if(c)antes=c;
+      h+='<button class="lp-turno" onclick="lsMover(\''+esc(x.id)+'\')"><i>'+LS_TURNOS[k]+'</i><span class="lp-foto"'+lsFotoCss(x.foto,220)+'></span><b>'+esc(x.nome)+'</b></button>';
+    }
+    h+='</section>';
+  }
+  if(dono&&n<30)h+='<button class="lp-sec2" onclick="lsDiaMais()">Adicionar dia</button>';
+  const so=sp.filter(x=>!lsNoRoteiro(l,x));
+  if(so.length)h+='<section class="lp-bloco"><h2 class="lp-h2">Se der tempo</h2>'+so.map(x=>'<button class="lp-turno lp-solto" onclick="lsMover(\''+esc(x.id)+'\')"><span class="lp-foto"'+lsFotoCss(x.foto,220)+'></span><b>'+esc(x.nome)+'</b></button>').join('')+'</section>';
+  if(dono)h+='<button class="ls-apagar" onclick="lsApagarRoteiro()">Apagar roteiro</button>';
+  return h;
+}
+async function lsGravaPos(x,dia,turno){
+  const{error}=await dbUpdate('lista_spots',x.id,{dia,turno});
+  if(!error){x.dia=dia;x.turno=turno}
+  return !error;
+}
+function lsNaoSalvou(){toast('Não salvou','Tenta de novo em alguns segundos.','alert')}
+// a folha do roteiro: quantos dias, mover um spot, preencher um turno vago
+function lsAbrirRoteiro(){
+  const l=LS2.listas.find(x=>x.id===LS2.atual);if(!l)return;
+  const a=lsData(l.data_ini),b=lsData(l.data_fim);
+  LSR.modo='dias';LSR.dias=a?Math.min(30,Math.round(((b||a)-a)/864e5)+1):3;
+  lsPintarRot();showOv('ov-lsrot');
+}
+function lsMover(id){
+  const l=LS2.listas.find(x=>x.id===LS2.atual);const x=l&&(LS2.spots[l.id]||[]).find(y=>y.id===id);if(!x)return;
+  const dentro=lsNoRoteiro(l,x);
+  LSR.modo='mover';LSR.id=id;LSR.d=dentro?x.dia:1;LSR.k=dentro?x.turno:0;
+  lsPintarRot();showOv('ov-lsrot');
+}
+function lsVaga(d,k){LSR.modo='vago';LSR.d=d;LSR.k=k;lsPintarRot();showOv('ov-lsrot')}
+function lsRotDias(n){LSR.dias=Math.max(1,Math.min(30,LSR.dias+n));lsPintarRot()}
+function lsRotDia(d){LSR.d=d;lsPintarRot()}
+function lsRotTurno(k){LSR.k=k;lsPintarRot()}
+function lsPintarRot(){
+  const box=document.getElementById('lsRot');const l=LS2.listas.find(x=>x.id===LS2.atual);if(!box||!l)return;
+  const sp=LS2.spots[l.id]||[];
+  let h='';
+  if(LSR.modo==='dias'){
+    const menos='<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M5 12h14"/></svg>';
+    h='<div class="sheet-title">Roteiro de '+esc(l.nome)+'</div>'
+      +'<div class="lp-dias"><button onclick="lsRotDias(-1)" aria-label="Um dia a menos">'+menos+'</button><span>'+LSR.dias+'<small>'+(LSR.dias===1?'dia':'dias')+'</small></span><button onclick="lsRotDias(1)" aria-label="Um dia a mais">'+icon('plus')+'</button></div>'
+      +'<button class="sheet-cta" id="lsRotBt" onclick="lsCriarRoteiro()">Montar roteiro</button>';
+  }else if(LSR.modo==='mover'){
+    const x=sp.find(y=>y.id===LSR.id);if(!x)return;
+    const dentro=lsNoRoteiro(l,x),la=sp.find(y=>y.dia===LSR.d&&y.turno===LSR.k&&y.id!==x.id);
+    let pd='',pt='';
+    for(let d=1;d<=l.roteiro_dias;d++)pd+='<button onclick="lsRotDia('+d+')" aria-pressed="'+(LSR.d===d)+'">Dia '+d+'</button>';
+    LS_TURNOS.forEach((t,k)=>{pt+='<button onclick="lsRotTurno('+k+')" aria-pressed="'+(LSR.k===k)+'">'+t+'</button>'});
+    h='<div class="sheet-title">'+esc(x.nome)+'</div><div class="lp-cal">'
+      +'<p class="lp-mvg">Dia</p><div class="lp-pils">'+pd+'</div><p class="lp-mvg">Turno</p><div class="lp-pils">'+pt+'</div>'
+      +(la?'<p class="lp-dica">'+esc(la.nome)+' está nesse turno e '+(dentro?'troca de lugar':'vai pra Se der tempo')+'.</p>':'')+'</div>'
+      +'<button class="sheet-cta" id="lsRotBt" onclick="lsPorAqui()">Pôr aqui</button>'
+      +(dentro?'<button class="ls-apagar lp-semdata" onclick="lsForaDoRoteiro()">Tirar do roteiro</button>':'');
+  }else if(LSR.modo==='vago'){
+    // primeiro o que combina com o turno: comida no almoço e no jantar
+    const quer=LSR.k%2?'food':'experience',peso=x=>catSegura(x.categoria)===quer?0:1;
+    const so=sp.filter(x=>!lsNoRoteiro(l,x)).sort((a,b)=>peso(a)-peso(b));
+    const mais='<span class="lp-mais2">'+icon('plus')+'</span>';
+    h='<div class="sheet-title">Dia '+LSR.d+' · '+LS_TURNOS[LSR.k]+'</div>'
+      +(so.length?'<p class="lp-rot">Da viagem, fora do roteiro</p>'+so.map(x=>'<button class="ls-linha lp-vagal" onclick="lsEscolherVaga(\''+esc(x.id)+'\')"><span class="place-thumb"'+(x.foto?' style="background:center/cover url('+escUrl(fotoNaLargura(x.foto,220))+')"':'')+'></span><span class="cid-txt"><span class="cid-nome">'+esc(x.nome)+'</span><span class="cid-linha">'+esc(x.cidade||'')+'</span></span>'+mais+'</button>').join(''):'')
+      +'<button class="lp-sec2 lp-sec2f" onclick="lsVagaNovo()">Adicionar outro spot</button>';
+  }
+  box.innerHTML=h;hydrateIcons(box);
+}
+async function lsCriarRoteiro(){
+  const l=LS2.listas.find(x=>x.id===LS2.atual);if(!l)return;
+  const bt=document.getElementById('lsRotBt');if(bt)bt.disabled=true;
+  const{error}=await dbUpdate('listas',l.id,{roteiro_dias:LSR.dias});
+  if(error){if(bt)bt.disabled=false;lsNaoSalvou();return}
+  l.roteiro_dias=LSR.dias;LS2.vista='roteiro';
+  closeOv('ov-lsrot');lsPintarDetalhe();
+  const t=document.getElementById('lista');if(t)t.scrollTop=0;
+}
+async function lsDiaMais(){
+  const l=LS2.listas.find(x=>x.id===LS2.atual);if(!l||l.roteiro_dias>=30)return;
+  const{error}=await dbUpdate('listas',l.id,{roteiro_dias:l.roteiro_dias+1});
+  if(error){lsNaoSalvou();return}
+  l.roteiro_dias++;lsPintarDetalhe();
+}
+// Tirar um dia: os spots dele vão pra "Se der tempo" e os dias de depois sobem.
+async function lsTirarDia(d){
+  const l=LS2.listas.find(x=>x.id===LS2.atual);if(!l||l.roteiro_dias<2)return;
+  const sp=LS2.spots[l.id]||[];
+  const ok=await Promise.all(sp.filter(x=>x.dia&&x.dia>=d).map(x=>x.dia===d?lsGravaPos(x,null,null):lsGravaPos(x,x.dia-1,x.turno)));
+  if(ok.includes(false)){await lsCarregar();lsPintarDetalhe();lsNaoSalvou();return}
+  const{error}=await dbUpdate('listas',l.id,{roteiro_dias:l.roteiro_dias-1});
+  if(error){await lsCarregar();lsPintarDetalhe();lsNaoSalvou();return}
+  l.roteiro_dias--;lsPintarDetalhe();
+  toast('Dia tirado','Os spots dele foram pra Se der tempo.','check');
+}
+async function lsPorAqui(){
+  const l=LS2.listas.find(x=>x.id===LS2.atual);if(!l)return;
+  const sp=LS2.spots[l.id]||[],x=sp.find(y=>y.id===LSR.id);if(!x)return;
+  const bt=document.getElementById('lsRotBt');if(bt)bt.disabled=true;
+  const la=sp.find(y=>y.dia===LSR.d&&y.turno===LSR.k&&y.id!==x.id),dentro=lsNoRoteiro(l,x);
+  // quem estava lá troca de lugar com o que chega (ou vai pra Se der tempo)
+  let ok=true;
+  if(la)ok=await lsGravaPos(la,dentro?x.dia:null,dentro?x.turno:null);
+  if(ok)ok=await lsGravaPos(x,LSR.d,LSR.k);
+  if(!ok){await lsCarregar();lsNaoSalvou()}
+  closeOv('ov-lsrot');lsPintarDetalhe();
+}
+async function lsForaDoRoteiro(){
+  const x=(LS2.spots[LS2.atual]||[]).find(y=>y.id===LSR.id);if(!x)return;
+  if(!await lsGravaPos(x,null,null)){lsNaoSalvou();return}
+  closeOv('ov-lsrot');lsPintarDetalhe();
+}
+async function lsEscolherVaga(id){
+  const x=(LS2.spots[LS2.atual]||[]).find(y=>y.id===id);if(!x)return;
+  if(!await lsGravaPos(x,LSR.d,LSR.k)){lsNaoSalvou();return}
+  closeOv('ov-lsrot');lsPintarDetalhe();
+}
+// turno vago preenchido com um spot que ainda não está na viagem
+function lsVagaNovo(){closeOv('ov-lsrot');lsAbrirPor({d:LSR.d,k:LSR.k})}
+async function lsApagarRoteiro(){
+  const l=LS2.listas.find(x=>x.id===LS2.atual);if(!l)return;
+  if(!await perguntar('Apagar o roteiro?','Os spots continuam na viagem.',[{rotulo:'Apagar',valor:'sim',tom:'perigo'}]))return;
+  const{error}=await dbUpdate('listas',l.id,{roteiro_dias:null});
+  if(error){lsNaoSalvou();return}
+  l.roteiro_dias=null;
+  await Promise.all((LS2.spots[l.id]||[]).filter(x=>x.dia).map(x=>lsGravaPos(x,null,null)));
+  lsPintarDetalhe();
+}
 // ── Quando: ida e volta no calendário. O ano troca num toque; o mês, pelas
 // setas ou arrastando pro lado.
 const LSQ={ini:null,fim:null,ano:0,mes:0,toque:null,ligado:false};
@@ -16039,9 +16224,9 @@ async function lsChamarUm(uid){
 // Adicionar spot: UM caminho só. Os seus spots entram num toque (a política
 // só aceita spot próprio); lugar que você nunca salvou segue pela busca de
 // sempre do app e cai na lista quando for salvo (lsEntrouNovo).
-function lsAbrirPor(){
+function lsAbrirPor(vaga){
   const l=LS2.listas.find(x=>x.id===LS2.atual);if(!l)return;
-  LS2.filtroPor='';
+  LS2.filtroPor='';LS2.vaga=vaga||null;
   const box=document.getElementById('lsPor');if(!box)return;
   box.innerHTML='<div class="sheet-title">Adicionar em '+esc(l.nome)+'</div>'
     +'<label class="am-cid-busca lp-porbusca"><span class="am-cid-lupa" data-ic="search"></span><input id="lsBusca" type="text" autocomplete="off" placeholder="Buscar spot ou lugar novo" oninput="LS2.filtroPor=this.value;lsPintarPor()"></label>'
@@ -16077,8 +16262,11 @@ async function lsEntrouNovo(spot){
 async function lsPor(spotId){
   const s=allSpotsFlat().find(x=>x.id===spotId);if(!s)return;
   const l=LS2.listas.find(x=>x.id===LS2.atual);
-  const{error}=await dbInsert('lista_spots',{lista_id:LS2.atual,spot_id:s.id,posto_por:S.user.id,nome:s.name,cidade:cityOf(s)||null,foto:s.photo_url||null,categoria:catSegura(s.category)});
+  // pedido de dentro de um turno vago do roteiro: já entra no dia e no turno
+  const vaga=LS2.vaga&&l&&!(LS2.spots[l.id]||[]).some(x=>x.dia===LS2.vaga.d&&x.turno===LS2.vaga.k)?LS2.vaga:null;
+  const{error}=await dbInsert('lista_spots',Object.assign({lista_id:LS2.atual,spot_id:s.id,posto_por:S.user.id,nome:s.name,cidade:cityOf(s)||null,foto:s.photo_url||null,categoria:catSegura(s.category)},vaga?{dia:vaga.d,turno:vaga.k}:{}));
   if(error){toast('Não pôs','Tenta de novo em alguns segundos.','alert');return}
+  if(vaga){LS2.vaga=null;closeOv('ov-poralista')}
   await lsCarregar();lsPintarDetalhe();lsPintarPor();
   toast(s.name,l?'Entrou em '+l.nome:'','check');
 }

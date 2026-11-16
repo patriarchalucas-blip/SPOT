@@ -1319,6 +1319,22 @@ if (v10 && spA10) {
   confere(/Portugal V4/.test(await texto(pa, '#lsCorpo') || ''), 'a busca acha a lista pelo spot de dentro', await texto(pa, '#lsCorpo'));
   await ir(pa, `(async()=>{LS2.q='';await lsVer('${v10.id}')})()`, 1200);
   const linha10 = DB.lista_spots.find(x => x.lista_id === v10.id && x.spot_id === spA10.id);
+  // roteiro à mão: dias, pôr num turno, tirar um dia
+  await ir(pa, `(async()=>{lsAbrirRoteiro();window._diasSug=LSR.dias;LSR.dias=3;await lsCriarRoteiro()})()`, 1200);
+  confere(v10.roteiro_dias === 3, 'A monta um roteiro de 3 dias', v10);
+  confere(await pa.evaluate(() => window._diasSug) === 7, 'os dias sugeridos vêm das datas (12 a 18 = 7)', await pa.evaluate(() => window._diasSug));
+  await ir(pa, `(async()=>{lsMover('${linha10.id}');lsRotDia(2);lsRotTurno(1);await lsPorAqui()})()`, 1200);
+  confere(linha10.dia === 2 && linha10.turno === 1, 'o spot vai pro almoço do dia 2', linha10);
+  const rot10 = await texto(pa, '#lsDetalhe') || '';
+  confere(/Dia 2/.test(rot10) && /sáb 13\/03/.test(rot10) && /Falta um jantar/.test(rot10) && /Adicionar dia/.test(rot10), 'o roteiro mostra dias, data e turnos vagos', rot10);
+  try { await pa.screenshot({ path: process.env.TEMP + '/jornada-roteiro-v4.png' }) } catch (e) {}
+  await ir(pb, `(async()=>{document.querySelectorAll('.overlay.show').forEach(o=>closeOv(o.id));await lsAbrir()})()`, 1200);
+  await ir(pa, `lsTirarDia(1)`, 1500);
+  confere(v10.roteiro_dias === 2 && linha10.dia === 1 && linha10.turno === 1, 'tirar o dia 1: o dia 2 vira dia 1', { v10, linha10 });
+  await ir(pa, `lsTirarDia(1)`, 1500);
+  confere(v10.roteiro_dias === 1 && linha10.dia == null, 'tirar o dia do spot: ele vai pra Se der tempo', { v10, linha10 });
+  confere(/Se der tempo/.test(await texto(pa, '#lsDetalhe') || ''), 'Se der tempo aparece', await texto(pa, '#lsDetalhe'));
+  await ir(pa, `lsVista('lista')`, 300);
   const antes10 = spA10.status, nota10 = spA10.my_rating;
   if (antes10 === 'been') { spA10.status = 'want'; await ir(pa, `(async()=>{lsMeuSpot('${spA10.id}').status='want';lsPintarDetalhe()})()`, 300) }
   await ir(pa, `lsFui('${linha10.id}')`, 1500);
