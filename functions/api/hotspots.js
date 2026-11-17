@@ -590,24 +590,37 @@ async function previa(env) {
         nome: x.g.nome || x.nome, endereco: x.g.endereco || '', bairro: x.bairro || '', tipo: x.g.tipo || '',
         foto: x.g.foto ? '/api/place-photo?ref=' + encodeURIComponent(x.g.foto.ref) + (x.g.foto.s ? '&s=' + x.g.foto.s : '') + '&w=800' : '',
         maps: x.g.maps || '', site: (x.det && x.det.site) || '', preco: (x.det && x.det.preco) || null,
-        precoDe: (x.det && x.det.precoDe) || null, precoAte: (x.det && x.det.precoAte) || null, novo: !!x.novo
+        precoDe: (x.det && x.det.precoDe) || null, precoAte: (x.det && x.det.precoAte) || null, novo: !!x.novo,
+        // Quantos perfis indicaram (a ficha mostra "Indicado por 6 perfis").
+        // Só a conta: QUEM indicou continua sem sair daqui.
+        n: x.n || 0
       }))
     });
   }
-  return { criada: semana.criada, listas };
+  return { v: 2, criada: semana.criada, listas };
 }
 
 // A lista publicada. Publicação de antes da vitrine existir (até 09/11): se a
 // semana guardada é a mesma que foi publicada, monta agora e guarda.
 async function vitrine(env) {
   const guardada = await lerJSON(env, 'hs_vitrine');
-  if (guardada) return guardada;
+  if (guardada && guardada.v === 2) return guardada;
   const [semana, pub] = await Promise.all([lerJSON(env, 'hs_semana'), lerJSON(env, 'hs_publicada')]);
+  const aMesma = !!(semana && pub && pub.semana === semana.criada);
   let v;
-  if (semana && pub && pub.semana === semana.criada) v = await previa(env);
+  // Vitrine guardada antes de a conta de perfis existir (16/11): completa uma vez.
+  if (guardada) v = comVozes(guardada, aMesma ? semana : null);
+  else if (aMesma) v = await previa(env);
   else v = await vitrineDasViagens(env); // já rodou outra busca depois: lê o que está publicado
+  v.v = 2;
   if (v.listas.some((l) => l.lugares.length)) await gravarKV(env, 'hs_vitrine', JSON.stringify(v), ANO);
   return v;
+}
+export function comVozes(vit, semana) {
+  const n = new Map();
+  for (const l of (semana && semana.listas) || []) for (const x of l.lugares || []) if (x.g && x.g.id) n.set(x.g.id, x.n || 0);
+  for (const l of vit.listas || []) for (const x of l.lugares || []) if (x.n == null) x.n = n.get(x.id) || 0;
+  return vit;
 }
 // O que está publicado de fato: as viagens "Hotspots em <cidade>" da conta-fonte.
 async function vitrineDasViagens(env) {
@@ -617,13 +630,14 @@ async function vitrineDasViagens(env) {
   const trips = await sbGet(env)('/rest/v1/trips?select=id,name&user_id=eq.' + conta.id + '&name=like.Hotspots%20em%20*');
   const listas = [];
   for (const t of trips || []) {
-    const spots = await sbGet(env)('/rest/v1/spots?select=name,address,category,tipo,maps_url,photo_url,created_at&trip_id=eq.' + t.id + '&order=created_at.asc');
+    const spots = await sbGet(env)('/rest/v1/spots?select=name,address,category,tipo,maps_url,photo_url,my_note,created_at&trip_id=eq.' + t.id + '&order=created_at.asc');
     listas.push({
       cidade: t.name.replace(/^Hotspots em /, ''),
       lugares: (spots || []).map((x) => ({
         id: '', categoria: ['food', 'hotel', 'experience'].includes(x.category) ? x.category : 'food',
         nome: x.name, endereco: x.address || '', bairro: '', tipo: x.tipo || '',
-        foto: String(x.photo_url || '').replace(/&w=\d+/, '&w=800'), maps: x.maps_url || '', site: '', preco: null, precoDe: null, precoAte: null, novo: false
+        foto: String(x.photo_url || '').replace(/&w=\d+/, '&w=800'), maps: x.maps_url || '', site: '', preco: null, precoDe: null, precoAte: null, novo: false,
+        n: Number((/^Citado por (\d+) vozes/.exec(x.my_note || '') || [])[1]) || 0
       }))
     });
   }

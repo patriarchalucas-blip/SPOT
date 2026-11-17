@@ -390,7 +390,7 @@ async function trataPedido(pg, r) {
     if (api === 'lugar') return responde(200, JSON.stringify(lugarResponde(r.postData())));
     if (api === 'place-photo' || api === 'foto' || api === 'city-photo' && metodo === 'GET' && /img=1/.test(u)) return responde(200, PNG1, 'image/png');
     // Hotspots da semana (vitrine pública): duas cidades, 3 lugares em SP.
-    if (api === 'hotspots') return responde(200, JSON.stringify({ listas: [{ cidade: 'São Paulo', lugares: [{ id: 'g1', categoria: 'food', nome: 'Bar do Teste', bairro: 'Pinheiros', tipo: 'bar', foto: '' }, { id: 'g2', categoria: 'food', nome: 'Cantina Dois', bairro: 'Bixiga', tipo: '', foto: '' }, { id: 'g3', categoria: 'experience', nome: 'Museu Três', bairro: 'Centro', tipo: '', foto: '' }] }, { cidade: 'Rio de Janeiro', lugares: [{ id: 'g4', categoria: 'food', nome: 'Boteco Rio', bairro: 'Botafogo', tipo: '', foto: '' }] }] }));
+    if (api === 'hotspots') return responde(200, JSON.stringify({ listas: [{ cidade: 'São Paulo', lugares: [{ id: 'g1', categoria: 'food', nome: 'Bar do Teste', bairro: 'Pinheiros', tipo: 'bar', foto: '', n: 6 }, { id: 'g2', categoria: 'food', nome: 'Cantina Dois', bairro: 'Bixiga', tipo: '', foto: '' }, { id: 'g3', categoria: 'experience', nome: 'Museu Três', bairro: 'Centro', tipo: '', foto: '' }] }, { cidade: 'Rio de Janeiro', lugares: [{ id: 'g4', categoria: 'food', nome: 'Boteco Rio', bairro: 'Botafogo', tipo: '', foto: '' }] }] }));
     if (api === 'importar') return responde(200, JSON.stringify(metodo === 'GET' ? { ligado: true } : { lugares: [] }));
     // Lista pública aberta antes de instalar (26/10): LISTA_CONEXAO = { codigo, dono, spots }.
     if (api === 'lista') {
@@ -1371,6 +1371,13 @@ try { await pb.screenshot({ path: process.env.TEMP + '/jornada-hotspots-sem-list
 await ir(pb, `(async()=>{S.profile.home_city=window._casaDeAntes;await hsAbrir()})()`, 1500);
 const hsd10 = await texto(pb, '#hsCorpo') || '';
 confere(/Para você/.test(hsd10) && /Nº 1 da semana/.test(hsd10), 'cidade com lista: Para você volta', hsd10);
+// Hotspot aberto: a ficha de sempre com a linha de quantos perfis indicaram.
+await ir(pb, `(async()=>{HSV.cidade='São Paulo';hsPintar();hsAbrirLugar(0)})()`, 1200);
+confere(/Indicado por 6 perfis/.test(await texto(pb, '#fiIndic') || ''), 'ficha do hotspot diz por quantos perfis foi indicado', await texto(pb, '#fiIndic'));
+try { await pb.screenshot({ path: process.env.TEMP + '/jornada-hotspot-ficha.png' }) } catch (e) {}
+await ir(pb, `(async()=>{HSV.cidade='São Paulo';hsPintar();hsAbrirLugar(1)})()`, 1200);
+confere(!(await texto(pb, '#fiIndic') || '').trim(), 'sem a conta, a linha não aparece', await texto(pb, '#fiIndic'));
+await ir(pb, `goTo('hotspots',true)`, 400);
 ['A', 'B'].forEach(n => { const e = errosDe(PAGINAS[n]); confere(!e.length, 'sem erro de JS no aparelho ' + n + ' (listas)', e) });
 
 // ═══ fim ═══

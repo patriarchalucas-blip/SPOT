@@ -2228,6 +2228,9 @@ body.tem-apple #convite .btn-apple{display:flex}
 #place.previa .fi-previa-dica{font-size:15px;color:var(--ink)}
 .fi-deles{display:flex;flex-direction:column;gap:12px;margin:16px 0 4px}
 .fi-deles:empty{display:none}
+.fi-indic{display:flex;align-items:center;gap:8px;margin:16px 0 0;font-size:14px;color:var(--ink2)}
+.fi-indic:empty{display:none}
+.fi-indic svg{width:16px;height:16px;flex:none}
 .fi-dele{display:flex;gap:12px;align-items:flex-start;width:100%;border:none;background:none;padding:0;text-align:left;font:inherit;cursor:pointer}
 .fi-dele:active{opacity:.6}
 .fi-dele-seta{margin-left:auto;padding-top:8px;color:var(--ink3)}
@@ -3506,6 +3509,9 @@ button.lp-chip{cursor:pointer}
 
     <!-- Quem do seu círculo tem este spot (desenho e5): entre o status e as
          ações. "Ana foi 5★" com a frase dela; "Rafa quer ir". -->
+    <!-- Hotspot (V4): a ficha de sempre, com uma linha a mais. Só a conta de
+         quantos perfis indicaram; nome de ninguém sai do servidor. -->
+    <div class="fi-indic" id="fiIndic"></div>
     <div class="fi-deles" id="fiDeles"></div>
 
     <div class="fi-acoes" id="placeReserveWrap"></div>
@@ -9218,6 +9224,7 @@ function estaAbertoAgora(oh){
 // a categoria pelo menu ⋯ precisa redesenhar isto sem recarregar a foto.
 function desenharFichaDoLugar(s){
   document.getElementById('placeName').textContent=s.name||'';
+  hsPintarIndicado(s);
   // "Tipo · bairro, cidade". O tipo de experiência é mais específico que a
   // categoria, então ganha dela quando existe.
   const quem=nomeDeQuemIndicou(s);
@@ -15664,6 +15671,24 @@ function hsPintar(){
   c.innerHTML=h;hydrateIcons(c);
 }
 function hsTipo(t){return (t&&TIPO_ROTULO[t])||''}
+// Quantos perfis indicaram este lugar na lista da semana (0 = não é hotspot,
+// ou a lista ainda não foi aberta neste aparelho).
+function hsIndicado(s){
+  if(!s||!s.name)return 0;
+  const cid=normName(cityOf(s)||s.city||'');
+  for(const l of (HSV.dados&&HSV.dados.listas)||[]){
+    if(cid&&normName(l.cidade)!==cid)continue;
+    const x=l.lugares.find(y=>mesmoLugar(y.nome,s.name));
+    if(x)return Number(x.n)||0;
+  }
+  return 0;
+}
+function hsPintarIndicado(s){
+  const el=document.getElementById('fiIndic');if(!el)return;
+  const n=hsIndicado(s);
+  el.innerHTML=n>0?'<span data-ic="fire"></span>Indicado por '+n+(n===1?' perfil':' perfis'):'';
+  if(n>0)hydrateIcons(el);
+}
 function hsAbrirLugar(i){
   const x=hsLugares()[i];if(!x)return;
   const meu=meuSpotIgual(x.nome,HSV.cidade);
