@@ -391,6 +391,7 @@ async function trataPedido(pg, r) {
     if (api === 'place-photo' || api === 'foto' || api === 'city-photo' && metodo === 'GET' && /img=1/.test(u)) return responde(200, PNG1, 'image/png');
     // Hotspots da semana (vitrine pública): duas cidades, 3 lugares em SP.
     if (api === 'hotspots') return responde(200, JSON.stringify({ listas: [{ cidade: 'São Paulo', lugares: [{ id: 'g1', categoria: 'food', nome: 'Bar do Teste', bairro: 'Pinheiros', tipo: 'bar', foto: '', n: 6 }, { id: 'g2', categoria: 'food', nome: 'Cantina Dois', bairro: 'Bixiga', tipo: '', foto: '' }, { id: 'g3', categoria: 'experience', nome: 'Museu Três', bairro: 'Centro', tipo: '', foto: '' }] }, { cidade: 'Rio de Janeiro', lugares: [{ id: 'g4', categoria: 'food', nome: 'Boteco Rio', bairro: 'Botafogo', tipo: '', foto: '' }] }] }));
+    if (api === 'pais') return responde(200, JSON.stringify({ capital: 'Lisboa', habitantes: 10347892, linguas: ['português'], moeda: 'EUR', fuso: 'Europe/Lisbon', dolar: 0.86, dolarEmReal: 5.4 }));
     if (api === 'importar') return responde(200, JSON.stringify(metodo === 'GET' ? { ligado: true } : { lugares: [] }));
     // Lista pública aberta antes de instalar (26/10): LISTA_CONEXAO = { codigo, dono, spots }.
     if (api === 'lista') {
@@ -1380,6 +1381,12 @@ confere(!(await texto(pb, '#fiIndic') || '').trim(), 'sem a conta, a linha não 
 await ir(pb, `goTo('hotspots',true)`, 400);
 ['A', 'B'].forEach(n => { const e = errosDe(PAGINAS[n]); confere(!e.length, 'sem erro de JS no aparelho ' + n + ' (listas)', e) });
 
+// Resumo do país (V3): tocar num país do mapa abre a folha com os dados.
+await ir(pb, "(async()=>{document.querySelectorAll('.overlay.show').forEach(o=>closeOv(o.id));await tocouNoPais('Portugal')})()", 1500);
+const pais10 = await texto(pb, '#paisCorpo') || '';
+confere(/Portugal/.test(pais10) && /Lisboa/.test(pais10) && /10,3 milhões/.test(pais10) && /Euro/.test(pais10) && /1 vale/.test(pais10) && /São Paulo/.test(pais10) && /(Ver seus spots|Marcar como visitado)/.test(pais10), 'tocar em Portugal abre o resumo do país', pais10);
+try { await pb.screenshot({ path: process.env.TEMP + '/jornada-pais.png' }) } catch (e) {}
+await ir(pb, "closeOv('ov-pais')", 300);
 // ═══ fim ═══
 await fim();
 async function fim() {

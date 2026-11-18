@@ -2967,6 +2967,21 @@ button.lp-chip{cursor:pointer}
 .lp-mvg+.lp-pils{margin-top:0}
 .lp-vagal{padding:6px 20px}
 #lsRotBt[disabled]{opacity:.4}
+/* resumo do país (V3, 18/11) */
+.pa-cab{display:flex;align-items:center;gap:14px;padding:4px 20px 0}
+.pa-band{font-size:30px;line-height:1}
+.pa-cab h2{margin:0;font-stretch:68%;font-size:40px;font-weight:700;line-height:1.05;min-width:0}
+.pa-foto{margin:18px 20px 0;height:150px;border-radius:var(--r-photo);background:var(--photo-empty) center/cover no-repeat}
+.pa-amigos{display:flex;align-items:center;gap:12px;padding:18px 20px 0}
+.pa-avs{display:flex;flex:none}
+.pa-avs>*+*{margin-left:-10px}
+.pa-amigos b{display:block;font-size:16px;font-weight:600}
+.pa-amigos small{display:block;font-size:14px;color:var(--ink2)}
+.pa-dados{margin:18px 20px 0;padding:16px;border-radius:var(--r-card);background:var(--surface);display:grid;grid-template-columns:1fr 1fr;gap:14px 16px}
+.pa-dados small{display:block;font-size:13px;color:var(--ink2)}
+.pa-dados b{display:block;font-size:16px;font-weight:600;overflow-wrap:anywhere}
+.pa-dados.pa-carregando{display:block;color:var(--ink2);font-size:15px}
+.pa-acao{margin:20px 20px 24px;width:calc(100% - 40px)}
 /* folha de adicionar e calendário */
 .lp-porbusca{margin:0 20px}
 .lp-rot{margin:18px 20px 4px;font-size:13px;color:var(--ink2)}
@@ -3584,6 +3599,7 @@ button.lp-chip{cursor:pointer}
 
 <!-- O ⋯ da ficha. O lápis flutuante e a engrenagem viraram este menu: tudo que
      é raro mora aqui, e a tela fica com o que se usa todo dia. -->
+<div class="overlay" id="ov-pais" onclick="closeOut(event,'ov-pais')"><div class="sheet"><button class="sheet-close" onclick="closeOv('ov-pais')" data-ic="close" aria-label="Fechar"></button><div class="sheet-handle"></div><div id="paisCorpo"></div></div></div>
 <div class="overlay" id="ov-menulugar" onclick="closeOut(event,'ov-menulugar')"><div class="sheet"><div class="sheet-handle"></div><div class="fi-menunome" id="fiMenuNome"></div>
 <div class="prof-linha" onclick="closeOv('ov-menulugar');compartilharLugar()"><span class="pl-ic" data-ic="share"></span><span class="pl-txt">Compartilhar spot</span></div>
 <div class="prof-linha" onclick="closeOv('ov-menulugar');document.getElementById('spotFotosInput').click()"><span class="pl-ic" data-ic="plus"></span><span class="pl-txt">Adicionar fotos</span></div>
@@ -8315,6 +8331,8 @@ window.acaoDeViagens=function(acao,valor){
   if(acao==='checkinAdd'){checkinAdd();return}
   if(acao==='checkinIgnorar'){checkinIgnore();return}
   if(acao==='mapa'){abrirMapaMundi('dashboard');return}
+  // Toque num país do mapa nativo da Você (18/11): o nome vem no padrão do mapa.
+  if(acao==='pais'){tocouNoPais(String(valor||''));return}
   if(acao==='recarregar'){loadDashboard();return}
   if(acao==='casa'){abrirCasa();return}
   if(acao==='marcarPaises'){openVisitedCountryPicker();return}
@@ -18856,6 +18874,113 @@ async function renderMiniMapa(){
   wrap.classList.add('pronto');
   wrap.onclick=()=>abrirMapaMundi('dashboard');
 }
+// ═══ RESUMO DO PAÍS (V3 "Você · país", 18/11) ═══
+// Tocar num país do mapa (Você no iPhone, mapa-múndi no site) abre esta folha:
+// foto, amigos que foram, capital/habitantes/fuso/língua/moeda/câmbio e UMA
+// ação — "Ver seus spots" se você foi, "Marcar como visitado" se não foi.
+// Os dados vêm de /api/pais (Wikidata + Open-Meteo + cotação, guardados no
+// servidor); ficam aqui também, pra reabrir o mesmo país sem pedir de novo.
+const PAIS_INFO={};
+let PAIS_ABERTO='',PAIS_DELES=[];
+function isoDaBandeira(f){
+  const cs=[...String(f||'')].map(c=>c.codePointAt(0)-0x1F1E6);
+  return cs.length===2&&cs.every(n=>n>=0&&n<26)?cs.map(n=>String.fromCharCode(65+n)).join(''):'';
+}
+function minutosDoFuso(tz,d){
+  try{
+    const p=new Intl.DateTimeFormat('en-US',{timeZone:tz,hourCycle:'h23',year:'numeric',month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit'}).formatToParts(d);
+    const g=k=>Number((p.find(x=>x.type===k)||{}).value);
+    return Math.round((Date.UTC(g('year'),g('month')-1,g('day'),g('hour'),g('minute'))-Math.floor(d.getTime()/60000)*60000)/60000);
+  }catch(e){return null}
+}
+// "+3h de São Paulo" · "-1h30 de São Paulo" · "Igual a São Paulo"
+function fusoTexto(tz){
+  if(!tz)return'';
+  const d=new Date(),a=minutosDoFuso(tz,d),b=minutosDoFuso('America/Sao_Paulo',d);
+  if(a==null||b==null)return'';
+  const m=a-b;if(!m)return'Igual a São Paulo';
+  const h=Math.floor(Math.abs(m)/60),r=Math.abs(m)%60;
+  return (m>0?'+':'-')+h+'h'+(r?String(r).padStart(2,'0'):'')+' de São Paulo';
+}
+function habitantesTexto(n){
+  n=Number(n)||0;if(!n)return'';
+  const f=(x,u1,u2)=>{const v=Math.round(x*10)/10;return String(v).replace('.',',')+' '+(v<2?u1:u2)};
+  if(n>=1e9)return f(n/1e9,'bilhão','bilhões');
+  if(n>=1e6)return f(n/1e6,'milhão','milhões');
+  return n.toLocaleString('pt-BR');
+}
+function maiuscula(s){s=String(s||'');return s.charAt(0).toUpperCase()+s.slice(1)}
+function moedaTexto(cod){
+  try{return maiuscula(new Intl.DisplayNames(['pt-BR'],{type:'currency'}).of(cod))}catch(e){return cod||''}
+}
+function dinheiro(v,cod){
+  try{return new Intl.NumberFormat('pt-BR',{style:'currency',currency:cod,maximumFractionDigits:v>=100?0:2}).format(v)}catch(e){return String(v)}
+}
+// "US$ 1 vale € 0,86". Dólar e real se comparam um com o outro.
+function cambioTexto(d){
+  if(!d||!d.moeda)return null;
+  if(d.moeda==='USD'&&d.dolarEmReal)return{rot:'US$ 1 vale',val:dinheiro(d.dolarEmReal,'BRL')};
+  if(d.dolar)return{rot:'US$ 1 vale',val:dinheiro(d.dolar,d.moeda)};
+  return null;
+}
+async function abrirPais(nome){
+  const c=COUNTRIES.find(x=>x.name===nome);if(!c)return;
+  PAIS_ABERTO=nome;
+  showOv('ov-pais');pintarPais();
+  const iso=isoDaBandeira(c.flag);
+  // Foto e amigos correm junto com os dados.
+  fetchCityPhoto(nome,'').then(u=>{if(PAIS_ABERTO!==nome)return;const el=document.getElementById('paisFoto');if(el&&u){el.style.backgroundImage=cssUrl(u);el.classList.add('com')}}).catch(()=>{});
+  plnSpotsDeles().then(l=>{PAIS_DELES=l||[];if(PAIS_ABERTO===nome)pintarPais()}).catch(()=>{});
+  if(iso&&!PAIS_INFO[iso]){
+    try{
+      const tk=await ensureToken();
+      const r=await comPrazo(fetch('/api/pais',{method:'POST',headers:Object.assign({'Content-Type':'application/json'},tk?{'Authorization':'Bearer '+tk}:{}),body:JSON.stringify({iso})}),15000);
+      const d=r.ok?await r.json():null;
+      PAIS_INFO[iso]=d&&!d.error?d:{falhou:true};
+    }catch(e){PAIS_INFO[iso]={falhou:true}}
+    if(PAIS_INFO[iso].falhou)setTimeout(()=>{if(PAIS_INFO[iso]&&PAIS_INFO[iso].falhou)delete PAIS_INFO[iso]},60000);
+    if(PAIS_ABERTO===nome)pintarPais();
+  }
+}
+// Os amigos que FORAM (Fui ou Não recomendo) e os spots deles lá que você não tem.
+function paisDosAmigos(nome){
+  const deles=PAIS_DELES||[];
+  const la=deles.filter(s=>s._pais===nome&&s.status!=='want');
+  const quem=[...new Set(la.map(s=>s.user_id))];
+  const naoTenho=la.filter(s=>!meuSpotIgual(s.name,cityOf(s))).length;
+  return{quem,naoTenho};
+}
+function pintarPais(){
+  const box=document.getElementById('paisCorpo');if(!box)return;
+  const nome=PAIS_ABERTO,c=COUNTRIES.find(x=>x.name===nome);if(!c)return;
+  const iso=isoDaBandeira(c.flag),d=PAIS_INFO[iso];
+  const fui=visitedCountryNames().includes(nome);
+  const am=paisDosAmigos(nome);
+  let h='<div class="pa-cab"><span class="pa-band">'+c.flag+'</span><h2>'+esc(nome)+'</h2></div>'
+    +'<div class="pa-foto" id="paisFoto"></div>';
+  if(am.quem.length){
+    h+='<div class="pa-amigos"><span class="pa-avs">'+am.quem.slice(0,3).map(id=>plnAvatar(id,'p')).join('')+'</span>'
+      +'<span><b>'+esc(plnNomesCurtos(am.quem))+(am.quem.length===1?' foi':' foram')+'</b>'
+      +(am.naoTenho?'<small>'+am.naoTenho+(am.naoTenho===1?' spot dele que você não salvou':' spots deles que você não salvou')+'</small>':'')+'</span></div>';
+  }
+  if(!d)h+='<div class="pa-dados pa-carregando">Carregando...</div>';
+  else if(d.falhou)h+='<div class="pa-dados pa-carregando">Não carregou. Confere a conexão.</div>';
+  else{
+    const cam=cambioTexto(d);
+    const itens=[['Capital',d.capital],['Habitantes',habitantesTexto(d.habitantes)],['Fuso',fusoTexto(d.fuso)],
+      ['Língua',(d.linguas||[]).map(maiuscula).slice(0,2).join(', ')],['Moeda',moedaTexto(d.moeda)],cam?[cam.rot,cam.val]:null]
+      .filter(x=>x&&x[1]);
+    if(itens.length)h+='<div class="pa-dados">'+itens.map(x=>'<div><small>'+esc(x[0])+'</small><b>'+esc(x[1])+'</b></div>').join('')+'</div>';
+  }
+  h+=fui?'<button class="btn-primario btn-largo pa-acao" onclick="paisVerSpots()">Ver seus spots</button>'
+    :'<button class="btn-primario btn-largo pa-acao" onclick="paisMarcar()">Marcar como visitado</button>';
+  const foto=document.getElementById('paisFoto');
+  const fundo=foto&&foto.style.backgroundImage;
+  box.innerHTML=h;
+  if(fundo){const f=document.getElementById('paisFoto');f.style.backgroundImage=fundo;f.classList.add('com')}
+}
+function paisVerSpots(){const n=PAIS_ABERTO;closeOv('ov-pais');drillTo('country',n);goTo('list')}
+async function paisMarcar(){const n=PAIS_ABERTO;closeOv('ov-pais');await marcarPaisVisitado(n);try{darDadosDeViagens()}catch(e){}}
 // TOCAR NUM PAÍS DO MAPA.
 //
 // Dois destinos, e a diferença é o que torna isto útil:
@@ -18873,16 +18998,9 @@ async function tocouNoPais(geo){
   // Território que o mapa desenha e a lista do app não conhece: sem ação,
   // melhor que uma ação errada.
   if(!nome)return;
-  if(visitedCountryNames().includes(nome)){
-    drillTo('country',nome);goTo('list');return;
-  }
-  // SEM PREPOSICAO ANTES DO PAIS. Em portugues ela muda com o genero e o
-  // numero — em Portugal, NA Argentina, NO Japao, NOS Estados Unidos — e a
-  // lista de paises nao guarda isso. Em vez de acertar 60% e escrever 'em
-  // Argentina' nos outros 40%, o nome vai no titulo e a pergunta vem depois.
-  const r=await perguntar(nome,'Marcar como visitado no seu mapa?',
-    [{rotulo:'Marcar como visitado',valor:'marcar'}]);
-  if(r==='marcar')await marcarPaisVisitado(nome);
+  // 18/11 (V3): o toque abre o resumo do país; "Ver seus spots" e "Marcar
+  // como visitado" ficam dentro dele, sem preposição antes do país.
+  abrirPais(nome);
 }
 // Uma linha de viagem escondida, igual à que o seletor de países cria — é
 // assim que o app guarda 'estive aqui' sem viagem de verdade (ver

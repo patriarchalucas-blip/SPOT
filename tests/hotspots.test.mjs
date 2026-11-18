@@ -290,3 +290,14 @@ test('hotspots: uma fonte é uma voz; hotel não entra; capa de notícia não fa
   assert.deepStrictEqual(jeitoDaFonte({ id: 'yt:pl:QUALQUER', playlist: 'QUALQUER' }), { variasVozes: true, noticia: false });
   assert.deepStrictEqual(jeitoDaFonte({ id: 'yt:UCKPsOdkRBBg9AxWNA0wd6sA', canal: 'x' }), { variasVozes: false, noticia: false });
 });
+
+import { resumirWikidata } from '../functions/api/pais.js';
+test('resumo do país junta as linhas do Wikidata', () => {
+  const L = (o) => Object.fromEntries(Object.entries(o).map(([k, v]) => [k, { value: v }]));
+  const r = resumirWikidata([
+    L({ capL: 'Lisboa', coord: 'Point(-9.15 38.72)', pop: '10300000', lingL: 'português', cod: 'EUR' }),
+    L({ capL: 'Lisboa', pop: '10347892', lingL: 'mirandês' }),
+  ]);
+  assert.deepEqual(r, { capital: 'Lisboa', lat: 38.72, lng: -9.15, habitantes: 10347892, linguas: ['português', 'mirandês'], moeda: 'EUR' });
+  assert.equal(resumirWikidata([]), null);
+});
