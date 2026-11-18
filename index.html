@@ -7343,7 +7343,9 @@ function naCasca(){return !!(window.ReactNativeWebView&&window.ReactNativeWebVie
 
 // As quatro telas que têm aba. O resto (viagem, cidade, lugar, telas de
 // amigo) são telas de detalhe: nelas a barra some, igual ao site hoje.
-const ABAS_DO_APP={dashboard:1,explore:1,friends:1,profile:1};
+// Redesenho (18/11): Listas e Hotspots também têm barra. Amigos e Perfil
+// saíram da barra nova, mas seguem aqui: a barra aparece neles, sem aba acesa.
+const ABAS_DO_APP={dashboard:1,explore:1,friends:1,profile:1,listas:1,hotspots:1};
 
 // A foto fica gravada como caminho relativo (/api/place-photo?...). Dentro
 // do site o navegador completa sozinho; a tela nativa NÃO tem página atual
@@ -7376,7 +7378,10 @@ function temJanelaAberta(){
 // descartado pelo Lucas — a diferença pras nativas era pequena. Elas seguem
 // nativas.)
 function avisarTelaAtual(id){
-  falarComACasca({tipo:'tela',aba:id,comAbas:!!ABAS_DO_APP[id]&&!temJanelaAberta(),explorarWeb:EXM_LIGADO});
+  // barraNova: este site tem Listas e Hotspots. A casca só troca a barra de
+  // quatro abas pela de cinco quando ouve isto — casca nova com site antigo
+  // (ou o contrário) segue com a barra de antes, sem botão que não leva a nada.
+  falarComACasca({tipo:'tela',aba:id,comAbas:!!ABAS_DO_APP[id]&&!temJanelaAberta(),explorarWeb:EXM_LIGADO,barraNova:true});
 }
 
 // Janela que abre POR CIMA (configurações, criar viagem, adicionar amigo,
@@ -7451,8 +7456,12 @@ window.aoTocarNotificacao=async function(d){
   if(d.tipo==='pedido'&&window.switchFriendsTab)switchFriendsTab('pedidos');
 };
 window.irParaAba=function(id){
+  // O "+" da barra nova não é tela: abre a folha de adicionar por cima.
+  if(id==='mais'){if(S.user)adicionarDoTopo();return}
   if(!ABAS_DO_APP[id])return;
   if(!S.user){ABA_PENDENTE=id;return}
+  if(id==='listas'){lsAbrir();return}
+  if(id==='hotspots'){hsAbrir();return}
   goTo(id);
   if(id==='dashboard')loadDashboard();
   else if(id==='explore')loadExplore();

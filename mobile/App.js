@@ -302,6 +302,9 @@ function Conteudo() {
   // Aí a tela nativa não cobre a aba: quem desenha é a página, e a barra de
   // abas continua sendo a daqui.
   const [explorarDoSite, setExplorarDoSite] = useState(false);
+  // O site do redesenho avisa que tem Listas e Hotspots (18/11): só então a
+  // barra vira a de cinco. Com o site de antes, seguem as quatro abas.
+  const [barraNova, setBarraNova] = useState(false);
   // Aba nativa que quebrou ao desenhar (11/10, auditoria): sai da frente e o
   // site aparece no lugar, em vez de o app inteiro cair. Volta a tentar quando
   // o site recarrega.
@@ -543,6 +546,7 @@ function Conteudo() {
       if (typeof dados.aba === 'string') setAbaAtiva(dados.aba);
       setMostrarAbas(!!dados.comAbas);
       if ('explorarWeb' in dados) setExplorarDoSite(!!dados.explorarWeb);
+      setBarraNova(!!dados.barraNova);
       // Saiu de Amigos pra uma tela de detalhe (perfil de amigo, ficha de
       // lugar): quem desenha volta a ser o site, então a tela nativa sai da
       // frente. Ela reaparece com os dados que já tinha.
@@ -573,6 +577,11 @@ function Conteudo() {
   // da resposta deixa o toque instantâneo; se o site discordar, ele corrige
   // na mensagem de volta.
   const trocarDeAba = useCallback((tela) => {
+    // O "+" não é aba: o site abre a folha de adicionar e a aba acesa não muda.
+    if (tela === 'mais') {
+      webRef.current?.injectJavaScript("window.irParaAba && window.irParaAba('mais');true;");
+      return;
+    }
     setAbaAtiva(tela);
     // Pede os dados da aba: ela pode nunca ter sido aberta nesta sessao.
     const PEDIDO = {
@@ -745,7 +754,7 @@ function Conteudo() {
             </View>
           ) : null}
           {mostrarAbas ? (
-            <BarraDeAbas ativa={abaAtiva} aoTocar={trocarDeAba} margemDeBaixo={margem.bottom} pontos={{ friends: pedidosEsperando > 0 }} />
+            <BarraDeAbas ativa={abaAtiva} aoTocar={trocarDeAba} margemDeBaixo={margem.bottom} pontos={{ friends: pedidosEsperando > 0 }} nova={barraNova} />
           ) : null}
           {/* Por cima de TUDO, inclusive das telas nativas: e o unico jeito
               de um aviso do site chegar em quem esta numa aba nativa. */}

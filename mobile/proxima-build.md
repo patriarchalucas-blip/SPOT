@@ -90,3 +90,11 @@ pra "Já compilado".
 
 - 16 (29/09): categoria automática, foto própria, Explorar sem fim, barra
   menor, teclado sem barra de navegador, botão voltar Android, etc.
+
+## Barra nova do redesenho (18/11/2026)
+
+Só JS: vai por EAS Update, sem build. `BarraDeAbas.js` ganhou `ABAS_NOVAS`
+(Você · Hotspots · + · Explorar · Listas) e o `App.js` só usa quando o site
+manda `barraNova:true` na mensagem `tela`. Ordem segura: EAS Update primeiro
+(com o site de hoje nada muda), depois o merge do `redesenho` no `main`, que
+vira a barra de todo mundo. Não visto rodando num iPhone.
