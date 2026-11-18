@@ -1,7 +1,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert';
 import { onRequestPost, onRequestGet, semanaDe, pontuar, citacoesValidas, cidadeDaLista, ehPubliPeloTexto,
-  ehHoraDePublicar, lugarDoGoogle, spotDoHotspot, categoriaPelosTipos, jsonDepoisDe, FONTES_DEPOIS } from '../functions/api/hotspots.js';
+  ehHoraDePublicar, lugarDoGoogle, spotDoHotspot, categoriaPelosTipos, jsonDepoisDe, FONTES_DEPOIS, comVozes } from '../functions/api/hotspots.js';
 
 // O robô dos Hotspots (26/10/2026). Nada sai pra rede: YouTube, IA, Google,
 // Supabase e KV são falsos.
@@ -254,4 +254,13 @@ test('hotspots: fonte que o código ganhou depois entra uma vez; a que o dono ti
   const e3 = await ver();
   assert.strictEqual(e3.fontes.length, 1 + FONTES_DEPOIS.length, 'não volta nem duplica');
   assert.strictEqual(new Set(FONTES_DEPOIS.map((f) => f.id)).size, FONTES_DEPOIS.length);
+});
+
+test('vitrine antiga ganha a conta de perfis sem nome de ninguém', () => {
+  const vit = { listas: [{ cidade: 'São Paulo', lugares: [{ id: 'g1', nome: 'A' }, { id: 'g2', nome: 'B' }, { id: 'g3', nome: 'C', n: 4 }] }] };
+  const semana = { listas: [{ cidade: 'São Paulo', lugares: [{ g: { id: 'g1' }, n: 6, vozes: ['Fulano'] }, { g: { id: 'g3' }, n: 9 }] }] };
+  const v = comVozes(vit, semana);
+  assert.deepEqual(v.listas[0].lugares.map((x) => x.n), [6, 0, 4]);
+  assert.ok(!JSON.stringify(v).includes('Fulano'));
+  assert.deepEqual(comVozes({ listas: [{ lugares: [{ id: 'g1' }] }] }, null).listas[0].lugares[0].n, 0);
 });
