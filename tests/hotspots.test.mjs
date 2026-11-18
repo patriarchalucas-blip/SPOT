@@ -264,3 +264,14 @@ test('vitrine antiga ganha a conta de perfis sem nome de ninguém', () => {
   assert.ok(!JSON.stringify(v).includes('Fulano'));
   assert.deepEqual(comVozes({ listas: [{ lugares: [{ id: 'g1' }] }] }, null).listas[0].lugares[0].n, 0);
 });
+
+import { resumirWikidata } from '../functions/api/pais.js';
+test('resumo do país junta as linhas do Wikidata', () => {
+  const L = (o) => Object.fromEntries(Object.entries(o).map(([k, v]) => [k, { value: v }]));
+  const r = resumirWikidata([
+    L({ capL: 'Lisboa', coord: 'Point(-9.15 38.72)', pop: '10300000', lingL: 'português', cod: 'EUR' }),
+    L({ capL: 'Lisboa', pop: '10347892', lingL: 'mirandês' }),
+  ]);
+  assert.deepEqual(r, { capital: 'Lisboa', lat: 38.72, lng: -9.15, habitantes: 10347892, linguas: ['português', 'mirandês'], moeda: 'EUR' });
+  assert.equal(resumirWikidata([]), null);
+});

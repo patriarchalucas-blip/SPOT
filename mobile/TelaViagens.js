@@ -32,7 +32,7 @@ import {
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Svg, { Circle, Path } from 'react-native-svg';
-import MapaMundi from './MapaMundi';
+import { MapaNavegavel } from './MapaMundi';
 import { BASE, SURFACE, INK, INK2, INK3, GREEN, ON_GREEN, PHOTO_EMPTY, DISPLAY, CORPO, NEGRITO } from './cores';
 import { folgaDeRolagem } from './BarraDeAbas';
 import { t } from './idioma';
@@ -236,6 +236,8 @@ function Anel({ paises }) {
 
 export default function TelaViagens({ dados, ocupado, acao }) {
   const margem = useSafeAreaInsets();
+  // Dedo no mapa: a página não rola (o arrasto é do mapa).
+  const [travado, setTravado] = React.useState(false);
 
   if (!dados) {
     return (
@@ -251,6 +253,7 @@ export default function TelaViagens({ dados, ocupado, acao }) {
   return (
     <ScrollView
       style={e.fundo}
+      scrollEnabled={!travado}
       contentContainerStyle={{ paddingBottom: folgaDeRolagem(margem.bottom) }}
       refreshControl={
         <RefreshControl refreshing={!!ocupado} onRefresh={() => acao('recarregar')} tintColor={INK3} />
@@ -317,16 +320,10 @@ export default function TelaViagens({ dados, ocupado, acao }) {
             </Pressable>
           </View>
         </View>
-        <Pressable
-          onPress={() => acao('mapa')}
-          style={({ pressed }) => [e.mapa, pressed && { opacity: 0.7 }]}
-          accessibilityRole="button"
-          accessibilityLabel={t("Abrir o mapa-múndi")}
-        >
-          <View pointerEvents="none">
-            <MapaMundi visitados={d.mapa} />
-          </View>
-        </Pressable>
+        {/* 18/11 (V3): o mapa se move aqui mesmo; tocar num país abre o resumo dele. */}
+        <View style={e.mapa} accessibilityLabel={t("Seu mapa")}>
+          <MapaNavegavel visitados={d.mapa} aoTocarPais={(n) => acao('pais', n)} aoSegurar={setTravado} />
+        </View>
       </View>
 
       {/* A SOMBRA AQUI É EXCEÇÃO, e é a única do app: o --surface está a 12
