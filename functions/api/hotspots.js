@@ -85,8 +85,10 @@ export const FONTES_DEPOIS = [
   { id: 'yt:UCkZtOcW672hb1fsrV_ECNrw', tipo: 'youtube', canal: 'UCkZtOcW672hb1fsrV_ECNrw', nome: 'Chef Bruno Xavier (Rolê Certo SP)', cidades: ['São Paulo'] },
   { id: 'yt:UC9T3o-LtuvAfu0w9rG1w50w', tipo: 'youtube', canal: 'UC9T3o-LtuvAfu0w9rG1w50w', nome: 'Vida de Barman', cidades: ['São Paulo'] },
   { id: 'yt:UCTznRtp5NGLUgSVV8V69V_Q', tipo: 'youtube', canal: 'UCTznRtp5NGLUgSVV8V69V_Q', nome: 'Sobre a Mesa (Marcio Cabral)', cidades: ['São Paulo'] },
-  { id: 'pg:vejasp-comer-e-beber', tipo: 'pagina', url: 'https://vejasp.abril.com.br/comer-e-beber/', nome: 'Veja São Paulo', cidades: ['São Paulo'] },
-  { id: 'pg:guiafolha-restaurantes', tipo: 'pagina', url: 'https://guia.folha.uol.com.br/restaurantes/', nome: 'Guia Folha', cidades: ['São Paulo'] }
+  // noticia: capa de jornal cita lugar por qualquer motivo (evento, lançamento),
+  // não é indicação — reforça um lugar que um curador citou, sozinha não conta.
+  { id: 'pg:vejasp-comer-e-beber', tipo: 'pagina', url: 'https://vejasp.abril.com.br/comer-e-beber/', nome: 'Veja São Paulo', cidades: ['São Paulo'], noticia: true },
+  { id: 'pg:guiafolha-restaurantes', tipo: 'pagina', url: 'https://guia.folha.uol.com.br/restaurantes/', nome: 'Guia Folha', cidades: ['São Paulo'], noticia: true }
 ];
 
 const SISTEMA = `Você lê a descrição de um vídeo (ou o texto de uma página) de quem indica restaurantes, bares e cafés. Separe cada LUGAR concreto indicado.
@@ -289,7 +291,7 @@ async function rodar(env) {
       if (data && data < limite) continue;
       idx.push({ chave: x.chave, data });
       if (lido.publi) continue;
-      for (const l of lido.lugares || []) citacoes.push(Object.assign({}, l, { data, fonte: f.id, cidadesDaFonte: f.cidades || [] }));
+      for (const l of lido.lugares || []) citacoes.push(Object.assign({}, l, { data, fonte: f.id, cidadesDaFonte: f.cidades || [] }, jeitoDaFonte(f)));
     }
     if (idx.length !== antes.length) await gravarKV(env, 'hs_idx_' + f.id, JSON.stringify(idx), ANO * 2);
   }
@@ -491,30 +493,44 @@ export function pontuar(citacoes, cidade, agora, minVozes) {
   const grupos = new Map();
   for (const c of citacoes) {
     if (c.cidade !== cidade) continue;
+    // A lista é de restaurante, bar e café: o que o Google devolve como hotel é
+    // menção a evento ou busca que caiu no prédio (18/11: o Rosewood em 4º).
+    if (c.g && c.g.categoria === 'hotel') continue;
     const chave = c.g && c.g.id ? 'g:' + c.g.id : 'n:' + normalizar(c.nome);
     let gr = grupos.get(chave);
-    if (!gr) { gr = { chave, nome: (c.g && c.g.nome) || c.nome, g: c.g || null, bairro: c.bairro, endereco: c.endereco, vozes: new Map(), primeira: c.data }; grupos.set(chave, gr) }
+    if (!gr) { gr = { chave, nome: (c.g && c.g.nome) || c.nome, g: c.g || null, bairro: c.bairro, endereco: c.endereco, vozes: new Map(), primeira: c.data, ultima: c.data }; grupos.set(chave, gr) }
     // A mesma voz citando o lugar duas vezes conta uma — vale a mais recente.
-    const voz = normalizar(c.voz) || c.fonte;
+    // E UMA FONTE é uma voz (18/11): o nome de quem indica vem escrito pela IA
+    // e o mesmo canal saía ora como o nome do canal, ora como o do
+    // apresentador — o mesmo vídeo repostado em corte virou "2 vozes" e pôs
+    // um lugar em 1º de SP. Só a fonte que junta várias pessoas (a série
+    // "Favoritos da cidade": cada chef é uma voz) conta pelo nome.
+    const voz = c.fonte && !c.variasVozes ? 'f:' + c.fonte : (normalizar(c.voz) || c.fonte);
     const peso = pesoDaData(c.data, agora);
     const atual = gr.vozes.get(voz);
-    if (!atual || peso > atual.peso) gr.vozes.set(voz, { nome: c.voz, peso });
+    if (!atual || peso > atual.peso) gr.vozes.set(voz, { nome: c.voz, peso, noticia: !!c.noticia });
     if (!gr.endereco && c.endereco) gr.endereco = c.endereco;
     if (!gr.bairro && c.bairro) gr.bairro = c.bairro;
     if (c.data && (!gr.primeira || c.data < gr.primeira)) gr.primeira = c.data;
+    if (c.data && (!gr.ultima || c.data > gr.ultima)) gr.ultima = c.data;
   }
   return [...grupos.values()]
-    .filter((g) => g.vozes.size >= (minVozes || MIN_VOZES))
+    // Capa de notícia (noticia) cita lugar sem indicar: reforça, mas não faz
+    // Hotspot sozinha nem em dupla — tem que haver ao menos um curador.
+    .filter((g) => g.vozes.size >= (minVozes || MIN_VOZES) && [...g.vozes.values()].some((v) => !v.noticia))
     .map((g) => {
       const vozes = [...g.vozes.values()];
       return {
         chave: g.chave, nome: g.nome, bairro: g.bairro || '', endereco: (g.g && g.g.endereco) || g.endereco || '',
         g: g.g, vozes: vozes.map((v) => v.nome), n: vozes.length,
         pontos: Math.round(vozes.reduce((a, v) => a + v.peso, 0) * 100) / 100,
-        novo: !!(g.primeira && agora - Date.parse(g.primeira) < 45 * 86400000)
+        novo: !!(g.primeira && agora - Date.parse(g.primeira) < 45 * 86400000),
+        ultima: g.ultima || ''
       };
     })
-    .sort((a, b) => b.pontos - a.pontos || b.n - a.n || a.nome.localeCompare(b.nome, 'pt-BR'));
+    // Empate: a citação mais recente na frente (antes era ordem alfabética, e
+    // quem completava a lista era o que começava com A).
+    .sort((a, b) => b.pontos - a.pontos || b.n - a.n || String(b.ultima).localeCompare(String(a.ultima)) || a.nome.localeCompare(b.nome, 'pt-BR'));
 }
 
 export function pesoDaData(data, agora) {
@@ -730,6 +746,17 @@ async function viagemDaCidade(env, uid, cidade) {
 }
 
 // ─────────────────────────── fontes ───────────────────────────
+
+// Como a fonte conta. A lista guardada no KV foi gravada antes destas marcas
+// existirem, então o que o código sabe da fonte (pelo id) completa o guardado.
+//   variasVozes: junta várias pessoas, cada uma é uma voz (por padrão, toda
+//                playlist — a série "Favoritos da cidade"). O resto é 1 voz.
+//   noticia:     capa de jornal; reforça, não faz Hotspot sozinha.
+export function jeitoDaFonte(f) {
+  const c = FONTES_INICIAIS.concat(FONTES_DEPOIS).find((x) => x.id === f.id) || {};
+  const de = (k, padrao) => (f[k] != null ? !!f[k] : c[k] != null ? !!c[k] : padrao);
+  return { variasVozes: de('variasVozes', !!f.playlist), noticia: de('noticia', false) };
+}
 
 // A lista do KV manda (é a que o dono edita). Fonte que o CÓDIGO ganhou depois
 // (FONTES_DEPOIS) entra nela UMA vez: fica anotado que já foi oferecida, então

@@ -1,7 +1,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert';
 import { onRequestPost, onRequestGet, semanaDe, pontuar, citacoesValidas, cidadeDaLista, ehPubliPeloTexto,
-  ehHoraDePublicar, lugarDoGoogle, spotDoHotspot, categoriaPelosTipos, jsonDepoisDe, FONTES_DEPOIS, comVozes } from '../functions/api/hotspots.js';
+  ehHoraDePublicar, lugarDoGoogle, spotDoHotspot, categoriaPelosTipos, jsonDepoisDe, FONTES_DEPOIS, comVozes , jeitoDaFonte, montarLista } from '../functions/api/hotspots.js';
 
 // O robô dos Hotspots (26/10/2026). Nada sai pra rede: YouTube, IA, Google,
 // Supabase e KV são falsos.
@@ -77,7 +77,7 @@ function mundo(opts) {
     SPOT_KV: kvFalso(o.kv), ANTHROPIC_API_KEY: 'a', GOOGLE_PLACES_KEY: 'g', SUPABASE_SERVICE_KEY_SP: 's'
   };
   env.SPOT_KV.m.set('hs_fontes', JSON.stringify([
-    { id: 'yt:CANAL_RIO', tipo: 'youtube', canal: 'CANAL_RIO', nome: 'Canal Rio', cidades: [] },
+    { id: 'yt:CANAL_RIO', tipo: 'youtube', canal: 'CANAL_RIO', nome: 'Canal Rio', cidades: [], variasVozes: true },
     { id: 'yt:CANAL_SP', tipo: 'youtube', canal: 'CANAL_SP', nome: 'Canal SP', cidades: ['São Paulo'] }]));
   // As fontes que o código ganhou depois (11/11) contam como já oferecidas, pra
   // cada teste rodar só com as duas falsas; o teste delas desliga isto.
@@ -263,4 +263,30 @@ test('vitrine antiga ganha a conta de perfis sem nome de ninguém', () => {
   assert.deepEqual(v.listas[0].lugares.map((x) => x.n), [6, 0, 4]);
   assert.ok(!JSON.stringify(v).includes('Fulano'));
   assert.deepEqual(comVozes({ listas: [{ lugares: [{ id: 'g1' }] }] }, null).listas[0].lugares[0].n, 0);
+});
+
+test('hotspots: uma fonte é uma voz; hotel não entra; capa de notícia não faz Hotspot sozinha', () => {
+  const c = (nome, voz, fonte, mais) => Object.assign({ nome, voz, fonte, cidade: 'São Paulo', data: HOJE, g: { id: 'g' + nome, nome, categoria: 'food' } }, mais || {});
+  // 18/11: o mesmo canal saiu com dois nomes de voz (canal e apresentador) e o lugar foi a 1º com "2 vozes".
+  const mesmoCanal = [c('Do Jorge', 'Diários Gastronômicos', 'yt:D'), c('Do Jorge', 'Marcelo', 'yt:D')];
+  assert.deepStrictEqual(pontuar(mesmoCanal, 'São Paulo', AGORA), []);
+  assert.strictEqual(pontuar(mesmoCanal, 'São Paulo', AGORA, 1)[0].n, 1);
+  // A série de chefs: a mesma fonte, vozes diferentes.
+  const serie = [c('Mocotó', 'Chef A', 'yt:pl:F', { variasVozes: true }), c('Mocotó', 'Chef B', 'yt:pl:F', { variasVozes: true })];
+  assert.strictEqual(pontuar(serie, 'São Paulo', AGORA)[0].n, 2);
+  // Hotel fica fora mesmo com duas fontes.
+  const hotel = [c('Rosewood', 'X', 'yt:A', { g: { id: 'gR', nome: 'Rosewood', categoria: 'hotel' } }), c('Rosewood', 'Y', 'yt:B', { g: { id: 'gR', nome: 'Rosewood', categoria: 'hotel' } })];
+  assert.deepStrictEqual(pontuar(hotel, 'São Paulo', AGORA, 1), []);
+  // Duas capas de notícia: não. Um curador + uma capa: sim, 2 vozes.
+  assert.deepStrictEqual(pontuar([c('Donuts', 'Veja', 'pg:V', { noticia: true }), c('Donuts', 'Folha', 'pg:F', { noticia: true })], 'São Paulo', AGORA), []);
+  assert.deepStrictEqual(pontuar([c('Donuts', 'Veja', 'pg:V', { noticia: true })], 'São Paulo', AGORA, 1), []);
+  assert.strictEqual(pontuar([c('Metzi', 'Neto', 'yt:N'), c('Metzi', 'Veja', 'pg:V', { noticia: true })], 'São Paulo', AGORA)[0].n, 2);
+  // Quem completa a lista com uma voz é o mais recente, não o primeiro do alfabeto.
+  const velho = new Date(AGORA - 10 * 86400000).toISOString().slice(0, 10);
+  const l = montarLista([c('Ajissai', 'A', 'yt:A', { data: velho }), c('Zeca', 'B', 'yt:B')], 'São Paulo', AGORA);
+  assert.deepStrictEqual(l.map((x) => x.nome), ['Zeca', 'Ajissai']);
+  // As marcas saem do código quando a lista guardada não tem.
+  assert.deepStrictEqual(jeitoDaFonte({ id: 'pg:vejasp-comer-e-beber' }), { variasVozes: false, noticia: true });
+  assert.deepStrictEqual(jeitoDaFonte({ id: 'yt:pl:QUALQUER', playlist: 'QUALQUER' }), { variasVozes: true, noticia: false });
+  assert.deepStrictEqual(jeitoDaFonte({ id: 'yt:UCKPsOdkRBBg9AxWNA0wd6sA', canal: 'x' }), { variasVozes: false, noticia: false });
 });
