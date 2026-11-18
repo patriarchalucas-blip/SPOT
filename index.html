@@ -66,24 +66,28 @@
 <!-- 11/10: conexão aberta cedo com as fontes (a folha de estilos delas segura o 1º desenho). -->
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500&family=Inter+Tight:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500&family=Archivo:wdth,wght@62..125,400..700&display=swap" rel="stylesheet">
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 /* ═══ TOKENS — base escura ═══
    --surface = base da página · --white = elevado (cards/sheet/nav) · --dark = recesso (inputs/wells)
    Raio: uma escala só (--r cards/superfícies · --r-sm controles · --r-pill chips), nunca valores soltos */
 :root{
-/* Direcao F. Uma cor de acento so, nenhuma borda, nenhuma sombra. */
---base:#F5F5F3;      /* fundo da pagina e da nav */
---surface:#E9E9E6;   /* blocos secundarios: acoes, campos, segmentado */
---map-bg:#E4E8E4;    /* fundo do mapa */
---map-dot:#C8CFC9;   /* trama de pontos do mapa */
---ink:#111111;
---ink2:#6B6B67;
---ink3:#9A9A96;
---green:#0B3D2E;     /* UNICO acento: paises visitados, botao, nav ativa */
---on-green:#F5F5F3;
---photo-empty:#6E7F73;
+/* Redesenho de 06/11 (branch redesenho): a noite verde. Fundo #072019,
+   texto quase branco, UM destaque: o branco quente #F2EDE3 (o --green virou
+   o nome do destaque, por isso as regras antigas ja saem certas). Fonte
+   Archivo; titulos condensados (font-stretch 68%). */
+--base:#072019;      /* fundo da pagina e da nav */
+--surface:#1A312A;   /* blocos secundarios: acoes, campos, segmentado (= branco a 8% sobre o fundo) */
+--map-bg:#0B2A21;    /* fundo do mapa */
+--map-dot:#2C4A41;   /* trama de pontos do mapa */
+--ink:#F5F5F3;
+--ink2:#9BA4A0;
+--ink3:#61716C;
+--green:#F2EDE3;     /* UNICO destaque (branco quente): paises visitados, botao, nav ativa */
+--on-green:#0C1714;
+--photo-empty:#2F5C4C;
+--grad-topo:linear-gradient(180deg,#0B3D2E 0,#0A3528 200px,#092D22 420px,#08261D 640px,#072019 900px);
 --r-photo:18px; --r-card:14px; --r-btn:10px; --r-sheet:28px;
 
 /* PONTES. Os nomes de antes apontam pro sistema novo, entao todo o CSS
@@ -96,7 +100,7 @@
 --white:var(--surface);
 --dark:var(--base);
 --border:transparent;      /* mata as 68 bordas de 1px de uma vez */
---mono:'Inter Tight',sans-serif;  /* a mono sai do app inteiro */
+--mono:'Archivo',sans-serif;  /* a mono sai do app inteiro */
 --shadow-sm:none; --shadow-md:none; --shadow-lg:none;
 --shadow-terra:none; --shadow-inset:none;
 /* A UNICA sombra do app, e ela existe por um motivo medido: o card do
@@ -107,7 +111,9 @@
 --r:var(--r-card); --r-sm:var(--r-btn); --r-pill:100px;
 }
 html{background:var(--base)}
-body{font-family:'Inter Tight',sans-serif;background:var(--base);color:var(--ink);max-width:430px;margin:0 auto;min-height:100vh}
+body{font-family:'Archivo',sans-serif;background:var(--base) var(--grad-topo) no-repeat;color:var(--ink);max-width:430px;margin:0 auto;min-height:100vh;color-scheme:dark}
+/* Títulos na Archivo condensada (redesenho 06/11) */
+h1,h2,.cond{font-stretch:68%}
 
 /* SCREENS */
 .screen{display:none;flex-direction:column;min-height:100vh}
@@ -122,7 +128,7 @@ body{font-family:'Inter Tight',sans-serif;background:var(--base);color:var(--ink
 
 /* LOADING */
 #loading{background:var(--dark);align-items:center;justify-content:center}
-.splash-wm{font-family:'Inter Tight',sans-serif;font-size:48px;color:#fff;letter-spacing:-2px}
+.splash-wm{font-family:'Archivo',sans-serif;font-size:48px;color:#fff;letter-spacing:-2px}
 .splash-wm em{font-style:italic;color:rgba(255,255,255,0.4)}
 .spinner{display:inline-block;width:20px;height:20px;border:2px solid rgba(255,255,255,0.2);border-top-color:rgba(255,255,255,0.6);border-radius:50%;animation:spin .6s linear infinite;margin-top:20px}
 @keyframes spin{to{transform:rotate(360deg)}}
@@ -156,7 +162,7 @@ body{font-family:'Inter Tight',sans-serif;background:var(--base);color:var(--ink
 .tagline{font-size:15px;color:rgba(245,245,243,.72);margin-bottom:28px}
 .form-stack{display:flex;flex-direction:column;gap:12px}
 .field{background:rgba(245,245,243,.14);border:none;border-radius:var(--r-card);padding:16px 18px;font-size:15px;
-  font-family:'Inter Tight',sans-serif;color:#fff;outline:none;width:100%;-webkit-backdrop-filter:blur(10px);
+  font-family:'Archivo',sans-serif;color:#fff;outline:none;width:100%;-webkit-backdrop-filter:blur(10px);
   backdrop-filter:blur(10px);margin-bottom:2px}
 /* Campo preenchido pelo navegador vinha azul-claro com texto preto — cor do
    Chrome, não nossa, e numa tela azul-petróleo ela entra como corpo estranho.
@@ -177,10 +183,10 @@ body{font-family:'Inter Tight',sans-serif;background:var(--base);color:var(--ink
 .field::placeholder{color:rgba(255,255,255,.55)}
 .field:focus{box-shadow:inset 0 0 0 2px rgba(245,245,243,.45)}
 .btn-primary{background:var(--base);color:var(--ink);border:none;border-radius:var(--r-card);min-height:52px;
-  font-family:'Inter Tight',sans-serif;font-size:15px;font-weight:600;cursor:pointer;width:100%;margin-top:4px}
+  font-family:'Archivo',sans-serif;font-size:15px;font-weight:600;cursor:pointer;width:100%;margin-top:4px}
 .btn-primary:active{opacity:.85}.btn-primary:disabled{opacity:.5}
 .btn-google{background:var(--base);border:none;border-radius:var(--r-card);min-height:52px;color:var(--ink);
-  font-family:'Inter Tight',sans-serif;font-size:15px;font-weight:600;cursor:pointer;width:100%;display:flex;
+  font-family:'Archivo',sans-serif;font-size:15px;font-weight:600;cursor:pointer;width:100%;display:flex;
   align-items:center;justify-content:center;gap:10px;margin-bottom:8px}
 .btn-google:active{opacity:.85}
 /* O G do Google era branco chapado; sobre fundo claro ele sumia. */
@@ -192,8 +198,8 @@ body{font-family:'Inter Tight',sans-serif;background:var(--base);color:var(--ink
 .btn-apple{display:none}
 .btn-apple svg path{fill:var(--ink)}
 body.tem-apple .btn-apple{display:flex}
-.btn-email-ghost{background:transparent;border:none;color:var(--base);font-size:15px;font-weight:600;
-  font-family:'Inter Tight',sans-serif;cursor:pointer;width:100%;min-height:44px;padding:8px;
+.btn-email-ghost{background:transparent;border:none;color:#F5F5F3;font-size:15px;font-weight:600;
+  font-family:'Archivo',sans-serif;cursor:pointer;width:100%;min-height:44px;padding:8px;
   text-decoration:underline;text-underline-offset:3px}
 .login-toggle{text-align:center;font-size:13px;color:rgba(255,255,255,0.6);cursor:pointer;margin-top:8px}
 /* Aceite dos termos na própria tela de entrada. A diretriz 1.2 da Apple não
@@ -206,18 +212,18 @@ body.tem-apple .btn-apple{display:flex}
 .login-toggle span span{color:#fff;text-decoration:underline}
 .login-back{text-align:center;font-size:13px;color:rgba(255,255,255,0.5);cursor:pointer;margin-top:14px}
 .auth-error{background:rgba(0,0,0,.45);border:none;border-radius:var(--r-card);padding:12px 16px;font-size:14px;
-  color:var(--base);display:none;-webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px)}
+  color:#F5F5F3;display:none;-webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px)}
 .auth-error.show{display:block}
 /* ── LOGIN 2b (Claude Design, 20/10): só a marca na tela, caminhos na folha ── */
 #login .login-inner{padding:calc(44px + env(safe-area-inset-top,0px)) 20px calc(34px + env(safe-area-inset-bottom,0px))}
 #login .login-top{flex-direction:column;align-items:center;gap:14px;min-height:0}
 /* Cidade sem pílula, sem fundo, sem blur: texto claro com o ponto que pulsa. */
-#login .login-place-tag{background:none;-webkit-backdrop-filter:none;backdrop-filter:none;padding:0;border-radius:0;color:var(--base);font-weight:500}
+#login .login-place-tag{background:none;-webkit-backdrop-filter:none;backdrop-filter:none;padding:0;border-radius:0;color:#F5F5F3;font-weight:500}
 #login .photo-dots{margin:0}
 #login .login-bottom{gap:0}
 #login .login-wm{display:block;margin-bottom:28px}
 #login .login-entrar{min-height:52px;border-radius:var(--r-btn);background:var(--base);color:var(--ink);border:none;
-  font-family:'Inter Tight',sans-serif;font-size:16px;font-weight:600;cursor:pointer;width:100%}
+  font-family:'Archivo',sans-serif;font-size:16px;font-weight:600;cursor:pointer;width:100%}
 #login .login-entrar:active{opacity:.85}
 #login .login-legal{text-align:center;font-size:11px;line-height:1.4;color:rgba(245,245,243,.6);margin-top:14px;padding:0}
 #login .login-legal a{color:rgba(245,245,243,.82);text-decoration:underline;text-underline-offset:2px}
@@ -226,7 +232,7 @@ body.tem-apple .btn-apple{display:flex}
 .login-sheet{padding:12px 20px calc(34px + env(safe-area-inset-bottom,0px))}
 .login-vias,.login-email{display:flex;flex-direction:column;gap:8px}
 .via{min-height:52px;border-radius:var(--r-btn);border:none;display:flex;align-items:center;justify-content:center;gap:9px;
-  font-family:'Inter Tight',sans-serif;font-size:16px;font-weight:600;cursor:pointer}
+  font-family:'Archivo',sans-serif;font-size:16px;font-weight:600;cursor:pointer}
 .via:active{opacity:.85}
 .via svg{width:18px;height:18px}
 .via-apple{background:var(--green);color:var(--on-green)}
@@ -235,17 +241,17 @@ body.tem-apple .btn-apple{display:flex}
 .via-surface svg path{fill:var(--ink)}
 .le-topo{display:flex;align-items:center;justify-content:space-between;margin-bottom:4px}
 .le-tit{font-size:22px;font-weight:700;letter-spacing:-.03em;color:var(--ink)}
-.le-voltar{background:none;border:none;font-family:'Inter Tight',sans-serif;font-size:15px;color:var(--ink2);cursor:pointer}
+.le-voltar{background:none;border:none;font-family:'Archivo',sans-serif;font-size:15px;color:var(--ink2);cursor:pointer}
 .le-campo{background:var(--surface);border:none;border-radius:var(--r-btn);min-height:52px;padding:0 18px;width:100%;
-  font-family:'Inter Tight',sans-serif;font-size:15px;color:var(--ink);outline:none}
+  font-family:'Archivo',sans-serif;font-size:15px;color:var(--ink);outline:none}
 .le-campo::placeholder{color:var(--ink3)}
 .le-campo:focus{box-shadow:inset 0 0 0 2px var(--ink3)}
 .le-senha{position:relative;display:flex}
 .le-senha .le-campo{padding-right:84px}
 .le-mostrar{position:absolute;right:16px;top:50%;transform:translateY(-50%);background:none;border:none;
-  font-family:'Inter Tight',sans-serif;font-size:14px;color:var(--ink2);cursor:pointer}
+  font-family:'Archivo',sans-serif;font-size:14px;color:var(--ink2);cursor:pointer}
 .le-entrar{min-height:52px;border-radius:var(--r-btn);border:none;background:var(--green);color:var(--on-green);
-  font-family:'Inter Tight',sans-serif;font-size:16px;font-weight:600;cursor:pointer;width:100%}
+  font-family:'Archivo',sans-serif;font-size:16px;font-weight:600;cursor:pointer;width:100%}
 .le-entrar:active{opacity:.85}
 .le-links{display:flex;align-items:center;justify-content:space-between;font-size:15px;color:var(--ink2);margin-top:4px}
 .le-links span{cursor:pointer}
@@ -255,7 +261,7 @@ body.tem-apple .btn-apple{display:flex}
   color:var(--ink3);font-size:14px}
 .login-moderacao{font-size:12px;color:var(--ink3);text-align:center;margin-top:16px;line-height:1.4}
 .ns-agora-nao{display:block;margin:4px auto 8px;padding:12px 20px;background:none;border:none;font:inherit;font-size:15px;font-weight:600;color:var(--ink3);cursor:pointer}
-.auth-err-acao{background:none;border:none;padding:0;font:inherit;font-weight:600;color:var(--base);text-decoration:underline;text-underline-offset:2px;cursor:pointer}
+.auth-err-acao{background:none;border:none;padding:0;font:inherit;font-weight:600;color:#F5F5F3;text-decoration:underline;text-underline-offset:2px;cursor:pointer}
 
 /* DASHBOARD */
 /* Fundo da página é --base (sistema F; desenho de 05/10). Era --surface,
@@ -272,7 +278,7 @@ body.tem-apple .btn-apple{display:flex}
    numa coluna de 390px tem 173px de altura — a proporcao dele e 800x355.
    Reservar 440px deixava 260px de trama vazia em volta de tres paises.
    Agora a area e o mapa mais o espaco do scorecard, e mais nada. */
-.dash-mapa-area{position:relative;background:var(--map-bg);overflow:hidden}
+.dash-mapa-area{position:relative;background:transparent;overflow:hidden}
 /* A faixa da marca fica ACIMA do mapa, nao em cima dele: o logotipo caia
    sobre o Canada e o avatar sobre o Japao, e num perfil com muitos paises
    os dois ficavam em cima de pais pintado. */
@@ -324,17 +330,17 @@ input,textarea,select{font-size:max(16px,1em)!important}
 .placar-col{flex:1;min-width:0;display:grid;grid-template-columns:repeat(3,1fr);align-items:end;gap:14px}
 .mundo-frase{display:flex;flex-direction:column;gap:0;margin:20px 20px 0}
 .mf-1{font-size:14px;font-weight:400;line-height:1.3;color:var(--ink2)}
-.mf-2{font-size:30px;font-weight:700;letter-spacing:-.04em;line-height:1.05;color:var(--green)}
+.mf-2{font-size:30px;font-weight:700;letter-spacing:-.04em;line-height:1.05;color:var(--green);font-stretch:68%;letter-spacing:0}
 .pc-item{flex:1;min-width:0;display:flex;flex-direction:column;align-items:flex-start;gap:1px;
   background:none;border:none;padding:0;cursor:pointer;text-align:left}
 .pc-item:active{opacity:.6}
-.pc-n{font-size:26px;font-weight:700;letter-spacing:-.04em;color:var(--ink);line-height:1.05}
+.pc-n{font-size:26px;font-weight:700;letter-spacing:-.04em;color:var(--ink);line-height:1.05;font-stretch:68%;letter-spacing:0}
 .pc-r{display:flex;align-items:center;gap:3px;font-size:13px;color:var(--ink2);white-space:nowrap}
 .pc-seta{font-style:normal;font-size:12px;color:var(--ink3)}
 .sc-item{background:none;border:none;padding:0;cursor:pointer;text-align:left;
   display:flex;flex-direction:column;gap:2px;min-height:44px;justify-content:flex-end}
 .sc-item:active{opacity:.6}
-.sc-n{font-size:28px;font-weight:700;letter-spacing:-.04em;color:var(--ink);line-height:1}
+.sc-n{font-size:28px;font-weight:700;letter-spacing:-.04em;color:var(--ink);line-height:1;font-stretch:68%;letter-spacing:0}
 .sc-hero .sc-n{font-size:44px}
 .sc-r{font-size:14px;color:var(--ink2);display:flex;align-items:center;gap:3px}
 .sc-seta{font-style:normal;font-size:12px;color:var(--ink3)}
@@ -445,7 +451,7 @@ input,textarea,select{font-size:max(16px,1em)!important}
 .am-busca{margin-top:12px;background:var(--base)}
 .am-convite{background:var(--base);border-radius:var(--r-card);padding:16px;margin:8px 0 24px}
 .am-convite .l-meta{margin:6px 0 0;line-height:1.4}
-.am-reenviar{display:block;background:none;border:none;padding:12px 0 0;color:var(--green);font:600 15px 'Inter Tight',sans-serif;cursor:pointer;text-align:left}
+.am-reenviar{display:block;background:none;border:none;padding:12px 0 0;color:var(--green);font:600 15px 'Archivo',sans-serif;cursor:pointer;text-align:left}
 .am-rotulo{font-size:13px;font-weight:600;color:var(--ink2);margin-bottom:12px}
 /* Perfil: card tracejado no fim do trilho. O tracejado é do desenho, e é a
    única borda da tela: ele diz "espaço vazio", que superfície não diz. */
@@ -475,7 +481,7 @@ input,textarea,select{font-size:max(16px,1em)!important}
 .vg-vazio{font-size:15px;line-height:1.45;color:var(--ink2);margin:0 0 4px}
 /* Mapa em branco (rodada 1): três passos numerados, sem placar zerado. */
 .mapa-branco{margin:24px 20px 0}
-.mb-titulo{font-size:24px;font-weight:700;letter-spacing:-.03em;line-height:1.15;color:var(--ink)}
+.mb-titulo{font-size:24px;font-weight:700;letter-spacing:-.03em;line-height:1.15;color:var(--ink);font-stretch:68%;letter-spacing:0}
 .mb-sub{font-size:15px;line-height:1.45;color:var(--ink2);margin:8px 0 12px}
 .mb-passo{display:flex;align-items:center;gap:14px;width:100%;padding:12px 0;border:none;background:none;text-align:left;cursor:pointer;font-family:inherit}
 .mb-passo .l-nome,.mb-passo .l-meta{display:block}
@@ -489,7 +495,7 @@ input,textarea,select{font-size:max(16px,1em)!important}
 .dash-top>*{position:relative;z-index:1}
 .dash-hello{font-size:14px;color:var(--ink3);margin-bottom:5px}
 .dash-email{font-size:12.5px;color:var(--ink3);margin-top:9px;cursor:pointer}
-.dash-name{font-family:'Inter Tight',sans-serif;font-weight:400;font-size:34px;color:var(--ink);letter-spacing:-.015em;line-height:1.05}
+.dash-name{font-family:'Archivo',sans-serif;font-weight:400;font-size:34px;color:var(--ink);letter-spacing:-.015em;line-height:1.05}
 .avatar{width:40px;height:40px;border-radius:50%;background:var(--green);display:flex;align-items:center;justify-content:center;font-size:16px;color:var(--dark);font-weight:600;cursor:pointer;flex-shrink:0;box-shadow:var(--shadow-sm),0 0 0 2px var(--surface)}
 /* No Dashboard o scorecard fica POR CIMA do mapa, e com fundo translúcido o
    mapa aparecia através dele — dava pra ver a Patagônia dentro do card
@@ -519,7 +525,7 @@ input,textarea,select{font-size:max(16px,1em)!important}
 .checkin-q{flex:1;min-width:0;font-size:15px;color:var(--on-green);line-height:1.35}
 .checkin-q span{color:var(--on-green);font-weight:600}
 .checkin-add{flex-shrink:0;border:none;border-radius:var(--r-btn);min-height:36px;padding:0 14px;
-  background:var(--base);color:var(--green);font-family:'Inter Tight',sans-serif;font-size:14px;
+  background:var(--base);color:var(--green);font-family:'Archivo',sans-serif;font-size:14px;
   font-weight:600;cursor:pointer}
 .checkin-add:active{opacity:.85}
 .checkin-x{flex-shrink:0;width:30px;height:30px;border:none;background:none;color:var(--on-green);opacity:.6;
@@ -551,7 +557,7 @@ input,textarea,select{font-size:max(16px,1em)!important}
   color:var(--ink);cursor:pointer;display:flex;align-items:center;justify-content:center;margin-bottom:16px}
 .list-back:active{opacity:.7}
 .list-back svg{width:20px;height:20px}
-.list-title{font-size:34px;font-weight:700;letter-spacing:-.04em;color:var(--ink);line-height:1.05}
+.list-title{font-size:34px;font-weight:700;letter-spacing:-.04em;color:var(--ink);line-height:1.05;font-stretch:68%;letter-spacing:0}
 .list-kicker{font-size:15px;color:var(--ink2);margin-top:4px}
 /* "Quem já foi" abre o Explorar. A ordem é a tese do app: o que gente que
    você conhece achou vem ANTES do que o Google acha. */
@@ -612,7 +618,7 @@ input,textarea,select{font-size:max(16px,1em)!important}
 .coment-titulo{font-size:20px;font-weight:700;letter-spacing:-.03em;color:var(--ink);margin-bottom:14px}
 .coment-item{display:flex;gap:12px;padding:0 0 18px;border-top:none}
 .av-foto{background-size:cover!important;background-position:center!important;color:transparent!important}
-.coment-av{width:30px;height:30px;border-radius:50%;flex-shrink:0;background:var(--green);color:#fff;
+.coment-av{width:30px;height:30px;border-radius:50%;flex-shrink:0;background:var(--green);color:var(--on-green);
   display:flex;align-items:center;justify-content:center;font-family:var(--mono);font-size:11px}
 .coment-corpo{flex:1;min-width:0}
 .coment-topo{display:flex;align-items:center;gap:8px}
@@ -764,11 +770,11 @@ input,textarea,select{font-size:max(16px,1em)!important}
 .pln-dest b{flex:1;min-width:0;font-weight:400;text-align:left}
 .pln-dest small{flex:none;font-size:14px;color:var(--ink3)}
 .pln-dest span svg{width:18px;height:18px;color:var(--ink3)}
-.pln-linha .pln-check{flex:none;margin-top:20px;background:none;padding:0;border-color:#CFCFCB;cursor:pointer}
+.pln-linha .pln-check{flex:none;margin-top:20px;background:none;padding:0;border-color:rgba(245,245,243,.3);cursor:pointer}
 .pln-linha .pln-check.on{background:var(--green);border-color:var(--green)}
 .pln-off .pln-foto,.pln-off .pln-t{opacity:.45}
 .pln-pronto{margin-top:32px}
-.pln-pronto h1{margin:0;font-size:38px;font-weight:700;letter-spacing:-.04em;line-height:1.05;color:var(--green)}
+.pln-pronto h1{margin:0;font-size:38px;font-weight:700;letter-spacing:-.04em;line-height:1.05;color:var(--green);font-stretch:68%;letter-spacing:0}
 .pln-viagem{display:flex;align-items:center;gap:12px;width:100%;min-height:56px;margin-top:8px;padding:0;border:none;background:none;font:inherit;text-align:left;color:var(--ink);cursor:pointer}
 .pln-viagem b{flex:1;font-size:17px;font-weight:600}
 .pln-viagem span{font-size:14px;color:var(--ink2)}
@@ -790,7 +796,7 @@ input,textarea,select{font-size:max(16px,1em)!important}
 #place.previa .fi-cat{display:none}
 /* a3: Viagens sem nenhum spot */
 .vg-primeiro{padding:8px 0 24px}
-.vg-primeiro h2{margin:0;font-size:26px;font-weight:700;letter-spacing:-.03em}
+.vg-primeiro h2{margin:0;font-size:26px;font-weight:700;letter-spacing:-.03em;font-stretch:68%;letter-spacing:0}
 .vg-primeiro p{margin:6px 0 0;font-size:15px;line-height:1.45;color:var(--ink2)}
 .vg-primeiro .vg-nota{margin-top:10px;font-size:14px;color:var(--ink3)}
 /* Planejar v2 */
@@ -814,7 +820,7 @@ input,textarea,select{font-size:max(16px,1em)!important}
 .pln-rodape:empty{display:none}
 .pln-rodape .exm-btn:disabled{opacity:.35}
 .pln-avs-m{margin-top:8px}
-.pln-titulo{margin:12px 0 0;font-size:30px;font-weight:700;letter-spacing:-.04em;line-height:1.05;color:var(--green);overflow-wrap:anywhere}
+.pln-titulo{margin:12px 0 0;font-size:30px;font-weight:700;letter-spacing:-.04em;line-height:1.05;color:var(--green);overflow-wrap:anywhere;font-stretch:68%;letter-spacing:0}
 .pln-sub{margin:6px 0 0;font-size:15px;color:var(--ink2)}
 .pln-aviso{margin-top:20px;padding:14px 16px;border-radius:14px;background:var(--surface);font-size:15px;line-height:1.4;color:var(--ink)}
 .pln-aviso span{color:var(--ink2)}
@@ -836,7 +842,7 @@ input,textarea,select{font-size:max(16px,1em)!important}
 .pln-querem{font-size:14px;line-height:1.45;color:var(--ink2)}
 .pln-foram+.pln-querem{margin-top:0}
 .pln-t>.pln-querem:nth-child(2){margin-top:3px}
-.pln-vazio h2{margin:40px 0 8px;font-size:26px;font-weight:700;letter-spacing:-.03em;line-height:1.1}
+.pln-vazio h2{margin:40px 0 8px;font-size:26px;font-weight:700;letter-spacing:-.03em;line-height:1.1;font-stretch:68%;letter-spacing:0}
 .pln-vazio p{margin:0 0 24px;font-size:15px;line-height:1.45;color:var(--ink2)}
 .pln-folha-corpo{padding:4px 20px calc(28px + env(safe-area-inset-bottom,0px))}
 .pln-folha-corpo h3{margin:0 44px 14px 0;font-size:22px;font-weight:700;letter-spacing:-.03em}
@@ -856,7 +862,7 @@ input,textarea,select{font-size:max(16px,1em)!important}
 .pln-mapa{display:block;margin-top:14px;text-align:center;font-size:15px;color:var(--ink2);text-decoration:none;min-height:44px;line-height:44px}
 /* Importar notas (handoff "crescimento", fluxo 2, 30/09) */
 .imp-corpo{padding:4px 20px 140px;display:flex;flex-direction:column;min-height:calc(100vh - 60px)}
-.imp-titulo{margin:12px 0 0;font-size:26px;font-weight:700;letter-spacing:-.03em;line-height:1.1}
+.imp-titulo{margin:12px 0 0;font-size:26px;font-weight:700;letter-spacing:-.03em;line-height:1.1;font-stretch:68%;letter-spacing:0}
 .imp-sub{margin:6px 0 0;font-size:15px;line-height:1.45;color:var(--ink2)}
 .imp-campo{flex:1;min-height:280px;margin-top:20px;padding:16px;border:none;border-radius:var(--r-card);background:var(--surface);font:inherit;font-size:16px;line-height:1.5;color:var(--ink);resize:none;outline:none}
 .imp-campo::placeholder{color:var(--ink3)}
@@ -874,7 +880,7 @@ input,textarea,select{font-size:max(16px,1em)!important}
 .imp-cidade small{font-size:14px;font-weight:400;color:var(--ink3)}
 .imp-linha{display:flex;align-items:center;gap:12px;min-height:64px;padding:6px 0}
 .imp-linha.off .imp-foto,.imp-linha.off .imp-t,.imp-linha.off .imp-seg{opacity:.45}
-.imp-linha .pln-check{border-color:#CFCFCB;background:none;padding:0;cursor:pointer}
+.imp-linha .pln-check{border-color:rgba(245,245,243,.3);background:none;padding:0;cursor:pointer}
 .imp-linha .pln-check.on{background:var(--green);border-color:var(--green)}
 .imp-foto{flex:none;width:52px;height:52px;border-radius:12px;overflow:hidden;background:var(--photo-empty);display:flex;align-items:center;justify-content:center;color:var(--on-green)}
 .imp-foto.g{width:60px;height:60px}
@@ -893,7 +899,7 @@ input,textarea,select{font-size:max(16px,1em)!important}
 .imp-nao-buscar{color:var(--green);font-weight:600}
 .imp-nao-ignorar{color:var(--ink2)}
 .imp-pronto{margin:auto 0;padding:40px 0}
-.imp-pronto h1{margin:0 0 24px;font-size:38px;font-weight:700;letter-spacing:-.04em;line-height:1.05;color:var(--green)}
+.imp-pronto h1{margin:0 0 24px;font-size:38px;font-weight:700;letter-spacing:-.04em;line-height:1.05;color:var(--green);font-stretch:68%;letter-spacing:0}
 .imp-cid,.imp-alt{display:flex;align-items:center;gap:14px;width:100%;min-height:72px;padding:6px 0;border:none;background:none;font:inherit;text-align:left;color:var(--ink);cursor:pointer}
 .imp-cid .imp-t b{font-size:17px}
 .imp-cid .imp-t span{font-size:14px;color:var(--ink2)}
@@ -924,6 +930,26 @@ input,textarea,select{font-size:max(16px,1em)!important}
 .cid-nome{font-size:17px;font-weight:600;letter-spacing:-.02em;color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .cid-linha{margin-top:2px;font-size:14px;color:var(--ink2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .st-fui{color:var(--green);font-weight:600}
+/* ── Cidade, redesenho 06/11 (quadro "Cidade · viagem") ── */
+#city .cat-tabs-wrap,#city #citySubcatFilter,#city #cityLabel,#city #cityMeta,#city .btn-solto{display:none!important}
+#city .trip-hero{height:380px}
+#city .trip-hero-name{font-size:64px;line-height:.9}
+#city .cid-seg{padding:22px 20px 6px}
+.cid-pilulas{display:flex;gap:8px;align-items:center}
+.pil{height:34px;padding:0 14px;border:0;border-radius:17px;background:rgba(245,245,243,.08);color:rgba(245,245,243,.82);font:inherit;font-size:14px;font-weight:600;display:flex;align-items:center;gap:6px;cursor:pointer}
+.pil i{font-style:normal;font-weight:500;opacity:.55}
+.pil.on{background:var(--green);color:var(--on-green)}
+.pil-mais{margin-left:auto;width:34px;height:34px;border:0;border-radius:17px;background:rgba(245,245,243,.08);color:var(--ink);display:grid;place-items:center;cursor:pointer}
+.pil-mais svg{width:15px;height:15px}
+#city .cid-row{padding:6px 0}
+#city .cid-row .place-thumb{width:64px;height:64px}
+#city .cid-nome{font-size:16px}
+#city .cid-linha{font-size:13px}
+.cid-nota{flex:none;display:flex;align-items:center;gap:4px;font-stretch:68%;font-size:24px;font-weight:700;color:var(--ink)}
+.cid-nota svg{width:14px;height:14px}
+.cid-nota svg *{fill:var(--green);stroke:none}
+.cid-nr{flex:none;font-size:13px;color:var(--ink3)}
+#city .trip-body{padding-bottom:120px}
 .st-quero{color:var(--ink3)}
 /* Sugestões de lugar enquanto digita (27/09): "Itapura" é a cidade ou a rua. */
 #exploreCitySearch{padding-right:40px}
@@ -1002,7 +1028,7 @@ html.cv-digitando #cvSalvar{display:none}
 .cv-ficha-nota{margin:0;font-size:14px;line-height:1.45;color:var(--ink2);text-align:center}
 .cvp{padding:4px 20px 24px}
 .cvp-kicker{font-size:14px;font-weight:600;color:var(--green)}
-.cvp h2{margin:6px 0 8px;font-size:24px;font-weight:700;letter-spacing:-.03em;line-height:1.15;color:var(--ink)}
+.cvp h2{margin:6px 0 8px;font-size:24px;font-weight:700;letter-spacing:-.03em;line-height:1.15;color:var(--ink);font-stretch:68%;letter-spacing:0}
 .cvp p{margin:0 0 16px;font-size:15px;line-height:1.45;color:var(--ink2)}
 .cvp-chips{display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin-bottom:24px}
 .cvp-chip{height:44px;padding:0 16px;border:none;border-radius:10px;background:var(--surface);font:inherit;font-size:16px;font-weight:500;color:var(--ink);cursor:pointer}
@@ -1017,7 +1043,7 @@ html.cv-digitando #cvSalvar{display:none}
 .coz-atual i{font-style:normal;font-size:14px;color:var(--ink2)}
 .coz-conta{font-size:14px;color:var(--ink3)}
 .coz-sheet{padding:12px 0 calc(34px + env(safe-area-inset-bottom,0px));overflow:hidden}
-.coz-alca{width:36px;height:4px;border-radius:2px;background:#CFCFCB;margin:0 auto 16px}
+.coz-alca{width:36px;height:4px;border-radius:2px;background:rgba(245,245,243,.2);margin:0 auto 16px}
 .coz-cab{display:flex;justify-content:space-between;align-items:baseline;padding:0 20px 16px}
 .coz-cab h2{margin:0;font-size:20px;font-weight:700;letter-spacing:-.02em;color:var(--ink)}
 .coz-cab span{font-size:14px;color:var(--ink3)}
@@ -1114,7 +1140,7 @@ html.cv-digitando #cvSalvar{display:none}
   width:min(430px, 100%);
   height:calc(56px + env(safe-area-inset-bottom, 0px));
   padding-bottom:env(safe-area-inset-bottom, 0px);
-  background:rgba(245,245,243,.92);
+  background:rgba(7,32,25,.72);
   -webkit-backdrop-filter:blur(20px);
   backdrop-filter:blur(20px);
   display:flex;align-items:center;z-index:40;
@@ -1156,7 +1182,7 @@ body.na-casca .bottom-nav{display:none}
 .trip-float{display:none}
 .trip-hero-content{position:absolute;inset:0;padding:0 20px 20px;display:flex;flex-direction:column;
   justify-content:flex-end;background:linear-gradient(to top,rgba(0,0,0,.55),transparent 55%)}
-.back-btn{position:absolute;top:18px;left:20px;width:36px;height:36px;background:rgba(245,245,243,.92);
+.back-btn{position:absolute;top:18px;left:20px;width:36px;height:36px;background:rgba(7,32,25,.72);
   border:none;border-radius:50%;color:var(--ink);cursor:pointer;display:flex;align-items:center;
   justify-content:center;z-index:2}
 .back-btn:active{opacity:.7}
@@ -1164,7 +1190,7 @@ body.na-casca .bottom-nav{display:none}
 /* Espelho do voltar, do outro lado da capa. Mesma forma e mesmo tamanho: sao
    os dois unicos controles sobre a foto, e formas diferentes ali brigariam. */
 .hero-share{position:absolute;top:18px;right:20px;width:36px;height:36px;
-  background:rgba(245,245,243,.92);border:none;border-radius:50%;color:var(--ink);
+  background:rgba(7,32,25,.72);border:none;border-radius:50%;color:var(--ink);
   cursor:pointer;display:flex;align-items:center;justify-content:center;z-index:2}
 .hero-share:active{opacity:.7}
 .hero-share svg{width:19px;height:19px}
@@ -1172,7 +1198,7 @@ body.na-casca .bottom-nav{display:none}
   font-size:14px;font-weight:500;color:var(--ink3);text-align:center}
 .btn-texto:active{opacity:.6}
 .trip-hero-label{font-size:13px;font-weight:500;color:rgba(255,255,255,.85);margin-bottom:4px}
-.trip-hero-name{font-size:34px;font-weight:700;letter-spacing:-.04em;color:#fff;line-height:1.05}
+.trip-hero-name{font-size:34px;font-weight:700;letter-spacing:-.04em;color:#fff;line-height:1.05;font-stretch:68%;letter-spacing:0}
 .trip-hero-meta{font-size:13px;color:rgba(255,255,255,.7);margin-top:6px}
 /* Abas de categoria — agora vivem na tela PRÓPRIA de cada cidade, não
    mais fixas no topo da viagem inteira (a viagem mostra cards de cidade,
@@ -1211,7 +1237,7 @@ body.na-casca .bottom-nav{display:none}
 .city-card-tirar svg{width:16px;height:16px}
 .city-section{margin-bottom:26px}
 .city-header{display:flex;align-items:center;gap:10px;margin-bottom:12px;padding-top:16px}
-.city-name-text{font-family:'Inter Tight',sans-serif;font-weight:400;font-size:21px;color:var(--ink);letter-spacing:-.01em}
+.city-name-text{font-family:'Archivo',sans-serif;font-weight:400;font-size:21px;color:var(--ink);letter-spacing:-.01em}
 .city-count{margin-left:auto;font-size:13px;color:var(--ink3)}
 
 /* Filtros de tipo e de situacao: aba de texto, nao pilula. */
@@ -1252,7 +1278,7 @@ body.na-casca .bottom-nav{display:none}
 /* Credito do autor da foto. O Google exige que ele apareca junto da foto do
    lugar (Termos da Google Maps Platform), e o Unsplash exige o mesmo pras
    fotos de cidade. Fica discreto em cima da imagem, canto inferior direito. */
-.foto-credito{position:absolute;right:20px;bottom:8px;z-index:3;font-family:'Inter Tight',sans-serif;
+.foto-credito{position:absolute;right:20px;bottom:8px;z-index:3;font-family:'Archivo',sans-serif;
   font-size:10px;color:rgba(255,255,255,.45);max-width:60%;text-align:right;line-height:1.3;pointer-events:auto}
 .foto-credito a{color:inherit;text-decoration:none}
 .foto-credito:empty{display:none}
@@ -1263,12 +1289,12 @@ body.na-casca .bottom-nav{display:none}
 #place .foto-credito{position:static;font-size:10px;color:var(--ink3);max-width:none;text-align:left;
   padding:10px 0 0;opacity:.75}
 #place .foto-credito a{text-decoration:underline;text-underline-offset:2px}
-.hero-back{position:absolute;top:18px;left:20px;width:36px;height:36px;background:rgba(245,245,243,.92);
+.hero-back{position:absolute;top:18px;left:20px;width:36px;height:36px;background:rgba(7,32,25,.72);
   border:none;border-radius:50%;color:var(--ink);cursor:pointer;display:flex;align-items:center;
   justify-content:center;z-index:2}
 .hero-back:active{opacity:.7}
 .hero-back svg{width:20px;height:20px}
-.hero-photo-btn{position:absolute;bottom:18px;right:20px;width:36px;height:36px;background:rgba(245,245,243,.92);
+.hero-photo-btn{position:absolute;bottom:18px;right:20px;width:36px;height:36px;background:rgba(7,32,25,.72);
   border:none;border-radius:50%;color:var(--ink);cursor:pointer;display:flex;align-items:center;
   justify-content:center;z-index:2}
 .hero-photo-btn:active{opacity:.7}
@@ -1282,7 +1308,7 @@ body.na-casca .bottom-nav{display:none}
 .chip-want,.chip-been{background:var(--green);color:var(--on-green)}
 .hero-bottom{position:absolute;bottom:0;left:0;right:0;padding:0 20px 20px;z-index:2}
 .hero-type{font-size:13px;font-weight:500;color:rgba(255,255,255,.85);margin-bottom:4px}
-.hero-name{font-size:34px;font-weight:700;letter-spacing:-.04em;color:#fff;line-height:1.05}
+.hero-name{font-size:34px;font-weight:700;letter-spacing:-.04em;color:#fff;line-height:1.05;font-stretch:68%;letter-spacing:0}
 .d-section{padding:24px 20px 0}
 .sec-label{font-size:20px;font-weight:700;letter-spacing:-.03em;color:var(--ink);margin-bottom:14px}
 .sec-pequeno{font-size:15px;font-weight:600;letter-spacing:0;color:var(--ink2);margin-bottom:10px}
@@ -1327,7 +1353,7 @@ body.na-casca .bottom-nav{display:none}
    verde, vermelho) — tres acentos pra escolher entre tres palavras. */
 .status-toggle{display:flex;background:var(--surface);border-radius:var(--r-card);padding:4px;gap:4px}
 .toggle-btn{flex:1;min-height:44px;border:none;border-radius:var(--r-btn);background:transparent;
-  font-family:'Inter Tight',sans-serif;font-size:14px;font-weight:600;color:var(--ink2);cursor:pointer;text-align:center}
+  font-family:'Archivo',sans-serif;font-size:14px;font-weight:600;color:var(--ink2);cursor:pointer;text-align:center}
 .toggle-btn.sel-want,.toggle-btn.sel-been,.toggle-btn.sel-skip{background:var(--base);color:var(--ink)}
 .stars-row{display:flex;gap:4px}
 /* A estrela e um alvo de toque de 44px com o desenho de 18 no meio: o
@@ -1343,14 +1369,14 @@ body.na-casca .bottom-nav{display:none}
    aqui a estrela saía com 13px e meia estrela era um alvo de 11px (29/09). */
 .star-btn svg,.star-btn svg.ic{width:28px;height:28px}
 .review-area{width:100%;background:var(--surface);border:none;border-radius:var(--r-card);padding:16px;
-  font-size:15px;font-family:'Inter Tight',sans-serif;color:var(--ink);resize:none;outline:none;line-height:1.5}
+  font-size:15px;font-family:'Archivo',sans-serif;color:var(--ink);resize:none;outline:none;line-height:1.5}
 .review-area::placeholder{color:var(--ink3)}
 .action-btn{display:block;width:100%;min-height:48px;background:var(--green);color:var(--on-green);border:none;
-  border-radius:var(--r-card);padding:0 18px;font-family:'Inter Tight',sans-serif;font-size:14px;font-weight:600;
+  border-radius:var(--r-card);padding:0 18px;font-family:'Archivo',sans-serif;font-size:14px;font-weight:600;
   cursor:pointer;margin-top:14px;margin-bottom:0}
 .action-btn:active{opacity:.85}
 .reserve-btn{display:block;text-align:center;width:100%;box-sizing:border-box;background:var(--surface);
-  color:var(--ink);border:none;border-radius:var(--r-card);padding:14px;font-family:'Inter Tight',sans-serif;
+  color:var(--ink);border:none;border-radius:var(--r-card);padding:14px;font-family:'Archivo',sans-serif;
   font-size:14px;font-weight:600;text-decoration:none;margin-top:12px}
 .reserve-btn:active{opacity:.7}
 .req-card{display:flex;align-items:center;gap:10px;padding:10px 0}
@@ -1360,7 +1386,7 @@ body.na-casca .bottom-nav{display:none}
 /* flex-shrink:0 + nowrap: sem isso, avatar + nome + dois botões numa linha de
    375px espremiam os botões até o "Recusar" deformar. O nome é que cede
    espaço (tem ellipsis), não os botões. */
-.req-btn{border:none;border-radius:var(--r-btn);min-height:40px;padding:0 14px;font-family:'Inter Tight',sans-serif;
+.req-btn{border:none;border-radius:var(--r-btn);min-height:40px;padding:0 14px;font-family:'Archivo',sans-serif;
   font-size:14px;font-weight:600;cursor:pointer;flex-shrink:0;white-space:nowrap}
 .req-btn:active{opacity:.8}
 .req-accept{background:var(--green);color:var(--on-green)}
@@ -1378,7 +1404,7 @@ body.na-casca .bottom-nav{display:none}
    igual à de pedido recebido — é a mesma coisa vista de outro ângulo. */
 .busca-res{margin-top:12px;max-height:46vh;overflow-y:auto;-webkit-overflow-scrolling:touch}
 .busca-dica{font-size:13.5px;color:var(--ink3);padding:12px 2px;line-height:1.5}
-.busca-user{font-family:'Inter Tight',sans-serif;font-size:11.5px;color:var(--ink3);margin-top:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.busca-user{font-family:'Archivo',sans-serif;font-size:11.5px;color:var(--ink3);margin-top:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 /* "pedido enviado" é ESTADO, não botão: fundo surface e texto ink2, do mesmo
    tamanho do "Adicionar" ao lado — em 10.5px ele parecia nota de rodapé. */
 .busca-estado{font-size:14px;font-weight:600;color:var(--ink2);background:var(--surface);
@@ -1483,7 +1509,7 @@ body.na-casca .bottom-nav{display:none}
    uma faixa solta acima da lista pra virar aba própria. */
 .am-topo{display:flex;align-items:center;justify-content:space-between;gap:14px;
   padding:calc(18px + env(safe-area-inset-top,0px)) 20px 0;flex:none}
-.am-titulo{font-size:34px;font-weight:700;margin:0;letter-spacing:-.04em;color:var(--ink);line-height:1.05}
+.am-titulo{font-size:34px;font-weight:700;margin:0;letter-spacing:-.04em;color:var(--ink);line-height:1.05;font-stretch:68%;letter-spacing:0}
 .am-add{width:36px;height:36px;flex:none;border-radius:50%;border:none;background:var(--surface);
   color:var(--ink);display:flex;align-items:center;justify-content:center;cursor:pointer}
 .am-add:active{opacity:.7}
@@ -1584,10 +1610,10 @@ body.na-casca .bottom-nav{display:none}
 /* Excluir perde o vermelho e o sublinhado: acao destrutiva nao precisa
    gritar, precisa estar longe do polegar e escrita por extenso. */
 .delete-link{display:block;width:100%;background:none;border:none;color:var(--ink3);font-size:14px;
-  font-family:'Inter Tight',sans-serif;cursor:pointer;padding:16px 8px;margin:8px 0 110px}
+  font-family:'Archivo',sans-serif;cursor:pointer;padding:16px 8px;margin:8px 0 110px}
 .delete-link:active{opacity:.6}
 .secondary-link{display:block;width:100%;background:none;border:none;color:var(--ink2);font-size:14px;
-  font-weight:500;font-family:'Inter Tight',sans-serif;cursor:pointer;padding:14px 8px}
+  font-weight:500;font-family:'Archivo',sans-serif;cursor:pointer;padding:14px 8px}
 /* 24px na horizontal como todo conteudo de ficha. Sem isso o texto do aviso
    de pais trocado encostava na borda — o titulo alinhado e a frase colada na
    lateral, que foi o desalinhamento que o Lucas viu no print. */
@@ -1654,7 +1680,7 @@ body.na-casca .bottom-nav{display:none}
 .pn-item{background:none;border:none;padding:0;cursor:pointer;text-align:left;
   display:flex;flex-direction:column;gap:2px;min-height:44px;justify-content:flex-end}
 .pn-item:active{opacity:.6}
-.pn-n{font-size:28px;font-weight:700;letter-spacing:-.04em;color:var(--ink);line-height:1}
+.pn-n{font-size:28px;font-weight:700;letter-spacing:-.04em;color:var(--ink);line-height:1;font-stretch:68%;letter-spacing:0}
 .pn-r{font-size:13px;color:var(--ink2)}
 .prof-email{font-size:13px;color:var(--ink3);text-align:center;margin-top:22px}
 /* ═══ PERFIL DE AMIGO (só leitura) ═══ */
@@ -1706,7 +1732,7 @@ body.na-casca .bottom-nav{display:none}
   background:var(--surface);color:var(--ink);display:flex;align-items:center;justify-content:center;
   border:3px solid var(--base)}
 .avatar-edit-badge svg{width:13px;height:13px}
-.profile-name{font-size:30px;font-weight:700;letter-spacing:-.04em;color:var(--ink);line-height:1.05}
+.profile-name{font-size:30px;font-weight:700;letter-spacing:-.04em;color:var(--ink);line-height:1.05;font-stretch:68%;letter-spacing:0}
 /* A bio desceu pra linha própria: ao lado do @usuário ela era cortada em
    qualquer nome de duas palavras. Margem direita 40 pra não virar bloco. */
 .profile-bio{display:block;margin:10px 40px 0 0;font-size:16px;line-height:1.45;color:var(--ink2)}
@@ -1792,7 +1818,7 @@ body.na-casca .bottom-nav{display:none}
 .fi-topo-veu{position:absolute;left:0;right:0;top:0;height:30%;
   background:linear-gradient(to bottom,rgba(0,0,0,.35),transparent)}
 .fi-redondo{position:absolute;top:18px;width:40px;height:40px;border:none;border-radius:50%;
-  background:rgba(245,245,243,.92);color:var(--ink);display:flex;align-items:center;
+  background:rgba(7,32,25,.72);color:var(--ink);display:flex;align-items:center;
   justify-content:center;cursor:pointer;z-index:2}
 .fi-redondo:active{opacity:.7}
 .fi-redondo svg{width:20px;height:20px}
@@ -1801,7 +1827,7 @@ body.na-casca .bottom-nav{display:none}
 .fi-corpo{padding:20px 20px 0}
 .fi-tipo{font-size:13px;font-weight:500;color:var(--ink2)}
 .fi-nome{margin:4px 0 0;font-size:30px;font-weight:700;letter-spacing:-.04em;
-  line-height:1.05;color:var(--ink)}
+  line-height:1.05;color:var(--ink);font-stretch:68%;letter-spacing:0}
 .fi-servico{display:flex;align-items:center;gap:8px;margin-top:10px;font-size:14px;color:var(--ink2);flex-wrap:wrap}
 .fi-servico .fi-aberto{font-weight:600;color:var(--green)}
 .fi-servico .fi-fechado{color:var(--ink3)}
@@ -1879,7 +1905,7 @@ body.na-casca .bottom-nav{display:none}
 .cv-rot{font-size:13px;color:var(--ink2)}
 .cv-nome{font-size:20px;font-weight:700;letter-spacing:-.03em;color:var(--ink)}
 .cv-titulo{margin-top:20px;font-size:28px;font-weight:700;letter-spacing:-.04em;
-  line-height:1.15;color:var(--ink)}
+  line-height:1.15;color:var(--ink);font-stretch:68%;letter-spacing:0}
 .cv-texto{margin-top:12px;font-size:15px;line-height:1.5;color:var(--ink2)}
 .cv-fotos{display:flex;gap:8px;margin-top:20px}
 .cv-foto{width:96px;height:96px;border-radius:var(--r-card);background:var(--photo-empty);
@@ -1919,7 +1945,7 @@ body.tem-apple #convite .btn-apple{display:flex}
    manchinhas verdes flutuando nele, sem contorno de continente nenhum pra
    dizer onde elas ficavam. A trama de pontos e o MAR; a terra e solida por
    cima dela, e o verde marca so onde a pessoa esteve. */
-.wm-country{fill:#CBD3CD;stroke:none;transition:fill .4s}
+.wm-country{fill:#2C4A41;stroke:#0B2A21;stroke-width:.4;transition:fill .4s}
 .wm-country.visited{fill:var(--green)}
 .am-mapa{display:none;margin:16px 20px 0;background:var(--map-bg);border-radius:var(--r-card);overflow:hidden;aspect-ratio:800/355}
 .am-mapa.pronto{display:block}
@@ -2001,13 +2027,13 @@ body.tem-apple #convite .btn-apple{display:flex}
 .pv-virou-topo{display:flex;align-items:center;gap:14px;margin-bottom:12px}
 .pv-virou-foto{flex:none;width:64px;height:64px;border-radius:var(--r-card);background:var(--photo-empty) center/cover no-repeat}
 .pv-virou-sub{font-size:15px;color:var(--ink2)}
-.pv-virou h2{margin:2px 0 0;font-size:26px;font-weight:700;letter-spacing:-.035em;line-height:1.1;color:var(--green)}
+.pv-virou h2{margin:2px 0 0;font-size:26px;font-weight:700;letter-spacing:-.035em;line-height:1.1;color:var(--green);font-stretch:68%;letter-spacing:0}
 .pv-virou p{margin:0 0 10px;font-size:15px;line-height:1.5;color:var(--ink2)}
 .pv-virou .pf-bt2{background:var(--surface)}
 .vg-meta.vg-chegou{font-weight:600}
 /* Seus spots (8a–8d) */
 .ss-topo{padding:12px 20px 0}
-.ss-tit{margin:6px 0 2px;font-size:38px;font-weight:700;letter-spacing:-.045em;color:var(--green)}
+.ss-tit{margin:6px 0 2px;font-size:38px;font-weight:700;letter-spacing:-.045em;color:var(--green);font-stretch:68%;letter-spacing:0}
 .ss-sub{margin-bottom:16px;font-size:15px;color:var(--ink2)}
 .ss-busca{display:flex;align-items:center;gap:12px;margin-bottom:12px}
 .ss-busca label{flex:1;height:44px}
@@ -2056,7 +2082,7 @@ body.tem-apple #convite .btn-apple{display:flex}
 #profile .pv5-av{width:36px;height:36px;border-radius:11px;font-size:15px}
 .pv5-nome{font-size:17px;font-weight:600;color:var(--ink)}
 .pv5-ajustes{border:none;background:none;padding:0;font:inherit;font-size:15px;color:var(--ink2);cursor:pointer}
-.pv5-tit{margin:24px 0 12px;font-size:24px;font-weight:700;letter-spacing:-.03em;color:var(--ink)}
+.pv5-tit{margin:24px 0 12px;font-size:24px;font-weight:700;letter-spacing:-.03em;color:var(--ink);font-stretch:68%;letter-spacing:0}
 .pv5-cab{display:flex;align-items:baseline;justify-content:space-between}
 .pv5-mandar{display:flex;align-items:center;gap:6px;border:none;background:none;padding:0;font:inherit;font-size:15px;font-weight:600;color:var(--green);cursor:pointer}
 .pv5-mandar svg{width:16px;height:16px}
@@ -2085,7 +2111,7 @@ body.tem-apple #convite .btn-apple{display:flex}
 .pv5-abas i{font-style:normal;font-weight:400;font-size:14px;color:var(--ink3);margin-left:5px}
 .tp-linha,.to-linha{display:flex;align-items:center;gap:12px;width:100%;padding:6px 0;border:none;background:none;text-align:left;font:inherit;cursor:pointer}
 .tp-linha:active{opacity:.6}
-.tp-n{flex:none;width:30px;font-size:26px;font-weight:700;color:var(--green);letter-spacing:-.02em}
+.tp-n{flex:none;width:30px;font-size:26px;font-weight:700;color:var(--green);letter-spacing:-.02em;font-stretch:68%;letter-spacing:0}
 .tp-foto{flex:none;width:56px;height:56px;border-radius:var(--r-card);background:var(--photo-empty) center/cover no-repeat}
 .tp-1 .tp-n{font-size:34px}
 .tp-1 .tp-foto{width:72px;height:72px}
@@ -2095,7 +2121,7 @@ body.tem-apple #convite .btn-apple{display:flex}
 .tp-empate b{font-size:16px;font-weight:600;color:var(--ink)}
 .tp-empate span span{font-size:14px;color:var(--ink2);line-height:1.4}
 .tp-empate i{font-style:normal;color:var(--ink3)}
-.tp-pouco{margin:4px 0 6px;font-size:26px;font-weight:700;letter-spacing:-.03em;color:var(--green)}
+.tp-pouco{margin:4px 0 6px;font-size:26px;font-weight:700;letter-spacing:-.03em;color:var(--green);font-stretch:68%;letter-spacing:0}
 .tp-pouco-txt{margin:0 0 14px;font-size:15px;line-height:1.45;color:var(--ink2)}
 .pv5-vercid{width:auto;padding:0 18px}
 .tp-semnota{display:flex;gap:12px;margin:0 0 16px}
@@ -2121,13 +2147,13 @@ body.tem-apple #convite .btn-apple{display:flex}
 .to-linha.arrastando{position:relative;z-index:2;opacity:.9}
 .to-alca{flex:none;padding:10px 4px 10px 12px;font-size:22px;color:var(--ink3);cursor:grab;touch-action:none;user-select:none}
 .at-topo.tt-topo{display:flex;justify-content:space-between}
-.tt-tit{margin:4px 0 4px;font-size:38px;font-weight:700;letter-spacing:-.04em;color:var(--green)}
+.tt-tit{margin:4px 0 4px;font-size:38px;font-weight:700;letter-spacing:-.04em;color:var(--green);font-stretch:68%;letter-spacing:0}
 .tt-sub{margin-bottom:16px;font-size:15px;color:var(--ink2)}
 .de-topo{display:flex;justify-content:space-between;align-items:center;padding:18px 20px 0}
 .de-fechar{border:none;background:none;padding:0;font:inherit;font-size:16px;color:var(--ink2);cursor:pointer}
 .de-topo span{font-size:15px;color:var(--ink3)}
 .de-corpo{padding:24px 20px 0}
-.de-tit{margin:0 0 6px;font-size:32px;font-weight:700;letter-spacing:-.04em;color:var(--green)}
+.de-tit{margin:0 0 6px;font-size:32px;font-weight:700;letter-spacing:-.04em;color:var(--green);font-stretch:68%;letter-spacing:0}
 .de-sub{margin:0 0 20px;font-size:15px;color:var(--ink2)}
 .de-par{display:grid;grid-template-columns:1fr 1fr;gap:12px}
 .de-card{display:flex;flex-direction:column;gap:2px;border:none;background:none;padding:0;text-align:left;font:inherit;cursor:pointer}
@@ -2141,7 +2167,7 @@ body.tem-apple #convite .btn-apple{display:flex}
 .tc-todas{flex:none;width:52px;height:52px;border-radius:var(--r-card);background:var(--green);color:var(--base);display:flex;align-items:center;justify-content:center;font-size:20px}
 .tc-foto{flex:none;width:52px;height:52px;border-radius:var(--r-card);background:var(--photo-empty) center/cover no-repeat}
 .mt-corpo{padding:4px 20px 8px}
-.mt-tit{margin:0 0 4px;font-size:24px;font-weight:700;letter-spacing:-.03em;color:var(--green)}
+.mt-tit{margin:0 0 4px;font-size:24px;font-weight:700;letter-spacing:-.03em;color:var(--green);font-stretch:68%;letter-spacing:0}
 .mt-sub{margin:0 0 16px;font-size:15px;color:var(--ink2)}
 .mt-previa{margin:14px 0 6px;padding:14px 16px;border-radius:var(--r-card);background:var(--surface);font:inherit;font-size:15px;line-height:1.5;color:var(--ink);white-space:pre-wrap;max-height:34vh;overflow-y:auto}
 .mt-copiar{background:var(--surface)}
@@ -2181,7 +2207,7 @@ body.tem-apple #convite .btn-apple{display:flex}
 .fi-slide{flex:0 0 100%;height:100%;scroll-snap-align:start;scroll-snap-stop:always;background:var(--photo-empty) center/cover no-repeat}
 .fi-slide:first-child{background:transparent}
 .fi-carro::after{content:"";position:absolute;inset:0;pointer-events:none;background:linear-gradient(to top,rgba(0,0,0,.55),transparent 40%)}
-.fi-cont,.fi-google{position:absolute;bottom:14px;z-index:1;font-size:13px;color:var(--base);pointer-events:none}
+.fi-cont,.fi-google{position:absolute;bottom:14px;z-index:1;font-size:13px;color:#F5F5F3;pointer-events:none}
 .fi-cont{right:20px;font-weight:600}
 .fi-carro.esperando .fi-cont,.fi-carro.esperando .fi-google{visibility:hidden} /* 06/10: até a capa carregar */
 .fi-google{left:20px;opacity:0;transition:opacity .2s}
@@ -2192,8 +2218,8 @@ body.tem-apple #convite .btn-apple{display:flex}
 .fi-ver-faixa{position:absolute;inset:0;display:flex;overflow-x:auto;scroll-snap-type:x mandatory;scrollbar-width:none;overscroll-behavior-x:none}
 .fi-ver-faixa::-webkit-scrollbar{display:none}
 .fi-ver-slide{flex:0 0 100%;height:100%;scroll-snap-align:start;scroll-snap-stop:always;background:center/contain no-repeat}
-.fi-ver-cont{position:absolute;top:calc(22px + env(safe-area-inset-top));left:0;right:0;z-index:1;text-align:center;font-size:13px;font-weight:600;color:var(--base);pointer-events:none}
-.fi-ver-x{position:absolute;top:calc(12px + env(safe-area-inset-top));right:16px;z-index:2;width:40px;height:40px;border:none;border-radius:50%;background:rgba(245,245,243,.16);color:var(--base);display:flex;align-items:center;justify-content:center;cursor:pointer}
+.fi-ver-cont{position:absolute;top:calc(22px + env(safe-area-inset-top));left:0;right:0;z-index:1;text-align:center;font-size:13px;font-weight:600;color:#F5F5F3;pointer-events:none}
+.fi-ver-x{position:absolute;top:calc(12px + env(safe-area-inset-top));right:16px;z-index:2;width:40px;height:40px;border:none;border-radius:50%;background:rgba(245,245,243,.16);color:#F5F5F3;display:flex;align-items:center;justify-content:center;cursor:pointer}
 .fi-ver-x svg{width:20px;height:20px}
 /* Ficha única (e3–e5, C10, C12) */
 .fi-lista-rot{display:none;align-items:baseline;justify-content:space-between;margin:16px 0 8px;font-size:15px;font-weight:600;color:var(--ink)}
@@ -2202,6 +2228,9 @@ body.tem-apple #convite .btn-apple{display:flex}
 #place.previa .fi-previa-dica{font-size:15px;color:var(--ink)}
 .fi-deles{display:flex;flex-direction:column;gap:12px;margin:16px 0 4px}
 .fi-deles:empty{display:none}
+.fi-indic{display:flex;align-items:center;gap:8px;margin:16px 0 0;font-size:14px;color:var(--ink2)}
+.fi-indic:empty{display:none}
+.fi-indic svg{width:16px;height:16px;flex:none}
 .fi-dele{display:flex;gap:12px;align-items:flex-start;width:100%;border:none;background:none;padding:0;text-align:left;font:inherit;cursor:pointer}
 .fi-dele:active{opacity:.6}
 .fi-dele-seta{margin-left:auto;padding-top:8px;color:var(--ink3)}
@@ -2260,7 +2289,7 @@ body.tem-apple #convite .btn-apple{display:flex}
 .conv-dica{font-size:11.5px;color:var(--ink3);text-align:center;margin-top:10px;line-height:1.5}
 /* faixa de quem convidou, na tela de login */
 .convite-faixa{display:flex;align-items:center;gap:11px;background:rgba(245,245,243,.14);border:none;
-  border-radius:var(--r-card);padding:12px 14px;margin-bottom:18px;color:var(--base)}
+  border-radius:var(--r-card);padding:12px 14px;margin-bottom:18px;color:#F5F5F3}
 .convite-quem{font-size:14px;color:inherit;line-height:1.4}
 .convite-quem b{font-weight:600}
 .country-chips{display:block;margin-top:4px}
@@ -2338,13 +2367,13 @@ body.na-casca.tour-rodando .bottom-nav{display:flex}
 .onb-barra{flex:1;display:flex;gap:6px}
 .onb-barra i{flex:1;height:3px;border-radius:2px;background:var(--surface)}
 .onb-barra i.on{background:var(--green)}
-.onb-pular{background:none;border:none;padding:0;color:var(--green);font:600 15px 'Inter Tight',sans-serif;cursor:pointer}
+.onb-pular{background:none;border:none;padding:0;color:var(--green);font:600 15px 'Archivo',sans-serif;cursor:pointer}
 .onb-corpo{flex:1;min-height:0;overflow-y:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none;padding:32px 20px 16px}
 .onb-corpo::-webkit-scrollbar{display:none}
-.onb-titulo{font-size:30px;font-weight:700;letter-spacing:-.04em;line-height:1.08;color:var(--ink);margin:0 0 8px}
+.onb-titulo{font-size:52px;font-weight:700;letter-spacing:-.04em;line-height:1;color:var(--ink);margin:0 0 8px;font-stretch:68%;letter-spacing:0}
 .onb-sub{font-size:15px;line-height:1.45;color:var(--ink2);margin:0 0 24px}
 .onb-campo{display:flex;align-items:center;gap:10px;height:52px;padding:0 16px;background:var(--surface);border-radius:var(--r-card);color:var(--ink2);font-size:18px}
-.onb-campo input{flex:1;min-width:0;border:none;background:none;outline:none;font:16px 'Inter Tight',sans-serif;color:var(--ink)}
+.onb-campo input{flex:1;min-width:0;border:none;background:none;outline:none;font:16px 'Archivo',sans-serif;color:var(--ink)}
 .onb-campo input::placeholder{color:var(--ink3)}
 .onb-linha{display:flex;align-items:center;gap:14px;padding:12px 0;cursor:pointer}
 .onb-linha .l-ic,.onb-cartao .l-ic{width:28px;flex:none;display:flex;justify-content:center;font-size:18px;color:var(--ink)}
@@ -2367,7 +2396,7 @@ body.na-casca.tour-rodando .bottom-nav{display:flex}
 .onbf-anel{position:relative;width:120px;height:120px;flex:none}
 .onbf-anel svg{width:120px;height:120px;display:block}
 .onbf-pct{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center}
-.onbf-pct b{font-size:30px;font-weight:700;letter-spacing:-.04em;line-height:1;color:var(--ink)}
+.onbf-pct b{font-size:30px;font-weight:700;letter-spacing:-.04em;line-height:1;color:var(--ink);font-stretch:68%;letter-spacing:0}
 .onbf-pct span{font-size:13px;color:var(--ink2);margin-top:4px}
 .onbf-txt{min-width:0}
 .onbf-titulo{font-size:28px;line-height:1.05;text-wrap:balance;margin:0 0 6px}
@@ -2377,16 +2406,16 @@ body.na-casca.tour-rodando .bottom-nav{display:flex}
 .onbf-linha span+span{font-size:15px;font-weight:400;color:var(--ink2)}
 @keyframes onbfEntra{from{opacity:0}to{opacity:1}}
 @media (prefers-reduced-motion: reduce){.onbf-linha{animation:none}}
-.onb-btn{width:100%;height:52px;border:none;border-radius:var(--r-card);background:var(--green);color:var(--on-green);font:600 16px 'Inter Tight',sans-serif;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px}
+.onb-btn{width:100%;height:52px;border:none;border-radius:var(--r-card);background:var(--green);color:var(--on-green);font:600 16px 'Archivo',sans-serif;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px}
 .onb-btn:disabled{background:var(--surface);color:var(--ink3);cursor:default}
-.onb-link{display:block;width:100%;background:none;border:none;padding:16px 0 4px;color:var(--ink2);font:600 15px 'Inter Tight',sans-serif;cursor:pointer}
+.onb-link{display:block;width:100%;background:none;border:none;padding:16px 0 4px;color:var(--ink2);font:600 15px 'Archivo',sans-serif;cursor:pointer}
 .onb-rotulo{font-size:15px;font-weight:600;color:var(--ink);margin:32px 0 12px}
 .onb-chips{display:flex;flex-wrap:wrap;gap:8px;margin:12px 0 8px}
-.onb-chip{height:40px;padding:0 14px;border:none;border-radius:var(--r-btn);background:var(--surface);color:var(--ink);font:600 14px 'Inter Tight',sans-serif;cursor:pointer}
+.onb-chip{height:40px;padding:0 14px;border:none;border-radius:var(--r-btn);background:var(--surface);color:var(--ink);font:600 14px 'Archivo',sans-serif;cursor:pointer}
 .onb-chip.on{background:var(--green);color:var(--on-green)}
 .onb-lugar{display:flex;align-items:center;gap:14px;padding:12px;background:var(--surface);border-radius:var(--r-card);margin-bottom:12px}
 .onb-lugar-foto{width:56px;height:56px;flex:none;border-radius:var(--r-card);background:var(--photo-empty) center/cover;display:flex;align-items:center;justify-content:center;color:var(--on-green);font-size:22px}
-.onb-nota{width:100%;box-sizing:border-box;border:none;outline:none;resize:none;background:var(--surface);border-radius:var(--r-card);padding:14px 16px;font:16px/1.4 'Inter Tight',sans-serif;color:var(--ink)}
+.onb-nota{width:100%;box-sizing:border-box;border:none;outline:none;resize:none;background:var(--surface);border-radius:var(--r-card);padding:14px 16px;font:16px/1.4 'Archivo',sans-serif;color:var(--ink)}
 .onb-nota::placeholder{color:var(--ink3)}
 .onb-cartao{display:flex;gap:12px;padding:16px;background:var(--surface);border-radius:var(--r-card);margin-top:16px}
 .sheet{background:var(--base);border-radius:var(--r-sheet) var(--r-sheet) 0 0;width:100%;max-width:430px;
@@ -2406,15 +2435,15 @@ body.na-casca.tour-rodando .bottom-nav{display:flex}
    exatamente aquela cor, e ai todo pais parecia selecionado. */
 .dest-check{margin-left:auto;width:22px;height:22px;border-radius:50%;border:1.5px solid var(--border);flex:none;display:flex;align-items:center;justify-content:center;color:transparent}
 .dest-check svg{width:14px;height:14px}
-.dest-result.on .dest-check{background:var(--terra);border-color:var(--terra);color:#fff}
+.dest-result.on .dest-check{background:var(--terra);border-color:var(--terra);color:var(--on-green)}
 .dest-result.ja{opacity:.45;pointer-events:none}
-.dest-ja-tag{margin-left:auto;font-family:'Inter Tight',sans-serif;font-size:10px;color:var(--ink3)}
+.dest-ja-tag{margin-left:auto;font-family:'Archivo',sans-serif;font-size:10px;color:var(--ink3)}
 .sheet::-webkit-scrollbar{display:none}
 @keyframes slideUp{from{transform:translateY(100%)}to{transform:translateY(0)}}
 /* A alca nao arrasta nada — era decoracao imitando folha de iOS. Vira so
    o respiro do topo. */
 .sheet-handle{height:20px}
-.sheet-title{font-size:24px;font-weight:700;letter-spacing:-.03em;color:var(--ink);padding:0 20px 18px;line-height:1.1}
+.sheet-title{font-size:24px;font-weight:700;letter-spacing:-.03em;color:var(--ink);padding:0 20px 18px;line-height:1.1;font-stretch:68%;letter-spacing:0}
 .sheet-close{position:absolute;top:16px;right:20px;width:36px;height:36px;background:var(--surface);border:none;
   border-radius:50%;cursor:pointer;display:flex;align-items:center;justify-content:center;color:var(--ink);z-index:2}
 .sheet-close:active{opacity:.7}
@@ -2455,7 +2484,7 @@ body.na-casca.tour-rodando .bottom-nav{display:flex}
 .search-field{position:relative}
 .search-field .si{position:absolute;left:14px;top:14px;font-size:15px;pointer-events:none}
 .search-input{width:100%;background:var(--surface);border:none;border-radius:var(--r-card);
-  padding:15px 16px 15px 44px;font-size:15px;font-family:'Inter Tight',sans-serif;color:var(--ink);outline:none}
+  padding:15px 16px 15px 44px;font-size:15px;font-family:'Archivo',sans-serif;color:var(--ink);outline:none}
 .search-input::placeholder{color:var(--ink3)}
 .search-field .si{color:var(--ink3)}
 .search-field .si svg{width:18px;height:18px}
@@ -2480,14 +2509,14 @@ body.na-casca.tour-rodando .bottom-nav{display:flex}
 .note-place-meta{font-size:13px;color:var(--ink2);margin-top:2px}
 .note-wrap{padding:0 20px}
 .note-input{width:100%;background:var(--surface);border:none;border-radius:var(--r-card);padding:16px;
-  font-size:15px;font-family:'Inter Tight',sans-serif;color:var(--ink);resize:none;outline:none;line-height:1.5}
+  font-size:15px;font-family:'Archivo',sans-serif;color:var(--ink);resize:none;outline:none;line-height:1.5}
 .note-input::placeholder{color:var(--ink3)}
 .note-input.error{box-shadow:inset 0 0 0 2px var(--ink3)}
 .note-hint{font-size:12px;color:var(--ink3);padding:8px 20px 0}
 /* 06/10: segmentado do sistema (trilho --surface, escolhida --base), não pílula verde cheia. */
 .status-choice{display:flex;gap:4px;margin:4px 20px 0;padding:4px;background:var(--surface);border-radius:var(--r-btn)}
 .status-opt{flex:1;background:transparent;border:none;border-radius:8px;padding:12px;cursor:pointer;
-  display:flex;flex-direction:column;align-items:center;gap:8px;font-family:'Inter Tight',sans-serif}
+  display:flex;flex-direction:column;align-items:center;gap:8px;font-family:'Archivo',sans-serif}
 .status-opt:active{opacity:.7}
 .status-opt.active{background:var(--base)}
 .so-emoji{color:var(--ink3);display:flex}
@@ -2497,7 +2526,7 @@ body.na-casca.tour-rodando .bottom-nav{display:flex}
 .note-label{font-size:14px;font-weight:600;color:var(--ink2);padding:18px 20px 8px}
 #addStars{padding:0 24px}
 .sheet-cta{display:block;width:calc(100% - 40px);min-height:48px;margin:20px 20px 28px;background:var(--green);
-  color:var(--on-green);border:none;border-radius:var(--r-card);padding:0 18px;font-family:'Inter Tight',sans-serif;
+  color:var(--on-green);border:none;border-radius:var(--r-card);padding:0 18px;font-family:'Archivo',sans-serif;
   font-size:14px;font-weight:600;cursor:pointer}
 .sheet-cta:active{opacity:.85}
 /* Uma escolha por botao, empilhadas. O confirm do navegador so tem duas; o
@@ -2511,7 +2540,7 @@ body.na-casca.tour-rodando .bottom-nav{display:flex}
 .nt-label{font-size:14px;font-weight:600;color:var(--ink2);padding:0 20px 8px}
 .nt-wrap{padding:0 20px 16px}
 .nt-input{width:100%;min-height:48px;background:var(--surface);border:none;border-radius:var(--r-card);
-  padding:14px 16px;font-size:15px;font-family:'Inter Tight',sans-serif;color:var(--ink);outline:none}
+  padding:14px 16px;font-size:15px;font-family:'Archivo',sans-serif;color:var(--ink);outline:none}
 .nt-input:focus{box-shadow:inset 0 0 0 2px var(--ink3)}
 .nt-input::placeholder{color:var(--ink3)}
 .dates-row{display:flex;gap:10px;padding:0 24px 16px}
@@ -2525,7 +2554,7 @@ body.na-casca.tour-rodando .bottom-nav{display:flex}
 .dest-name{font-size:15px;font-weight:500;color:var(--ink)}
 .dest-region{font-size:12px;color:var(--ink3);margin-top:2px}
 .selected-dests{display:flex;flex-wrap:wrap;gap:8px;padding:0 24px 16px}
-.sel-dest-chip{display:flex;align-items:center;gap:7px;background:var(--terra);color:#fff;border-radius:var(--r-pill);padding:7px 13px;font-size:13px;font-weight:500}
+.sel-dest-chip{display:flex;align-items:center;gap:7px;background:var(--terra);color:var(--on-green);border-radius:var(--r-pill);padding:7px 13px;font-size:13px;font-weight:500}
 .sel-dest-chip button{background:none;border:none;color:rgba(255,255,255,0.7);cursor:pointer;font-size:14px;padding:0;line-height:1}
 /* O aviso vira o inverso da pagina: tinta cheia com texto claro. Sobre um
    fundo claro, um retangulo quase da mesma cor com sombra nao se destaca. */
@@ -2537,14 +2566,14 @@ body.na-casca.tour-rodando .bottom-nav{display:flex}
 .toast-icon{width:20px;height:20px;flex-shrink:0;color:var(--base);margin-top:1px;opacity:.7}
 .toast-body{flex:1;min-width:0}
 .toast-title{font-size:15px;font-weight:600;margin-bottom:2px;color:var(--base)}
-.toast-msg{font-family:'Inter Tight',sans-serif;font-size:14px;color:rgba(245,245,243,.72);line-height:1.4}
+.toast-msg{font-family:'Archivo',sans-serif;font-size:14px;color:rgba(245,245,243,.72);line-height:1.4}
 .toast-msg:empty{display:none}
 
 /* ═══ RECORTE DE FOTO (avatar quadrado, spot 3:2) — arrasta antes de subir,
    pra nunca cortar o rosto sem o usuário poder escolher onde ═══ */
 .cropper-overlay{position:fixed;inset:0;background:rgba(11,22,32,.96);z-index:500;display:none;flex-direction:column;align-items:center;justify-content:center;gap:22px}
 .cropper-overlay.show{display:flex}
-.cropper-hint{color:var(--ink3);font-family:'Inter Tight',sans-serif;font-size:11px;}
+.cropper-hint{color:var(--ink3);font-family:'Archivo',sans-serif;font-size:11px;}
 .cropper-stage{position:relative;overflow:hidden;background:#000;touch-action:none;cursor:grab;box-shadow:0 12px 40px rgba(0,0,0,.5)}
 .cropper-stage:active{cursor:grabbing}
 .cropper-stage img{position:absolute;top:0;left:0;user-select:none;-webkit-user-drag:none;pointer-events:none;max-width:none}
@@ -2600,7 +2629,7 @@ body.exm #exploreCozinhas,body.exm #exploreBody{display:none!important}
 #explore.exm-buscando .exm-folha{opacity:0;pointer-events:none}
 #explore.exm-cheia .exm-corpo{touch-action:pan-y}
 .exm-pega{flex:none;cursor:grab;touch-action:none;padding:10px 0 4px}
-.exm-alca{width:36px;height:4px;border-radius:2px;background:#CFCFCB;margin:0 auto}
+.exm-alca{width:36px;height:4px;border-radius:2px;background:rgba(245,245,243,.2);margin:0 auto}
 .exm-corpo{flex:1;min-height:0;overflow-y:auto;touch-action:none;-webkit-overflow-scrolling:touch;padding:0 0 24px;overscroll-behavior:contain}
 .exm-peek{display:flex;align-items:center;gap:12px;min-height:58px;padding:6px 20px 0;cursor:pointer}
 .exm-peek-avs,.exm-avs16,.exm-grupo-avs{display:flex;flex:none}
@@ -2629,9 +2658,9 @@ body.exm #exploreCozinhas,body.exm #exploreBody{display:none!important}
 .exm-card-foto{position:relative;height:150px;border-radius:18px;overflow:hidden;background-size:cover}
 .exm-card-foto img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
 .exm-card-foto::after{content:'';position:absolute;inset:0;background:linear-gradient(to top,rgba(0,0,0,.55),transparent 55%)}
-.exm-card-foto b{position:absolute;left:14px;right:14px;bottom:12px;z-index:1;font-size:17px;font-weight:600;letter-spacing:-.02em;color:var(--base);
+.exm-card-foto b{position:absolute;left:14px;right:14px;bottom:12px;z-index:1;font-size:17px;font-weight:600;letter-spacing:-.02em;color:#F5F5F3;
   white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.exm-cred{position:absolute;right:10px;top:8px;z-index:1;font-size:9px;color:var(--base);opacity:.85;max-width:60%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.exm-cred{position:absolute;right:10px;top:8px;z-index:1;font-size:9px;color:#F5F5F3;opacity:.85;max-width:60%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .exm-card-quem{display:flex;align-items:center;gap:8px;margin-top:8px;font-size:13px;color:var(--ink2);white-space:nowrap;overflow:hidden}
 .exm-card-quem span:last-child{overflow:hidden;text-overflow:ellipsis}
 .exm-rot{padding:4px 20px 10px;font-size:13px;color:var(--ink3)}
@@ -2722,12 +2751,320 @@ body.exm #exploreCozinhas,body.exm #exploreBody{display:none!important}
 .exf-ck.on{background:var(--green)}
 .exf-ck svg{width:14px;height:14px}
 .exf-nota{margin:12px 0 0;font-size:13px;color:var(--ink3)}
+
+/* ═══ REDESENHO 06/11 — por cima de tudo (branch redesenho) ═══
+   Regras do canvas aprovado: escolha ligada = pílula branco quente com texto
+   escuro; desligada = branco a 8%. Nada de segmentado com fundo "base". */
+.pf-seg,.fi-status{background:none;padding:0;gap:8px;height:auto;border-radius:0}
+.pf-op,.fi-st{flex:1;height:44px;border-radius:22px;background:rgba(245,245,243,.08);color:rgba(245,245,243,.82);font-weight:600}
+.pf-op.on,.fi-st.on{background:var(--green);color:var(--on-green)}
+.pf-op.on i{color:inherit;opacity:.55}
+.cat-tab{color:var(--ink3)}
+.cat-tab.active{color:var(--ink)}
+/* Ficha do spot (quadro "Ficha do spot") */
+.fi-foto{height:420px}
+.fi-redondo{background:rgba(7,32,25,.55);color:#F5F5F3}
+.fi-nome{font-size:40px;line-height:.95;margin-top:6px}
+.fi-corpo{padding-top:18px}
+.fi-acoes{grid-template-columns:repeat(4,1fr);gap:4px;margin-top:28px}
+.fi-ac{height:auto;background:none;gap:8px;padding:0}
+.fi-ac svg{width:52px;height:52px;padding:16px;box-sizing:border-box;border-radius:50%;background:rgba(245,245,243,.08)}
+.fi-ac span{font-size:12px;font-weight:500;color:var(--ink2)}
+.fi-end{background:rgba(245,245,243,.06);border-radius:20px}
+.fi-amcab .section-title{font-stretch:68%;font-size:28px;font-weight:700;letter-spacing:0}
+.fi-campo{font-size:16px;color:var(--ink)}
+/* Folhas de baixo: mesmo verde do fundo, sem borda */
+.sheet{background:#0A2A21}
+/* Rosto de quem não tem foto: inicial clara sobre cor sóbria */
+.pln-av,.avatar,.amg-avatar,.coment-av,.sp-av,.fd-av,.feed-avatar,.profile-avatar,.cv-avatar,.am-av{color:#F5F5F3;background-color:#2F5C4C;border-color:transparent}
+.profile-avatar,.cv-avatar,.am-av{border-radius:50%}
+.conv-bloco{background:rgba(245,245,243,.07);border-radius:20px}
+.conv-tit{color:var(--ink);font-stretch:68%;font-size:24px}
+.conv-txt{color:var(--ink2)}
+.conv-btn{background:var(--green);color:var(--on-green);border-radius:22px}
+/* Perfil do amigo (quadro "Perfil do amigo"): rosto ao lado do nome, mapa
+   de borda a borda, Planejar juntos em pílula clara */
+#friend .am-cab{display:grid;grid-template-columns:76px 1fr;column-gap:16px;align-items:center;padding:8px 20px 0}
+#friend .am-av{grid-row:1/4;width:76px;height:76px;font-size:30px}
+#friend .am-nome{font-size:40px}
+#friend .am-mapa{margin:20px 0 0;border-radius:0;background:transparent}
+#friend .pln-entrada{padding:0 20px}
+#friend .pln-btn{background:var(--green);color:var(--on-green);border-radius:22px;height:44px;margin-top:16px}
+.am-comum{background:rgba(245,245,243,.07);border-radius:20px}
+.am-cid-titulo{font-stretch:68%;font-size:28px}
+/* Atividade (quadro "Atividade (o sino)") */
+.at-topo{display:block;padding:52px 20px 0}
+.at-topo h1{text-align:left;font-size:52px;font-weight:700;line-height:1;margin:12px 0 0}
+.at-pedidos{display:flex;gap:10px;overflow-x:auto;margin:20px -20px 0;padding:0 20px;scrollbar-width:none}
+.at-pedidos::-webkit-scrollbar{display:none}
+.atp{flex:none;width:150px;border-radius:20px;background:rgba(245,245,243,.07);padding:16px 12px 12px;box-sizing:border-box;display:flex;flex-direction:column;align-items:center;gap:4px;text-align:center}
+.atp .pln-av.g{width:60px;height:60px;font-size:22px;margin-bottom:4px}
+.atp-nome{font-size:15px;font-weight:600;max-width:100%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.atp-meta{font-size:12px;color:var(--ink2);max-width:100%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.atp-bt{display:flex;gap:6px;width:100%;margin-top:8px}
+.atp .at-aceitar{flex:1;height:34px;border-radius:17px;font-size:14px}
+.atp-x{flex:none;width:34px;height:34px;border:0;border-radius:17px;background:rgba(245,245,243,.08);color:var(--ink);display:grid;place-items:center;cursor:pointer}
+.atp-x svg{width:14px;height:14px}
+.atp-cancelar{flex:1;height:34px;padding:0;border:0;border-radius:17px;background:rgba(245,245,243,.08);color:var(--ink2);font:inherit;font-size:14px;font-weight:600;cursor:pointer}
+.at-pils{display:flex;gap:8px;margin:24px 0 8px}
+.at-quando{display:block;margin-top:2px;font-size:13px;color:var(--ink3)}
+.at-foto{width:48px;height:48px;border-radius:12px}
+.sheet-handle{background:none}.profile-body{background:none}
+/* Login (quadro "Login"): botões em pílula, o principal claro */
+#login .login-entrar{background:var(--green);color:var(--on-green);border-radius:27px;min-height:54px;font-weight:600}
+.via,.le-campo,.le-entrar{border-radius:27px;min-height:54px}
+.via-surface{background:rgba(245,245,243,.12)}
+/* Ajustes (quadro "Ajustes"): linhas em bloco claro, Sair em pílula,
+   Excluir em cinza no fim. Sem linha divisória. */
+#ov-editperfil .sheet-title{font-stretch:68%;font-size:40px;font-weight:700}
+#ov-editperfil .prof-linha{border:none!important;background:rgba(245,245,243,.06);border-radius:16px;margin-bottom:6px;padding-left:14px;padding-right:14px}
+#ov-editperfil .prof-sair{background:none;color:var(--ink3)}
+.nt-input,.note-input{background:rgba(245,245,243,.08);border:none;color:var(--ink)}
+/* Você (quadro "Você · mapa"): anel ao lado dos números, sem caixa; Em casa
+   em foto grande; viagens em fileira de fotos só com o nome. */
+#dashMundo{display:none}
+.placar-card{background:none!important;box-shadow:none!important;padding:0!important;margin:24px 20px 0;gap:22px}
+.vc-anel{position:relative;width:100px;height:100px;flex:none}
+.vc-anel svg{width:100%;height:100%;display:block}
+.vc-anel-tx{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center}
+.vc-anel-tx b{font-stretch:68%;font-size:36px;font-weight:700;line-height:.9;color:var(--green)}
+.vc-anel-tx span{font-size:11px;color:var(--ink2);margin-top:4px}
+.pc-n{font-stretch:68%;font-size:46px!important;line-height:.9}
+.dash-mais{background:rgba(7,32,25,.55)}
+.vc-cab{display:flex;align-items:baseline;justify-content:space-between;margin:36px 0 14px}
+.vc-tit{margin:0;font-stretch:68%;font-size:28px;font-weight:700}
+.vc-mais{border:0;background:none;padding:0;font:inherit;font-size:13px;font-weight:600;color:var(--green);cursor:pointer}
+.vc-casa{position:relative;display:block;width:100%;height:190px;border:0;padding:0;border-radius:22px;overflow:hidden;cursor:pointer;text-align:left}
+.vc-casa-foto,.vc-via-foto{position:absolute;inset:0;background:var(--photo-empty) center/cover no-repeat}
+.vc-veu{position:absolute;inset:0;background:linear-gradient(to top,rgba(0,0,0,.55),transparent 55%)}
+.vc-casa-nome{position:absolute;left:18px;bottom:16px;font-stretch:68%;font-size:40px;font-weight:700;line-height:.95;color:#F5F5F3}
+.vc-minis{position:absolute;right:14px;bottom:14px;display:flex}
+.vc-minis span{width:34px;height:34px;border-radius:50%;background:center/cover;box-shadow:0 0 0 2px rgba(7,32,25,.8)}
+.vc-minis span+span{margin-left:-10px}
+.vc-pils{display:flex;gap:8px;overflow-x:auto;margin:0 -20px 14px;padding:0 20px;scrollbar-width:none}
+.vc-pils::-webkit-scrollbar{display:none}
+.vc-pils .pil{flex:none}
+.vc-trilho{display:flex;gap:10px;overflow-x:auto;margin:0 -20px;padding:0 20px 8px;scrollbar-width:none}
+.vc-trilho::-webkit-scrollbar{display:none}
+.vc-via{position:relative;flex:none;width:150px;height:196px;border:0;padding:0;border-radius:20px;overflow:hidden;cursor:pointer;text-align:left}
+.vc-via b{position:absolute;left:14px;right:14px;bottom:12px;font-stretch:68%;font-size:24px;font-weight:700;line-height:1;color:#F5F5F3}
+/* Barra de baixo: o + no meio é um círculo claro */
+.nav-mais .nav-icon{width:52px;height:52px;border-radius:50%;background:var(--green);color:var(--on-green)!important;justify-content:center}
+.nav-mais .nav-icon svg{width:24px;height:24px}
+/* Listas (quadros Listas, Lista compartilhada, Criar, Listas · vazia) */
+.ls-topo{display:flex;align-items:baseline;justify-content:space-between;padding:56px 20px 0}
+.ls-tit{margin:0;font-stretch:68%;font-size:52px;font-weight:700;line-height:1}
+#lsCorpo{padding:0 20px}
+/* Listas V4 (13/11): pilhas, prateleiras, busca e filtro */
+.ls-topo{align-items:center}
+.lp-mais{width:44px;height:44px;flex:none;border:0;border-radius:22px;background:var(--green);color:var(--on-green);display:grid;place-items:center;cursor:pointer}
+.lp-mais svg{width:20px;height:20px}
+.lp-cab{padding:0 20px}
+.lp-abas{display:flex;gap:22px;margin-top:22px}
+.lp-abas button{border:0;background:none;padding:0 0 8px;font:inherit;font-size:17px;font-weight:600;color:var(--ink3);cursor:pointer}
+.lp-abas button[aria-pressed="true"]{color:var(--ink);box-shadow:inset 0 -2px 0 var(--green)}
+.lp-busca{margin-top:14px;height:48px;border-radius:24px;background:var(--surface);display:flex;align-items:center;gap:10px;padding:0 16px;color:var(--ink2)}
+.lp-busca>span{display:grid;place-items:center;flex:none}
+.lp-busca>span svg{width:19px;height:19px}
+.lp-busca input{flex:1;min-width:0;border:0;background:none;outline:0;color:var(--ink);font:inherit;font-size:16px}
+.lp-busca input::placeholder{color:var(--ink3)}
+.lp-busca input::-webkit-search-cancel-button{display:none}
+.lp-limpar{border:0;background:none;padding:6px;color:var(--ink2);display:grid;place-items:center;cursor:pointer}
+.lp-limpar svg{width:16px;height:16px}
+.lp-pils{display:flex;flex-wrap:wrap;gap:8px;margin-top:14px}
+.lp-pils button{height:34px;padding:0 14px;border:0;border-radius:17px;background:var(--surface);color:var(--ink);opacity:.85;font:inherit;font-size:14px;font-weight:600;cursor:pointer}
+.lp-pils button[aria-pressed="true"]{background:var(--green);color:var(--on-green);opacity:1}
+.lp-sec{margin-top:30px}
+.lp-h2{margin:0;padding:0 20px;font-stretch:68%;font-size:26px;font-weight:700;display:flex;align-items:center;gap:10px}
+.lp-h2 .pln-av{width:30px;height:30px;font-size:13px;border:0;font-stretch:100%}
+/* prateleira: desliza pro lado; a pilha cortada na borda avisa que tem mais */
+.lp-prat{display:flex;gap:30px;overflow-x:auto;padding:22px 20px 8px 38px;scroll-snap-type:x proximity;scrollbar-width:none;-webkit-overflow-scrolling:touch}
+.lp-prat::-webkit-scrollbar{display:none}
+.lp-prat .lp-item{flex:none;width:124px;scroll-snap-align:center}
+.lp-grade{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:40px 10px;margin-top:34px;padding:0 20px}
+/* a pilha: a foto mais nova fica por cima, reta; as de trás saem tortas */
+.lp-item{display:flex;flex-direction:column;align-items:center;gap:14px;border:0;background:none;padding:0;min-width:0;text-align:center;color:var(--ink);font:inherit;cursor:pointer}
+.lp-pilha{position:relative;display:block;width:132px;height:132px}
+.lp-prat .lp-pilha{width:124px;height:124px}
+.lp-f{position:absolute;inset:0;border-radius:18px;background:#2F5C4C center/cover no-repeat;box-shadow:0 0 0 4px var(--base)}
+.lp-f.lp-t2{transform:translate(-13.6%,4.5%) rotate(var(--g0))}
+.lp-f.lp-t1{transform:translate(13.6%,2.3%) rotate(var(--g1))}
+.lp-selo{position:absolute;right:-12px;top:-12px;width:38px;height:38px;border-radius:50%;background:var(--green);color:var(--on-green);display:grid;place-items:center;box-shadow:0 0 0 4px var(--base)}
+.lp-nome{display:block;font-size:17px;font-weight:600;line-height:1.2}
+.lp-sub{display:block;font-size:13px;color:var(--ink2);margin-top:3px}
+.lp-item:active .lp-pilha{transform:scale(.97)}
+.lp-todas{margin:26px 20px 0;width:calc(100% - 40px);height:54px;border:0;border-radius:27px;background:var(--surface);color:var(--ink);display:flex;align-items:center;justify-content:space-between;padding:0 22px;font:inherit;font-size:16px;font-weight:600;cursor:pointer}
+.lp-todas span{color:var(--ink2);font-weight:500}
+.lp-nada{margin:40px 20px 0;font-size:15px;color:var(--ink2);line-height:1.5}
+.lp-voltar{margin:26px 20px 0;border:0;background:none;padding:0;display:flex;align-items:center;gap:6px;font:inherit;font-size:15px;font-weight:600;color:var(--ink2);cursor:pointer}
+.lp-voltar svg{width:18px;height:18px}
+/* a lista aberta */
+.lp-lista{padding:0 20px}
+.lp-nomeh{display:flex;align-items:center;gap:12px;line-height:.96;margin-top:10px}
+.lp-nomeh .lp-selo{position:static;box-shadow:none;flex:none}
+.lp-chips{display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin-top:16px}
+.lp-chip{height:34px;padding:0 12px;border:0;border-radius:17px;background:var(--surface);color:var(--ink);font:inherit;font-size:13px;font-weight:600;display:flex;align-items:center;gap:6px}
+button.lp-chip{cursor:pointer}
+.lp-chip svg{width:14px;height:14px}
+.lp-gente{display:flex;align-items:center;padding-left:6px}
+.lp-gente .pln-av{width:30px;height:30px;font-size:12px;margin-left:-6px;border-color:var(--base)}
+.lp-add{margin-top:22px;width:100%;height:54px;border:0;border-radius:27px;background:var(--green);color:var(--on-green);font:inherit;font-size:16px;font-weight:600;display:flex;align-items:center;justify-content:center;gap:8px;cursor:pointer}
+.lp-add svg{width:18px;height:18px}
+.lp-bloco{margin-top:30px}
+.lp-bloco .lp-h2{padding:0;font-size:24px;margin-bottom:4px}
+.lp-lista .lp-nada{margin:30px 0 0}
+.lp-dica{margin:22px 0 0;font-size:13px;color:var(--ink2)}
+.lp-linha{display:flex;align-items:center;gap:14px;padding:8px 0}
+.lp-foto{flex:none;width:60px;height:60px;border-radius:14px;background:#2F5C4C center/cover no-repeat}
+.lp-tx{flex:1;min-width:0}
+.lp-tx b{display:block;font-size:16px;font-weight:600}
+.lp-sub2{display:block;font-size:13px;color:var(--ink2);margin-top:2px}
+/* marcar que foi: arrasta a linha pra esquerda; a nota entra na hora */
+.lp-arr{position:relative;border-radius:16px;overflow:hidden;margin:0 -12px}
+.lp-atras{position:absolute;inset:0;display:none;align-items:center;gap:8px;padding:0 22px;font-size:15px;font-weight:600;background:var(--surface)}
+.lp-atras svg{width:18px;height:18px}
+.lp-arr.indo:not(.pra-dir) .lp-dir{display:flex;justify-content:flex-end}
+.lp-arr.indo.pra-dir .lp-esq{display:flex;justify-content:flex-start}
+.lp-arr.vai:not(.pra-dir) .lp-dir{background:var(--green);color:var(--on-green)}
+.lp-frente{position:relative;padding:8px 12px;touch-action:pan-y;user-select:none;-webkit-user-select:none}
+.lp-arr.indo .lp-frente{background:#0A3023}
+.lp-estl{display:flex;gap:2px;margin-top:6px}
+.lp-estl button{width:30px;height:30px;border:0;background:none;padding:0;display:grid;place-items:center;color:var(--ink3);cursor:pointer}
+.lp-estl button.on{color:var(--green)}
+.lp-estl button.on path{fill:currentColor}
+.lp-nt{margin-left:auto;flex:none;border:0;background:none;color:var(--ink);padding:0 0 0 8px;font:inherit;font-stretch:68%;font-size:32px;font-weight:700;line-height:1;font-variant-numeric:tabular-nums;cursor:pointer}
+@media (prefers-reduced-motion:no-preference){
+  .lp-pilha{transition:transform .12s}
+  .lp-frente{transition:transform .18s}
+  @keyframes lp-pop{0%{transform:scale(1)}45%{transform:scale(1.12)}100%{transform:scale(1)}}
+  @keyframes lp-sobe{from{opacity:0;transform:translateY(6px) scale(.7)}to{opacity:1;transform:none}}
+  .lp-arr.novo .lp-foto{animation:lp-pop .4s ease-out}
+  .lp-arr.novo .lp-estl button{animation:lp-sobe .28s ease-out backwards}
+  .lp-arr.novo .lp-estl button:nth-child(2){animation-delay:.05s}.lp-arr.novo .lp-estl button:nth-child(3){animation-delay:.1s}
+  .lp-arr.novo .lp-estl button:nth-child(4){animation-delay:.15s}.lp-arr.novo .lp-estl button:nth-child(5){animation-delay:.2s}
+}
+/* roteiro */
+.lp-vistas{margin-top:26px}
+.lp-diah{justify-content:space-between;align-items:baseline}
+.lp-diah small{font-size:14px;font-weight:500;font-stretch:100%;color:var(--ink2)}
+.lp-tirardia{border:0;background:none;padding:0;font:inherit;font-size:14px;font-weight:500;font-stretch:100%;color:var(--ink3);cursor:pointer}
+.lp-turno{display:flex;align-items:center;gap:14px;width:100%;padding:7px 0;border:0;background:none;color:var(--ink);font:inherit;text-align:left;cursor:pointer}
+.lp-turno i{font-style:normal;width:58px;flex:none;font-size:13px;color:var(--ink2)}
+.lp-turno .lp-foto{width:52px;height:52px;border-radius:12px}
+.lp-turno b{flex:1;min-width:0;font-size:16px;font-weight:600}
+.lp-turno.falta b{font-size:15px;font-weight:500;color:var(--ink3)}
+.lp-perto{margin-left:72px;font-size:12px;color:var(--ink3);padding:1px 0}
+.lp-sec2{display:block;margin-top:22px;width:100%;height:50px;border:0;border-radius:25px;background:var(--surface);color:var(--ink);font:inherit;font-size:15px;font-weight:600;cursor:pointer}
+.lp-sec2f{margin:18px 20px 24px;width:calc(100% - 40px)}
+.lp-dias{display:flex;align-items:center;justify-content:space-between;padding:0 20px;margin-top:6px}
+.lp-dias span{font-stretch:68%;font-size:64px;font-weight:700;line-height:1;text-align:center}
+.lp-dias small{display:block;font-size:14px;font-weight:500;font-stretch:100%;color:var(--ink2);margin-top:4px}
+.lp-dias button{width:52px;height:52px;border:0;border-radius:26px;background:var(--surface);color:var(--ink);display:grid;place-items:center;cursor:pointer}
+.lp-dias button svg{width:20px;height:20px}
+.lp-mvg{margin:18px 0 8px;font-size:13px;color:var(--ink2)}
+.lp-mvg+.lp-pils{margin-top:0}
+.lp-vagal{padding:6px 20px}
+#lsRotBt[disabled]{opacity:.4}
+/* folha de adicionar e calendário */
+.lp-porbusca{margin:0 20px}
+.lp-rot{margin:18px 20px 4px;font-size:13px;color:var(--ink2)}
+#lsPorLista .ls-linha{padding:6px 20px}
+.lp-mais2{margin-left:auto;flex:none;width:32px;height:32px;border-radius:16px;background:var(--surface);display:grid;place-items:center}
+.lp-mais2 svg{width:16px;height:16px}
+.lp-pino{display:grid!important;place-items:center;color:var(--ink)}
+.lp-pino svg{width:22px;height:22px}
+.lp-nada-folha{margin:18px 20px 0;font-size:14px}
+.lp-cal{padding:0 20px}
+.lp-cal .lp-pils{margin-top:0}
+.lp-cal-top{display:flex;align-items:center;justify-content:space-between;margin-top:14px}
+.lp-cal-top b{font-size:17px;font-weight:600}
+.lp-cal-top button{width:40px;height:40px;border:0;border-radius:20px;background:var(--surface);color:var(--ink);display:grid;place-items:center;cursor:pointer}
+.lp-cal-sem,.lp-cal-g{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));touch-action:pan-y}
+.lp-cal-sem span{text-align:center;font-size:12px;color:var(--ink3);padding:14px 0 6px}
+.lp-cal-g button{height:44px;border:0;background:none;color:var(--ink);font:inherit;font-size:15px;font-weight:500;font-variant-numeric:tabular-nums;cursor:pointer}
+.lp-cal-g button.meio{background:var(--surface)}
+.lp-cal-g button.ponta{background:var(--green);color:var(--on-green);font-weight:700;border-radius:22px}
+.lp-cal-res{margin:14px 0 0;min-height:20px;text-align:center;font-size:14px;color:var(--ink2)}
+#lsQuandoBt[disabled]{opacity:.4}
+.lp-semdata{margin:-8px auto 24px}
+.ls-vazio{text-align:center;padding:40px 0}
+.ls-vazio p{margin:24px auto;max-width:260px;font-size:16px;line-height:1.4;color:var(--ink2)}
+.ls-leque{position:relative;height:150px}
+.ls-falsa{position:absolute;top:10px;left:50%;width:110px;height:130px;margin-left:-55px;border-radius:16px;background:rgba(245,245,243,.08)}
+.ls-f0{transform:rotate(-12deg) translateX(-70px)}.ls-f2{transform:rotate(12deg) translateX(70px)}.ls-f1{background:rgba(245,245,243,.14);z-index:1}
+.ls-linha{display:flex;align-items:center;gap:14px;width:100%;box-sizing:border-box;border:0;background:none;color:var(--ink);font:inherit;text-align:left;cursor:pointer;padding:6px 0}
+.ls-linha .place-thumb{display:block;flex:none;width:64px;height:64px;border-radius:14px;background-color:#2F5C4C}
+.ls-linha .cid-txt{display:flex;flex-direction:column;gap:3px;flex:1;min-width:0}
+.ls-linha .cid-nome,.ls-linha .cid-linha{display:block}
+.ls-apagar{display:block;margin:28px auto 0;border:0;background:none;font:inherit;font-size:15px;color:var(--ink3);cursor:pointer}
+.ls-tipos{display:grid;gap:10px;margin-top:8px}
+.ls-tipo{display:flex;flex-direction:column;gap:4px;padding:20px;border:0;border-radius:20px;background:rgba(245,245,243,.07);color:var(--ink);text-align:left;font:inherit;cursor:pointer}
+.ls-tipo b{font-stretch:68%;font-size:28px}
+.ls-tipo span{font-size:14px;color:var(--ink2)}
+.ls-com{display:flex;flex-wrap:wrap;gap:12px;margin:6px 0 18px}
+.ls-pessoa{display:flex;flex-direction:column;align-items:center;gap:6px;width:62px;border:0;background:none;padding:0;color:var(--ink2);font:inherit;font-size:12px;cursor:pointer}
+.ls-pessoa .pln-av.g{width:48px;height:48px;font-size:18px;box-shadow:0 0 0 2px transparent}
+.ls-pessoa.on{color:var(--ink)}
+.ls-pessoa.on .pln-av.g{box-shadow:0 0 0 3px var(--green)}
+/* Conversa: curtir e responder comentário (038) */
+.coment-acoes{display:flex;align-items:center;gap:14px;margin-top:6px}
+.coment-curtir,.coment-responder{border:0;background:none;padding:0;font:inherit;font-size:13px;color:var(--ink3);cursor:pointer;display:flex;align-items:center;gap:4px}
+.coment-curtir svg{width:18px;height:18px}
+.coment-curtir i{font-style:normal}
+.coment-curtir.on{color:var(--green)}
+.coment-curtir.on svg *{fill:var(--green)}
+.coment-resp{margin-left:42px}
+/* Ficha, seção Amigos: cartões com nota, frase, coração */
+.fi-cards{display:flex;gap:10px;overflow-x:auto;margin:4px -20px 0;padding:0 20px 4px;scrollbar-width:none}
+.fi-cards::-webkit-scrollbar{display:none}
+.fic{flex:none;width:240px;box-sizing:border-box;border-radius:20px;background:rgba(245,245,243,.07);padding:14px;display:flex;flex-direction:column;gap:8px}
+.fic-topo{display:flex;align-items:center;gap:10px}
+.fic-topo .pln-av.g{width:36px;height:36px;font-size:14px}
+.fic-topo b{flex:1;min-width:0;font-size:15px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.fic-nota{display:flex;align-items:center;gap:3px;font-stretch:68%;font-size:26px;font-weight:700}
+.fic-nota svg{width:14px;height:14px}
+.fic-nota svg *{fill:var(--green);stroke:none}
+.fic-quer{font-size:13px;color:var(--ink2)}
+.fic-frase{margin:0;min-height:20px;font-size:14px;line-height:1.4;color:var(--ink);display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
+.fic-pe{display:flex;align-items:center;gap:14px;margin-top:auto}
+/* Botões grandes do app inteiro: pílula */
+.btn-primario,.action-btn,.sheet-cta,.onb-btn,.exm-btn,.pf-bt{border-radius:27px}
+/* ═══ HOTSPOTS (redesenho 06/11: "Para você · capa" e "Amigos") ═══ */
+.hv-capa{position:relative;height:520px;background:#2F5C4C center/cover no-repeat;cursor:pointer}
+.hv-capa::before{content:"";position:absolute;inset:0;background:linear-gradient(to bottom,rgba(0,0,0,.45),transparent 30%,transparent 50%,rgba(0,0,0,.7))}
+.hv-abas{position:relative;z-index:2;display:flex;gap:20px;padding:56px 20px 0}
+.hv-abas button{border:0;background:none;padding:0 0 6px;font:inherit;font-size:15px;font-weight:600;color:rgba(245,245,243,.6);cursor:pointer}
+.hv-abas button.on{color:var(--ink);box-shadow:inset 0 -2px 0 var(--ink)}
+.hv-sem-capa{padding-bottom:8px}
+.hv-pe{position:absolute;z-index:2;left:20px;right:20px;bottom:24px;color:var(--green)}
+.hv-pe small{display:block;font-size:13px;font-weight:600}
+.hv-pe small button{border:0;background:none;padding:0;font:inherit;color:inherit;text-decoration:underline;text-underline-offset:3px;cursor:pointer}
+.hv-pe b{display:block;margin:6px 0 4px;font-stretch:68%;font-size:64px;line-height:.95;font-weight:700;color:var(--ink)}
+.hv-pe span{font-size:14px;color:rgba(245,245,243,.85)}
+.hv-pils{display:flex;gap:8px;padding:20px 20px 4px;overflow-x:auto}
+.hv-linha{display:flex;align-items:center;gap:14px;padding:10px 20px;cursor:pointer}
+.hv-num{width:28px;flex:none;font-stretch:68%;font-size:30px;font-weight:700;color:var(--green)}
+.hv-foto{width:68px;height:68px;flex:none;border-radius:14px;background:#2F5C4C center/cover no-repeat}
+.hv-txt{min-width:0;display:flex;flex-direction:column;gap:3px}
+.hv-txt b{font-size:16px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.hv-txt span{font-size:13px;color:var(--ink2)}
+.hv-am{padding:12px 20px 0;display:flex;flex-direction:column;gap:28px}
+.hv-card{cursor:pointer}
+.hv-card-foto{position:relative;height:219px;border-radius:18px;background:#2F5C4C center/cover no-repeat}
+.hv-card-foto .pln-av{position:absolute;left:12px;bottom:12px}
+.hv-salvar{position:absolute;right:12px;bottom:12px;width:36px;height:36px;border:0;border-radius:18px;background:var(--green);color:var(--on-green);display:grid;place-items:center;cursor:pointer}
+.hv-card h3{margin:12px 0 2px;font-size:17px;font-weight:600}
+.hv-card .hv-cid{font-size:13px;color:var(--ink2)}
+.hv-quem{display:flex;align-items:center;gap:8px;margin-top:8px;font-size:14px;font-weight:600}
+.hv-quem .fd-estrelas{color:var(--green)}
+.hv-quem .coment-curtir{margin-left:auto}
+.hv-dica{margin:6px 0 0;font-size:14px;color:var(--ink2)}
 </style>
 </head>
 <body>
 
 <div class="screen active" id="loading">
-  <div style="text-align:center"><svg class="brand-wordmark" viewBox="3 77 273 76" height="46" role="img" aria-label="Spot"><text x="0" y="150" font-family="Cinzel" font-weight="500" font-size="100" letter-spacing="6" fill="#0B3D2E">SPOT</text></svg><div class="spinner" style="margin-top:20px"></div></div>
+  <div style="text-align:center"><svg class="brand-wordmark" viewBox="3 77 273 76" height="46" role="img" aria-label="Spot"><text x="0" y="150" font-family="Cinzel" font-weight="500" font-size="100" letter-spacing="6" fill="#F2EDE3">SPOT</text></svg><div class="spinner" style="margin-top:20px"></div></div>
 </div>
 
 <!-- PÁGINA DO CONVITE. Quem abre um link caía na tela de entrada comum, que
@@ -2827,10 +3164,11 @@ body.exm #exploreCozinhas,body.exm #exploreBody{display:none!important}
     <div class="dash-mapa" id="dashMapa" aria-hidden="true"></div>
     <div class="dash-mapa-fade"></div>
     <div class="dash-topo-linha">
-      <svg class="dash-wordmark" viewBox="3 77 273 76" role="img" aria-label="Spot"><text x="0" y="150" font-family="Cinzel" font-weight="500" font-size="100" letter-spacing="6" fill="#0B3D2E">SPOT</text></svg>
+      <svg class="dash-wordmark" viewBox="3 77 273 76" role="img" aria-label="Spot"><text x="0" y="150" font-family="Cinzel" font-weight="500" font-size="100" letter-spacing="6" fill="#F2EDE3">SPOT</text></svg>
       <div class="dash-topo-acoes">
         <!-- 07/10: o Adicionar ficava no FIM da tela, depois de todas as viagens. -->
         <button class="dash-mais" onclick="adicionarDoTopo()" data-ic="plus" aria-label="Adicionar"></button>
+        <button class="dash-mais" onclick="abrirAtividade()" data-ic="bell" aria-label="Atividade"></button>
         <div class="avatar" id="dashAvatar" onclick="goTo('profile');loadProfile()" role="button" tabindex="0" aria-label="Abrir seu perfil">?</div>
       </div>
     </div>
@@ -2838,6 +3176,8 @@ body.exm #exploreCozinhas,body.exm #exploreBody{display:none!important}
     <!-- 15a (08/10): o anel saiu; a porcentagem virou frase entre o mapa e o placar. -->
     <div class="mundo-frase" id="dashMundo"><span class="mf-1">Você conheceu</span><span class="mf-2" id="dashMundoPct"></span></div>
     <div class="placar-card" id="dashPlacar">
+      <!-- Redesenho 06/11 (quadro Você): o anel "% do mundo" volta, ao lado dos números. -->
+      <div class="vc-anel"><svg viewBox="0 0 104 104" aria-hidden="true"><circle cx="52" cy="52" r="46" fill="none" stroke="rgba(245,245,243,.14)" stroke-width="7"/><circle id="dashAnelArco" cx="52" cy="52" r="46" fill="none" stroke="#F2EDE3" stroke-width="7" stroke-linecap="round" stroke-dasharray="0 289" transform="rotate(-90 52 52)"/></svg><span class="vc-anel-tx"><b id="dashAnelPct">0%</b><span>do mundo</span></span></div>
       <div class="placar-col">
         <button class="pc-item" onclick="openList('countries')">
           <span class="pc-n" id="dashPaisesN">0</span><span class="pc-r">países<i class="pc-seta">›</i></span>
@@ -3097,6 +3437,36 @@ body.exm #exploreCozinhas,body.exm #exploreBody{display:none!important}
   <div class="dash-body" id="mapaPaises"></div>
 </div>
 
+<!-- LISTAS (redesenho 06/11, migração 038): "Uma viagem" ou "Uma lista", com
+     quem vai junto. Quadros "Listas", "Lista compartilhada", "Criar" e
+     "Listas · vazia" do canvas. -->
+<div class="screen" id="listas">
+  <div class="ls-topo"><h1 class="ls-tit">Listas</h1><button class="lp-mais" onclick="lsAbrirNova()" data-ic="plus" aria-label="Nova lista"></button></div>
+  <div class="lp-cab" id="lsCab" style="display:none">
+    <div class="lp-abas"><button data-aba="suas" aria-pressed="true" onclick="lsAba('suas')">Suas</button><button data-aba="amigos" aria-pressed="false" onclick="lsAba('amigos')">Amigos</button></div>
+    <label class="lp-busca"><span data-ic="search"></span><input id="lsQ" type="search" placeholder="Buscar lista ou spot" autocomplete="off" autocorrect="off" spellcheck="false" aria-label="Buscar lista ou spot" oninput="LS2.q=this.value;LS2.todas=false;lsPintar()"><button class="lp-limpar" id="lsLimpar" style="display:none" onclick="event.preventDefault();lsLimpar()" data-ic="close" aria-label="Limpar busca"></button></label>
+    <div class="lp-pils"><button data-f="tudo" aria-pressed="true" onclick="lsFiltro('tudo')">Tudo</button><button data-f="viagens" aria-pressed="false" onclick="lsFiltro('viagens')">Viagens</button><button data-f="listas" aria-pressed="false" onclick="lsFiltro('listas')">Listas</button></div>
+  </div>
+  <div id="lsCorpo"></div>
+  <div style="height:120px"></div>
+  <div class="bottom-nav"></div>
+</div>
+<div class="screen" id="lista">
+  <div class="am-barra"><button onclick="goTo('listas');lsAbrir()" data-ic="back" aria-label="Voltar"></button><span></span></div>
+  <div id="lsDetalhe"></div>
+  <div style="height:120px"></div>
+  <div class="bottom-nav"></div>
+</div>
+<div class="screen" id="hotspots">
+  <div id="hsCorpo"></div>
+  <div style="height:120px"></div>
+  <div class="bottom-nav"></div>
+</div>
+<div class="overlay" id="ov-novalista" onclick="closeOut(event,'ov-novalista')"><div class="sheet"><button class="sheet-close" onclick="closeOv('ov-novalista')" data-ic="close" aria-label="Fechar"></button><div class="sheet-handle"></div><div id="lsNova"></div></div></div>
+<div class="overlay" id="ov-lsquando" onclick="closeOut(event,'ov-lsquando')"><div class="sheet"><button class="sheet-close" onclick="closeOv('ov-lsquando')" data-ic="close" aria-label="Fechar"></button><div class="sheet-handle"></div><div id="lsQuando"></div></div></div>
+<div class="overlay" id="ov-lsrot" onclick="closeOut(event,'ov-lsrot')"><div class="sheet"><button class="sheet-close" onclick="closeOv('ov-lsrot')" data-ic="close" aria-label="Fechar"></button><div class="sheet-handle"></div><div id="lsRot"></div></div></div>
+<div class="overlay" id="ov-poralista" onclick="closeOut(event,'ov-poralista')"><div class="sheet sheet-fixa"><button class="sheet-close" onclick="closeOv('ov-poralista')" data-ic="close" aria-label="Fechar"></button><div class="sheet-handle"></div><div id="lsPor"></div></div></div>
+
 <div class="screen" id="place">
   <!-- A foto perdeu o título, a pastilha de status e o véu de baixo. Sobrou o
        degradê do TOPO, que existe só pra barra de status do telefone
@@ -3139,6 +3509,9 @@ body.exm #exploreCozinhas,body.exm #exploreBody{display:none!important}
 
     <!-- Quem do seu círculo tem este spot (desenho e5): entre o status e as
          ações. "Ana foi 5★" com a frase dela; "Rafa quer ir". -->
+    <!-- Hotspot (V4): a ficha de sempre, com uma linha a mais. Só a conta de
+         quantos perfis indicaram; nome de ninguém sai do servidor. -->
+    <div class="fi-indic" id="fiIndic"></div>
     <div class="fi-deles" id="fiDeles"></div>
 
     <div class="fi-acoes" id="placeReserveWrap"></div>
@@ -3231,7 +3604,7 @@ body.exm #exploreCozinhas,body.exm #exploreBody{display:none!important}
 <div class="tour-acoes"><span class="tour-n" id="tourN"></span><button class="tour-pular" id="tourPular" onclick="fecharTutorial()">Pular</button><button class="tour-prox" id="tourProx" onclick="tourAvancar()">Próximo</button></div></div>
 </div>
 
-<div class="overlay" id="ov-editperfil" onclick="closeOut(event,'ov-editperfil')"><div class="sheet"><button class="sheet-close" onclick="closeOv('ov-editperfil')" data-ic="close" aria-label="Fechar"></button><div class="sheet-handle"></div><div class="sheet-title">Configurações</div>
+<div class="overlay" id="ov-editperfil" onclick="closeOut(event,'ov-editperfil')"><div class="sheet"><button class="sheet-close" onclick="closeOv('ov-editperfil')" data-ic="close" aria-label="Fechar"></button><div class="sheet-handle"></div><div class="sheet-title">Ajustes</div>
 <div class="prof-linha" onclick="document.getElementById('avatarFileInput').click()"><span class="pl-ic" data-ic="user"></span><span class="pl-txt">Trocar foto de perfil</span><span class="pl-seta">›</span></div>
 <div class="prof-linha" onclick="closeOv('ov-editperfil');abrirCidadeDeCasa()"><span class="pl-ic" data-ic="pin"></span><span class="pl-txt">Onde moro<span class="pl-valor" id="cfgCidade"></span></span><span class="pl-seta">›</span></div>
 <div class="prof-linha" onclick="closeOv('ov-editperfil');openVisitedCountryPicker()"><span class="pl-ic" data-ic="globe"></span><span class="pl-txt">Países que já visitei</span><span class="pl-seta">›</span></div>
@@ -3326,6 +3699,9 @@ body.exm #exploreCozinhas,body.exm #exploreBody{display:none!important}
   try{
     const host=String((location&&location.hostname)||'');
     if(!/(^|\.)meuspot\.app$|\.pages\.dev$/.test(host))return;
+    // Prévia do redesenho (06/11): o branch `redesenho` vira um endereço
+    // próprio da Cloudflare, aberto no Safari pra testar antes de ir pro app.
+    if(/^redesenho\./.test(host))return;
     if(window.ReactNativeWebView||window.enderecoDeVoltaDoLogin)return;
     const h=String(location.hash||''),q=String(location.search||'');
     if(/type=(recovery|signup|invite|magiclink|email_change)|access_token=|error_description=/.test(h+q))return;
@@ -3338,7 +3714,7 @@ body.exm #exploreCozinhas,body.exm #exploreBody{display:none!important}
     const texto=veioDeLink?'Instale o Spot e depois toque no link de novo na conversa.<br>'+veioDeLink
       :'Seus lugares e os dos seus amigos ficam no app.<br>Baixe na App Store pra entrar.';
     document.documentElement.innerHTML='<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Spot</title>'
-      +'<style>body{margin:0;min-height:100vh;display:grid;place-items:center;background:#F5F5F3;color:#111;font-family:"Inter Tight",system-ui,-apple-system,sans-serif;text-align:center;padding:24px;box-sizing:border-box}'
+      +'<style>body{margin:0;min-height:100vh;display:grid;place-items:center;background:#F5F5F3;color:#111;font-family:"Archivo",system-ui,-apple-system,sans-serif;text-align:center;padding:24px;box-sizing:border-box}'
       +'img{width:88px;height:88px;border-radius:20px}h1{margin:20px 0 8px;font-size:26px;letter-spacing:-.03em}p{margin:0 0 24px;color:#6B6B67;font-size:16px;line-height:1.45}'
       +'a{display:inline-block;padding:14px 22px;border-radius:10px;background:#0B3D2E;color:#F5F5F3;font-weight:600;text-decoration:none}</style></head>'
       +'<body><div><img src="/icon-192.png" alt=""><h1>'+titulo+'</h1><p>'+texto+'</p>'
@@ -3421,6 +3797,10 @@ compass:'<circle cx="12" cy="12" r="9"/><path d="M15.5 8.5l-2.2 5.2-5.2 2.2 2.2-
 pin:'<path d="M12 21c4-4.4 6-7.7 6-10.5a6 6 0 1 0-12 0C6 13.3 8 16.6 12 21Z"/><circle cx="12" cy="10.5" r="2.2"/>',
 city:'<path d="M3 21V9l6-2.5v14.5"/><path d="M9 21V11l8-3v13"/><path d="M17 21V13l4 1.5V21"/><path d="M3 21h18"/>',
 star:'<path d="M12 4l2.35 4.76 5.25.76-3.8 3.7.9 5.23L12 16.24 7.3 18.45l.9-5.23-3.8-3.7 5.25-.76L12 4Z"/>',
+grade:'<rect x="4.5" y="4.5" width="6" height="6" rx="1.5"/><rect x="13.5" y="4.5" width="6" height="6" rx="1.5"/><rect x="4.5" y="13.5" width="6" height="6" rx="1.5"/><rect x="13.5" y="13.5" width="6" height="6" rx="1.5"/>',
+heart:'<path d="M12 19.5s-7-4.3-7-9.6A4 4 0 0 1 12 7.6a4 4 0 0 1 7 2.3c0 5.3-7 9.6-7 9.6Z"/>',
+fire:'<path d="M12 20c-3.3 0-6-2.4-6-5.7 0-3 2-4.6 3.3-6.6.6 1.6 1.5 2.4 2.5 2.7C12 7.8 12.6 5.6 14.3 4c.2 2.6 1.4 3.9 2.6 5.5.8 1.2 1.1 2.4 1.1 4.8C18 17.6 15.3 20 12 20Z"/>',
+bell:'<path d="M6.5 16.5h11l-1.3-1.8V10.5a4.2 4.2 0 0 0-8.4 0v4.2l-1.3 1.8Z"/><path d="M10.2 19a1.9 1.9 0 0 0 3.6 0"/>',
 bookmark:'<path d="M6.5 4h11a1 1 0 0 1 1 1v15l-6.5-4.3L5.5 20V5a1 1 0 0 1 1-1Z"/>',
 check:'<path d="M5 12.5l4.5 4.5L19 7.5"/>',
 suitcase:'<rect x="4" y="8" width="16" height="12" rx="2.2"/><path d="M9 8V5.5a1.5 1.5 0 0 1 1.5-1.5h3A1.5 1.5 0 0 1 15 5.5V8"/><path d="M9.5 8v12M14.5 8v12"/>',
@@ -5631,6 +6011,26 @@ async function pintarDelesNaFicha(s){
       }
     }
   }
+  // Redesenho 06/11 (quadro Ficha, seção "Amigos"): cartões que rolam pro
+  // lado, cada um com a nota grande, a frase, o coração (038) e "Responder",
+  // que abre a conversa do spot dele.
+  if(l.length){
+    await carregarCurtidasDeSpot(l.map(o=>o.id));
+    if(S.curPlace!==s)return;
+    box.innerHTML=doDono+'<div class="fi-cards">'+l.map((o,i)=>{
+      const quem=plnPrimeiro(o.user_id)||'';
+      const cs=CURT_SPOT[o.id]||{n:0,meu:false};
+      const nota=o.status==='been'&&Number(o.my_rating)>0?'<span class="fic-nota">'+icon('star')+esc(fmtRating(o.my_rating))+'</span>':'<span class="fic-quer">quer ir</span>';
+      return '<div class="fic">'
+        +'<div class="fic-topo">'+plnAvatar(o.user_id,'g')+'<b>'+esc(quem)+'</b>'+nota+'</div>'
+        +(o.my_review?'<p class="fic-frase">'+esc(o.my_review)+'</p>':'<p class="fic-frase"></p>')
+        +'<div class="fic-pe"><button class="coment-curtir'+(cs.meu?' on':'')+'" onclick="curtirSpot(\''+esc(o.id)+'\')" aria-label="Curtir">'+icon('heart')+(cs.n?'<i>'+cs.n+'</i>':'')+'</button>'
+        +'<button class="coment-responder" onclick="abrirSpotDeleDaFicha('+i+')">Responder</button></div></div>';
+    }).join('')+'</div>';
+    hydrateIcons(box);
+    atualizarConversa(s);
+    return;
+  }
   // Tocar abre o spot DELA: a nota, a frase e a conversa de lá (05/10).
   box.innerHTML=doDono+l.map((o,i)=>{
     const quem=plnPrimeiro(o.user_id);
@@ -6054,6 +6454,7 @@ function detalheDoPedido(p){
   const n=Number(p.spots)||0;
   return [p.username?'@'+p.username:'',p.home_city?'Mora em '+p.home_city:'',n?n+(n===1?' spot':' spots'):''].filter(Boolean).join(' · ');
 }
+let ATIV_ABA='spots';
 function pintarAtividade(){
   const box=document.getElementById('atCorpo');if(!box)return;
   const d=FRIENDS_DATA||{};
@@ -6062,14 +6463,17 @@ function pintarAtividade(){
   const out=(d.outgoing||[]).filter(r=>!estaBloqueado(r.following_id));
   const av=(id)=>plnAvatar(id,'g');
   let h='';
+  // Redesenho 06/11 (quadro Atividade): pedidos em cartões que rolam pro lado,
+  // no topo; embaixo, pílulas Seus spots · Amigos (Listas entra quando as
+  // listas compartilhadas existirem).
   if(inc.length||out.length){
-    h+='<div class="at-sec">Pedidos</div>';
-    // O @ embaixo (06/10): com nome repetido, é o que diz quem está pedindo.
-    const arroba=p=>{const t=detalheDoPedido(p);return t?'<span class="busca-user" style="display:block">'+esc(t)+'</span>':''};
-    h+=inc.map(r=>'<div class="at-linha">'+av(r.follower_id)+'<div class="at-txt"><b>'+esc(friendName(pmap[r.follower_id]))+'</b> quer adicionar você'+arroba(pmap[r.follower_id])+'</div>'
-      +'<button class="at-aceitar" onclick="respondRequest(\''+esc(r.id)+'\',true)">Aceitar</button><button class="at-recusar" onclick="respondRequest(\''+esc(r.id)+'\',false)">Recusar</button></div>').join('');
-    h+=out.map(r=>'<div class="at-linha">'+av(r.following_id)+'<div class="at-txt">Pedido enviado pra <b>'+esc(friendName(pmap[r.following_id]))+'</b></div>'
-      +'<button class="at-recusar" onclick="cancelRequest(\''+esc(r.id)+'\')">Cancelar</button></div>').join('');
+    const arroba=p=>{const t=detalheDoPedido(p);return t?'<span class="atp-meta">'+esc(t)+'</span>':''};
+    h+='<div class="at-pedidos">'
+      +inc.map(r=>'<div class="atp">'+plnAvatar(r.follower_id,'g')+'<span class="atp-nome">'+esc(friendName(pmap[r.follower_id]))+'</span>'+arroba(pmap[r.follower_id])
+        +'<span class="atp-bt"><button class="at-aceitar" onclick="respondRequest(\''+esc(r.id)+'\',true)">Aceitar</button><button class="atp-x" onclick="respondRequest(\''+esc(r.id)+'\',false)" aria-label="Recusar">'+icon('close')+'</button></span></div>').join('')
+      +out.map(r=>'<div class="atp">'+plnAvatar(r.following_id,'g')+'<span class="atp-nome">'+esc(friendName(pmap[r.following_id]))+'</span><span class="atp-meta">Pedido enviado</span>'
+        +'<span class="atp-bt"><button class="at-recusar atp-cancelar" onclick="cancelRequest(\''+esc(r.id)+'\')">Cancelar</button></span></div>').join('')
+      +'</div>';
   }
   const itens=ATIV.itens;
   ATIV_TELA=itens||[];
@@ -6096,12 +6500,17 @@ function pintarAtividade(){
       :it.tipo==='tambem'?nome+' também foi em '+spot+(trecho?' e disse:'+trecho:'')
       :nome+' comentou em '+spot+':'+trecho;
     const foto=it.spot.photo_url?' style="background-image:'+cssUrl(fotoNaLargura(it.spot.photo_url,120))+'"':'';
-    return '<button class="at-linha at-evento" onclick="abrirDaAtividade('+i+')">'+av(it.user_id)+'<span class="at-txt">'+txt+'</span><span class="at-foto"'+foto+'></span></button>';
+    return '<button class="at-linha at-evento" onclick="abrirDaAtividade('+i+')">'+av(it.user_id)+'<span class="at-txt">'+txt+'<span class="at-quando">'+esc(timeAgo(it.quando))+'</span></span><span class="at-foto"'+foto+'></span></button>';
   };
-  const novos=[],antigos=[];
-  itens.forEach((it,i)=>{(new Date(it.quando).getTime()>=semana?novos:antigos).push(linha(it,i))});
-  if(novos.length)h+='<div class="at-sec">Esta semana</div>'+novos.join('');
-  if(antigos.length)h+='<div class="at-sec">Antes</div>'+antigos.join('');
+  // Uma lista por assunto, sem "Esta semana / Antes" (o Lucas: separação ruim).
+  const spots=[],amigos=[];
+  itens.forEach((it,i)=>{(it.tipo==='amizade'?amigos:spots).push(linha(it,i))});
+  if(ATIV_ABA==='amigos'&&!amigos.length&&spots.length)ATIV_ABA='spots';
+  const pil=(k,rot,n)=>'<button class="pil'+(ATIV_ABA===k?' on':'')+'" onclick="ATIV_ABA=\''+k+'\';pintarAtividade()">'+rot+'</button>';
+  h+='<div class="at-pils">'+pil('spots','Seus spots')+pil('amigos','Amigos')+'</div>';
+  const lista=ATIV_ABA==='amigos'?amigos:spots;
+  h+=lista.length?lista.join(''):'<div class="at-vazio">'+(ATIV_ABA==='amigos'?'Nada de amigos por aqui ainda.':'Nada nos seus spots ainda.')+'</div>';
+  void semana;
   box.innerHTML=h;
   hydrateIcons(box);
 }
@@ -6301,7 +6710,7 @@ async function signInOAuth(provedor){
   if(!sb)return;
 
   if(!naCasca()){
-    const{error}=await sb.auth.signInWithOAuth({provider:provedor,options:{redirectTo:window.location.origin}});
+    const{error}=await sb.auth.signInWithOAuth({provider:provedor,options:{redirectTo:window.location.origin+'/'}});   // com a barra: casa com "https://.../**" da lista do Supabase (06/11, prévia)
     if(error)showAuthErr(error.message);
     return;
   }
@@ -6934,7 +7343,9 @@ function naCasca(){return !!(window.ReactNativeWebView&&window.ReactNativeWebVie
 
 // As quatro telas que têm aba. O resto (viagem, cidade, lugar, telas de
 // amigo) são telas de detalhe: nelas a barra some, igual ao site hoje.
-const ABAS_DO_APP={dashboard:1,explore:1,friends:1,profile:1};
+// Redesenho (18/11): Listas e Hotspots também têm barra. Amigos e Perfil
+// saíram da barra nova, mas seguem aqui: a barra aparece neles, sem aba acesa.
+const ABAS_DO_APP={dashboard:1,explore:1,friends:1,profile:1,listas:1,hotspots:1};
 
 // A foto fica gravada como caminho relativo (/api/place-photo?...). Dentro
 // do site o navegador completa sozinho; a tela nativa NÃO tem página atual
@@ -6967,7 +7378,10 @@ function temJanelaAberta(){
 // descartado pelo Lucas — a diferença pras nativas era pequena. Elas seguem
 // nativas.)
 function avisarTelaAtual(id){
-  falarComACasca({tipo:'tela',aba:id,comAbas:!!ABAS_DO_APP[id]&&!temJanelaAberta(),explorarWeb:EXM_LIGADO});
+  // barraNova: este site tem Listas e Hotspots. A casca só troca a barra de
+  // quatro abas pela de cinco quando ouve isto — casca nova com site antigo
+  // (ou o contrário) segue com a barra de antes, sem botão que não leva a nada.
+  falarComACasca({tipo:'tela',aba:id,comAbas:!!ABAS_DO_APP[id]&&!temJanelaAberta(),explorarWeb:EXM_LIGADO,barraNova:true});
 }
 
 // Janela que abre POR CIMA (configurações, criar viagem, adicionar amigo,
@@ -7042,8 +7456,12 @@ window.aoTocarNotificacao=async function(d){
   if(d.tipo==='pedido'&&window.switchFriendsTab)switchFriendsTab('pedidos');
 };
 window.irParaAba=function(id){
+  // O "+" da barra nova não é tela: abre a folha de adicionar por cima.
+  if(id==='mais'){if(S.user)adicionarDoTopo();return}
   if(!ABAS_DO_APP[id])return;
   if(!S.user){ABA_PENDENTE=id;return}
+  if(id==='listas'){lsAbrir();return}
+  if(id==='hotspots'){hsAbrir();return}
   goTo(id);
   if(id==='dashboard')loadDashboard();
   else if(id==='explore')loadExplore();
@@ -7562,10 +7980,19 @@ function cardDeCasa(){
   const pais=(S.profile&&S.profile.home_country)||'';
   // Desenho c1 (05/10): bloco próprio, antes do título "Viagens", e fora da
   // lista — a cidade onde mora não é uma viagem.
-  return '<div class="vg-rot">Onde você mora</div>'
-    +'<button class="vg-casa2" onclick="abrirCasa()">'
-    +'<span class="vg-casa2-foto" id="casaFoto" style="background-image:'+(FOTO_DE_CASA?cssUrl(FOTO_DE_CASA):destGradient(pais))+'"></span>'
-    +'<span class="pf-row-txt"><b>'+esc(r.cidade)+'</b><span>'+esc(r.meta)+'</span></span><span class="vg-l-seta">›</span>'
+  // Redesenho 06/11 (quadro Você): "Em casa" + foto grande só com o nome, e as
+  // fotos dos 3 últimos spots no canto. Sem legenda embaixo (o Lucas: "odeio
+  // esses rodapés").
+  const casa=(S.trips||[]).find(ehCasa);
+  const c=cidadeDeCasa();
+  const spots=(casa?spotsDaViagem(casa):allSpotsFlat().filter(s=>mesmoLugar(cityOf(s),c)))
+    .filter(s=>s.photo_url).sort((a,b)=>String(b.created_at||'').localeCompare(String(a.created_at||''))).slice(0,3);
+  const n=(casa?spotsDaViagem(casa):allSpotsFlat().filter(s=>mesmoLugar(cityOf(s),c))).length;
+  return '<div class="vc-cab"><h2 class="vc-tit">Em casa</h2>'+(n?'<button class="vc-mais" onclick="abrirCasa()">Ver os '+n+'</button>':'')+'</div>'
+    +'<button class="vc-casa" onclick="abrirCasa()">'
+    +'<span class="vc-casa-foto" id="casaFoto" style="background-image:'+(FOTO_DE_CASA?cssUrl(FOTO_DE_CASA):destGradient(pais))+'"></span>'
+    +'<span class="vc-veu"></span><b class="vc-casa-nome">'+esc(r.cidade)+'</b>'
+    +(spots.length?'<span class="vc-minis">'+spots.map(s=>'<span style="background-image:'+cssUrl(fotoNaLargura(s.photo_url,120))+'"></span>').join('')+'</span>':'')
     +'</button>';
 }
 // A foto da cidade de casa chega em segundo plano, como a das viagens.
@@ -7694,7 +8121,7 @@ function renderTrips(){
   // Onde você mora vem ANTES das viagens, e fica mesmo sem viagem nenhuma.
   const casa=cardDeCasa();
   if(casa)pintarFotoDeCasa();
-  const titulo='<div class="pf-cab vg-cab"><h2 class="pf-tit">Viagens<span class="pf-n">'+(visibleTrips.length||'')+'</span></h2><button class="pf-nova" onclick="abrirAdicionarViagem()">+ Adicionar</button></div>';
+  const titulo='<div class="vc-cab"><h2 class="vc-tit">Viagens</h2><button class="vc-mais" onclick="abrirAdicionarViagem()">+ Adicionar</button></div>';
   if(!visibleTrips.length&&!allSpotsFlat().length){
     // a3 (handoff 01/10): conta sem nenhum spot. O "Colar uma lista" só
     // aparece com a IA ligada no servidor.
@@ -7712,15 +8139,14 @@ function renderTrips(){
   }
 
   const{groups,ordem}=regioesComViagem();
-  // Continente que sumiu (viagem apagada) não pode deixar a tela vazia.
-  if(!REGIAO_ATIVA||!groups[REGIAO_ATIVA])REGIAO_ATIVA=ordem[0];
-  const trips=groups[REGIAO_ATIVA]||[];
-
-  // Continentes viram ABAS DE TEXTO. A pilula colorida e o mesmo cacoete do
-  // painel de indicadores: enfeite carregando informacao que o texto ja da.
-  let h=casa+titulo+'<nav class="cont-abas">';
-  h+=ordem.map(r=>'<button class="cont-aba'+(r===REGIAO_ATIVA?' on':'')
-    +'" onclick="trocarRegiao(\''+esc(r)+'\')">'+esc(r)+' · '+groups[r].length+'</button>').join('');
+  // Redesenho 06/11 (quadro Você): pílulas Todas · Europa · Américas…, com a
+  // contagem apagada ao lado. "Todas" é o padrão.
+  if(REGIAO_ATIVA!=='__todas'&&!groups[REGIAO_ATIVA])REGIAO_ATIVA='__todas';
+  const trips=REGIAO_ATIVA==='__todas'?visibleTrips:(groups[REGIAO_ATIVA]||[]);
+  let h=casa+titulo+'<nav class="vc-pils">';
+  h+='<button class="pil'+(REGIAO_ATIVA==='__todas'?' on':'')+'" onclick="trocarRegiao(\'__todas\')">Todas<i>'+visibleTrips.length+'</i></button>';
+  h+=ordem.map(r=>'<button class="pil'+(r===REGIAO_ATIVA?' on':'')
+    +'" onclick="trocarRegiao(\''+esc(r)+'\')">'+esc(r)+'<i>'+groups[r].length+'</i></button>').join('');
   h+='</nav>';
 
   // De carrossel pra MOSAICO. O carrossel escondia as viagens fora da tela
@@ -7743,7 +8169,11 @@ function renderTrips(){
   const ordenadas=trips.slice().sort((a,b)=>nSpots(b)-nSpots(a));
   // Linhas (desenho c1, 05/10): foto, país, "2 cidades · 14 spots", ›. O
   // mosaico mostrava 4 viagens por tela; a linha mostra o dobro.
-  h+='<div class="vg-lista">'+ordenadas.map(linhaDeViagem).join('')+'</div>';
+  // Redesenho 06/11: fileira de fotos que rola pro lado, só o nome por cima.
+  h+='<div class="vc-trilho">'+ordenadas.map(t=>{
+    const destino=(t.destinations&&t.destinations[0])||t.name;
+    return '<button class="vc-via" onclick="openTrip(\''+esc(t.id)+'\')"><span class="vc-via-foto" id="tcbg-'+esc(t.id)+'" style="background-image:'+destGradient(destino)+'"></span><span class="vc-veu"></span><b>'+esc(t.name)+'</b></button>';
+  }).join('')+'</div>';
   // O "Adicionar" do fim da lista saiu (09/10, o Lucas): repetia o "+" do topo,
   // que abre a mesma folha (spot, cidades ou países).
   // Colar uma lista continua à mão depois do primeiro acesso (05/10).
@@ -7766,14 +8196,16 @@ function darDadosDeViagens(){
   if(!S.user||!DADOS_DA_CONTA||(CARGA_FALHOU_SEM_DADOS&&!S.trips.length)){falarComACasca({tipo:'viagens',pronto:false});return}
   const visiveis=S.trips.filter(naAbaViagens);
   const{groups,ordem}=regioesComViagem();
-  const regiao=(REGIAO_ATIVA&&groups[REGIAO_ATIVA])?REGIAO_ATIVA:ordem[0];
+  // Redesenho 06/11: 'Todas' é a pílula padrão (REGIAO_ATIVA='__todas').
+  const todas=!REGIAO_ATIVA||REGIAO_ATIVA==='__todas'||!groups[REGIAO_ATIVA];
+  const regiao=todas?'Todas':REGIAO_ATIVA;
   // Mesma ordem do mosaico do site: o destaque (card do dobro do tamanho) vai
   // pra viagem com MAIS SPOTS, não pra primeira da lista — que vem em
   // created_at.desc e pode ser uma viagem vazia e sem foto. Ordenar AQUI, e
   // não no nativo, mantém a regra num lugar só. Copiar antes de ordenar: o
   // vetor é do agrupamento, e ordenar no lugar muda o que a tela web usa.
   const nSpotsDe=t=>(t._spots||[]).length;
-  const daRegiao=(groups[regiao]||[]).slice().sort((a,b)=>nSpotsDe(b)-nSpotsDe(a));
+  const daRegiao=(todas?visiveis:(groups[regiao]||[])).slice().sort((a,b)=>nSpotsDe(b)-nSpotsDe(a));
 
   // A faixa de check-in existia so no HTML, entao a tela nativa nunca soube
   // dela: quem usa o app pelas abas nativas simplesmente nunca era
@@ -7798,7 +8230,12 @@ function darDadosDeViagens(){
       nome:String((S.profile&&S.profile.display_name)||'').trim().split(/\s+/)[0]||''
     },
     casa:(function(){const r=resumoDeCasa();if(!r)return null;
-      return{cidade:r.cidade,meta:r.meta,foto:FOTO_DE_CASA?fotoPraCasca(safeUrl(FOTO_DE_CASA)):'',
+      // minis (06/11): fotos dos 3 últimos spots, no canto do card de casa.
+      const casaT=(S.trips||[]).find(ehCasa),cc=cidadeDeCasa();
+      const deCasa=casaT?spotsDaViagem(casaT):allSpotsFlat().filter(x=>mesmoLugar(cityOf(x),cc));
+      const minis=deCasa.filter(x=>x.photo_url).sort((a,b)=>String(b.created_at||'').localeCompare(String(a.created_at||'')))
+        .slice(0,3).map(x=>fotoPraCasca(safeUrl(fotoNaLargura(x.photo_url,120))));
+      return{cidade:r.cidade,meta:r.meta,minis,n:deCasa.length,foto:FOTO_DE_CASA?fotoPraCasca(safeUrl(FOTO_DE_CASA)):'',
         cores:coresDoGradiente((S.profile&&S.profile.home_country)||'')}})(),
     primeiro:!allSpotsFlat().length&&!visiveis.length?{ia:!!(typeof IMP!=='undefined'&&IMP.ligado)}:null,
     vazioTexto:(S.profile&&S.profile.home_city)
@@ -7809,7 +8246,7 @@ function darDadosDeViagens(){
     // de pintar o país errado.
     mapa:visitedCountryNames().map(geoFor).filter(Boolean),
     regiao:regiao||'',
-    regioes:ordem.map(r=>({nome:r,n:groups[r].length})),
+    regioes:[{nome:'Todas',n:visiveis.length}].concat(ordem.map(r=>({nome:r,n:groups[r].length}))),
     viagensDaRegiao:daRegiao.map(t=>{
       const destino=(t.destinations&&t.destinations[0])||t.name;
       const el=document.getElementById('tcbg-'+t.id);
@@ -7842,7 +8279,8 @@ window.darDadosDeViagens=darDadosDeViagens;
 function abrirMeusSpots(){abrirSeusSpots('dashboard')}
 window.acaoDeViagens=function(acao,valor){
   if(acao==='lista'&&valor==='spots'){abrirMeusSpots();return}
-  if(acao==='regiao'){trocarRegiao(valor);darDadosDeViagens();return}
+  if(acao==='regiao'){trocarRegiao(valor==='Todas'?'__todas':valor);darDadosDeViagens();return}
+  if(acao==='atividade'){abrirAtividade();return}
   if(acao==='abrir'){openTrip(valor);return}
   if(acao==='lista'){openList(valor);return}
   if(acao==='perfil'){goTo('profile');loadProfile();return}
@@ -8045,7 +8483,7 @@ function backFromPlace(){
   // Spot de amigo aberto da SUA ficha ("Ana foi"): volta pra sua ficha.
   if(S.curPlace&&S.curPlace._voltarPara){openPlace(S.curPlace._voltarPara,S.placeOriginAntes||'trip');return}
   // Aberto de um amigo (perfil, cidade, Explorar, Atividade): volta pra lá.
-  if(S.placeOrigin==='amigo'){goTo(telaAntesDaFicha||'friends',true);return}
+  if(S.placeOrigin==='amigo'){goTo(telaAntesDaFicha||'friends',true);if(telaAntesDaFicha==='lista')lsPintarDetalhe();return}
   // Aberto pela estante: voltar tem que devolver pro Perfil, nao jogar
   // numa viagem que a pessoa nem sabia que estava aberta.
   if(S.placeOrigin==='profile'){goTo('profile');loadProfile();return}
@@ -8548,7 +8986,7 @@ function abrirStatusDaCidade(){
 function spotsDaCidade(){
   const t = S.curTrip;
   if(!t || !S.curCity) return [];
-  return spotsDaViagem(t).filter(sp => cityOf(sp) === S.curCity && sp.category === curCityCat);
+  return spotsDaViagem(t).filter(sp => cityOf(sp) === S.curCity);   // redesenho 06/11: sem abas de categoria, uma lista só
 }
 // FUI | QUERO IR (desenho c2, 05/10): segmentado com contagem, sempre que a
 // categoria tem spot. Abre em Fui; se a categoria só tem Quero ir, abre em
@@ -8574,9 +9012,11 @@ function renderCityStatusFilter(){
     if(curCityStatus==='want'&&!quero)curCityStatus='been';
   }
   box.className = 'cid-seg'; box.style.cssText = '';
-  box.innerHTML = '<div class="pf-seg">'
-    +'<button class="pf-op'+(curCityStatus==='been'?' on':'')+'" onclick="setCityStatus(\'been\')">Fui'+(fui?'<i>'+fui+'</i>':'')+'</button>'
-    +'<button class="pf-op'+(curCityStatus==='want'?' on':'')+'" onclick="setCityStatus(\'want\')">Quero ir'+(quero?'<i>'+quero+'</i>':'')+'</button></div>';
+  // Redesenho 06/11 (quadro Cidade): duas pílulas e o + no fim da linha.
+  box.innerHTML = '<div class="cid-pilulas">'
+    +'<button class="pil'+(curCityStatus==='been'?' on':'')+'" onclick="setCityStatus(\'been\')">Fui<i>'+fui+'</i></button>'
+    +'<button class="pil'+(curCityStatus==='want'?' on':'')+'" onclick="setCityStatus(\'want\')">Quero ir<i>'+quero+'</i></button>'
+    +'<button class="pil-mais" onclick="addSpotToCurrentCity()" aria-label="Adicionar spot">'+icon('plus')+'</button></div>';
 }
 // Spot sem foto na tela da cidade: busca a foto atual do lugar na hora e
 // grava (healSpotPhoto). Antes só um preenchimento em segundo plano tentava,
@@ -8632,7 +9072,12 @@ function renderCityBody(){
     const st=s.status==='skip'?'<span class="st-quero">Não recomendo</span>'
       :(s.status==='been'&&s.my_rating?'<span class="st-fui">'+esc(fmtRating(s.my_rating))+'★</span>':(dica?'<span class="st-fui">'+esc(dica)+'</span>':''));
     const estrelas='';
-    h+=`<div class="cid-row" onclick="openPlace('${esc(s.id)}','city')">${thumb}<div class="cid-txt"><div class="cid-nome">${esc(s.name)}</div><div class="cid-linha">${st}${estrelas}${nota?(st?' · ':'')+esc(nota):''}</div></div></div>`;
+    // Redesenho 06/11 (quadro Cidade): linha 2 = tipo · dica/frase; a nota
+    // vai pra direita, grande e condensada. Não recomendo também na direita.
+    const meta=[spotTag(s),dica||nota].filter(Boolean).join(' · ');
+    const dir=s.status==='skip'?'<span class="cid-nr">Não recomendo</span>'
+      :(s.status==='been'&&s.my_rating?'<span class="cid-nota">'+icon('star')+esc(fmtRating(s.my_rating))+'</span>':'');
+    h+=`<div class="cid-row" onclick="openPlace('${esc(s.id)}','city')">${thumb}<div class="cid-txt"><div class="cid-nome">${esc(s.name)}</div>${meta?'<div class="cid-linha">'+esc(meta)+'</div>':''}</div>${dir}</div>`;
   });
   b.innerHTML=h;
   buscarFotosDaCidade(spots);
@@ -8788,6 +9233,7 @@ function estaAbertoAgora(oh){
 // a categoria pelo menu ⋯ precisa redesenhar isto sem recarregar a foto.
 function desenharFichaDoLugar(s){
   document.getElementById('placeName').textContent=s.name||'';
+  hsPintarIndicado(s);
   // "Tipo · bairro, cidade". O tipo de experiência é mais específico que a
   // categoria, então ganha dela quando existe.
   const quem=nomeDeQuemIndicou(s);
@@ -13122,7 +13568,10 @@ async function resolverCidadeDoSpot(p,trip){
     // confirmação — ficha + faixa verde, ou reabrir a busca — acontece JÁ,
     // sem esperar o loadDashboard (que rebusca TUDO do banco em Oregon, 1-2s).
     // O loadDashboard roda POR TRÁS, só pra reconciliar e disparar os backfills.
-    if(addAnother){
+    if(lsEsperaNovo()){
+      closeOv('ov-note');
+      lsEntrouNovo(data);
+    }else if(addAnother){
       // Mesma viagem e categoria — só reabre a busca (colar lista, um a um).
       closeOv('ov-note');
       S.addCat=null;
@@ -13287,6 +13736,9 @@ function fracaoDoMundo(n){
 function pintarFraseDoMundo(paises){
   const el=document.getElementById('dashMundoPct');
   if(el)el.textContent=fracaoDoMundo(paises)+' do mundo';
+  const pct=document.getElementById('dashAnelPct'),arco=document.getElementById('dashAnelArco');
+  if(pct)pct.textContent=fracaoDoMundo(paises);
+  if(arco){const f=Math.min(1,(Number(paises)||0)/PAISES_NO_MUNDO),v=2*Math.PI*46;arco.setAttribute('stroke-dasharray',(paises>0?Math.max(f*v,6):0)+' '+v)}
 }
 // SEMPRE INTEIRO, sem casa decimal (pedido do Lucas, 22/09/2026). Eu tinha
 // posto uma casa abaixo de 10% achando que "0,5%" dizia mais que "1%" — mas
@@ -13558,7 +14010,7 @@ async function talvezAbrirBoasVindas(){
   if(S.user.user_metadata&&S.user.user_metadata.onboarding_done)return;
   if(p.home_city)return;
   if((S.trips||[]).length)return;
-  Object.assign(ONB,{passo:0,cidade:null,cidades:[],paises:new Set(),busca:'',
+  Object.assign(ONB,{passo:1,cidade:null,cidades:[],paises:new Set(),busca:'',
     cat:'food',lugares:[],lugar:null,nota:'',localOk:false,ocupado:false,soCidade:false,salvo:null,paisesGravados:{}});
   onbDesenhar();
   showOv('ov-onb');
@@ -13579,7 +14031,9 @@ function onbTopo(){
   if(!n)return'';
   if(ONB.soCidade)return '<button class="onb-voltar" onclick="fecharCidadeDeCasa()" aria-label="Voltar">'+icon('back')+'</button>';
   const antes=n===6?2:(n===3&&onbTemCidades())?6:n-1;
-  const voltar=(n<5||n===6)
+  // A boas-vindas saiu (redesenho 06/11: o login já faz esse papel), então a
+  // cidade, que é o 1º passo, não tem pra onde voltar.
+  const voltar=((n<5&&n>1)||n===6)
     ?'<button class="onb-voltar" onclick="onbIr('+antes+')" aria-label="Voltar">'+icon('back')+'</button>'
     :'<span class="onb-voltar"></span>';
   const naBarra=n===6?2:n;
@@ -13598,21 +14052,20 @@ function onbDesenhar(){
   const n=ONB.passo;
   if(n===0){
     corpo.innerHTML='<div class="onb-mapa onb-mapa-sangra" id="onbMapa"></div>'
-      +'<svg class="onb-marca" viewBox="3 77 273 76" height="30" role="img" aria-label="Spot"><text x="0" y="150" font-family="Cinzel" font-weight="500" font-size="100" letter-spacing="6" fill="#0B3D2E">SPOT</text></svg>'
+      +'<svg class="onb-marca" viewBox="3 77 273 76" height="30" role="img" aria-label="Spot"><text x="0" y="150" font-family="Cinzel" font-weight="500" font-size="100" letter-spacing="6" fill="#F2EDE3">SPOT</text></svg>'
       +'<h1 class="onb-titulo">Os lugares que valem a viagem.</h1>'
       +'<p class="onb-sub">Guarde onde você foi, o que quer conhecer e veja as dicas de quem você confia. Vamos montar seu mapa: leva um minuto.</p>';
     pe.innerHTML='<button class="onb-btn" onclick="onbIr(1)">Começar</button>';
     onbPintarMapa([]);
   }else if(n===1){
-    corpo.innerHTML='<h1 class="onb-titulo">Em que cidade você mora?</h1>'
-      +'<p class="onb-sub">É o ponto de partida do Explorar: o que seus amigos marcaram perto de você.</p>'
+    corpo.innerHTML='<h1 class="onb-titulo">Onde você mora</h1>'
       +'<label class="onb-campo">'+icon('search')+'<input id="onbCidade" type="text" placeholder="Buscar cidade" autocomplete="off" oninput="onbBuscarCidade(this.value)"></label>'
       +'<div id="onbCidadeRes"></div>';
     const c=document.getElementById('onbCidade');if(c&&ONB.busca)c.value=ONB.busca;
     onbListarCidades();
     pe.innerHTML='<button class="onb-btn" id="onbSeguir" onclick="onbSalvarCidade()"'+(ONB.cidade?'':' disabled')+'>'+(ONB.soCidade?'Salvar':'Continuar')+'</button>';
   }else if(n===2){
-    corpo.innerHTML='<h1 class="onb-titulo">Onde você já esteve?</h1>'
+    corpo.innerHTML='<h1 class="onb-titulo">Onde você já esteve</h1>'
       +'<div class="onb-mapa-card"><div class="onb-mapa" id="onbMapa"></div><div class="onb-mapa-n" id="onbMapaN"></div></div>'
       +'<label class="onb-campo">'+icon('search')+'<input id="onbPais" type="text" placeholder="Buscar país" autocomplete="off" oninput="onbListarPaises(this.value)"></label>'
       +'<div id="onbPaises"></div>';
@@ -13624,20 +14077,17 @@ function onbDesenhar(){
     // fica vazia enquanto isso: os dois usam os mesmos ids.
     const f=document.getElementById('cvFolha');if(f)f.innerHTML='';
     cvZerar('onb','');
-    corpo.innerHTML='<h1 class="onb-titulo">E as cidades?</h1>'
-      +'<p class="onb-sub">Dos países que você marcou. Contam no seu mapa mesmo sem spot.</p>'
+    corpo.innerHTML='<h1 class="onb-titulo">Cidades</h1>'
       +cvCampoHTML()+'<div class="cv-sel" id="cvSel"></div><div class="cv-lista" id="cvLista"></div>';
     pe.innerHTML='<button class="onb-btn" id="cvSalvar" onclick="cvSalvar()">Continuar</button>';
     cvPintar();
   }else if(n===3){
-    corpo.innerHTML='<h1 class="onb-titulo">Tem lugares anotados no celular?</h1>'
-      +'<p class="onb-sub">Notas, WhatsApp, Instagram: cole o texto e o Spot encontra os lugares. Você confere antes de salvar.</p>'
+    corpo.innerHTML='<h1 class="onb-titulo">Lugares anotados</h1>'
       +'<textarea id="onbImportar" class="imp-campo onb-importar" maxlength="'+IMP_MAX+'" placeholder="lisboa: taberna da rua das flores, pasteis de belem (amei!!)&#10;porto - majestic café" oninput="ONB.textoImportar=this.value;document.getElementById(\'onbSeguirImp\').textContent=this.value.trim()?\'Encontrar os lugares\':\'Continuar\'"></textarea>';
     const t=document.getElementById('onbImportar');if(t&&ONB.textoImportar)t.value=ONB.textoImportar;
     pe.innerHTML='<button class="onb-btn" id="onbSeguirImp" onclick="onbSeguirImportar()">'+(String(ONB.textoImportar||'').trim()?'Encontrar os lugares':'Continuar')+'</button>';
   }else if(n===4){
-    corpo.innerHTML='<h1 class="onb-titulo">O Spot fica melhor com amigos</h1>'
-      +'<p class="onb-sub">Você vê os lugares deles, eles veem os seus. Quem entrar pelo seu link já vira seu amigo.</p>'
+    corpo.innerHTML='<h1 class="onb-titulo">Amigos</h1>'
       +'<button class="onb-btn" id="onbConvite" onclick="onbConvidar()">'+icon('share')+'Compartilhar convite</button>'
       +'<div class="onb-rotulo">Já está no Spot?</div>'
       +'<label class="onb-campo">'+icon('search')+'<input id="onbPessoa" type="text" placeholder="Buscar pelo nome ou @" autocomplete="off" autocapitalize="off" oninput="buscarPessoas(this.value,\'onbPessoas\',\'onbPessoa\')"></label>'
@@ -13647,7 +14097,7 @@ function onbDesenhar(){
     const nome=String((S.profile&&S.profile.display_name)||'').trim().split(/\s+/)[0]||'';
     // 11b (07/10, Claude Design): mapa, anel "do mundo" e até 4 continentes.
     const nomes=visitedCountryNames();
-    const titulo='<h1 class="onb-titulo onbf-titulo">Seu mapa está pronto'+(nome?', '+esc(nome):'')+'.</h1>';
+    const titulo='<h1 class="onb-titulo onbf-titulo">Seu mapa'+(nome?', '+esc(nome):'')+'</h1>';
     corpo.innerHTML='<div class="onb-mapa onb-mapa-sangra onbf-mapa" id="onbMapa"></div>'
       +(nomes.length
         ?'<div class="onbf-topo">'+anelDoOnboarding(nomes.length)
@@ -13681,7 +14131,7 @@ function fatiaDoMundo(paises){
 }
 function anelDoOnboarding(paises){
   return '<div class="onbf-anel"><svg viewBox="0 0 120 120" aria-hidden="true">'
-    +'<circle cx="60" cy="60" r="'+ONBF_R+'" fill="none" stroke="#E2E2DE" stroke-width="12"/>'
+    +'<circle cx="60" cy="60" r="'+ONBF_R+'" fill="none" stroke="rgba(245,245,243,.14)" stroke-width="12"/>'
     +'<circle id="onbfArco" cx="60" cy="60" r="'+ONBF_R+'" fill="none" stroke="var(--green)" stroke-width="12" stroke-linecap="round"'
     +' transform="rotate(-90 60 60)" stroke-dasharray="'+(ONBF_VOLTA*fatiaDoMundo(paises))+' '+ONBF_VOLTA+'"/></svg>'
     +'<div class="onbf-pct"><b id="onbfPct">'+(percentualDoMundo(paises)||'0%')+'</b><span>do mundo</span></div></div>';
@@ -14919,6 +15369,7 @@ async function carregarComentarios(spotId){
     S.user?dbRpc('perfis_da_conversa',{p_spot:spotId}).catch(()=>null):null,
     amigosEmCache()]);
   COMENTARIOS[spotId]=lista||[];
+  await carregarCurtidasDeComentario(COMENTARIOS[spotId].map(c=>c.id));
   if(Array.isArray(daConversa)&&!falhou(daConversa)&&amigos){
     const meu=S.user&&S.user.id;
     daConversa.forEach(p=>{if(p&&p.id)COMENT_PERFIS[p.id]=(p.id===meu||amigos.has(p.id))?p:Object.assign({},p,{_conversa:true})});
@@ -14944,9 +15395,15 @@ function renderComentarios(spotId,alvo,donoDoSpot){
   if(!box)return;
   // Conteúdo de quem você bloqueou não aparece. É metade do que a diretriz
   // 1.2 da Apple pede: bloquear tem que surtir efeito visível, não só gravar.
-  const lista=(COMENTARIOS[spotId]||[]).filter(c=>!estaBloqueado(c.user_id));
+  const todos=(COMENTARIOS[spotId]||[]).filter(c=>!estaBloqueado(c.user_id));
+  // Respostas (038) logo abaixo do comentário que respondem, um nível só.
+  // Resposta cujo comentário sumiu fica como comentário comum.
+  const ids=new Set(todos.map(c=>c.id));
+  const raiz=todos.filter(c=>!c.responde_a||!ids.has(c.responde_a));
+  const lista=[];raiz.forEach(c=>{lista.push(c);todos.filter(r=>r.responde_a===c.id).forEach(r=>lista.push(r))});
   const meu=S.user&&S.user.id;
   const linhas=lista.map(function(c){
+    const cc=CURT_COM[c.id]||{n:0,meu:false};
     const p=COMENT_PERFIS[c.user_id];
     const nome=friendName(p);
     // Apaga quem escreveu — e tambem o dono do spot, que precisa poder tirar
@@ -14968,12 +15425,16 @@ function renderComentarios(spotId,alvo,donoDoSpot){
     // não abre nada. Só uuid no onclick.
     // Quem não é amigo (_conversa, 06/10) não abre: o perfil dele não carrega.
     const abre=(c.user_id&&c.user_id!==meu&&!(p&&p._conversa))?' onclick="abrirPerfilDoComentario(\''+esc(c.user_id)+'\')" role="button"':'';
-    return'<div class="coment-item">'
+    return'<div class="coment-item'+(c.responde_a&&ids.has(c.responde_a)?' coment-resp':'')+'">'
       +avatarDe(c.user_id,nome,'coment-av'+(abre?' coment-link':'')).replace('<div class=','<div'+abre+' class=')
       +'<div class="coment-corpo">'
       +'<div class="coment-topo"><span class="coment-nome'+(abre?' coment-link':'')+'"'+abre+'>'+esc(nome)+'</span>'
       +'<span class="coment-quando">'+esc(timeAgo(c.created_at))+'</span>'+den+x+'</div>'
-      +'<div class="coment-txt">'+esc(c.body)+'</div></div></div>';
+      +'<div class="coment-txt">'+esc(c.body)+'</div>'
+      // Redesenho 06/11 (038): curtir e responder. Só uuid no onclick.
+      +'<div class="coment-acoes"><button class="coment-curtir'+(cc.meu?' on':'')+'" onclick="curtirComentario(\''+esc(c.id)+'\',\''+esc(spotId)+'\',\''+esc(alvo)+'\',\''+esc(donoDoSpot||'')+'\')" aria-label="Curtir">'+icon('heart')+(cc.n?'<i>'+cc.n+'</i>':'')+'</button>'
+      +'<button class="coment-responder" onclick="responderComentario(\''+esc(c.responde_a||c.id)+'\',\''+esc(alvo)+'\')">Responder</button></div>'
+      +'</div></div>';
   }).join('');
 
   // No SEU próprio spot, escrever comentário seria um segundo lugar pra dizer
@@ -15123,6 +15584,794 @@ function avisarConteudoBarrado(){
     'O Spot não aceita ódio, ameaça nem conteúdo sexual. Reescreve sem isso.','alert');
 }
 
+// ═══ BARRA DE BAIXO DO REDESENHO (06/11) ═══
+// Você · + · Explorar · Listas (Hotspots entra quando a aba existir). Só
+// ícone, sem nome embaixo (o Lucas, 09/11: "não é pra ter nome as abas"). Amigos
+// e Perfil saíram da barra: Amigos é o ícone no topo da Você, Perfil é o
+// rosto. Dentro do app quem desenha a barra é a casca; esta vale pro site.
+const ABA_DA_TELA={dashboard:'voce',trip:'voce',city:'voce',list:'voce',mapaMundi:'voce',explore:'explorar',listas:'listas',lista:'listas',hotspots:'hotspots'};
+function barraNova(){
+  document.querySelectorAll('.screen').forEach(sc=>{
+    const nav=sc.querySelector(':scope > .bottom-nav');if(!nav)return;
+    const ativa=ABA_DA_TELA[sc.id]||'';
+    const it=(k,ic,rot,acao)=>'<div class="nav-item'+(ativa===k?' active':'')+'" role="button" aria-label="'+rot+'" onclick="'+acao+'"><div class="nav-icon" data-ic="'+ic+'"></div></div>';
+    nav.innerHTML=it('voce','user','Você',"goTo('dashboard');loadDashboard()")
+      +it('hotspots','fire','Hotspots','hsAbrir()')
+      +'<div class="nav-item nav-mais" onclick="adicionarDoTopo()"><div class="nav-icon" data-ic="plus"></div></div>'
+      +it('explorar','search','Explorar',"goTo('explore');loadExplore()")
+      +it('listas','grade','Listas','lsAbrir()');
+    hydrateIcons(nav);
+  });
+}
+if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',barraNova);else barraNova();
+// ═══ HOTSPOTS (redesenho 06/11) ═══
+// Para você: a lista da semana JÁ PUBLICADA (/api/hotspots op vitrine), a
+// cidade segue onde a pessoa mora (Rio ou São Paulo; tocar no nome troca).
+// Amigos: o que os amigos salvaram, do mais novo pro mais antigo.
+// Sem lista publicada pra cidade onde a pessoa mora (11/11, Lucas e Jezler):
+// a aba é SÓ o feed dos amigos — sem "Para você", sem lista de outra cidade.
+// Quem decide é a lista que o servidor devolve, não uma relação de cidades
+// aqui: cidade nova publicada passa a aparecer sozinha pra quem mora nela.
+const HSV={aba:'voce',dados:null,cidade:'',cat:'',amigos:null,erro:false,soAmigos:false,casa:null};
+function hsListaDeCasa(){
+  const casa=normName((S.profile&&S.profile.home_city)||'');
+  return casa?((HSV.dados&&HSV.dados.listas)||[]).find(x=>normName(x.cidade)===casa)||null:null;
+}
+async function hsAbrir(){
+  goTo('hotspots');hsPintar();
+  if(!HSV.dados){
+    try{
+      const pedir=op=>fetch('/api/hotspots',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({op})}).then(r=>r.json());
+      let d=await comPrazo(pedir('vitrine'),15000);
+      // Servidor de antes da vitrine (a prévia do redesenho fala com o de
+      // produção): cai na prévia da newsletter, que é a mesma lista.
+      if(d&&d.error==='op')d=await comPrazo(pedir('previa'),15000);
+      HSV.dados=d&&Array.isArray(d.listas)?{...d,listas:d.listas.filter(x=>x.lugares&&x.lugares.length)}:{listas:[]};HSV.erro=false;
+    }catch(e){HSV.erro=true}
+  }
+  // Mudou a cidade onde mora (ou trocou de conta): decide de novo.
+  const casa=normName((S.profile&&S.profile.home_city)||'');
+  if(casa!==HSV.casa){HSV.casa=casa;HSV.cidade='';HSV.cat=''}
+  const deCasa=hsListaDeCasa(),eraSo=HSV.soAmigos;
+  HSV.soAmigos=!deCasa;
+  if(HSV.soAmigos)HSV.aba='amigos';
+  else{if(eraSo)HSV.aba='voce';if(!HSV.cidade)HSV.cidade=deCasa.cidade}
+  hsPintar();
+  if(HSV.aba==='amigos'&&!HSV.amigos)hsCarregarAmigos();
+}
+function hsAba(a){HSV.aba=a;hsPintar();if(a==='amigos'&&!HSV.amigos)hsCarregarAmigos()}
+function hsTrocarCidade(){
+  const l=(HSV.dados&&HSV.dados.listas)||[];if(l.length<2)return;
+  const i=l.findIndex(x=>x.cidade===HSV.cidade);HSV.cidade=l[(i+1)%l.length].cidade;HSV.cat='';hsPintar();
+}
+function hsCat(c){HSV.cat=HSV.cat===c?'':c;hsPintar()}
+const HS_CAT={food:'Gastronomia',experience:'Experiência',hotel:'Hospedagem'};
+function hsLugares(){
+  const l=((HSV.dados&&HSV.dados.listas)||[]).find(x=>x.cidade===HSV.cidade);
+  return l?l.lugares:[];
+}
+function hsAbas(){
+  if(HSV.soAmigos)return '';
+  return '<div class="hv-abas"><button class="'+(HSV.aba==='voce'?'on':'')+'" onclick="hsAba(\'voce\')">Para você</button>'
+    +'<button class="'+(HSV.aba==='amigos'?'on':'')+'" onclick="hsAba(\'amigos\')">Amigos</button></div>';
+}
+function hsPintar(){
+  const c=document.getElementById('hsCorpo');if(!c)return;
+  if(HSV.soAmigos){c.innerHTML='<div class="ls-topo"><h1 class="ls-tit">Amigos</h1></div>'+hsPintarAmigos();hydrateIcons(c);return}
+  if(HSV.aba==='amigos'){c.innerHTML='<div class="hv-sem-capa">'+hsAbas()+'</div>'+hsPintarAmigos();hydrateIcons(c);return}
+  if(HSV.erro){c.innerHTML='<div class="hv-sem-capa">'+hsAbas()+'</div><div class="at-vazio">Não carregou. Confere a conexão.<br><button class="btn-primario" style="margin-top:16px" onclick="HSV.dados=null;hsAbrir()">Tentar de novo</button></div>';return}
+  // Antes da lista chegar não se sabe se a pessoa tem "Para você": sem abas,
+  // pra elas não aparecerem e sumirem em quem mora onde não há lista.
+  if(!HSV.dados){c.innerHTML='<div class="at-vazio" style="padding:56px 20px 0">Carregando...</div>';return}
+  const todos=hsLugares();
+  if(!todos.length){c.innerHTML='<div class="hv-sem-capa">'+hsAbas()+'</div><div class="at-vazio" style="padding:0 20px">A lista da semana sai sexta às 17h.</div>';return}
+  const cats=[...new Set(todos.map(x=>x.categoria))].filter(k=>HS_CAT[k]);
+  const lista=HSV.cat?todos.filter(x=>x.categoria===HSV.cat):todos;
+  const meta=x=>esc([hsTipo(x.tipo),x.bairro].filter(Boolean).join(' · '));
+  const n1=todos[0],iDe=x=>todos.indexOf(x);
+  let h='<div class="hv-capa" style="background-image:'+(n1.foto?esc(cssUrl(n1.foto)):'none')+'" onclick="hsAbrirLugar(0)">'+hsAbas()
+    +'<div class="hv-pe"><small>Nº 1 da semana · '+(((HSV.dados.listas||[]).length>1)?'<button onclick="event.stopPropagation();hsTrocarCidade()">'+esc(HSV.cidade)+'</button>':esc(HSV.cidade))+'</small>'
+    +'<b>'+esc(n1.nome)+'</b><span>'+meta(n1)+'</span></div></div>';
+  if(cats.length>1)h+='<div class="hv-pils">'+cats.map(k=>'<button class="pil'+(HSV.cat===k?' on':'')+'" onclick="hsCat(\''+k+'\')">'+HS_CAT[k]+'</button>').join('')+'</div>';
+  h+=lista.filter(x=>x!==n1).map(x=>{const i=iDe(x);
+    return '<div class="hv-linha" onclick="hsAbrirLugar('+i+')"><span class="hv-num">'+(i+1)+'</span>'
+      +'<span class="hv-foto"'+(x.foto?' style="background-image:'+esc(cssUrl(fotoNaLargura(x.foto,240)))+'"':'')+'></span>'
+      +'<span class="hv-txt"><b>'+esc(x.nome)+'</b><span>'+meta(x)+'</span></span></div>'}).join('');
+  c.innerHTML=h;hydrateIcons(c);
+}
+function hsTipo(t){return (t&&TIPO_ROTULO[t])||''}
+// Quantos perfis indicaram este lugar na lista da semana (0 = não é hotspot,
+// ou a lista ainda não foi aberta neste aparelho).
+function hsIndicado(s){
+  if(!s||!s.name)return 0;
+  const cid=normName(cityOf(s)||s.city||'');
+  for(const l of (HSV.dados&&HSV.dados.listas)||[]){
+    if(cid&&normName(l.cidade)!==cid)continue;
+    const x=l.lugares.find(y=>mesmoLugar(y.nome,s.name));
+    if(x)return Number(x.n)||0;
+  }
+  return 0;
+}
+function hsPintarIndicado(s){
+  const el=document.getElementById('fiIndic');if(!el)return;
+  const n=hsIndicado(s);
+  el.innerHTML=n>0?'<span data-ic="fire"></span>Indicado por '+n+(n===1?' perfil':' perfis'):'';
+  if(n>0)hydrateIcons(el);
+}
+function hsAbrirLugar(i){
+  const x=hsLugares()[i];if(!x)return;
+  const meu=meuSpotIgual(x.nome,HSV.cidade);
+  if(meu){openPlace(meu.id,'hotspots');return}
+  EXPLORE.avulso={name:x.nome,address:x.endereco||'',city:HSV.cidade,country:'Brasil',subcat:'',phone:'',
+    photo_url:x.foto||'',photo_author:{nome:'',url:''},rating:'',website_url:x.site||'',maps_url:x.maps||'',
+    lat:null,lng:null,price_level:x.preco||null,tipo:x.tipo||'',_cat:x.categoria||'food'};
+  abrirPreviaDoExplorar('avulso');
+}
+async function hsCarregarAmigos(){
+  try{
+    const l=await plnSpotsDeles();
+    HSV.amigos=(l||[]).filter(s=>s.status==='been'||s.status==='want')
+      .sort((a,b)=>String(b.fui_em||b.created_at||'').localeCompare(String(a.fui_em||a.created_at||''))).slice(0,40);
+    await carregarCurtidasDeSpot(HSV.amigos.map(s=>s.id));
+  }catch(e){HSV.amigos=[]}
+  if(HSV.aba==='amigos')hsPintar();
+}
+function hsPintarAmigos(){
+  if(!HSV.amigos)return '<div class="at-vazio">Carregando...</div>';
+  if(!HSV.amigos.length)return '<div class="at-vazio">Quando seus amigos salvarem spots, eles aparecem aqui.</div>';
+  return '<div class="hv-am">'+HSV.amigos.map((s,i)=>{
+    const quem=esc(plnPrimeiro(s.user_id)),cs=CURT_SPOT[s.id]||{n:0,meu:false};
+    const foto=s._fotoVista||s.photo_url;
+    return '<div class="hv-card" onclick="hsAbrirDoAmigo('+i+')">'
+      +'<div class="hv-card-foto"'+(foto?' style="background-image:'+esc(cssUrl(fotoNaLargura(foto,800)))+'"':'')+'>'+plnAvatar(s.user_id,'p')
+      +'<button class="hv-salvar" onclick="event.stopPropagation();hsAbrirDoAmigo('+i+')" aria-label="Salvar">'+icon('plus')+'</button></div>'
+      +'<h3>'+esc(s.name)+'</h3><span class="hv-cid">'+esc(cityOf(s)||s.city||'')+'</span>'
+      +'<div class="hv-quem">'+(s.status==='been'?quem+' foi '+estrelasHTML(s.my_rating,14):quem+' quer ir')
+      +'<button class="coment-curtir'+(cs.meu?' on':'')+'" onclick="event.stopPropagation();curtirSpot(\''+esc(s.id)+'\',hsPintar)" aria-label="Curtir">'+icon('heart')+(cs.n?'<i>'+cs.n+'</i>':'')+'</button></div>'
+      +(s.my_review?'<p class="hv-dica">“'+esc(s.my_review)+'”</p>':'')
+      +'</div>';
+  }).join('')+'</div>';
+}
+function hsAbrirDoAmigo(i){const s=(HSV.amigos||[])[i];if(s)abrirFichaDoSpotDeAmigo(s)}
+// ═══ LISTAS (038, redesenho 06/11) ═══
+// Tabelas listas / lista_membros / lista_spots. Toda lista pode ser
+// compartilhada: quem está nela vê e põe spots; só o dono chama gente (amigo
+// aceito) e renomeia. Cada spot da lista guarda quem pôs ("Nati pôs").
+// V4 (13/11, migração 039): pilhas com busca e filtro, viagem com data no
+// calendário, um Adicionar só, Fui arrastando a linha, roteiro à mão por dia
+// e turno. Roteiro com IA: ainda não.
+const LS2={listas:[],membros:{},spots:{},atual:null,carregou:false,nova:null,filtroPor:'',
+  aba:'suas',filtro:'tudo',q:'',todas:false,poeDepois:null,novo:null,renota:null,arrastou:0,vista:'roteiro',vaga:null};
+const LS_GIROS=[[-9,7],[8,-6],[-7,9],[6,-8],[-8,6],[9,-7]];
+const LS_MES3=['jan','fev','mar','abr','mai','jun','jul','ago','set','out','nov','dez'];
+const LS_MESES=['janeiro','fevereiro','março','abril','maio','junho','julho','agosto','setembro','outubro','novembro','dezembro'];
+const LS_AVIAO='<svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" role="img" aria-label="Viagem"><path d="M10.5 13.5 3 11l1.5-1.5 8 .5 4-4c.8-.8 2.2-.8 3 0s.8 2.2 0 3l-4 4 .5 8L14.5 22 12 14.5l-3 3V20l-1.5 1.5-1-3.5-3.5-1L4.5 15.5H7l3.5-2z"/></svg>';
+const LS_EST='<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round" aria-hidden="true"><path d="M12 2.8l2.8 5.9 6.4.8-4.7 4.4 1.2 6.4L12 17.2l-5.700 3.100 1.200-6.400-4.700-4.400 6.400-.800z"/></svg>';
+// Data da viagem (039): data_ini/data_fim em AAAA-MM-DD. Lista antiga só tem
+// o `quando` escrito à mão, que continua aparecendo.
+function lsData(iso){if(!iso)return null;const p=String(iso).slice(0,10).split('-').map(Number);return p.length===3&&p[0]?new Date(p[0],p[1]-1,p[2]):null}
+function lsIso(d){return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0')}
+function lsQuando(l){
+  const a=lsData(l.data_ini);if(!a)return l.quando||'';
+  const b=lsData(l.data_fim)||a,ano=' '+b.getFullYear();
+  if(+a===+b)return a.getDate()+' '+LS_MES3[a.getMonth()]+ano;
+  if(a.getMonth()===b.getMonth()&&a.getFullYear()===b.getFullYear())return a.getDate()+'–'+b.getDate()+' '+LS_MES3[b.getMonth()]+ano;
+  return a.getDate()+' '+LS_MES3[a.getMonth()]+(a.getFullYear()!==b.getFullYear()?' '+a.getFullYear():'')+' – '+b.getDate()+' '+LS_MES3[b.getMonth()]+ano;
+}
+async function lsAbrir(){
+  goTo('listas');
+  const c=document.getElementById('lsCorpo');
+  if(!LS2.carregou&&c)c.innerHTML='<div class="at-vazio">Carregando...</div>';
+  await lsCarregar();
+  lsPintar();
+}
+async function lsCarregar(){
+  if(!S.user)return;
+  const ls=await dbGet('listas','select=*&order=created_at.desc');
+  if(!Array.isArray(ls)||falhou(ls)){LS2.erro=true;return}
+  LS2.erro=false;LS2.listas=ls;LS2.carregou=true;
+  const ids=ls.map(l=>l.id);
+  LS2.membros={};LS2.spots={};
+  if(!ids.length)return;
+  const [ms,ss]=await Promise.all([
+    dbGet('lista_membros','select=lista_id,user_id,papel&lista_id=in.('+ids.join(',')+')'),
+    dbGet('lista_spots','select=*&lista_id=in.('+ids.join(',')+')&order=created_at.desc')]);
+  (Array.isArray(ms)?ms:[]).forEach(m=>{(LS2.membros[m.lista_id]=LS2.membros[m.lista_id]||[]).push(m)});
+  (Array.isArray(ss)?ss:[]).forEach(x=>{(LS2.spots[x.lista_id]=LS2.spots[x.lista_id]||[]).push(x)});
+  // nomes de quem está nas listas (amigos já vêm do Planejar)
+  try{await plnCarregarAmigos()}catch(e){}
+}
+// ── A aba (V4, 13/11): cada lista é uma pilha de até 3 fotos; viagem leva o
+// selo e a data. Viagens e Recentes deslizam pro lado. Em Listas só entra
+// viagem em planejamento: a que já teve Fui (feita_em) sai daqui.
+function lsFotoCss(u,w){return u?' style="background-image:'+esc(cssUrl(fotoNaLargura(u,w)))+'"':''}
+function lsPilha(l){
+  const f=(LS2.spots[l.id]||[]).map(x=>x.foto).filter(Boolean).slice(0,3);
+  let h=0;for(const ch of String(l.id))h=(h*31+ch.charCodeAt(0))>>>0;
+  const g=LS_GIROS[h%LS_GIROS.length];
+  // a da frente (reta) é a mais nova; as duas de trás saem tortas
+  return '<span class="lp-pilha" style="--g0:'+g[0]+'deg;--g1:'+g[1]+'deg">'
+    +[2,1,0].map(k=>'<span class="lp-f'+(k?' lp-t'+k:'')+'"'+lsFotoCss(f[k],300)+'></span>').join('')
+    +(l.tipo==='viagem'?'<span class="lp-selo">'+LS_AVIAO+'</span>':'')+'</span>';
+}
+function lsItem(l,sub){
+  const s=sub!==undefined?sub:(l.tipo==='viagem'?(l.feita_em?'Viagem feita':lsQuando(l)):'');
+  return '<button class="lp-item" onclick="lsVer(\''+esc(l.id)+'\')">'+lsPilha(l)
+    +'<span><span class="lp-nome">'+esc(l.nome)+'</span>'+(s?'<span class="lp-sub">'+esc(s)+'</span>':'')+'</span></button>';
+}
+function lsAba(a){LS2.aba=a;LS2.todas=false;lsPintar();const t=document.getElementById('listas');if(t)t.scrollTop=0}
+function lsFiltro(f){LS2.filtro=f;LS2.todas=false;lsPintar()}
+function lsLimpar(){LS2.q='';const i=document.getElementById('lsQ');if(i){i.value='';i.focus()}lsPintar()}
+function lsPintar(){
+  const c=document.getElementById('lsCorpo');if(!c)return;
+  const cab=document.getElementById('lsCab');
+  if(LS2.erro){if(cab)cab.style.display='none';c.innerHTML='<div class="at-vazio">Não carregou. Confere a conexão.<br><button class="btn-primario" style="margin-top:16px" onclick="lsAbrir()">Tentar de novo</button></div>';return}
+  if(!LS2.listas.length){
+    // O vazio aprovado (quadro "Listas · vazia"): a única frase explicativa
+    // permitida na aba.
+    if(cab)cab.style.display='none';
+    c.innerHTML='<div class="ls-vazio"><div class="ls-leque">'+[0,1,2].map(i=>'<span class="ls-falsa ls-f'+i+'"></span>').join('')+'</div>'
+      +'<p>Junte spots numa lista e chame quem vai com você.</p>'
+      +'<button class="btn-primario btn-largo" onclick="lsAbrirNova()">Criar minha primeira lista</button></div>';
+    return;
+  }
+  if(cab){
+    cab.style.display='';
+    cab.querySelectorAll('[data-aba]').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.aba===LS2.aba)));
+    cab.querySelectorAll('[data-f]').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.f===LS2.filtro)));
+    const x=document.getElementById('lsLimpar');if(x)x.style.display=LS2.q?'':'none';
+  }
+  const eu=S.user.id,viagem=l=>l.tipo==='viagem';
+  const base=LS2.listas.filter(l=>LS2.aba==='suas'?l.dono_id===eu:l.dono_id!==eu);
+  const ativas=base.filter(l=>!l.feita_em);
+  const porFiltro=ls=>LS2.filtro==='viagens'?ls.filter(viagem):LS2.filtro==='listas'?ls.filter(l=>!viagem(l)):ls;
+  const grade=ls=>'<div class="lp-grade">'+ls.map(l=>lsItem(l)).join('')+'</div>';
+  const prat=ls=>'<div class="lp-prat">'+ls.map(l=>lsItem(l)).join('')+'</div>';
+  const nada=t=>'<p class="lp-nada">'+t+'</p>';
+  const q=normName(LS2.q);
+  let h='';
+  if(q){
+    // procura no nome da lista e nos spots de dentro dela
+    const achou=porFiltro(base).map(l=>{
+      const sp=(LS2.spots[l.id]||[]).filter(x=>normName(x.nome).includes(q));
+      return (normName(l.nome).includes(q)||sp.length)?{l,sp}:null}).filter(Boolean);
+    h=achou.length?'<div class="lp-grade">'+achou.map(a=>lsItem(a.l,a.sp.length?'tem '+a.sp[0].nome:undefined)).join('')+'</div>'
+      :nada('Nenhuma lista nem spot com “'+esc(LS2.q)+'”.');
+  }else if(LS2.aba==='amigos'){
+    // uma prateleira por amigo
+    const ls=porFiltro(ativas),donos=[...new Set(ls.map(l=>l.dono_id))];
+    h=donos.map(d=>'<section class="lp-sec"><h2 class="lp-h2">'+plnAvatar(d,'p')+esc(plnPrimeiro(d)||'Amigo')+'</h2>'+prat(ls.filter(l=>l.dono_id===d))+'</section>').join('')
+      ||nada(LS2.filtro==='tudo'?'Quando um amigo chamar você pra uma lista, ela aparece aqui.':'Nenhuma lista de amigo assim.');
+  }else if(LS2.filtro!=='tudo'){
+    const ls=porFiltro(ativas);
+    h=ls.length?grade(ls):nada(LS2.filtro==='viagens'?'Nenhuma viagem em planejamento.':'Nenhuma lista ainda.');
+  }else if(LS2.todas){
+    h='<button class="lp-voltar" onclick="LS2.todas=false;lsPintar()">'+icon('back')+'Todas as listas</button>'+grade(base);
+  }else{
+    const vs=ativas.filter(viagem),ts=ativas.filter(l=>!viagem(l));
+    if(vs.length)h+='<section class="lp-sec"><h2 class="lp-h2">Viagens</h2>'+prat(vs)+'</section>';
+    if(ts.length)h+='<section class="lp-sec"><h2 class="lp-h2">Recentes</h2>'+prat(ts.slice(0,8))+'</section>';
+    if(!vs.length&&!ts.length)h+=nada(base.length?'Nenhuma lista em aberto.':'Você ainda não criou uma lista.');
+    // só aparece quando a tela não mostra tudo: muita lista, ou viagem já feita
+    if(ts.length>8||base.length>ativas.length)h+='<button class="lp-todas" onclick="LS2.todas=true;lsPintar();document.getElementById(\'listas\').scrollTop=0">Todas as listas<span>'+base.length+'</span></button>';
+  }
+  c.innerHTML=h;hydrateIcons(c);
+}
+// ── A lista aberta ──
+async function lsVer(id){
+  LS2.atual=id;LS2.novo=null;LS2.renota=null;LS2.vista='roteiro';goTo('lista');lsPintarDetalhe();
+  const sp=LS2.spots[id]||[];
+  await carregarCurtidasDeSpot(sp.map(x=>x.spot_id).filter(Boolean));
+  if(LS2.atual===id)lsPintarDetalhe();
+}
+function lsNotaTxt(n){return String(n).replace('.',',')}
+// A linha de um spot. O spot é SEU: arrastar pra esquerda marca (ou desfaz) o
+// Fui, e as estrelas entram na própria linha. Pode tirar (você pôs, ou a
+// lista é sua): arrastar pra direita.
+function lsLinha(l,x,meus){
+  const eu=S.user.id,dono=l.dono_id===eu,outro=x.posto_por!==eu;
+  const meu=x.spot_id?meus.get(x.spot_id):null;
+  const foi=!!(meu&&meu.status==='been'),nota=foi?(Number(meu.my_rating)||0):0;
+  let meio='<span class="lp-tx"><b>'+esc(x.nome)+'</b>';
+  if(outro)meio+='<span class="lp-sub2">'+esc((plnPrimeiro(x.posto_por)||'Alguém')+' pôs')+'</span>';
+  else if(foi&&(!nota||LS2.renota===x.id)){
+    meio+='<span class="lp-estl">';
+    for(let i=1;i<=5;i++)meio+='<button onclick="event.stopPropagation();lsNota(\''+esc(x.id)+'\','+i+')" aria-label="'+i+(i===1?' estrela':' estrelas')+'"'+(i<=nota?' class="on"':'')+'>'+LS_EST+'</button>';
+    meio+='</span>';
+  }
+  meio+='</span>';
+  const cs=x.spot_id&&outro?(CURT_SPOT[x.spot_id]||{n:0,meu:false}):null;
+  const fim=cs?'<button class="coment-curtir'+(cs.meu?' on':'')+'" onclick="event.stopPropagation();curtirSpot(\''+esc(x.spot_id)+'\',lsPintarDetalhe)" aria-label="Curtir">'+icon('heart')+(cs.n?'<i>'+cs.n+'</i>':'')+'</button>'
+    :(nota&&LS2.renota!==x.id?'<button class="lp-nt" onclick="event.stopPropagation();lsRenota(\''+esc(x.id)+'\')" aria-label="Nota '+lsNotaTxt(nota)+', trocar">'+lsNotaTxt(nota)+'</button>':'');
+  const podeTirar=!outro||dono;
+  const linha='<span class="lp-foto"'+lsFotoCss(x.foto,220)+'></span>'+meio+fim;
+  if(!meu&&!podeTirar)return '<div class="lp-linha lp-solta">'+linha+'</div>';
+  return '<div class="lp-arr'+(LS2.novo===x.id?' novo':'')+'" data-ls="'+esc(x.id)+'" data-fui="'+(meu?1:0)+'" data-tira="'+(podeTirar?1:0)+'">'
+    +'<div class="lp-atras lp-esq">Tirar</div><div class="lp-atras lp-dir">'+(foi?'Desfazer':icon('check')+'Fui')+'</div>'
+    +'<div class="lp-linha lp-frente"'+(meu?' onclick="lsAbrirSpot(\''+esc(meu.id)+'\')"':'')+'>'+linha+'</div></div>';
+}
+function lsPintarDetalhe(){
+  const box=document.getElementById('lsDetalhe');const l=LS2.listas.find(x=>x.id===LS2.atual);if(!box||!l)return;
+  const eu=S.user.id,sp=LS2.spots[l.id]||[],ms=LS2.membros[l.id]||[],dono=l.dono_id===eu,viagem=l.tipo==='viagem';
+  const meus=new Map(allSpotsFlat().map(s=>[s.id,s]));
+  const qd=lsQuando(l);
+  let chips='';
+  if(!dono)chips+='<span class="lp-chip">de '+esc(plnPrimeiro(l.dono_id)||'amigo')+'</span>';
+  if(viagem){
+    if(dono&&!l.feita_em)chips+='<button class="lp-chip" onclick="lsAbrirQuando()">'+(qd?esc(qd):icon('plus')+'Data')+'</button>';
+    else if(qd)chips+='<span class="lp-chip">'+esc(qd)+'</span>';
+  }
+  const outros=ms.filter(m=>m.user_id!==eu);
+  if(outros.length)chips+='<span class="lp-gente">'+outros.map(m=>plnAvatar(m.user_id,'p')).join('')+'</span>';
+  if(viagem&&dono&&!l.feita_em&&!l.roteiro_dias)chips+='<button class="lp-chip" onclick="lsAbrirRoteiro()">Roteiro</button>';
+  if(dono)chips+='<button class="lp-chip" onclick="lsChamar()">'+icon('plus')+'Amigo</button>';
+  let h='<div class="lp-lista"><h1 class="ls-tit lp-nomeh">'+esc(l.nome)+(viagem?'<span class="lp-selo">'+LS_AVIAO+'</span>':'')+'</h1>'
+    +(chips?'<div class="lp-chips">'+chips+'</div>':'')
+    +'<button class="lp-add" onclick="lsAbrirPor()">'+icon('plus')+'Adicionar spot</button>';
+  const rot=!!(viagem&&l.roteiro_dias),noRot=rot&&LS2.vista!=='lista';
+  if(rot)h+='<div class="lp-abas lp-vistas"><button aria-pressed="'+!noRot+'" onclick="lsVista(\'lista\')">Lista</button><button aria-pressed="'+noRot+'" onclick="lsVista(\'roteiro\')">Roteiro</button></div>';
+  if(noRot)h+=lsRoteiroHTML(l,sp,dono);
+  else if(!sp.length)h+='<p class="lp-nada">Nenhum spot ainda.</p>';
+  else if(viagem){
+    // os blocos da viagem são as categorias do app; bloco vazio não aparece
+    h+=['food','hotel','experience'].map(cat=>{
+      const ss=sp.filter(x=>catSegura(x.categoria)===cat);
+      return ss.length?'<section class="lp-bloco"><h2 class="lp-h2">'+catLabel(cat)+'</h2>'+ss.map(x=>lsLinha(l,x,meus)).join('')+'</section>':'';
+    }).join('');
+  }else h+='<section class="lp-bloco">'+sp.map(x=>lsLinha(l,x,meus)).join('')+'</section>';
+  if(!noRot&&sp.some(x=>x.spot_id&&meus.has(x.spot_id)))h+='<p class="lp-dica">Arraste um spot pra esquerda quando você for. Pra direita, ele sai da lista.</p>';
+  h+='</div>'+(dono?'<button class="ls-apagar" onclick="lsApagar()">Apagar lista</button>':'<button class="ls-apagar" onclick="lsSair()">Sair da lista</button>');
+  box.innerHTML=h;hydrateIcons(box);
+}
+function lsAbrirSpot(id){
+  if(Date.now()-LS2.arrastou<350)return; // o toque que termina um arrasto não abre a ficha
+  telaAntesDaFicha='lista';openPlace(id,'amigo');
+}
+// O spot de verdade (allSpotsFlat devolve cópias: mexer nelas não muda nada).
+function lsMeuSpot(id){for(const t of (S.trips||[])){const s=(t._spots||[]).find(x=>x.id===id);if(s)return s}return null}
+// Fui (ou desfaz). Pinta antes de gravar, e volta atrás se o banco recusar.
+async function lsFui(id){
+  const l=LS2.listas.find(x=>x.id===LS2.atual);if(!l)return;
+  const x=(LS2.spots[l.id]||[]).find(y=>y.id===id);if(!x||!x.spot_id)return;
+  const s=lsMeuSpot(x.spot_id);if(!s)return;
+  const antes=s.status,vai=antes==='been'?'want':'been';
+  s.status=vai;LS2.novo=vai==='been'?id:null;LS2.renota=null;lsPintarDetalhe();
+  const{error}=await dbUpdate('spots',s.id,{status:vai});
+  if(error){s.status=antes;LS2.novo=null;lsPintarDetalhe();toast('Não salvou',error.message||'Confere a conexão e tenta de novo.','alert');return}
+  // primeiro Fui numa viagem em planejamento: ela vira viagem feita e sai da aba
+  if(vai==='been'&&l.tipo==='viagem'&&!l.feita_em){
+    l.feita_em=new Date().toISOString();
+    dbRpc('lista_feita',{l:l.id});
+    toast(l.nome+' virou viagem feita','Ela saiu da aba Listas.','check');
+  }
+  try{conferirViagensQueViraram();atualizarPlacar()}catch(e){}
+}
+async function lsNota(id,n){
+  const x=(LS2.spots[LS2.atual]||[]).find(y=>y.id===id);if(!x)return;
+  const s=lsMeuSpot(x.spot_id);if(!s)return;
+  const antes=s.my_rating;
+  s.my_rating=n;LS2.novo=null;LS2.renota=null;lsPintarDetalhe();
+  const{error}=await dbUpdate('spots',s.id,{my_rating:n});
+  if(error){s.my_rating=antes;lsPintarDetalhe();toast('Não salvou',error.message||'Confere a conexão e tenta de novo.','alert')}
+}
+function lsRenota(id){LS2.renota=id;LS2.novo=null;lsPintarDetalhe()}
+// Arrasto da linha: esquerda = Fui, direita = tirar da lista.
+let LS_AR=null;
+document.addEventListener('pointerdown',e=>{
+  const f=e.target.closest&&e.target.closest('.lp-frente');
+  if(!f||e.target.closest('button'))return;
+  LS_AR={f,cx:f.parentElement,x:e.clientX,y:e.clientY,dx:0,ok:false};
+});
+document.addEventListener('pointermove',e=>{
+  const a=LS_AR;if(!a)return;
+  const dx=e.clientX-a.x,dy=e.clientY-a.y;
+  if(!a.ok){
+    if(Math.abs(dx)<8)return;
+    if(Math.abs(dy)>Math.abs(dx)){LS_AR=null;return}
+    a.ok=true;a.f.style.transition='none';a.cx.classList.add('indo');
+    try{a.f.setPointerCapture(e.pointerId)}catch(_){}
+  }
+  const esq=a.cx.dataset.fui==='1'?-130:0,dir=a.cx.dataset.tira==='1'?130:0;
+  a.dx=Math.max(esq,Math.min(dir,dx));
+  a.f.style.transform='translateX('+a.dx+'px)';
+  a.cx.classList.toggle('pra-dir',a.dx>0);
+  a.cx.classList.toggle('vai',Math.abs(a.dx)>70);
+});
+function lsSoltar(cancelou){
+  const a=LS_AR;if(!a)return;LS_AR=null;
+  a.f.style.transition='';a.f.style.transform='';
+  if(a.ok)LS2.arrastou=Date.now();
+  if(a.ok&&!cancelou&&a.dx<-70){lsFui(a.cx.dataset.ls);return}
+  if(a.ok&&!cancelou&&a.dx>70){lsTirar(a.cx.dataset.ls);return}
+  setTimeout(()=>a.cx.classList.remove('indo','vai','pra-dir'),200);
+}
+document.addEventListener('pointerup',()=>lsSoltar(false));
+document.addEventListener('pointercancel',()=>lsSoltar(true));
+// ── Roteiro à mão (V4, 039): cada dia tem quatro turnos. O número de dias
+// mora na lista (roteiro_dias, só o dono muda); o dia e o turno de cada spot
+// moram em lista_spots (qualquer pessoa da lista mexe). Spot sem dia fica em
+// "Se der tempo". O roteiro com IA entra depois, nesta mesma tela.
+const LS_TURNOS=['Manhã','Almoço','Tarde','Jantar'];
+const LS_DSEM=['dom','seg','ter','qua','qui','sex','sáb'];
+const LSR={modo:'',dias:3,id:null,d:1,k:0};
+function lsCoord(x){const s=x.spot_id?lsMeuSpot(x.spot_id):null;return s&&s.lat!=null&&s.lng!=null?[Number(s.lat),Number(s.lng)]:null}
+function lsKm(a,b){
+  const R=6371,r=Math.PI/180,dy=(b[0]-a[0])*r,dx=(b[1]-a[1])*r;
+  const h=Math.sin(dy/2)**2+Math.cos(a[0]*r)*Math.cos(b[0]*r)*Math.sin(dx/2)**2;
+  return 2*R*Math.asin(Math.sqrt(h));
+}
+function lsAndar(km){return km<1?(Math.max(1,Math.round(km*20))*50)+' m a pé':km.toFixed(1).replace('.',',')+' km'}
+function lsDiaData(l,d){
+  const a=lsData(l.data_ini);if(!a)return'';
+  a.setDate(a.getDate()+d-1);
+  return ' · '+LS_DSEM[a.getDay()]+' '+a.getDate()+'/'+String(a.getMonth()+1).padStart(2,'0');
+}
+function lsNoRoteiro(l,x){return !!(x.dia&&x.dia<=l.roteiro_dias)}
+function lsVista(v){LS2.vista=v;lsPintarDetalhe()}
+function lsRoteiroHTML(l,sp,dono){
+  const n=l.roteiro_dias,mais='<span class="lp-mais2">'+icon('plus')+'</span>';
+  let h='<p class="lp-dica">Toque num spot pra mudar de dia ou de turno.</p>';
+  for(let d=1;d<=n;d++){
+    let antes=null;
+    h+='<section class="lp-bloco"><h2 class="lp-h2 lp-diah"><span>Dia '+d+'<small>'+esc(lsDiaData(l,d))+'</small></span>'
+      +(dono&&n>1?'<button class="lp-tirardia" onclick="lsTirarDia('+d+')">Tirar dia</button>':'')+'</h2>';
+    for(let k=0;k<4;k++){
+      const x=sp.find(y=>y.dia===d&&y.turno===k);
+      if(!x){h+='<button class="lp-turno falta" onclick="lsVaga('+d+','+k+')"><i>'+LS_TURNOS[k]+'</i><b>'+(k%2?'Falta um '+LS_TURNOS[k].toLowerCase():'Livre')+'</b>'+mais+'</button>';continue}
+      const c=lsCoord(x);
+      if(antes&&c)h+='<div class="lp-perto">'+lsAndar(lsKm(antes,c))+'</div>';
+      if(c)antes=c;
+      h+='<button class="lp-turno" onclick="lsMover(\''+esc(x.id)+'\')"><i>'+LS_TURNOS[k]+'</i><span class="lp-foto"'+lsFotoCss(x.foto,220)+'></span><b>'+esc(x.nome)+'</b></button>';
+    }
+    h+='</section>';
+  }
+  if(dono&&n<30)h+='<button class="lp-sec2" onclick="lsDiaMais()">Adicionar dia</button>';
+  const so=sp.filter(x=>!lsNoRoteiro(l,x));
+  if(so.length)h+='<section class="lp-bloco"><h2 class="lp-h2">Se der tempo</h2>'+so.map(x=>'<button class="lp-turno lp-solto" onclick="lsMover(\''+esc(x.id)+'\')"><span class="lp-foto"'+lsFotoCss(x.foto,220)+'></span><b>'+esc(x.nome)+'</b></button>').join('')+'</section>';
+  if(dono)h+='<button class="ls-apagar" onclick="lsApagarRoteiro()">Apagar roteiro</button>';
+  return h;
+}
+async function lsGravaPos(x,dia,turno){
+  const{error}=await dbUpdate('lista_spots',x.id,{dia,turno});
+  if(!error){x.dia=dia;x.turno=turno}
+  return !error;
+}
+function lsNaoSalvou(){toast('Não salvou','Tenta de novo em alguns segundos.','alert')}
+// a folha do roteiro: quantos dias, mover um spot, preencher um turno vago
+function lsAbrirRoteiro(){
+  const l=LS2.listas.find(x=>x.id===LS2.atual);if(!l)return;
+  const a=lsData(l.data_ini),b=lsData(l.data_fim);
+  LSR.modo='dias';LSR.dias=a?Math.min(30,Math.round(((b||a)-a)/864e5)+1):3;
+  lsPintarRot();showOv('ov-lsrot');
+}
+function lsMover(id){
+  const l=LS2.listas.find(x=>x.id===LS2.atual);const x=l&&(LS2.spots[l.id]||[]).find(y=>y.id===id);if(!x)return;
+  const dentro=lsNoRoteiro(l,x);
+  LSR.modo='mover';LSR.id=id;LSR.d=dentro?x.dia:1;LSR.k=dentro?x.turno:0;
+  lsPintarRot();showOv('ov-lsrot');
+}
+function lsVaga(d,k){LSR.modo='vago';LSR.d=d;LSR.k=k;lsPintarRot();showOv('ov-lsrot')}
+function lsRotDias(n){LSR.dias=Math.max(1,Math.min(30,LSR.dias+n));lsPintarRot()}
+function lsRotDia(d){LSR.d=d;lsPintarRot()}
+function lsRotTurno(k){LSR.k=k;lsPintarRot()}
+function lsPintarRot(){
+  const box=document.getElementById('lsRot');const l=LS2.listas.find(x=>x.id===LS2.atual);if(!box||!l)return;
+  const sp=LS2.spots[l.id]||[];
+  let h='';
+  if(LSR.modo==='dias'){
+    const menos='<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M5 12h14"/></svg>';
+    h='<div class="sheet-title">Roteiro de '+esc(l.nome)+'</div>'
+      +'<div class="lp-dias"><button onclick="lsRotDias(-1)" aria-label="Um dia a menos">'+menos+'</button><span>'+LSR.dias+'<small>'+(LSR.dias===1?'dia':'dias')+'</small></span><button onclick="lsRotDias(1)" aria-label="Um dia a mais">'+icon('plus')+'</button></div>'
+      +'<button class="sheet-cta" id="lsRotBt" onclick="lsCriarRoteiro()">Montar roteiro</button>';
+  }else if(LSR.modo==='mover'){
+    const x=sp.find(y=>y.id===LSR.id);if(!x)return;
+    const dentro=lsNoRoteiro(l,x),la=sp.find(y=>y.dia===LSR.d&&y.turno===LSR.k&&y.id!==x.id);
+    let pd='',pt='';
+    for(let d=1;d<=l.roteiro_dias;d++)pd+='<button onclick="lsRotDia('+d+')" aria-pressed="'+(LSR.d===d)+'">Dia '+d+'</button>';
+    LS_TURNOS.forEach((t,k)=>{pt+='<button onclick="lsRotTurno('+k+')" aria-pressed="'+(LSR.k===k)+'">'+t+'</button>'});
+    h='<div class="sheet-title">'+esc(x.nome)+'</div><div class="lp-cal">'
+      +'<p class="lp-mvg">Dia</p><div class="lp-pils">'+pd+'</div><p class="lp-mvg">Turno</p><div class="lp-pils">'+pt+'</div>'
+      +(la?'<p class="lp-dica">'+esc(la.nome)+' está nesse turno e '+(dentro?'troca de lugar':'vai pra Se der tempo')+'.</p>':'')+'</div>'
+      +'<button class="sheet-cta" id="lsRotBt" onclick="lsPorAqui()">Pôr aqui</button>'
+      +(dentro?'<button class="ls-apagar lp-semdata" onclick="lsForaDoRoteiro()">Tirar do roteiro</button>':'');
+  }else if(LSR.modo==='vago'){
+    // primeiro o que combina com o turno: comida no almoço e no jantar
+    const quer=LSR.k%2?'food':'experience',peso=x=>catSegura(x.categoria)===quer?0:1;
+    const so=sp.filter(x=>!lsNoRoteiro(l,x)).sort((a,b)=>peso(a)-peso(b));
+    const mais='<span class="lp-mais2">'+icon('plus')+'</span>';
+    h='<div class="sheet-title">Dia '+LSR.d+' · '+LS_TURNOS[LSR.k]+'</div>'
+      +(so.length?'<p class="lp-rot">Da viagem, fora do roteiro</p>'+so.map(x=>'<button class="ls-linha lp-vagal" onclick="lsEscolherVaga(\''+esc(x.id)+'\')"><span class="place-thumb"'+(x.foto?' style="background:center/cover url('+escUrl(fotoNaLargura(x.foto,220))+')"':'')+'></span><span class="cid-txt"><span class="cid-nome">'+esc(x.nome)+'</span><span class="cid-linha">'+esc(x.cidade||'')+'</span></span>'+mais+'</button>').join(''):'')
+      +'<button class="lp-sec2 lp-sec2f" onclick="lsVagaNovo()">Adicionar outro spot</button>';
+  }
+  box.innerHTML=h;hydrateIcons(box);
+}
+async function lsCriarRoteiro(){
+  const l=LS2.listas.find(x=>x.id===LS2.atual);if(!l)return;
+  const bt=document.getElementById('lsRotBt');if(bt)bt.disabled=true;
+  const{error}=await dbUpdate('listas',l.id,{roteiro_dias:LSR.dias});
+  if(error){if(bt)bt.disabled=false;lsNaoSalvou();return}
+  l.roteiro_dias=LSR.dias;LS2.vista='roteiro';
+  closeOv('ov-lsrot');lsPintarDetalhe();
+  const t=document.getElementById('lista');if(t)t.scrollTop=0;
+}
+async function lsDiaMais(){
+  const l=LS2.listas.find(x=>x.id===LS2.atual);if(!l||l.roteiro_dias>=30)return;
+  const{error}=await dbUpdate('listas',l.id,{roteiro_dias:l.roteiro_dias+1});
+  if(error){lsNaoSalvou();return}
+  l.roteiro_dias++;lsPintarDetalhe();
+}
+// Tirar um dia: os spots dele vão pra "Se der tempo" e os dias de depois sobem.
+async function lsTirarDia(d){
+  const l=LS2.listas.find(x=>x.id===LS2.atual);if(!l||l.roteiro_dias<2)return;
+  const sp=LS2.spots[l.id]||[];
+  const ok=await Promise.all(sp.filter(x=>x.dia&&x.dia>=d).map(x=>x.dia===d?lsGravaPos(x,null,null):lsGravaPos(x,x.dia-1,x.turno)));
+  if(ok.includes(false)){await lsCarregar();lsPintarDetalhe();lsNaoSalvou();return}
+  const{error}=await dbUpdate('listas',l.id,{roteiro_dias:l.roteiro_dias-1});
+  if(error){await lsCarregar();lsPintarDetalhe();lsNaoSalvou();return}
+  l.roteiro_dias--;lsPintarDetalhe();
+  toast('Dia tirado','Os spots dele foram pra Se der tempo.','check');
+}
+async function lsPorAqui(){
+  const l=LS2.listas.find(x=>x.id===LS2.atual);if(!l)return;
+  const sp=LS2.spots[l.id]||[],x=sp.find(y=>y.id===LSR.id);if(!x)return;
+  const bt=document.getElementById('lsRotBt');if(bt)bt.disabled=true;
+  const la=sp.find(y=>y.dia===LSR.d&&y.turno===LSR.k&&y.id!==x.id),dentro=lsNoRoteiro(l,x);
+  // quem estava lá troca de lugar com o que chega (ou vai pra Se der tempo)
+  let ok=true;
+  if(la)ok=await lsGravaPos(la,dentro?x.dia:null,dentro?x.turno:null);
+  if(ok)ok=await lsGravaPos(x,LSR.d,LSR.k);
+  if(!ok){await lsCarregar();lsNaoSalvou()}
+  closeOv('ov-lsrot');lsPintarDetalhe();
+}
+async function lsForaDoRoteiro(){
+  const x=(LS2.spots[LS2.atual]||[]).find(y=>y.id===LSR.id);if(!x)return;
+  if(!await lsGravaPos(x,null,null)){lsNaoSalvou();return}
+  closeOv('ov-lsrot');lsPintarDetalhe();
+}
+async function lsEscolherVaga(id){
+  const x=(LS2.spots[LS2.atual]||[]).find(y=>y.id===id);if(!x)return;
+  if(!await lsGravaPos(x,LSR.d,LSR.k)){lsNaoSalvou();return}
+  closeOv('ov-lsrot');lsPintarDetalhe();
+}
+// turno vago preenchido com um spot que ainda não está na viagem
+function lsVagaNovo(){closeOv('ov-lsrot');lsAbrirPor({d:LSR.d,k:LSR.k})}
+async function lsApagarRoteiro(){
+  const l=LS2.listas.find(x=>x.id===LS2.atual);if(!l)return;
+  if(!await perguntar('Apagar o roteiro?','Os spots continuam na viagem.',[{rotulo:'Apagar',valor:'sim',tom:'perigo'}]))return;
+  const{error}=await dbUpdate('listas',l.id,{roteiro_dias:null});
+  if(error){lsNaoSalvou();return}
+  l.roteiro_dias=null;
+  await Promise.all((LS2.spots[l.id]||[]).filter(x=>x.dia).map(x=>lsGravaPos(x,null,null)));
+  lsPintarDetalhe();
+}
+// ── Quando: ida e volta no calendário. O ano troca num toque; o mês, pelas
+// setas ou arrastando pro lado.
+const LSQ={ini:null,fim:null,ano:0,mes:0,toque:null,ligado:false};
+function lsAbrirQuando(){
+  const l=LS2.listas.find(x=>x.id===LS2.atual);if(!l)return;
+  const a=lsData(l.data_ini),b=lsData(l.data_fim),ref=a||new Date();
+  LSQ.ini=a?+a:null;LSQ.fim=b?+b:(a?+a:null);LSQ.ano=ref.getFullYear();LSQ.mes=ref.getMonth();
+  const box=document.getElementById('lsQuando');
+  if(box&&!LSQ.ligado){
+    LSQ.ligado=true;
+    box.addEventListener('touchstart',e=>{const p=e.changedTouches&&e.changedTouches[0];LSQ.toque=p?[p.clientX,p.clientY]:null},{passive:true});
+    box.addEventListener('touchend',e=>{const p=e.changedTouches&&e.changedTouches[0];if(!LSQ.toque||!p)return;
+      const dx=p.clientX-LSQ.toque[0],dy=p.clientY-LSQ.toque[1];LSQ.toque=null;
+      if(Math.abs(dx)>45&&Math.abs(dx)>Math.abs(dy)*1.5)lsMes(dx<0?1:-1)},{passive:true});
+  }
+  lsPintarQuando();showOv('ov-lsquando');
+}
+function lsMes(n){LSQ.mes+=n;if(LSQ.mes<0){LSQ.mes=11;LSQ.ano--}if(LSQ.mes>11){LSQ.mes=0;LSQ.ano++}lsPintarQuando()}
+function lsAno(a){LSQ.ano=a;lsPintarQuando()}
+function lsDia(ts){
+  if(!LSQ.ini||LSQ.fim){LSQ.ini=ts;LSQ.fim=null}else if(ts>=LSQ.ini)LSQ.fim=ts;else LSQ.ini=ts;
+  lsPintarQuando();
+}
+function lsPintarQuando(){
+  const box=document.getElementById('lsQuando');const l=LS2.listas.find(x=>x.id===LS2.atual);if(!box||!l)return;
+  const y=LSQ.ano,m=LSQ.mes,prim=new Date(y,m,1).getDay(),tot=new Date(y,m+1,0).getDate();
+  let g='';
+  for(let i=0;i<prim;i++)g+='<span></span>';
+  for(let d=1;d<=tot;d++){
+    const ts=+new Date(y,m,d),cl=(ts===LSQ.ini||ts===LSQ.fim)?'ponta':(LSQ.ini&&LSQ.fim&&ts>LSQ.ini&&ts<LSQ.fim?'meio':'');
+    g+='<button onclick="lsDia('+ts+')"'+(cl?' class="'+cl+'"':'')+'>'+d+'</button>';
+  }
+  const n=LSQ.ini&&LSQ.fim?Math.round((LSQ.fim-LSQ.ini)/864e5)+1:0;
+  const res=!LSQ.ini?'Toque no dia da ida':!LSQ.fim?'Agora o dia da volta'
+    :lsQuando({data_ini:lsIso(new Date(LSQ.ini)),data_fim:lsIso(new Date(LSQ.fim))})+' · '+n+(n===1?' dia':' dias');
+  const hoje=new Date().getFullYear(),anos=[hoje,hoje+1,hoje+2];
+  if(!anos.includes(y)){anos.push(y);anos.sort()}
+  const seta=d=>'<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="'+d+'"/></svg>';
+  box.innerHTML='<div class="sheet-title">Quando</div><div class="lp-cal">'
+    +'<div class="lp-pils">'+anos.map(a=>'<button onclick="lsAno('+a+')" aria-pressed="'+(a===y)+'">'+a+'</button>').join('')+'</div>'
+    +'<div class="lp-cal-top"><button onclick="lsMes(-1)" aria-label="Mês anterior">'+seta('M15 5l-7 7 7 7')+'</button><b>'+LS_MESES[m]+' '+y+'</b><button onclick="lsMes(1)" aria-label="Próximo mês">'+seta('M9 5l7 7-7 7')+'</button></div>'
+    +'<div class="lp-cal-sem">'+['D','S','T','Q','Q','S','S'].map(s=>'<span>'+s+'</span>').join('')+'</div><div class="lp-cal-g">'+g+'</div>'
+    +'<p class="lp-cal-res">'+esc(res)+'</p></div>'
+    +'<button class="sheet-cta" id="lsQuandoBt" onclick="lsSalvarQuando()"'+(LSQ.ini?'':' disabled')+'>Salvar</button>'
+    +(l.data_ini?'<button class="ls-apagar lp-semdata" onclick="lsSalvarQuando(true)">Tirar a data</button>':'');
+}
+async function lsSalvarQuando(tirar){
+  const l=LS2.listas.find(x=>x.id===LS2.atual);if(!l||(!tirar&&!LSQ.ini))return;
+  const novo=tirar?{data_ini:null,data_fim:null,quando:null}
+    :{data_ini:lsIso(new Date(LSQ.ini)),data_fim:lsIso(new Date(LSQ.fim||LSQ.ini)),quando:null};
+  const bt=document.getElementById('lsQuandoBt');if(bt)bt.disabled=true;
+  const{error}=await dbUpdate('listas',l.id,novo);
+  if(error){if(bt)bt.disabled=false;toast('Não salvou','Tenta de novo em alguns segundos.','alert');return}
+  Object.assign(l,novo);closeOv('ov-lsquando');lsPintarDetalhe();
+}
+// Criar (quadro "Criar"): Uma viagem / Uma lista → nome e com quem. A data da
+// viagem é posta depois, dentro dela, no calendário.
+async function lsAbrirNova(){
+  LS2.nova={tipo:null,nome:'',quando:'',com:new Set()};
+  lsPintarNova();showOv('ov-novalista');
+  try{await plnCarregarAmigos()}catch(e){}
+  if(LS2.nova&&LS2.nova.tipo)lsPintarNova();
+}
+function lsPintarNova(){
+  const box=document.getElementById('lsNova');const n=LS2.nova;if(!box||!n)return;
+  if(!n.tipo){
+    box.innerHTML='<div class="sheet-title">Nova lista</div><div class="ls-tipos">'
+      +'<button class="ls-tipo" onclick="LS2.nova.tipo=\'viagem\';lsPintarNova()"><b>Uma viagem</b><span>Um destino, com data se quiser</span></button>'
+      +'<button class="ls-tipo" onclick="LS2.nova.tipo=\'tema\';lsPintarNova()"><b>Uma lista</b><span>Um tema: bares pra sexta, cafés</span></button></div>';
+    return;
+  }
+  const amigos=(PLN_AMIGOS.perfis?Object.values(PLN_AMIGOS.perfis):[]).filter(p=>p&&p.id&&!estaBloqueado(p.id));
+  box.innerHTML='<div class="sheet-title">'+(n.tipo==='viagem'?'Uma viagem':'Uma lista')+'</div>'
+    +'<label class="nt-label">'+(n.tipo==='viagem'?'Para onde':'Nome')+'</label>'
+    +'<input class="nt-input" id="lsNome" maxlength="80" placeholder="'+(n.tipo==='viagem'?'Portugal':'Pra ir com a Nati')+'" value="'+esc(n.nome)+'" oninput="LS2.nova.nome=this.value">'
+    +(amigos.length?'<label class="nt-label">Com quem</label><div class="ls-com">'+amigos.map(p=>'<button class="ls-pessoa'+(n.com.has(p.id)?' on':'')+'" onclick="lsMarcar(\''+esc(p.id)+'\')">'+plnAvatar(p.id,'g')+'<span>'+esc(String(friendName(p)).split(' ')[0])+'</span></button>').join('')+'</div>':'')
+    +'<button class="sheet-cta" id="lsCriarBt" onclick="lsCriar()">Criar</button>';
+  hydrateIcons(box);
+}
+function lsMarcar(id){const n=LS2.nova;if(!n)return;if(n.com.has(id))n.com.delete(id);else n.com.add(id);lsPintarNova()}
+async function lsCriar(){
+  const n=LS2.nova;if(!n)return;
+  const nome=String(n.nome||'').trim();if(!nome){toast('Falta o nome','','alert');return}
+  if(textoBarrado(nome)){avisarConteudoBarrado();return}
+  const bt=document.getElementById('lsCriarBt');if(bt){bt.disabled=true;bt.textContent='Criando...'}
+  const{data,error}=await dbInsert('listas',{dono_id:S.user.id,nome,tipo:n.tipo,destino:n.tipo==='viagem'?nome:null,quando:String(n.quando||'').trim()||null});
+  if(error||!data){if(bt){bt.disabled=false;bt.textContent='Criar'}toast('Não criou','Tenta de novo em alguns segundos.','alert');return}
+  const com=[...n.com];
+  if(com.length){const r=await dbInsertMany('lista_membros',com.map(u=>({lista_id:data.id,user_id:u,papel:'membro'})));
+    if(r.error)toast('Lista criada','Não deu pra chamar todo mundo agora. Chame de novo dentro da lista.','alert')}
+  closeOv('ov-novalista');LS2.nova=null;
+  await lsCarregar();lsVer(data.id);
+}
+async function lsChamar(){
+  const l=LS2.listas.find(x=>x.id===LS2.atual);if(!l)return;
+  LS2.nova={tipo:l.tipo,nome:l.nome,quando:l.quando||'',com:new Set(),chamando:l.id};
+  try{await plnCarregarAmigos()}catch(e){}
+  const ja=new Set((LS2.membros[l.id]||[]).map(m=>m.user_id));
+  const amigos=Object.values(PLN_AMIGOS.perfis||{}).filter(p=>p&&p.id&&!ja.has(p.id)&&!estaBloqueado(p.id));
+  const box=document.getElementById('lsNova');
+  box.innerHTML='<div class="sheet-title">Chamar pra lista</div>'
+    +(amigos.length?'<div class="ls-com">'+amigos.map(p=>'<button class="ls-pessoa" onclick="lsChamarUm(\''+esc(p.id)+'\')">'+plnAvatar(p.id,'g')+'<span>'+esc(String(friendName(p)).split(' ')[0])+'</span></button>').join('')+'</div>'
+      :'<div class="at-vazio">Todos os seus amigos já estão nesta lista.</div>');
+  showOv('ov-novalista');
+}
+async function lsChamarUm(uid){
+  const id=LS2.atual;
+  const{error}=await dbInsert('lista_membros',{lista_id:id,user_id:uid,papel:'membro'});
+  if(error){toast('Não chamou','Tenta de novo em alguns segundos.','alert');return}
+  closeOv('ov-novalista');await lsCarregar();lsPintarDetalhe();
+}
+// Adicionar spot: UM caminho só. Os seus spots entram num toque (a política
+// só aceita spot próprio); lugar que você nunca salvou segue pela busca de
+// sempre do app e cai na lista quando for salvo (lsEntrouNovo).
+function lsAbrirPor(vaga){
+  const l=LS2.listas.find(x=>x.id===LS2.atual);if(!l)return;
+  LS2.filtroPor='';LS2.vaga=vaga||null;
+  const box=document.getElementById('lsPor');if(!box)return;
+  box.innerHTML='<div class="sheet-title">Adicionar em '+esc(l.nome)+'</div>'
+    +'<label class="am-cid-busca lp-porbusca"><span class="am-cid-lupa" data-ic="search"></span><input id="lsBusca" type="text" autocomplete="off" placeholder="Buscar spot ou lugar novo" oninput="LS2.filtroPor=this.value;lsPintarPor()"></label>'
+    +'<div class="lista-rolante" id="lsPorLista"></div>';
+  hydrateIcons(box);lsPintarPor();showOv('ov-poralista');
+}
+function lsPintarPor(){
+  const box=document.getElementById('lsPorLista');if(!box)return;
+  const ja=new Set((LS2.spots[LS2.atual]||[]).map(x=>x.spot_id));
+  const txt=String(LS2.filtroPor||'').trim(),q=normName(txt);
+  const meus=allSpotsFlat().filter(s=>!ja.has(s.id)&&(!q||normName(s.name).includes(q)||normName(cityOf(s)||'').includes(q))).slice(0,60);
+  const mais='<span class="lp-mais2">'+icon('plus')+'</span>';
+  let h=meus.length?'<p class="lp-rot">Dos seus spots</p>'+meus.map(s=>'<button class="ls-linha" onclick="lsPor(\''+esc(s.id)+'\')"><span class="place-thumb"'+(s.photo_url?' style="background:center/cover url('+escUrl(fotoNaLargura(s.photo_url,220))+')"':'')+'></span><span class="cid-txt"><span class="cid-nome">'+esc(s.name)+'</span><span class="cid-linha">'+esc(cityOf(s)||'')+'</span></span>'+mais+'</button>').join(''):'';
+  // o que a pessoa digitou sempre vira uma opção de lugar novo
+  h+=txt.length>=2?'<p class="lp-rot">Lugar novo</p><button class="ls-linha" onclick="lsBuscarNovo()"><span class="place-thumb lp-pino">'+icon('search')+'</span><span class="cid-txt"><span class="cid-nome">'+esc(txt)+'</span><span class="cid-linha">Buscar esse lugar</span></span>'+mais+'</button>'
+    :'<p class="lp-nada lp-nada-folha">Não achou? Digite o nome de qualquer lugar.</p>';
+  box.innerHTML=h;hydrateIcons(box);
+}
+function lsBuscarNovo(){
+  const txt=String(LS2.filtroPor||'').trim();if(!txt)return;
+  LS2.poeDepois=LS2.atual;
+  closeOv('ov-poralista');
+  S.addTrip=null;abrirBuscaDeSpot();
+  const i=document.getElementById('placeSearch');if(i)i.value=txt;
+  searchPlaces(txt);
+}
+// O spot novo acabou de ser salvo pelo caminho normal: entra na lista que pediu.
+function lsEsperaNovo(){return !!(LS2.poeDepois&&LS2.poeDepois===LS2.atual&&document.getElementById('lista').classList.contains('active'))}
+async function lsEntrouNovo(spot){
+  LS2.poeDepois=null;
+  if(spot&&spot.id)await lsPor(spot.id);
+}
+async function lsPor(spotId){
+  const s=allSpotsFlat().find(x=>x.id===spotId);if(!s)return;
+  const l=LS2.listas.find(x=>x.id===LS2.atual);
+  // pedido de dentro de um turno vago do roteiro: já entra no dia e no turno
+  const vaga=LS2.vaga&&l&&!(LS2.spots[l.id]||[]).some(x=>x.dia===LS2.vaga.d&&x.turno===LS2.vaga.k)?LS2.vaga:null;
+  const{error}=await dbInsert('lista_spots',Object.assign({lista_id:LS2.atual,spot_id:s.id,posto_por:S.user.id,nome:s.name,cidade:cityOf(s)||null,foto:s.photo_url||null,categoria:catSegura(s.category)},vaga?{dia:vaga.d,turno:vaga.k}:{}));
+  if(error){toast('Não pôs','Tenta de novo em alguns segundos.','alert');return}
+  if(vaga){LS2.vaga=null;closeOv('ov-poralista')}
+  await lsCarregar();lsPintarDetalhe();lsPintarPor();
+  toast(s.name,l?'Entrou em '+l.nome:'','check');
+}
+async function lsTirar(id){
+  const{error}=await dbDelete('lista_spots',id);
+  if(error){lsPintarDetalhe();toast('Não tirou','Tenta de novo em alguns segundos.','alert');return}
+  await lsCarregar();lsPintarDetalhe();
+}
+async function lsApagar(){
+  const l=LS2.listas.find(x=>x.id===LS2.atual);if(!l)return;
+  if(!await perguntar('Apagar "'+l.nome+'"?','Some pra todo mundo que está nela.',[{rotulo:'Apagar',valor:'sim',tom:'perigo'}]))return;
+  const{error}=await dbDelete('listas',l.id);
+  if(error){toast('Não apagou','Tenta de novo em alguns segundos.','alert');return}
+  lsAbrir();
+}
+async function lsSair(){
+  const l=LS2.listas.find(x=>x.id===LS2.atual);if(!l)return;
+  if(!await perguntar('Sair de "'+l.nome+'"?','Você deixa de ver a lista.',[{rotulo:'Sair',valor:'sim',tom:'perigo'}]))return;
+  const{error}=await dbDeleteOnde('lista_membros','lista_id=eq.'+encodeURIComponent(l.id)+'&user_id=eq.'+encodeURIComponent(S.user.id));
+  if(error){toast('Não saiu','Tenta de novo em alguns segundos.','alert');return}
+  lsAbrir();
+}
+// ═══ CURTIR SPOT (038) ═══ {n, meu} por spot. Curte quem enxerga o spot.
+const CURT_SPOT={};
+async function carregarCurtidasDeSpot(ids){
+  ids=(ids||[]).filter(Boolean);if(!ids.length)return;
+  const r=await dbGet('spot_curtidas','select=spot_id,user_id&spot_id=in.('+ids.join(',')+')');
+  if(!Array.isArray(r)||falhou(r))return;
+  ids.forEach(id=>{CURT_SPOT[id]={n:0,meu:false}});
+  r.forEach(x=>{const c=CURT_SPOT[x.spot_id];if(!c)return;c.n++;if(S.user&&x.user_id===S.user.id)c.meu=true});
+}
+async function curtirSpot(id,depois){
+  if(!S.user||!id)return;
+  const c=CURT_SPOT[id]=CURT_SPOT[id]||{n:0,meu:false};
+  const ia=!c.meu;c.meu=ia;c.n=Math.max(0,c.n+(ia?1:-1));
+  const repintar=()=>{if(typeof depois==='function')depois();else if(S.curPlace)pintarDelesNaFicha(S.curPlace)};
+  repintar();
+  const{error}=ia?await dbInsert('spot_curtidas',{spot_id:id,user_id:S.user.id})
+    :await dbDeleteOnde('spot_curtidas','spot_id=eq.'+encodeURIComponent(id)+'&user_id=eq.'+encodeURIComponent(S.user.id));
+  if(error){c.meu=!ia;c.n=Math.max(0,c.n+(ia?-1:1));repintar();toast('Não curtiu','Tenta de novo em alguns segundos.','alert')}
+}
+// ═══ CURTIR E RESPONDER COMENTÁRIO (038, redesenho 06/11) ═══
+// Curtidas por comentário: {n, meu}. Tabela comentario_curtidas; quem vê o
+// comentário vê e dá curtida (RLS). Falhou a leitura: fica sem número.
+const CURT_COM={};
+async function carregarCurtidasDeComentario(ids){
+  ids=(ids||[]).filter(Boolean);if(!ids.length)return;
+  const r=await dbGet('comentario_curtidas','select=comentario_id,user_id&comentario_id=in.('+ids.join(',')+')');
+  if(!Array.isArray(r)||falhou(r))return;
+  ids.forEach(id=>{CURT_COM[id]={n:0,meu:false}});
+  r.forEach(x=>{const c=CURT_COM[x.comentario_id];if(!c)return;c.n++;if(S.user&&x.user_id===S.user.id)c.meu=true});
+}
+async function curtirComentario(id,spotId,alvo,dono){
+  if(!S.user)return;
+  const c=CURT_COM[id]=CURT_COM[id]||{n:0,meu:false};
+  const ia=!c.meu;c.meu=ia;c.n=Math.max(0,c.n+(ia?1:-1));
+  renderComentarios(spotId,alvo,dono);   // responde na hora; desfaz se o banco recusar
+  const{error}=ia?await dbInsert('comentario_curtidas',{comentario_id:id,user_id:S.user.id})
+    :await dbDeleteOnde('comentario_curtidas','comentario_id=eq.'+encodeURIComponent(id)+'&user_id=eq.'+encodeURIComponent(S.user.id));
+  if(error){c.meu=!ia;c.n=Math.max(0,c.n+(ia?-1:1));renderComentarios(spotId,alvo,dono);toast('Não curtiu','Tenta de novo em alguns segundos.','alert')}
+}
+// Responder: o próximo envio desse campo vai como resposta (responde_a).
+// Um nível só: responder uma resposta responde o mesmo comentário.
+const RESPONDENDO={};
+function responderComentario(id,alvo){
+  RESPONDENDO[alvo]=id;
+  const c=Object.values(COMENTARIOS).flat().find(x=>x&&x.id===id);
+  const nome=c?String(friendName(COMENT_PERFIS[c.user_id])||'').split(' ')[0]:'';
+  const campo=document.getElementById('campo-'+alvo);
+  if(campo){campo.placeholder=nome?'Responder '+nome+'...':'Responder...';campo.focus()}
+}
 async function enviarComentario(spotId,alvo,donoDoSpot){
   const campo=document.getElementById('campo-'+alvo);
   if(!campo)return;
@@ -15131,7 +16380,8 @@ async function enviarComentario(spotId,alvo,donoDoSpot){
   // Barra ANTES de gravar: o texto nem chega ao banco.
   if(textoBarrado(texto)){avisarConteudoBarrado();return}
   campo.value='';
-  const{data,error}=await dbInsert('spot_comments',{spot_id:spotId,user_id:S.user.id,body:texto});
+  const resp=RESPONDENDO[alvo]||null;delete RESPONDENDO[alvo];
+  const{data,error}=await dbInsert('spot_comments',Object.assign({spot_id:spotId,user_id:S.user.id,body:texto},resp?{responde_a:resp}:{}));
   if(error){
     campo.value=texto;   // devolve o que a pessoa escreveu, nao some com ele
     toast('Não enviou','Tenta de novo em alguns segundos.','alert');

@@ -21,10 +21,10 @@
 // passa a ter duas barras diferentes dependendo de onde abre.
 
 import React from 'react';
-import { Platform, Pressable, StyleSheet, Text, View } from 'react-native';
+import { Platform, Pressable, StyleSheet, View } from 'react-native';
 import { BlurView } from 'expo-blur';
-import Svg, { Circle, Path } from 'react-native-svg';
-import { BASE, INK, INK3, GREEN } from './cores';
+import Svg, { Circle, Path, Rect } from 'react-native-svg';
+import { BASE, INK3, GREEN, ON_GREEN } from './cores';
 import { t } from './idioma';
 
 // Valores lidos do :root do index.html — não inventar aqui.
@@ -56,6 +56,18 @@ function Icone({ nome, cor }) {
           <Path d="M17.2 14.4a5.2 5.2 0 0 1 3 4.6" {...comum} />
         </>
       )}
+      {nome === 'fire' && (
+        <Path d="M12 20c-3.3 0-6-2.4-6-5.7 0-3 2-4.6 3.3-6.6.6 1.6 1.5 2.4 2.5 2.7C12 7.8 12.6 5.6 14.3 4c.2 2.6 1.4 3.9 2.6 5.5.8 1.2 1.1 2.4 1.1 4.8C18 17.6 15.3 20 12 20Z" {...comum} />
+      )}
+      {nome === 'plus' && <Path d="M12 5.5v13M5.5 12h13" {...comum} />}
+      {nome === 'grade' && (
+        <>
+          <Rect x="4.5" y="4.5" width="6" height="6" rx="1.5" {...comum} />
+          <Rect x="13.5" y="4.5" width="6" height="6" rx="1.5" {...comum} />
+          <Rect x="4.5" y="13.5" width="6" height="6" rx="1.5" {...comum} />
+          <Rect x="13.5" y="13.5" width="6" height="6" rx="1.5" {...comum} />
+        </>
+      )}
       {nome === 'user' && (
         <>
           <Circle cx="12" cy="8" r="3.6" {...comum} />
@@ -84,10 +96,23 @@ export const ABAS = [
   { tela: 'profile', icone: 'user', rotulo: 'Perfil' },
 ];
 
+// A BARRA DO REDESENHO (18/11): Você · Hotspots · + · Explorar · Listas, a
+// mesma ordem e os mesmos ícones da barraNova() do site. Amigos e Perfil
+// saíram da barra (Amigos é o ícone no topo da Você; Perfil é o rosto). O "+"
+// não é aba: 'mais' pede ao site a folha de adicionar. Só entra quando o site
+// diz que tem essas telas (prop `nova`); senão valem as quatro de antes.
+export const ABAS_NOVAS = [
+  { tela: 'dashboard', icone: 'user', rotulo: 'Você' },
+  { tela: 'hotspots', icone: 'fire', rotulo: 'Hotspots' },
+  { tela: 'mais', icone: 'plus', rotulo: 'Adicionar', mais: true },
+  { tela: 'explore', icone: 'search', rotulo: 'Explorar' },
+  { tela: 'listas', icone: 'grade', rotulo: 'Listas' },
+];
+
 // pontos: { friends: true } acende o ponto verde no ícone (08/10: pedido de
 // amizade esperando — o Felipe nunca soube do pedido da Roberta, porque o
 // ponto só existia dentro da aba Amigos).
-export default function BarraDeAbas({ ativa, aoTocar, margemDeBaixo, pontos }) {
+export default function BarraDeAbas({ ativa, aoTocar, margemDeBaixo, pontos, nova }) {
   const folga = margemDeBaixo || 0;
   return (
     <View style={estilo.ancora} pointerEvents="box-none">
@@ -100,15 +125,30 @@ export default function BarraDeAbas({ ativa, aoTocar, margemDeBaixo, pontos }) {
             ficaria embaixo dele e não teria efeito nenhum. */}
         {Platform.OS === 'ios' ? (
           <>
-            <BlurView intensity={30} tint="light" style={StyleSheet.absoluteFill} />
-            <View style={[StyleSheet.absoluteFill, { backgroundColor: 'rgba(245,245,243,0.85)' }]} />
+            <BlurView intensity={30} tint="dark" style={StyleSheet.absoluteFill} />
+            <View style={[StyleSheet.absoluteFill, { backgroundColor: 'rgba(7,32,25,0.85)' }]} />
           </>
         ) : (
           <View style={[StyleSheet.absoluteFill, { backgroundColor: BASE }]} />
         )}
         <View style={estilo.linha}>
-          {ABAS.map((a) => {
+          {(nova ? ABAS_NOVAS : ABAS).map((a) => {
             const sel = a.tela === ativa;
+            if (a.mais) {
+              return (
+                <Pressable
+                  key={a.tela}
+                  onPress={() => aoTocar(a.tela)}
+                  style={({ pressed }) => [estilo.item, pressed && estilo.itemPressionado]}
+                  accessibilityRole="button"
+                  accessibilityLabel={t(a.rotulo)}
+                >
+                  <View style={estilo.mais}>
+                    <Icone nome={a.icone} cor={ON_GREEN} />
+                  </View>
+                </Pressable>
+              );
+            }
             return (
               <Pressable
                 key={a.tela}
@@ -125,7 +165,6 @@ export default function BarraDeAbas({ ativa, aoTocar, margemDeBaixo, pontos }) {
                   <Icone nome={a.icone} cor={sel ? GREEN : INK3} />
                   {pontos && pontos[a.tela] ? <View style={estilo.ponto} /> : null}
                 </View>
-                <Text style={[estilo.rotulo, sel && estilo.rotuloAtivo]}>{t(a.rotulo)}</Text>
               </Pressable>
             );
           })}
@@ -155,7 +194,10 @@ const estilo = StyleSheet.create({
     overflow: 'hidden',
     justifyContent: 'center',
   },
-  linha: { flexDirection: 'row' },
+  linha: { flexDirection: 'row', alignItems: 'center' },
+  // .nav-mais .nav-icon do site: círculo de 52 no destaque. Mais alto que os
+  // ícones, mas cabe nos 56 da barra.
+  mais: { width: 52, height: 52, borderRadius: 26, backgroundColor: GREEN, alignItems: 'center', justifyContent: 'center' },
   item: {
     flex: 1,
     alignItems: 'center',
@@ -164,8 +206,6 @@ const estilo = StyleSheet.create({
   itemPressionado: { opacity: 0.6 },
   // O mesmo ponto do botão Atividade (TelaAmigos), no canto do ícone.
   ponto: { position: 'absolute', top: -1, right: -3, width: 8, height: 8, borderRadius: 4, backgroundColor: GREEN },
-  rotulo: { fontSize: 11, fontWeight: '500', color: INK3 },
-  // O rótulo ativo é tinta, não verde: o acento fica no ÍCONE. É o que o site
-  // desenha hoje em todas as telas.
-  rotuloAtivo: { color: INK, fontWeight: '600' },
+  // Sem nome embaixo do ícone (redesenho 06/11, o Lucas): o nome fica só pra
+  // leitura de tela (accessibilityLabel).
 });
