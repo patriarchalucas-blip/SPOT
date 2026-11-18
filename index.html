@@ -2228,6 +2228,7 @@ body.tem-apple #convite .btn-apple{display:flex}
 #place.previa .fi-previa-dica{font-size:15px;color:var(--ink)}
 .fi-deles{display:flex;flex-direction:column;gap:12px;margin:16px 0 4px}
 .fi-deles:empty{display:none}
+#placeCat:empty{display:none}
 #place .fi-amigos.sem-conversa{display:none!important}
 .fi-indic{display:flex;align-items:center;gap:8px;margin:16px 0 0;font-size:14px;color:var(--ink2)}
 .fi-indic:empty{display:none}
@@ -3505,7 +3506,7 @@ button.lp-chip{cursor:pointer}
         <button class="star-btn fi-star" onclick="rateStar(5,event)" aria-label="Dar nota 5"><span class="st-base" data-ic="star"></span><span class="st-fill" data-ic="star"></span></button>
       </div>
       <textarea class="fi-campo" id="fiCampo" rows="3" oninput="fiCampoMudou()"></textarea>
-      <div class="fi-dica" id="fiDica">Salva sozinho</div>
+      <div class="fi-dica" id="fiDica" style="display:none"></div>
       <div class="fi-antes" id="fiAntes" style="display:none"></div>
     </div>
 
@@ -3587,6 +3588,7 @@ button.lp-chip{cursor:pointer}
 <div class="prof-linha" onclick="closeOv('ov-menulugar');compartilharLugar()"><span class="pl-ic" data-ic="share"></span><span class="pl-txt">Compartilhar spot</span></div>
 <div class="prof-linha" onclick="closeOv('ov-menulugar');document.getElementById('spotFotosInput').click()"><span class="pl-ic" data-ic="plus"></span><span class="pl-txt">Adicionar fotos</span></div>
 <div class="prof-linha" onclick="closeOv('ov-menulugar');document.getElementById('spotPhotoFileInput').click()"><span class="pl-ic" data-ic="edit"></span><span class="pl-txt">Trocar foto</span></div>
+<div class="prof-linha" onclick="closeOv('ov-menulugar');abrirTrocaDeCategoria()"><span class="pl-ic" data-ic="grade"></span><span class="pl-txt">Mudar categoria</span></div>
 
 <div class="prof-linha" onclick="closeOv('ov-menulugar');deleteSpot()"><span class="pl-ic" data-ic="trash"></span><span class="pl-txt" style="color:var(--ink3)">Excluir spot</span></div>
 <div style="height:14px"></div></div></div>
@@ -9297,7 +9299,7 @@ function desenharFichaDoLugar(s){
   setStatus(s.status||'want',false);
   renderPlaceLinks(s);
   const pc=document.getElementById('placeCat');
-  if(pc)pc.innerHTML=blocoDeCategoria(s.category||'food','aba da cidade','trocarCategoriaDoLugar');
+  if(pc)pc.innerHTML=''; // 18/11: saiu da ficha (botão demais); trocar fica no menu "..."
   desenharEnderecoDoLugar(s);
 }
 
@@ -9518,8 +9520,9 @@ function atualizarDicaDeSalvar(){
   if(!c||!d)return;
   // A legenda só existe pra ensinar que não há botão de salvar. Com texto
   // escrito ela já cumpriu o papel e vira ruído.
-  d.style.display=String(c.value||'').trim()?'none':'';
-  d.textContent='Salva sozinho';
+  // 18/11 (o Lucas): "Salva sozinho" poluía a ficha. A legenda só existe pra
+  // dizer que NÃO salvou (ver salvarCampoDaFicha).
+  d.style.display='none';d.textContent='';
 }
 // Salva sozinho, 800ms depois da última tecla. Sem botão: o botão "Salvar
 // avaliação" era o único jeito de gravar, e quem saía da tela sem tocar nele
