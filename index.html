@@ -2228,6 +2228,7 @@ body.tem-apple #convite .btn-apple{display:flex}
 #place.previa .fi-previa-dica{font-size:15px;color:var(--ink)}
 .fi-deles{display:flex;flex-direction:column;gap:12px;margin:16px 0 4px}
 .fi-deles:empty{display:none}
+#place .fi-amigos.sem-conversa{display:none!important}
 .fi-indic{display:flex;align-items:center;gap:8px;margin:16px 0 0;font-size:14px;color:var(--ink2)}
 .fi-indic:empty{display:none}
 .fi-indic svg{width:16px;height:16px;flex:none}
@@ -3168,6 +3169,7 @@ button.lp-chip{cursor:pointer}
       <div class="dash-topo-acoes">
         <!-- 07/10: o Adicionar ficava no FIM da tela, depois de todas as viagens. -->
         <button class="dash-mais" onclick="adicionarDoTopo()" data-ic="plus" aria-label="Adicionar"></button>
+        <button class="dash-mais" onclick="goTo('friends');loadFriends(true)" data-ic="users" aria-label="Amigos"></button>
         <button class="dash-mais" onclick="abrirAtividade()" data-ic="bell" aria-label="Atividade"></button>
         <div class="avatar" id="dashAvatar" onclick="goTo('profile');loadProfile()" role="button" tabindex="0" aria-label="Abrir seu perfil">?</div>
       </div>
@@ -3337,7 +3339,7 @@ button.lp-chip{cursor:pointer}
 
 <!-- ATIVIDADE (desenho c6, 05/10): pedidos e o que aconteceu com os seus spots. -->
 <div class="screen" id="atividade">
-  <div class="at-topo"><button class="at-voltar" onclick="goTo('friends')" data-ic="back" aria-label="Voltar"></button><h1>Atividade</h1><span></span></div>
+  <div class="at-topo"><button class="at-voltar" onclick="voltarDaAtividade()" data-ic="back" aria-label="Voltar"></button><h1>Atividade</h1><span></span></div>
   <div class="at-corpo" id="atCorpo"></div>
   <div style="height:80px"></div>
 </div>
@@ -6020,7 +6022,9 @@ async function pintarDelesNaFicha(s){
     box.innerHTML=doDono+'<div class="fi-cards">'+l.map((o,i)=>{
       const quem=plnPrimeiro(o.user_id)||'';
       const cs=CURT_SPOT[o.id]||{n:0,meu:false};
-      const nota=o.status==='been'&&Number(o.my_rating)>0?'<span class="fic-nota">'+icon('star')+esc(fmtRating(o.my_rating))+'</span>':'<span class="fic-quer">quer ir</span>';
+      const nota=o.status==='skip'?'<span class="fic-quer">não recomenda</span>'
+        :o.status==='been'?(Number(o.my_rating)>0?'<span class="fic-nota">'+icon('star')+esc(fmtRating(o.my_rating))+'</span>':'<span class="fic-quer">foi</span>')
+        :'<span class="fic-quer">quer ir</span>';
       return '<div class="fic">'
         +'<div class="fic-topo">'+plnAvatar(o.user_id,'g')+'<b>'+esc(quem)+'</b>'+nota+'</div>'
         +(o.my_review?'<p class="fic-frase">'+esc(o.my_review)+'</p>':'<p class="fic-frase"></p>')
@@ -6039,7 +6043,7 @@ async function pintarDelesNaFicha(s){
       return '<button class="fi-dele" onclick="abrirSpotDeleDaFicha('+i+')">'+plnAvatar(o.user_id,'g')+'<span class="fi-dele-txt"><b>'+esc(quem+' foi'+n)+'</b>'
         +(o.my_review?'<span>'+esc(o.my_review)+'</span>':'')+'</span><span class="fi-dele-seta">›</span></button>';
     }
-    return '<button class="fi-dele" onclick="abrirSpotDeleDaFicha('+i+')">'+plnAvatar(o.user_id,'g')+'<span class="fi-dele-txt"><b>'+esc(quem)+' <em>quer ir</em></b></span><span class="fi-dele-seta">›</span></button>';
+    return '<button class="fi-dele" onclick="abrirSpotDeleDaFicha('+i+')">'+plnAvatar(o.user_id,'g')+'<span class="fi-dele-txt"><b>'+esc(quem)+' <em>'+(o.status==='skip'?'não recomenda':'quer ir')+'</em></b></span><span class="fi-dele-seta">›</span></button>';
   }).join('');
   atualizarConversa(s);
 }
@@ -6437,7 +6441,18 @@ async function avisarPedidosEsperando(){
 }
 // Voltou pro app (estava em segundo plano): o pedido pode ter chegado nesse meio tempo.
 document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible')avisarPedidosEsperando().catch(()=>{})});
+// A Atividade abre do sino da Você (e de Amigos): voltar devolve pra lá. Os
+// pedidos vêm de FRIENDS_DATA, que só a aba Amigos carregava — pelo sino da
+// barra nova a Atividade aparecia sem pedido nenhum (18/11).
+let ATIV_DE='dashboard';
+function voltarDaAtividade(){
+  const v=ATIV_DE;goTo(v);
+  if(v==='friends')loadFriends(true);else if(v==='dashboard')loadDashboard();
+}
 function abrirAtividade(){
+  const a=document.querySelector('.screen.active');
+  if(a&&a.id!=='atividade'&&a.id!=='place')ATIV_DE=a.id;
+  if(!FRIENDS_DATA||FRIENDS_DATA.uid!==S.user.id)loadFriends().then(()=>{if(document.getElementById('atividade').classList.contains('active'))pintarAtividade()}).catch(()=>{});
   goTo('atividade');
   pintarAtividade();
   carregarAtividade(true).then(()=>{pintarAtividade();try{localStorage.setItem(ATIV_VISTA,new Date().toISOString())}catch(e){}pintarPontoDaAtividade()}).catch(()=>{});
@@ -7448,7 +7463,7 @@ window.aoTocarNotificacao=async function(d){
       const s=!falhou(l)&&l[0];
       if(s){
         if(s.user_id===S.user.id){await openPlace(s.id,'notificacao');return}
-        abrirFichaDoSpotDeAmigo(s,true);return;
+        telaAntesDaFicha='dashboard';abrirFichaDoSpotDeAmigo(s,true);return;
       }
     }catch(e){}
   }
@@ -8281,6 +8296,7 @@ window.acaoDeViagens=function(acao,valor){
   if(acao==='lista'&&valor==='spots'){abrirMeusSpots();return}
   if(acao==='regiao'){trocarRegiao(valor==='Todas'?'__todas':valor);darDadosDeViagens();return}
   if(acao==='atividade'){abrirAtividade();return}
+  if(acao==='amigos'){goTo('friends');loadFriends(true);return}
   if(acao==='abrir'){openTrip(valor);return}
   if(acao==='lista'){openList(valor);return}
   if(acao==='perfil'){goTo('profile');loadProfile();return}
@@ -8483,12 +8499,17 @@ function backFromPlace(){
   // Spot de amigo aberto da SUA ficha ("Ana foi"): volta pra sua ficha.
   if(S.curPlace&&S.curPlace._voltarPara){openPlace(S.curPlace._voltarPara,S.placeOriginAntes||'trip');return}
   // Aberto de um amigo (perfil, cidade, Explorar, Atividade): volta pra lá.
-  if(S.placeOrigin==='amigo'){goTo(telaAntesDaFicha||'friends',true);if(telaAntesDaFicha==='lista')lsPintarDetalhe();return}
+  if(S.placeOrigin==='amigo'){
+    // 'place' aqui é sobra de outra ficha: voltar pra ela mostrava a ficha
+    // vazia (18/11). Sem tela válida, Amigos.
+    const v=telaAntesDaFicha&&telaAntesDaFicha!=='place'&&document.getElementById(telaAntesDaFicha)?telaAntesDaFicha:'friends';
+    goTo(v,true);if(v==='lista')lsPintarDetalhe();else if(v==='hotspots')hsPintar();return}
   // Aberto pela estante: voltar tem que devolver pro Perfil, nao jogar
   // numa viagem que a pessoa nem sabia que estava aberta.
   if(S.placeOrigin==='profile'){goTo('profile');loadProfile();return}
   // Salvo como Fui pelo Explorar: volta pra lista de onde a pessoa veio.
   if(S.placeOrigin==='explore'){goTo('explore',true);renderExploreResults();return}
+  if(S.placeOrigin==='hotspots'){goTo('hotspots',true);hsPintar();return}
   // Aberto de dentro da tela da cidade, o voltar tem que devolver PRA cidade.
   // Antes caía sempre na tela da viagem, um nível acima de onde a pessoa estava.
   if(S.placeOrigin==='city'&&S.curCity){goTo('city',true);updateCityHeader();renderCityBody();return}
@@ -12281,7 +12302,7 @@ async function salvarPreviaEscolhida(){
 }
 async function salvarPreviaDoExplorar(status){
   const s=S.curPlace;if(!s||!s._previa)return;
-  const origem=S.placeOrigin==='amigo'?'amigo':'explore';
+  const origem=S.placeOrigin==='amigo'||S.placeOrigin==='hotspots'?S.placeOrigin:'explore';
   const data=await salvarDoExplorar(s._i,status,true);
   if(data&&S.curPlace===s)openPlace(data.id,origem);
   if(data)mostrarFaixaSalvo(status,data);
@@ -13583,7 +13604,8 @@ async function resolverCidadeDoSpot(p,trip){
       closeOv('ov-note');
       // Depois de "Salvar spot": a ficha do spot salvo com a faixa verde.
       const tela=document.querySelector('.screen.active');
-      let origem=tela&&['city','profile','explore','list','dashboard'].includes(tela.id)?tela.id:'trip';
+      let origem=tela&&['city','profile','explore','list','dashboard','hotspots'].includes(tela.id)?tela.id:'trip';
+      if(tela&&(tela.id==='listas'||tela.id==='lista')){telaAntesDaFicha=tela.id;origem='amigo'}
       if(tela&&['friends','friend','atividade','friendCity'].includes(tela.id)){telaAntesDaFicha=tela.id;origem='amigo'}
       const salvo=(S.trips||[]).reduce((a,v)=>a||(v._spots||[]).find(x=>x.id===data.id),null)||data;
       openPlace(salvo.id,origem);
@@ -15446,14 +15468,13 @@ function renderComentarios(spotId,alvo,donoDoSpot){
   // o título interno sai, e o vazio DIZ o que vai aparecer ali em vez de a
   // seção simplesmente não existir.
   const naFicha=alvo==='placeComentarios';
-  if(meuSpot&&!lista.length){
-    // Com "Ana foi 5★" logo acima, "nenhum amigo salvou" se contradizia (11/10).
-    const temDeles=!!(S.curPlace&&(S.curPlace._deles||[]).length);
-    box.innerHTML=naFicha
-      ?(temDeles?'<div class="ml-vazio">Ninguém comentou ainda.</div>':'<div class="ml-vazio">Nenhum amigo seu salvou este spot. Quando alguém salvar ou comentar, aparece aqui.</div>')
-      :'';
-    return;
-  }
+  // A seção "Conversa" da ficha só existe quando há comentário (o Lucas,
+  // 18/11). Seu spot sem comentário: some inteira. Responder o amigo é no
+  // "Responder" do cartão dele, logo acima. O vazio "Nenhum amigo salvou"
+  // saía antes de os cartões dos amigos carregarem e contradizia a "Natália 4,5".
+  const secao=naFicha&&box.closest('.fi-amigos');
+  if(secao)secao.classList.toggle('sem-conversa',meuSpot&&!lista.length);
+  if(meuSpot&&!lista.length){box.innerHTML='';return}
 
   const titulo=naFicha?'':(lista.length
     ?(lista.length===1?'1 comentário':lista.length+' comentários')
@@ -15637,7 +15658,7 @@ async function hsAbrir(){
   if(HSV.soAmigos)HSV.aba='amigos';
   else{if(eraSo)HSV.aba='voce';if(!HSV.cidade)HSV.cidade=deCasa.cidade}
   hsPintar();
-  if(HSV.aba==='amigos'&&!HSV.amigos)hsCarregarAmigos();
+  if(HSV.aba==='amigos')hsCarregarAmigos();
 }
 function hsAba(a){HSV.aba=a;hsPintar();if(a==='amigos'&&!HSV.amigos)hsCarregarAmigos()}
 function hsTrocarCidade(){
@@ -15652,8 +15673,8 @@ function hsLugares(){
 }
 function hsAbas(){
   if(HSV.soAmigos)return '';
-  return '<div class="hv-abas"><button class="'+(HSV.aba==='voce'?'on':'')+'" onclick="hsAba(\'voce\')">Para você</button>'
-    +'<button class="'+(HSV.aba==='amigos'?'on':'')+'" onclick="hsAba(\'amigos\')">Amigos</button></div>';
+  return '<div class="hv-abas"><button class="'+(HSV.aba==='voce'?'on':'')+'" onclick="event.stopPropagation();hsAba(\'voce\')">Para você</button>'
+    +'<button class="'+(HSV.aba==='amigos'?'on':'')+'" onclick="event.stopPropagation();hsAba(\'amigos\')">Amigos</button></div>';
 }
 function hsPintar(){
   const c=document.getElementById('hsCorpo');if(!c)return;
@@ -15706,11 +15727,12 @@ function hsAbrirLugar(i){
     photo_url:x.foto||'',photo_author:{nome:'',url:''},rating:'',website_url:x.site||'',maps_url:x.maps||'',
     lat:null,lng:null,price_level:x.preco||null,tipo:x.tipo||'',_cat:x.categoria||'food'};
   abrirPreviaDoExplorar('avulso');
+  if(S.curPlace&&S.curPlace._previa)S.placeOrigin='hotspots';
 }
 async function hsCarregarAmigos(){
   try{
     const l=await plnSpotsDeles();
-    HSV.amigos=(l||[]).filter(s=>s.status==='been'||s.status==='want')
+    HSV.amigos=(l||[]).filter(s=>s.status==='been')
       .sort((a,b)=>String(b.fui_em||b.created_at||'').localeCompare(String(a.fui_em||a.created_at||''))).slice(0,40);
     await carregarCurtidasDeSpot(HSV.amigos.map(s=>s.id));
   }catch(e){HSV.amigos=[]}
@@ -15732,7 +15754,7 @@ function hsPintarAmigos(){
       +'</div>';
   }).join('')+'</div>';
 }
-function hsAbrirDoAmigo(i){const s=(HSV.amigos||[])[i];if(s)abrirFichaDoSpotDeAmigo(s)}
+function hsAbrirDoAmigo(i){const s=(HSV.amigos||[])[i];if(!s)return;telaAntesDaFicha='hotspots';abrirFichaDoSpotDeAmigo(s);if(S.placeOrigin!=='amigo')S.placeOrigin='hotspots'}
 // ═══ LISTAS (038, redesenho 06/11) ═══
 // Tabelas listas / lista_membros / lista_spots. Toda lista pode ser
 // compartilhada: quem está nela vê e põe spots; só o dono chama gente (amigo
@@ -15885,13 +15907,21 @@ function lsLinha(l,x,meus){
     :(nota&&LS2.renota!==x.id?'<button class="lp-nt" onclick="event.stopPropagation();lsRenota(\''+esc(x.id)+'\')" aria-label="Nota '+lsNotaTxt(nota)+', trocar">'+lsNotaTxt(nota)+'</button>':'');
   const podeTirar=!outro||dono;
   const linha='<span class="lp-foto"'+lsFotoCss(x.foto,220)+'></span>'+meio+fim;
-  if(!meu&&!podeTirar)return '<div class="lp-linha lp-solta">'+linha+'</div>';
+  // Spot que outra pessoa pôs: tocar abre a ficha dela (antes não fazia nada).
+  const abreOutro=!meu&&x.spot_id&&outro?' onclick="lsAbrirDoOutro(\''+esc(x.spot_id)+'\')"':'';
+  if(!meu&&!podeTirar)return '<div class="lp-linha lp-solta"'+abreOutro+'>'+linha+'</div>';
   return '<div class="lp-arr'+(LS2.novo===x.id?' novo':'')+'" data-ls="'+esc(x.id)+'" data-fui="'+(meu?1:0)+'" data-tira="'+(podeTirar?1:0)+'">'
     +'<div class="lp-atras lp-esq">Tirar</div><div class="lp-atras lp-dir">'+(foi?'Desfazer':icon('check')+'Fui')+'</div>'
-    +'<div class="lp-linha lp-frente"'+(meu?' onclick="lsAbrirSpot(\''+esc(meu.id)+'\')"':'')+'>'+linha+'</div></div>';
+    +'<div class="lp-linha lp-frente"'+(meu?' onclick="lsAbrirSpot(\''+esc(meu.id)+'\')"':abreOutro)+'>'+linha+'</div></div>';
 }
 function lsPintarDetalhe(){
-  const box=document.getElementById('lsDetalhe');const l=LS2.listas.find(x=>x.id===LS2.atual);if(!box||!l)return;
+  const box=document.getElementById('lsDetalhe');const l=LS2.listas.find(x=>x.id===LS2.atual);if(!box)return;
+  if(!l){
+    // Lista que sumiu (apagada, saiu, ou a carga falhou logo depois de criar):
+    // sem isto sobrava só a barra de voltar, ou a lista anterior.
+    box.innerHTML='<div class="at-vazio">'+(LS2.erro?'Não carregou. Confere a conexão.':'Essa lista não existe mais.')+'<br><button class="btn-primario" style="margin-top:16px" onclick="lsAbrir()">Ver suas listas</button></div>';
+    return;
+  }
   const eu=S.user.id,sp=LS2.spots[l.id]||[],ms=LS2.membros[l.id]||[],dono=l.dono_id===eu,viagem=l.tipo==='viagem';
   const meus=new Map(allSpotsFlat().map(s=>[s.id,s]));
   const qd=lsQuando(l);
@@ -15925,7 +15955,19 @@ function lsPintarDetalhe(){
 }
 function lsAbrirSpot(id){
   if(Date.now()-LS2.arrastou<350)return; // o toque que termina um arrasto não abre a ficha
+  if(!lsMeuSpot(id))return;
   telaAntesDaFicha='lista';openPlace(id,'amigo');
+}
+// Spot que outra pessoa pôs na lista: abre a ficha dela (prévia, com Salvar).
+async function lsAbrirDoOutro(spotId){
+  if(Date.now()-LS2.arrastou<350)return;
+  let s=null;
+  try{s=((await plnSpotsDeles())||[]).find(x=>x.id===spotId)}catch(e){}
+  if(!s){
+    const x=(LS2.spots[LS2.atual]||[]).find(y=>y.spot_id===spotId);if(!x)return;
+    s={id:spotId,name:x.nome,city:x.cidade||'',photo_url:x.foto||'',category:catSegura(x.categoria),user_id:x.posto_por};
+  }
+  telaAntesDaFicha='lista';abrirFichaDoSpotDeAmigo(s);
 }
 // O spot de verdade (allSpotsFlat devolve cópias: mexer nelas não muda nada).
 function lsMeuSpot(id){for(const t of (S.trips||[])){const s=(t._spots||[]).find(x=>x.id===id);if(s)return s}return null}
@@ -15939,10 +15981,16 @@ async function lsFui(id){
   const{error}=await dbUpdate('spots',s.id,{status:vai});
   if(error){s.status=antes;LS2.novo=null;lsPintarDetalhe();toast('Não salvou',error.message||'Confere a conexão e tenta de novo.','alert');return}
   // primeiro Fui numa viagem em planejamento: ela vira viagem feita e sai da aba
-  if(vai==='been'&&l.tipo==='viagem'&&!l.feita_em){
-    l.feita_em=new Date().toISOString();
-    dbRpc('lista_feita',{l:l.id});
-    toast(l.nome+' virou viagem feita','Ela saiu da aba Listas.','check');
+  // Só o Fui do DONO fecha a viagem (um amigo da lista marcar Fui não tira
+  // a viagem de todo mundo). Desfazer o único Fui reabre.
+  if(l.tipo==='viagem'&&l.dono_id===S.user.id){
+    if(vai==='been'&&!l.feita_em){
+      const{error:e2}=await dbUpdate('listas',l.id,{feita_em:new Date().toISOString()});
+      if(!e2){l.feita_em=new Date().toISOString();lsPintarDetalhe();toast(l.nome+' virou viagem feita','Ela saiu da aba Listas.','check')}
+    }else if(vai==='want'&&l.feita_em){
+      const algumFui=(LS2.spots[l.id]||[]).some(y=>{const z=y.spot_id&&lsMeuSpot(y.spot_id);return z&&z.status==='been'});
+      if(!algumFui){const{error:e3}=await dbUpdate('listas',l.id,{feita_em:null});if(!e3){l.feita_em=null;lsPintarDetalhe()}}
+    }
   }
   try{conferirViagensQueViraram();atualizarPlacar()}catch(e){}
 }
@@ -20922,8 +20970,12 @@ function openFriendCityFromTrip(i){
   const city=FRIEND_CITY_ORDER[i];
   if(city!=null)openFriendCity(city);
 }
-let voltarDaCidadeDoAmigo='friendTrip';
-function voltarDaCidade(){goTo(voltarDaCidadeDoAmigo)}
+let voltarDaCidadeDoAmigo='friend';
+// friendTrip só existe se alguém a preencheu; vazia, era a tela "do nada".
+function voltarDaCidade(){
+  const v=voltarDaCidadeDoAmigo==='friendTrip'&&!(document.getElementById('ftName')||{}).textContent?'friend':voltarDaCidadeDoAmigo;
+  goTo(v||'friends');
+}
 function openFriendCity(city){
   const t=FRIEND.trip;if(!t)return;
   FRIEND.city=city;fcCat='food';
@@ -20959,7 +21011,7 @@ function switchFriendCityCat(cat,el){
 // A tela da cidade do amigo listava os spots sem clique, o que não faz
 // sentido: o endereço, a nota, a avaliação e o link do Instagram são
 // justamente o que interessa ver de quem você conhece.
-let telaAntesDaFicha='friendCity';
+let telaAntesDaFicha='friends';
 function voltarDaFichaDoAmigo(){goTo(telaAntesDaFicha)}
 // FICHA ÚNICA (desenho C10, 05/10): o spot de amigo abre a MESMA ficha do
 // resto do app — a sua, se o lugar também é seu; senão a prévia, com "Salvar

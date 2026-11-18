@@ -276,6 +276,20 @@ export default function TelaViagens({ dados, ocupado, acao }) {
                 <Path d="M12 5.5v13M5.5 12h13" stroke={INK} strokeWidth={1.8} strokeLinecap="round" />
               </Svg>
             </Pressable>
+            {/* 18/11: Amigos saiu da barra; a entrada é aqui, ao lado do sino. */}
+            <Pressable
+              onPress={() => acao('amigos')}
+              style={({ pressed }) => [e.mais, pressed && { opacity: 0.6 }]}
+              accessibilityRole="button"
+              accessibilityLabel={t("Amigos")}
+            >
+              <Svg width={22} height={22} viewBox="0 0 24 24">
+                <Circle cx="9" cy="8.5" r="3" stroke={INK} strokeWidth={1.8} fill="none" />
+                <Path d="M3.8 19a5.2 5.2 0 0 1 10.4 0" stroke={INK} strokeWidth={1.8} strokeLinecap="round" fill="none" />
+                <Path d="M16 6.2a3 3 0 0 1 0 5.6" stroke={INK} strokeWidth={1.8} strokeLinecap="round" fill="none" />
+                <Path d="M17.2 14.4a5.2 5.2 0 0 1 3 4.6" stroke={INK} strokeWidth={1.8} strokeLinecap="round" fill="none" />
+              </Svg>
+            </Pressable>
             {/* Redesenho 06/11: o sino da Atividade, como no canvas. */}
             <Pressable
               onPress={() => acao('atividade')}

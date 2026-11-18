@@ -754,7 +754,7 @@ function Conteudo() {
             </View>
           ) : null}
           {mostrarAbas ? (
-            <BarraDeAbas ativa={abaAtiva} aoTocar={trocarDeAba} margemDeBaixo={margem.bottom} pontos={{ friends: pedidosEsperando > 0 }} nova={barraNova} />
+            <BarraDeAbas ativa={abaAtiva} aoTocar={trocarDeAba} margemDeBaixo={margem.bottom} pontos={{ friends: pedidosEsperando > 0, dashboard: barraNova && pedidosEsperando > 0 }} nova={barraNova} />
           ) : null}
           {/* Por cima de TUDO, inclusive das telas nativas: e o unico jeito
               de um aviso do site chegar em quem esta numa aba nativa. */}
