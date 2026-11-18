@@ -20,6 +20,10 @@ senha, `/l/`, `/c/`, `/sobre`, `/privacidade`, e localhost (testes). Mudança
 nas telas do site chega em TODOS os apps (App Store e TestFlight) na hora: não
 há área de teste — ver Dívida técnica 4.
 
+## Redesenho NO AR desde 18/11/2026
+
+O branch `redesenho` (noite verde, Archivo, Listas V4 com roteiro, Hotspots com "Indicado por N perfis") foi juntado no `main` em 18/11/2026, com o OK do Lucas. Antes do merge foi um EAS Update (branch `production`, runtime 1.0.4, grupo `67417e9d`) com as abas nativas escuras e a barra de cinco: Você · Hotspots · + · Explorar · Listas (`ABAS_NOVAS` em `mobile/BarraDeAbas.js`). A casca só usa a barra nova quando o site manda `barraNova:true` na mensagem `tela`. O login da Expo é o token de `mobile/build.ps1` (fora do git); o Lucas autorizou o uso em 18/11 — pedir de novo antes de usar. A consulta à Apple deu 403 "required agreement missing or expired": falta ele aceitar o contrato em Business. As seções de design abaixo (direção "F", claro) descrevem o visual ANTERIOR.
+
 ## Arquitetura atual
 
 - **Frontend:** `index.html` — single file, HTML+CSS+JS inline, sem framework, sem build step. ~10.500 linhas em 24/09/2026 (este número envelhece rápido; ver Dívida técnica 3).
