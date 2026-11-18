@@ -609,7 +609,8 @@ async function vitrine(env) {
   const aMesma = !!(semana && pub && pub.semana === semana.criada);
   let v;
   // Vitrine guardada antes de a conta de perfis existir (16/11): completa uma vez.
-  if (guardada) v = comVozes(guardada, aMesma ? semana : null);
+  // A conta vem da busca mais recente, mesmo que já seja a da semana seguinte.
+  if (guardada) v = comVozes(guardada, semana);
   else if (aMesma) v = await previa(env);
   else v = await vitrineDasViagens(env); // já rodou outra busca depois: lê o que está publicado
   v.v = 2;
