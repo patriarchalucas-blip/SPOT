@@ -391,6 +391,7 @@ async function trataPedido(pg, r) {
     if (api === 'place-photo' || api === 'foto' || api === 'city-photo' && metodo === 'GET' && /img=1/.test(u)) return responde(200, PNG1, 'image/png');
     // Hotspots da semana (vitrine pública): duas cidades, 3 lugares em SP.
     if (api === 'hotspots') return responde(200, JSON.stringify({ listas: [{ cidade: 'São Paulo', lugares: [{ id: 'g1', categoria: 'food', nome: 'Bar do Teste', bairro: 'Pinheiros', tipo: 'bar', foto: '', n: 6 }, { id: 'g2', categoria: 'food', nome: 'Cantina Dois', bairro: 'Bixiga', tipo: '', foto: '' }, { id: 'g3', categoria: 'experience', nome: 'Museu Três', bairro: 'Centro', tipo: '', foto: '' }] }, { cidade: 'Rio de Janeiro', lugares: [{ id: 'g4', categoria: 'food', nome: 'Boteco Rio', bairro: 'Botafogo', tipo: '', foto: '' }] }] }));
+    if (api === 'busca-ia') return responde(200, JSON.stringify(metodo === 'GET' ? { ligado: true } : { etiquetas: ['Japonês', 'Lisboa', 'Até R$ 100'], categoria: 'food', lugares: [{ id: 'gT', nome: 'Taberna da Rua das Flores', endereco: 'R. da Rua das Flores, 103 - Chiado, Lisboa, Portugal', lat: 38.71, lng: -9.14, nota: 4.6, preco: 2, precoDe: 60, precoAte: 90, tipo: 'restaurant', maps: '', site: '', foto: '', categoria: 'food' }] }));
     if (api === 'pais') return responde(200, JSON.stringify({ capital: 'Lisboa', habitantes: 10347892, linguas: ['português'], moeda: 'EUR', fuso: 'Europe/Lisbon', dolar: 0.86, dolarEmReal: 5.4 }));
     if (api === 'importar') return responde(200, JSON.stringify(metodo === 'GET' ? { ligado: true } : { lugares: [] }));
     // Lista pública aberta antes de instalar (26/10): LISTA_CONEXAO = { codigo, dono, spots }.
@@ -1401,6 +1402,15 @@ if (caixa) {
 const vbDepois = await pa.evaluate(() => { const s = document.querySelector('#dashMapa svg'); return s && s.getAttribute('viewBox') });
 const telaMapa = await pa.evaluate(() => (document.querySelector('.screen.active') || {}).id);
 confere(!!vbAntes && vbAntes !== vbDepois && telaMapa === 'dashboard', 'o mapa da Você se move ali mesmo, sem trocar de tela', { vbAntes, vbDepois, telaMapa });
+// Busca com IA (19/11): nome de lugar não passa pela IA; pedido com condição passa.
+await ir(pb, "(async()=>{document.querySelectorAll('.overlay.show').forEach(o=>closeOv(o.id));biaConferir()})()", 800);
+const bia = await pb.evaluate(() => ['Japão','Barbacoa','Vila Madalena','restaurantes','japonês no Itaim até 100','trilha perto de São Paulo','bar bom pra date','pizza perto de casa'].map(t => [t, pareceDePedido(t)]));
+confere(bia.slice(0, 4).every(x => !x[1]) && bia.slice(4).every(x => x[1]), 'só pedido com condição chama a IA (Japão e Barbacoa não)', bia);
+await ir(pb, "(async()=>{await buscarComIA('japonês em Lisboa até 100')})()", 2500);
+const bia10 = await texto(pb, '#biaCorpo') || '';
+confere(/Japonês/.test(bia10) && /Até R\$ 100/.test(bia10) && /Taberna da Rua das Flores/.test(bia10) && /R\$ 60–90 por pessoa/.test(bia10) && /Ana foi/.test(bia10), 'a busca com IA mostra etiquetas, preço por pessoa e Ana foi', bia10);
+try { await pb.screenshot({ path: process.env.TEMP + '/jornada-busca-ia.png' }) } catch (e) {}
+await ir(pb, "closeOv('ov-buscaia')", 300);
 // Resumo do país (V3): tocar num país do mapa abre a folha com os dados.
 await ir(pb, "(async()=>{document.querySelectorAll('.overlay.show').forEach(o=>closeOv(o.id));await tocouNoPais('Portugal')})()", 1500);
 const pais10 = await texto(pb, '#paisCorpo') || '';

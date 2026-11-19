@@ -323,3 +323,18 @@ test('resumo do país junta as linhas do Wikidata', () => {
   assert.deepEqual(r, { capital: 'Lisboa', lat: 38.72, lng: -9.15, habitantes: 10347892, linguas: ['português', 'mirandês'], moeda: 'EUR' });
   assert.equal(resumirWikidata([]), null);
 });
+
+import { lerEntendimento, lugaresDoGoogle, niveisDoPreco } from '../functions/api/busca-ia.js';
+test('busca com IA: entendimento conferido, preço vira faixa do Google, caro demais sai', () => {
+  assert.equal(lerEntendimento({ consulta: '' }), null);
+  const e = lerEntendimento({ etiquetas: ['Japonês', 'Itaim', 'Até R$ 100', 'x', 'y'], consulta: 'restaurante japonês', lugar: 'Itaim Bibi', perto: false, categoria: 'zzz', preco_max: 100 });
+  assert.equal(e.etiquetas.length, 4); assert.equal(e.categoria, 'food'); assert.equal(e.preco_max, 100);
+  assert.deepEqual(niveisDoPreco(100), ['PRICE_LEVEL_INEXPENSIVE', 'PRICE_LEVEL_MODERATE']);
+  assert.equal(niveisDoPreco(0), null);
+  const l = lugaresDoGoogle([
+    { id: 'a', displayName: { text: 'Barato' }, priceRange: { startPrice: { units: '50' }, endPrice: { units: '90' } } },
+    { id: 'b', displayName: { text: 'Caro' }, priceRange: { startPrice: { units: '200' } } },
+    { id: 'c', displayName: { text: 'Sem preço' } }
+  ], e);
+  assert.deepEqual(l.map((x) => x.nome), ['Barato', 'Sem preço']);
+});

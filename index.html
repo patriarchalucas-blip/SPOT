@@ -2083,7 +2083,7 @@ body.tem-apple #convite .btn-apple{display:flex}
 .pv5-nome{font-size:17px;font-weight:600;color:var(--ink)}
 .pv5-ajustes{border:none;background:none;padding:0;font:inherit;font-size:15px;color:var(--ink2);cursor:pointer}
 .pv5-ic{width:40px;height:40px;flex:none;border:0;border-radius:20px;background:var(--surface);color:var(--ink);display:grid;place-items:center;cursor:pointer;padding:0}
-.pv5-ic svg{width:20px;height:20px}
+.pv5-ic svg,.pv5-ic svg.ic{width:20px;height:20px}
 .pv5-topo .pv5-eu{flex:1;min-width:0;margin-left:12px}
 .pv5-tit{margin:24px 0 12px;font-size:24px;font-weight:700;letter-spacing:-.03em;color:var(--ink);font-stretch:68%;letter-spacing:0}
 .pv5-cab{display:flex;align-items:baseline;justify-content:space-between}
@@ -2982,6 +2982,30 @@ button.lp-chip{cursor:pointer}
 .lp-mvg+.lp-pils{margin-top:0}
 .lp-vagal{padding:6px 20px}
 #lsRotBt[disabled]{opacity:.4}
+/* Busca com IA (19/11) */
+.bia-folha{max-height:92dvh;overflow-y:auto}
+.bia-ic{background:var(--green)!important;color:var(--on-green)!important}
+.bia-sg b{color:var(--ink)}
+.bia-campo{display:flex;align-items:center;gap:10px;margin:6px 60px 0 20px;height:48px;padding:0 16px;border-radius:24px;background:var(--surface);color:var(--ink3)}
+.bia-campo svg{width:18px;height:18px;flex:none}
+.bia-campo input{flex:1;min-width:0;border:0;background:none;color:var(--ink);font:inherit;font-size:16px;outline:none}
+.bia-espera{display:flex;align-items:center;gap:10px;margin:28px 20px;color:var(--ink2);font-size:15px}
+.bia-ponto{width:10px;height:10px;border-radius:50%;background:var(--green);animation:bia-pulsa 1s ease-in-out infinite}
+@keyframes bia-pulsa{50%{opacity:.25;transform:scale(.7)}}
+@media (prefers-reduced-motion:reduce){.bia-ponto{animation:none}}
+.bia-msg{margin:24px 20px;color:var(--ink2);font-size:15px}
+.bia-de-novo{margin:0 20px 24px}
+.bia-etiquetas{display:flex;flex-wrap:wrap;gap:8px;padding:16px 20px 0}
+.bia-etiquetas span{padding:6px 14px;border-radius:16px;background:var(--surface);font-size:14px;font-weight:600}
+.bia-conta{padding:16px 20px 6px;font-size:14px;color:var(--ink2)}
+.bia-linha{display:flex;gap:14px;width:100%;padding:10px 20px;border:0;background:none;color:var(--ink);font:inherit;text-align:left;cursor:pointer}
+.bia-foto{width:72px;height:72px;flex:none;border-radius:var(--r-card);background:var(--photo-empty) center/cover}
+.bia-tx{flex:1;min-width:0;display:flex;flex-direction:column;gap:2px}
+.bia-tx b{font-size:17px;font-weight:600}
+.bia-tx span{font-size:14px;color:var(--ink2)}
+.bia-tx .bia-preco{color:var(--ink)}
+.bia-am{align-self:flex-start;margin-top:4px;padding:3px 10px;border-radius:12px;background:var(--green);color:var(--on-green);font-style:normal;font-size:13px;font-weight:600}
+.bia-pe{margin:14px 20px 28px;font-size:12px;color:var(--ink3)}
 /* Amigos (V3, 19/11) */
 #amigos{background:var(--base)}
 .am2-topo{display:flex;align-items:center;justify-content:space-between;padding:16px 20px 0}
@@ -3302,7 +3326,7 @@ button.lp-chip{cursor:pointer}
     <div class="dash-top-row"><div><div class="dash-hello">Explorar</div><div class="dash-name" style="font-size:26px">Tendências por lugar</div></div></div>
     <div class="ex-abas" id="exploreAbas"></div>
     <div class="search-wrap" style="padding:0;display:flex;gap:8px;align-items:center">
-      <div class="search-field" style="flex:1"><span class="si" data-ic="search"></span><input class="search-input" autocomplete="off" autocorrect="off" spellcheck="false" id="exploreCitySearch" placeholder="Spot, bairro ou cidade" enterkeyhint="search" autocomplete="off" onkeydown="if(event.key==='Enter'){fecharSugestoes();runExplore()}" oninput="sugerirLugar(this.value)" onfocus="this.select();sugerirLugar(this.value)" onblur="setTimeout(fecharSugestoes,200)"><button class="ex-limpar" onclick="limparBuscaDoExplorar()" aria-label="Limpar busca">×</button><div class="ex-sugestoes" id="exploreSugestoes" style="display:none"></div></div>
+      <div class="search-field" style="flex:1"><span class="si" data-ic="search"></span><input class="search-input" autocomplete="off" autocorrect="off" spellcheck="false" id="exploreCitySearch" placeholder="Spot, bairro ou cidade" enterkeyhint="search" autocomplete="off" onkeydown="if(event.key==='Enter')aoEnterNoExplorar()" oninput="sugerirLugar(this.value)" onfocus="this.select();sugerirLugar(this.value)" onblur="setTimeout(fecharSugestoes,200)"><button class="ex-limpar" onclick="limparBuscaDoExplorar()" aria-label="Limpar busca">×</button><div class="ex-sugestoes" id="exploreSugestoes" style="display:none"></div></div>
       <button class="req-btn req-accept" style="height:48px;padding:0 16px" onclick="runExplore()">Ir</button>
     </div>
   </div>
@@ -3653,6 +3677,7 @@ button.lp-chip{cursor:pointer}
 
 <!-- O ⋯ da ficha. O lápis flutuante e a engrenagem viraram este menu: tudo que
      é raro mora aqui, e a tela fica com o que se usa todo dia. -->
+<div class="overlay" id="ov-buscaia" onclick="closeOut(event,'ov-buscaia')"><div class="sheet sheet-fixa bia-folha"><button class="sheet-close" onclick="closeOv('ov-buscaia')" data-ic="close" aria-label="Fechar"></button><div class="sheet-handle"></div><div id="biaCorpo"></div></div></div>
 <div class="overlay" id="ov-pais" onclick="closeOut(event,'ov-pais')"><div class="sheet"><button class="sheet-close" onclick="closeOv('ov-pais')" data-ic="close" aria-label="Fechar"></button><div class="sheet-handle"></div><div id="paisCorpo"></div></div></div>
 <div class="overlay" id="ov-menulugar" onclick="closeOut(event,'ov-menulugar')"><div class="sheet"><div class="sheet-handle"></div><div class="fi-menunome" id="fiMenuNome"></div>
 <div class="prof-linha" onclick="closeOv('ov-menulugar');compartilharLugar()"><span class="pl-ic" data-ic="share"></span><span class="pl-txt">Compartilhar spot</span></div>
@@ -3699,8 +3724,8 @@ button.lp-chip{cursor:pointer}
 </div>
 <div class="aj-tit">Preferências</div>
 <div class="aj-grupo">
-<div class="prof-linha" onclick="closeOv('ov-editperfil');abrirCidadeDeCasa()"><span class="pl-ic" data-ic="pin"></span><span class="pl-txt">Onde moro<span class="pl-valor" id="cfgCidade"></span></span><span class="pl-seta">›</span></div>
-<div class="prof-linha" onclick="closeOv('ov-editperfil');openVisitedCountryPicker()"><span class="pl-ic" data-ic="globe"></span><span class="pl-txt">Países que já visitei</span><span class="pl-seta">›</span></div>
+<!-- Onde moro e Países ficam só no Perfil (19/11, ronda: o mesmo botão em dois lugares). -->
+<span id="cfgCidade" hidden></span>
 <div class="prof-linha" onclick="trocarIdioma()"><span class="pl-ic" data-ic="chat"></span><span class="pl-txt">Idioma<span class="pl-valor" id="cfgIdioma" data-sem-traduzir></span></span><span class="pl-seta">›</span></div>
 </div>
 <div class="aj-tit">Privacidade</div>
@@ -5913,7 +5938,8 @@ async function notaRapida(id,k){
 function abrirCidadeDoTop(){
   const c=TOP.cidade;if(!c||c==='*')return;
   const t=(S.trips||[]).find(v=>(v._spots||[]).some(x=>mesmoLugar(cityOf(x)||'',c)));
-  if(!t)return;
+  // Cidade de casa ainda sem spot (ronda 19/11: o botão não fazia nada).
+  if(!t){if(typeof abrirCasa==='function'&&mesmoLugar(c,(S.profile&&S.profile.home_city)||''))abrirCasa();return}
   S.curTrip=t;S.addTrip=t;loadTrip(t).then(()=>openCityScreen(c));
 }
 // 7b: trocar a cidade (com "Todas as cidades" no topo)
@@ -6639,8 +6665,9 @@ function pintarAtividade(){
     const nome='<b>'+esc(nomeNaAtividade(x.quem))+'</b>',ln='<b>'+esc(x.lista.nome||'')+'</b>';
     const txt=x.n?nome+' pôs '+(x.n===1?'1 spot':x.n+' spots')+' em '+ln:nome+' te chamou pra lista '+ln;
     const foto=x.foto?' style="background-image:'+cssUrl(fotoNaLargura(x.foto,120))+'"':'';
+    const caixa=x.foto?'<span class="at-foto"'+foto+'></span>':'';
     return '<button class="at-linha at-evento" onclick="window.irParaAba(\'listas\');lsVer(\''+esc(x.lista.id)+'\')">'+av(x.quem)
-      +'<span class="at-txt">'+txt+'<span class="at-quando">'+esc(timeAgo(x.quando))+'</span></span><span class="at-foto"'+foto+'></span></button>';
+      +'<span class="at-txt">'+txt+'<span class="at-quando">'+esc(timeAgo(x.quando))+'</span></span>'+caixa+'</button>';
   });
   if(ATIV_ABA==='amigos'&&!amigos.length&&spots.length)ATIV_ABA='spots';
   const pil=(k,rot,n)=>'<button class="pil'+(ATIV_ABA===k?' on':'')+'" onclick="ATIV_ABA=\''+k+'\';pintarAtividade()">'+rot+'</button>';
@@ -8657,6 +8684,7 @@ function backFromPlace(){
   // Salvo como Fui pelo Explorar: volta pra lista de onde a pessoa veio.
   if(S.placeOrigin==='explore'){goTo('explore',true);renderExploreResults();return}
   if(S.placeOrigin==='hotspots'){goTo('hotspots',true);hsPintar();return}
+  if(S.placeOrigin==='buscaia'){goTo('explore',true);showOv('ov-buscaia');biaPintar();return}
   // Aberto de dentro da tela da cidade, o voltar tem que devolver PRA cidade.
   // Antes caía sempre na tela da viagem, um nível acima de onde a pessoa estava.
   if(S.placeOrigin==='city'&&S.curCity){goTo('city',true);updateCityHeader();renderCityBody();return}
@@ -10141,6 +10169,7 @@ async function pedirLugar(corpo){
 }
 function sugerirLugar(v){
   clearTimeout(SUG.timer);
+  biaConferir();
   const t=String(v||'').trim();
   if(t.length<3){
     const rec=lerRecentes();
@@ -10162,6 +10191,118 @@ function sugerirLugar(v){
     SUG.modo=(SUG.lista.length||SUG.spots.length||(EXM_LIGADO&&EXM.montado&&exmSpotsLocais(t).length))?'sugestoes':(d&&(d.sugestoes||d.spots)?'nada':'');
     pintarSugestoes();
   },300);
+}
+// ═══ BUSCA COM IA (19/11, combinado com o Lucas) ═══
+// Um campo só, o do Explorar. Enquanto a pessoa digita, as sugestões de
+// sempre (país, cidade, bairro, restaurante pelo nome, spots seus e dos
+// amigos) aparecem na hora, sem IA. A IA só entra quando o texto é um PEDIDO
+// com condição ("japonês no Itaim até 100", "trilha perto de São Paulo"): aí a
+// linha "Buscar com IA" aparece no topo, e o Enter também vai pra ela. Nome de
+// lugar ("Japão", "Barbacoa") nunca passa pela IA.
+const BIA={ligado:null,q:'',estado:'',d:null,deles:[]};
+function biaConferir(){
+  if(BIA.ligado!==null)return;
+  BIA.ligado=false;
+  fetch('/api/busca-ia').then(r=>r.ok?r.json():null).then(d=>{BIA.ligado=!!(d&&d.ligado)}).catch(()=>{});
+}
+// Pedido com condição: palavra de pedido, preço, ou 4+ palavras.
+const BIA_PALAVRAS=/(^|\s)(ate|r\$|reais|perto|pra|para|com|sem|bom|boa|bons|boas|barat\w*|car[oa]s?|melhor\w*|abert[oa]|aberto agora|date|romantic\w*|trabalhar|tranquil\w*|crianca\w*|famil\w*|vegan\w*|vegetarian\w*|domingo|sabado|sexta|noite|almoco|jantar|brunch|cafe da manha|trilha\w*|vista|rooftop|ao ar livre|fazer|onde|que|quero|algum\w*|lugar\w*)(\s|$)/;
+function pareceDePedido(t){
+  const n=normName(t);
+  if(n.length<6)return false;
+  const palavras=n.split(/\s+/).filter(Boolean);
+  if(palavras.length<2)return false;
+  if(/\d/.test(n)&&/(ate|r\$|reais|por pessoa)/.test(n))return true;
+  return palavras.length>=4||BIA_PALAVRAS.test(' '+n+' ');
+}
+function linhaDaIA(){
+  const t=(SUG.texto||(document.getElementById('exploreCitySearch')||{}).value||'').trim();
+  if(!BIA.ligado||!pareceDePedido(t))return '';
+  return '<button class="ex-sg bia-sg" onmousedown="event.preventDefault()" onclick="buscarComIA()">'
+    +'<span class="ex-sg-foto ex-sg-ic bia-ic">'+icon('spark')+'</span>'
+    +'<span class="ex-sg-txt"><b>Buscar com IA</b><span>'+esc(t)+'</span></span></button>';
+}
+function aoEnterNoExplorar(){
+  const t=((document.getElementById('exploreCitySearch')||{}).value||'').trim();
+  if(BIA.ligado&&pareceDePedido(t)){buscarComIA();return}
+  fecharSugestoes();runExplore();
+}
+async function buscarComIA(texto){
+  const campo=document.getElementById('exploreCitySearch');
+  const q=String(texto||(campo&&campo.value)||'').trim();if(q.length<3)return;
+  fecharSugestoes();if(campo)campo.blur();
+  BIA.q=q;BIA.estado='buscando';BIA.d=null;
+  showOv('ov-buscaia');biaPintar();
+  plnSpotsDeles().then(l=>{BIA.deles=l||[];if(BIA.estado==='pronto')biaPintar()}).catch(()=>{});
+  const a=window.__spotAqui||null;
+  const cidade=(EXPLORE&&EXPLORE.city)||(S.profile&&S.profile.home_city)||'';
+  try{
+    const tk=await ensureToken();
+    const r=await comPrazo(fetch('/api/busca-ia',{method:'POST',headers:Object.assign({'Content-Type':'application/json'},tk?{'Authorization':'Bearer '+tk}:{}),
+      body:JSON.stringify(Object.assign({q,cidade},a?{lat:a.lat,lng:a.lng}:{}))}),30000);
+    const d=await r.json().catch(()=>null);
+    if(BIA.q!==q)return;
+    if(d&&d.capped){BIA.estado='teto'}
+    else if(!r.ok||!d||!Array.isArray(d.lugares)){BIA.estado='erro'}
+    else{BIA.d=d;BIA.estado='pronto'}
+  }catch(e){if(BIA.q===q)BIA.estado='erro'}
+  biaPintar();
+}
+function bairroDoEndereco(e){
+  // "R. Tal, 123 - Itaim Bibi, São Paulo - SP, ..." → "Itaim Bibi"
+  const m=/ - ([^,]+),/.exec(String(e||''));
+  return m?m[1].trim():(cityOf({address:e})||'');
+}
+function biaPreco(x){
+  const r=v=>'R$ '+Math.round(v);
+  if(x.precoDe&&x.precoAte)return 'R$ '+Math.round(x.precoDe)+'–'+Math.round(x.precoAte)+' por pessoa';
+  if(x.precoDe)return 'A partir de '+r(x.precoDe)+' por pessoa';
+  if(x.preco)return '$'.repeat(x.preco);
+  return '';
+}
+// "Ana foi · 5★" / "Rafa quer ir": o que os amigos têm desse lugar.
+function biaAmigos(x){
+  const la=(BIA.deles||[]).filter(s=>mesmoLugar(s.name,x.nome)&&(!x.endereco||!cityOf(s)||normName(x.endereco).includes(normName(cityOf(s)))));
+  if(!la.length)return '';
+  const foi=la.filter(s=>s.status!=='want').sort((a,b)=>(Number(b.my_rating)||0)-(Number(a.my_rating)||0));
+  if(foi.length){const s=foi[0],n=Number(s.my_rating)>0?' · '+fmtRating(s.my_rating)+'★':'';
+    return plnPrimeiro(s.user_id)+(foi.length>1?' e mais '+(foi.length-1):'')+' foi'+(foi.length>1?'ram':'')+n}
+  return plnPrimeiro(la[0].user_id)+(la.length>1?' e mais '+(la.length-1):'')+(la.length>1?' querem ir':' quer ir');
+}
+function biaPintar(){
+  const box=document.getElementById('biaCorpo');if(!box)return;
+  let h='<div class="bia-campo">'+icon('search')+'<input id="biaCampo" type="text" value="'+esc(BIA.q)+'" enterkeyhint="search" autocomplete="off" onkeydown="if(event.key===\'Enter\')buscarComIA(this.value)"></div>';
+  if(BIA.estado==='buscando'){box.innerHTML=h+'<div class="bia-espera"><span class="bia-ponto"></span>Entendendo o pedido…</div>';hydrateIcons(box);return}
+  if(BIA.estado==='teto'){box.innerHTML=h+'<p class="bia-msg">Você usou todas as buscas com IA deste mês. A busca normal continua funcionando.</p>';hydrateIcons(box);return}
+  if(BIA.estado==='erro'){box.innerHTML=h+'<p class="bia-msg">Não deu pra buscar agora. Confere a conexão e tenta de novo.</p><button class="btn-primario bia-de-novo" onclick="buscarComIA(BIA.q)">Tentar de novo</button>';hydrateIcons(box);return}
+  const d=BIA.d||{lugares:[],etiquetas:[]};
+  if((d.etiquetas||[]).length)h+='<div class="bia-etiquetas">'+d.etiquetas.map(e=>'<span>'+esc(e)+'</span>').join('')+'</div>';
+  const l=d.lugares||[];
+  h+='<div class="bia-conta">'+(l.length?(l.length===1?'1 lugar':l.length+' lugares'):'Nada encontrado com esse pedido. Tenta de outro jeito.')+'</div>';
+  h+=l.map((x,i)=>{
+    const tipo=(TIPO_ROTULO[x.tipo]||TIPO_EM_PT[x.tipo]||'');
+    const meta=[tipo,bairroDoEndereco(x.endereco)].filter(Boolean).join(' · ');
+    const preco=[biaPreco(x),x.nota?'★ '+fmtRating(x.nota):''].filter(Boolean).join(' · ');
+    const am=biaAmigos(x);
+    return '<button class="bia-linha" onclick="biaAbrir('+i+')"><span class="bia-foto"'+(x.foto?' style="background-image:'+esc(cssUrl(x.foto))+'"':'')+'></span>'
+      +'<span class="bia-tx"><b>'+esc(x.nome)+'</b>'+(meta?'<span>'+esc(meta)+'</span>':'')+(preco?'<span class="bia-preco">'+esc(preco)+'</span>':'')
+      +(am?'<i class="bia-am">'+esc(am)+'</i>':'')+'</span></button>';
+  }).join('');
+  if(l.length)h+='<p class="bia-pe">Lugares do Google, escolhidos pelo que você pediu.</p>';
+  box.innerHTML=h;hydrateIcons(box);
+}
+// Abre a prévia da ficha (Quero ir / Fui / Salvar). Voltar devolve o resultado.
+function biaAbrir(i){
+  const x=((BIA.d&&BIA.d.lugares)||[])[i];if(!x)return;
+  closeOv('ov-buscaia');
+  const cid=cityOf({address:x.endereco})||'';
+  const meu=meuSpotIgual(x.nome,cid);
+  if(meu){openPlace(meu.id,'buscaia');return}
+  EXPLORE.avulso={name:x.nome,address:x.endereco||'',city:cid,country:paisDoEndereco(x.endereco||'')||'',subcat:'',phone:'',
+    photo_url:x.foto||'',photo_author:{nome:'',url:''},rating:x.nota?String(x.nota):'',website_url:x.site||'',maps_url:x.maps||'',
+    lat:x.lat,lng:x.lng,price_level:x.preco||null,tipo:x.tipo||'',_cat:x.categoria||'food'};
+  abrirPreviaDoExplorar('avulso');
+  if(S.curPlace&&S.curPlace._previa)S.placeOrigin='buscaia';
 }
 function fecharSugestoes(){SUG.req++;clearTimeout(SUG.timer);SUG.lista=[];SUG.spots=[];SUG.modo='';pintarSugestoes()}
 // O quanto o título bate com o que foi digitado: igual 3, começa com 2, contém 1.
@@ -10277,14 +10418,18 @@ function pintarSugestoes(){
   const box=document.getElementById('exploreSugestoes');
   if(box&&EXM_LIGADO&&EXM.montado){
     EXM.locais=SUG.modo&&SUG.modo!=='recentes'?exmSpotsLocais(SUG.texto||''):[];
-    if(!SUG.modo){box.style.display='none';box.innerHTML=''}
-    else{box.innerHTML=exmPainelDeBusca();box.style.display=''}
+    // Pedido com condição: "Buscar com IA" no topo (19/11).
+    const ia=SUG.modo==='recentes'?'':linhaDaIA();
+    if(!SUG.modo&&!ia){box.style.display='none';box.innerHTML=''}
+    else{box.innerHTML=ia+(SUG.modo?exmPainelDeBusca():'');box.style.display='';hydrateIcons(box)}
     darDadosDeExplorar();return;
   }
   if(box){
-    if(!SUG.modo){box.style.display='none';box.innerHTML=''}
+    const ia=SUG.modo==='recentes'?'':linhaDaIA();
+    if(!SUG.modo&&!ia){box.style.display='none';box.innerHTML=''}
+    else if(!SUG.modo){box.innerHTML=ia;box.style.display='';hydrateIcons(box)}
     else{
-      if(SUG.modo==='nada')box.innerHTML='<div class="ex-sg-nada">Nada com esse nome</div>';
+      if(SUG.modo==='nada')box.innerHTML=ia+(ia?'':'<div class="ex-sg-nada">Nada com esse nome</div>');
       else if(SUG.modo==='sugestoes'){
         // Até 3 de cada. Vem primeiro o grupo do resultado que mais bate com o
         // texto; no empate, Spots — é o que a pessoa costuma digitar (e1).
@@ -10292,7 +10437,7 @@ function pintarSugestoes(){
         const melhor=l=>Math.max(0,...l.map(x=>notaDoTexto(x.titulo,SUG.texto)));
         const gS=sp.length?'<div class="ex-sg-grupo">Spots</div>'+sp.map(linhaDeSpotSugerido).join(''):'';
         const gL=lu.length?'<div class="ex-sg-grupo">Lugares</div>'+lu.map(linhaDeLugarSugerido).join(''):'';
-        box.innerHTML=(sp.length&&melhor(sp)>=melhor(lu))?gS+gL:gL+gS;
+        box.innerHTML=ia+((sp.length&&melhor(sp)>=melhor(lu))?gS+gL:gL+gS);hydrateIcons(box);
       }
       else box.innerHTML='<div class="ex-sug-titulo">Buscas recentes</div>'
         +SUG.lista.map((x,i)=>'<button class="ex-sug" onmousedown="event.preventDefault()" onclick="escolherSugestao('+i+')"><b>'+esc(x.titulo)+'</b>'+(x.sub?'<span>'+esc(x.sub)+'</span>':'')+'</button>').join('');
@@ -22198,7 +22343,7 @@ async function trocarIdioma(){
   try{localStorage.setItem('spot_idioma',r)}catch(e){}
   location.reload();
 }
-{const v=document.getElementById('cfgIdioma');if(v)v.textContent=nomeDoIdioma()}
+{const v=document.getElementById('cfgIdioma');if(v)v.textContent=' · '+nomeDoIdioma()}
 // A casca desenha as abas nativas na mesma língua (mobile/idioma.js). Casca
 // antiga ignora a mensagem e fica em português.
 try{falarComACasca({tipo:'idioma',lang:window.IDIOMA==='en'?'en':'pt'})}catch(e){}
