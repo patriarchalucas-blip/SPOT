@@ -267,18 +267,7 @@ export default function TelaViagens({ dados, ocupado, acao }) {
         <View style={e.topoLinha}>
           <Text style={e.marca}>SPOT</Text>
           <View style={e.topoAcoes}>
-            {/* 07/10: o Adicionar ficava no FIM da tela, depois de todas as
-                viagens — quem tinha várias nunca via. */}
-            <Pressable
-              onPress={() => acao('novoLugar')}
-              style={({ pressed }) => [e.mais, pressed && { opacity: 0.6 }]}
-              accessibilityRole="button"
-              accessibilityLabel={t("Adicionar")}
-            >
-              <Svg width={22} height={22} viewBox="0 0 24 24">
-                <Path d="M12 5.5v13M5.5 12h13" stroke={INK} strokeWidth={1.8} strokeLinecap="round" />
-              </Svg>
-            </Pressable>
+            {/* 18/11: o + de cima saiu (o Lucas): o + da barra de baixo é o único. */}
             {/* 18/11: Amigos saiu da barra; a entrada é aqui, ao lado do sino. */}
             <Pressable
               onPress={() => acao('amigos')}

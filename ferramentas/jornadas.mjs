@@ -1381,6 +1381,18 @@ confere(!(await texto(pb, '#fiIndic') || '').trim(), 'sem a conta, a linha não 
 await ir(pb, `goTo('hotspots',true)`, 400);
 ['A', 'B'].forEach(n => { const e = errosDe(PAGINAS[n]); confere(!e.length, 'sem erro de JS no aparelho ' + n + ' (listas)', e) });
 
+// Mapa da Você: arrasta ali mesmo (18/11), sem abrir o mapa-múndi.
+await ir(pa, "(async()=>{document.querySelectorAll('.overlay.show').forEach(o=>closeOv(o.id));goTo('dashboard');await loadDashboard();await renderMiniMapa()})()", 2500);
+const vbAntes = await pa.evaluate(() => { const s = document.querySelector('#dashMapa svg'); return s && s.getAttribute('viewBox') });
+const caixa = await pa.evaluate(() => { const s = document.querySelector('#dashMapa svg'); if (!s) return null; const r = s.getBoundingClientRect(); return { x: r.x + r.width / 2, y: r.y + r.height / 2 } });
+if (caixa) {
+  // zoom com duplo clique e depois arrasta
+  await pa.mouse.click(caixa.x, caixa.y); await pa.mouse.click(caixa.x, caixa.y); await espera(400);
+  await pa.mouse.move(caixa.x, caixa.y); await pa.mouse.down(); await pa.mouse.move(caixa.x + 60, caixa.y + 20, { steps: 6 }); await pa.mouse.up(); await espera(300);
+}
+const vbDepois = await pa.evaluate(() => { const s = document.querySelector('#dashMapa svg'); return s && s.getAttribute('viewBox') });
+const telaMapa = await pa.evaluate(() => (document.querySelector('.screen.active') || {}).id);
+confere(!!vbAntes && vbAntes !== vbDepois && telaMapa === 'dashboard', 'o mapa da Você se move ali mesmo, sem trocar de tela', { vbAntes, vbDepois, telaMapa });
 // Resumo do país (V3): tocar num país do mapa abre a folha com os dados.
 await ir(pb, "(async()=>{document.querySelectorAll('.overlay.show').forEach(o=>closeOv(o.id));await tocouNoPais('Portugal')})()", 1500);
 const pais10 = await texto(pb, '#paisCorpo') || '';

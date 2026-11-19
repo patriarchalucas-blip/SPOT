@@ -431,7 +431,7 @@ input,textarea,select{font-size:max(16px,1em)!important}
    POR CIMA dele e disputavam leitura — era isso que incomodava. Agora nada
    cobre o mapa. A margem negativa faz ele sangrar até as bordas apesar do
    padding lateral do painel. */
-.dash-top>.dash-mapa{position:relative;margin:2px -24px 6px;width:calc(100% + 48px);aspect-ratio:800/355;opacity:0;transition:opacity .5s ease;cursor:pointer}
+.dash-top>.dash-mapa{position:relative;margin:2px -24px 6px;width:calc(100% + 48px);aspect-ratio:800/355;opacity:0;transition:opacity .5s ease;cursor:grab;touch-action:none;overflow:hidden}
 /* o conteúdo fica na frente do mapa, e o mapa segue clicável na área livre */
 
 /* O wordmark e desenho, nao palavra em negrito. */
@@ -3184,7 +3184,6 @@ button.lp-chip{cursor:pointer}
       <svg class="dash-wordmark" viewBox="3 77 273 76" role="img" aria-label="Spot"><text x="0" y="150" font-family="Cinzel" font-weight="500" font-size="100" letter-spacing="6" fill="#F2EDE3">SPOT</text></svg>
       <div class="dash-topo-acoes">
         <!-- 07/10: o Adicionar ficava no FIM da tela, depois de todas as viagens. -->
-        <button class="dash-mais" onclick="adicionarDoTopo()" data-ic="plus" aria-label="Adicionar"></button>
         <button class="dash-mais" onclick="goTo('friends');loadFriends(true)" data-ic="users" aria-label="Amigos"></button>
         <button class="dash-mais" onclick="abrirAtividade()" data-ic="bell" aria-label="Atividade"></button>
         <div class="avatar" id="dashAvatar" onclick="goTo('profile');loadProfile()" role="button" tabindex="0" aria-label="Abrir seu perfil">?</div>
@@ -7373,6 +7372,26 @@ let dashboardReqId=0;
 // suposição de ordem que eu não consigo testar daqui, e se um dia mudar o
 // sintoma seria a barra nativa simplesmente nunca aparecer, sem erro nenhum.
 function naCasca(){return !!(window.ReactNativeWebView&&window.ReactNativeWebView.postMessage)}
+
+// NOVIDADE SEM FECHAR O APP (18/11). A página fica aberta dentro do app por
+// dias; o site novo só chegava fechando o app de vez. A casca chama isto
+// quando a pessoa volta pro app (depois de 20 s fora): se a versão mudou
+// desde que a página abriu, recarrega. Sem janela aberta e sem texto sendo
+// digitado — recarregar no meio de uma nota apagaria o que ela escreveu.
+let VERSAO_DO_SITE='';
+function lerVersaoDoSite(){
+  return fetch('/api/versao',{cache:'no-store'}).then(r=>r.ok?r.json():null).then(d=>(d&&d.v)||'').catch(()=>'');
+}
+lerVersaoDoSite().then(v=>{VERSAO_DO_SITE=v});
+window.conferirVersaoDoSite=async function(){
+  const v=await lerVersaoDoSite();
+  if(!v)return;
+  if(!VERSAO_DO_SITE){VERSAO_DO_SITE=v;return}
+  if(v===VERSAO_DO_SITE)return;
+  const digitando=document.activeElement&&/^(INPUT|TEXTAREA)$/.test(document.activeElement.tagName);
+  if(digitando||temJanelaAberta())return;
+  location.reload();
+};
 
 // As quatro telas que têm aba. O resto (viagem, cidade, lugar, telas de
 // amigo) são telas de detalhe: nelas a barra some, igual ao site hoje.
@@ -11704,11 +11723,8 @@ function exmFrase(l){
   const amigos=[],perf={};
   l.filter(it=>it.tipo==='amigo').forEach(it=>it.g.foram.concat(it.g.querem).forEach(u=>{if(!amigos.includes(u)){amigos.push(u);perf[u]=it.g.perfis[u]}}));
   if(amigos.length){
-    const nomes=amigos.map(u=>friendName(perf[u]||plnPerfil(u)||{})||'?');
-    const av=amigos.slice(0,3).map(u=>exmAvatar(u,perf,'exm-av30')).join('');
-    if(amigos.length===1){const n=l.filter(it=>it.tipo==='amigo').length;
-      return{av,txt:String(nomes[0]).split(' ')[0]+' tem '+n+(n===1?' spot':' spots')+' por aqui'}}
-    return{av,txt:exmNomes(nomes)+' têm spots por aqui'};
+    const n=l.filter(it=>it.tipo==='amigo').length;
+    return{av:'',txt:n+(n===1?' spot de amigo por aqui':' spots de amigos por aqui'),sub:'Toque pra ver'};
   }
   if(EXPLORE_ESTADO==='buscando')return{av:'',txt:'Procurando por aqui…'};
   if(EXPLORE_ESTADO==='erro'&&!EXPLORE.cota)return{av:'',txt:'Não deu pra buscar agora',tentar:true};
@@ -12193,7 +12209,9 @@ async function exmAbrirInicial(){
   const cidade=await cidadeOndeEstou();
   if(exploreMexeu(antes))return;
   const a=window.__spotAqui;
-  exmIrPara('peek',true);
+  // 18/11 (o Lucas): abrir e ler "Ana e Rafa têm spots por aqui" não dizia
+  // ONDE. A folha abre já nos cards: foto, nome e quem foi.
+  exmIrPara('media',true);
   if(a&&cidade){
     const campo=document.getElementById('exploreCitySearch');if(campo)campo.value=cidade;
     const arred=x=>Math.round(x/0.005)*0.005;
@@ -12210,7 +12228,7 @@ function exmDepoisDeBuscar(){
   if(EXM.buscaSozinha){EXM.pessoaMexeu=false;return}
   EXM.sel=-1;EXM.selIt=null;EXM.pessoaMexeu=false;EXPLORE.cota=null;
   {const c=document.getElementById('exploreCitySearch');if(c&&document.activeElement===c)c.blur()}
-  if(EXM.parada==='previa'||EXM.parada==='cheia')exmIrPara('peek');
+  if(EXM.parada==='previa'||EXM.parada==='cheia'||EXM.parada==='peek')exmIrPara('media');
   exmPrepararMapa();
   exmCarregarDeles();
 }
@@ -18870,9 +18888,13 @@ async function renderMiniMapa(){
   // e mostra o mundo inteiro). Aquela faixa no rodapé empurrava os continentes
   // pra cima e desequilibrava o conjunto.
   const alturaSemPolo=Math.round(vb.h*0.845);
-  wrap.innerHTML=`<svg viewBox="${vb.x} ${vb.y} ${vb.w} ${alturaSemPolo}" preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">${paths}</svg>`;
+  wrap.innerHTML=`<svg viewBox="${vb.x} ${vb.y} ${vb.w} ${alturaSemPolo}" preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg" aria-label="Seu mapa">${paths}</svg>`;
   wrap.classList.add('pronto');
-  wrap.onclick=()=>abrirMapaMundi('dashboard');
+  // 18/11 (o Lucas, irritado com razão): o mapa da Você se move AQUI, com o
+  // dedo, sem abrir outra tela. Um dedo arrasta, dois dão zoom, toque num
+  // país abre o resumo dele (o mesmo arrastar/ampliar do mapa-múndi).
+  wrap.onclick=null;
+  initMapZoom({x:vb.x,y:vb.y,w:vb.w,h:alturaSemPolo},{svg:wrap.querySelector('svg')});
 }
 // ═══ RESUMO DO PAÍS (V3 "Você · país", 18/11) ═══
 // Tocar num país do mapa (Você no iPhone, mapa-múndi no site) abre esta folha:
