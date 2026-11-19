@@ -861,7 +861,7 @@ confere(amigos(A.id, B.id), 'A aceita de novo');
 // desfazer amizade (por B)
 await ir(pb, `(async()=>{await openFriend('${A.id}');await desfazerAmizade('${A.id}','Ana')})()`, 2000);
 confere(!amigos(A.id, B.id) && !DB.follows.some(f => (f.follower_id === A.id && f.following_id === B.id) || (f.follower_id === B.id && f.following_id === A.id)), 'desfazer amizade apaga os vínculos');
-confere(await tela(pb) === 'friends', 'B volta pra Amigos depois de desfazer');
+confere(await tela(pb) === 'amigos', 'B volta pra Amigos (a tela nova) depois de desfazer', await tela(pb));
 const delesB = await ev(pb, async a => { const l = await plnSpotsDeles(); const ids = await plnCarregarAmigos(); return { spots: l.filter(s => s.user_id === a).map(s => s.name), amigo: ids.includes(a) } }, A.id);
 confere(!delesB.spots.length && !delesB.amigo, 'depois de desfazer, Planejar/ficha de B não mostram mais os spots de A', delesB);
 const pacDesf = await ate(async () => { const p = await ultimoPacote(pb, 'amigos'); return p && p.pronto && !(p.dados.amigos || []).length ? p : null }, 3000);
@@ -1282,6 +1282,14 @@ const l10 = DB.listas.find(l => l.dono_id === A.id && l.nome === 'Pra ir com a B
 confere(!!l10, 'A cria a lista "Pra ir com a B"', DB.listas);
 confere(l10 && DB.lista_membros.some(m => m.lista_id === l10.id && m.user_id === A.id && m.papel === 'dono'), 'A entra como dono');
 confere(l10 && DB.lista_membros.some(m => m.lista_id === l10.id && m.user_id === B.id), 'B foi chamada na criação');
+confere(l10 && await ate(() => AVISOS.some(x => x.tipo === 'lista' && x.alvo === B.id && x.lista === l10.id), 3000), 'B recebe o aviso de que foi chamada pra lista', AVISOS.filter(x => x.tipo === 'lista'));
+await ir(pb, "(async()=>{document.querySelectorAll('.overlay.show').forEach(o=>closeOv(o.id));abrirAtividade();await lsCarregar();ATIV_ABA='listas';pintarAtividade()})()", 2000);
+confere(/te chamou pra lista/.test(await texto(pb, '#atCorpo') || ''), 'a Atividade de B mostra o convite pra lista', await texto(pb, '#atCorpo'));
+await ir(pb, "(async()=>{await abrirAmigos()})()", 2500);
+const am10 = await texto(pb, '#amigos') || '';
+confere(await tela(pb) === 'amigos' && /Ana Teste/.test(am10) && /Convidar/.test(am10) && !/Recente/.test(am10), 'Amigos abre a tela nova, com a Ana e sem o feed antigo', am10.slice(0, 200));
+try { await pb.screenshot({ path: process.env.TEMP + '/jornada-amigos-v3.png' }) } catch (e) {}
+await ir(pb, 'voltarDeAmigos()', 600);
 confere(await tela(pa) === 'lista', 'criar abre a lista', await tela(pa));
 if (l10 && spA10) {
   await ir(pa, `lsPor('${spA10.id}')`, 1500);

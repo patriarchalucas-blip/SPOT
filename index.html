@@ -2082,6 +2082,9 @@ body.tem-apple #convite .btn-apple{display:flex}
 #profile .pv5-av{width:36px;height:36px;border-radius:11px;font-size:15px}
 .pv5-nome{font-size:17px;font-weight:600;color:var(--ink)}
 .pv5-ajustes{border:none;background:none;padding:0;font:inherit;font-size:15px;color:var(--ink2);cursor:pointer}
+.pv5-ic{width:40px;height:40px;flex:none;border:0;border-radius:20px;background:var(--surface);color:var(--ink);display:grid;place-items:center;cursor:pointer;padding:0}
+.pv5-ic svg{width:20px;height:20px}
+.pv5-topo .pv5-eu{flex:1;min-width:0;margin-left:12px}
 .pv5-tit{margin:24px 0 12px;font-size:24px;font-weight:700;letter-spacing:-.03em;color:var(--ink);font-stretch:68%;letter-spacing:0}
 .pv5-cab{display:flex;align-items:baseline;justify-content:space-between}
 .pv5-mandar{display:flex;align-items:center;gap:6px;border:none;background:none;padding:0;font:inherit;font-size:15px;font-weight:600;color:var(--green);cursor:pointer}
@@ -2821,6 +2824,18 @@ body.exm #exploreCozinhas,body.exm #exploreBody{display:none!important}
 #ov-editperfil .sheet-title{font-stretch:68%;font-size:40px;font-weight:700}
 #ov-editperfil .prof-linha{border:none!important;background:rgba(245,245,243,.06);border-radius:16px;margin-bottom:6px;padding-left:14px;padding-right:14px}
 #ov-editperfil .prof-sair{background:none;color:var(--ink3)}
+/* Ajustes em grupos (19/11) */
+#ov-editperfil .aj-tit{margin:18px 20px 8px;font-size:13px;font-weight:600;color:var(--ink2)}
+#ov-editperfil .aj-grupo{margin:0 20px;background:var(--surface);border-radius:var(--r-card);overflow:hidden}
+#ov-editperfil .aj-grupo .prof-linha{background:none;border-radius:0;margin:0;padding:15px 16px;text-decoration:none;color:inherit}
+#ov-editperfil .aj-grupo .prof-linha+.prof-linha{box-shadow:inset 0 1px 0 rgba(245,245,243,.06)}
+#ov-editperfil .aj-campos{padding:4px 16px 16px}
+#ov-editperfil .aj-campos .nt-label{padding:0;margin:10px 0 6px}
+#ov-editperfil .aj-campos .nt-input,#ov-editperfil .aj-campos .note-input{width:100%;margin:0;background:var(--base)}
+#ov-editperfil .aj-campos .feed-time{min-height:4px;padding:2px 0 0}
+#ov-editperfil .aj-campos .sheet-cta{width:100%;margin:14px 0 0}
+#ov-editperfil .aj-fim{display:flex;flex-direction:column;align-items:flex-start;gap:16px;padding:26px 20px 30px}
+#ov-editperfil .aj-palavra{border:0;background:none;padding:0;font:inherit;font-size:15px;color:var(--ink3);cursor:pointer}
 .nt-input,.note-input{background:rgba(245,245,243,.08);border:none;color:var(--ink)}
 /* Você (quadro "Você · mapa"): anel ao lado dos números, sem caixa; Em casa
    em foto grande; viagens em fileira de fotos só com o nome. */
@@ -2967,6 +2982,35 @@ button.lp-chip{cursor:pointer}
 .lp-mvg+.lp-pils{margin-top:0}
 .lp-vagal{padding:6px 20px}
 #lsRotBt[disabled]{opacity:.4}
+/* Amigos (V3, 19/11) */
+#amigos{background:var(--base)}
+.am2-topo{display:flex;align-items:center;justify-content:space-between;padding:16px 20px 0}
+.am2-convidar{display:flex;align-items:center;gap:6px;height:40px;padding:0 16px;border:0;border-radius:20px;background:var(--green);color:var(--on-green);font:inherit;font-size:15px;font-weight:600;cursor:pointer}
+.am2-convidar svg{width:16px;height:16px}
+.am2-tit{margin:18px 20px 0;font-stretch:68%;font-size:44px;font-weight:700;line-height:1}
+.am2-tit span{color:var(--ink3)}
+.am2-busca{display:flex;align-items:center;gap:10px;margin:18px 20px 0;height:48px;padding:0 16px;border-radius:24px;background:var(--surface);color:var(--ink3)}
+.am2-busca svg{width:18px;height:18px;flex:none}
+.am2-busca input{flex:1;min-width:0;border:0;background:none;color:var(--ink);font:inherit;font-size:16px;outline:none}
+.am2-res.com{padding:8px 20px 0}
+.am2-pedidos{display:flex;align-items:center;gap:12px;width:calc(100% - 40px);margin:16px 20px 0;padding:14px 16px;border:0;border-radius:var(--r-card);background:var(--surface);color:var(--ink);font:inherit;font-size:15px;text-align:left;cursor:pointer}
+.am2-pedidos svg{width:18px;height:18px;flex:none}
+.am2-pedidos span{flex:1}
+.am2-pedidos i{font-style:normal;color:var(--ink3)}
+.am2-h2{margin:26px 20px 6px;font-stretch:68%;font-size:26px;font-weight:700}
+.am2-linha{display:flex;align-items:center;gap:14px;width:100%;padding:10px 20px;border:0;background:none;color:var(--ink);font:inherit;text-align:left;cursor:pointer}
+.am2-av{width:52px;height:52px;flex:none;border-radius:50%;background:var(--surface) center/cover;display:grid;place-items:center;font-size:18px;font-weight:600;color:var(--ink)}
+.am2-tx{flex:1;min-width:0}
+.am2-tx b{display:block;font-size:16px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.am2-tx span{display:block;font-size:13px;color:var(--ink2)}
+.am2-fotos{display:flex;flex:none}
+.am2-fotos i{width:34px;height:34px;border-radius:10px;background:var(--photo-empty) center/cover;box-shadow:0 0 0 2px var(--base)}
+.am2-fotos i+i{margin-left:-8px}
+.am2-vazio{display:flex;flex-direction:column;gap:8px;align-items:flex-start;margin:28px 20px 0}
+.am2-vazio b{font-size:18px}
+.am2-vazio span{color:var(--ink2)}
+.am2-vazio .btn-primario{margin-top:8px}
+.am2-nada{margin:16px 20px;color:var(--ink2)}
 /* resumo do país (V3, 18/11) */
 .pa-cab{display:flex;align-items:center;gap:14px;padding:4px 20px 0}
 .pa-band{font-size:30px;line-height:1}
@@ -3184,7 +3228,7 @@ button.lp-chip{cursor:pointer}
       <svg class="dash-wordmark" viewBox="3 77 273 76" role="img" aria-label="Spot"><text x="0" y="150" font-family="Cinzel" font-weight="500" font-size="100" letter-spacing="6" fill="#F2EDE3">SPOT</text></svg>
       <div class="dash-topo-acoes">
         <!-- 07/10: o Adicionar ficava no FIM da tela, depois de todas as viagens. -->
-        <button class="dash-mais" onclick="goTo('friends');loadFriends(true)" data-ic="users" aria-label="Amigos"></button>
+        <button class="dash-mais" onclick="abrirAmigos()" data-ic="users" aria-label="Amigos"></button>
         <button class="dash-mais" onclick="abrirAtividade()" data-ic="bell" aria-label="Atividade"></button>
         <div class="avatar" id="dashAvatar" onclick="goTo('profile');loadProfile()" role="button" tabindex="0" aria-label="Abrir seu perfil">?</div>
       </div>
@@ -3275,9 +3319,11 @@ button.lp-chip{cursor:pointer}
   <!-- PERFIL v5 (05/10): o que vem (Próximas viagens) e o que você já sabe
        (Seus melhores). O nome não é título: avatar + primeiro nome numa linha. -->
   <div class="pv5-topo">
+    <!-- 19/11 (ronda): o Perfil não tinha volta, e o Ajustes era um texto cinza que ninguém achava. -->
+    <button class="pv5-ic pv5-volta" onclick="goTo('dashboard');loadDashboard()" data-ic="back" aria-label="Voltar"></button>
     <button class="pv5-eu" onclick="document.getElementById('avatarFileInput').click()" aria-label="Trocar sua foto"><span class="profile-avatar pv5-av" id="profAvatar">?</span><span class="pv5-nome" id="profName">—</span></button>
     <input type="file" id="avatarFileInput" accept="image/*" style="display:none" onchange="onAvatarFileChosen(this)">
-    <button class="pv5-ajustes" onclick="abrirConfig()">Ajustes</button>
+    <span class="pv5-acoes"><button class="pv5-ic" onclick="abrirConfig()" data-ic="gear" aria-label="Ajustes"></button></span>
   </div>
   <!-- ainda preenchidos por loadProfile; o desenho v5 não mostra -->
   <div style="display:none"><span id="profUser"></span><span id="profAmigos"></span><div id="profBio"></div></div>
@@ -3353,6 +3399,15 @@ button.lp-chip{cursor:pointer}
 </div>
 
 <!-- ATIVIDADE (desenho c6, 05/10): pedidos e o que aconteceu com os seus spots. -->
+<!-- AMIGOS da V3 (19/11): substitui a aba antiga, que o ícone do topo da Você abria. -->
+<div class="screen" id="amigos">
+  <div class="am2-topo"><button class="pv5-ic" onclick="voltarDeAmigos()" data-ic="back" aria-label="Voltar"></button><button class="am2-convidar" onclick="convidarAmigo()"><span data-ic="plus"></span>Convidar</button></div>
+  <h1 class="am2-tit">Amigos <span id="am2N"></span></h1>
+  <div class="am2-busca"><span data-ic="search"></span><input id="am2Busca" type="text" placeholder="Buscar por nome ou @" autocapitalize="none" autocomplete="off" oninput="am2Buscar(this.value)"></div>
+  <div class="am2-res" id="am2Res"></div>
+  <div id="am2Corpo"></div>
+  <div style="height:120px"></div>
+</div>
 <div class="screen" id="atividade">
   <div class="at-topo"><button class="at-voltar" onclick="voltarDaAtividade()" data-ic="back" aria-label="Voltar"></button><h1>Atividade</h1><span></span></div>
   <div class="at-corpo" id="atCorpo"></div>
@@ -3624,31 +3679,48 @@ button.lp-chip{cursor:pointer}
 </div>
 
 <div class="overlay" id="ov-editperfil" onclick="closeOut(event,'ov-editperfil')"><div class="sheet"><button class="sheet-close" onclick="closeOv('ov-editperfil')" data-ic="close" aria-label="Fechar"></button><div class="sheet-handle"></div><div class="sheet-title">Ajustes</div>
-<div class="prof-linha" onclick="document.getElementById('avatarFileInput').click()"><span class="pl-ic" data-ic="user"></span><span class="pl-txt">Trocar foto de perfil</span><span class="pl-seta">›</span></div>
+<!-- 19/11 (ronda + V3): em grupos. Antes era uma pilha só, misturando editar o
+     nome com sair da conta e termos, com linhas desalinhadas. Os ids são os
+     mesmos de antes: quem preenche e quem lê não mudou. -->
+<div class="aj-tit">Perfil</div>
+<div class="aj-grupo">
+<div class="prof-linha" onclick="document.getElementById('avatarFileInput').click()"><span class="pl-ic" data-ic="user"></span><span class="pl-txt">Foto de perfil</span><span class="pl-seta">›</span></div>
+<div class="aj-campos">
+<div class="nt-label">Seu nome</div>
+<input class="nt-input" autocomplete="name" id="displayNameInput" placeholder="Como seus amigos te chamam" maxlength="40" oninput="document.getElementById('displayNameStatus').textContent=''">
+<div class="feed-time" id="displayNameStatus"></div>
+<div class="nt-label">Seu nome de usuário</div>
+<input class="nt-input" autocomplete="off" autocorrect="off" spellcheck="false" id="usernameInput" placeholder="seu_username" autocapitalize="none" oninput="document.getElementById('usernameStatus').textContent=''">
+<div class="feed-time" id="usernameStatus"></div>
+<div class="nt-label">Bio</div>
+<textarea class="note-input" id="bioInput" rows="2" maxlength="300" placeholder="Uma frase sobre como você viaja"></textarea>
+<button class="sheet-cta" id="btnSalvarPerfil" onclick="salvarPerfil()">Salvar</button>
+</div>
+</div>
+<div class="aj-tit">Preferências</div>
+<div class="aj-grupo">
 <div class="prof-linha" onclick="closeOv('ov-editperfil');abrirCidadeDeCasa()"><span class="pl-ic" data-ic="pin"></span><span class="pl-txt">Onde moro<span class="pl-valor" id="cfgCidade"></span></span><span class="pl-seta">›</span></div>
 <div class="prof-linha" onclick="closeOv('ov-editperfil');openVisitedCountryPicker()"><span class="pl-ic" data-ic="globe"></span><span class="pl-txt">Países que já visitei</span><span class="pl-seta">›</span></div>
-<div style="height:18px"></div>
-<div class="nt-label">Seu nome</div>
-<input class="nt-input" autocomplete="name" id="displayNameInput" placeholder="Como seus amigos te chamam" maxlength="40" style="margin-bottom:4px" oninput="document.getElementById('displayNameStatus').textContent=''">
-<div class="feed-time" id="displayNameStatus" style="margin-bottom:18px"></div>
-<div class="nt-label">Seu nome de usuário</div>
-<input class="nt-input" autocomplete="off" autocorrect="off" spellcheck="false" id="usernameInput" placeholder="seu_username" style="margin-bottom:4px" autocapitalize="none" oninput="document.getElementById('usernameStatus').textContent=''">
-<div class="feed-time" id="usernameStatus" style="margin-bottom:18px"></div>
-<div class="nt-label">Bio</div>
-<textarea class="note-input" id="bioInput" rows="2" maxlength="300" placeholder="Uma frase sobre como você viaja" style="margin-bottom:8px"></textarea>
-<button class="sheet-cta" id="btnSalvarPerfil" onclick="salvarPerfil()">Salvar</button>
-<div class="prof-linha prof-sair" style="margin-top:10px;border-top:1px solid var(--border);border-bottom:none" onclick="signOut()"><span class="pl-txt">Sair da conta</span></div>
-<div class="prof-linha" onclick="abrirBloqueados()"><span class="pl-txt">Pessoas bloqueadas</span></div>
-<div class="prof-linha" onclick="closeOv('ov-editperfil');setTimeout(abrirTutorial,250)"><span class="pl-txt">Como o Spot funciona</span><span class="pl-seta">›</span></div>
-<div class="prof-linha" onclick="trocarIdioma()"><span class="pl-txt">Idioma<span class="pl-valor" id="cfgIdioma" data-sem-traduzir></span></span><span class="pl-seta">›</span></div>
-<div class="prof-linha" id="cfgHotspots" style="display:none" onclick="closeOv('ov-editperfil');abrirHotspots()" data-sem-traduzir><span class="pl-txt">Hotspots da semana</span><span class="pl-seta">›</span></div>
+<div class="prof-linha" onclick="trocarIdioma()"><span class="pl-ic" data-ic="chat"></span><span class="pl-txt">Idioma<span class="pl-valor" id="cfgIdioma" data-sem-traduzir></span></span><span class="pl-seta">›</span></div>
+</div>
+<div class="aj-tit">Privacidade</div>
+<div class="aj-grupo">
+<div class="prof-linha" onclick="abrirBloqueados()"><span class="pl-ic" data-ic="lock"></span><span class="pl-txt">Pessoas bloqueadas</span><span class="pl-seta">›</span></div>
+<a class="prof-linha" href="/privacidade" target="_blank" rel="noopener"><span class="pl-ic" data-ic="shield"></span><span class="pl-txt">Política de privacidade</span><span class="pl-seta">›</span></a>
+</div>
+<div class="aj-tit">Sobre</div>
+<div class="aj-grupo">
+<div class="prof-linha" onclick="closeOv('ov-editperfil');setTimeout(abrirTutorial,250)"><span class="pl-ic" data-ic="spark"></span><span class="pl-txt">Como o Spot funciona</span><span class="pl-seta">›</span></div>
 <!-- Termos e privacidade acessiveis DE DENTRO do app: a diretriz 1.2 da Apple
-     pede termos publicados, e o revisor procura por eles aqui. So ter a URL na
-     ficha da loja nao basta. -->
-<a class="prof-linha" href="/termos" target="_blank" rel="noopener" style="text-decoration:none;color:inherit"><span class="pl-txt">Termos de uso</span><span class="pl-seta">›</span></a>
-<a class="prof-linha" href="/privacidade" target="_blank" rel="noopener" style="text-decoration:none;color:inherit"><span class="pl-txt">Política de privacidade</span><span class="pl-seta">›</span></a>
-<a class="prof-linha" href="/suporte" target="_blank" rel="noopener" style="text-decoration:none;color:inherit"><span class="pl-txt">Ajuda e suporte</span><span class="pl-seta">›</span></a>
-<div class="prof-linha prof-sair" style="border-bottom:none;padding-bottom:26px" onclick="abrirExcluirConta()"><span class="pl-txt">Excluir minha conta</span></div></div></div>
+     pede termos publicados, e o revisor procura por eles aqui. -->
+<a class="prof-linha" href="/suporte" target="_blank" rel="noopener"><span class="pl-ic" data-ic="help"></span><span class="pl-txt">Ajuda e suporte</span><span class="pl-seta">›</span></a>
+<a class="prof-linha" href="/termos" target="_blank" rel="noopener"><span class="pl-ic" data-ic="doc"></span><span class="pl-txt">Termos de uso</span><span class="pl-seta">›</span></a>
+<div class="prof-linha" id="cfgHotspots" style="display:none" onclick="closeOv('ov-editperfil');abrirHotspots()" data-sem-traduzir><span class="pl-ic" data-ic="fire"></span><span class="pl-txt">Hotspots da semana</span><span class="pl-seta">›</span></div>
+</div>
+<div class="aj-fim">
+<button class="aj-palavra" onclick="signOut()">Sair da conta</button>
+<button class="aj-palavra" onclick="abrirExcluirConta()">Excluir minha conta</button>
+</div></div></div>
 
 <!-- HOTSPOTS DA SEMANA (26/10/2026): só o dono vê. O robô (functions/api/
      hotspots.js) monta a lista na quinta à noite; aqui o Lucas tira o que não
@@ -3839,7 +3911,12 @@ mais:'<circle cx="5.5" cy="12" r="1.6" fill="currentColor" stroke="none"/><circl
 menu:'<path d="M4 6.5h16"/><path d="M4 12h16"/><path d="M4 17.5h10"/>',
 instagram:'<rect x="3.5" y="3.5" width="17" height="17" rx="5"/><circle cx="12" cy="12" r="4.2"/><path d="M16.3 7.3v.01"/>',
 mapPin:'<path d="M12 21c4-4.4 6-7.7 6-10.5a6 6 0 1 0-12 0C6 13.3 8 16.6 12 21Z"/><path d="M9 10.5l1.7 1.7L15 8.3"/>',
-gear:'<circle cx="12" cy="12" r="2.6"/><circle cx="12" cy="12" r="5.4"/><path d="M12 6.6V4.4M12 17.4v2.2M6.6 12H4.4M17.4 12h2.2M8.2 8.2 6.6 6.6M15.8 15.8l1.6 1.6M8.2 15.8 6.6 17.4M15.8 8.2l1.6-1.6"/>'
+gear:'<circle cx="12" cy="12" r="2.6"/><circle cx="12" cy="12" r="5.4"/><path d="M12 6.6V4.4M12 17.4v2.2M6.6 12H4.4M17.4 12h2.2M8.2 8.2 6.6 6.6M15.8 15.8l1.6 1.6M8.2 15.8 6.6 17.4M15.8 8.2l1.6-1.6"/>',
+chat:'<path d="M5 6.5h14v9H10l-4 3v-3H5z"/>',
+shield:'<path d="M12 4l7 3v5c0 4-3 7-7 8-4-1-7-4-7-8V7z"/>',
+spark:'<path d="M12 4v4M12 16v4M4 12h4M16 12h4M7 7l2 2M15 15l2 2M17 7l-2 2M9 15l-2 2"/>',
+help:'<circle cx="12" cy="12" r="8"/><path d="M9.8 9.6a2.3 2.3 0 0 1 4.4.9c0 1.6-2.2 2-2.2 3.4"/><path d="M12 16.6v.1"/>',
+doc:'<path d="M7 4h7l4 4v12H7z"/><path d="M14 4v4h4M9.5 12.5h5M9.5 15.5h5"/>'
 };
 function icon(n,c){return '<svg class="ic'+(c?' '+c:'')+'" viewBox="0 0 24 24" aria-hidden="true">'+(ICONS[n]||ICONS.pin)+'</svg>';}
 // ═══ ESCAPE DE HTML (obrigatório em TODO innerHTML) ═══
@@ -6463,8 +6540,28 @@ document.addEventListener('visibilitychange',()=>{if(document.visibilityState===
 // barra nova a Atividade aparecia sem pedido nenhum (18/11).
 let ATIV_DE='dashboard';
 function voltarDaAtividade(){
-  const v=ATIV_DE;goTo(v);
-  if(v==='friends')loadFriends(true);else if(v==='dashboard')loadDashboard();
+  const v=ATIV_DE==='friends'?'amigos':ATIV_DE;
+  if(v==='amigos'){abrirAmigos();return}
+  goTo(v);if(v==='dashboard')loadDashboard();
+}
+// A aba Listas da Atividade (19/11, V3): quem te chamou pra uma lista e quem
+// pôs spots nas listas que você divide (últimos 30 dias, um por pessoa e lista).
+function atividadeDasListas(){
+  const eu=S.user&&S.user.id;if(!eu)return[];
+  const desde=Date.now()-30*864e5,l=[];
+  (LS2.listas||[]).forEach(lista=>{
+    const eu_m=(LS2.membros[lista.id]||[]).find(m=>m.user_id===eu);
+    if(eu_m&&eu_m.papel==='membro'&&lista.dono_id!==eu)l.push({quem:lista.dono_id,lista,quando:eu_m.created_at||lista.created_at,n:0});
+    const por={};
+    (LS2.spots[lista.id]||[]).forEach(x=>{
+      if(!x.posto_por||x.posto_por===eu||Date.parse(x.created_at||0)<desde)return;
+      const k=x.posto_por;(por[k]=por[k]||{quem:k,lista,quando:x.created_at,n:0,foto:''}).n++;
+      if(!por[k].foto&&x.foto)por[k].foto=x.foto;
+      if(String(x.created_at)>String(por[k].quando))por[k].quando=x.created_at;
+    });
+    Object.values(por).forEach(p=>l.push(p));
+  });
+  return l.filter(x=>!estaBloqueado(x.quem)).sort((a,b)=>String(b.quando||'').localeCompare(String(a.quando||''))).slice(0,40);
 }
 function abrirAtividade(){
   const a=document.querySelector('.screen.active');
@@ -6472,6 +6569,7 @@ function abrirAtividade(){
   if(!FRIENDS_DATA||FRIENDS_DATA.uid!==S.user.id)loadFriends().then(()=>{if(document.getElementById('atividade').classList.contains('active'))pintarAtividade()}).catch(()=>{});
   goTo('atividade');
   pintarAtividade();
+  lsCarregar().then(()=>{if(document.getElementById('atividade').classList.contains('active'))pintarAtividade()}).catch(()=>{});
   carregarAtividade(true).then(()=>{pintarAtividade();try{localStorage.setItem(ATIV_VISTA,new Date().toISOString())}catch(e){}pintarPontoDaAtividade()}).catch(()=>{});
 }
 let ATIV_TELA=[];
@@ -6537,11 +6635,18 @@ function pintarAtividade(){
   // Uma lista por assunto, sem "Esta semana / Antes" (o Lucas: separação ruim).
   const spots=[],amigos=[];
   itens.forEach((it,i)=>{(it.tipo==='amizade'?amigos:spots).push(linha(it,i))});
+  const listas=atividadeDasListas().map(x=>{
+    const nome='<b>'+esc(nomeNaAtividade(x.quem))+'</b>',ln='<b>'+esc(x.lista.nome||'')+'</b>';
+    const txt=x.n?nome+' pôs '+(x.n===1?'1 spot':x.n+' spots')+' em '+ln:nome+' te chamou pra lista '+ln;
+    const foto=x.foto?' style="background-image:'+cssUrl(fotoNaLargura(x.foto,120))+'"':'';
+    return '<button class="at-linha at-evento" onclick="window.irParaAba(\'listas\');lsVer(\''+esc(x.lista.id)+'\')">'+av(x.quem)
+      +'<span class="at-txt">'+txt+'<span class="at-quando">'+esc(timeAgo(x.quando))+'</span></span><span class="at-foto"'+foto+'></span></button>';
+  });
   if(ATIV_ABA==='amigos'&&!amigos.length&&spots.length)ATIV_ABA='spots';
   const pil=(k,rot,n)=>'<button class="pil'+(ATIV_ABA===k?' on':'')+'" onclick="ATIV_ABA=\''+k+'\';pintarAtividade()">'+rot+'</button>';
-  h+='<div class="at-pils">'+pil('spots','Seus spots')+pil('amigos','Amigos')+'</div>';
-  const lista=ATIV_ABA==='amigos'?amigos:spots;
-  h+=lista.length?lista.join(''):'<div class="at-vazio">'+(ATIV_ABA==='amigos'?'Nada de amigos por aqui ainda.':'Nada nos seus spots ainda.')+'</div>';
+  h+='<div class="at-pils">'+pil('spots','Seus spots')+pil('listas','Listas')+pil('amigos','Amigos')+'</div>';
+  const lista=ATIV_ABA==='amigos'?amigos:ATIV_ABA==='listas'?listas:spots;
+  h+=lista.length?lista.join(''):'<div class="at-vazio">'+(ATIV_ABA==='amigos'?'Nada de amigos por aqui ainda.':ATIV_ABA==='listas'?'Quando alguém te chamar pra uma lista ou puser spots numa lista sua, aparece aqui.':'Nada nos seus spots ainda.')+'</div>';
   void semana;
   box.innerHTML=h;
   hydrateIcons(box);
@@ -7504,8 +7609,11 @@ window.aoTocarNotificacao=async function(d){
       }
     }catch(e){}
   }
-  window.irParaAba('friends');
-  if(d.tipo==='pedido'&&window.switchFriendsTab)switchFriendsTab('pedidos');
+  // 19/11: a aba antiga de Amigos saiu da navegação. Pedido abre a Atividade
+  // (onde os pedidos ficam); o resto, a tela de Amigos.
+  if(d.tipo==='pedido'){abrirAtividade();return}
+  if(d.tipo==='lista'&&/^[0-9a-f-]{36}$/i.test(String(d.lista||''))){try{await lsCarregar()}catch(e){}if(LS2.listas.some(l=>l.id===d.lista)){window.irParaAba('listas');lsVer(d.lista);return}}
+  abrirAmigos();
 };
 window.irParaAba=function(id){
   // O "+" da barra nova não é tela: abre a folha de adicionar por cima.
@@ -8333,7 +8441,7 @@ window.acaoDeViagens=function(acao,valor){
   if(acao==='lista'&&valor==='spots'){abrirMeusSpots();return}
   if(acao==='regiao'){trocarRegiao(valor==='Todas'?'__todas':valor);darDadosDeViagens();return}
   if(acao==='atividade'){abrirAtividade();return}
-  if(acao==='amigos'){goTo('friends');loadFriends(true);return}
+  if(acao==='amigos'){abrirAmigos();return}
   if(acao==='abrir'){openTrip(valor);return}
   if(acao==='lista'){openList(valor);return}
   if(acao==='perfil'){goTo('profile');loadProfile();return}
@@ -15835,7 +15943,7 @@ async function lsCarregar(){
   LS2.membros={};LS2.spots={};
   if(!ids.length)return;
   const [ms,ss]=await Promise.all([
-    dbGet('lista_membros','select=lista_id,user_id,papel&lista_id=in.('+ids.join(',')+')'),
+    dbGet('lista_membros','select=lista_id,user_id,papel,created_at&lista_id=in.('+ids.join(',')+')'),
     dbGet('lista_spots','select=*&lista_id=in.('+ids.join(',')+')&order=created_at.desc')]);
   (Array.isArray(ms)?ms:[]).forEach(m=>{(LS2.membros[m.lista_id]=LS2.membros[m.lista_id]||[]).push(m)});
   (Array.isArray(ss)?ss:[]).forEach(x=>{(LS2.spots[x.lista_id]=LS2.spots[x.lista_id]||[]).push(x)});
@@ -16320,7 +16428,9 @@ async function lsCriar(){
   if(error||!data){if(bt){bt.disabled=false;bt.textContent='Criar'}toast('Não criou','Tenta de novo em alguns segundos.','alert');return}
   const com=[...n.com];
   if(com.length){const r=await dbInsertMany('lista_membros',com.map(u=>({lista_id:data.id,user_id:u,papel:'membro'})));
-    if(r.error)toast('Lista criada','Não deu pra chamar todo mundo agora. Chame de novo dentro da lista.','alert')}
+    if(r.error)toast('Lista criada','Não deu pra chamar todo mundo agora. Chame de novo dentro da lista.','alert');
+    // 19/11: quem foi chamado fica sabendo (aviso no celular + Atividade).
+    else com.forEach(u=>avisar('lista',u,{lista:data.id}))}
   closeOv('ov-novalista');LS2.nova=null;
   await lsCarregar();lsVer(data.id);
 }
@@ -16340,6 +16450,7 @@ async function lsChamarUm(uid){
   const id=LS2.atual;
   const{error}=await dbInsert('lista_membros',{lista_id:id,user_id:uid,papel:'membro'});
   if(error){toast('Não chamou','Tenta de novo em alguns segundos.','alert');return}
+  avisar('lista',uid,{lista:id});
   closeOv('ov-novalista');await lsCarregar();lsPintarDetalhe();
 }
 // Adicionar spot: UM caminho só. Os seus spots entram num toque (a política
@@ -16546,7 +16657,7 @@ async function bloquearUsuario(userId,nome){
   toast('Bloqueado','Você não vê mais o conteúdo dessa pessoa.','check');
   FRIENDS_DATA=null;
   if(document.getElementById('friends').classList.contains('active'))loadFriends();
-  if(document.getElementById('friend').classList.contains('active'))goTo('friends');
+  if(document.getElementById('friend').classList.contains('active'))abrirAmigos();
 }
 
 // Todas as linhas de follows entre você e a pessoa, nos dois sentidos (a
@@ -16571,8 +16682,7 @@ async function desfazerAmizade(userId,nome){
   esquecerAmigosGuardados();
   toast('Amizade desfeita','','check');
   FRIENDS_DATA=null;
-  goTo('friends');
-  loadFriends();
+  abrirAmigos();
 }
 
 async function desbloquearUsuario(userId){
@@ -18692,14 +18802,14 @@ window.acaoDePerfil=function(acao,valor){
   if(acao==='cidadeMosaico'){abrirCidadeDaEstante(valor);return}
   // "amigos" não é um modo da Lista: ele abre a ABA de amigos. Sem este desvio
   // o openList receberia um modo que não existe e a tela ficaria vazia.
-  if(acao==='lista'&&valor==='amigos'){goTo('friends');loadFriends(true);return}
+  if(acao==='lista'&&valor==='amigos'){abrirAmigos();return}
   if(acao==='lista'){openList(valor);return}
   if(acao==='lugar'){openPlace(valor,'profile');return}
   if(acao==='config'){abrirConfig();return}
   if(acao==='visitado'){openVisitedCountryPicker();return}
   if(acao==='moro'){openHomeCountryPicker();return}
   if(acao==='foto'){const i=document.getElementById('avatarFileInput');if(i)i.click();return}
-  if(acao==='pais'){drillTo('country',valor);goTo('list');return}
+  if(acao==='pais'){abrirPaisNaViagem(valor);return}
   if(acao==='tirarPais'){desmarcarPais(valor);return}
   if(acao==='todosOsPaises'){openList('countries');return}
   if(acao==='mapa'){abrirMapaMundi('profile');return}
@@ -18748,7 +18858,7 @@ function renderListaDePaises(visited,alvo){
     const tirar=paisSoMarcado(c)
       ?'<button class="cr-tirar" onclick="desmarcarPais(\''+seguro+'\',event)" aria-label="Tirar '+esc(c)+' do mapa">'+icon('close')+'</button>'
       :'';
-    return '<div class="country-row" onclick="drillTo(\'country\',\''+seguro+'\');goTo(\'list\')">'
+    return '<div class="country-row" onclick="abrirPaisNaViagem(\''+seguro+'\')">'
       +'<span class="cr-flag">'+flagHTML(c)+'</span>'
       +'<span class="cr-name">'+esc(c)+'</span>'+direita+tirar+'</div>';
   }).join('');
@@ -19001,7 +19111,20 @@ function pintarPais(){
   box.innerHTML=h;
   if(fundo){const f=document.getElementById('paisFoto');f.style.backgroundImage=fundo;f.classList.add('com')}
 }
-function paisVerSpots(){const n=PAIS_ABERTO;closeOv('ov-pais');drillTo('country',n);goTo('list')}
+function paisVerSpots(){const n=PAIS_ABERTO;closeOv('ov-pais');abrirPaisNaViagem(n)}
+// Tocar num país (lista do mapa, resumo do país, Perfil) abre a VIAGEM dele —
+// a tela de sempre, com cidades e spots. Antes abria a lista antiga
+// "Melhores / A–Z", que já tinha saído do app (achado na ronda de 19/11).
+// Viagem de verdade com mais spots primeiro; país só marcado abre a marcação;
+// onde a pessoa mora e não tem viagem do país, a cidade de casa.
+function abrirPaisNaViagem(nome){
+  const doPais=(S.trips||[]).filter(t=>[paisDaViagem(t)].concat(t.destinations||[]).some(d=>d&&mesmoLugar(normalizeCountry(d)||d,nome)));
+  const peso=t=>(isQuickVisit(t)?0:1)*1e6+((t._spots||[]).length);
+  const t=doPais.sort((a,b)=>peso(b)-peso(a))[0];
+  if(t){openTrip(t.id);return}
+  if(nome===homeCountryName()&&typeof abrirCasa==='function'){abrirCasa();return}
+  abrirPais(nome);
+}
 async function paisMarcar(){const n=PAIS_ABERTO;closeOv('ov-pais');await marcarPaisVisitado(n);try{darDadosDeViagens()}catch(e){}}
 // TOCAR NUM PAÍS DO MAPA.
 //
@@ -20685,7 +20808,77 @@ const FRIEND={id:null,profile:null,trips:[],visiveis:[],trip:null,city:null,spot
 // só pra tela abrir com o nome certo em vez de "Amigo" enquanto o perfil
 // carrega — evita passar texto de outra pessoa dentro de um atributo onclick.
 const FRIEND_NOMES={};
-function backToFriends(){goTo('friends');loadFriends(true)}
+// ═══ AMIGOS (V3, 19/11) ═══
+// Aberta pelo ícone de Amigos no topo da Você. Antes o ícone levava pra aba
+// antiga (feed "Recente/Todos", sem voltar) — achado do Lucas e da ronda de
+// 19/11. Aqui: voltar, Convidar, "Amigos N", busca (os seus primeiro; com 3+
+// letras, também gente no Spot), pedidos esperando e a lista dos seus amigos
+// com as fotos dos últimos spots de cada um. Sugestões ("6 em comum") da V3
+// ficam de fora: o banco não deixa ver os amigos dos amigos.
+let AM2_DE='dashboard',AM2_DELES=[],AM2_Q='';
+async function abrirAmigos(){
+  const a=document.querySelector('.screen.active');
+  if(a&&!['amigos','friend','friendTrip','friendCity','place','atividade'].includes(a.id))AM2_DE=a.id;
+  AM2_Q='';
+  const b=document.getElementById('am2Busca');if(b)b.value='';
+  const r=document.getElementById('am2Res');if(r)r.innerHTML='';
+  goTo('amigos');
+  am2Pintar();
+  try{await loadFriends()}catch(e){}
+  am2Pintar();
+  try{AM2_DELES=(await plnSpotsDeles())||[]}catch(e){AM2_DELES=[]}
+  am2Pintar();
+}
+function voltarDeAmigos(){
+  const v=AM2_DE||'dashboard';goTo(v);
+  if(v==='dashboard')loadDashboard();else if(v==='profile')loadProfile();
+}
+function am2Fotos(uid){
+  return AM2_DELES.filter(s=>s.user_id===uid&&s.photo_url&&s.status!=='want')
+    .sort((a,b)=>String(b.fui_em||b.created_at||'').localeCompare(String(a.fui_em||a.created_at||'')))
+    .slice(0,3).map(s=>s.photo_url);
+}
+function am2Pintar(){
+  const box=document.getElementById('am2Corpo');if(!box)return;
+  const d=FRIENDS_DATA;
+  const n=document.getElementById('am2N');
+  if(!d){box.innerHTML='<div class="at-vazio">Carregando...</div>';if(n)n.textContent='';return}
+  const ids=(d.friendIds||[]).filter(id=>!estaBloqueado(id));
+  if(n)n.textContent=ids.length?String(ids.length):'';
+  const q=normName(AM2_Q.replace(/^@/,''));
+  const nome=id=>friendName(d.pmap[id]||{})||'Amigo';
+  const user=id=>(d.pmap[id]&&d.pmap[id].username)||'';
+  const lista=ids.filter(id=>!q||normName(nome(id)).includes(q)||normName(user(id)).includes(q))
+    .sort((a,b)=>nome(a).localeCompare(nome(b),'pt-BR'));
+  let h='';
+  const ped=(d.incoming||[]).length;
+  if(ped&&!q)h+='<button class="am2-pedidos" onclick="abrirAtividade()">'+icon('bell')+'<span>'+ped+(ped===1?' pedido de amizade esperando':' pedidos de amizade esperando')+'</span><i>›</i></button>';
+  if(!ids.length){
+    h+='<div class="am2-vazio"><b>Chame seus amigos</b><span>O Spot fica bom quando você vê onde eles foram.</span>'
+      +'<button class="btn-primario" onclick="convidarAmigo()">Convidar</button></div>';
+  }else{
+    if(!q)h+='<h2 class="am2-h2">Seus amigos</h2>';
+    h+=lista.map(id=>{
+      const fotos=am2Fotos(id);
+      return '<button class="am2-linha" onclick="openFriend(\''+esc(id)+'\')">'+avatarDe(id,nome(id),'am2-av')
+        +'<span class="am2-tx"><b>'+esc(nome(id))+'</b>'+(user(id)?'<span>@'+esc(user(id))+'</span>':'')+'</span>'
+        +(fotos.length?'<span class="am2-fotos">'+fotos.map(u=>'<i style="background-image:'+esc(cssUrl(fotoNaLargura(u,120)))+'"></i>').join('')+'</span>':'')
+        +'</button>';
+    }).join('');
+    if(q&&!lista.length)h+='<p class="am2-nada">Nenhum amigo com esse nome.</p>';
+  }
+  box.innerHTML=h;hydrateIcons(box);
+}
+function am2Buscar(v){
+  AM2_Q=String(v||'');
+  am2Pintar();
+  const t=AM2_Q.trim();
+  const r=document.getElementById('am2Res');if(!r)return;
+  // Com 3+ letras, gente no Spot também (o mesmo buscador do "Adicionar amigo").
+  if(t.replace(/^@/,'').length>=3){r.classList.add('com');buscarPessoas(t,'am2Res','am2Busca')}
+  else{r.classList.remove('com');r.innerHTML=''}
+}
+function backToFriends(){abrirAmigos()}
 async function openFriend(id){
   FRIEND.id=id;FRIEND.trips=[];FRIEND.cidadesMarcadas=[];FRIEND.visiveis=[];FRIEND.trip=null;FRIEND.status='been';FRIEND.soComum=false;FRIEND.abertas={};FRIEND.todos=[];FRIEND.busca='';FRIEND.buscando=false;
   {const b=document.getElementById('friendBusca');if(b)b.value='';

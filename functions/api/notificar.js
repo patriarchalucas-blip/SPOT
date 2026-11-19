@@ -42,7 +42,11 @@ const TEXTOS = {
   // Também não é tipo que o app pede: é o 'aceite' de quem entrou pelo LINK de
   // convite (08/10). Quem mandou o link nunca ficava sabendo. O banco segue
   // vendo 'aceite' (a amizade já existe, então ele autoriza).
-  convite: (nome) => ({ title: 'Vocês são amigos', body: `${nome} entrou no Spot pelo seu convite` })
+  convite: (nome) => ({ title: 'Vocês são amigos', body: `${nome} entrou no Spot pelo seu convite` }),
+  // 19/11: quem é chamado pra uma lista ficava sem saber. O nome da lista sai
+  // do banco, depois de conferir que a lista é de quem chamou e que a pessoa
+  // foi posta nela.
+  lista: (nome, extra) => ({ title: 'Lista', body: extra ? `${nome} te chamou pra lista ${extra}` : `${nome} te chamou pra uma lista` })
 };
 
 // Em inglês (13/10/2026): quem recebe escolheu o app em inglês (o app avisa
@@ -52,7 +56,8 @@ const TEXTOS_EN = {
   aceite:     (nome) => ({ title: "You're friends",  body: `${nome} accepted your friend request` }),
   comentario: (nome, extra) => ({ title: 'Comment', body: extra ? `${nome} commented on ${extra}` : `${nome} commented on your spot` }),
   resposta: (nome, extra) => ({ title: 'Reply', body: extra ? `${nome} replied in the conversation on ${extra}` : `${nome} replied in a spot conversation` }),
-  convite: (nome) => ({ title: "You're friends", body: `${nome} joined Spot through your invite` })
+  convite: (nome) => ({ title: "You're friends", body: `${nome} joined Spot through your invite` }),
+  lista: (nome, extra) => ({ title: 'List', body: extra ? `${nome} added you to the list ${extra}` : `${nome} added you to a list` })
 };
 
 // ═══ REGISTRO DO RESULTADO (26/10) ═══
@@ -127,6 +132,7 @@ async function tratar(context) {
   // em PIX GRÁTIS em golpe.co"). Agora o app manda só o id do spot, e o nome
   // sai do banco, depois de conferir que o comentário existe.
   const spotId = String(body.spot || '');
+  const listaId = String(body.lista || '');
 
   if (!TEXTOS[tipo] || tipo === 'resposta') return json({ error: 'tipo_invalido' }, 400);
   if (!/^[0-9a-f-]{36}$/i.test(alvo)) return json({ error: 'alvo_invalido' }, 400);
@@ -155,10 +161,18 @@ async function tratar(context) {
   // A marca só é GRAVADA depois que o aviso sai de fato (06/10): gravada antes,
   // um pedido feito antes do vínculo existir no banco (ou com o Expo fora)
   // calava o aviso de verdade pelo resto do dia.
-  const par = 'push_par_' + tipo + '_' + quem.uid + '_' + alvo + (tipo === 'comentario' ? '_' + spotId : '');
+  const par = 'push_par_' + tipo + '_' + quem.uid + '_' + alvo + (tipo === 'comentario' ? '_' + spotId : tipo === 'lista' ? '_' + listaId : '');
   if (await lerKV(env, par)) return json({ enviados: 0, motivo: 'repetido' });
 
-  let extra = '', texto = tipo;
+  let extra = '', texto = tipo, tipoNoBanco = tipo;
+  if (tipo === 'lista') {
+    if (!/^[0-9a-f-]{36}$/i.test(listaId)) return json({ enviados: 0, motivo: 'sem_lista' });
+    const l = await listaQueChamou(env, listaId, quem.uid, alvo);
+    if (!l) return json({ enviados: 0, motivo: 'sem_vinculo' });
+    extra = l.nome;
+    // A lista só aceita amigo aceito (038): o banco autoriza como 'aceite'.
+    tipoNoBanco = 'aceite';
+  }
   if (tipo === 'aceite' && body.convite === true) texto = 'convite';
   if (tipo === 'comentario' && /^[0-9a-f-]{36}$/i.test(spotId)) {
     const c = await nomeDoSpotComentado(env, spotId, quem.uid, alvo);
@@ -176,7 +190,7 @@ async function tratar(context) {
         Authorization: 'Bearer ' + env.SUPABASE_SERVICE_KEY_SP,
         'Content-Type': 'application/json'
       },
-      body: JSON.stringify({ de: quem.uid, para: alvo, tipo })
+      body: JSON.stringify({ de: quem.uid, para: alvo, tipo: tipoNoBanco })
     });
     if (!r.ok) return json({ enviados: 0, erro: 'consulta' }, 200);
     const d = await r.json();
@@ -198,7 +212,7 @@ async function tratar(context) {
     // o app usa isso pra abrir na tela certa quando a pessoa toca
     // spot (09/10): o toque num comentário abre o spot comentado. Só o id,
     // e só o que já foi conferido acima (formato de uuid).
-    data: Object.assign({ tipo, de: quem.uid }, tipo === 'comentario' && /^[0-9a-f-]{36}$/i.test(spotId) ? { spot: spotId } : {})
+    data: Object.assign({ tipo, de: quem.uid }, tipo === 'comentario' && /^[0-9a-f-]{36}$/i.test(spotId) ? { spot: spotId } : {}, tipo === 'lista' ? { lista: listaId } : {})
   }));
 
   try {
@@ -249,6 +263,18 @@ async function nomeDoSpotComentado(env, spotId, de, para) {
     }
     return { nome, resposta: sp.user_id !== para };
   } catch (e) { return { nome: '', resposta: false } }
+}
+
+// A lista é de quem chamou E a pessoa está nela. Devolve { nome } ou null.
+async function listaQueChamou(env, listaId, de, para) {
+  try {
+    const h = { apikey: env.SUPABASE_SERVICE_KEY_SP, Authorization: 'Bearer ' + env.SUPABASE_SERVICE_KEY_SP };
+    const [l] = await (await fetch(SB_URL + '/rest/v1/listas?select=nome,dono_id&id=eq.' + listaId, { headers: h })).json();
+    if (!l || l.dono_id !== de) return null;
+    const [m] = await (await fetch(SB_URL + '/rest/v1/lista_membros?select=user_id&lista_id=eq.' + listaId + '&user_id=eq.' + para, { headers: h })).json();
+    if (!m) return null;
+    return { nome: String(l.nome || '').replace(/\s+/g, ' ').trim().slice(0, 60) };
+  } catch (e) { return null }
 }
 
 async function nomeDe(env, uid) {
