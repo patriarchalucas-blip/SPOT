@@ -80,14 +80,20 @@ export const FONTES_INICIAIS = [
 // Veja São Paulo e do Guia Folha (mudam todo dia; a chave é o conteúdo).
 // Entram UMA vez na lista do KV (ver lerFontes); o dono tira na página de aprovar.
 export const FONTES_DEPOIS = [
-  { id: 'yt:UC0iWYqFPnkgMI7Xvjb2T22A', tipo: 'youtube', canal: 'UC0iWYqFPnkgMI7Xvjb2T22A', nome: 'Neto Costa Explora', cidades: [] },
-  { id: 'yt:UCkZtOcW672hb1fsrV_ECNrw', tipo: 'youtube', canal: 'UCkZtOcW672hb1fsrV_ECNrw', nome: 'Chef Bruno Xavier (Rolê Certo SP)', cidades: ['São Paulo'] },
-  { id: 'yt:UC9T3o-LtuvAfu0w9rG1w50w', tipo: 'youtube', canal: 'UC9T3o-LtuvAfu0w9rG1w50w', nome: 'Vida de Barman', cidades: ['São Paulo'] },
   { id: 'yt:UCTznRtp5NGLUgSVV8V69V_Q', tipo: 'youtube', canal: 'UCTznRtp5NGLUgSVV8V69V_Q', nome: 'Sobre a Mesa (Marcio Cabral)', cidades: ['São Paulo'] },
   // noticia: capa de jornal cita lugar por qualquer motivo (evento, lançamento),
   // não é indicação — reforça um lugar que um curador citou, sozinha não conta.
   { id: 'pg:vejasp-comer-e-beber', tipo: 'pagina', url: 'https://vejasp.abril.com.br/comer-e-beber/', nome: 'Veja São Paulo', cidades: ['São Paulo'], noticia: true },
-  { id: 'pg:guiafolha-restaurantes', tipo: 'pagina', url: 'https://guia.folha.uol.com.br/restaurantes/', nome: 'Guia Folha', cidades: ['São Paulo'], noticia: true }
+  { id: 'pg:guiafolha-restaurantes', tipo: 'pagina', url: 'https://guia.folha.uol.com.br/restaurantes/', nome: 'Guia Folha', cidades: ['São Paulo'], noticia: true },
+  // 18/11, o Lucas: "queria coisas mais high level em restaurantes". Saem os
+  // canais de boteco/burger (FONTES_FORA) e entram guia e crítico. Testados
+  // daqui: Michelin responde 202 (barra robô) e a Time Out não tem página de SP.
+  // O 50 Best é uma lista parada: lida uma vez, pesa cheio 45 dias e depois cai.
+  { id: 'pg:50best-latam', tipo: 'pagina', url: 'https://www.theworlds50best.com/latinamerica/en/list/1-50', nome: "Latin America's 50 Best", cidades: ['São Paulo', 'Rio de Janeiro'] },
+  // O crítico da Veja SP. vozDe: é a mesma casa da capa da Veja — as duas
+  // juntas contam UMA voz (e, por ele, deixa de ser só notícia).
+  { id: 'pg:vejasp-lorencato', tipo: 'pagina', url: 'https://vejasp.abril.com.br/coluna/arnaldo-lorencato/', nome: 'Blog do Lorençato (Veja SP)', cidades: ['São Paulo'], vozDe: 'pg:vejasp-comer-e-beber' },
+  { id: 'pg:paladar-restaurantes', tipo: 'pagina', url: 'https://www.estadao.com.br/paladar/restaurantes-e-bares/', nome: 'Paladar (Estadão)', cidades: ['São Paulo'], noticia: true }
 ];
 
 const SISTEMA = `Você lê a descrição de um vídeo (ou o texto de uma página) de quem indica restaurantes, bares e cafés. Separe cada LUGAR concreto indicado.
@@ -504,10 +510,13 @@ export function pontuar(citacoes, cidade, agora, minVozes) {
     // apresentador — o mesmo vídeo repostado em corte virou "2 vozes" e pôs
     // um lugar em 1º de SP. Só a fonte que junta várias pessoas (a série
     // "Favoritos da cidade": cada chef é uma voz) conta pelo nome.
-    const voz = c.fonte && !c.variasVozes ? 'f:' + c.fonte : (normalizar(c.voz) || c.fonte);
+    const voz = c.fonte && !c.variasVozes ? 'f:' + (c.vozDe || c.fonte) : (normalizar(c.voz) || c.fonte);
     const peso = pesoDaData(c.data, agora);
     const atual = gr.vozes.get(voz);
-    if (!atual || peso > atual.peso) gr.vozes.set(voz, { nome: c.voz, peso, noticia: !!c.noticia });
+    // Duas fontes da mesma casa (vozDe): basta uma não ser capa de notícia.
+    const noticia = !!c.noticia && (!atual || atual.noticia);
+    if (!atual || peso > atual.peso) gr.vozes.set(voz, { nome: c.voz, peso, noticia });
+    else atual.noticia = noticia;
     if (!gr.endereco && c.endereco) gr.endereco = c.endereco;
     if (!gr.bairro && c.bairro) gr.bairro = c.bairro;
     if (c.data && (!gr.primeira || c.data < gr.primeira)) gr.primeira = c.data;
@@ -754,14 +763,16 @@ async function viagemDaCidade(env, uid, cidade) {
 export function jeitoDaFonte(f) {
   const c = FONTES_INICIAIS.concat(FONTES_DEPOIS).find((x) => x.id === f.id) || {};
   const de = (k, padrao) => (f[k] != null ? !!f[k] : c[k] != null ? !!c[k] : padrao);
-  return { variasVozes: de('variasVozes', !!f.playlist), noticia: de('noticia', false) };
+  return { variasVozes: de('variasVozes', !!f.playlist), noticia: de('noticia', false), vozDe: f.vozDe || c.vozDe || '' };
 }
 
 // Fonte que o Lucas reprovou pelo resultado: sai da lista do KV UMA vez (fica
 // anotado, então se o dono colar o link de novo na página de aprovar ela volta).
 // 18/11: Diários Gastronômicos — três vídeos seguidos do mesmo boteco puseram
 // o lugar em 1º de SP ("muito ruim").
-export const FONTES_FORA = ['yt:UCKPsOdkRBBg9AxWNA0wd6sA'];
+// Rolê Certo SP, Vida de Barman e Neto Costa Explora: boteco, burger e rolê
+// barato — o Lucas quer restaurante de nível mais alto.
+export const FONTES_FORA = ['yt:UCKPsOdkRBBg9AxWNA0wd6sA', 'yt:UCkZtOcW672hb1fsrV_ECNrw', 'yt:UC9T3o-LtuvAfu0w9rG1w50w', 'yt:UC0iWYqFPnkgMI7Xvjb2T22A'];
 
 // A lista do KV manda (é a que o dono edita). Fonte que o CÓDIGO ganhou depois
 // (FONTES_DEPOIS) entra nela UMA vez: fica anotado que já foi oferecida, então

@@ -300,9 +300,17 @@ test('hotspots: uma fonte é uma voz; hotel não entra; capa de notícia não fa
   const l = montarLista([c('Ajissai', 'A', 'yt:A', { data: velho }), c('Zeca', 'B', 'yt:B')], 'São Paulo', AGORA);
   assert.deepStrictEqual(l.map((x) => x.nome), ['Zeca', 'Ajissai']);
   // As marcas saem do código quando a lista guardada não tem.
-  assert.deepStrictEqual(jeitoDaFonte({ id: 'pg:vejasp-comer-e-beber' }), { variasVozes: false, noticia: true });
-  assert.deepStrictEqual(jeitoDaFonte({ id: 'yt:pl:QUALQUER', playlist: 'QUALQUER' }), { variasVozes: true, noticia: false });
-  assert.deepStrictEqual(jeitoDaFonte({ id: 'yt:UCKPsOdkRBBg9AxWNA0wd6sA', canal: 'x' }), { variasVozes: false, noticia: false });
+  assert.deepStrictEqual(jeitoDaFonte({ id: 'pg:vejasp-comer-e-beber' }), { variasVozes: false, noticia: true, vozDe: '' });
+  assert.deepStrictEqual(jeitoDaFonte({ id: 'yt:pl:QUALQUER', playlist: 'QUALQUER' }), { variasVozes: true, noticia: false, vozDe: '' });
+  assert.deepStrictEqual(jeitoDaFonte({ id: 'yt:UCKPsOdkRBBg9AxWNA0wd6sA', canal: 'x' }), { variasVozes: false, noticia: false, vozDe: '' });
+  // O crítico e a capa da mesma casa são UMA voz — e, por ele, não é só notícia.
+  const casa = jeitoDaFonte({ id: 'pg:vejasp-lorencato' });
+  assert.strictEqual(casa.vozDe, 'pg:vejasp-comer-e-beber');
+  const veja = [c('Fisga', 'Veja', 'pg:vejasp-comer-e-beber', { noticia: true }), c('Fisga', 'Lorençato', 'pg:vejasp-lorencato', casa)];
+  assert.deepStrictEqual(pontuar(veja, 'São Paulo', AGORA), []);
+  assert.strictEqual(pontuar(veja, 'São Paulo', AGORA, 1)[0].n, 1);
+  assert.strictEqual(pontuar(veja.slice().reverse(), 'São Paulo', AGORA, 1)[0].n, 1);
+  assert.ok(!FONTES_DEPOIS.some((x) => FONTES_FORA.includes(x.id)));
 });
 
 import { resumirWikidata } from '../functions/api/pais.js';
