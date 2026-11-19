@@ -81,7 +81,6 @@ export const FONTES_INICIAIS = [
 // Entram UMA vez na lista do KV (ver lerFontes); o dono tira na página de aprovar.
 export const FONTES_DEPOIS = [
   { id: 'yt:UC0iWYqFPnkgMI7Xvjb2T22A', tipo: 'youtube', canal: 'UC0iWYqFPnkgMI7Xvjb2T22A', nome: 'Neto Costa Explora', cidades: [] },
-  { id: 'yt:UCKPsOdkRBBg9AxWNA0wd6sA', tipo: 'youtube', canal: 'UCKPsOdkRBBg9AxWNA0wd6sA', nome: 'Diários Gastronômicos', cidades: [] },
   { id: 'yt:UCkZtOcW672hb1fsrV_ECNrw', tipo: 'youtube', canal: 'UCkZtOcW672hb1fsrV_ECNrw', nome: 'Chef Bruno Xavier (Rolê Certo SP)', cidades: ['São Paulo'] },
   { id: 'yt:UC9T3o-LtuvAfu0w9rG1w50w', tipo: 'youtube', canal: 'UC9T3o-LtuvAfu0w9rG1w50w', nome: 'Vida de Barman', cidades: ['São Paulo'] },
   { id: 'yt:UCTznRtp5NGLUgSVV8V69V_Q', tipo: 'youtube', canal: 'UCTznRtp5NGLUgSVV8V69V_Q', nome: 'Sobre a Mesa (Marcio Cabral)', cidades: ['São Paulo'] },
@@ -758,17 +757,25 @@ export function jeitoDaFonte(f) {
   return { variasVozes: de('variasVozes', !!f.playlist), noticia: de('noticia', false) };
 }
 
+// Fonte que o Lucas reprovou pelo resultado: sai da lista do KV UMA vez (fica
+// anotado, então se o dono colar o link de novo na página de aprovar ela volta).
+// 18/11: Diários Gastronômicos — três vídeos seguidos do mesmo boteco puseram
+// o lugar em 1º de SP ("muito ruim").
+export const FONTES_FORA = ['yt:UCKPsOdkRBBg9AxWNA0wd6sA'];
+
 // A lista do KV manda (é a que o dono edita). Fonte que o CÓDIGO ganhou depois
 // (FONTES_DEPOIS) entra nela UMA vez: fica anotado que já foi oferecida, então
 // o que o dono tirar na página de aprovar não volta.
 async function lerFontes(env) {
   const guardadas = (await lerJSON(env, 'hs_fontes')) || FONTES_INICIAIS;
   const oferecidas = (await lerJSON(env, 'hs_fontes_oferecidas')) || [];
-  if (FONTES_DEPOIS.every((f) => oferecidas.includes(f.id))) return guardadas;
+  const tiradas = FONTES_FORA.map((id) => 'fora:' + id);
+  if (FONTES_DEPOIS.every((f) => oferecidas.includes(f.id)) && tiradas.every((t) => oferecidas.includes(t))) return guardadas;
+  const sai = new Set(FONTES_FORA.filter((id) => !oferecidas.includes('fora:' + id)));
   const novas = FONTES_DEPOIS.filter((f) => !oferecidas.includes(f.id) && !guardadas.some((g) => g.id === f.id));
-  const todas = guardadas.concat(novas);
+  const todas = guardadas.filter((g) => !sai.has(g.id)).concat(novas);
   await gravarKV(env, 'hs_fontes', JSON.stringify(todas), ANO * 10);
-  await gravarKV(env, 'hs_fontes_oferecidas', JSON.stringify([...new Set(oferecidas.concat(FONTES_DEPOIS.map((f) => f.id)))]), ANO * 10);
+  await gravarKV(env, 'hs_fontes_oferecidas', JSON.stringify([...new Set(oferecidas.concat(FONTES_DEPOIS.map((f) => f.id), tiradas))]), ANO * 10);
   return todas;
 }
 

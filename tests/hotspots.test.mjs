@@ -1,7 +1,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert';
 import { onRequestPost, onRequestGet, semanaDe, pontuar, citacoesValidas, cidadeDaLista, ehPubliPeloTexto,
-  ehHoraDePublicar, lugarDoGoogle, spotDoHotspot, categoriaPelosTipos, jsonDepoisDe, FONTES_DEPOIS, comVozes , jeitoDaFonte, montarLista } from '../functions/api/hotspots.js';
+  ehHoraDePublicar, lugarDoGoogle, spotDoHotspot, categoriaPelosTipos, jsonDepoisDe, FONTES_DEPOIS, comVozes , jeitoDaFonte, montarLista, FONTES_FORA } from '../functions/api/hotspots.js';
 
 // O robô dos Hotspots (26/10/2026). Nada sai pra rede: YouTube, IA, Google,
 // Supabase e KV são falsos.
@@ -254,6 +254,20 @@ test('hotspots: fonte que o código ganhou depois entra uma vez; a que o dono ti
   const e3 = await ver();
   assert.strictEqual(e3.fontes.length, 1 + FONTES_DEPOIS.length, 'não volta nem duplica');
   assert.strictEqual(new Set(FONTES_DEPOIS.map((f) => f.id)).size, FONTES_DEPOIS.length);
+});
+
+test('hotspots: fonte reprovada sai da lista guardada uma vez; colada de novo pelo dono, fica', async () => {
+  const w = mundo({ logado: DONO });
+  const fora = FONTES_FORA[0];
+  const por = () => w.env.SPOT_KV.m.set('hs_fontes', JSON.stringify(JSON.parse(w.env.SPOT_KV.m.get('hs_fontes')).concat([{ id: fora, tipo: 'youtube', canal: 'X', nome: 'Fora', cidades: [] }])));
+  const ver = () => comFetch(w.fetchFalso, async () => (await onRequestGet({ env: w.env, request: new Request('https://x/api/hotspots', { headers: { Authorization: 'Bearer ' + TK } }) })).json());
+  por();
+  const e1 = await ver();
+  assert.ok(!e1.fontes.some((f) => f.id === fora), 'saiu');
+  assert.strictEqual(e1.fontes.length, 2);
+  assert.ok(!FONTES_DEPOIS.some((f) => f.id === fora), 'e não é oferecida de novo');
+  por();
+  assert.ok((await ver()).fontes.some((f) => f.id === fora), 'o dono pôs de volta: fica');
 });
 
 test('vitrine antiga ganha a conta de perfis sem nome de ninguém', () => {
