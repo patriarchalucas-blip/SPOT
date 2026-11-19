@@ -29,6 +29,7 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import {
   ActivityIndicator,
+  AppState,
   BackHandler,
   Linking,
   Platform,
@@ -68,6 +69,7 @@ import { useFonts } from 'expo-font';
 import { Cinzel_500Medium } from '@expo-google-fonts/cinzel/500Medium';
 import * as Notifications from 'expo-notifications';
 import * as Device from 'expo-device';
+import * as Updates from 'expo-updates';
 import Constants from 'expo-constants';
 import { BASE, INK, INK2, GREEN } from './cores';
 import { t, definirIdioma } from './idioma';
@@ -281,6 +283,45 @@ function Conteudo() {
   // um piscar de fonte do sistema em vez de uma tela preta esperando.
   useFonts(FONTES);
   const webRef = useRef(null);
+
+  // NOVIDADE SEM FECHAR O APP (18/11, o Lucas: "vou pedir pra 40 pessoas
+  // fecharem o app?"). Antes, a atualização das abas baixava em silêncio e só
+  // valia na PRÓXIMA abertura do zero — quem só troca de app nunca via. E o
+  // site dentro do app ficava o mesmo enquanto a página estivesse aberta.
+  // Agora: na abertura e a cada volta pro app (depois de 20 s fora), confere
+  // se há atualização das abas; havendo, baixa e recarrega na hora. Sem
+  // atualização das abas, pede ao site pra conferir a versão dele.
+  const foraDesde = useRef(0);
+  useEffect(() => {
+    let vivo = true, conferindo = false;
+    const conferir = async (motivo) => {
+      if (conferindo) return;
+      conferindo = true;
+      try {
+        if (!__DEV__ && Updates.isEnabled) {
+          const r = await Updates.checkForUpdateAsync();
+          if (vivo && r.isAvailable) {
+            const f = await Updates.fetchUpdateAsync();
+            if (vivo && f.isNew) { await Updates.reloadAsync(); return }
+          }
+        }
+        if (vivo && motivo === 'volta') {
+          webRef.current?.injectJavaScript('window.conferirVersaoDoSite&&window.conferirVersaoDoSite();true;');
+        }
+      } catch (e) {
+        // sem rede ou servidor fora: fica com o que tem
+      } finally { conferindo = false }
+    };
+    conferir('abertura');
+    const sub = AppState.addEventListener('change', (st) => {
+      if (st === 'active') {
+        const fora = foraDesde.current ? Date.now() - foraDesde.current : 0;
+        foraDesde.current = 0;
+        if (fora > 20000) conferir('volta');
+      } else if (!foraDesde.current) foraDesde.current = Date.now();
+    });
+    return () => { vivo = false; sub.remove() };
+  }, []);
   const [carregando, setCarregando] = useState(true);
   const [semRede, setSemRede] = useState(false);
   const [podeVoltar, setPodeVoltar] = useState(false);
