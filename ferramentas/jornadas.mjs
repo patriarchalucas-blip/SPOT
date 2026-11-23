@@ -1402,6 +1402,25 @@ if (caixa) {
 const vbDepois = await pa.evaluate(() => { const s = document.querySelector('#dashMapa svg'); return s && s.getAttribute('viewBox') });
 const telaMapa = await pa.evaluate(() => (document.querySelector('.screen.active') || {}).id);
 confere(!!vbAntes && vbAntes !== vbDepois && telaMapa === 'dashboard', 'o mapa da Você se move ali mesmo, sem trocar de tela', { vbAntes, vbDepois, telaMapa });
+// Foto de amigo abre o perfil em qualquer lugar (23/11), e voltar devolve pra onde estava.
+const tocaFoto = (pg, sel) => pg.evaluate((sel, id) => { const el = [...document.querySelectorAll(sel + ' [data-perfil="' + id + '"]')].find(e => e.getBoundingClientRect().width > 0); if (!el) return false; el.click(); return true }, sel, A.id);
+await ir(pb, "(async()=>{document.querySelectorAll('.overlay.show').forEach(o=>closeOv(o.id));await hsAbrir();hsAba('amigos')})()", 2000);
+const tocou1 = await tocaFoto(pb, '#hsCorpo');
+await espera(1500);
+confere(tocou1 && await tela(pb) === 'friend' && await pb.evaluate(() => FRIEND.id) === A.id, 'foto da Ana no feed dos Hotspots abre o perfil dela', { tocou1, tela: await tela(pb) });
+await ir(pb, 'backToFriends()', 800);
+confere(await tela(pb) === 'hotspots', 'voltar do perfil devolve pros Hotspots', await tela(pb));
+await ir(pb, "(async()=>{const s=(HSV.amigos||[])[0];if(s)hsAbrirDoAmigo(0)})()", 2500);
+const tocou2 = await tocaFoto(pb, '#place');
+await espera(1500);
+confere(tocou2 && await tela(pb) === 'friend', 'foto da Ana na ficha do spot abre o perfil dela', { tocou2, tela: await tela(pb) });
+await ir(pb, 'backToFriends()', 800);
+confere(await tela(pb) === 'place', 'voltar do perfil devolve pra ficha', await tela(pb));
+await ir(pb, "(async()=>{abrirAtividade();await lsCarregar();ATIV_ABA='listas';pintarAtividade()})()", 2000);
+const tocou3 = await tocaFoto(pb, '#atCorpo');
+await espera(1500);
+confere(tocou3 && await tela(pb) === 'friend', 'nome ou foto da Ana na Atividade abre o perfil dela', { tocou3, tela: await tela(pb) });
+await ir(pb, 'backToFriends()', 800);
 // Busca com IA (19/11): nome de lugar não passa pela IA; pedido com condição passa.
 await ir(pb, "(async()=>{document.querySelectorAll('.overlay.show').forEach(o=>closeOv(o.id));biaConferir()})()", 800);
 const bia = await pb.evaluate(() => ['Japão','Barbacoa','Vila Madalena','restaurantes','japonês no Itaim até 100','trilha perto de São Paulo','bar bom pra date','pizza perto de casa'].map(t => [t, pareceDePedido(t)]));

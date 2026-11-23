@@ -2606,6 +2606,7 @@ body.exm #exploreCozinhas,body.exm #exploreBody{display:none!important}
 .exm-veu{position:absolute;inset:0;z-index:2;background:rgba(228,232,228,.72);opacity:0;pointer-events:none;transition:opacity .2s}
 #explore.exm-buscando .exm-veu,#explore.exm-cheia .exm-veu{opacity:1}
 .exm-topo{position:absolute;top:calc(env(safe-area-inset-top,0px) + 12px);left:20px;right:20px;z-index:6}
+[data-perfil]{cursor:pointer}
 /* Explorar novo (23/11, V3): chips, lista com frase e distância, pino com nome */
 .exm-chips{display:flex;gap:8px;margin:10px -20px 0;padding:0 20px;overflow-x:auto;scrollbar-width:none;touch-action:pan-x;-webkit-overflow-scrolling:touch;overscroll-behavior-x:contain}
 .exm-chips::-webkit-scrollbar{display:none}
@@ -4615,7 +4616,7 @@ function plnAvatar(id,classe){
   if(!p.avatar_url)p.avatar_url=fotoDaPessoa(id);
   const nome=S.user&&id===S.user.id?((S.profile&&S.profile.display_name)||nomeDeExibicao()||'?'):friendName(p);
   const foto=p.avatar_url?';background-image:'+cssUrl(p.avatar_url):'';
-  return '<span class="pln-av'+(classe?' '+classe:'')+'" style="'+esc('background-color:'+plnCor(id)+foto)+'">'
+  return '<span class="pln-av'+(classe?' '+classe:'')+'"'+(/^[0-9a-f-]{36}$/i.test(String(id||''))?' data-perfil="'+id+'"':'')+' style="'+esc('background-color:'+plnCor(id)+foto)+'">'
     +(p.avatar_url?'':esc(String(nome).replace(/^@/,'').charAt(0).toUpperCase()))+'</span>';
 }
 // "Ana" · "Ana e Rafa" · "Ana, Rafa e Bia"
@@ -6164,7 +6165,7 @@ async function pintarDelesNaFicha(s){
         :o.status==='been'?(Number(o.my_rating)>0?'<span class="fic-nota">'+icon('star')+esc(fmtRating(o.my_rating))+'</span>':'<span class="fic-quer">foi</span>')
         :'<span class="fic-quer">quer ir</span>';
       return '<div class="fic">'
-        +'<div class="fic-topo">'+plnAvatar(o.user_id,'g')+'<b>'+esc(quem)+'</b>'+nota+'</div>'
+        +'<div class="fic-topo">'+plnAvatar(o.user_id,'g')+'<b data-perfil="'+esc(o.user_id)+'">'+esc(quem)+'</b>'+nota+'</div>'
         +(o.my_review?'<p class="fic-frase">'+esc(o.my_review)+'</p>':'<p class="fic-frase"></p>')
         +'<div class="fic-pe"><button class="coment-curtir'+(cs.meu?' on':'')+'" onclick="curtirSpot(\''+esc(o.id)+'\')" aria-label="Curtir">'+icon('heart')+(cs.n?'<i>'+cs.n+'</i>':'')+'</button>'
         +'<button class="coment-responder" onclick="abrirSpotDeleDaFicha('+i+')">Responder</button></div></div>';
@@ -6663,7 +6664,7 @@ function pintarAtividade(){
   }
   const semana=Date.now()-7*864e5;
   const linha=(it,i)=>{
-    const nome='<b>'+esc(nomeNaAtividade(it.user_id))+'</b>';
+    const nome='<b data-perfil="'+esc(it.user_id)+'">'+esc(nomeNaAtividade(it.user_id))+'</b>';
     if(it.tipo==='amizade')return '<button class="at-linha at-evento" onclick="abrirDaAtividade('+i+')">'+av(it.user_id)
       +'<span class="at-txt">Você e '+nome+' agora são amigos</span></button>';
     const spot='<b>'+esc(it.spot.name||'')+'</b>';
@@ -6680,7 +6681,7 @@ function pintarAtividade(){
   const spots=[],amigos=[];
   itens.forEach((it,i)=>{(it.tipo==='amizade'?amigos:spots).push(linha(it,i))});
   const listas=atividadeDasListas().map(x=>{
-    const nome='<b>'+esc(nomeNaAtividade(x.quem))+'</b>',ln='<b>'+esc(x.lista.nome||'')+'</b>';
+    const nome='<b data-perfil="'+esc(x.quem)+'">'+esc(nomeNaAtividade(x.quem))+'</b>',ln='<b>'+esc(x.lista.nome||'')+'</b>';
     const txt=x.n?nome+' pôs '+(x.n===1?'1 spot':x.n+' spots')+' em '+ln:nome+' te chamou pra lista '+ln;
     const foto=x.foto?' style="background-image:'+cssUrl(fotoNaLargura(x.foto,120))+'"':'';
     const caixa=x.foto?'<span class="at-foto"'+foto+'></span>':'';
@@ -11969,7 +11970,8 @@ function exmAvatar(uid,perfis,classe){
   const p=(perfis&&perfis[uid])||plnPerfil(uid)||{};
   const f=safeUrl(p.avatar_url||fotoDaPessoa(uid));
   const nome=friendName(p)||'?';
-  return f?'<span class="'+classe+'" style="background-image:'+cssUrl(f)+'"></span>':'<span class="'+classe+'">'+esc(nome.charAt(0).toUpperCase())+'</span>';
+  const dp=/^[0-9a-f-]{36}$/i.test(String(uid||''))?' data-perfil="'+uid+'"':'';
+  return f?'<span class="'+classe+'"'+dp+' style="background-image:'+cssUrl(f)+'"></span>':'<span class="'+classe+'"'+dp+'>'+esc(nome.charAt(0).toUpperCase())+'</span>';
 }
 function exmQuemDoItem(it){
   if(it.tipo==='amigo'){
@@ -16134,7 +16136,7 @@ function hsPintarAmigos(){
   if(!HSV.amigos)return '<div class="at-vazio">Carregando...</div>';
   if(!HSV.amigos.length)return '<div class="at-vazio">Quando seus amigos salvarem spots, eles aparecem aqui.</div>';
   return '<div class="hv-am">'+HSV.amigos.map((s,i)=>{
-    const quem=esc(plnPrimeiro(s.user_id)),cs=CURT_SPOT[s.id]||{n:0,meu:false};
+    const quem='<b data-perfil="'+esc(s.user_id)+'">'+esc(plnPrimeiro(s.user_id))+'</b>',cs=CURT_SPOT[s.id]||{n:0,meu:false};
     const foto=s._fotoVista||s.photo_url;
     return '<div class="hv-card" onclick="hsAbrirDoAmigo('+i+')">'
       +'<div class="hv-card-foto"'+(foto?' style="background-image:'+esc(cssUrl(fotoNaLargura(foto,800)))+'"':'')+'>'+plnAvatar(s.user_id,'p')
@@ -20608,8 +20610,9 @@ function fotoDaPessoa(id){
 // O círculo com a foto (ou as iniciais, sem foto). `classe` decide o tamanho.
 function avatarDe(id,nome,classe){
   const f=safeUrl(fotoDaPessoa(id));
-  return f?'<div class="'+classe+' av-foto" style="background-image:'+cssUrl(f)+'"></div>'
-    :'<div class="'+classe+'">'+esc(initials(nome||'?'))+'</div>';
+  const dp=/^[0-9a-f-]{36}$/i.test(String(id||''))?' data-perfil="'+id+'"':'';
+  return f?'<div class="'+classe+' av-foto"'+dp+' style="background-image:'+cssUrl(f)+'"></div>'
+    :'<div class="'+classe+'"'+dp+'>'+esc(initials(nome||'?'))+'</div>';
 }
 
 let SALVANDO_NO_FEED=-1;
@@ -21123,8 +21126,44 @@ function am2Buscar(v){
   if(t.replace(/^@/,'').length>=3){r.classList.add('com');buscarPessoas(t,'am2Res','am2Busca')}
   else{r.classList.remove('com');r.innerHTML=''}
 }
-function backToFriends(){abrirAmigos()}
+// ═══ FOTO OU NOME DE AMIGO ABRE O PERFIL, EM QUALQUER LUGAR (23/11) ═══
+// O Lucas: "clico na foto da Natália e não vai pro perfil dela". Em vez de
+// ligar tela por tela, toda foto de pessoa (plnAvatar, exmAvatar, avatarDe)
+// e os nomes dos cartões levam data-perfil; um ouvinte só, na fase de
+// captura, abre o perfil antes do toque chegar na linha (que abriria a ficha).
+// Só amigo aceito (perfil de quem não é amigo não carrega); você mesmo, o seu
+// Perfil. Dentro do pino do mapa a foto continua escolhendo o lugar.
+function ehAmigoAceito(uid){
+  const d=FRIENDS_DATA;
+  if(d&&Array.isArray(d.friendIds)&&d.friendIds.includes(uid))return true;
+  return !!(typeof PLN_AMIGOS!=='undefined'&&PLN_AMIGOS.perfis&&PLN_AMIGOS.perfis[uid]);
+}
+document.addEventListener('click',e=>{
+  const el=e.target&&e.target.closest&&e.target.closest('[data-perfil]');if(!el)return;
+  if(el.closest('.exm-pin,.lp-gente,#friend .am-topo'))return;
+  const uid=el.getAttribute('data-perfil');
+  if(!/^[0-9a-f-]{36}$/i.test(uid||''))return;
+  const eu=S.user&&S.user.id;
+  if(uid===eu){e.stopPropagation();e.preventDefault();document.querySelectorAll('.overlay.show').forEach(o=>closeOv(o.id));goTo('profile');loadProfile();return}
+  if(!ehAmigoAceito(uid))return;
+  const at=document.querySelector('.screen.active');
+  if(at&&at.id==='friend'&&FRIEND.id===uid)return;
+  e.stopPropagation();e.preventDefault();
+  document.querySelectorAll('.overlay.show').forEach(o=>closeOv(o.id));
+  openFriend(uid);
+},true);
+// Voltar do perfil do amigo devolve pra tela de onde se veio (a ficha, a
+// lista, os Hotspots...), não sempre pra Amigos.
+let FRIEND_DE='';
+function backToFriends(){
+  const v=FRIEND_DE;FRIEND_DE='';
+  if(!v||v==='amigos'||!document.getElementById(v)){abrirAmigos();return}
+  goTo(v,true);
+  if(v==='hotspots')hsPintar();else if(v==='lista')lsPintarDetalhe();else if(v==='atividade')pintarAtividade();
+  else if(v==='dashboard')loadDashboard();else if(v==='profile')loadProfile();
+}
 async function openFriend(id){
+  {const a=document.querySelector('.screen.active');if(a&&!['friend','friendTrip','friendCity'].includes(a.id))FRIEND_DE=a.id}
   FRIEND.id=id;FRIEND.trips=[];FRIEND.cidadesMarcadas=[];FRIEND.visiveis=[];FRIEND.trip=null;FRIEND.status='been';FRIEND.soComum=false;FRIEND.abertas={};FRIEND.todos=[];FRIEND.busca='';FRIEND.buscando=false;
   {const b=document.getElementById('friendBusca');if(b)b.value='';
    const tela=document.getElementById('friend');if(tela)tela.classList.remove('am-buscando','am-saindo');
