@@ -2606,6 +2606,21 @@ body.exm #exploreCozinhas,body.exm #exploreBody{display:none!important}
 .exm-veu{position:absolute;inset:0;z-index:2;background:rgba(228,232,228,.72);opacity:0;pointer-events:none;transition:opacity .2s}
 #explore.exm-buscando .exm-veu,#explore.exm-cheia .exm-veu{opacity:1}
 .exm-topo{position:absolute;top:calc(env(safe-area-inset-top,0px) + 12px);left:20px;right:20px;z-index:6}
+/* Explorar novo (23/11, V3): chips, lista com frase e distância, pino com nome */
+.exm-chips{display:flex;gap:8px;margin:10px -20px 0;padding:0 20px;overflow-x:auto;scrollbar-width:none;touch-action:pan-x;-webkit-overflow-scrolling:touch;overscroll-behavior-x:contain}
+.exm-chips::-webkit-scrollbar{display:none}
+.exm-chip{flex:none;height:36px;padding:0 14px;border:0;border-radius:18px;background:rgba(7,32,25,.82);color:var(--ink);font:inherit;font-size:15px;font-weight:600;cursor:pointer;-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px)}
+.exm-chip i{font-style:normal;color:var(--ink3);font-weight:500;margin-left:2px}
+.exm-chip.on{background:var(--green);color:var(--on-green)}
+.exm-chip.on i{color:rgba(12,23,20,.55)}
+#explore.exm-buscando .exm-chips{display:none}
+.exm-cab2{align-items:baseline}
+.exm-cab2 h2{margin:0;font-stretch:68%;font-size:30px;font-weight:700;line-height:1.05;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.exm-cab2 span{flex:none;font-size:14px;color:var(--ink2)}
+.exm-frase{margin-top:3px;font-size:14px;color:var(--ink);line-height:1.35;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.exm-lado{flex:none;display:flex;flex-direction:column;align-items:flex-end;gap:2px;font-size:13px;color:var(--ink2)}
+.exm-pin-nome{display:none;position:absolute;left:50%;top:100%;margin-top:6px;transform:translateX(-50%);white-space:nowrap;padding:2px 8px;border-radius:10px;background:rgba(7,32,25,.85);color:var(--ink);font-size:12px;font-weight:600;pointer-events:none}
+.exm-perto .exm-pin-nome{display:block}
 .exm-topo .search-field{display:flex;align-items:center;height:48px;background:var(--base);border-radius:14px}
 .exm-topo .search-field .si{position:static;flex:none;width:16px;height:16px;margin:0 10px 0 16px;color:var(--ink2)}
 .exm-topo .search-field .si svg{width:16px;height:16px}
@@ -2719,7 +2734,9 @@ body.exm #exploreCozinhas,body.exm #exploreBody{display:none!important}
 /* Pinos (HTML numa camada só por cima do mapa) */
 .exm-camada{position:absolute;left:0;top:0}
 .exm-pos{position:absolute;transform:translate(-50%,-50%);cursor:pointer}
-.exm-dot{width:12px;height:12px;border-radius:50%;background:var(--green);outline:3px solid var(--base);position:relative}
+.exm-dot{width:10px;height:10px;border-radius:50%;background:var(--ink3);outline:2px solid var(--base);position:relative}
+/* Google em cinza (23/11): verde era a mesma cor do anel de amigo. */
+.exm-dot.sel{background:var(--green)}
 /* Alvo de dedo: 36 px em volta do ponto de 12, sem aparecer. */
 .exm-dot::after{content:'';position:absolute;left:50%;top:50%;width:36px;height:36px;margin:-18px 0 0 -18px;border-radius:50%}
 /* "Você" não pega toque: ficava por cima do ponto ao lado e engolia o toque. */
@@ -10534,6 +10551,7 @@ function setExploreCozinha(id){
 }
 function setExploreCat(c){
   EXPLORE.cat=c;renderExploreFilters();
+  EXM.googleEnquadrado=false;
   if(EXM_LIGADO&&EXPLORE.modoPais){exmAgendar();return}   // país: amigos só filtram, sem Google
   if(EXPLORE.city)runExplore(EXPLORE.rotulo,EXM_LIGADO&&EXPLORE.lugar?EXPLORE.lugar:undefined);
 }
@@ -11663,7 +11681,7 @@ const EXM={mapa:null,camada:null,pinos:[],itens:[],todos:[],filtros:{amigos:fals
   parada:'peek',sel:-1,selIt:null,selChave:null,areaChave:'',amigosEnquadrados:-1,agendado:false,montado:false,
   pessoaMexeu:false,deles:null,mapaBaixo:0,chavePinos:''};
 const EXM_CAT={food:'Comer',hotel:'Ficar',experience:'Fazer'};
-const EXM_PEEK=96,EXM_MEDIA=300;
+const EXM_PEEK=96,EXM_MEDIA=340;
 
 function exmMontar(){
   if(EXM.montado)return;EXM.montado=true;
@@ -11677,12 +11695,12 @@ function exmMontar(){
   const palco=document.createElement('div');
   palco.className='exm-palco';palco.id='exmPalco';
   palco.innerHTML='<div class="exm-mapa" id="exmMapa"></div><div class="exm-veu" id="exmVeu"></div>'
-    +'<div class="exm-topo" id="exmTopo"></div>'
+    +'<div class="exm-topo" id="exmTopo"><div class="exm-chips" id="exmChips"></div></div>'
     +'<div class="exm-folha" id="exmFolha"><div class="exm-pega" id="exmPega"><div class="exm-alca"></div></div>'
     +'<div class="exm-corpo" id="exmCorpo"></div></div>';
   tela.insertBefore(palco,document.querySelector('#explore .bottom-nav'));
   const topo=document.getElementById('exmTopo');
-  topo.appendChild(fld);
+  topo.insertBefore(fld,topo.firstChild);
   // Localizar mora DENTRO do campo, à direita; o ✕ de antes vira "cancelar".
   const loc=document.createElement('button');
   loc.className='exm-loc';loc.setAttribute('aria-label','Voltar pra minha localização');
@@ -11909,6 +11927,7 @@ function exmMontarTudo(){
       foram:0,querem:0,cidade:p.city||'',tipoG:p.tipo||'',aberto:exmAberto(p.opening_hours),
       autor:(p.photo_author&&p.photo_author.nome)||''});
   });
+  EXM.todosSemFiltro=itens;
   let l=itens;
   if(EXM.filtros.amigos)l=l.filter(it=>it.tipo==='amigo');
   if(EXM.filtros.quero)l=l.filter(it=>(it.meu&&it.meu.status==='want')||(!it.meu&&statusNaMinhaLista({name:it.nome,city:it.cidade})==='Quero ir'));
@@ -12016,7 +12035,7 @@ function exmDesenhar(){
     if(j<0&&EXM.selIt){EXM.itens.push(EXM.selIt);j=EXM.itens.length-1}
     EXM.sel=j;
   }
-  exmPintarCampo();
+  exmPintarCampo();exmPintarChips();
   const corpo=document.getElementById('exmCorpo');
   const it=EXM.itens[EXM.sel];
   const f=EXM.filtros;
@@ -12026,8 +12045,9 @@ function exmDesenhar(){
   EXM.chaveFolha=chave;
   if(EXM.sel>=0&&it){corpo.innerHTML=exmPrevia(it,EXM.sel);hydrateIcons(corpo)}
   else if(EXPLORE.cota&&EXPLORE_ESTADO==='erro'){corpo.innerHTML=exmAvisoDeCota();if(EXM.parada!=='aviso')requestAnimationFrame(()=>exmIrPara('aviso'))}
-  else if(EXM.parada==='cheia')corpo.innerHTML=exmLista();
-  else if(EXM.parada==='media'){corpo.innerHTML=exmCards();exmLigarCards()}
+  // Média e cheia mostram a MESMA lista (23/11): foto, nome, quem foi, a
+  // frase e a distância. Os cartões de lado diziam pouco e moviam o mapa.
+  else if(EXM.parada==='cheia'||EXM.parada==='media')corpo.innerHTML=exmLista();
   else corpo.innerHTML=exmPeek();
   exmPinos();
 }
@@ -12066,18 +12086,39 @@ function exmLigarCards(){
     if(it&&it.lat!=null&&EXM.mapa){EXM.pessoaMexeu=false;EXM.mapa.panTo({lat:it.lat,lng:it.lng})}
   },140)},{passive:true});
 }
+// Onde a folha está: o que a busca disse, ou "Perto de você".
+function exmOndeTitulo(){
+  const l=EXPLORE.lugar;
+  if(l&&l.tipo==='mapa')return 'Nesta área';
+  if(l&&l.tipo==='ponto')return 'Perto de você';
+  return (l&&l.nome)||EXPLORE.city||'Por aqui';
+}
+// "350 m" / "1,2 km" de onde a pessoa está (só se ela está perto: em outra
+// cidade a distância não diz nada).
+function exmDistTxt(it){
+  const a=window.__spotAqui;if(!a||it.lat==null)return '';
+  const km=exmDistKm(a,it);if(!(km>=0)||km>30)return '';
+  return km<1?(Math.max(50,Math.round(km*1000/50)*50))+' m':String(Math.round(km*10)/10).replace('.',',')+' km';
+}
 function exmLista(){
   const l=EXM.itens;
-  let html='<div class="exm-cab">'+exmTituloDaFolha()+'</div>';
-  if(!l.length)return html+'<p class="exm-nada">'+esc(exmFrase(l).txt)+'</p>';
+  const nAm=l.filter(it=>it.tipo==='amigo').length;
+  let html='<div class="exm-cab exm-cab2"><h2>'+esc(exmOndeTitulo())+'</h2>'+(nAm?'<span>'+nAm+(nAm===1?' spot de amigo':' spots de amigos')+'</span>':'')+'</div>';
+  if(!l.length){const fr=exmFrase(l);return html+'<p class="exm-nada">'+esc(fr.txt)+'</p>'+((!navigator.onLine||fr.tentar)?'<button class="btn-primario exm-tentar" onclick="exmTentarDeNovo()">Tentar de novo</button>':'')}
+  const linha=(it,i)=>{
+    const fr=it.tipo==='amigo'?exmFraseDoGrupo(it.g):null;
+    const quem=exmQuemDoItem(it)+(it.tipo==='amigo'&&it.nota?' · '+fmtRating(it.nota)+'★':'');
+    const dist=exmDistTxt(it);
+    const nota=it.tipo==='google'&&it.notaGoogle?'★ '+fmtRating(it.notaGoogle):'';
+    return '<div class="exm-linha" onclick="exmSelecionar('+i+')">'
+      +'<div class="exm-foto" style="background-image:'+destGradient(it.nome)+'">'+exmFotoImg(it,i,160)+'</div>'
+      +'<div class="exm-txt"><div class="exm-nome">'+esc(it.nome)+'</div><div class="exm-meta">'+esc(quem)+'</div>'
+      +(fr&&fr.texto?'<div class="exm-frase">“'+esc(String(fr.texto).slice(0,90))+'”</div>':'')+'</div>'
+      +'<span class="exm-lado">'+(dist?'<span>'+esc(dist)+'</span>':'')+(nota?'<span>'+esc(nota)+'</span>':'')+'</span></div>'};
   const grupo=(rot,tipo)=>{const g=l.map((it,i)=>[it,i]).filter(([it])=>it.tipo===tipo);
     if(!g.length)return '';
-    return '<div class="exm-rot">'+esc(rot)+'</div>'+g.map(([it,i])=>'<div class="exm-linha" onclick="exmSelecionar('+i+')">'
-      +'<div class="exm-foto" style="background-image:'+destGradient(it.nome)+'">'+exmFotoImg(it,i,160)+'</div>'
-      +'<div class="exm-txt"><div class="exm-nome">'+esc(it.nome)+'</div><div class="exm-meta">'+esc(exmQuemDoItem(it))
-      +(it.foto&&exmEhFotoDoGoogle(it.foto)?' · foto de '+esc(it.autor||'Google'):'')+'</div></div>'
-      +'<span class="exm-nota">'+exmNotaTxt(it.nota||it.notaGoogle)+'</span></div>').join('')};
-  html+=grupo('Seus amigos','amigo')+grupo('Seus spots','meu')+grupo('Sugestões','google');
+    return (rot?'<div class="exm-rot">'+esc(rot)+'</div>':'')+g.map(([it,i])=>linha(it,i)).join('')};
+  html+=grupo('','amigo')+grupo('Seus spots','meu')+grupo('Sugestões','google');
   if(EXPLORE.carregandoMais)html+='<div class="exm-esq"></div><div class="exm-esq"></div><div class="exm-mais">Carregando mais…</div>';
   else if(EXPLORE.fim||EXPLORE.modoPais)html+='<div class="exm-fim"><b>Isso é tudo por aqui.</b><span>Amplie o mapa para ver mais.</span></div>';
   if((EXPLORE.items||[]).length)html+='<div class="search-powered" style="justify-content:center;padding:18px 0 8px"><span>Lugares e fotos via</span><strong>Google</strong></div>';
@@ -12099,12 +12140,27 @@ function exmAvisoDeCota(){
 function exmVerSoAmigos(){EXPLORE.cota=null;EXM.filtros.amigos=true;exmIrPara('media');exmDesenhar()}
 function exmTentarDeNovo(){if(EXPLORE.city)runExplore(EXPLORE.rotulo,EXPLORE.lugar||undefined);else{EXPLORE_ABRIU=false;loadExplore()}}
 
+// ── chips (Explorar novo, 23/11, V3): Amigos · Gastronomia · Hospedagem ·
+// Experiência à vista, num toque. Antes a categoria ficava escondida em
+// "Comer por aqui ▾" e "Filtros", que abriam a mesma folha.
+function exmPintarChips(){
+  const box=document.getElementById('exmChips');if(!box)return;
+  const n=exmNaTela(EXM.todosSemFiltro||EXM.todos||[]).filter(it=>it.tipo==='amigo').length;
+  const c=EXPLORE.cat,f=EXM.filtros;
+  let h='<button class="exm-chip'+(f.amigos?' on':'')+'" onclick="exmChipAmigos()">Amigos'+(n?' <i>'+n+'</i>':'')+'</button>';
+  h+=['food','hotel','experience'].map(id=>'<button class="exm-chip'+(id===c?' on':'')+'" onclick="exmTrocarCat(\''+id+'\')">'+esc(catLabel(id))+'</button>').join('');
+  if(c==='food')h+='<button class="exm-chip" onclick="abrirCozinhas()">'+esc(EXPLORE.cozinha?cozinhaAtual().rotulo:'Cozinha')+' <i>▾</i></button>';
+  const extra=(f.quero?1:0)+(f.aberto?1:0);
+  h+='<button class="exm-chip'+(extra?' on':'')+'" onclick="exmAbrirFiltros(true)">Filtros'+(extra?' <i>'+extra+'</i>':'')+'</button>';
+  if(box.innerHTML!==h)box.innerHTML=h;
+}
+function exmChipAmigos(){EXM.filtros.amigos=!EXM.filtros.amigos;EXM.sel=-1;exmDesenhar()}
 // ── o campo do topo ──
 function exmPintarCampo(){
   // campoFixo: escolheu uma sugestão e a busca ainda não leu o campo.
   const c=document.getElementById('exploreCitySearch');if(!c||document.activeElement===c||EXM.campoFixo)return;
   const l=EXPLORE.lugar;
-  let nome=l&&l.tipo!=='ponto'&&l.tipo!=='mapa'?(l.nome||EXPLORE.city):EXPLORE.city;
+  let nome=l&&l.tipo==='mapa'?'Nesta área':l&&l.tipo!=='ponto'?(l.nome||EXPLORE.city):EXPLORE.city;
   c.value=nome||'';
   const fld=c.closest('.search-field');
   if(fld){
@@ -12160,7 +12216,7 @@ function exmSelecionarItem(it){
   esconderFaixaDesfazer();
   // O app vai mover o mapa até o lugar: conta como "mexeu", senão o
   // enquadramento puxava o mapa de volta pra busca anterior (estresse 23/11).
-  EXM.pessoaMexeu=true;
+  EXM.pessoaMexeu=true;EXM.vistaDaPessoa=true;
   let i=EXM.itens.findIndex(x=>x.nome===it.nome&&x.lat===it.lat);
   if(i<0){EXM.itens.push(it);i=EXM.itens.length-1}
   exmSelecionar(i);
@@ -12222,12 +12278,11 @@ async function exmDesfazerSalvo(sp){
 function exmAbrirFiltros(nasChaves){
   const c=EXPLORE.cat,f=EXM.filtros;
   const ck=on=>'<span class="exf-ck'+(on?' on':'')+'">'+(on?icon('check'):'')+'</span>';
-  document.getElementById('exfCorpo').innerHTML='<div class="exf-rot">Mostrar por aqui</div>'
-    +['food','hotel','experience'].map(id=>'<button class="exf-cat'+(id===c?' on':'')+'" onclick="exmTrocarCat(\''+id+'\')"><span>'+esc(EXM_CAT[id])+'</span>'+(id===c?ck(true):'')+'</button>').join('')
+  // Categoria e Amigos viraram chips no topo (23/11): aqui só o que sobra.
+  document.getElementById('exfCorpo').innerHTML=''
     +'<div class="exf-rot" id="exfSo">Só</div>'
-    +[['amigos','Dos amigos'],['quero','Quero ir'],['aberto','Aberto agora']].map(([k,r])=>'<button class="exf-chave" onclick="exmFiltro(\''+k+'\')"><span>'+esc(r)+'</span>'+ck(f[k])+'</button>').join('')
-    +(c==='food'?'<button class="exf-chave" onclick="closeOv(\'ov-exfiltros\');setTimeout(abrirCozinhas,260)"><span>Cozinha · '+esc(cozinhaAtual().rotulo)+'</span><i>›</i></button>':'')
-    +'<p class="exf-nota">Escolher refaz a busca nesta área.</p>';
+    +[['quero','Quero ir'],['aberto','Aberto agora']].map(([k,r])=>'<button class="exf-chave" onclick="exmFiltro(\''+k+'\')"><span>'+esc(r)+'</span>'+ck(f[k])+'</button>').join('')
+    +'';void c;
   hydrateIcons(document.getElementById('exfCorpo'));
   showOv('ov-exfiltros');
   if(nasChaves)requestAnimationFrame(()=>{const s=document.getElementById('exfSo');if(s)s.scrollIntoView({block:'start'})});
@@ -12303,9 +12358,9 @@ async function exmPrepararMapa(){
       exmAgendar();exmTalvezBuscarAqui()});
     // Só o gesto da pessoa conta: o enquadramento que o próprio app faz
     // (fitBounds, panTo do pino) não oferece busca nova.
-    EXM.mapa.addListener('dragstart',()=>{EXM.pessoaMexeu=true;EXM.gesto=true});
-    document.getElementById('exmMapa').addEventListener('wheel',()=>{EXM.pessoaMexeu=true;EXM.gesto=true},{passive:true});
-    document.getElementById('exmMapa').addEventListener('touchstart',e=>{if(e.touches.length>1){EXM.pessoaMexeu=true;EXM.gesto=true}},{passive:true});
+    EXM.mapa.addListener('dragstart',()=>{EXM.pessoaMexeu=true;EXM.gesto=true;EXM.vistaDaPessoa=true});
+    document.getElementById('exmMapa').addEventListener('wheel',()=>{EXM.pessoaMexeu=true;EXM.gesto=true;EXM.vistaDaPessoa=true},{passive:true});
+    document.getElementById('exmMapa').addEventListener('touchstart',e=>{if(e.touches.length>1){EXM.pessoaMexeu=true;EXM.gesto=true;EXM.vistaDaPessoa=true}},{passive:true});
     exmIrPara(EXM.parada,true);
     exmDesenhar();
     return EXM.mapa;
@@ -12346,7 +12401,8 @@ function exmPinoHTML(it,escolhido,id){
   // id é 'p' + número (exmIdDoPino): seguro dentro do onerror.
   const foto=f?'<img src="'+escUrl(f)+'" alt="" decoding="async" onload="if(this.parentNode)this.parentNode.classList.add(\'ok\')" onerror="exmPinoFalhou(this,\''+id+'\')">':'';
   return '<div class="exm-pin'+(foi?' foi':'')+(escolhido?' sel':'')+'"><div class="exm-pin-f'+(f?'':' sem')+'">'+foto+'<span>'+ini+'</span></div>'
-    +(it.tipo==='amigo'?'<span class="exm-pin-avs">'+exmAvsDoItem(it,'exm-av18',3)+'</span>':'')+'</div>';
+    +(it.tipo==='amigo'?'<span class="exm-pin-avs">'+exmAvsDoItem(it,'exm-av18',3)+'</span>':'')
+    +'<span class="exm-pin-nome">'+esc(String(it.nome||'').length>16?String(it.nome).slice(0,15)+'…':String(it.nome||''))+'</span></div>';
 }
 // Agrupa por proximidade de tela (~60 px) abaixo do zoom 14; país inteiro,
 // por cidade, com o nome dela.
@@ -12393,6 +12449,7 @@ function exmPinos(){
   const m=EXM.mapa,cam=EXM.camada;if(!m||!cam||!cam.el)return;
   const proj=cam.getProjection();if(!proj)return;
   const zoom=Math.round(m.getZoom()||12);
+  cam.el.classList.toggle('exm-perto',zoom>=14);
   const sel=EXM.itens[EXM.sel]||(EXM.parada==='media'&&EXM.foco?EXM.itens.find(x=>x.nome+'|'+x.lat===EXM.foco):null);
   const ehSel=it=>!!sel&&sel.nome===it.nome&&sel.lat===it.lat;
   const nossos=EXM.todos.filter(it=>it.tipo!=='google');
@@ -12458,11 +12515,11 @@ function exmEnquadrar(nossos){
   const temGoogle=comPos.some(it=>it.tipo==='google');
   if(chave===EXM.areaChave){
     let fora=false;
-    try{const v=m.getBounds();fora=!!(!EXM.pessoaMexeu&&v&&comPos.length&&!comPos.some(it=>v.contains({lat:it.lat,lng:it.lng})))}catch(e){}
-    const chegouGoogle=temGoogle&&!EXM.googleEnquadrado;
+    try{const v=m.getBounds();fora=!!(!EXM.vistaDaPessoa&&EXPLORE_ESTADO!=='buscando'&&v&&comPos.length&&!comPos.some(it=>v.contains({lat:it.lat,lng:it.lng})))}catch(e){}
+    const chegouGoogle=temGoogle&&!EXM.googleEnquadrado&&!EXM.vistaDaPessoa;
     const chegaramAmigos=grande&&comPos.length&&EXM.amigosEnquadrados<=0;
     if(!(chegouGoogle||chegaramAmigos||fora))return;
-  }else EXM.googleEnquadrado=false;
+  }else{EXM.googleEnquadrado=false;EXM.vistaDaPessoa=false}
   if(temGoogle)EXM.googleEnquadrado=true;
   EXM.areaChave=chave;EXM.amigosEnquadrados=comPos.length;EXM.renovarVista=true;
   let b=new google.maps.LatLngBounds({lat:r.low.latitude,lng:r.low.longitude},{lat:r.high.latitude,lng:r.high.longitude});
@@ -12472,7 +12529,7 @@ function exmEnquadrar(nossos){
   else m.fitBounds(b,{top:exmTopoDoCampo()+16,left:20,right:20,bottom:20});
 }
 async function exmRecentralizar(){
-  EXM.pessoaMexeu=true;
+  EXM.pessoaMexeu=true;EXM.vistaDaPessoa=true;
   let a=window.__spotAqui;
   if(!a){a=await posicaoSemPerguntar();if(a)window.__spotAqui=a}
   if(!a){toast('Sem localização','Libere a localização pra ver o que tem perto de você.','alert');return}
