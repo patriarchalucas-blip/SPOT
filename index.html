@@ -2983,6 +2983,7 @@ button.lp-chip{cursor:pointer}
 .lp-vagal{padding:6px 20px}
 #lsRotBt[disabled]{opacity:.4}
 /* Busca com IA (19/11) */
+.exm-tentar{margin:4px 20px 0}
 .bia-folha{max-height:92dvh;overflow-y:auto}
 .bia-ic{background:var(--green)!important;color:var(--on-green)!important}
 .bia-sg b{color:var(--ink)}
@@ -10205,7 +10206,8 @@ function biaConferir(){
   BIA.ligado=false;
   fetch('/api/busca-ia').then(r=>r.ok?r.json():null).then(d=>{BIA.ligado=!!(d&&d.ligado)}).catch(()=>{});
 }
-// Pedido com condição: palavra de pedido, preço, ou 4+ palavras.
+// Pedido com condição: palavra de pedido ou preço. Só ter muitas palavras não
+// basta: "Avenida Paulista São Paulo" é lugar.
 const BIA_PALAVRAS=/(^|\s)(ate|r\$|reais|perto|pra|para|com|sem|bom|boa|bons|boas|barat\w*|car[oa]s?|melhor\w*|abert[oa]|aberto agora|date|romantic\w*|trabalhar|tranquil\w*|crianca\w*|famil\w*|vegan\w*|vegetarian\w*|domingo|sabado|sexta|noite|almoco|jantar|brunch|cafe da manha|trilha\w*|vista|rooftop|ao ar livre|fazer|onde|que|quero|algum\w*|lugar\w*)(\s|$)/;
 function pareceDePedido(t){
   const n=normName(t);
@@ -10213,7 +10215,7 @@ function pareceDePedido(t){
   const palavras=n.split(/\s+/).filter(Boolean);
   if(palavras.length<2)return false;
   if(/\d/.test(n)&&/(ate|r\$|reais|por pessoa)/.test(n))return true;
-  return palavras.length>=4||BIA_PALAVRAS.test(' '+n+' ');
+  return BIA_PALAVRAS.test(' '+n+' ');
 }
 function linhaDaIA(){
   const t=(SUG.texto||(document.getElementById('exploreCitySearch')||{}).value||'').trim();
@@ -10403,7 +10405,7 @@ function exmEscolherSpotLocal(i){
   fecharSugestoes();
   const c=document.getElementById('exploreCitySearch');if(c){c.value=EXM.textoAntes!=null?EXM.textoAntes:c.value;c.blur()}
   const it=(EXM.todos||[]).find(it=>(it.s&&it.s.id===s.id)||(it.meu&&it.meu.id===s.id)||(it.g&&it.g.spots.some(z=>z.id===s.id)));
-  if(it&&it.lat!=null&&EXM.mapa){EXM.mapa.setZoom(Math.max(EXM.mapa.getZoom()||12,15));exmSelecionarItem(it);return}
+  if(it&&it.lat!=null&&EXM.mapa){EXM.renovarVista=true;EXM.mapa.setZoom(Math.max(EXM.mapa.getZoom()||12,15));exmSelecionarItem(it);return}
   if(x.meu)openPlace(s.id,'explore');
   else{abrirFichaDoSpotDeAmigo(s);telaAntesDaFicha='explore'}
 }
@@ -11093,7 +11095,7 @@ async function runExplore(rotulo,lugarEscolhido,opts){
   // busca no Google — 20 lugares espalhados por um país não dizem nada, e é
   // uma busca paga. A busca acontece ao tocar numa cidade.
   EXPLORE.modoPais=!!(EXM_LIGADO&&lugar&&lugar.ehPais);
-  if(EXM_LIGADO)exmDepoisDeBuscar();
+  if(EXM_LIGADO)exmDepoisDeBuscar(!!(opts&&opts.sozinha));
   const pontual=!!(lugar&&lugar.tipo!=='area');
   if(pontual){
     // "restaurantes em São Paulo" DENTRO do retângulo da Fradique Coutinho.
@@ -11260,7 +11262,17 @@ function queroIrDoExplorar(i){return salvarDoExplorar(i,'want')}
 // semFaixa: a prévia mostra a faixa ela mesma, DEPOIS de abrir a ficha
 // salva (06/10: aparecia duas vezes — a 1ª antes do openPlace, que rola a
 // tela e às vezes a escondia).
-async function salvarDoExplorar(i,status,semFaixa){
+async function salvarDoExplorar(i,status,semFaixa,nomeEsperado){
+  // 23/11 (agentes): o índice aponta pra lista da busca ATUAL; se uma busca
+  // nova chegou no meio, o mesmo número era outro lugar e salvava o errado.
+  if(nomeEsperado&&i!=='avulso'){
+    const q=itemDoExplorar(i);
+    if(!q||!mesmoLugar(q.name,nomeEsperado)){
+      const j=(EXPLORE.items||[]).findIndex(x=>x&&mesmoLugar(x.name,nomeEsperado));
+      if(j<0){toast('Esse lugar saiu da busca','Abra ele de novo pra salvar.','alert');return null}
+      i=j;
+    }
+  }
   const p=itemDoExplorar(i);if(!p||p._salvando)return null;
   if(statusNaMinhaLista(p)){toast('Já está na sua lista',p.name,'check');return null}
   p._salvando=true;renderExploreResults();
@@ -12030,7 +12042,7 @@ function exmPeek(){
 function exmCards(){
   const l=EXM.itens.slice(0,24);
   const cab='<div class="exm-cab">'+exmTituloDaFolha()+'</div>';
-  if(!l.length)return cab+'<p class="exm-nada">'+esc(exmFrase(l).txt)+'</p>';
+  if(!l.length){const fr=exmFrase(l);return cab+'<p class="exm-nada">'+esc(fr.txt)+'</p>'+((!navigator.onLine||fr.tentar)?'<button class="btn-primario exm-tentar" onclick="exmTentarDeNovo()">Tentar de novo</button>':'')}
   return cab+'<div class="exm-cards" id="exmCards">'+l.map((it,i)=>'<div class="exm-card" data-i="'+i+'" onclick="exmSelecionar('+i+')">'
     +'<div class="exm-card-foto" style="background-image:'+destGradient(it.nome)+'">'+exmFotoImg(it,i,480)
     +'<b>'+esc(it.nome)+'</b>'+exmCredito(it)+'</div>'
@@ -12039,9 +12051,14 @@ function exmCards(){
 // Deslizar os cards centra o pino do card que parou na frente (sem buscar).
 function exmLigarCards(){
   const row=document.getElementById('exmCards');if(!row)return;
-  if(EXM.cardsScroll)row.scrollLeft=EXM.cardsScroll;
+  // 23/11 (agentes): devolver a posição disparava o 'scroll', e o mapa pulava
+  // sozinho pro cartão daquela posição — o que também cancelava a busca ao
+  // arrastar. Só o dedo da pessoa move o mapa.
+  let devolvendo=false;
+  if(EXM.cardsScroll){devolvendo=true;row.scrollLeft=EXM.cardsScroll;setTimeout(()=>{devolvendo=false},250)}
   let to=null;
   row.addEventListener('scroll',()=>{clearTimeout(to);to=setTimeout(()=>{
+    if(devolvendo){EXM.cardsScroll=row.scrollLeft;return}
     EXM.cardsScroll=row.scrollLeft;
     const i=Math.round(row.scrollLeft/252),it=EXM.itens[i];
     // O pino do card da frente cresce: é assim que se vê qual card é qual pino.
@@ -12080,7 +12097,7 @@ function exmAvisoDeCota(){
     +'<button class="exm-btn" onclick="exmVerSoAmigos()">Ver spots de amigos</button></div>';
 }
 function exmVerSoAmigos(){EXPLORE.cota=null;EXM.filtros.amigos=true;exmIrPara('media');exmDesenhar()}
-function exmTentarDeNovo(){if(EXPLORE.city)runExplore(EXPLORE.rotulo);else{EXPLORE_ABRIU=false;loadExplore()}}
+function exmTentarDeNovo(){if(EXPLORE.city)runExplore(EXPLORE.rotulo,EXPLORE.lugar||undefined);else{EXPLORE_ABRIU=false;loadExplore()}}
 
 // ── o campo do topo ──
 function exmPintarCampo(){
@@ -12129,6 +12146,8 @@ function exmPrevia(it,i){
 let EXM_ESCOLHA='want';
 function exmEscolher(s){EXM_ESCOLHA=s;['Want','Been'].forEach(k=>{const b=document.getElementById('exmSt'+k);if(b)b.classList.toggle('on',('exmSt'+k)===(s==='want'?'exmStWant':'exmStBeen'))})}
 function exmSelecionar(i){
+  // Faixa "Salvo… Desfazer" por cima do Salvar da próxima prévia engolia o toque (23/11).
+  esconderFaixaDesfazer();
   // O escolhido é guardado pelo LUGAR, não pela posição: a lista muda a cada arrasto.
   // De onde veio (peek, média, lista): é pra lá que a prévia volta.
   if(EXM.parada!=='previa')EXM.paradaAntes=EXM.parada;
@@ -12138,6 +12157,10 @@ function exmSelecionar(i){
     if(EXM.mapa&&it&&it.lat!=null)EXM.mapa.panTo({lat:it.lat,lng:it.lng})});
 }
 function exmSelecionarItem(it){
+  esconderFaixaDesfazer();
+  // O app vai mover o mapa até o lugar: conta como "mexeu", senão o
+  // enquadramento puxava o mapa de volta pra busca anterior (estresse 23/11).
+  EXM.pessoaMexeu=true;
   let i=EXM.itens.findIndex(x=>x.nome===it.nome&&x.lat===it.lat);
   if(i<0){EXM.itens.push(it);i=EXM.itens.length-1}
   exmSelecionar(i);
@@ -12176,7 +12199,7 @@ async function exmSalvar(i){
   if(!it||(b&&b.disabled))return;
   if(b){b.disabled=true;b.textContent='Salvando…'}
   const status=EXM_ESCOLHA;
-  const data=await salvarDoExplorar(exmIndiceParaSalvar(it),status,true);
+  const data=await salvarDoExplorar(exmIndiceParaSalvar(it),status,true,it.nome);
   if(!data){if(b&&b.isConnected){b.disabled=false;b.textContent='Salvar'}return}
   // Fecha a prévia, o pino ganha o anel do seu status, e a faixa verde com
   // Desfazer por 4 s (desenho v3).
@@ -12251,7 +12274,7 @@ function exmTalvezBuscarAqui(){
     const campo=document.getElementById('exploreCitySearch');if(campo&&!campo.value.trim())campo.value='Nesta área';
     const cidade=(EXPLORE.lugar&&EXPLORE.lugar.cidade)||EXPLORE.city||'';
     // Por trás: as sugestões de antes ficam até as novas chegarem (sem piscar).
-    runExplore('Nesta área',{nome:'Nesta área',tipo:'mapa',cidade,pais:'',area:rect},{silencioso:true})
+    runExplore('Nesta área',{nome:'Nesta área',tipo:'mapa',cidade,pais:'',area:rect},{silencioso:true,sozinha:true})
       .finally(()=>{EXM.buscaSozinha=false});
   },900);
 }
@@ -12402,7 +12425,8 @@ function exmPinos(){
   EXM.pinoEls=agora;
   EXM.pinos=[...agora.values()];
   cam.draw();
-  exmEnquadrar(nossos);
+  // Amigos E sugestões do Google (23/11): só com os amigos, as sugestões ficavam fora da tela.
+  exmEnquadrar(EXM.todos.filter(it=>!(it.tipo==='google'&&EXPLORE.modoPais)));
 }
 // País: entrar na cidade (aí sim a busca paga). Grupo: aproxima até abrir.
 function exmAbrirGrupo(g){
@@ -12420,17 +12444,35 @@ function exmAbrirGrupo(g){
 function exmEnquadrar(nossos){
   const m=EXM.mapa,r=EXPLORE.area&&EXPLORE.area.rectangle;if(!m||!r)return;
   const chave=[r.low.latitude,r.low.longitude,r.high.latitude,r.high.longitude].join(',');
-  const comPos=nossos.filter(it=>it.tipo==='amigo'&&it.lat!=null);
+  const folga=Math.max(r.high.latitude-r.low.latitude,r.high.longitude-r.low.longitude)*0.25;
+  const naArea=it=>it.lat>=r.low.latitude-folga&&it.lat<=r.high.latitude+folga&&it.lng>=r.low.longitude-folga&&it.lng<=r.high.longitude+folga;
+  // Tudo que tem lugar dentro da área: amigos E sugestões. Enquadrar só os
+  // amigos deixava as sugestões do Google fora da tela (estresse 23/11).
+  const comPos=nossos.filter(it=>it.lat!=null&&it.lng!=null&&naArea(it));
   const grande=EXPLORE.lugar&&EXPLORE.lugar.tipo==='area';
-  if(chave===EXM.areaChave&&!(grande&&comPos.length&&comPos.length!==EXM.amigosEnquadrados))return;
+  // Mesma busca: re-enquadra só quando (a) as sugestões do Google chegam e
+  // ainda não tinham sido enquadradas (os amigos costumam chegar antes), ou
+  // (b) nada do resultado está à vista (trocou pra Hospedagem e os hotéis
+  // ficam fora) — e só se a pessoa não mexeu no mapa desde a busca, senão o
+  // mapa voltaria sozinho no meio do arrasto.
+  const temGoogle=comPos.some(it=>it.tipo==='google');
+  if(chave===EXM.areaChave){
+    let fora=false;
+    try{const v=m.getBounds();fora=!!(!EXM.pessoaMexeu&&v&&comPos.length&&!comPos.some(it=>v.contains({lat:it.lat,lng:it.lng})))}catch(e){}
+    const chegouGoogle=temGoogle&&!EXM.googleEnquadrado;
+    const chegaramAmigos=grande&&comPos.length&&EXM.amigosEnquadrados<=0;
+    if(!(chegouGoogle||chegaramAmigos||fora))return;
+  }else EXM.googleEnquadrado=false;
+  if(temGoogle)EXM.googleEnquadrado=true;
   EXM.areaChave=chave;EXM.amigosEnquadrados=comPos.length;EXM.renovarVista=true;
   let b=new google.maps.LatLngBounds({lat:r.low.latitude,lng:r.low.longitude},{lat:r.high.latitude,lng:r.high.longitude});
-  // Cidade grande ou país: onde os amigos foram, não o território inteiro.
+  // Cidade grande ou país: onde estão os spots (amigos e sugestões), não o território inteiro.
   if(comPos.length&&grande&&!EXPLORE.modoPais){b=new google.maps.LatLngBounds();comPos.forEach(it=>b.extend({lat:it.lat,lng:it.lng}))}
   if(comPos.length===1&&grande&&!EXPLORE.modoPais){m.setCenter({lat:comPos[0].lat,lng:comPos[0].lng});m.setZoom(14)}
   else m.fitBounds(b,{top:exmTopoDoCampo()+16,left:20,right:20,bottom:20});
 }
 async function exmRecentralizar(){
+  EXM.pessoaMexeu=true;
   let a=window.__spotAqui;
   if(!a){a=await posicaoSemPerguntar();if(a)window.__spotAqui=a}
   if(!a){toast('Sem localização','Libere a localização pra ver o que tem perto de você.','alert');return}
@@ -12475,10 +12517,11 @@ async function exmAbrirInicial(){
   exmDesenhar();
 }
 // Busca nova: a prévia fecha, os pontos do Google voltam, a folha no peek.
-function exmDepoisDeBuscar(){
+function exmDepoisDeBuscar(sozinha){
   if(!EXM_LIGADO)return;
   // Busca sozinha (arrastou o mapa) não mexe na folha nem fecha nada.
-  if(EXM.buscaSozinha){EXM.pessoaMexeu=false;return}
+  if(sozinha){EXM.pessoaMexeu=false;return}
+  EXM.cardsScroll=0;EXM.foco='';
   EXM.sel=-1;EXM.selIt=null;EXM.pessoaMexeu=false;EXPLORE.cota=null;
   {const c=document.getElementById('exploreCitySearch');if(c&&document.activeElement===c)c.blur()}
   if(EXM.parada==='previa'||EXM.parada==='cheia'||EXM.parada==='peek')exmIrPara('media');
@@ -12594,8 +12637,8 @@ async function salvarPreviaEscolhida(){
 }
 async function salvarPreviaDoExplorar(status){
   const s=S.curPlace;if(!s||!s._previa)return;
-  const origem=S.placeOrigin==='amigo'||S.placeOrigin==='hotspots'?S.placeOrigin:'explore';
-  const data=await salvarDoExplorar(s._i,status,true);
+  const origem=['amigo','hotspots','buscaia'].includes(S.placeOrigin)?S.placeOrigin:'explore';
+  const data=await salvarDoExplorar(s._i,status,true,s.name);
   if(data&&S.curPlace===s)openPlace(data.id,origem);
   if(data)mostrarFaixaSalvo(status,data);
 }
