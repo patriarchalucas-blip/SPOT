@@ -1374,13 +1374,21 @@ confere(!spA10 || (hsa10 || '').includes(spA10.name), 'Hotspots · Amigos mostra
 try { await pb.screenshot({ path: process.env.TEMP + '/jornada-hotspots-amigos.png' }) } catch (e) {}
 // Mora onde não há lista publicada: a aba é só o feed dos amigos, sem "Para
 // você" e sem a lista de outra cidade. Voltando pra cidade com lista, volta.
-await ir(pb, `(async()=>{window._casaDeAntes=S.profile.home_city;S.profile.home_city='Curitiba';await hsAbrir()})()`, 2000);
+await ir(pb, `(async()=>{window._casaDeAntes=S.profile.home_city;window._cidadeOrig0=cidadeOndeEstou;cidadeOndeEstou=async()=>'';S.profile.home_city='Curitiba';await hsAbrir()})()`, 2000);
 const hsc10 = await texto(pb, '#hsCorpo') || '';
 confere(!/Para você|Nº 1 da semana|Bar do Teste|Boteco Rio/.test(hsc10) && /Amigos/.test(hsc10) && (!spA10 || hsc10.includes(spA10.name)), 'sem Hotspots na cidade: só o feed dos amigos', hsc10);
 try { await pb.screenshot({ path: process.env.TEMP + '/jornada-hotspots-sem-lista.png' }) } catch (e) {}
-await ir(pb, `(async()=>{S.profile.home_city=window._casaDeAntes;await hsAbrir()})()`, 1500);
+await ir(pb, `(async()=>{S.profile.home_city=window._casaDeAntes;cidadeOndeEstou=window._cidadeOrig0;await hsAbrir()})()`, 1500);
 const hsd10 = await texto(pb, '#hsCorpo') || '';
 confere(/Para você/.test(hsd10) && /Nº 1 da semana/.test(hsd10), 'cidade com lista: Para você volta', hsd10);
+// Sem 'Onde moro' (24/11): vale a cidade onde o celular está.
+await ir(pb, "(async()=>{window._casaDeAntes=S.profile.home_city;window._cidadeOrig=cidadeOndeEstou;S.profile.home_city='';HSV.cidadeAqui='';cidadeOndeEstou=async()=>'São Paulo';await hsAbrir()})()", 2000);
+const hse10 = await texto(pb, '#hsCorpo') || '';
+confere(/Nº 1 da semana/.test(hse10) && /São Paulo/.test(hse10), 'sem Onde moro, a lista é a da cidade onde o celular está', hse10.slice(0, 120));
+await ir(pb, "(async()=>{S.profile.home_city='São Paulo';cidadeOndeEstou=async()=>'Rio de Janeiro';await hsAbrir()})()", 2000);
+const hsr10 = await texto(pb, '#hsCorpo') || '';
+confere(/Rio de Janeiro/.test(hsr10) && /Boteco Rio/.test(hsr10), 'mora em SP mas está no Rio: a lista é a do Rio', hsr10.slice(0, 120));
+await ir(pb, "(async()=>{S.profile.home_city=window._casaDeAntes;cidadeOndeEstou=window._cidadeOrig;HSV.cidadeAqui='';await hsAbrir()})()", 1200);
 // Hotspot aberto: a ficha de sempre com a linha de quantos perfis indicaram.
 await ir(pb, `(async()=>{HSV.cidade='São Paulo';hsPintar();hsAbrirLugar(0)})()`, 1200);
 confere(/Indicado por 6 perfis/.test(await texto(pb, '#fiIndic') || ''), 'ficha do hotspot diz por quantos perfis foi indicado', await texto(pb, '#fiIndic'));

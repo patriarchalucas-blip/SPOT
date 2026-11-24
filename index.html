@@ -16027,10 +16027,15 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
 // a aba é SÓ o feed dos amigos — sem "Para você", sem lista de outra cidade.
 // Quem decide é a lista que o servidor devolve, não uma relação de cidades
 // aqui: cidade nova publicada passa a aparecer sozinha pra quem mora nela.
-const HSV={aba:'voce',dados:null,cidade:'',cat:'',amigos:null,erro:false,soAmigos:false,casa:null};
+const HSV={aba:'voce',dados:null,cidade:'',cat:'',amigos:null,erro:false,soAmigos:false,casa:null,cidadeAqui:''};
+// A cidade da lista (24/11, o Lucas: "se ele estiver no RJ, pega pela
+// localização e traz os Hotspots do RJ"): primeiro ONDE O CELULAR ESTÁ
+// (HSV.cidadeAqui, medida no hsAbrir); sem localização ou sem lista ali, a
+// cidade de "Onde moro"; sem nenhuma das duas, só o feed dos amigos.
 function hsListaDeCasa(){
-  const casa=normName((S.profile&&S.profile.home_city)||'');
-  return casa?((HSV.dados&&HSV.dados.listas)||[]).find(x=>normName(x.cidade)===casa)||null:null;
+  const ls=(HSV.dados&&HSV.dados.listas)||[];
+  const da=c=>{const n=normName(c||'');return n?ls.find(x=>normName(x.cidade)===n)||null:null};
+  return da(HSV.cidadeAqui)||da(S.profile&&S.profile.home_city);
 }
 async function hsAbrir(){
   goTo('hotspots');hsPintar();
@@ -16044,8 +16049,11 @@ async function hsAbrir(){
       HSV.dados=d&&Array.isArray(d.listas)?{...d,listas:d.listas.filter(x=>x.lugares&&x.lugares.length)}:{listas:[]};HSV.erro=false;
     }catch(e){HSV.erro=true}
   }
-  // Mudou a cidade onde mora (ou trocou de conta): decide de novo.
-  const casa=normName((S.profile&&S.profile.home_city)||'');
+  // Onde o celular está (a mesma medida do Explorar, guardada 6 h no
+  // aparelho; sem permissão de localização, fica vazia e vale Onde moro).
+  try{HSV.cidadeAqui=await comPrazo(cidadeOndeEstou(),5000,'')||HSV.cidadeAqui||''}catch(e){}
+  // Mudou a cidade (viajou, trocou Onde moro, trocou de conta): decide de novo.
+  const casa=normName(HSV.cidadeAqui||'')+'|'+normName((S.profile&&S.profile.home_city)||'');
   if(casa!==HSV.casa){HSV.casa=casa;HSV.cidade='';HSV.cat=''}
   const deCasa=hsListaDeCasa(),eraSo=HSV.soAmigos;
   HSV.soAmigos=!deCasa;
