@@ -1433,6 +1433,10 @@ await ir(pb, 'backToFriends()', 800);
 await ir(pb, "(async()=>{document.querySelectorAll('.overlay.show').forEach(o=>closeOv(o.id));biaConferir()})()", 800);
 const bia = await pb.evaluate(() => ['Japão','Barbacoa','Vila Madalena','restaurantes','japonês no Itaim até 100','trilha perto de São Paulo','bar bom pra date','pizza perto de casa'].map(t => [t, pareceDePedido(t)]));
 confere(bia.slice(0, 4).every(x => !x[1]) && bia.slice(4).every(x => x[1]), 'só pedido com condição chama a IA (Japão e Barbacoa não)', bia);
+// Campo vazio mostra os exemplos de pedido; nome sem resultado oferece a IA.
+await ir(pb, "(async()=>{goTo('explore');const c=document.getElementById('exploreCitySearch');c.focus();c.value='';sugerirLugar('');await new Promise(r=>setTimeout(r,400));pintarSugestoes()})()", 800);
+confere(/Peça do seu jeito/.test(await texto(pb, '#exploreSugestoes') || ''), 'campo vazio mostra Peça do seu jeito com exemplos', await texto(pb, '#exploreSugestoes'));
+await ir(pb, "(async()=>{const c=document.getElementById('exploreCitySearch');c.blur()})()", 300);
 await ir(pb, "(async()=>{await buscarComIA('japonês em Lisboa até 100')})()", 2500);
 const bia10 = await texto(pb, '#biaCorpo') || '';
 confere(/Japonês/.test(bia10) && /Até R\$ 100/.test(bia10) && /Taberna da Rua das Flores/.test(bia10) && /R\$ 60–90 por pessoa/.test(bia10) && /Ana foi/.test(bia10), 'a busca com IA mostra etiquetas, preço por pessoa e Ana foi', bia10);

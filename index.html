@@ -10189,6 +10189,7 @@ async function pedirLugar(corpo){
 function sugerirLugar(v){
   clearTimeout(SUG.timer);
   biaConferir();
+  if(!String(v||'').trim())SUG.texto='';
   const t=String(v||'').trim();
   if(t.length<3){
     const rec=lerRecentes();
@@ -10222,7 +10223,9 @@ const BIA={ligado:null,q:'',estado:'',d:null,deles:[]};
 function biaConferir(){
   if(BIA.ligado!==null)return;
   BIA.ligado=false;
-  fetch('/api/busca-ia').then(r=>r.ok?r.json():null).then(d=>{BIA.ligado=!!(d&&d.ligado)}).catch(()=>{});
+  fetch('/api/busca-ia').then(r=>r.ok?r.json():null).then(d=>{BIA.ligado=!!(d&&d.ligado);
+    // a resposta chega depois do 1º toque no campo: repinta pra os exemplos aparecerem
+    if(BIA.ligado&&document.activeElement===document.getElementById('exploreCitySearch'))pintarSugestoes()}).catch(()=>{});
 }
 // Pedido com condição: palavra de pedido ou preço. Só ter muitas palavras não
 // basta: "Avenida Paulista São Paulo" é lugar.
@@ -10237,10 +10240,19 @@ function pareceDePedido(t){
 }
 function linhaDaIA(){
   const t=(SUG.texto||(document.getElementById('exploreCitySearch')||{}).value||'').trim();
-  if(!BIA.ligado||!pareceDePedido(t))return '';
+  // Pedido com condição, ou a busca normal não achou nada com 2+ palavras.
+  const semNada=SUG.modo==='nada'&&t.split(/\s+/).filter(Boolean).length>=2;
+  if(!BIA.ligado||!(pareceDePedido(t)||semNada))return '';
   return '<button class="ex-sg bia-sg" onmousedown="event.preventDefault()" onclick="buscarComIA()">'
     +'<span class="ex-sg-foto ex-sg-ic bia-ic">'+icon('spark')+'</span>'
     +'<span class="ex-sg-txt"><b>Buscar com IA</b><span>'+esc(t)+'</span></span></button>';
+}
+// Campo vazio (tocou na busca): exemplos de pedido, cada um vira a busca com IA.
+const BIA_EXEMPLOS=['Japonês até R$ 100 por pessoa','Bar bom pra date','Café tranquilo pra trabalhar','O que fazer num domingo de sol'];
+function exemplosDaIA(){
+  if(!BIA.ligado)return '';
+  return '<div class="ex-sg-grupo">Peça do seu jeito</div>'+BIA_EXEMPLOS.map((e,i)=>'<button class="ex-sg bia-sg" onmousedown="event.preventDefault()" onclick="buscarComIA(BIA_EXEMPLOS['+i+'])">'
+    +'<span class="ex-sg-foto ex-sg-ic bia-ic">'+icon('spark')+'</span><span class="ex-sg-txt"><b>'+esc(e)+'</b></span></button>').join('');
 }
 function aoEnterNoExplorar(){
   const t=((document.getElementById('exploreCitySearch')||{}).value||'').trim();
@@ -10440,14 +10452,18 @@ function pintarSugestoes(){
     EXM.locais=SUG.modo&&SUG.modo!=='recentes'?exmSpotsLocais(SUG.texto||''):[];
     // Pedido com condição: "Buscar com IA" no topo (19/11).
     const ia=SUG.modo==='recentes'?'':linhaDaIA();
-    if(!SUG.modo&&!ia){box.style.display='none';box.innerHTML=''}
-    else{box.innerHTML=ia+(SUG.modo?exmPainelDeBusca():'');box.style.display='';hydrateIcons(box)}
+    const vazio=!String(SUG.texto||'').trim()&&document.activeElement===document.getElementById('exploreCitySearch');
+    const ex=(SUG.modo==='recentes'||(!SUG.modo&&vazio))?exemplosDaIA():'';
+    if(!SUG.modo&&!ia&&!ex){box.style.display='none';box.innerHTML=''}
+    else{box.innerHTML=ia+ex+(SUG.modo?exmPainelDeBusca():'');box.style.display='';hydrateIcons(box)}
     darDadosDeExplorar();return;
   }
   if(box){
     const ia=SUG.modo==='recentes'?'':linhaDaIA();
-    if(!SUG.modo&&!ia){box.style.display='none';box.innerHTML=''}
-    else if(!SUG.modo){box.innerHTML=ia;box.style.display='';hydrateIcons(box)}
+    const vazio=!String(SUG.texto||'').trim()&&document.activeElement===document.getElementById('exploreCitySearch');
+    const ex=!SUG.modo&&vazio?exemplosDaIA():'';
+    if(!SUG.modo&&!ia&&!ex){box.style.display='none';box.innerHTML=''}
+    else if(!SUG.modo){box.innerHTML=ia+ex;box.style.display='';hydrateIcons(box)}
     else{
       if(SUG.modo==='nada')box.innerHTML=ia+(ia?'':'<div class="ex-sg-nada">Nada com esse nome</div>');
       else if(SUG.modo==='sugestoes'){
@@ -11686,10 +11702,12 @@ const EXM_PEEK=96,EXM_MEDIA=340;
 
 function exmMontar(){
   if(EXM.montado)return;EXM.montado=true;
+  biaConferir();
   document.body.classList.add('exm');
   const tela=document.getElementById('explore');
   const campo=document.getElementById('exploreCitySearch');
-  if(campo)campo.placeholder='Para onde?';
+  // 24/11 (o Lucas: "deixa a busca com IA mais visível"): o campo diz que dá pra pedir.
+  if(campo)campo.placeholder='Busque um lugar ou peça algo';
   // O campo do topo é o MESMO input de antes (as sugestões, o Enter e o
   // pacote da casca continuam ligados nele); só muda de lugar e de roupa.
   const fld=document.querySelector('#explore .search-field');
