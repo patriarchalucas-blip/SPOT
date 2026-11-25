@@ -1321,6 +1321,11 @@ if (v10 && spA10) {
   await ir(pa, `(async()=>{lsAbrirQuando();lsAno(2027);LSQ.mes=2;lsDia(+new Date(2027,2,12));lsDia(+new Date(2027,2,18));await lsSalvarQuando()})()`, 1500);
   confere(v10.data_ini === '2027-03-12' && v10.data_fim === '2027-03-18', 'o calendário grava ida e volta', v10);
   confere(/12–18 mar 2027/.test(await texto(pa, '#lsDetalhe') || ''), 'a viagem mostra a data', await texto(pa, '#lsDetalhe'));
+  // 25/11: a folha de adicionar de uma viagem mostra só os spots daquele lugar
+  await ir(pa, `lsAbrirPor()`, 600);
+  const por10 = await texto(pa, '#lsPorLista') || '';
+  confere(/Seus spots em Portugal V4|Busque um lugar em Portugal V4/.test(por10) && !/Dos seus spots/.test(por10), 'adicionar numa viagem não lista spots de outros lugares', por10.slice(0, 160));
+  await ir(pa, `closeOv('ov-poralista')`, 300);
   await ir(pa, `lsPor('${spA10.id}')`, 1500);
   await ir(pa, `lsAbrir()`, 1200);
   confere(/Portugal V4/.test(await texto(pa, '#lsCorpo') || ''), 'viagem em planejamento aparece em Listas', await texto(pa, '#lsCorpo'));

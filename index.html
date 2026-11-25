@@ -2943,7 +2943,7 @@ button.lp-chip{cursor:pointer}
 .lp-chip svg{width:14px;height:14px}
 .lp-gente{display:flex;align-items:center;padding-left:6px}
 .lp-gente .pln-av{width:30px;height:30px;font-size:12px;margin-left:-6px;border-color:var(--base)}
-.lp-add{margin-top:22px;width:100%;height:54px;border:0;border-radius:27px;background:var(--green);color:var(--on-green);font:inherit;font-size:16px;font-weight:600;display:flex;align-items:center;justify-content:center;gap:8px;cursor:pointer}
+.lp-add{margin-top:16px;width:auto;height:40px;padding:0 18px 0 14px;border:0;border-radius:20px;background:var(--green);color:var(--on-green);font:inherit;font-size:15px;font-weight:600;display:flex;align-items:center;justify-content:center;gap:8px;cursor:pointer}
 .lp-add svg{width:18px;height:18px}
 .lp-bloco{margin-top:30px}
 .lp-bloco .lp-h2{padding:0;font-size:24px;margin-bottom:4px}
@@ -16742,12 +16742,17 @@ function lsPintarPor(){
   const box=document.getElementById('lsPorLista');if(!box)return;
   const ja=new Set((LS2.spots[LS2.atual]||[]).map(x=>x.spot_id));
   const txt=String(LS2.filtroPor||'').trim(),q=normName(txt);
-  const meus=allSpotsFlat().filter(s=>!ja.has(s.id)&&(!q||normName(s.name).includes(q)||normName(cityOf(s)||'').includes(q))).slice(0,60);
+  // 25/11 (o Lucas): na lista "Amsterdam" a folha mostrava Uruguai, Chile...
+  // Lista de viagem: sem texto, só os seus spots daquele lugar; digitando,
+  // procura em todos.
+  const l=LS2.listas.find(x=>x.id===LS2.atual),lugar=l&&l.tipo==='viagem'?normName(l.nome||''):'';
+  const doLugar=s=>!lugar||normName([cityOf(s),s.city,s.address].filter(Boolean).join(' ')).includes(lugar);
+  const meus=allSpotsFlat().filter(s=>!ja.has(s.id)&&(q?(normName(s.name).includes(q)||normName(cityOf(s)||'').includes(q)):doLugar(s))).slice(0,60);
   const mais='<span class="lp-mais2">'+icon('plus')+'</span>';
-  let h=meus.length?'<p class="lp-rot">Dos seus spots</p>'+meus.map(s=>'<button class="ls-linha" onclick="lsPor(\''+esc(s.id)+'\')"><span class="place-thumb"'+(s.photo_url?' style="background:center/cover url('+escUrl(fotoNaLargura(s.photo_url,220))+')"':'')+'></span><span class="cid-txt"><span class="cid-nome">'+esc(s.name)+'</span><span class="cid-linha">'+esc(cityOf(s)||'')+'</span></span>'+mais+'</button>').join(''):'';
+  let h=meus.length?'<p class="lp-rot">'+(lugar&&!q?'Seus spots em '+esc(l.nome):'Dos seus spots')+'</p>'+meus.map(s=>'<button class="ls-linha" onclick="lsPor(\''+esc(s.id)+'\')"><span class="place-thumb"'+(s.photo_url?' style="background:center/cover url('+escUrl(fotoNaLargura(s.photo_url,220))+')"':'')+'></span><span class="cid-txt"><span class="cid-nome">'+esc(s.name)+'</span><span class="cid-linha">'+esc(cityOf(s)||'')+'</span></span>'+mais+'</button>').join(''):'';
   // o que a pessoa digitou sempre vira uma opção de lugar novo
   h+=txt.length>=2?'<p class="lp-rot">Lugar novo</p><button class="ls-linha" onclick="lsBuscarNovo()"><span class="place-thumb lp-pino">'+icon('search')+'</span><span class="cid-txt"><span class="cid-nome">'+esc(txt)+'</span><span class="cid-linha">Buscar esse lugar</span></span>'+mais+'</button>'
-    :'<p class="lp-nada lp-nada-folha">Não achou? Digite o nome de qualquer lugar.</p>';
+    :'<p class="lp-nada lp-nada-folha">'+(lugar&&!meus.length?'Busque um lugar em '+esc(l.nome)+'.':'Não achou? Digite o nome de qualquer lugar.')+'</p>';
   box.innerHTML=h;hydrateIcons(box);
 }
 function lsBuscarNovo(){
@@ -16755,8 +16760,10 @@ function lsBuscarNovo(){
   LS2.poeDepois=LS2.atual;
   closeOv('ov-poralista');
   S.addTrip=null;abrirBuscaDeSpot();
-  const i=document.getElementById('placeSearch');if(i)i.value=txt;
-  searchPlaces(txt);
+  const l=LS2.listas.find(x=>x.id===LS2.atual);
+  const onde=l&&l.tipo==='viagem'&&!normName(txt).includes(normName(l.nome||''))?txt+' '+l.nome:txt;
+  const i=document.getElementById('placeSearch');if(i)i.value=onde;
+  searchPlaces(onde);
 }
 // O spot novo acabou de ser salvo pelo caminho normal: entra na lista que pediu.
 function lsEsperaNovo(){return !!(LS2.poeDepois&&LS2.poeDepois===LS2.atual&&document.getElementById('lista').classList.contains('active'))}
