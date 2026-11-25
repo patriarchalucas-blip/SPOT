@@ -10538,6 +10538,14 @@ function limparBuscaDoExplorar(){
 // O retângulo onde procurar. Rua e ponto têm retângulo minúsculo (ou nenhum):
 // abre pra umas quadras em volta (~700 m pra cada lado), senão viria meia
 // dúzia de lugares. Bairro, cidade e país usam o retângulo do próprio Google.
+// Área numa grade fixa: o ponto da grade mais perto, com um passo pra cada
+// lado. Todo mundo perto do mesmo ponto pede o MESMO retângulo, e o servidor
+// responde do guardado em vez de pagar o Google de novo.
+function areaEmGrade(lat,lng,passo){
+  const fixo=x=>Number(x.toFixed(5));
+  const la=Math.round(lat/passo)*passo,ln=Math.round(lng/passo)*passo;
+  return{rectangle:{low:{latitude:fixo(la-passo),longitude:fixo(ln-passo)},high:{latitude:fixo(la+passo),longitude:fixo(ln+passo)}}};
+}
 function areaDaBusca(loc,vp,tipo){
   const lat=Number(loc.latitude),lng=Number(loc.longitude);
   const meio=0.0065,meioLng=meio/Math.max(Math.cos(lat*Math.PI/180),0.2);
@@ -11151,9 +11159,9 @@ async function runExplore(rotulo,lugarEscolhido,opts){
   carregarAmigosDaArea(meu,EXPLORE.area,pontual,pontual?onde:[city,lugar&&lugar.nome]);
   if(EXPLORE.modoPais){EXPLORE.items=[];EXPLORE.token='';EXPLORE.fim=true;EXPLORE.fila=[];EXPLORE_ESTADO='ok';renderExploreResults();return}
   try{
-    const{lugares:pagina,token}=await paginaDoExplorar('');
+    const{lugares:pagina,token,n}=await paginaDoExplorar('');
     if(meu!==EXPLORE_REQ)return;
-    guardarMarcadorDoExplorar(token);
+    guardarMarcadorDoExplorar(token,n);
     if(!pagina.length){body.innerHTML='<div class="empty-state"><div class="ei" data-ic="pin"></div><h3>Nada encontrado</h3><p>'+(EXPLORE.cat==='food'&&EXPLORE.cozinha?'Nada bem avaliado em '+esc(cozinhaAtual().rotulo)+' por aqui. Tenta outro tipo.':'Tenta outro lugar: uma cidade, um bairro ou uma rua.')+'</p></div>';hydrateIcons(body);EXPLORE.items=[];EXPLORE_ESTADO='semResultado';darDadosDeExplorar();return}
     EXPLORE.items=pagina;
     EXPLORE_ESTADO='ok';
@@ -11179,7 +11187,10 @@ async function paginaDoExplorar(token){
   const corpo={textQuery:EXPLORE.termo,languageCode:'pt-BR',pageSize:20};
   // A área vai em TODAS as páginas: o Google exige a mesma consulta com o token.
   if(EXPLORE.area)corpo.locationRestriction=EXPLORE.area;
-  if(token)corpo.pageToken=token;
+  // Qual página é (25/11): o servidor guarda as páginas 2 e 3 pra quem vier
+  // depois, e precisa saber o número — o marcador do Google é opaco.
+  const n=token?(EXPLORE.paginaN||1)+1:1;
+  if(token){corpo.pageToken=token;corpo.pagina=n}
   const resp=await googlePlaces('searchText',{
     method:'POST',
     headers:{'Content-Type':'application/json','X-Goog-FieldMask':CAMPOS_DO_EXPLORAR},
@@ -11197,9 +11208,9 @@ async function paginaDoExplorar(token){
   // O marcador da próxima página volta JUNTO, e quem chamou só grava depois
   // de conferir que a busca ainda é a atual. Gravado aqui dentro, a página 2
   // atrasada de "Japonesa" apagava o marcador de "Pizza" e a rolagem parava.
-  return{lugares:places.map(lugarDoExplorar),token:(data&&data.nextPageToken)||''};
+  return{lugares:places.map(lugarDoExplorar),token:(data&&data.nextPageToken)||'',n};
 }
-function guardarMarcadorDoExplorar(token){EXPLORE.token=token||'';EXPLORE.fim=!EXPLORE.token&&!(EXPLORE.fila||[]).length}
+function guardarMarcadorDoExplorar(token,n){EXPLORE.token=token||'';EXPLORE.paginaN=n||1;EXPLORE.fim=!EXPLORE.token&&!(EXPLORE.fila||[]).length}
 async function maisDoExplorar(){
   if(EXPLORE.fim||EXPLORE.carregandoMais||EXPLORE_ESTADO!=='ok')return;
   if(!EXPLORE.token&&!(EXPLORE.fila||[]).length)return;
@@ -11222,9 +11233,9 @@ async function maisDoExplorar(){
       EXPLORE._inicioDaConsulta=EXPLORE.items.length;
       EXPLORE.termo=EXPLORE.fila.shift()+' em '+(EXPLORE.ondeTermo||EXPLORE.city);
     }
-    const{lugares:pagina,token}=await paginaDoExplorar(EXPLORE.token);
+    const{lugares:pagina,token,n}=await paginaDoExplorar(EXPLORE.token);
     if(meu!==EXPLORE_REQ)return;
-    guardarMarcadorDoExplorar(token);
+    guardarMarcadorDoExplorar(token,n);
     // Página nova que repete lugar da anterior não entra duas vezes.
     const ja=new Set(EXPLORE.items.map(p=>normName(p.name)+'|'+normName(p.city)));
     const antes=EXPLORE.items.length;
@@ -12338,10 +12349,13 @@ function exmTalvezBuscarAqui(){
       if(!fora&&aBusca>=aTela*0.35)return;
     }
     EXM_BUSCAS_SOZINHAS++;EXM.pessoaMexeu=false;
-    const bruto=Math.max(0.002,Math.max(ne.lat()-sw.lat(),ne.lng()-sw.lng())/8);
-    const passo=Math.pow(2,Math.round(Math.log2(bruto)));
-    const baixo=x=>Math.floor(x/passo)*passo,alto=x=>Math.ceil(x/passo)*passo,fixo=x=>Number(x.toFixed(5));
-    const rect={rectangle:{low:{latitude:fixo(baixo(sw.lat())),longitude:fixo(baixo(sw.lng()))},high:{latitude:fixo(alto(ne.lat())),longitude:fixo(alto(ne.lng()))}}};
+    // Grade FIXA por nível de zoom (25/11): o quadro é o do ponto da grade
+    // mais perto do centro, do tamanho da tela. Antes as bordas seguiam a tela
+    // de cada um, e duas pessoas no mesmo bairro quase nunca caíam no mesmo
+    // retângulo — a busca guardada não servia pra ninguém.
+    const lado=Math.max(ne.lat()-sw.lat(),ne.lng()-sw.lng());
+    const passo=Math.max(Math.pow(2,-8),Math.pow(2,Math.round(Math.log2(lado/2))));
+    const rect=areaEmGrade(c.lat(),c.lng(),passo);
     const rr=rect.rectangle;
     // A chave é a do retângulo buscado: o mapa não re-enquadra (a pessoa escolheu a vista).
     EXM.areaChave=[rr.low.latitude,rr.low.longitude,rr.high.latitude,rr.high.longitude].join(',');
@@ -12572,7 +12586,7 @@ function exmPedirLocal(){
     EXM_LOCAL_PROMPT=false;EXPLORE_ABRIU=false;exmAbrirInicial()},()=>{EXM_LOCAL_PROMPT=false;exmAgendar()},{timeout:15000});
 }
 // Abrir: com a sua localização, a leva de ~1,4 km em volta de você (centro
-// arredondado ~500 m, guardada 24 h no servidor); sem ela, a sua cidade; sem
+// numa grade fixa de ~1 km, guardada 7 dias no servidor); sem ela, a sua cidade; sem
 // as duas, o mapa-múndi e "Para onde?".
 async function exmAbrirInicial(){
   exmConferirLocal();
@@ -12586,8 +12600,10 @@ async function exmAbrirInicial(){
   exmIrPara('media',true);
   if(a&&cidade){
     const campo=document.getElementById('exploreCitySearch');if(campo)campo.value=cidade;
-    const arred=x=>Math.round(x/0.005)*0.005;
-    return runExplore('Perto de você',{nome:'Perto de você',tipo:'ponto',cidade,pais:'',area:areaDaBusca({latitude:arred(a.lat),longitude:arred(a.lng)},null,'rua')},op);
+    // Grade fixa de ~1 km (25/11): quem abre no mesmo pedaço da cidade cai na
+    // MESMA área e na mesma busca guardada. Era um quadrado de 500 m em volta
+    // de cada pessoa: cada quarteirão pagava a sua.
+    return runExplore('Perto de você',{nome:'Perto de você',tipo:'ponto',cidade,pais:'',area:areaEmGrade(a.lat,a.lng,0.01)},op);
   }
   const casa=(S.profile&&S.profile.home_city)||'';
   if(casa)return exploreEm(casa,'Sua cidade · '+casa,op);

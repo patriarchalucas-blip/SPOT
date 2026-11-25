@@ -79,21 +79,53 @@ export async function onRequestPost(context) {
   const guardado = await lerKV(env, chave);
   if (guardado) { try { return json(JSON.parse(guardado)) } catch (e) {} }
 
-  if (!await podeGastar(env, 'buscaia', quem.uid, 1, TETO_PESSOA)) return json({ capped: 'pessoa' });
-  if (!await dentroDoMes(env)) return json({ capped: 'mes' });
+  // DUAS MEMÓRIAS A MAIS (25/11, preparação pra divulgação). O que a IA
+  // entendeu do pedido não depende de onde a pessoa está: "japa barato" é o
+  // mesmo pra todo mundo (30 dias). E pedidos DIFERENTES que a IA entende
+  // igual ("japa barato", "japonês baratinho") viram a mesma busca do Google,
+  // guardada por região (7 dias). Só o que não está guardado gasta — e só
+  // então contam os tetos.
+  let conferido = false;
+  const podePagar = async () => {
+    if (conferido) return null;
+    conferido = true;
+    if (!await podeGastar(env, 'buscaia', quem.uid, 1, TETO_PESSOA)) return 'pessoa';
+    if (!await dentroDoMes(env)) return 'mes';
+    return null;
+  };
 
-  const ent = await entender(env, q);
-  if (!ent) return json({ error: 'ia' }, 502);
+  const chaveEnt = 'buscaia_ent_' + await resumo(normalizar(q));
+  let ent = null;
+  try { ent = lerEntendimento(JSON.parse(await lerKV(env, chaveEnt) || 'null')) } catch (e) {}
+  if (!ent) {
+    const teto = await podePagar();
+    if (teto) return json({ capped: teto });
+    ent = await entender(env, q);
+    if (!ent) return json({ error: 'ia' }, 502);
+    await gravarKV(env, chaveEnt, JSON.stringify(ent), 60 * 60 * 24 * 30);
+  }
 
   const onde = ent.lugar || (ent.perto ? '' : cidade);
-  const lugares = await buscarNoGoogle(env, ent, onde, temPos ? { lat, lng } : null);
-  if (!lugares) return json({ error: 'google' }, 502);
+  // A posição vai pro Google já arredondada (~5 km), a mesma da chave: quem
+  // está no mesmo pedaço da cidade recebe a mesma resposta.
+  const pos = temPos ? { lat: Math.round(lat * 20) / 20, lng: Math.round(lng * 20) / 20 } : null;
+  const chaveGoogle = 'buscaia_g_' + await resumo([ent.consulta, onde, ent.categoria, ent.preco_max,
+    pos && !ent.lugar ? pos.lat + ',' + pos.lng : ''].map((x) => normalizar(String(x))).join('|'));
+  let lugares = null;
+  try { lugares = JSON.parse(await lerKV(env, chaveGoogle) || 'null') } catch (e) {}
+  if (!Array.isArray(lugares)) {
+    const teto = await podePagar();
+    if (teto) return json({ capped: teto });
+    lugares = await buscarNoGoogle(env, ent, onde, pos);
+    if (!lugares) return json({ error: 'google' }, 502);
+    if (lugares.length) await gravarKV(env, chaveGoogle, JSON.stringify(lugares), 60 * 60 * 24 * 7);
+  }
   const r = {
     etiquetas: (ent.etiquetas || []).map((x) => String(x).slice(0, 30)).filter(Boolean).slice(0, 4),
     categoria: ent.categoria,
     lugares
   };
-  if (lugares.length) await gravarKV(env, chave, JSON.stringify(r), 60 * 60 * 24);
+  if (lugares.length) await gravarKV(env, chave, JSON.stringify(r), 60 * 60 * 24 * 7);
   return json(r);
 }
 

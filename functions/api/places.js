@@ -47,7 +47,14 @@ const TTL_BUSCA = 60 * 60 * 24 * 7;
 // que muda com a nota, e é a que mais se repete. 24 h desde o Explorar v3
 // (23/10): a abertura da aba é uma leva guardada por área, que não refaz
 // sozinha. "Aberto agora" é calculado no app, pelo horário que veio junto.
-const TTL_PAGINA_1 = 60 * 60 * 24;
+// 7 dias desde 25/11 (preparação pra divulgação): a mesma área é a mesma pra
+// todo mundo, e cada dia a mais é uma busca paga a menos por área. Nota e
+// horário mudam devagar; "aberto agora" sai do horário, no app.
+const TTL_PAGINA_1 = 60 * 60 * 24 * 7;
+// Páginas 2 e 3 (rolar a lista). Antes nunca eram guardadas: cada pessoa que
+// rolava pagava as suas. Agora quem paga guarda pra quem vem depois, e o
+// marcador "cacheN" (nosso, não do Google) leva o próximo à página guardada.
+const MARCADOR_DO_CACHE = /^cache([23])$/;
 
 // Campos que o app usa hoje. Pedir além disso custa mais caro por requisição,
 // então o que não está aqui é descartado em vez de repassado.
@@ -106,17 +113,36 @@ export async function onRequestPost(context) {
   // página 2 voltar erro. Quem pega a página 1 do cache recebe só ela; o app
   // trata "sem token" como fim da consulta e segue pra fila de cozinhas
   // vizinhas (filaDoExplorar). Quem paga a busca recebe o token, como antes.
-  const cacheavel = op === 'searchText' && kv && !payload.pageToken;
-  let chave = null;
+  //
+  // PÁGINAS 2 E 3 (25/11): a chave da página N é a da página 1 + "_pN". O app
+  // diz qual página pede (`pagina`); sem isso, pedido com marcador do Google
+  // segue sem cache, como antes. O marcador "cacheN" é nosso: aponta pra
+  // página já guardada, e nunca vai pro Google.
+  const doCache = payload.pageToken ? MARCADOR_DO_CACHE.exec(payload.pageToken) : null;
+  const paginaPedida = doCache ? Number(doCache[1])
+    : !payload.pageToken ? 1
+    : (Number(body.pagina) === 2 || Number(body.pagina) === 3) ? Number(body.pagina) : 0;
+  const cacheavel = op === 'searchText' && kv && paginaPedida > 0;
+  let base = null, chave = null;
   if (cacheavel) {
-    chave = 'places_' + (await hash(op + '|' + mascara + '|' + JSON.stringify(payload)));
+    base = 'places_' + (await hash(op + '|' + mascara + '|' + JSON.stringify(semMarcador(payload))));
+    chave = paginaPedida === 1 ? base : base + '_p' + paginaPedida;
     try {
       const guardado = await kv.get(chave);
       // Cache liberado sem login: responder daqui não gasta nada e não expõe
       // nada — é resultado público do Google, não dado de ninguém.
-      if (guardado) return json(JSON.parse(guardado));
+      if (guardado) {
+        const g = JSON.parse(guardado);
+        if (payload.pageSize && paginaPedida < 3 && await kv.get(base + '_p' + (paginaPedida + 1))) {
+          g.nextPageToken = 'cache' + (paginaPedida + 1);
+        }
+        return json(g);
+      }
     } catch (e) { /* KV fora do ar: segue e consulta */ }
   }
+  // Marcador nosso sem página guardada (venceu): é o fim desta consulta, e o
+  // app segue pra próxima da fila. Nunca manda "cacheN" pro Google.
+  if (doCache) return json({ places: [] });
 
   // Daqui pra baixo custa dinheiro de verdade — só pra quem está logado.
   const quem = await quemEsta(request, env);
@@ -193,6 +219,13 @@ export async function onRequestPost(context) {
     try { await kv.put(chave, JSON.stringify(guardar), { expirationTtl: payload.pageSize ? TTL_PAGINA_1 : TTL_BUSCA }) } catch (e) {}
   }
   return json(saida);
+}
+
+// O corpo sem o marcador de página: é o que identifica a consulta.
+export function semMarcador(p) {
+  const c = Object.assign({}, p);
+  delete c.pageToken;
+  return c;
 }
 
 // ── validação de entrada ─────────────────────────────────────────────────────
